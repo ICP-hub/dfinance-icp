@@ -7,25 +7,31 @@ import { useAuth } from "../../utils/useAuthClient";
 import FaucetDetails from "../../components/Faucet/FaucetDetails";
 import Element from "../../../public/element/Elements.svg";
 import { setUserData } from "../../redux/reducers/userReducer";
-import {setIsWalletConnected,setWalletModalOpen,setConnectedWallet,} from "../../redux/reducers/utilityReducer";
+import {
+  setIsWalletConnected,
+  setWalletModalOpen,
+  setConnectedWallet,
+} from "../../redux/reducers/utilityReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import plug from "../../../public/wallet/plug.png";
 import bifinity from "../../../public/wallet/bifinity.png";
 import nfid from "../../../public/wallet/nfid.png";
 import WalletModal from "../../components/Dashboard/WalletModal";
 
+/**
+ * Faucet component allows users to receive testnet assets for testing purposes.
+ * Users must connect their wallet to receive assets.
+ *
+ * @returns {JSX.Element} - Returns the Faucet component.
+ */
 const Faucet = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
-
-  const { isAuthenticated, login, logout, principal, createLedgerActor } =
-    useAuth();
+  const { isWalletModalOpen, isSwitchingWallet } = useSelector(
+    (state) => state.utility
+  );
+  const { isAuthenticated } = useAuth();
+  const [isTestnetMode, setIsTestnetMode] = useState(true);
 
   const handleWalletConnect = () => {
     dispatch(
@@ -33,12 +39,9 @@ const Faucet = () => {
     );
   };
 
-  const [isTestnetMode, setIsTestnetMode] = useState(true); // Add state for testnet mode
-
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);
   };
-
 
   return (
     <>
@@ -62,7 +65,6 @@ const Faucet = () => {
                   src={Element}
                   alt="Elements"
                   className="h-full w-full object-cover rounded-r-3xl opacity-60 dark:opacity-40 dark:filter dark:drop-shadow-[0_0_0_#0000ff]"
-                 
                 />
               </div>
               <h1 className="text-[#2A1F9D] font-semibold my-2 text-lg dark:text-darkText">

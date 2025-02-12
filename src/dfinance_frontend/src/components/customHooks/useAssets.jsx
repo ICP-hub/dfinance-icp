@@ -1,14 +1,22 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
-import useFormatNumber from "../customHooks/useFormatNumber";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFormatNumber from "./useFormatNumber";
+import useFetchConversionRate from "./useFetchConversionRate";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useDispatch, useSelector } from "react-redux";
 
+/**
+ * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
+ * It integrates with backend actors, fetches conversion rates, and processes financial calculations.
+ * @param {string} searchQuery - Search string to filter assets.
+ * @returns {Object} - Returns asset data and utility functions.
+ */
 const useAssetData = (searchQuery = "") => {
   const dispatch = useDispatch();
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const {
     principal,
     fetchReserveData,
@@ -36,10 +44,12 @@ const useAssetData = (searchQuery = "") => {
     ckUSDTUsdRate,
     fetchConversionRate,
   } = useFetchConversionRate();
+
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
 
+  // Fetch list of all assets from the backend
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
@@ -54,16 +64,19 @@ const useAssetData = (searchQuery = "") => {
 
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
+
+ /**
+   * Fetches the total supply of a specific asset.
+   * @param {string} asset - The asset.
+   */
   const fetchAssetSupply = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-
-        // Make sure the id is present in the object
         if (reserveDataForAsset.Ok?.id) {
           const result = await backendActor.user_normalized_supply(
             reserveDataForAsset.Ok
-          ); // Pass Ok which includes id
+          );
           setAssetSupply((prev) => ({ ...prev, [asset]: result.Ok }));
         } else {
           console.error("Missing id in reserveDataForAsset.");
@@ -76,16 +89,18 @@ const useAssetData = (searchQuery = "") => {
     }
   };
 
+  /**
+   * Fetches the total borrowed amount of a specific asset.
+   * @param {string} asset - The asset.
+   */
   const fetchAssetBorrow = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-
-        // Make sure the id is present in the object
         if (reserveDataForAsset.Ok?.id) {
           const result = await backendActor.user_normalized_debt(
             reserveDataForAsset.Ok
-          ); // Pass Ok which includes id
+          );
           setAssetBorrow((prev) => ({ ...prev, [asset]: result.Ok }));
         } else {
           console.error("Missing id in reserveDataForAsset.");
@@ -98,15 +113,15 @@ const useAssetData = (searchQuery = "") => {
     }
   };
 
+  /**
+   * Fetches asset details and calculates supply, borrow, and reserve factors.
+   */
   useEffect(() => {
     const fetchData = async () => {
       if (assets.length === 0 || !fetchReserveData) {
         return;
       }
-  
-      
       setLoading(true);
-  
       try {
         const data = {};
         let totalMarketSizeTemp = 0;
@@ -114,29 +129,31 @@ const useAssetData = (searchQuery = "") => {
         let totalBorrowes = 0;
         let reserveFactors = 0;
         let totalAccruedValue = 0;
-  
-        // Concurrent data fetching
+
         const results = await Promise.all(
           assets.map(async (asset) => {
             try {
               const reserveDataForAsset = await fetchReserveData(asset);
               return { asset, reserveDataForAsset };
             } catch (err) {
-              console.warn(`Error fetching data for asset ${asset}:`, err.message);
+              console.warn(
+                `Error fetching data for asset ${asset}:`,
+                err.message
+              );
               return null;
             }
           })
         );
-  
+
         results.forEach((result) => {
           if (!result || !result.reserveDataForAsset) return;
-  
+
           const { asset, reserveDataForAsset } = result;
           data[asset] = reserveDataForAsset;
-  
+
           const assetName = reserveDataForAsset.Ok.asset_name.toString();
           let assetRate = 0;
-  
+
           switch (assetName) {
             case "ckBTC":
               assetRate = ckBTCUsdRate;
@@ -156,42 +173,41 @@ const useAssetData = (searchQuery = "") => {
             default:
               assetRate = 0;
           }
-  
+
           const supplyCap = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000
           );
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
-            100000000
+              100000000
           );
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
-            100000000
+              100000000
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
-            100000000
+              100000000
           );
           const interestAccure = parseFloat(
             Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
           );
           const accruedValue = interestAccure * (assetRate / 1e8);
-  
+
           totalAccruedValue += accruedValue;
           totalMarketSizeTemp += supplyCap;
           totalSupplies += parseInt(totalSupply);
           totalBorrowes += parseInt(totalBorrow);
           reserveFactors = reserveFactor;
         });
-  
-        // Single state update for performance
+
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies));
         setTotalBorrowSize(formatNumber(totalBorrowes));
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
-  
+
         console.log("Data successfully fetched and state updated.");
       } catch (err) {
         console.error("Error during fetch:", err.message);
@@ -201,11 +217,19 @@ const useAssetData = (searchQuery = "") => {
         setLoading(false);
       }
     };
-  
-    console.log("useEffect triggered with dependencies:", { assets, fetchReserveData, principal, ckUSDTUsdRate, ckICPUsdRate,ckUSDCUsdRate,ckETHUsdRate,ckBTCUsdRate});
     fetchData();
-  }, [assets, fetchReserveData, principal, ckUSDTUsdRate, ckICPUsdRate,ckUSDCUsdRate,ckETHUsdRate,ckBTCUsdRate]);
-  
+  }, [
+    assets,
+    fetchReserveData,
+    principal,
+    ckUSDTUsdRate,
+    ckICPUsdRate,
+    ckUSDCUsdRate,
+    ckETHUsdRate,
+    ckBTCUsdRate,
+  ]);
+
+  // Filter assets based on search query
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(

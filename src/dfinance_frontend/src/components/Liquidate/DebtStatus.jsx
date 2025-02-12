@@ -17,17 +17,29 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import useUserData from "../customHooks/useUserData";
 import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import Lottie from "../Common/Lottie";
 
+/**
+ * DebtStatus Component
+ *
+ * This component manages the list of users with outstanding debts,
+ * calculates their borrowing power, and determines liquidation risks.
+ * It fetches user data, account balances, asset reserves, and liquidation statuses.
+ *
+ * @returns {JSX.Element} - Returns the DebtStatus component.
+ */
 const DebtStatus = () => {
   const liquidateTrigger = useSelector(
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
+  const theme = useSelector((state) => state.theme.theme);
+  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
+
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
@@ -40,9 +52,16 @@ const DebtStatus = () => {
   const [assetSupply, setAssetSupplied] = useState({});
   const [assetBorrow, setAssetBorrowed] = useState({});
   const [assetBalances, setAssetBalances] = useState([]);
-  const [liquidationUsers, setLiquidationUsers] = useState([]); // To store parsed result
-  const [liquidationLoading, setLiquidationLoading] = useState(false); // Loading state
-  const [error, setError] = useState(""); // Error state
+  const [liquidationUsers, setLiquidationUsers] = useState([]);
+  const [liquidationLoading, setLiquidationLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
+  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [Users, setusers] = useState([]);
+  const [userLoadingStates, setUserLoadingStates] = useState({});
+  const [totalUsers, setTotalUsers] = useState(null);
+
   const {
     assets,
     reserveData,
@@ -53,11 +72,6 @@ const DebtStatus = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
-  const showSearchBar = () => {
-    setShowSearch(!Showsearch);
-  };
-  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
-  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const navigate = useNavigate();
   const {
     getAllUsers,
@@ -67,20 +81,22 @@ const DebtStatus = () => {
     fetchReserveData,
     createLedgerActor,
   } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [Users, setusers] = useState([]);
-  const [userLoadingStates, setUserLoadingStates] = useState({});
-  const [totalUsers, setTotalUsers] = useState(null); // Initialize state
 
+  const showSearchBar = () => {
+    setShowSearch(!Showsearch);
+  };
+
+  /**
+   * Fetches the total number of users from the backend.
+   */
   const getTotalUser = async () => {
     if (!backendActor) {
       console.error("Error: Backend actor is not initialized.");
       throw new Error("Backend actor not initialized");
     }
-
     try {
       const totalUser = await backendActor.get_total_users();
-      setTotalUsers(totalUser); // Update state
+      setTotalUsers(totalUser);
     } catch (error) {
       console.error("Error fetching total users:", error);
       throw error;
@@ -88,7 +104,6 @@ const DebtStatus = () => {
   };
 
   useEffect(() => {
-    // Fetch total users on component mount
     (async () => {
       try {
         await getTotalUser();
@@ -116,14 +131,18 @@ const DebtStatus = () => {
   );
   const stableUsers = useMemo(() => users, [users]);
 
+  /**
+   * Fetches a list of users eligible for liquidation.
+   * @param {number} totalPages - The total number of pages.
+   * @param {number} pageSize - The number of users per page.
+   * @returns {Promise<Array>} - Returns an array of liquidation users.
+   */
   const fetchLiquidationUsers = async (totalPages, pageSize) => {
     try {
       const result = await backendActor.get_liquidation_users_concurrent(
         totalPages,
         pageSize
       );
-
-      // Parse the result
       const parsedResult = result.map(
         ([principal, userAccountData, userData]) => ({
           principal: Principal.fromUint8Array(principal),
@@ -147,18 +166,18 @@ const DebtStatus = () => {
 
   useEffect(() => {
     const loadUsers = async () => {
-      setLiquidationLoading(true); // Start loading
+      setLiquidationLoading(true);
       try {
-        const usersPerPage = 10; // Number of users to fetch per page
+        const usersPerPage = 10;
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
 
-        const data = await fetchLiquidationUsers(totalPages, usersPerPage); // Example: 5 pages, 10 users per page
-        setLiquidationUsers(data); // Store parsed result in state
+        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
+        setLiquidationUsers(data);
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later."); // Set user-friendly error message
+        setError("Failed to fetch users. Please try again later.");
       } finally {
-        setLiquidationLoading(false); // End loading
+        setLiquidationLoading(false);
       }
     };
 
@@ -168,9 +187,6 @@ const DebtStatus = () => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
   };
-
-  const theme = useSelector((state) => state.theme.theme);
-  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
 
   const handleChevronClick = () => {
     setShowPopup(true);
@@ -186,14 +202,18 @@ const DebtStatus = () => {
 
   const cachedData = useRef({});
 
+  /**
+   * Fetches and caches user account data to avoid redundant API calls.
+   * @param {Object} userData - The user data object.
+   */
   const fetchUserAccountDataWithCache = async (userData) => {
     const principal = userData?.principal;
-    if (!principal || cachedData.current[principal]) return; // Skip if already cached
+    if (!principal || cachedData.current[principal]) return;
 
     try {
       const result = await backendActor.get_user_account_data([principal]);
       if (result) {
-        cachedData.current[principal] = result; // Cache the result
+        cachedData.current[principal] = result;
         setUserAccountData((prev) => ({ ...prev, [principal]: result }));
       }
     } catch (error) {
@@ -204,14 +224,12 @@ const DebtStatus = () => {
   useEffect(() => {
     cachedData.current = {};
     if (!users || users.length === 0) return;
-
-    // Parallelize fetching with Promise.all
     Promise.all(
       users.map((userData) => {
         const principal = userData[0];
         if (principal)
           return fetchUserAccountDataWithCache({ ...userData, principal });
-        return null; // Skip invalid users
+        return null;
       })
     )
       .then(() => console.log("All user account data fetched"))
@@ -221,15 +239,13 @@ const DebtStatus = () => {
   }, [users, liquidateTrigger]);
 
   const relevantItems = liquidationUsers.filter((item) => {
-    console.log("Item:", item.debt); // Log each item to check its structure
-  
+    console.log("Item:", item.debt);
     return (
-      item.principal?._arr.toText() !== user.toString() && item.debt !== 0n &&
-      item.collateral !== 0n 
-      
+      item.principal?._arr.toText() !== user.toString() &&
+      item.debt !== 0n &&
+      item.collateral !== 0n
     );
   });
-  
 
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
@@ -317,9 +333,7 @@ const DebtStatus = () => {
     balanceType
   ) => {
     const userBalances = assetBalances[principal] || {};
-
     const assetBalance = userBalances[assetName];
-
     return assetBalance ? assetBalance[balanceType] || 0 : 0;
   };
 
@@ -376,9 +390,17 @@ const DebtStatus = () => {
     return;
   };
 
-  const calculateAssetSupply = (assetName, mappedItem, reserveData) => {
-    const reserve = reserveData?.[assetName];
-    const currentLiquidity = reserve?.Ok?.liquidity_index;
+  const calculateAssetSupply = (assetName, mappedItem) => {
+    const reserves = mappedItem?.userData?.reserves?.[0] || [];
+    console.log("reserve in asset supply", reserves);
+    let currentLiquidity = 0;
+    reserves.map((reserveGroup) => {
+      if (reserveGroup[0] === assetName) {
+        currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
+        console.log("Liquidity Index for", assetName, ":", currentLiquidity);
+      }
+    });
+
     const assetBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
@@ -386,16 +408,25 @@ const DebtStatus = () => {
         "dtokenBalance"
       ) || 0;
 
-    const supplyValue =
-      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-      (Number(currentLiquidity) * 1e8);
+    if (!currentLiquidity) return 0;
 
-    return supplyValue;
+    return Math.trunc(
+      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
+        Number(currentLiquidity)
+    );
   };
 
-  const calculateAssetBorrow = (assetName, mappedItem, reserveData) => {
-    const reserve = reserveData?.[assetName];
-    const DebtIndex = reserve?.Ok?.debt_index;
+  const calculateAssetBorrow = (assetName, mappedItem) => {
+    const reserves = mappedItem?.userData?.reserves?.[0] || [];
+    console.log("reserves in borrow", reserves);
+    let debtIndex = 0;
+    reserves.map((reserveGroup) => {
+      if (reserveGroup[0] === assetName) {
+        debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
+        console.log("Debt Index for", assetName, ":", debtIndex);
+      }
+    });
+
     const assetBorrowBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
@@ -403,11 +434,12 @@ const DebtStatus = () => {
         "debtTokenBalance"
       ) || 0;
 
-    const borrowValue =
-      (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-      (Number(DebtIndex) * 1e8);
+    if (!debtIndex) return 0;
 
-    return borrowValue;
+    return Math.trunc(
+      (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
+        Number(debtIndex)
+    );
   };
 
   const handlePageChange = (pageNumber) => {
@@ -472,10 +504,10 @@ const DebtStatus = () => {
           </div>
         ) : !liquidationLoading && currentItems && currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
-            <div className="mb-7 -ml-3 -mt-5">
-              <Lottie /> 
+            <div className="mb-3 -ml-3 -mt-5">
+              <Lottie />
             </div>
-            <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
+            <p className="text-[#8490ff] text-sm dark:text-[#c2c2c2] opacity-90">
               NO USERS FOUND!
             </p>
           </div>
@@ -544,13 +576,11 @@ const DebtStatus = () => {
                                   const assetName = mappedItem?.[0];
                                   const assetSupply = calculateAssetSupply(
                                     assetName,
-                                    item,
-                                    reserveData
+                                    item
                                   );
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
-                                    item,
-                                    reserveData
+                                    item
                                   );
 
                                   if (assetBorrow > 0) {
@@ -588,15 +618,24 @@ const DebtStatus = () => {
                                   const assetName = mappedItem?.[0];
                                   const assetSupply = calculateAssetSupply(
                                     assetName,
-                                    item,
-                                    reserveData
+                                    item
                                   );
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
-                                    item,
-                                    reserveData
+                                    item
                                   );
-
+                                  const item1 = filteredItems.find(
+                                    (item) => item[0] === assetName
+                                  );
+                                  const reserveliquidationThreshold =
+                                    Number(
+                                      item1?.[1]?.Ok.configuration
+                                        .liquidation_threshold
+                                    ) / 100000000 || 0;
+                                  console.log(
+                                    "reserveliquidationThreshold",
+                                    reserveliquidationThreshold
+                                  );
                                   if (assetSupply > 0) {
                                     return (
                                       <img

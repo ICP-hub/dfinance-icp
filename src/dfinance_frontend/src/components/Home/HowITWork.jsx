@@ -14,7 +14,6 @@ import SubmitICPRequest from "../../../public/howitworks/Submit-ICPRequest.png";
 const HowITWork = () => {
   useEffect(() => {
     Aos.init();
-
   }, []);
   return (
     <section className="mt-20 font-poppins" id="HowItWorks">
@@ -50,7 +49,7 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-            {}
+          {}
           <div
             data-aos="fade-left"
             data-aos-duration="2000"
@@ -187,7 +186,6 @@ const HowITWork = () => {
               <p className="text-[#517687] font-[500] font-poppins dark:text-darkText text-center leading-relaxed max-w-[300px] mx-auto">
                 Earn points on the actions you take
               </p>
-              
             </div>
           </div>
         </div>

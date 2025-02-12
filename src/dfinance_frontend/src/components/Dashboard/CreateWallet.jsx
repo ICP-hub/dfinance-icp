@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import Button from "../Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {setIsWalletConnected,setWalletModalOpen,setConnectedWallet,} from "../../redux/reducers/utilityReducer";
+import {
+  setIsWalletConnected,
+  setWalletModalOpen,
+  setConnectedWallet,
+} from "../../redux/reducers/utilityReducer";
 import { Modal } from "@mui/material";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
@@ -19,18 +23,17 @@ import { Wallet } from "lucide-react";
 
 const CreateWallet = () => {
   const dispatch = useDispatch();
-  const { isWalletModalOpen,isSwitchingWallet} = useSelector((state) => state.utility);
-  const { isAuthenticated, principal, createLedgerActor } =useAuth();
-
+  const { isWalletModalOpen, isSwitchingWallet } = useSelector(
+    (state) => state.utility
+  );
+  const { isAuthenticated, principal, createLedgerActor } = useAuth();
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-
   const principalObj = Principal.fromText(principal);
 
-  console.log("isAuthenticated",isAuthenticated);
   return (
     <>
       {isAuthenticated ? (
@@ -55,9 +58,7 @@ const CreateWallet = () => {
         </div>
       )}
 
-      {(isSwitchingWallet || !isAuthenticated) && (
-       <WalletModal />
-      )}
+      {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
     </>
   );
 };

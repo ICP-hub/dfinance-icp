@@ -16,7 +16,7 @@ const MiniLoader = ({ isLoading }) => {
     if (!isLoading) return null;
 
     return (
-        <div className="bouncing-loader select-none mt-3 -mb-6">
+        <div className="bouncing-miniloader select-none mt-3 -mb-6">
             <div className="loader-element opacity-80"><img src={loader} className="w-4 h-4" alt="loader" /></div>
             <div className="loader-element opacity-80"><img src={loader} className="w-4 h-4" alt="loader" /></div>
             <div className="loader-element opacity-80"><img src={loader} className="w-4 h-4" alt="loader" /></div>

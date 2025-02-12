@@ -4,17 +4,33 @@ import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { Info } from "lucide-react";
 
+/**
+ * BorrowInfo component displays borrowing-related data such as total borrowed amount,
+ * borrowing cap, APY rates, and reserve factor with a tooltip.
+ *
+ * @param {Object} props - Component props.
+ * @param {Function} props.formatNumber - Function to format numerical values.
+ * @param {number} props.borrowCap - Maximum amount that can be borrowed.
+ * @param {number} props.totalBorrowed - Total amount borrowed so far.
+ * @param {number} props.borrowRateAPR - Borrowing interest rate in APR.
+ * @param {number} props.reserveFactor - Reserve factor percentage.
+ */
 const BorrowInfo = ({
   formatNumber,
   borrowCap,
   totalBorrowed,
   borrowRateAPR,
+  reserveFactor,
 }) => {
+  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
+    useState(false);
+
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
   const totalBorrowPercentage =
     borrowCapNumber && totalBorrowed ? totalBorrowed / borrowCapNumber : 0;
-  const { id } = useParams();
 
+  const { id } = useParams();
+  const tooltipRef = useRef(null);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -45,13 +61,12 @@ const BorrowInfo = ({
     assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
   const totalBorrowedCap =
     assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
+
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
-
     if (isNaN(numericValue)) {
       return "0";
     }
-
     if (numericValue === 0) {
       return "0";
     } else if (numericValue >= 1) {
@@ -60,9 +75,6 @@ const BorrowInfo = ({
       return numericValue.toFixed(7);
     }
   };
-  const tooltipRef = useRef(null);
-  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
-    useState(false);
 
   const toggleReserveFactorTooltip = () =>
     setIsReserveFactorTooltipVis((prev) => !prev);
@@ -164,7 +176,7 @@ const BorrowInfo = ({
             <hr
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
-            <p>60%</p>
+            <p>{reserveFactor}%</p>
           </div>
         </div>
       </div>

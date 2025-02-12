@@ -1,12 +1,26 @@
-use crate::api::state_handler::{mutate_state, read_state};
-use crate::constants::errors::Error;
-use crate::declarations::assets::ReserveData;
-use crate::declarations::storable::Candid;
-use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
-use candid::{Nat, Principal};
 use ic_cdk::api::time;
 use ic_cdk::{query, update};
+use candid::{Nat, Principal};
+use crate::constants::errors::Error;
+use crate::declarations::storable::Candid;
+use crate::declarations::assets::ReserveData;
+use crate::api::state_handler::{mutate_state, read_state};
+use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 
+/*  
+ * @title Reserve Initialization 
+ * @notice Provides functionalities for initializing reserves, modifying reserve configurations,  
+ *         and verifying controller permissions.  
+ * @dev This module handles the creation of token canisters, updating reserve parameters,  
+ *      and ensures only controllers can execute certain operations.  
+ *  
+ * # Parameters  
+ * @param token_name The name of the token to be initialized.  
+ * @param reserve_data The reserve data structure containing metadata and token-related details.  
+ *  
+ * # Returns  
+ * @return `Ok(())` on success.  
+ */
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
@@ -66,6 +80,19 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
     Ok(())
 }
 
+/*  
+ * @title Reset Reserve Value  
+ * @notice Resets a specific variable in the reserve configuration.  
+ * @dev This function allows only the controller to modify key reserve parameters.  
+ *  
+ * # Parameters  
+ * @param asset_name The name of the asset whose reserve data is to be modified.  
+ * @param variable_name The specific variable to reset (e.g., "liquidity_index", "ltv").  
+ * @param reset_value The new value to set for the specified variable.  
+ *  
+ * # Returns  
+ * @return `Ok(())` on success.  
+ */
 #[update]
 pub async fn reset_reserve_value(
     asset_name: String,
@@ -117,6 +144,14 @@ pub async fn reset_reserve_value(
     Ok(())
 }
 
+/*  
+ * @title Check Controller Permissions  
+ * @notice Checks if the caller is a controller of the canister.  
+ * @dev This function verifies whether the caller has administrative privileges.  
+ *  
+ * # Returns  
+ * @return `true` if the caller is a controller, otherwise `false`.  
+ */
 #[query]
 pub fn to_check_controller() -> bool {
     ic_cdk::api::is_controller(&ic_cdk::api::caller())

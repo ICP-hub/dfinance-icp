@@ -4,26 +4,34 @@ import { X } from "lucide-react";
 import CircularProgress from "../../Common/CircularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
+/**
+ * SupplyInfo Component
+ *
+ * This component provides information on a specific asset's supply status, including total supplied,
+ * supply cap, borrowed amount, APY, and liquidation-related metrics like Max LTV, liquidation threshold,
+ * and liquidation penalty. It also includes interactive tooltips with additional details on LTV and liquidation threshold.
+ *
+ * @param {Object} props - The component props containing asset data and necessary functions.
+ * @returns {JSX.Element} - The rendered SupplyInfo component displaying key supply and risk metrics.
+ */
 const SupplyInfo = ({
   formatNumber,
   supplyCap,
   totalSupplied,
+  totalBorrowed,
   supplyRateAPR,
   ltv,
   canBeCollateral,
   liquidationBonus,
   liquidationThreshold,
 }) => {
-  const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
-  const totalSupplyPercentage =
-    supplyCapNumber && totalSupplied
-      ? (totalSupplied / supplyCapNumber) * 100
-      : 0;
-
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const { id } = useParams();
   const tooltipRef = useRef(null);
-
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -31,6 +39,27 @@ const SupplyInfo = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
+
+  const [supplied, setSupplied] = useState(totalSupplied);
+  const [borrowed, setBorrowed] = useState(totalBorrowed);
+  const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
+  const [
+    isLiquidationThresholdTooltipVisible,
+    setLiquidationThresholdTooltipVisible,
+  ] = useState(false);
+  const [
+    isLiquidationPenaltyTooltipVisible,
+    setLiquidationPenaltyTooltipVisible,
+  ] = useState(false);
+
+  useEffect(() => {
+    setSupplied(totalSupplied);
+    setBorrowed(totalBorrowed);
+  }, [dashboardRefreshTrigger, totalSupplied, totalBorrowed]);
+
+  const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
+  const totalSupplyPercentage =
+    supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
 
   const getAssetRate = (assetName) => {
     switch (assetName) {
@@ -51,34 +80,19 @@ const SupplyInfo = ({
 
   const assetRate = getAssetRate(id);
   const totalSuppliedAsset =
-    assetRate && totalSupplied ? Number(totalSupplied) * assetRate : 0;
+    assetRate && supplied ? Number(supplied) * assetRate : 0;
   const totalSuppliedCap =
     assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
-
     if (isNaN(numericValue)) {
       return "0";
     }
-
-    if (numericValue === 0) {
-      return "0";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
+    return numericValue >= 1
+      ? numericValue.toFixed(2)
+      : numericValue.toFixed(7);
   };
-
-  const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
-  const [
-    isLiquidationThresholdTooltipVisible,
-    setLiquidationThresholdTooltipVisible,
-  ] = useState(false);
-  const [
-    isLiquidationPenaltyTooltipVisible,
-    setLiquidationPenaltyTooltipVisible,
-  ] = useState(false);
 
   const toggleLTVTooltip = () => setLTVTooltipVisible((prev) => !prev);
   const toggleLiquidationThresholdTooltip = () =>
@@ -151,7 +165,7 @@ const SupplyInfo = ({
       </div>
       <div className="w-full mt-3 border-t border-t-[#5B62FE] py-6">
         <p className="mt-4 text-[#5B62FE] flex items-center gap-2 dark:text-darkText">
-          Collateral usage {canBeCollateral ? <Check /> : <X />}{" "}
+          Collateral usage: {canBeCollateral ? <Check /> : <X />}{" "}
           {canBeCollateral ? "Can be collateral" : "Cannot be collateral"}
         </p>
 
@@ -214,9 +228,8 @@ const SupplyInfo = ({
                     className="absolute w-[300px] bottom-full transform -translate-x-[75%] mb-2 px-4 py-2 bg-[#fcfafa] rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 p-6 flex flex-col dark:bg-darkOverlayBackground dark:text-darkText z-50 "
                   >
                     <span className="text-gray-700  text-wrap font-medium text-[11px] dark:text-darkText">
-                      A liquidation threshold is the point at which a
-                      borrowed position becomes too risky and will be
-                      liquidated.
+                      A liquidation threshold is the point at which a borrowed
+                      position becomes too risky and will be liquidated.
                       <hr className="my-2 opacity-50" />
                       For example, if the threshold is 80%, the position will be
                       liquidated when the debt reaches 80% of the collateral's

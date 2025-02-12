@@ -13,8 +13,8 @@ const defaultOptions = {
    */
   createOptions: {
     idleOptions: {
-      idleTimeout: 1000 * 60 * 30, 
-      disableDefaultIdleCallback: true, 
+      idleTimeout: 1000 * 60 * 30,
+      disableDefaultIdleCallback: true,
     },
   },
   /**
@@ -36,13 +36,19 @@ const defaultOptions = {
   loginOptionsbifinity: {},
 };
 
+/**
+ * Custom hook for handling authentication with Internet Identity and other providers.
+ *
+ * @param {Object} options - Authentication configuration options.
+ * @returns {Object} - Authentication state and utility functions.
+ */
 export const useAuthClient = (options = defaultOptions) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accountIdString, setAccountIdString] = useState("");
   const [authClient, setAuthClient] = useState(null);
   const [identity, setIdentity] = useState(null);
   const [principal, setPrincipal] = useState(null);
-  const [user,setUser]=useState(null);
+  const [user, setUser] = useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
 
@@ -72,6 +78,11 @@ export const useAuthClient = (options = defaultOptions) => {
   };
   let logoutTimeout;
 
+  /**
+   * Handles login process with selected identity provider.
+   * @param {string} provider - The provider name (ii, nfid, bifinity).
+   * @returns {Promise<AuthClient>} - Returns the authenticated client instance.
+   */
   const login = async (provider) => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -121,6 +132,9 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  /**
+   * Logs out the user and clears session data.
+   */
   const logout = async () => {
     try {
       await authClient.logout();
@@ -135,8 +149,9 @@ export const useAuthClient = (options = defaultOptions) => {
         localStorage.removeItem("connectedWallet");
         window.location.reload();
       }
-    } catch (error) 
-    {console.error(error.message)}
+    } catch (error) {
+      console.error(error.message);
+    }
   };
 
   const checkSession = () => {
@@ -153,8 +168,12 @@ export const useAuthClient = (options = defaultOptions) => {
 
   checkSession();
 
+  /**
+   * Updates client state with authentication details.
+   * @param {AuthClient} client - AuthClient instance.
+   */
   const updateClient = async (client) => {
-    console.log("client",client);
+    console.log("client", client);
     try {
       const isAuthenticated = await client.isAuthenticated();
       setIsAuthenticated(isAuthenticated);
@@ -162,10 +181,12 @@ export const useAuthClient = (options = defaultOptions) => {
       setIdentity(identity);
 
       const principal = identity.getPrincipal();
-      setUser(principal)
+      setUser(principal);
       setPrincipal(principal.toString());
       initGA("G-HP2ELMSQCW");
-      if(isAuthenticated){setUserId(principal.toString());}
+      if (isAuthenticated) {
+        setUserId(principal.toString());
+      }
 
       const accountId = AccountIdentifier.fromPrincipal({ principal });
       setAccountId(toHexString(accountId.bytes));
@@ -178,7 +199,6 @@ export const useAuthClient = (options = defaultOptions) => {
         { agent }
       );
       setBackendActor(backendActor);
-      
     } catch (error) {
       console.log(error.message);
     }
@@ -187,10 +207,10 @@ export const useAuthClient = (options = defaultOptions) => {
   useEffect(() => {
     const savedAuth = localStorage.getItem("isAuthenticated");
     if (savedAuth === "true") {
-      reloadLogin(); // Ensure the user is reauthenticated on refresh
+      reloadLogin();
     }
   }, []);
-  
+
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
@@ -199,6 +219,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
+  
   const reloadLogin = async () => {
     try {
       if (
@@ -210,28 +231,24 @@ export const useAuthClient = (options = defaultOptions) => {
     } catch (error) {}
   };
 
+  // Registers user
   const checkUser = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-  
+
     try {
       const identity = authClient.getIdentity();
       if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
-  
-        
         const result = await backendActor.register_user();
-  
         if (result.Ok) {
           if (result.Ok === "User available") {
-            
           } else if (result.Ok === "User added") {
           }
         } else if (result.Err) {
           console.error("Error from backend:", result.Err);
           throw new Error(result.Err);
         }
-  
         return result;
       } else {
         console.error("Anonymous principals are not allowed.");
@@ -242,30 +259,29 @@ export const useAuthClient = (options = defaultOptions) => {
       throw error;
     }
   };
-  
+
   if (backendActor && isAuthenticated) {
     checkUser();
- }
+  }
 
+  // Fetches reserve data for a specific asset
   const fetchReserveData = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-
     try {
       const reserveData = await backendActor.get_reserve_data(asset);
-      
       return reserveData;
     } catch (error) {
       throw error;
     }
   };
 
+  // Fetches all registered users
   const getAllUsers = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-
     try {
       const allUsers = await backendActor.get_all_users();
       return allUsers;

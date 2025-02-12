@@ -18,16 +18,24 @@ import {
   TAB_CARD_DATA,
   SECURITY_CONTRIBUTORS_DATA,
 } from "../../utils/constants";
-import { usePageLoading } from "../../components/Common/useLoading";
+import { usePageLoading } from "../../components/customHooks/useLoading";
 
+/**
+ * Home component represents the main landing page with sections such as hero, markets, FAQs, and more.
+ *
+ * @returns {JSX.Element} - Returns the Home component.
+ */
 const Home = () => {
+  const intervalRef = useRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const theme = useSelector((state) => state.theme.theme);
   const isLoading = usePageLoading();
-
   const [currentFAQ, setCurrentFAQ] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,11 +67,6 @@ const Home = () => {
       behavior: "smooth",
     });
   };
-  const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
-
-  const intervalRef = useRef();
 
   useEffect(() => {
     const startInterval = () => {
@@ -74,9 +77,7 @@ const Home = () => {
       }, 3000);
       intervalRef.current = id;
     };
-
     startInterval();
-
     return () => {
       clearInterval(intervalRef.current);
     };
@@ -119,13 +120,9 @@ const Home = () => {
           />
         </div>
 
-        {}
         <Navbar isHomeNav={true} />
-
-        {}
         <HeroSection />
 
-        {}
         <section className="mt-16">
           <div
             className="w-full"
@@ -188,9 +185,6 @@ const Home = () => {
           </div>
         </section>
 
-        {}
-
-        {}
         <section className="mt-[44px] md:mt-24 " id="gov">
           <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">
             <h1 className="text-lg text-[28px] md:text-[45px] font-light">
@@ -215,13 +209,8 @@ const Home = () => {
           </div>
         </section>
 
-        {}
         <HowITWork />
 
-        {}
-        {}
-
-        {}
         <section className="mt-[44px] md:mt-24 " id="faq">
           <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
             <div className="w-full">
@@ -294,7 +283,6 @@ const Home = () => {
           </div>
         </section>
 
-        {}
         <div className="absolute right-0 bottom-[0%] -z-10">
           <Ellipse
             position={"bottom-right"}
@@ -302,7 +290,6 @@ const Home = () => {
           />
         </div>
       </div>
-      {}
       <button
         className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${
           isVisible ? "opacity-100" : "opacity-0"

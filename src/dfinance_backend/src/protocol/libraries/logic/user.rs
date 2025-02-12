@@ -1,6 +1,8 @@
 use super::update::user_data;
 use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::MIN_BORROW;
+use crate::declarations::storable::Candid;
 use crate::get_all_users;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
 };
 use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
-use ic_cdk::query;
+use ic_cdk::{query, update};
 
 
 fn get_max_value() -> Nat {
@@ -23,6 +25,24 @@ pub struct UserConfig {
     pub collateral: bool,
     pub borrowing: bool,
 }
+
+/* 
+ * @title User Account Data Calculation
+ * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
+ *
+ * @dev Aggregates user reserves, fetches exchange rates, and determines borrowing capacity.
+ *
+ * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * 
+ * @return A tuple containing:
+ *   - Total collateral
+ *   - Total debt
+ *   - Average LTV
+ *   - Liquidation threshold
+ *   - Health factor
+ *   - Available borrow
+ *   - Has zero-LTV collateral (bool)
+ */
 
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
@@ -236,14 +256,14 @@ pub async fn calculate_user_account_data(
             ic_cdk::println!("Total debt for borrowed reserves {}", total_debt.clone());
         }
     }
-    if available_borrow < total_debt.clone() {
+    if available_borrow < total_debt.clone() || available_borrow < Nat::from(MIN_BORROW) {
         available_borrow = Nat::from(0u128);
     } else {
         available_borrow -= total_debt.clone();
     }
 
     ic_cdk::println!(
-        "avaible borrow after subtracting debt = {}",
+        "available borrow after subtracting debt = {}",
         available_borrow.clone()
     );
     avg_ltv = if total_collateral != Nat::from(0u128) {
@@ -296,6 +316,18 @@ pub async fn calculate_user_account_data(
     ))
 }
 
+/* 
+ * @title Get User Balance in Base Currency
+ * @notice Computes the user's total balance in the base currency (USD equivalent).
+ *
+ * @dev Fetches the user's scaled balance, applies normalization, and multiplies by the asset's exchange rate.
+ *
+ * @param user_principal The principal of the user whose balance is being calculated.
+ * @param reserve The reserve data associated with the user's asset.
+ * @param asset_price The price of the asset in the base currency.
+ * 
+ * @return The user's balance in base currency.
+ */
 pub async fn get_user_balance_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -363,6 +395,18 @@ pub async fn get_user_balance_in_base_currency(
         .scaled_mul(asset_price.clone()))
 }
 
+/* 
+ * @title Get User Debt in Base Currency
+ * @notice Computes the user's total outstanding debt in the base currency.
+ *
+ * @dev Fetches the user's debt balance, applies normalization, and multiplies by the asset's exchange rate.
+ *
+ * @param user_principal The principal of the user whose debt is being calculated.
+ * @param reserve The reserve data associated with the user's asset.
+ * @param asset_price The price of the asset in the base currency.
+ * 
+ * @return The user's debt in base currency.
+ */
 pub async fn get_user_debt_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -426,6 +470,12 @@ pub async fn get_user_debt_in_base_currency(
     Ok(result)
 }
 
+/* 
+ * @title User Account Data Structure
+ * @notice Stores financial data such as collateral, debt, and risk factors.
+ *
+ * @dev Tracks users' financial health and determines potential liquidation status.
+ */
 #[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct UserAccountData {
     pub collateral: Nat,
@@ -437,6 +487,17 @@ pub struct UserAccountData {
     pub has_zero_ltv_collateral: bool,
 }
 
+/* 
+ * @title Get Users Eligible for Liquidation
+ * @notice Identifies users with a health factor below the liquidation threshold.
+ *
+ * @dev Uses concurrency for improved efficiency by fetching users in batches.
+ *
+ * @param total_pages The total number of pages to fetch users from.
+ * @param page_size The number of users per page.
+ * 
+ * @return A vector of tuples containing (Principal, UserAccountData, UserData).
+ */
 #[query]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
@@ -501,4 +562,37 @@ pub async fn get_liquidation_users_concurrent(
     }
 
     liq_list
+}
+
+
+/*
+ * @title Register User
+ * @dev Registers a new user if they do not already exist.
+ * @returns A string message indicating success.
+ */
+#[update]
+fn register_user() -> Result<String, Error> {
+    ic_cdk::println!("function is register running");
+
+    let user_principal: Principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal register = {} ", user_principal);
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let user_data = mutate_state(|state| {
+        let user_index = &mut state.user_profile;
+        match user_index.get(&user_principal) {
+            Some(_) => Ok("User available".to_string()),
+            None => {
+                let default_user_data = UserData::default();
+                user_index.insert(user_principal.clone(), Candid(default_user_data));
+                Ok("User added".to_string())
+            }
+        }
+    });
+
+    user_data
 }

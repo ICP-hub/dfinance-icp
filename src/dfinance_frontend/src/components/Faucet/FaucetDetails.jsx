@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
@@ -27,17 +27,14 @@ import WalletModal from "../../components/Dashboard/WalletModal";
 import Lottie from "../Common/Lottie";
 const ITEMS_PER_PAGE = 8;
 
+/**
+ * FaucetDetails Component
+ *
+ * This component displays the details of faucet assets available for users to claim. 
+ * It allows users to view various assets like `ckBTC`, `ckETH`, `ckUSDC`, `ICP`, and `ckUSDT`, 
+ * @returns {JSX.Element} - Returns the FaucetDetails component, including the faucet assets table and pagination controls.
+ */
 const FaucetDetails = () => {
-  const refreshTrigger = useSelector((state) => state.faucetUpdate.refreshTrigger);
-  console.log("refreshTrigger", refreshTrigger);
-  const { isAuthenticated, principal, backendActor, createLedgerActor } =
-    useAuth();
-
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,8 +47,19 @@ const FaucetDetails = () => {
   const [balance, setBalance] = useState(null);
   const [usdBalance, setUsdBalance] = useState(null);
   const [conversionRate, setConversionRate] = useState(null);
-  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  const { filteredItems, loading } = useAssetData();
+  const refreshTrigger = useSelector(
+    (state) => state.faucetUpdate.refreshTrigger
+  );
+  const { isAuthenticated, principal, backendActor, createLedgerActor } =
+    useAuth();
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
   const {
     isWalletCreated,
     isWalletModalOpen,
@@ -124,7 +132,7 @@ const FaucetDetails = () => {
     ckICPUsdRate,
     ckUSDTBalance,
     ckUSDTUsdRate,
-    refreshTrigger
+    refreshTrigger,
   ]);
 
   useEffect(() => {
@@ -154,8 +162,9 @@ const FaucetDetails = () => {
     ckUSDCBalance,
     ckICPBalance,
     ckUSDTBalance,
-    refreshTrigger
+    refreshTrigger,
   ]);
+
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -195,11 +204,15 @@ const FaucetDetails = () => {
     setShowPopup(true);
   };
 
+  useEffect(() => {
+    if (!loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
+
   const closePopup = () => {
     setShowPopup(false);
   };
-
-  const { filteredItems, loading } = useAssetData();
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
@@ -208,14 +221,7 @@ const FaucetDetails = () => {
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
   const filteredReserveData = Object.fromEntries(filteredItems);
   const formatNumber = useFormatNumber();
-  const [hasLoaded, setHasLoaded] = useState(false);
 
-  useEffect(() => {
-    // If loading is finished, mark as loaded
-    if (!loading) {
-      setHasLoaded(true);
-    }
-  }, [loading]);
   return (
     <div className="w-full">
       <div className="w-full flex items-center px-1">
@@ -225,16 +231,16 @@ const FaucetDetails = () => {
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-1">
-        {loading  && !isSwitchingWallet  && !hasLoaded ? (
+        {loading && !isSwitchingWallet && !hasLoaded ? (
           <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
             <MiniLoader isLoading={true} />
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
-            <div className="mb-7 -ml-3 -mt-5">
-              <Lottie /> 
+            <div className="mb-3 -ml-3 -mt-5">
+              <Lottie />
             </div>
-            <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
+            <p className="text-[#8490ff] text-sm dark:text-[#c2c2c2] opacity-90">
               NO ASSETS FOUND!
             </p>
           </div>
@@ -309,140 +315,87 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-                      <td className="">
+                      <td>
                         <div className="p-3">
                           <div>
                             <center>
-                              {item[0] === "ckBTC" && (
-                                <>
-                                  <p className="">
-                                    {ckBTCBalance === 0
-                                      ? "0"
-                                      : ckBTCBalance >= 1
-                                      ? Number(ckBTCBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          }
-                                        )
-                                      : Number(ckBTCBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 7,
-                                            maximumFractionDigits: 7,
-                                          }
-                                        )}
-                                  </p>
-                                  <p className="font-light  text-[11px]">
-                                    ${formatNumber(ckBTCUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ckETH" && (
-                                <>
-                                  <p>
-                                    {ckETHBalance === 0
-                                      ? "0"
-                                      : ckETHBalance >= 1
-                                      ? Number(ckETHBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          }
-                                        )
-                                      : Number(ckETHBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 7,
-                                            maximumFractionDigits: 7,
-                                          }
-                                        )}
-                                  </p>
-                                  <p className="font-light  text-[11px]">
-                                    ${formatNumber(ckETHUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <>
-                                  <p>
-                                    {ckUSDCBalance === 0
-                                      ? "0"
-                                      : ckUSDCBalance >= 1
-                                      ? Number(ckUSDCBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          }
-                                        )
-                                      : Number(ckUSDCBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 7,
-                                            maximumFractionDigits: 7,
-                                          }
-                                        )}
-                                  </p>
-                                  <p className="font-light text-[11px]">
-                                    ${formatNumber(ckUSDCUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ICP" && (
-                                <>
-                                  <p>
-                                    {ckICPBalance === 0
-                                      ? "0"
-                                      : ckICPBalance >= 1
-                                      ? Number(ckICPBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          }
-                                        )
-                                      : Number(ckICPBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 7,
-                                            maximumFractionDigits: 7,
-                                          }
-                                        )}
-                                  </p>
-                                  <p className="font-light  text-[11px]">
-                                    ${formatNumber(ckICPUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ckUSDT" && (
-                                <>
-                                  <p>
-                                    {ckUSDTBalance === 0
-                                      ? "0"
-                                      : ckUSDTBalance >= 1
-                                      ? Number(ckUSDTBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          }
-                                        )
-                                      : Number(ckUSDTBalance).toLocaleString(
-                                          undefined,
-                                          {
-                                            minimumFractionDigits: 7,
-                                            maximumFractionDigits: 7,
-                                          }
-                                        )}
-                                  </p>
-                                  <p className="font-light  text-[11px]">
-                                    ${formatNumber(ckUSDTUsdBalance)}
-                                  </p>
-                                </>
-                              )}
+                              {(() => {
+                                const assetData = {
+                                  ckBTC: {
+                                    balance: ckBTCBalance,
+                                    usdBalance: ckBTCUsdBalance,
+                                    rate: ckBTCUsdRate,
+                                  },
+                                  ckETH: {
+                                    balance: ckETHBalance,
+                                    usdBalance: ckETHUsdBalance,
+                                    rate: ckETHUsdRate,
+                                  },
+                                  ckUSDC: {
+                                    balance: ckUSDCBalance,
+                                    usdBalance: ckUSDCUsdBalance,
+                                    rate: ckUSDCUsdRate,
+                                  },
+                                  ICP: {
+                                    balance: ckICPBalance,
+                                    usdBalance: ckICPUsdBalance,
+                                    rate: ckICPUsdRate,
+                                  },
+                                  ckUSDT: {
+                                    balance: ckUSDTBalance,
+                                    usdBalance: ckUSDTUsdBalance,
+                                    rate: ckUSDTUsdRate,
+                                  },
+                                }[item[0]];
+
+                                if (!assetData) return null;
+                                const { balance, usdBalance, rate } = assetData;
+                                const usdRate = rate / 1e8;
+                                const calculatedUsdValue = balance * usdRate;
+                                let displayedBalance;
+                                if (
+                                  !isFinite(calculatedUsdValue) ||
+                                  calculatedUsdValue === 0
+                                ) {
+                                  displayedBalance = "0.00";
+                                } else if (calculatedUsdValue < 0.01) {
+                                  displayedBalance = `<${(
+                                    0.01 / usdRate
+                                  ).toLocaleString(undefined, {
+                                    minimumFractionDigits: 7,
+                                    maximumFractionDigits: 7,
+                                  })}`;
+                                } else {
+                                  displayedBalance =
+                                    balance >= 1
+                                      ? balance.toLocaleString(undefined, {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
+                                      : balance.toLocaleString(undefined, {
+                                          minimumFractionDigits: 7,
+                                          maximumFractionDigits: 7,
+                                        });
+                                }
+                                return (
+                                  <>
+                                    <p>{displayedBalance}</p>
+                                    <p className="font-light text-[11px]">
+                                      {calculatedUsdValue === 0
+                                        ? "$0.00"
+                                        : calculatedUsdValue < 0.01
+                                        ? "<0.01$"
+                                        : `$${calculatedUsdValue.toLocaleString(
+                                            undefined,
+                                            {
+                                              minimumFractionDigits: 2,
+                                              maximumFractionDigits: 2,
+                                            }
+                                          )}`}
+                                    </p>
+                                  </>
+                                );
+                              })()}
                             </center>
                           </div>
                         </div>
@@ -502,7 +455,7 @@ const FaucetDetails = () => {
             />
           </div>
         )}
-         {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+        {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
       </div>
     </div>
   );

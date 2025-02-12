@@ -3,8 +3,16 @@ import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
+/**
+ * Custom hook to fetch and store balances for multiple ckAssets.
+ * @param {Object} ledgerActors - An object mapping asset types to their respective ledger actor instances.
+ * @param {string} principal - The user's principal ID as a string.
+ * @returns {Object} - An object containing balances for ckAssets and a function to fetch balances.
+ */
 const useFetchBalance = (ledgerActors, principal) => {
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
@@ -17,6 +25,10 @@ const useFetchBalance = (ledgerActors, principal) => {
     [principal]
   );
 
+  /**
+   * Fetches the balance of a given asset type using the corresponding ledger actor.
+   * @param {string} assetType - The asset symbol (e.g., "ckBTC").
+   */
   const fetchBalance = useCallback(
     async (assetType) => {
       if (principalObj) {
@@ -29,11 +41,8 @@ const useFetchBalance = (ledgerActors, principal) => {
           ) {
             return;
           }
-
           const balance = await ledgerActor.icrc1_balance_of(account);
-
           const formattedBalance = Number(balance) / 100000000;
-
           switch (assetType) {
             case "ckBTC":
               setCkBTCBalance(formattedBalance);
@@ -55,8 +64,10 @@ const useFetchBalance = (ledgerActors, principal) => {
           }
         } catch (error) {
           setError(error);
+          console.error(`Error fetching balance for ${assetType}:`, error);
         }
       } else {
+        console.error("Invalid Principal:", principal);
       }
     },
     [ledgerActors, principalObj, dashboardRefreshTrigger]

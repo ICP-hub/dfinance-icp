@@ -8,7 +8,6 @@ const lightImages = {
     MarketPageSmallLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/MarketPageSmallLight_mxkpws.webp",
     marketPageLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/market-pageLight_ed2puc.webp",
     userInformationLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/userInformationLight_exsejw.webp",
-    riskDetailsLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/risk-detailsLight_fl8wov.webp",
     LiquidationSuccessfullLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/LiquidationSuccessfullLight_tmfbft.webp",
     liquidationTableLight: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/liquidation-tableLight_jrkh65.webp",
     marketNavDetailsLightSmall: "https://res.cloudinary.com/dxcmkla3l/image/upload/v1735556482/marketNavDetailsLightSmall_nzzjob.webp",
@@ -44,7 +43,16 @@ const lightImages = {
     userInfoLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373376/userInfoLight_h35ktu.webp",
     approveLiquidationLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373376/approveLiquidationLight_s9shot.webp",
     callLiquidationLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737373376/callLiquidationLight_pkllom.webp",
-    warningPopupLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737439530/warningPopupLight_yuehd6.webp"
+    warningPopupLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737439530/warningPopupLight_yuehd6.webp",
+    supplyLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969254/supplyLight_dmn16j.webp",
+    borrowLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969255/borrowLight_ifp0nx.webp",
+    repayLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969255/repayLight_bsbqzk.webp",
+    withdrawLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969255/withdrawLight_e7zwxo.webp",
+    dashboardNavLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969255/dashboardNavLight_wdvbzu.webp",
+    riskDetailsLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969255/riskDetailsLight_zaxsmr.webp",
+    dashboardNavMarketLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969254/dashboardNavMarketLight_tkqknz.webp",
+    liquidationGetDebtStatusLight:"https://res.cloudinary.com/dxcmkla3l/image/upload/v1737969255/liquidationGetDebtStatusLight_yndaqd.webp",
+    
   };
   
   export default lightImages;

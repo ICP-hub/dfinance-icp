@@ -5,8 +5,8 @@ import Ellipse from "../../components/Common/Ellipse";
 
 import DashboardNav from "../../components/Dashboard/DashboardNav";
 import Loading from "../../components/Common/Loading";
-import { usePageLoading } from "../../components/Common/useLoading";
-import useAssetData from "../../components/Common/useAssets";
+import { usePageLoading } from "../../components/customHooks/useLoading";
+import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 
 const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
@@ -46,10 +46,8 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
           />
         </div>
 
-        {}
         <Navbar isHomeNav={false} />
 
-        {}
         {isDGov ? (
           <div className="w-full">{children}</div>
         ) : (
@@ -60,7 +58,6 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
         )}
       </div>
 
-      {}
       <Footer />
     </>
   );

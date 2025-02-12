@@ -15,6 +15,12 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import { setUserData } from "../../redux/reducers/userReducer";
 
+/**
+ * WalletModal Component
+ *
+ * This component displays a modal for connecting and switching between wallets.
+ * @returns {JSX.Element} - Returns the WalletModal component for wallet connection and switching.
+ */
 const WalletModal = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -46,14 +52,25 @@ const WalletModal = () => {
     }
   }, [isWalletCreated]);
 
+  /**
+   * Handles switching the connected wallet.
+   * It logs out the current wallet, switches to the new wallet, and authenticates the new wallet.
+   *
+   * @param {string} val - The wallet type to switch to (e.g., "ii" or "nfid").
+   * @returns {void}
+   */
   const loginHandlerIsSwitch = async (val) => {
-    handleLogout()
+    handleLogout();
     await logout();
     await login(val);
     dispatch(setConnectedWallet(val));
     dispatch(setWalletModalOpen({ isOpen: false, isSwitching: false }));
   };
 
+  /**
+   * This function handles logging in with a selected wallet.
+   * @param {string} val - The wallet type to connect to.
+   */
   const loginHandler = async (val) => {
     await login(val);
     dispatch(setConnectedWallet(val));
@@ -89,9 +106,6 @@ const WalletModal = () => {
       dispatch(setConnectedWallet(savedWallet));
     }
   }, [dispatch]);
-  
-
-  console.log("connectedWallet", connectedWallet)
 
   useEffect(() => {
     const reAuthenticate = async () => {
@@ -99,7 +113,6 @@ const WalletModal = () => {
         await loginHandler(connectedWallet);
       }
     };
-  
     reAuthenticate();
   }, [connectedWallet, isAuthenticated]);
 
@@ -166,9 +179,6 @@ const WalletModal = () => {
             </div>
           )}
         </div>
-        
-
-        
       </div>
     </Modal>
   );

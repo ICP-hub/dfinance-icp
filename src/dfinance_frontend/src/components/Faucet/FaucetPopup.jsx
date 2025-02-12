@@ -8,6 +8,17 @@ import { toast } from "react-toastify";
 import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 
+/**
+ * FaucetPopup Component
+ *
+ * This component provides a popup interface to claim faucet tokens.
+ *
+ * @param {boolean} isOpen - Determines whether the popup is open or closed.
+ * @param {function} onClose - Function to close the popup.
+ * @param {string} asset - The selected asset for the faucet.
+ * @param {string} assetImage - Image for the selected asset.
+ * @returns {JSX.Element} - Returns the FaucetPopup component.
+ */
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const dispatch = useDispatch();
   const { backendActor } = useAuth();
@@ -19,8 +30,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [faucetICP, setFaucetICP] = useState(0);
   const [faucetUSDT, setFaucetUSDT] = useState(0);
   const [exchangeRate, setExchangeRate] = useState(null);
+  const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
   const { userData } = useUserData();
+
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -40,6 +53,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [FaucetUsage, setFaucetUsage] = useState(initialUsages);
   const [FaucetLimit, setFaucetLimit] = useState(initialLimits);
   const [remainingFaucet, setRemainingFaucet] = useState(0);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -51,19 +65,17 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
   useEffect(() => {
     if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
       const updatedLimits = { ...initialLimits };
       const updatedUsages = { ...initialUsages };
-
       userData.Ok.reserves[0].forEach((reserveGroup) => {
         const asset = reserveGroup[0];
         if (!asset) return;
-
         const faucetLimit = reserveGroup[1]?.faucet_limit
           ? Number(reserveGroup[1].faucet_limit)
           : initialLimits[asset];
-
         const faucetUsage = reserveGroup[1]?.faucet_usage
           ? Number(reserveGroup[1].faucet_usage)
           : initialUsages[asset];
@@ -78,8 +90,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     }
   }, [userData]);
 
-  const [showFaucetPayment, setShowFaucetPayment] = useState(false);
-
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -89,6 +99,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     fetchConversionRate,
     fetchBalance,
   } = useFetchConversionRate();
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -109,9 +120,15 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
-        console.log("btc", FaucetLimit[asset], FaucetUsage[asset], ckBTCUsdRate, btcAmount);
+      console.log(
+        "btc",
+        FaucetLimit[asset],
+        FaucetUsage[asset],
+        ckBTCUsdRate,
+        btcAmount
+      );
       const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
-      console.log("tr",truncatedBtcAmount);
+      console.log("tr", truncatedBtcAmount);
       setFaucetBTC(truncatedBtcAmount);
     }
 
@@ -177,14 +194,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (!/^\d*\.?\d*$/.test(inputAmount)) {
       return;
     }
-
     const numericAmount = parseFloat(inputAmount);
     const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
-console.log("availableAmount", availableAmount);
     if (numericAmount > exchangeRate) {
       return;
     }
-
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
@@ -232,6 +246,15 @@ console.log("availableAmount", availableAmount);
       "An unexpected error occurred during the faucet process. Please try again later.",
   };
 
+  /**
+   * handleFaucet function
+   *
+   * This function handles the process of claiming faucet tokens for the selected asset.
+   * It checks the input amount, ensures it's within the faucet limits, and then makes a request to the backend
+   * to transfer the requested amount of tokens. It also displays appropriate success or error messages.
+   *
+   * @param {string} asset - The asset selected by the user to claim.
+   */
   const handleFaucet = async (asset) => {
     setLoading(true);
     try {
@@ -267,7 +290,8 @@ console.log("availableAmount", availableAmount);
           const errorKey = result.Err;
           console.log(errorKey);
           const userFriendlyMessage =
-            errorMessages[errorKey] || "An unexpected error occurred, please try again later.";
+            errorMessages[errorKey] ||
+            "An unexpected error occurred, please try again later.";
           toast.error(userFriendlyMessage, {
             className: "custom-toast",
             position: "top-center",
@@ -333,12 +357,15 @@ console.log("availableAmount", availableAmount);
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const transferFee = fees[normalizedAsset] || fees.default;
 
+  /**
+   * handleResetFaucetUsage function
+   *
+   * This function resets the faucet usage data to its initial state for the selected asset.
+   */
   const handleResetFaucetUsage = async () => {
     setLoading(true);
-
     try {
       const result = await backendActor.reset_faucet_usage();
-
       if (result.Ok === null || result.Ok === undefined) {
         const updatedLimits = { ...FaucetLimit };
         updatedLimits[asset] = 50000000000;
@@ -479,7 +506,8 @@ console.log("availableAmount", availableAmount);
                       </div>
                     </div>
                     <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                    Faucet limit has been exceeded. It will reset at 00:00 (UTC).
+                      Faucet limit has been exceeded. It will reset at 00:00
+                      (UTC).
                     </div>
                   </div>
                 </div>

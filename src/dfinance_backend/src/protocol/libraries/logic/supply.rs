@@ -11,10 +11,33 @@ use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
 use candid::{Nat, Principal};
 use ic_cdk::update;
-// -------------------------------------
-// ----------- SUPPLY LOGIC ------------
-// -------------------------------------
 
+/*
+-------------------------------------
+----------- SUPPLY LOGIC ------------
+-------------------------------------
+ */
+
+/*
+ * @title Execute Supply Function
+ * @notice Allows users to supply assets to the platform, handling validation, state updates, and asset transfer.
+ *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
+ *
+ * @dev The function follows these steps:
+ *      1. Validates input parameters (asset name, amount, and caller's identity).
+ *      2. Acquires a lock to ensure only one operation per user at a time.
+ *      3. Updates the reserve data and user profile state.
+ *      4. Validates the supply request against platform rules (e.g., limits, reserves).
+ *      5. Transfers the asset from the user to the platform.
+ *      6. Rolls back any changes and releases resources if an error occurs.
+ *
+ * @param params Parameters for the supply operation:
+ *               - `asset`: The name of the asset being supplied.
+ *               - `amount`: The amount of the asset being supplied.
+ *               - `is_collateral`: Flag indicating if the asset is collateral.
+ *
+ * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
+ */
 #[update]
 pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
@@ -207,10 +230,33 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     result
 }
 
-// -------------------------------------
-// ---------- WITHDRAW LOGIC -----------
-// -------------------------------------
+/*
+-------------------------------------
+---------- WITHDRAW LOGIC -----------
+-------------------------------------
+*/
 
+/*
+ * @title Execute Withdraw Function
+ * @notice Allows users to withdraw assets from the platform, handling validation, state updates, and asset transfer.
+ *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
+ *
+ * @dev The function follows these steps:
+ *      1. Validates input parameters (asset name, amount, and caller's identity).
+ *      2. Acquires a lock to ensure only one operation per user at a time.
+ *      3. Updates the reserve data and user profile state.
+ *      4. Validates the withdrawal request against platform rules (e.g., limits, available assets).
+ *      5. Transfers the requested asset from the platform to the user or liquidator.
+ *      6. Rolls back any changes and releases resources if an error occurs.
+ *
+ * @param params Parameters for the withdraw operation:
+ *               - `asset`: The name of the asset being withdrawn.
+ *               - `amount`: The amount of the asset being withdrawn.
+ *               - `is_collateral`: Flag indicating if the asset is collateral.
+ *               - `on_behalf_of`: Optional principal requesting the withdrawal on behalf of another user.
+ *
+ * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
+ */
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {

@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useLottie } from "lottie-react";
-import emptyAnimationDark from "../../../public/animations/Animation - 1737441133283.json"
+import emptyAnimationDark from "../../../public/animations/Animation - 1737441133283.json";
 import emptyAnimationLight from "../../../public/animations/Animation - 1737440788189.json";
 
 const style = {

@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { ArrowDownUp } from "lucide-react";
 import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuth } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
 import { ClickAwayListener } from "@mui/base/ClickAwayListener";
-import { Switch } from "@mui/material";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
 import { useRef } from "react";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import { FaWallet } from "react-icons/fa";
-
-import { styled } from "@mui/material/styles";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import loader from "../../../public/Helpers/loader.svg";
-import ARROW from "../../../public/wallet/ARROW.svg";
 import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../../utils/constants";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Drawer } from "@mui/material";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
@@ -39,24 +29,59 @@ import {
   setIsWalletConnected,
   setWalletModalOpen,
 } from "../../redux/reducers/utilityReducer";
-import settingsicon from "../../../public/Helpers/settings.png";
 import ThemeToggle from "../Common/ThemeToggle";
 import settingsIcon from "../../../public/Helpers/Settings.svg";
-import Vector from "../../../public/Helpers/Vector.svg";
-import Group216 from "../../../public/navbar/Group216.svg";
-
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";
-import { ArrowUpDown } from "lucide-react";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
+/**
+ * Navbar Component
+ *
+ * The Navbar provides navigation links, wallet connection options,
+ * testnet mode toggle, dark mode switch, and account-related actions.
+ *
+ * @param {boolean} isHomeNav - Determines if the navbar is in home mode or dashboard mode.
+ * @returns {JSX.Element} - Navbar component.
+ */
 export default function Navbar({ isHomeNav }) {
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const isMobile = window.innerWidth <= 1115;
+  const isMobile2 = window.innerWidth <= 640;
+  const renderThemeToggle = !isMobile;
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.user);
+  const { isWalletModalOpen, isWalletConnected } = useSelector(
+    (state) => state.utility
+  );
+  const theme = useSelector((state) => state.theme.theme);
+  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
+  const previousIsTestnetMode = useRef(isTestnetMode);
+
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("isDarkMode");
+    return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
+  });
+  const [isMobileNav, setIsMobileNav] = useState(false);
+  const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
+  const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
+  const [ethValue, setEthValue] = useState("0.00");
+  const [oneInchValue, setOneInchValue] = useState("0.00");
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [selectedToken, setSelectedToken] = useState("ETH");
+  const [balance, setBalance] = useState(0);
+  const [insufficientBalance, setInsufficientBalance] = useState(false);
+  const [showTestnetPopup, setShowTestnetPopup] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
 
   const handleSoundToggle = () => {
     dispatch(toggleSound());
@@ -65,19 +90,7 @@ export default function Navbar({ isHomeNav }) {
     dispatch(joyRideTrigger());
     navigate("/dashboard");
   };
-  const isMobile = window.innerWidth <= 1115;
-  const isMobile2 = window.innerWidth <= 640;
-  const renderThemeToggle = !isMobile;
-  const [isMobileNav, setIsMobileNav] = useState(false);
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.user);
-  const { isWalletModalOpen, isWalletConnected } = useSelector(
-    (state) => state.utility
-  );
-  const theme = useSelector((state) => state.theme.theme);
-  const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
 
-  const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const handleCloseDropdownOnScroll = () => {
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
@@ -104,13 +117,6 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   }, [location]);
 
-  const [ethValue, setEthValue] = useState("0.00");
-  const [oneInchValue, setOneInchValue] = useState("0.00");
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [selectedToken, setSelectedToken] = useState("ETH");
-  const [balance, setBalance] = useState(0);
-  const [insufficientBalance, setInsufficientBalance] = useState(false);
-  const [showTestnetPopup, setShowTestnetPopup] = useState(false);
   const handleEthChange = (e) => {
     const value = e.target.value;
     setEthValue(value);
@@ -118,7 +124,7 @@ export default function Navbar({ isHomeNav }) {
     const inch = eth * 32.569;
     setOneInchValue(inch.toFixed(2));
   };
-  const [showWarning, setShowWarning] = useState(false);
+
   const handleOneInchChange = (e) => {
     const value = e.target.value;
     setOneInchValue(value);
@@ -269,15 +275,6 @@ export default function Navbar({ isHomeNav }) {
       dispatch(setUserData(null));
     }
   }, [isAuthenticated]);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem("isDarkMode");
-    return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
-  });
-
-  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
-
-  const previousIsTestnetMode = useRef(isTestnetMode);
 
   const handleTestnetModeToggle = () => {
     navigate("/dashboard");
@@ -320,8 +317,6 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [hash]);
 
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
 
   const handleResize = () => {
@@ -797,16 +792,15 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               <div className="flex gap-3">
-               <button
+                <button
                   className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
                   onClick={handleWalletConnect}
                 >
                   <div className="flex items-center justify-center">
                     <p className="hidden md:flex">Connect Wallet</p>
                     <div>
-                      <FaWallet  size={17} className="ml-0 md:hidden" />
+                      <FaWallet size={17} className="ml-0 md:hidden" />
                     </div>
-                    
                   </div>
                 </button>
                 <div className="flex items-center justify-center">

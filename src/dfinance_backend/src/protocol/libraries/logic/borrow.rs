@@ -1,24 +1,54 @@
+use ic_cdk::update;
+use candid::{Nat, Principal};
+use crate::api::state_handler::*;
+use crate::constants::errors::Error;
+use crate::reserve_ledger_canister_id;
+use crate::declarations::storable::Candid;
 use crate::api::functions::asset_transfer_from;
+use crate::protocol::libraries::logic::reserve::{self};
+use crate::protocol::libraries::logic::update::UpdateLogic;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::calculate::update_token_price;
+use crate::constants::interest_variables::constants::INITIAL_DEBT_INDEX;
+use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::api::resource_manager::{
     acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
 };
-use crate::api::state_handler::*;
-use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::INITIAL_DEBT_INDEX;
-use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::declarations::storable::Candid;
-use crate::protocol::libraries::logic::reserve::{self};
-use crate::protocol::libraries::logic::update::UpdateLogic;
-use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_token_price;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{declarations, reserve_ledger_canister_id};
-use candid::{Nat, Principal};
-use ic_cdk::update;
 
-// -------------------------------------
-// ----------- BORROW LOGIC ------------
-// -------------------------------------
+/*
+-------------------------------------
+----------- BORROW LOGIC ------------
+-------------------------------------
+ */
+
+/**
+ * @title Execute Borrow Function
+ * 
+ * @notice Allows users to borrow a specified amount of assets while performing necessary checks, 
+ *         state updates, and validations. The function:
+ *         - Validates input parameters.
+ *         - Checks the caller's identity.
+ *         - Acquires a lock.
+ *         - Validates the borrow request.
+ *         - Updates user and reserve data.
+ *         - Transfers the asset to the user.
+ *         - Rolls back changes if any operation fails.
+ * 
+ * @dev The function follows a structured workflow:
+ *      1. **Input validation**: Ensures a valid asset name, a positive amount, and a known caller.
+ *      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
+ *      3. **State mutation**: Updates reserve data and the user's profile in the canister's state.
+ *      4. **Borrow validation**: Verifies that the request complies with platform rules (e.g., limits, availability).
+ *      5. **Asset transfer**: Moves the requested amount from the platform's reserve to the user's wallet.
+ *      6. **Rollback mechanism**: If any step fails, reverts all changes and releases resources.
+ * 
+ * @param params The parameters required to execute the borrow operation:
+ *               - `asset`: The name of the asset to be borrowed.
+ *               - `amount`: The amount of the asset to be borrowed.
+ * 
+ * @return Result<Nat, Error> The user's new balance after a successful transaction or an error code if the operation fails.
+ */
 #[update]
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
@@ -53,7 +83,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         }
     }
 
-    let asset = params.asset.clone();
     let amount_requested = params.amount.clone();
 
     let result: Result<Nat, Error> = async {
@@ -276,9 +305,36 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     result
 }
 
-// -------------------------------------
-// ------------ REPAY LOGIC ------------
-// -------------------------------------
+/*
+-------------------------------------
+------------ REPAY LOGIC ------------
+-------------------------------------
+ */
+
+/**
+ * @notice Executes the repay operation for a given asset and amount. 
+ *         This function validates parameters, checks asset conditions, 
+ *         and updates the user's debt position in the reserve system.
+ *         It ensures that only valid principals can perform the operation 
+ *         and manages locking to prevent race conditions.
+ *         If the operation fails at any step, the state is rolled back to maintain consistency.
+ * 
+ * @param params The parameters required for the repay operation:
+ *               - `asset`: The name of the asset to be repaid (string).
+ *               - `amount`: The amount of the asset to repay (Nat).
+ *               - `on_behalf_of`: The principal ID of the user being repaid on behalf of (Optional, Principal).
+ * 
+ * @return Result<Nat, Error> The updated balance (Nat) after successful repayment, 
+ *         or an error (Error) indicating why the repayment failed.
+ * 
+ * @dev The function follows these steps:
+ *      - Validates the input parameters (asset, amount, on-behalf-of principal).
+ *      - Acquires a lock to prevent re-entrancy during the repayment process.
+ *      - Fetches reserve data and ensures the repayment can proceed.
+ *      - Updates the user’s debt position in the reserve system.
+ *      - Transfers the tokens from the user or liquidator to the platform canister.
+ *      - Rolls back changes if any step fails to maintain system consistency.
+ */
 #[update]
 pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {

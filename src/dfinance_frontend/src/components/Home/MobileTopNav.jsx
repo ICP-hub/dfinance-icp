@@ -40,12 +40,11 @@ const MobileTopNav = ({
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-
+  const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
 
   const handleSoundToggle = () => {
@@ -63,7 +62,7 @@ const MobileTopNav = ({
   useEffect(() => {
     if (previousIsTestnetMode.current !== isTestnetMode) {
       if (previousIsTestnetMode.current !== undefined) {
-        toast.dismiss(); 
+        toast.dismiss();
       }
       toast.success(
         `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
@@ -164,26 +163,22 @@ const MobileTopNav = ({
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
 
-  const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   useEffect(() => {
-
     setSwitchWalletDrop(false);
   }, [location]);
 
   const handleSwitchWallet = () => {
     if (switchWalletDrop) {
-      logout(); 
+      logout();
     } else {
       setSwitchWalletDrop(!switchWalletDrop);
     }
   };
 
-  const handleViewOnExplorerClick = () => {
-   
-  };
+  const handleViewOnExplorerClick = () => {};
 
   if (isLargeScreen) {
-    return null; 
+    return null;
   }
 
   const switchWallet = () => {
@@ -191,12 +186,11 @@ const MobileTopNav = ({
   };
 
   const handleTour = () => {
-      console.log("button triggered");
-       dispatch(joyRideTrigger());
-      handleClose()
-      navigate("/dashboard");
-      // localStorage.removeItem("userGuideData");
-    };
+    console.log("button triggered");
+    dispatch(joyRideTrigger());
+    handleClose();
+    navigate("/dashboard");
+  };
 
   return (
     <Drawer
@@ -266,10 +260,8 @@ const MobileTopNav = ({
                     </h1>
                   </div>
                   <div className="flex flex-col-reverse   lg:block">
-                    {}
 
                     <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                      {}
                       <div className="hidden lg1:flex justify-center">
                         <div
                           className="flex-1 flex flex-col items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -456,10 +448,8 @@ const MobileTopNav = ({
                   Sound
                 </label>
 
-                {}
                 <Info size={16} className="ml-2 cursor-pointer" />
 
-                {}
                 <div className="absolute left-36 transform -translate-x-[40%] bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[30vw]">
                   Enabling this will allow the user to hear sound when supply,
                   borrow, repay, or withdraw functions are executed.
@@ -481,15 +471,15 @@ const MobileTopNav = ({
         </div>
 
         <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
-                          <div className="flex w-full align-center justify-center mb-2">
-                            <button
-                              type="button"
-                              className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
-                              onClick={handleTour} 
-                            >
-                              Start Guide Tour
-                            </button>
-                          </div>
+        <div className="flex w-full align-center justify-center mb-2">
+          <button
+            type="button"
+            className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
+            onClick={handleTour}
+          >
+            Start Guide Tour
+          </button>
+        </div>
       </div>
       {isAuthenticated && (
         <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">

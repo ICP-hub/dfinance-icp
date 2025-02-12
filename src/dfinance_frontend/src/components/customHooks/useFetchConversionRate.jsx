@@ -3,8 +3,17 @@ import useFetchBalance from "./useFetchBalance";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 
+/**
+ * Custom hook to fetch and update conversion rates for various ckAssets in USD.
+ * Polls the backend at a specified interval to get exchange rates and updates state accordingly.
+ *
+ * @param {number} pollInterval - The interval (in milliseconds) at which to poll for exchange rates.
+ * @returns {Object} - Contains conversion rates, balance states, error states, and fetch functions.
+ */
 const useFetchConversionRate = (pollInterval = 2000) => {
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const ledgerActors = useSelector((state) => state.ledger);
   const { principal, backendActor } = useAuth();
   const {
@@ -15,25 +24,27 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchBalance(ledgerActors, principal);
+
   const [ckBTCUsdRate, setCkBTCUsdRate] = useState(null);
   const [ckETHUsdRate, setCkETHUsdRate] = useState(null);
   const [ckUSDCUsdRate, setCkUSDCUsdRate] = useState(null);
   const [ckUSDTUsdRate, setCkUSDTUsdRate] = useState(null);
   const [ckICPUsdRate, setCkICPUsdRate] = useState(null);
   const [error, setError] = useState(null);
-
   const intervalIdRef = useRef(null);
 
+  /**
+   * Fetches conversion rates for multiple assets from the backend canister.
+   * Updates state with the latest prices and stops polling if all rates are retrieved.
+   */
   const fetchConversionRate = useCallback(async () => {
     try {
       if (!backendActor) {
         setError("Backend actor is not available.");
         return;
       }
-
       const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
       let fetchedRates = 0;
-
       const rates = await Promise.all(
         assets.map(async (asset) => {
           try {
@@ -88,6 +99,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       }
     } catch (error) {
       setError(error.message);
+      console.error(error.message);
     }
   }, [
     backendActor,
@@ -96,7 +108,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    dashboardRefreshTrigger
+    dashboardRefreshTrigger,
   ]);
 
   useEffect(() => {

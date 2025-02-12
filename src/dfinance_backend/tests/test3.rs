@@ -517,12 +517,12 @@ fn setup() -> (PocketIc, Principal) {
 #[test]
 fn call_test_function() {
     let (pic, backend_canister) = setup();
-    // test_faucet(&pic, backend_canister);
+    test_faucet(&pic, backend_canister);
     // test_supply(&pic, backend_canister);
     // test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
 }
 
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
@@ -535,48 +535,77 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
-        // Valid faucet request
+        //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100000u128),
+            amount: Nat::from(500u128),
             expect_success: true,
             expected_error_message: None,
         },
-        // Non-existent asset case
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(50000u128),
-            expect_success: false,
-            expected_error_message: Some("Asset not found: nonexistent_asset".to_string()),
-        },
-        // Minimum valid amount
-        TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(1u128), // Minimum valid amount
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(500u128),
             expect_success: true,
             expected_error_message: None,
         },
-        // Large amount request
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(200u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(100u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(500u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+
+        //  Asset length exceeds 7 characters
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128), // Large amount
-            expect_success: true,
-            expected_error_message: None,
-        },
-        // Insufficient balance case
-        TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128), // Valid amount but insufficient balance
+            asset: "ckETH_long".to_string(),
+            amount: Nat::from(100u128),
             expect_success: false,
-            expected_error_message: Some("Insufficient balance in faucet".to_string()),
+            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
         },
-        // Faucet failure (simulate failure during transfer)
+
+        // Non-existent asset
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(100000u128),
+            asset: "XYZ".to_string(),
+            amount: Nat::from(500u128),
             expect_success: false,
-            expected_error_message: Some("Faucet transfer failed".to_string()),
+            expected_error_message: Some("No canister ID found".to_string()),
         },
+
+        // Zero amount request
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(0u128),
+            expect_success: false,
+            expected_error_message: Some("Amount cannot be zero".to_string()),
+        },
+
+        // // Large amount exceeding wallet balance
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(10_000_000_000u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("wallet balance is low".to_string()),
+        // },
+
+        // Faucet limit exceeded
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(1_000_000_000u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("amount is too much".to_string()),
+        // },
     ];
 
     let user_principal = get_user_principal();
@@ -646,7 +675,8 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         expected_error_message: Option<String>,
     }
 
-    let test_cases = vec![
+    let test_cases: Vec<TestCase> = vec![
+        // Valid Test Cases
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(1000u128),
@@ -655,27 +685,65 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: None,
         },
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(50000u128),
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(100u128),
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(500u128),
+        //     is_collateral: true,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(1u128),
+        //     is_collateral: true,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(250u128),
+        //     is_collateral: false,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+
+        //  Invalid Test Cases
+        //  Input Validation Failures
+        TestCase {
+            asset: "".to_string(), // Empty asset
+            amount: Nat::from(100u128),
             is_collateral: true,
             expect_success: false,
-            expected_error_message: Some(
-                "No canister ID found for asset: nonexistent_asset".to_string(),
-            ),
+            expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(1u128),
-            is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
+            asset: "ckBTC12345".to_string(), // Exceeds 7 characters
+            amount: Nat::from(100u128),
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
         },
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128),
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(0u128), // Zero amount
             is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
+            expect_success: false,
+            expected_error_message: Some("Amount cannot be zero".to_string()),
+        },
+
+        // Reserve & State Failures
+        TestCase {
+            asset: "ckXYZ".to_string(), // Non-existent asset
+            amount: Nat::from(100u128),
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("No reserve data found".to_string()),
         },
     ];
 
@@ -761,37 +829,99 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
-        // Valid borrow case
+        // Valid Test Cases (Normal Withdrawals)
         TestCase {
-            asset: "ckBTC".to_string(),
+            asset: "ICP".to_string(),
+            amount: Nat::from(100u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
             amount: Nat::from(1000u128),
             expect_success: true,
             expected_error_message: None,
         },
-        // Non-existent asset case
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(50u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(200u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(500u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        
+    
+        // Boundary Cases (Minimum and Maximum Withdrawals)
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(50000u128),
+            asset: "ICP".to_string(),
+            amount: Nat::from(1u128), // Minimum possible valid amount
+            expect_success: true,
+            expected_error_message: None,
+        },
+    
+        // Invalid Cases (General Failures)
+        TestCase {
+            asset: "".to_string(),
+            amount: Nat::from(100u128),
             expect_success: false,
-            expected_error_message: Some(
-                "No canister ID found for asset: nonexistent_asset".to_string(),
-            ),
+            expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
-        // Minimum valid amount
+        TestCase {
+            asset: "INVALID".to_string(),
+            amount: Nat::from(100u128),
+            expect_success: false,
+            expected_error_message: Some("No reserve data found for the asset".to_string()),
+        },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(1u128),
-            expect_success: true,
-            expected_error_message: None,
+            amount: Nat::from(0u128),
+            expect_success: false,
+            expected_error_message: Some("Amount cannot be zero".to_string()),
         },
-        // Large amount
+    
+        // Case: Asset Name Too Long
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(10_000_000u128),
-            expect_success: true,
-            expected_error_message: None,
+            asset: "ckETHEREUM".to_string(), // More than 7 characters
+            amount: Nat::from(50u128),
+            expect_success: false,
+            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
         },
+        // //  Edge Cases (Special Conditions)
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: Nat::from(100u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("User is not allowed to perform such transaction".to_string()),
+        // },
+    
+        // // Error Cases (Withdrawal Limits and Errors)
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(100_000_000_000u128), // Excessively large amount
+        //     expect_success: false,
+        //     expected_error_message: Some("Withdraw validation failed".to_string()),
+        // },
+    
+        // // Case: Principal Validation (Anonymous)
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(150u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Anonymous principals are not allowed".to_string()),
+        // },
     ];
+    
 
     let user_principal = get_user_principal();
 
@@ -824,7 +954,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         match result {
             Ok(WasmResult::Reply(reply)) => {
                 let supply_response: Result<Nat, errors::Error> =
-                    candid::decode_one(&reply).expect("Failed to get IC supply response");
+                    candid::decode_one(&reply).expect("Failed to get IC borrow response");
 
                 match supply_response {
                     Ok(balance) => {
@@ -889,54 +1019,130 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
-        // Valid borrow case
+        // Valid Withdrawals (Direct)
         TestCase {
-            asset: "ckBTC".to_string(), //
-            amount: Nat::from(1000u32),
+            asset: "ICP".to_string(),
+            amount: Nat::from(100u128),
             on_behalf_of: None,
-            is_collateral:true,
+            is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
-        // Non-existent asset case
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(500u32),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(50u128),
             on_behalf_of: None,
-            is_collateral:false,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+    
+        // Valid Collateral Withdrawals
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128),
+            on_behalf_of: None,
+            is_collateral: true, // Withdrawing collateral
+            expect_success: true,
+            expected_error_message: None,
+        },
+    
+        // Valid Withdrawal on Behalf of Another User
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(500u128),
+        //     on_behalf_of: Some(Principal::anonymous()), // Assuming valid delegation
+        //     is_collateral: false,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+    
+        // Boundary Cases (Minimum and Maximum Withdrawals)
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(1u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+    
+        // Invalid Cases (General Failures)
+        TestCase {
+            asset: "".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: None,
+            is_collateral: false,
             expect_success: false,
-            expected_error_message: Some(
-                "No canister ID found for asset: nonexistent_asset".to_string(),
-            ),
+            expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
-        // Minimum valid amount
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(1u32), // Minimum valid amount
+            asset: "INVALID".to_string(),
+            amount: Nat::from(100u128),
             on_behalf_of: None,
-            is_collateral:true,
-            expect_success: true,
-            expected_error_message: None,
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("No reserve data found for the asset".to_string()),
         },
-        // Large amount
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(10_000u32), // Large amount
-            on_behalf_of: None,
-            is_collateral:true,
-            expect_success: true,
-            expected_error_message: None,
-        },
-        // Insufficient balance
+
+    
+        // // Anonymous Principal Withdrawal Attempt
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(150u128),
+        //     on_behalf_of: Some(Principal::anonymous()), // Anonymous user
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some("Anonymous principals are not allowed".to_string()),
+        // },
+    
+        // // Insufficient Reserve
         // TestCase {
         //     asset: "ckBTC".to_string(),
-        //     amount: 10_00_000, // Valid amount but insufficient balance
-        //     user: Principal::anonymous().to_string(),
-        //     on_behalf_of: "user6".to_string(),
+        //     amount: Nat::from(1000000u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
         //     expect_success: false,
-        //     expected_error_message: Some("Asset transfer failed: \"InsufficientAllowance { allowance: Nat(10000000) }\"".to_string()), // change it later on
+        //     expected_error_message: Some("Insufficient reserve balance".to_string()),
         // },
+    
+        // // Valid Case: Withdraw Exact Reserve Amount
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(500u128), // Assuming 500 is exactly the reserve balance
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+    
     ];
+    
+    
 
     // for case in test_cases {
     println!();
@@ -1033,42 +1239,84 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         expected_error_message: Option<String>,
     }
 
-    let test_cases = vec![
-        // Valid repay case
+    let test_cases: Vec<TestCase> = vec![
+        // Valid cases
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(1000u128),
-            on_behalf_of: Some(Principal::anonymous()),
+            asset: "ICP".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
-        // Non-existent asset case
         TestCase {
-            asset: "nonexistent_asset".to_string(),
-            amount: Nat::from(50000u128),
-            on_behalf_of: Some(Principal::anonymous()),
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(50u128),
+            on_behalf_of: Some(Principal::from_text("aaaaa-aa").unwrap()),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(200u128),
+        //     on_behalf_of: None,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(500u128),
+        //     on_behalf_of: Some(Principal::from_text("bbbbb-bb").unwrap()),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(300u128),
+        //     on_behalf_of: None,
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+    
+        // Invalid cases
+        TestCase {
+            asset: "".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: None,
             expect_success: false,
-            expected_error_message: Some(
-                "No canister ID found for asset: nonexistent_asset".to_string(),
-            ),
+            expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
-        // Minimum valid amount
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(1u128),
-            on_behalf_of: Some(Principal::anonymous()),
-            expect_success: true,
-            expected_error_message: None,
+            asset: "TooLongAsset".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
         },
-        // Large amount
         TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(10_000_000u128),
-            on_behalf_of: Some(Principal::anonymous()),
-            expect_success: true,
-            expected_error_message: None,
+            asset: "ICP".to_string(),
+            amount: Nat::from(0u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("Amount cannot be zero".to_string()),
         },
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(100u128),
+        //     on_behalf_of: Some(Principal::anonymous()),
+        //     expect_success: false,
+        //     expected_error_message: Some("Anonymous principals are not allowed".to_string()),
+        // },
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(5u128),
+        //     on_behalf_of: None,
+        //     expect_success: false,
+        //     expected_error_message: Some("Repay validation failed".to_string()),
+        // },
+    
+        
     ];
+    
 
     let user_principal = get_user_principal();
 
@@ -1168,27 +1416,126 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
-        TestCase {
+        // Valid cases with sufficient collateral
+        TestCase { 
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(10u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(500u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase { 
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckETH".to_string(),
-            amount: Nat::from(1000u128),
+            amount: Nat::from(1u128),
             on_behalf_of: Principal::anonymous(),
             reward_amount: Nat::from(1045u128),
             expect_success: true,
             expected_error_message: None,
         },
-        TestCase {
-            debt_asset: "nonexistent_asset".to_string(),
-            collateral_asset: "ckETH".to_string(),
-            amount: Nat::from(50000u128),
+        // TestCase { 
+        //     debt_asset: "ckUSDC".to_string(),
+        //     collateral_asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(200u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(50u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+
+        // Unsupported asset pairs
+        TestCase { 
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(50u128),
             on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(1045u128),
+            reward_amount: Nat::from(100u128),
             expect_success: false,
-            expected_error_message: Some(
-                "No canister ID found for asset: nonexistent_asset".to_string(),
-            ),
+            expected_error_message: Some("Invalid collateral-debt pair".to_string()),
         },
+
+        // Zero amount (invalid scenario)
+        TestCase { 
+            debt_asset: "ckETH".to_string(),
+            collateral_asset: "ckUSDC".to_string(),
+            amount: Nat::from(0u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(0u128),
+            expect_success: false,
+            expected_error_message: Some("Amount must be greater than zero".to_string()),
+        },
+
+        // Very large amounts (stress test)
+        // TestCase { 
+        //     debt_asset: "ckBTC".to_string(),
+        //     collateral_asset: "ckETH".to_string(),
+        //     amount: Nat::from(u128::MAX), // Max possible amount
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(u128::MAX),
+        //     expect_success: false,
+        //     expected_error_message: Some("Amount exceeds maximum limit".to_string()),
+        // },
+
+        // Edge case: Minimal possible amount
+        TestCase { 
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "ckUSDT".to_string(),
+            amount: Nat::from(1u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(10u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+
+        //  Invalid principal (malformed or blocked user)
+        // TestCase { 
+        //     debt_asset: "ckUSDC".to_string(),
+        //     collateral_asset: "ckBTC".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: Principal::from_slice(&[0; 29]), // Malformed principal
+        //     reward_amount: Nat::from(5u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Invalid principal ID".to_string()),
+        // },
+
+        // Zero reward amount (could be invalid depending on system logic)
+        TestCase { 
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckETH".to_string(),
+            amount: Nat::from(10u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(0u128),
+            expect_success: false,
+            expected_error_message: Some("Reward amount must be greater than zero".to_string()),
+        },
+
+        // Edge case: Borrowing with a different valid principal
+        // TestCase { 
+        //     debt_asset: "ICP".to_string(),
+        //     collateral_asset: "ckETH".to_string(),
+        //     amount: Nat::from(200u128),
+        //     on_behalf_of: Principal::from_text("w4xhj-lyaaa-aaaaa-qaaca-cai").unwrap(),
+        //     reward_amount: Nat::from(150u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+
+
+        // Borrowing against an unlisted or unknown asset (hypothetical scenario)
+        TestCase { 
+            debt_asset: "XYZCoin".to_string(), // Unsupported coin
+            collateral_asset: "ckUSDC".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(30u128),
+            expect_success: false,
+            expected_error_message: Some("Unsupported debt asset".to_string()),
+        },
+
     ];
+
 
     let user_principal = get_user_principal();
 

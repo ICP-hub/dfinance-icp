@@ -35,6 +35,7 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
+use std::collections::HashMap;
 use std::time::Duration;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
@@ -329,7 +330,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         let price_cache_data = &state.price_cache_list;
         price_cache_data
             .get(&base_asset.to_string())
-            .map(|price_cache| price_cache.0)
+            .map(|price_cache: Candid<PriceCache>| price_cache.0)
             .ok_or_else(|| Error::NoPriceCache)
     });
 
@@ -345,6 +346,28 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         }
     }
 }
+
+// TODO: later i need to remove this function.
+#[query]
+pub fn get_all_cached_exchange_rates() -> Result<HashMap<String, PriceCache>, Error> {
+    // Fetching all price-cache data
+    let all_price_cache_result = read_state(|state| {
+        state
+            .price_cache_list
+            .iter()
+            .map(|(key, value)| (key.clone(), value.0.clone())) // Extracting and cloning values
+            .collect::<HashMap<String, PriceCache>>() // Collect into a HashMap
+    });
+
+    ic_cdk::println!("All cached exchange rates: {:?}", all_price_cache_result);
+
+    if all_price_cache_result.is_empty() {
+        return Err(Error::NoPriceCache);
+    }
+
+    Ok(all_price_cache_result)
+}
+
 /*
  * @title Calculate Dynamic Balance
  * @dev Computes the updated balance based on liquidity indexes.

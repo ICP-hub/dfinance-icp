@@ -19,7 +19,7 @@ pub struct CachedPrice {
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
-/* 
+/*
  * @title Maximum Value Helper
  * @dev Returns the maximum possible value that can be stored in a `Nat` type.
  *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
@@ -28,13 +28,13 @@ pub struct PriceCache {
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
 }
-/* 
+/*
  * @title Price Cache Management
  * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.
  *      Allows fetching and updating asset exchange rates efficiently.
  */
 impl PriceCache {
-     /* 
+    /*
      * @title Get Cached Price
      * @dev Retrieves the cached exchange rate for a given asset, if available.
      * @param asset The name of the asset (e.g., "ckBTC", "ckETH").
@@ -45,7 +45,7 @@ impl PriceCache {
             .get(asset)
             .map(|cached_price| cached_price.price.clone())
     }
-   /* 
+    /*
      * @title Set Cached Price
      * @dev Updates the cached price for a specific asset.
      * @param asset The name of the asset.
@@ -55,7 +55,7 @@ impl PriceCache {
         self.cache.insert(asset, CachedPrice { price });
     }
 }
-/* 
+/*
  * @title Update Reserve Prices
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
@@ -97,20 +97,20 @@ pub async fn update_reserves_price() -> Result<(), Error> {
     }
     Ok(())
 }
-/* 
+/*
  * @title Update Token Price
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
  */
 #[update]
-pub async fn update_token_price(asset:String)-> Result<(),Error>{
-   if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await{
-    return Err(e);
+pub async fn update_token_price(asset: String) -> Result<(), Error> {
+    if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await {
+        return Err(e);
     };
 
     Ok(())
 }
-/* 
+/*
  * @title Query Reserve Prices
  * @dev Fetches the cached price data of all available assets from the state.
  * @returns Vec<PriceCache> - A list of cached prices for each asset.
@@ -128,7 +128,7 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
     ic_cdk::println!("all tokens are = {:?}", tokens);
     tokens
 }
-/* 
+/*
  * @title User Financial Position
  * @dev Represents a user's position in terms of collateral, borrowings, and liquidation threshold.
  */
@@ -139,7 +139,7 @@ pub struct UserPosition {
     pub liquidation_threshold: Nat,
 }
 
-/* 
+/*
  * @title Fetch Exchange Rates
  * @dev Fetches the latest exchange rate of a given base asset against a quote asset.
  *      Supports both cryptocurrency and fiat asset classes.
@@ -229,7 +229,7 @@ pub async fn get_exchange_rates(
                 let pow = 10usize.pow(v.metadata.decimals);
                 ic_cdk::println!("quote = {}", quote);
                 ic_cdk::println!("pow = {}", pow);
-                // Ask : should i handle the error here or not. 
+                // Ask : should i handle the error here or not.
                 let exchange_rate = (Nat::from(quote) * Nat::from(SCALING_FACTOR))
                     / (Nat::from(pow) - Nat::from(SCALING_FACTOR));
                 ic_cdk::println!("exchange rate = {}", exchange_rate);
@@ -242,6 +242,7 @@ pub async fn get_exchange_rates(
                 // Fetching price-cache data
                 ic_cdk::println!("exchange rate");
                 if quote_asset == "USDT" {
+                    ic_cdk::println!("base asset to check = {}",base_asset);
                     let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                         let price_cache_data = &mut state.price_cache_list;
                         if let Some(price_cache) = price_cache_data.get(&base_asset) {
@@ -298,31 +299,39 @@ pub async fn get_exchange_rates(
 #[update]
 pub async fn update_reserve_price_test() -> Result<(), Error> {
     let manual_prices: HashMap<String, Nat> = vec![
-        ("ckBTC".to_string(), Nat::from(10934116666666u128)), 
-        ("ckETH".to_string(), Nat::from(302148333333u128)), 
-        ("ICP".to_string(), Nat::from(819611111u128)), 
+        ("ckBTC".to_string(), Nat::from(10934116666666u128)),
+        ("ckETH".to_string(), Nat::from(302148333333u128)),
+        ("ICP".to_string(), Nat::from(819611111u128)),
         ("ckUSDC".to_string(), Nat::from(111094444u128)),
-        ("ckUSDT".to_string(), Nat::from(111111111u128)),   
+        ("ckUSDT".to_string(), Nat::from(111111111u128)),
     ]
     .into_iter()
     .collect();
 
     let keys: Vec<String> = read_state(|state| {
-        state.reserve_list.iter().map(|(key, _)| key.clone()).collect()
+        state
+            .reserve_list
+            .iter()
+            .map(|(key, _)| key.clone())
+            .collect()
     });
 
     ic_cdk::println!("Keys (assets) = {:?}", keys);
 
     for asset_name in keys {
         ic_cdk::println!("Updating test price for asset: {}", asset_name);
-        
+
         if let Some(price) = manual_prices.get(&asset_name) {
             ic_cdk::println!("Found manual price for {}: {:?}", asset_name, price);
-            
+
             let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                 let price_cache_data = &mut state.price_cache_list;
                 if let Some(price_cache) = price_cache_data.get(&asset_name) {
-                    ic_cdk::println!("Existing price cache found for {}: {:?}", asset_name, price_cache.0);
+                    ic_cdk::println!(
+                        "Existing price cache found for {}: {:?}",
+                        asset_name,
+                        price_cache.0
+                    );
                     Ok(price_cache.0.clone())
                 } else {
                     ic_cdk::println!("Creating new price cache for {}", asset_name);
@@ -335,12 +344,23 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
             });
 
             if let Ok(mut price_cache_data) = price_cache_result {
-                ic_cdk::println!("Updating price cache for {} with new price: {:?}", asset_name, price);
-                price_cache_data.cache.insert(asset_name.clone(), protocol::libraries::math::calculate::CachedPrice { price: price.clone() });
-                
+                ic_cdk::println!(
+                    "Updating price cache for {} with new price: {:?}",
+                    asset_name,
+                    price
+                );
+                price_cache_data.set_price(asset_name.clone(), price.clone());
+                ic_cdk::println!("price cache after setting =  {:?}", price_cache_data.cache);
+
                 mutate_state(|state| {
-                    state.price_cache_list.insert(asset_name.clone(), Candid(price_cache_data.clone()));
-                    ic_cdk::println!("State updated successfully for asset: {}", asset_name);
+                    state
+                        .price_cache_list
+                        .insert(asset_name.clone(), Candid(price_cache_data.clone()));
+                    ic_cdk::println!(
+                        "Full state after update: {:?}",
+                        state.price_cache_list.iter().collect::<Vec<_>>() 
+                    );
+                    
                 });
             } else {
                 ic_cdk::println!("Failed to update price cache for {}", asset_name);
@@ -353,3 +373,6 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
     ic_cdk::println!("Price update process completed successfully.");
     Ok(())
 }
+
+
+

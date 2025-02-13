@@ -3,6 +3,8 @@ import { Modal } from "@mui/material";
 import Button from "../Common/Button";
 import icplogo from "../../../public/wallet/icp.png";
 import nfid from "../../../public/wallet/nfid.png";
+import bitfinity from "../../../public/wallet/bitfinity.png";
+
 import {
   setIsWalletConnected,
   setWalletModalOpen,
@@ -91,7 +93,7 @@ const WalletModal = () => {
         return "Internet Identity";
       case "plug":
         return "Plug";
-      case "bifinity":
+      case "bitfinity":
         return "Bitfinity";
       case "nfid":
         return "NFID";
@@ -178,6 +180,46 @@ const WalletModal = () => {
               </div>
             </div>
           )}
+
+          {connectedWallet !== "bitfinity" && (
+            <div
+              className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30  dark:text-darkText"
+              onClick={() => {
+                isSwitchingWallet
+                  ? loginHandlerIsSwitch("bitfinity")
+                  : loginHandler("bitfinity");
+              }}
+            >
+              bitfinity
+              <div className="w-8 h-8">
+                <img
+                  src={bitfinity}
+                  alt="connect_wallet_icon"
+                  className="object-fill w-9 h-8 bg-white p-1 rounded-[20%]"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* {connectedWallet !== "metamask" && (
+            <div
+              className="w-full flex items-center justify-between bg-[#c8c8c8] bg-opacity-20 hover:bg-[#b7b4b4] cursor-pointer p-2 rounded-md text-[#2A1F9D] dark:bg-darkBackground/30  dark:text-darkText"
+              onClick={() => {
+                isSwitchingWallet
+                  ? loginHandlerIsSwitch("metamask")
+                  : loginHandler("metamask");
+              }}
+            >
+              metamask
+              <div className="w-8 h-8">
+                <img
+                  src={bitfinity}
+                  alt="connect_wallet_icon"
+                  className="object-fill w-9 h-8 bg-white p-1 rounded-[20%]"
+                />
+              </div>
+            </div>
+          )} */}
         </div>
       </div>
     </Modal>

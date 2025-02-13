@@ -1,12 +1,18 @@
 import { AuthClient } from "@dfinity/auth-client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { HttpAgent, Actor } from "@dfinity/agent";
+import { HttpAgent, Actor, SignIdentity } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor } from "../../../declarations/dfinance_backend/index";
 import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
+import { Artemis } from "artemis-web3-adapter";
+import { idlFactory } from "../../../declarations/dfinance_backend/dfinance_backend.did.js";
 const AuthContext = createContext();
-
+const connectObj = {
+  whitelist: ["ryjl3-tyaaa-aaaaa-aaaba-cai"],
+  host: "https://icp0.io/",
+};
+const ArtemisAdapter = new Artemis(connectObj);
 const defaultOptions = {
   /**
    *  @type {import("@dfinity/auth-client").AuthClientCreateOptions}
@@ -33,7 +39,8 @@ const defaultOptions = {
         : `https://nfid.one/authenticate/?applicationName=my-ic-app#authorize`,
   },
 
-  loginOptionsbifinity: {},
+  loginOptionsbitfinity: {},
+  loginOptionsmetamask: {},
 };
 
 /**
@@ -83,10 +90,66 @@ export const useAuthClient = (options = defaultOptions) => {
    * @param {string} provider - The provider name (ii, nfid, bifinity).
    * @returns {Promise<AuthClient>} - Returns the authenticated client instance.
    */
+
   const login = async (provider) => {
     return new Promise(async (resolve, reject) => {
       try {
-        if (
+        if (provider === "bitfinity") {
+          const walletConnection = await ArtemisAdapter.connect("bitfinity");
+
+          const principal = await window.ic.bitfinityWallet.getPrincipal();
+          const accountId = await window.ic.bitfinityWallet.getAccountID();
+          const provider = ArtemisAdapter.provider; // Get the provider from Artemis
+
+          if (!provider) {
+            console.error("Bitfinity Wallet provider not found.");
+            return reject("Provider not initialized.");
+          }
+          console.log("Creating actor with:");
+          console.log("Canister ID:", process.env.CANISTER_ID_DFINANCE_BACKEND);
+          console.log("IDL Factory:", idlFactory);
+          console.log("Provider:", provider);
+          // Create backend actor using Bitfinity provider
+          const backendActor = await provider.createActor({
+            canisterId: process.env.CANISTER_ID_DFINANCE_BACKEND,
+            interfaceFactory: idlFactory, // Ensure `createActor` is the correct IDL factory
+          });
+
+          setIsAuthenticated(true);
+          setPrincipal(principal.toString());
+          setUser(principal);
+          setAccountId(accountId);
+          setAccountIdString(accountId);
+          setBackendActor(backendActor);
+
+          initGA("G-HP2ELMSQCW");
+          setUserId(principal.toString());
+          localStorage.setItem("connectedWallet", "bitfinity");
+
+          console.log("Bitfinity Login Successful:", {
+            principal: principal.toString(),
+            accountId,
+          });
+
+          resolve(walletConnection);
+        } else if (provider === "metamask") {
+          if (window.ethereum) {
+            const accounts = await window.ethereum.request({
+              method: "eth_requestAccounts",
+            });
+            const ethProvider = new ethers.providers.Web3Provider(
+              window.ethereum
+            );
+            const signer = ethProvider.getSigner();
+            const address = await signer.getAddress();
+            setUser(address);
+            setPrincipal(address);
+            setIsAuthenticated(true);
+            localStorage.setItem("connectedWallet", "metamask");
+          } else {
+            alert("MetaMask is not installed!");
+          }
+        } else if (
           authClient.isAuthenticated() &&
           !(await authClient.getIdentity().getPrincipal().isAnonymous())
         ) {
@@ -137,6 +200,12 @@ export const useAuthClient = (options = defaultOptions) => {
    */
   const logout = async () => {
     try {
+      if (connectedWallet === "bitfinity") {
+        await ArtemisAdapter.disconnect();
+      } else if (connectedWallet === "metamask") {
+        // No special disconnect logic needed for MetaMask
+        await ArtemisAdapter.disconnect();
+      }
       await authClient.logout();
       clearTimeout(logoutTimeout);
       setIsAuthenticated(false);
@@ -219,7 +288,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-  
+
   const reloadLogin = async () => {
     try {
       if (

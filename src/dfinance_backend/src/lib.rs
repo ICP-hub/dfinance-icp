@@ -1,4 +1,5 @@
 use crate::constants::errors::Error;
+use crate::constants::asset_data::to_check_controller;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
@@ -6,6 +7,7 @@ use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::InitArgs;
+use ic_cdk::api::is_controller;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
@@ -753,6 +755,47 @@ async fn get_lock() -> Result<bool, Error> {
 #[query]
 pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
+}
+
+// Function to store a Principal
+#[ic_cdk::update]
+pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+    if user_principal == Principal::anonymous()  {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    mutate_state(|state| {
+        state.tester_list.insert(username, principal)
+    });
+    return Ok(());
+}
+
+// Function to retrieve a Principal
+#[ic_cdk::query]
+pub fn get_testers() -> Result<Vec<Principal>, Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    read_state(|state| {
+        let mut testers = Vec::new();
+        let iter = state.tester_list.iter();
+        for (_, value) in iter {
+            testers.push(value.clone());
+        }
+        Ok(testers)
+    })
 }
 
 /*

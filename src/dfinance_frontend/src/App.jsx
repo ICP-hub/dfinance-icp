@@ -67,7 +67,7 @@ export default function App() {
 
   useEffect(() => {
     const fetchAssetPrinciple = async () => {
-      if (backendActor) {
+      if (backendActor && principal) {
         try {
           const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
           for (const asset of assets) {

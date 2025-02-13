@@ -1,8 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { Principal } from "@dfinity/principal";
-import { useMemo } from "react";
 import { useSelector } from "react-redux";
-
+import { useAuths } from "../../utils/useAuthClient";
 /**
  * Custom hook to fetch and store balances for multiple ckAssets.
  * @param {Object} ledgerActors - An object mapping asset types to their respective ledger actor instances.
@@ -13,6 +12,7 @@ const useFetchBalance = (ledgerActors, principal) => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
+const {  isAuthenticated } = useAuths();
   const [ckBTCBalance, setCkBTCBalance] = useState(null);
   const [ckETHBalance, setCkETHBalance] = useState(null);
   const [ckUSDCBalance, setCKUSDCBalance] = useState(null);
@@ -21,7 +21,13 @@ const useFetchBalance = (ledgerActors, principal) => {
   const [error, setError] = useState(null);
 
   const principalObj = useMemo(() => {
-    return principal ? Principal.fromText(principal) : null;
+     if (principal){
+      try {
+        return Principal.fromText(principal);
+      } catch (error) {
+        console.error("Invalid principal:", principal);
+        return null;
+      }}
   }, [principal]);
 
   /**
@@ -30,24 +36,24 @@ const useFetchBalance = (ledgerActors, principal) => {
    */
   const fetchBalance = useCallback(
     async (assetType) => {
-      if (!principalObj) {
-        console.error("Invalid Principal:", principal);
-        return; // Exit early if principal is not present
-      }
-  
+      if (principalObj && ledgerActors && isAuthenticated) {
+       
+
       try {
         const account = { owner: principalObj, subaccount: [] };
+
+        console.log("Fetching balance for:", assetType);
+        console.log("Account:", account);
+
         const ledgerActor = ledgerActors[assetType];
-  
         if (!ledgerActor || typeof ledgerActor.icrc1_balance_of !== "function") {
-          console.warn(`Ledger actor for ${assetType} is invalid.`);
+          console.warn(`Ledger actor not available for ${assetType}`);
           return;
         }
-  
+
         const balance = await ledgerActor.icrc1_balance_of(account);
         const formattedBalance = Number(balance) / 100000000;
-  
-        // Handle different asset types
+
         switch (assetType) {
           case "ckBTC":
             setCkBTCBalance(formattedBalance);
@@ -65,15 +71,21 @@ const useFetchBalance = (ledgerActors, principal) => {
             setCkUSDTBalance(formattedBalance);
             break;
           default:
-            throw new Error("Unsupported asset type");
+            throw new Error(`Unsupported asset type: ${assetType}`);
         }
       } catch (error) {
         setError(error);
         console.error(`Error fetching balance for ${assetType}:`, error);
       }
+    }else{
+        // console.error("Principal is not initialized. Skipping balance fetch for:", assetType);
+
+      }
     },
     [ledgerActors, principalObj, dashboardRefreshTrigger]
   );
+
+ 
 
   return {
     ckBTCBalance,

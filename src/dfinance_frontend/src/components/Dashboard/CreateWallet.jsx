@@ -20,7 +20,11 @@ import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ck
 import { useMemo } from "react";
 import WalletModal from "./WalletModal";
 import { Wallet } from "lucide-react";
-
+import {
+  ConnectWallet,
+  useBalance,
+  useIdentityKit,
+} from "@nfid/identitykit/react";
 const CreateWallet = () => {
   const dispatch = useDispatch();
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
@@ -33,7 +37,9 @@ const CreateWallet = () => {
     );
   };
   const principalObj = principal ? Principal.fromText(principal):null;
-
+  const ConnectBtn = ({ onClick }) => (
+    <Button title="Connect Wallet" onClickHandler={onClick} />
+  );
   return (
     <>
       {isAuthenticated ? (
@@ -54,7 +60,10 @@ const CreateWallet = () => {
             Please connect your wallet to see your supplies, borrowings anf open
             positions.
           </p>
-          <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
+           <ConnectWallet
+                          connectButtonComponent={ConnectBtn}
+                          className="rounded-full bg-black"
+                        />
         </div>
       )}
 

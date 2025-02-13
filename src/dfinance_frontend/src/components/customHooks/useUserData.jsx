@@ -14,7 +14,7 @@ const useUserData = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const { backendActor, principal, user, isAuthenticated } = useAuths();
+  const { backendActor, principal, User, isAuthenticated } = useAuths();
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
@@ -26,12 +26,13 @@ const useUserData = () => {
    * @param {string} user - The identifier for the user.
    * @returns {Object} - The user data retrieved from the backend.
    */
-  const getUserData = async (user) => {
+  const getUserData = async (User) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     try {
-      const result = await backendActor.get_user_data(user);
+      const result = await backendActor.get_user_data(User);
+      console.log("result  in user data ",result)
       return result;
     } catch (error) {
       setError(error.message);
@@ -39,10 +40,10 @@ const useUserData = () => {
     }
   };
 
-  const fetchUserData = async (user) => {
+  const fetchUserData = async (User) => {
     if (backendActor) {
       try {
-        const result = await getUserData(user);
+        const result = await getUserData(User);
         setUserData(result);
       } catch (error) {
         console.error(error.message);
@@ -92,8 +93,8 @@ const useUserData = () => {
   };
 
   useEffect(() => {
-    fetchUserData(user);
-  }, [user, backendActor, dashboardRefreshTrigger]);
+    fetchUserData(User);
+  }, [User, backendActor, dashboardRefreshTrigger]);
 
   useEffect(() => {
     fetchUserAccountData();

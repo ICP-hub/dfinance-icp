@@ -16,12 +16,13 @@ export const useAuthClient = () => {
   const dispatch = useDispatch();
   const [backendActor, setBackendActor] = useState(null);
   const [principal, setPrincipal] = useState(null);
+  const [User, setUser] = useState(null);
   const { connect, disconnect, isConnecting, user } = useAuth();
   const { balance, fetchBalance } = useBalance();
   const identity = useIdentity();
   const delegationType = useDelegationType();
   const isInitializing = useIsInitializing();
-  const agent = useAgent();
+  
 
   const {
     isWalletCreated,
@@ -30,12 +31,22 @@ export const useAuthClient = () => {
     connectedWallet,
   } = useSelector((state) => state.utility);
 
- 
+ console.log('identity',identity)
   useEffect(() => {
     const initActor = async () => {
       try {
-        if (user && identity && agent) {
+        if (user && identity ) {
+          const principal = identity.getPrincipal().toText();
+          console.log('principal',principal)
+          setPrincipal(principal);
+          const User =identity.getPrincipal();
+          setUser(User);
           // Fetch root key for local development
+          const HOST =     process.env.DFX_NETWORK === "ic"
+          ? "https://identity.ic0.app/#authorize"
+          : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
+
+          const agent = new HttpAgent({ identity, HOST });
           if (process.env.DFX_NETWORK !== "ic") {
             await agent.fetchRootKey();
           }
@@ -50,13 +61,14 @@ export const useAuthClient = () => {
       }
     };
     initActor();
-  }, [user, identity, agent]);
+  
+  }, [user, identity]);
+
 
   const login = async () => {
     try {
       await connect();
-      const principal = identity.getPrincipal().toText();
-      setPrincipal(principal);
+     
       // dispatch(
       //   loginSuccess({
       //     isAuthenticated: true,
@@ -112,7 +124,11 @@ export const useAuthClient = () => {
   // };
 
   const createLedgerActor = (canisterId, IdlFac) => {
-
+    const HOST =     process.env.DFX_NETWORK === "ic"
+    ? "https://identity.ic0.app/#authorize"
+    : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
+console.log("host",HOST)
+          const agent = new HttpAgent({ identity });
     if (process.env.DFX_NETWORK !== "production") {
       agent.fetchRootKey().catch((err) => {});
     }
@@ -125,6 +141,7 @@ export const useAuthClient = () => {
     }
     try {
       const result = await backendActor.register_user();
+      console.log('result',result)
       if (result.Err) {
         console.error("Error from backend:", result.Err);
         throw new Error(result.Err);
@@ -135,7 +152,11 @@ export const useAuthClient = () => {
       throw error;
     }
   };
-
+useEffect(()=>{
+  if(backendActor){
+    checkUser();
+  }
+},[backendActor])
   const fetchReserveData = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -168,6 +189,7 @@ export const useAuthClient = () => {
     logout,
     identity,
      principal,
+     User,
     backendActor,
     checkUser,
     createLedgerActor,

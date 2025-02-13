@@ -5,7 +5,8 @@ import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuths } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
-// import { ClickAwayListener } from "@mui/base/ClickAwayListener";
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+;
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
@@ -397,7 +398,7 @@ export default function Navbar({ isHomeNav }) {
 
   return (
     <>
-      {/* <ClickAwayListener onClickAway={handleClickAway}> */}
+      <ClickAwayListener onClickAway={handleClickAway}>
       <div className="w-full">
         <nav className="w-full py-4 md:py-5 dxl:py-9 flex items-center justify-between">
           <div className="flex justify-center items-center ">
@@ -889,7 +890,7 @@ export default function Navbar({ isHomeNav }) {
           )}
         </nav>
       </div>
-      {/* </ClickAwayListener> */}
+      </ClickAwayListener>
 
       <MobileTopNav
         isMobileNav={isMobileNav}

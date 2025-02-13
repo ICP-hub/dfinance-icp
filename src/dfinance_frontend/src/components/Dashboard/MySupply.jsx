@@ -247,72 +247,121 @@ const MySupply = () => {
       setShowZeroBalance(savedShowZeroBalance);
     }
   }, []);
-
-    const principalObj = useMemo(() => {
-  if (!principal) return null;  // ✅ Prevent null values
-  try {
-    return Principal.fromText(principal);
-  } catch (error) {
-    console.error("Invalid principal:", principal);
-    return null;
-  }
-}, [principal]);
-
-  /**
-   * This function fetches the data for all assets that the user has, including reserve data and balance information.
-   * It uses the `createLedgerActor` function to interact with the ledger and retrieve the asset balances.
-   *
-   * @returns {void}
-   */
+  console.log("principal", principal);
+  const principalObj = useMemo(() => {
+    if (!principal || typeof principal !== "string" || principal.trim() === "") {
+      console.error("Invalid principal input:", principal);
+      return null;
+    }
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Error converting principal:", error);
+      return null;
+    }
+  }, [principal]);
+  const principal3 = "tscqn-sn2xc-sxo7b-fguer-d46hb-xv4bo-bhelv-a7i44-n7azw-n4pe5-dqe"
+  const principal2 = useMemo(
+    () => Principal.fromText(principal3.toString()),
+    [principal3]
+  );
+  console.log("type of prinipal",typeof(principal2),typeof(principal3))
+  useEffect(() => {
+    if (principalObj) {
+      fetchAssetData();
+    }
+  }, [principalObj,dashboardRefreshTrigger]);
+  
   const fetchAssetData = async () => {
+    if (!principalObj) {
+      console.error("Principal is not available yet.");
+      return;
+    }
+  
+    console.log(`PrincipalObj when calling balance fetch:`, principalObj);
     const balances = [];
-
+  
     for (const asset of assets) {
+      console.log(`Fetching data for asset: ${asset}`);
+  
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-
+  
+      console.log(`Asset: ${asset}, dtokenId: ${dtokenId}, debtTokenId: ${debtTokenId}`);
+  
+      if (!dtokenId || !debtTokenId) {
+        console.error(`Skipping fetch: Missing token ID for ${asset}`);
+        continue;
+      }
+  
       const assetBalance = {
         asset,
         dtokenBalance: null,
         debtTokenBalance: null,
       };
-
+  
       if (dtokenId) {
+        console.log(`Creating actor for dtokenId: ${dtokenId}`);
         const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = balance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
-          }
+        console.log(`Created dtokenActor:`, dtokenActor);
+  
+        if (!dtokenActor || typeof dtokenActor.icrc1_balance_of !== "function") {
+          console.error(`Invalid dtokenActor for asset ${asset}:`, dtokenActor);
+          continue;
+        }
+  
+        try {
+          // const principal2 = Principal.fromText("tscqn-sn2xc-sxo7b-fguer-d46hb-xv4bo-bhelv-a7i44-n7azw-n4pe5-dqe");
+          
+          const account = { owner: principal2, subaccount: [] };
+
+          console.log(`Fetching balance with account:`, account);
+  console.log("balance =",dtokenActor.icrc1_balance_of(account))
+          const balance = await dtokenActor.icrc1_balance_of(account);
+          console.log(`dToken balance for ${asset}:`, balance);
+  
+          assetBalance.dtokenBalance = Number(balance) / 100000000;
+        } catch (error) {
+          console.error(`Error fetching dtoken balance for ${asset}:`, error);
         }
       }
-
+  
       if (debtTokenId) {
+        console.log(`Creating actor for debtTokenId: ${debtTokenId}`);
         const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+        console.log(`Created debtTokenActor:`, debtTokenActor);
+  
+        if (!debtTokenActor || typeof debtTokenActor.icrc1_balance_of !== "function") {
+          console.error(`Invalid debtTokenActor for asset ${asset}:`, debtTokenActor);
+          continue;
+        }
+  
+        try {
+          const account = { owner: principal2, subaccount: [] };
 
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = balance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
-          }
+          console.log(`Fetching balance with account:`, account);
+          console.log("principalObj before calling icrc1_balance_of:", principalObj.toString());
+
+          const balance = await debtTokenActor.icrc1_balance_of(account);
+          console.log(`Debt token balance for ${asset}:`, balance);
+  
+          assetBalance.debtTokenBalance = Number(balance) / 100000000;
+        } catch (error) {
+          console.error(`Error fetching debt token balance for ${asset}:`, error);
         }
       }
+  
       balances.push(assetBalance);
     }
+  
     setAssetBalances(balances);
   };
+  
+  
+  
+  
+  
 
   const handleToggleShowAllAssets = () => {
     setShowAllAssets(!showAllAssets);

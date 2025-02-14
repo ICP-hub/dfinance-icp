@@ -660,23 +660,6 @@ pub async fn create_user_reserve_with_low_health(
             reserve_data.is_collateral = true;
             reserve_data.is_borrowed = true;
         };
-        // else {
-        //     let mut reserve = UserReserveData {
-        //         reserve: asset_supply.clone(),
-        //         asset_supply: supply_tokens.clone(),
-        //         asset_borrow: borrow_tokens.clone(),
-        //         is_collateral: true,
-        //         liquidity_index: Nat::from(100_000_000u128),
-        //         variable_borrow_index: Nat::from(100_000_000u128),
-        //         ..Default::default()
-        //     };
-
-        //     reserve.d_token_balance += supply_tokens.clone();
-        //     reserve.debt_token_blance += borrow_tokens.clone();
-        // };
-
-        // Update token balances
-        // (reserve.clone(), reserve)
     } else {
         let mut supply_user_reserve = user_reserve(&mut user_data, &asset_supply);
         let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
@@ -695,48 +678,7 @@ pub async fn create_user_reserve_with_low_health(
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.is_borrowed = true;
         };
-        // let mut supply_reserve = UserReserveData {
-        //     reserve: asset_supply.clone(),
-        //     asset_supply: supply_tokens.clone(),
-        //     asset_borrow: Nat::from(0u128),
-        //     is_collateral: true,
-        //     liquidity_index: Nat::from(100_000_000u128),
-        //     variable_borrow_index: Nat::from(100_000_000u128),
-        //     ..Default::default()
-        // };
-
-        // supply_reserve.d_token_balance += supply_tokens.clone();
-
-        // let mut borrow_reserve = UserReserveData {
-        //     reserve: asset_borrow.clone(),
-        //     asset_supply: Nat::from(0u128),
-        //     asset_borrow: borrow_tokens.clone(),
-        //     is_collateral: false,
-        //     ..Default::default()
-        // };
-
-        // borrow_reserve.debt_token_blance += supply_tokens.clone();
-
-        // (supply_reserve, borrow_reserve)
     };
-
-    // if let Some(ref mut reserves) = user_data.reserves {
-    //     reserves.push((asset_supply.clone(), supply_reserve.clone()));
-    //     if asset_supply != asset_borrow {
-    //         reserves.push((asset_borrow.clone(), borrow_reserve.clone()));
-    //     }
-    // } else {
-    //     user_data.reserves = Some(vec![(asset_supply.clone(), supply_reserve.clone())]);
-    //     if asset_supply != asset_borrow {
-    //         user_data
-    //             .reserves
-    //             .as_mut()
-    //             .unwrap()
-    //             .push((asset_borrow.clone(), borrow_reserve.clone()));
-    //     }
-    // }
-
-    // ic_cdk::println!()
 
     let dtoken_principal =
         Principal::from_text(supply_reserve_data.d_token_canister.clone().unwrap()).unwrap();

@@ -622,7 +622,7 @@ fn call_test_function() {
     // test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);
-    // test_liquidation(&pic, backend_canister);
+    test_liquidation(&pic, backend_canister);
 }
 
 fn test_get_asset_principal(asset:String ,pic: &PocketIc, backend_canister: Principal)-> Option<Principal>{
@@ -743,10 +743,10 @@ fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Pr
 
     // Pushing second user data
     // users_with_low_health.push(LowHealthUsers {
-    //     asset_supply: "ICP".to_string(),
-    //     asset_borrow: "ICP".to_string(),
-    //     supply_tokens: Nat::from(1000u128),
-    //     borrow_tokens: Nat::from(500u128),
+    //     asset_supply: "ckETH".to_string(),
+    //     asset_borrow: "ckBTC".to_string(),
+    //     supply_tokens: Nat::from(1_000_000u128), // 0.01
+    //     borrow_tokens: Nat::from(200_00u128),// 0.00002
     // });
 
     let user_principal = get_user_principal();
@@ -841,7 +841,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(5000u128),  //  0.00005 ckETH
+            amount: Nat::from(1000_000u128),  //  0.00005 ckETH
             expect_success: true,
             expected_error_message: None,
         },
@@ -1864,9 +1864,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // TestCase { 
         //     debt_asset: "ckBTC".to_string(),
         //     collateral_asset: "ckETH".to_string(),
-        //     amount: Nat::from(1u128),
-        //     on_behalf_of: Principal::anonymous(),
-        //     reward_amount: Nat::from(1045u128),
+        //     amount: Nat::from(10_000u128),
+        //     on_behalf_of: get_user_principal(),
+        //     reward_amount: Nat::from(361_936u128),
         //     expect_success: true,
         //     expected_error_message: None,
         // },
@@ -1881,15 +1881,15 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
         // Unsupported asset pairs
-        // TestCase { 
-        //     debt_asset: "ckBTC".to_string(),
-        //     collateral_asset: "ckBTC".to_string(),
-        //     amount: Nat::from(50u128),
-        //     on_behalf_of: Principal::anonymous(),
-        //     reward_amount: Nat::from(100u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Invalid collateral-debt pair".to_string()),
-        // },
+        TestCase { 
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(50u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(100u128),
+            expect_success: false,
+            expected_error_message: Some("Invalid collateral-debt pair".to_string()),
+        },
 
         // // Zero amount (invalid scenario)
         // TestCase { 
@@ -1925,26 +1925,26 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
         //  Invalid principal (malformed or blocked user)
-        // TestCase { 
-        //     debt_asset: "ckUSDC".to_string(),
-        //     collateral_asset: "ckBTC".to_string(),
-        //     amount: Nat::from(50u128),
-        //     on_behalf_of: Principal::from_slice(&[0; 29]), // Malformed principal
-        //     reward_amount: Nat::from(5u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Invalid principal ID".to_string()),
-        // },
+        TestCase { 
+            debt_asset: "ckUSDC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(50u128),
+            on_behalf_of: Principal::from_slice(&[0; 29]), // Malformed principal
+            reward_amount: Nat::from(5u128),
+            expect_success: false,
+            expected_error_message: Some("Invalid principal ID".to_string()),
+        },
 
         // // Zero reward amount (could be invalid depending on system logic)
-        // TestCase { 
-        //     debt_asset: "ckBTC".to_string(),
-        //     collateral_asset: "ckETH".to_string(),
-        //     amount: Nat::from(10u128),
-        //     on_behalf_of: Principal::anonymous(),
-        //     reward_amount: Nat::from(0u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Reward amount must be greater than zero".to_string()),
-        // },
+        TestCase { 
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckETH".to_string(),
+            amount: Nat::from(10u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(0u128),
+            expect_success: false,
+            expected_error_message: Some("Reward amount must be greater than zero".to_string()),
+        },
 
         // Edge case: Borrowing with a different valid principal
         // TestCase { 
@@ -1959,15 +1959,15 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
 
 
         // // Borrowing against an unlisted or unknown asset (hypothetical scenario)
-        // TestCase { 
-        //     debt_asset: "XYZCoin".to_string(), // Unsupported coin
-        //     collateral_asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(100u128),
-        //     on_behalf_of: Principal::anonymous(),
-        //     reward_amount: Nat::from(30u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Unsupported debt asset".to_string()),
-        // },
+        TestCase { 
+            debt_asset: "XYZCoin".to_string(), // Unsupported coin
+            collateral_asset: "ckUSDC".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(30u128),
+            expect_success: false,
+            expected_error_message: Some("Unsupported debt asset".to_string()),
+        },
 
     ];
 
@@ -1977,7 +1977,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
     test_create_user_reserve_with_low_health(&pic, backend_canister);
-
+    
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
@@ -1993,7 +1993,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
-
+        
+        let asset_principal =  test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister).unwrap();
+        test_icrc2_aprove(get_users_principal(Nat::from(1u128)).unwrap(), asset_principal, &pic, backend_canister);
 
         let liquidation_params = ExecuteLiquidationParams {
             debt_asset: case.debt_asset.clone(),

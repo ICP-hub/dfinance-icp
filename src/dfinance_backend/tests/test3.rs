@@ -412,7 +412,7 @@ fn setup() -> (PocketIc, Principal) {
 
                 match initialize_response {
                     Ok(()) => {
-                        ic_cdk::println!("✅ Initialize function succeeded for test case");
+                        ic_cdk::println!("✅ Initialize function succeeded for {:?}",token_name);
                     }
                     Err(e) => {
                         ic_cdk::println!(
@@ -513,9 +513,9 @@ fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
     test_supply(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
     test_borrow(&pic, backend_canister);
     test_repay(&pic, backend_canister);
+    test_withdraw(&pic, backend_canister);
     // test_liquidation(&pic, backend_canister);
 }
 
@@ -532,50 +532,50 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1100000000u128),
+            amount: Nat::from(5_000_000_000u128),  // 50 ICP
             expect_success: true,
             expected_error_message: None,
         },
-        // Minimum valid amount
+        
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(40000u128), // Minimum valid amount
+            amount: Nat::from(40000u128), // 0.0004 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(200u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(100u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(2000u128),  //   0.00002 ckUSDC
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(10000u128),     // 0.0001 ckUSDT
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5000u128),  //  0.00005 ckETH
+            expect_success: true,
+            expected_error_message: None,
+        },
 
-        //  Asset length exceeds 7 characters
+        // Asset length exceeds 7 characters
         TestCase {
             asset: "ckETH_long".to_string(),
-            amount: Nat::from(100u128),
+            amount: Nat::from(100000u128),
             expect_success: false,
-            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
+            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
 
         // Non-existent asset
         TestCase {
             asset: "XYZ".to_string(),
-            amount: Nat::from(500u128),
+            amount: Nat::from(50000u128),
             expect_success: false,
-            expected_error_message: Some("No canister ID found".to_string()),
+            expected_error_message: Some("no canister id found".to_string()),
         },
 
         // Zero amount request
@@ -583,24 +583,24 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(0u128),
             expect_success: false,
-            expected_error_message: Some("Amount cannot be zero".to_string()),
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
 
-        // // Large amount exceeding wallet balance
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(10_000_000_000u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("wallet balance is low".to_string()),
-        // },
+        // Large amount exceeding wallet balance
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(10_000_000_000u128),
+            expect_success: false,
+            expected_error_message: Some("Amount is too much".to_string()),
+        },
+        // Boundry amount
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(100_000_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
 
-        // Faucet limit exceeded
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(1_000_000_000u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("amount is too much".to_string()),
-        // },
     ];
 
     let user_principal = get_user_principal();
@@ -611,7 +611,9 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Faucet Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
-        ic_cdk::println!("Amount: {}", case.amount);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
@@ -631,41 +633,43 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             Ok(WasmResult::Reply(reply)) => {
                 let decoded_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to decode faucet response");
-
+                    
+                    // ic_cdk::println!("Decoded response (generic): {:?}", decoded_response);
                 match decoded_response {
                     Ok(balance) => {
+                        if !case.expect_success{
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected failure but got success.", i + 1);
+                            panic!("Unexpected rejection.");
+                        }
                         ic_cdk::println!(
                             "✅ IC Test Case {} Passed: Faucet successful. New Balance: {}",
                             i + 1,
                             balance
                         );
                     }
-                    Err(decode_err) => {
-                        ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Faucet failed with error: {:?}",
-                            i + 1,
-                            decode_err
-                        );
+                    Err(error) => {
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(error.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
+                                i + 1, case
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Faucet rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            panic!("Unexpected rejection.");
+                        }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
-                        i + 1, case
-                    );
-                    ic_cdk::println!(
-                        "✅ IC Test Case {} Passed: Faucet rejected as expected with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                } else {
-                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
-                    panic!("Unexpected rejection.");
-                }
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -696,72 +700,92 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Valid Test Cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(900000000u128),
+            amount: Nat::from(4_000_000_000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(20000u128),
+            amount: Nat::from(40000u128),
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(1u128),
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(250u128),
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-
-        //  Invalid Test Cases
-        //  Input Validation Failures
         TestCase {
-            asset: "".to_string(), // Empty asset
-            amount: Nat::from(100u128),
-            is_collateral: true,
-            expect_success: false,
-            expected_error_message: Some("Asset cannot be an empty string".to_string()),
-        },
-        TestCase {
-            asset: "ckETH".to_string(),
-            amount: Nat::from(60u128),
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(2000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5000u128),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(10000u128),
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+
+        //  Invalid Test Cases
+        // Empty assets name
+        TestCase {
+            asset: "".to_string(), // Empty asset
+            amount: Nat::from(1000000000000000u128),
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some("Asset cannot be an empty string".to_string()),
+        },
+        //  low wallet amount
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(100000000u128),
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some("Amount must be less than user available balance".to_string()),
+        },
+        // // testcase will work only if this asset has not been faucet
         // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(0u128), // Zero amount
+        //     asset: "ICP".to_string(),
+        //     amount: Nat::from(1000000000u128),
         //     is_collateral: true,
         //     expect_success: false,
-        //     expected_error_message: Some("Amount cannot be zero".to_string()),
+        //     expected_error_message: Some("Amount must be less than user available balance".to_string()),
         // },
 
-        // Reserve & State Failures
+        // Zero amount request
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(0u128), // Zero amount
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
+        },
+
+        // Asset length exceeds 7 characters
+        TestCase {
+            asset: "ckXYZ_long".to_string(), 
+            amount: Nat::from(100u128),
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
+        },
+        // Non-existent asset 
         TestCase {
             asset: "ckXYZ".to_string(), // Non-existent asset
             amount: Nat::from(100u128),
             is_collateral: false,
             expect_success: false,
-            expected_error_message: Some("No reserve data found".to_string()),
+            expected_error_message: Some("no canister id found".to_string()),
         },
+        
     ];
 
     let user_principal = get_user_principal();
@@ -772,7 +796,9 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Supply Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
-        ic_cdk::println!("Amount: {}", case.amount);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         ic_cdk::println!("Is Collateral: {}", case.is_collateral);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
@@ -796,14 +822,13 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     }
                     Ok(Err(err)) => {
                         // Handle the error returned by get_asset_principal
-                        ic_cdk::println!("❌ IC Test Case {} Failed: Error retrieving asset principal: {:?}",i+1, err);
+                        ic_cdk::println!("❌ Error retrieving asset principal: {:?}", err);
                         None
                     }
                     Err(decode_err) => {
                         // Handle the error while decoding the response
                         ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Borrow failed with error: {:?}",
-                            i + 1,
+                            "❌ Supply failed with error: {:?}",
                             decode_err
                         );
                         None
@@ -825,8 +850,15 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         let asset_principal = match asset_canister_id {
             Some(principal) => principal,
             None => {
-                // Handle the case where the asset principal was not found
-                // println!("{:?}", case.expected_error_message);
+                if !case.expect_success {
+                    ic_cdk::println!(
+                        "✅ IC Test Case {} Passed: Supply rejected as expected",
+                        i + 1,
+                    );
+                } else {
+                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection", i + 1);
+                    panic!("Unexpected rejection.");
+                }
                 continue;
             }
         };
@@ -861,7 +893,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
                 match approve_response {
                     Ok(ApproveResult::Ok(block_index)) => {
-                        ic_cdk::println!("☑️ Approve succeeded, block index: {}", block_index);
+                        ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
                     }
                     Ok(ApproveResult::Err(error)) => {
                         ic_cdk::println!("❌ Approve failed with error: {:?}", error);
@@ -905,6 +937,10 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
 
                 match supply_response {
                     Ok(balance) => {
+                        if !case.expect_success{
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected failure but got success.", i + 1);
+                            panic!("Unexpected success.");
+                        }
                         ic_cdk::println!(
                             "✅ IC Test Case {} Passed: Supply successful. New Balance: {}",
                             i + 1,
@@ -912,31 +948,28 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                         );
                     }
                     Err(error) => {
-                        ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Supply failed with error: {:?}",
-                            i + 1,
-                            error
-                        );
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(error.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
+                                i+1, case
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Supply rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            panic!("Unexpected rejection.");
+                        }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
-                        i+1, case
-                    );
-                    ic_cdk::println!(
-                        "✅ IC Test Case {} Passed: Supply rejected as expected with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                } else {
-                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
-                    panic!("Unexpected rejection.");
-                }
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -963,96 +996,87 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
+        // 
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(300000000u128),
+            amount: Nat::from(1_000_000_000u128),
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(1000u128),
+            amount: Nat::from(20000u128),
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(50u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(200u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(500u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(500u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
         
     
         // Boundary Cases (Minimum and Maximum Withdrawals)
-        TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(100000000u128),
-            expect_success: true,
-            expected_error_message: None,
-        },
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: Nat::from(100000000u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
     
         // Invalid Cases (General Failures)
+        // Empty asset name
         TestCase {
             asset: "".to_string(),
             amount: Nat::from(100u128),
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
+        // Non-existent asset
         TestCase {
-            asset: "INVALID".to_string(),
+            asset: "XYZ".to_string(),
             amount: Nat::from(100u128),
             expect_success: false,
-            expected_error_message: Some("No reserve data found for the asset".to_string()),
+            expected_error_message: Some("no canister id found".to_string()),
         },
+        // Zero amount request
         TestCase {
             asset: "ckBTC".to_string(),
             amount: Nat::from(0u128),
             expect_success: false,
-            expected_error_message: Some("Amount cannot be zero".to_string()),
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
     
-        // Case: Asset Name Too Long
+        // Asset length exceeds 7 characters
         TestCase {
             asset: "ckETHEREUM".to_string(), // More than 7 characters
             amount: Nat::from(50u128),
             expect_success: false,
-            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
+            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
-        // //  Edge Cases (Special Conditions)
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: Nat::from(100u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("User is not allowed to perform such transaction".to_string()),
-        // },
-    
-        // // Error Cases (Withdrawal Limits and Errors)
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(100_000_000_000u128), // Excessively large amount
-        //     expect_success: false,
-        //     expected_error_message: Some("Withdraw validation failed".to_string()),
-        // },
-    
-        // // Case: Principal Validation (Anonymous)
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(150u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Anonymous principals are not allowed".to_string()),
-        // },
+
+        // Large amount
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(100_000_000_000u128), // Excessively large amount
+            expect_success: false,
+            expected_error_message: Some("Amount is too much".to_string()),
+        },
+
+
     ];
     
 
@@ -1065,7 +1089,9 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
-        ic_cdk::println!("Amount: {}", case.amount);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
@@ -1091,6 +1117,10 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
 
                 match borrow_response {
                     Ok(balance) => {
+                        if !case.expect_success{
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected failure but got success.", i + 1);
+                            panic!("Unexpected success.");
+                        }
                         ic_cdk::println!(
                             "✅ IC Test Case {} Passed: Borrow successful. New Balance: {}",
                             i + 1,
@@ -1098,31 +1128,28 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                         );
                     }
                     Err(error) => {
-                        ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Borrow failed with error: {:?}",
-                            i + 1,
-                            error
-                        );
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(error.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch.",
+                                i + 1
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Borrow rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            panic!("Unexpected rejection.");
+                        }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "❌ IC Test Case {} Failed: Error message mismatch.",
-                        i + 1
-                    );
-                    ic_cdk::println!(
-                        "✅ IC Test Case {} Passed: Borrow rejected as expected with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                } else {
-                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
-                    panic!("Unexpected rejection.");
-                }
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -1155,45 +1182,44 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Withdrawals (Direct)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(200000000u128),
+            amount: Nat::from(3_800_000_000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
-        //Non-existent asset case
         TestCase {
             asset: "ckBTC".to_string(),
+            amount: Nat::from(40000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
             amount: Nat::from(10000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(50u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(50u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(50u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(2000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
     
         // Valid Collateral Withdrawals
         TestCase {
@@ -1204,28 +1230,18 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: true,
             expected_error_message: None,
         },
-    
-        // Valid Withdrawal on Behalf of Another User
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     on_behalf_of: Some(Principal::anonymous()), // Assuming valid delegation
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-    
-        // Boundary Cases (Minimum and Maximum Withdrawals)
+        
+        // Invalid Cases (General Failures)
+        // Large amount exceeding wallet balance
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_0000u128), // Large amount
+            amount: Nat::from(100_000_000_000u128), // Large amount
             on_behalf_of: None,
             is_collateral: false,
-            expect_success: true,
-            expected_error_message: None,
+            expect_success: false,
+            expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
-    
-        // Invalid Cases (General Failures)
+        // Empty asset name
         TestCase {
             asset: "".to_string(),
             amount: Nat::from(100u128),
@@ -1234,35 +1250,34 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
+        // Non-existent asset
         TestCase {
-            asset: "INVALID".to_string(),
+            asset: "XYZ".to_string(),
             amount: Nat::from(100u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: false,
-            expected_error_message: Some("No reserve data found for the asset".to_string()),
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        // Asset length exceeds 7 characters
+        TestCase {
+            asset: "ckXYZ_long".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
 
-    
-        // // Anonymous Principal Withdrawal Attempt
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(150u128),
-        //     on_behalf_of: Some(Principal::anonymous()), // Anonymous user
-        //     is_collateral: false,
-        //     expect_success: false,
-        //     expected_error_message: Some("Anonymous principals are not allowed".to_string()),
-        // },
-    
-        // // Insufficient Reserve
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(1000000u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: false,
-        //     expected_error_message: Some("Insufficient reserve balance".to_string()),
-        // },
+        // Zero amount request
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(0u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
+        },
     
         // // Valid Case: Withdraw Exact Reserve Amount
         // TestCase {
@@ -1285,7 +1300,9 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
-        ic_cdk::println!("Amount: {}", case.amount);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         ic_cdk::println!("On Behalf Of: {}", 
             case.on_behalf_of.as_ref().map_or("None".to_string(), |p| p.to_text()));
         ic_cdk::println!("Is Collateral: {}", case.is_collateral);
@@ -1317,6 +1334,10 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
 
                 match withdraw_response {
                     Ok(balance) => {
+                        if !case.expect_success{
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected failure but got success.", i + 1);
+                            panic!("Unexpected success.");
+                        }
                         ic_cdk::println!(
                             "✅ IC Test Case {} Passed: Withdraw successful. New Balance: {}",
                             i + 1,
@@ -1324,31 +1345,28 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                         );
                     }
                     Err(error) => {
-                        ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Withdraw failed with error: {:?}",
-                            i + 1,
-                            error
-                        );
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(error.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch.",
+                                i + 1
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            panic!("Unexpected rejection.");
+                        }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "❌ IC Test Case {} Failed: Error message mismatch.",
-                        i + 1
-                    );
-                    ic_cdk::println!(
-                        "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                } else {
-                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
-                    panic!("Unexpected rejection.");
-                }
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -1380,41 +1398,42 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Valid cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(300_000_000u128),
+            amount: Nat::from(1_000_000_000u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(1000u128),
+            amount: Nat::from(20000u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(200u128),
-        //     on_behalf_of: None,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     on_behalf_of: Some(Principal::from_text("bbbbb-bb").unwrap()),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(300u128),
-        //     on_behalf_of: None,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(500u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(500u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
     
         // Invalid cases
+        // Empty asset name
         TestCase {
             asset: "".to_string(),
             amount: Nat::from(100u128),
@@ -1422,34 +1441,49 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
+
+        // Asset length exceeds 7 characters
         TestCase {
             asset: "TooLongAsset".to_string(),
             amount: Nat::from(100u128),
             on_behalf_of: None,
             expect_success: false,
-            expected_error_message: Some("Asset must have a maximum length of 7 characters".to_string()),
+            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
+
+        // Zero amount request
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(0u128),
             on_behalf_of: None,
             expect_success: false,
-            expected_error_message: Some("Amount cannot be zero".to_string()),
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(100u128),
-        //     on_behalf_of: Some(Principal::anonymous()),
-        //     expect_success: false,
-        //     expected_error_message: Some("Anonymous principals are not allowed".to_string()),
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(5u128),
-        //     on_behalf_of: None,
-        //     expect_success: false,
-        //     expected_error_message: Some("Repay validation failed".to_string()),
-        // },
+
+        // Non-existent asset
+        TestCase {
+            asset: "XYZ".to_string(),
+            amount: Nat::from(50000000u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        // Large amount exceeding wallet balance
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("wallet balance is low".to_string()),
+        },
+        // repay on no borrow
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(1_000_000_000u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("no debt to repay".to_string()),
+        },
     
         
     ];
@@ -1465,7 +1499,9 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
-        ic_cdk::println!("Amount: {}", case.amount);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         if let Some(ref principal) = case.on_behalf_of {
             ic_cdk::println!("On Behalf Of: {}", principal);
         }
@@ -1497,6 +1533,10 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
 
                 match repay_response {
                     Ok(balance) => {
+                        if !case.expect_success{
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected failure but got success.", i + 1);
+                            panic!("Unexpected success.");
+                        }
                         ic_cdk::println!(
                             "✅ IC Test Case {} Passed: Repay successful. New Balance: {}",
                             i + 1,
@@ -1504,35 +1544,32 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                         );
                     }
                     Err(error) => {
-                        ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Repay failed with error: {:?}",
-                            i + 1,
-                            error
-                        );
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(error.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch.",
+                                i + 1
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Repay rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!(
+                                "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                            panic!("Unexpected rejection.");
+                        }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "❌ IC Test Case {} Failed: Error message mismatch.",
-                        i + 1
-                    );
-                    ic_cdk::println!(
-                        "✅ IC Test Case {} Passed: Repay rejected as expected with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                } else {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Expected success but got rejection with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                    panic!("Unexpected rejection.");
-                }
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -1692,7 +1729,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
         ic_cdk::println!("Debt Asset: {}", case.debt_asset);
         ic_cdk::println!("Collateral Asset: {}", case.collateral_asset);
-        ic_cdk::println!("Amount: {}", case.amount);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         ic_cdk::println!("On Behalf Of: {}", case.on_behalf_of);
         ic_cdk::println!("Reward Amount: {}", case.reward_amount);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
@@ -1737,31 +1776,28 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                         }
                     }
                     Err(e) => {
-                        ic_cdk::println!(
-                            "❌ IC Test Case {} Failed: Liquidation failed with error: {:?}",
-                            i + 1,
-                            e
-                        );
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(e.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch.",
+                                i + 1
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Liquidation rejected as expected with message: {:?}",
+                                i + 1,
+                                e
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
+                            panic!("Unexpected rejection.");
+                        }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                if !case.expect_success {
-                    assert_eq!(
-                        case.expected_error_message.as_deref(),
-                        Some(reject_message.as_str()),
-                        "❌ IC Test Case {} Failed: Error message mismatch.",
-                        i + 1
-                    );
-                    ic_cdk::println!(
-                        "✅ IC Test Case {} Passed: Liquidation rejected as expected with message: {}",
-                        i + 1,
-                        reject_message
-                    );
-                } else {
-                    ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {}", i + 1, reject_message);
-                    panic!("Unexpected rejection.");
-                }
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
             }
             Err(e) => {
                 ic_cdk::println!(

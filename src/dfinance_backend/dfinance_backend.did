@@ -120,8 +120,8 @@ type ReserveData = record {
   accure_to_platform : nat;
   debt_index : nat;
 };
-type Result = variant { Ok : text; Err : Error };
-type Result_1 = variant { Ok; Err : Error };
+type Result = variant { Ok; Err : Error };
+type Result_1 = variant { Ok : text; Err : Error };
 type Result_10 = variant { Ok : ReserveData; Err : Error };
 type Result_11 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
@@ -168,8 +168,9 @@ type UserReserveData = record {
   is_borrowed : bool;
 };
 service : (principal) -> {
-  check_lock : () -> (Result);
-  clear_all_locks : () -> (Result_1);
+  add_tester : (text, principal) -> (Result);
+  check_lock : () -> (Result_1);
+  clear_all_locks : () -> (Result);
   create_testtoken_canister : (text, text) -> (Result_2);
   create_token_canister : (text, text) -> (Result_2);
   cycle_checker : () -> (nat) query;
@@ -192,19 +193,20 @@ service : (principal) -> {
     ) query;
   get_lock : () -> (Result_9) query;
   get_reserve_data : (text) -> (Result_10) query;
+  get_testers : () -> (Result_5) query;
   get_total_supply : (principal) -> (Result_3) query;
   get_total_users : () -> (nat64) query;
   get_user_account_data : (opt principal) -> (Result_11);
   get_user_data : (principal) -> (Result_12) query;
-  initialize : (text, ReserveData) -> (Result_1);
+  initialize : (text, ReserveData) -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result);
-  reset_reserve_value : (text, text, nat) -> (Result_1);
+  register_user : () -> (Result_1);
+  reset_reserve_value : (text, text, nat) -> (Result);
   to_check_controller : () -> (bool) query;
-  toggle_collateral : (text, nat, nat) -> (Result_1);
-  update_reserve_price_test : () -> (Result_1);
-  update_reserves_price : () -> (Result_1);
-  update_token_price : (text) -> (Result_1);
+  toggle_collateral : (text, nat, nat) -> (Result);
+  update_reserve_price_test : () -> (Result);
+  update_reserves_price : () -> (Result);
+  update_token_price : (text) -> (Result);
   user_normalized_debt : (ReserveData) -> (Result_3) query;
   user_normalized_supply : (ReserveData) -> (Result_3) query;
   user_position : (text) -> (Result_13) query;

@@ -41,9 +41,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
-  const [FaucetUsage, setFaucetUsage] = useState(initialUsages);
-  const [FaucetLimit, setFaucetLimit] = useState(initialLimits);
-
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -59,6 +56,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ICP: 0,
     ckUSDT: 0,
   };
+  const [FaucetUsage, setFaucetUsage] = useState(initialUsages);
+  const [FaucetLimit, setFaucetLimit] = useState(initialLimits);
+
+ 
 
   /* ===================================================================================
    *                                  REDUX-SELECTER

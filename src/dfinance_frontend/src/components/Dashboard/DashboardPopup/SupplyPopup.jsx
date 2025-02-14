@@ -275,7 +275,7 @@ const SupplyPopup = ({
       };
 
       const response = await backendActor.execute_supply(supplyParams);
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in response) {
         trackEvent(

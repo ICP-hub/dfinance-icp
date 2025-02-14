@@ -174,8 +174,6 @@ const MySupply = () => {
 
   if (filteredItems && filteredItems.length > 0) {
     const item = filteredItems[0][1].Ok;
-    const total_supply = item.total_supply;
-    const total_borrow = item.total_borrow;
     current_liquidity_rate = item.current_liquidity_rate
       ? item.current_liquidity_rate[0]
       : "0";

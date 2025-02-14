@@ -73,8 +73,6 @@ const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reser
   const assetRate = getAssetRate(id);
 
   const totalBorrowedAsset = assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
-    
-
   const totalBorrowedCap = assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
    
 

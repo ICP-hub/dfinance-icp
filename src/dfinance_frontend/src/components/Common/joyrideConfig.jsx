@@ -1,7 +1,5 @@
-import lightImages from "./components/Common/lightImages";
-import darkImages from "./components/Common/darkImages";
-import debtStatusImage from "../public/Helpers/debtStatusImage.png";
-import debtStatusImageLight from "../public/Helpers/debtStatusImageLight.png";
+import lightImages from "./lightImages";
+import darkImages from "./darkImages";
 
 export const getSteps = (theme, isMobile2, isMobile) => [
   {

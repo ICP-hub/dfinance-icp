@@ -1161,8 +1161,8 @@ const AssetDetails = () => {
                         handleModalOpen(
                           "borrow",
                           id,
-                          (id === "ckBTC" && ckBTC) ||
-                            (id === "ckETH" && ckETH) ||
+                          (id === "ckBTC" && ckbtc) ||
+                            (id === "ckETH" && cketh) ||
                             (id === "ckUSDC" && ckUSDC) ||
                             (id === "ICP" && icp) ||
                             (id === "ckUSDT" && ckUSDT),

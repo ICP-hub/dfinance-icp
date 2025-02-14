@@ -1,20 +1,17 @@
 import React, { useEffect } from "react";
-import { GoArrowRight } from "react-icons/go";
 import Aos from "aos";
 import "aos/dist/aos.css";
-import ICPRequest from "../../../public/howitworks/ICP-request.png";
 import supply from "../../../public/Helpers/supply.png";
 import borrow from "../../../public/Helpers/borrow.png";
 import Max from "../../../public/Helpers/max.png";
 import Ltv from "../../../public/Helpers/Ltv.png";
 import Points from "../../../public/Helpers/points.png";
-import Calculator from "../../../public/howitworks/calculator.png";
-import Button from "../../components/Common/Button";
-import SubmitICPRequest from "../../../public/howitworks/Submit-ICPRequest.png";
+
 const HowITWork = () => {
   useEffect(() => {
     Aos.init();
   }, []);
+
   return (
     <section className="mt-20 font-poppins" id="HowItWorks">
       <div className="w-full text-center text-[#2A1F9D] dark:text-darkText">

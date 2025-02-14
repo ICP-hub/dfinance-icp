@@ -775,8 +775,8 @@ pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
     return Ok(());
 }
 
+
 // Function to retrieve testers
-#[ic_cdk::query]
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
     let user_principal = ic_cdk::caller();
 
@@ -784,10 +784,7 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
-    if !to_check_controller(){
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
+    
     read_state(|state| {
         let mut testers = Vec::new();
         let iter = state.tester_list.iter();

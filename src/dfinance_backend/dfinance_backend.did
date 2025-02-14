@@ -128,10 +128,9 @@ type Result_12 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
-type Result_13 = variant { Ok : UserData; Err : Error };
-type Result_14 = variant { Ok : record { nat; nat }; Err : Error };
+type Result_13 = variant { Ok : record { nat; nat }; Err : Error };
 type Result_2 = variant { Ok : principal; Err : Error };
-type Result_3 = variant { Ok : UserReserveData; Err : Error };
+type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : nat; Err : Error };
 type Result_5 = variant { Ok : vec record { text; PriceCache }; Err : Error };
 type Result_6 = variant { Ok : vec principal; Err : Error };
@@ -196,11 +195,10 @@ service : (principal) -> {
     ) query;
   get_lock : () -> (Result_10) query;
   get_reserve_data : (text) -> (Result_11) query;
-  get_testers : () -> (Result_6) query;
   get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
   get_user_account_data : (opt principal) -> (Result_12);
-  get_user_data : (principal) -> (Result_13) query;
+  get_user_data : (principal) -> (Result_3) query;
   initialize : (text, ReserveData) -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_1);
@@ -212,6 +210,6 @@ service : (principal) -> {
   update_token_price : (text) -> (Result);
   user_normalized_debt : (ReserveData) -> (Result_4) query;
   user_normalized_supply : (ReserveData) -> (Result_4) query;
-  user_position : (text) -> (Result_14) query;
+  user_position : (text) -> (Result_13) query;
   will_panic : () -> (text);
 }

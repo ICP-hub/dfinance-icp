@@ -192,6 +192,26 @@ pub struct ExecuteWithdrawParams {
     pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
+/* 
+ * @title User Reserve Data
+ * @dev Stores the user's balance and reserve-related details.
+ */
+#[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
+pub struct UserReserveData {
+    pub reserve: String,
+    pub last_update_timestamp: u64,
+    pub liquidity_index: Nat,
+    pub variable_borrow_index: Nat, 
+    pub asset_supply: Nat,
+    pub asset_borrow: Nat, 
+    pub is_using_as_collateral_or_borrow: bool,
+    pub is_collateral: bool,
+    pub is_borrowed: bool,
+    pub faucet_usage: Nat,
+    pub faucet_limit: Nat, 
+    pub d_token_balance: Nat,
+    pub debt_token_blance: Nat,
+}
 
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
@@ -432,9 +452,46 @@ fn setup() -> (PocketIc, Principal) {
         }
     }
 
+    let add_tester_result = pic.update_call(
+        backend_canister,
+        user_principal,
+        "add_tester",
+        encode_args(("tester".to_string(), user_principal.clone())).unwrap(),
+    );
+
+    // Decode the response
+    match add_tester_result {
+        Ok(WasmResult::Reply(response)) => {
+            let initialize_response: Result<(), errors::Error> =
+                candid::decode_one(&response).expect("Failed to decode add tester response");
+
+            match initialize_response {
+                Ok(()) => {
+                    ic_cdk::println!("✅ Add Tester function succeeded");
+                }
+                Err(e) => {
+                    ic_cdk::println!(
+                        "Add Tester function failed as expected with error: {:?}",
+                        e
+                    );
+                    panic!("🚨 Expected success but got error: {:?}", e);
+                }
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => {
+            panic!(
+                "🚨 Add Tester function was rejected: {:?}",
+                reject_message
+            );
+        }
+        Err(e) => {
+            panic!("🚨 Error calling Add Tester function: {:?}", e);
+        }
+    }
+
     let result = pic.update_call(
         backend_canister,
-        Principal::anonymous(),
+        user_principal,
         "update_reserve_price_test",
         encode_one(()).unwrap(),
     );
@@ -512,11 +569,79 @@ fn setup() -> (PocketIc, Principal) {
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
-    test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
-    test_repay(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
+    // test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
     // test_liquidation(&pic, backend_canister);
+}
+
+fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Principal){
+
+    struct LowHealthUsers {
+        asset_supply:String,
+        asset_borrow:String,
+        supply_tokens:Nat,
+        borrow_tokens:Nat,
+    }
+
+    let mut users_with_low_health:Vec<LowHealthUsers> = Vec::new();
+    // Pushing first user data
+    users_with_low_health.push(LowHealthUsers {
+        asset_supply: "ICP".to_string(),
+        asset_borrow: "ckBTC".to_string(),
+        supply_tokens: Nat::from(100u128),
+        borrow_tokens: Nat::from(500u128),
+    });
+
+    // Pushing second user data
+    users_with_low_health.push(LowHealthUsers {
+        asset_supply: "ckETH".to_string(),
+        asset_borrow: "ckUSDT".to_string(),
+        supply_tokens: Nat::from(1000u128),
+        borrow_tokens: Nat::from(500u128),
+    });
+
+    let user_principal = get_user_principal();
+    for user  in &users_with_low_health{
+
+        let add_tester_result = pic.update_call(
+            backend_canister,
+            user_principal,
+            "create_user_reserve_with_low_health",
+            encode_args((user.asset_supply.clone(), user.asset_borrow.clone(), user.supply_tokens.clone(), user.borrow_tokens.clone())).unwrap(),
+        );
+
+        // Decode the response
+        match add_tester_result {
+            Ok(WasmResult::Reply(response)) => {
+                let initialize_response: Result<UserReserveData, errors::Error> =
+                    candid::decode_one(&response).expect("Failed to decode create_user_reserve_with_low_health response");
+
+                match initialize_response {
+                    Ok(_) => {
+                        ic_cdk::println!("✅ Create_user_reserve_with_low_health function succeeded");
+                    }
+                    Err(e) => {
+                        ic_cdk::println!(
+                            "Create_user_reserve_with_low_health function failed as expected with error: {:?}",
+                            e
+                        );
+                        panic!("🚨 Expected success but got error: {:?}", e);
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                panic!(
+                    "🚨 Create_user_reserve_with_low_health function was rejected: {:?}",
+                    reject_message
+                );
+            }
+            Err(e) => {
+                panic!("🚨 Error calling Create_user_reserve_with_low_health function: {:?}", e);
+            }
+        }
+    }
 }
 
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {

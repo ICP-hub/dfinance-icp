@@ -4,20 +4,20 @@ pub mod constants {
     pub const CKBTC_OPTIMAL_USAGE_RATIO: u128 = 45;
     pub const CKBTC_MAX_EXCESS_USAGE_RATIO: u128 = 55;
     pub const CKBTC_BASE_VARIABLE_BORROW_RATE: u128 = 0;
-    pub const CKBTC_VARIABLE_RATE_SLOPE1: u128 = 70;
-    pub const CKBTC_VARIABLE_RATE_SLOPE2: u128 = 300;
+    pub const CKBTC_VARIABLE_RATE_SLOPE1: u128 = 7;
+    pub const CKBTC_VARIABLE_RATE_SLOPE2: u128 = 30;
 
     pub const CKETH_OPTIMAL_USAGE_RATIO: u128 = 45;
     pub const CKETH_MAX_EXCESS_USAGE_RATIO: u128 = 55;
     pub const CKETH_BASE_VARIABLE_BORROW_RATE: u128 = 0;
-    pub const CKETH_VARIABLE_RATE_SLOPE1: u128 = 70;
-    pub const CKETH_VARIABLE_RATE_SLOPE2: u128 = 300;
+    pub const CKETH_VARIABLE_RATE_SLOPE1: u128 = 7;
+    pub const CKETH_VARIABLE_RATE_SLOPE2: u128 = 30;
 
     pub const ICP_OPTIMAL_USAGE_RATIO: u128 = 45;
     pub const ICP_MAX_EXCESS_USAGE_RATIO: u128 = 55;
     pub const ICP_BASE_VARIABLE_BORROW_RATE: u128 = 0;
-    pub const ICP_VARIABLE_RATE_SLOPE1: u128 = 70;
-    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 300;  //TODO: review
+    pub const ICP_VARIABLE_RATE_SLOPE1: u128 = 7;
+    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 30; 
 
     pub const CKUSDC_OPTIMAL_USAGE_RATIO: u128 = 90;
     pub const CKUSDC_MAX_EXCESS_USAGE_RATIO: u128 = 10;

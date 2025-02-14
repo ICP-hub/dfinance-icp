@@ -884,11 +884,4 @@ pub async fn post_upgrade() {
 
 export_candid!();
 
-//BUG 1. Total collateral and total debt -> updated according to  price of asset
-//2. Available borrow in real time
-//3. Burn function repay
-// 4. cal of liq_index and borrow index of user
-//5. Optimization
-//6. accuare_to_treasury for fees
-//7. liq_bot -> discuss about node or timer
-//8. frontend -> cal h.f , dont show negative apy, remove tofix
+

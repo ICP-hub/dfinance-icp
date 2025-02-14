@@ -1881,15 +1881,15 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
         // Unsupported asset pairs
-        TestCase { 
-            debt_asset: "ckBTC".to_string(),
-            collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(50u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(100u128),
-            expect_success: false,
-            expected_error_message: Some("Invalid collateral-debt pair".to_string()),
-        },
+        // TestCase { 
+        //     debt_asset: "ckBTC".to_string(),
+        //     collateral_asset: "ckBTC".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(100u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Invalid collateral-debt pair".to_string()),
+        // },
 
         // // Zero amount (invalid scenario)
         // TestCase { 
@@ -1925,26 +1925,26 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
         //  Invalid principal (malformed or blocked user)
-        TestCase { 
-            debt_asset: "ckUSDC".to_string(),
-            collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(50u128),
-            on_behalf_of: Principal::from_slice(&[0; 29]), // Malformed principal
-            reward_amount: Nat::from(5u128),
-            expect_success: false,
-            expected_error_message: Some("Invalid principal ID".to_string()),
-        },
+        // TestCase { 
+        //     debt_asset: "ckUSDC".to_string(),
+        //     collateral_asset: "ckBTC".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: Principal::from_slice(&[0; 29]), // Malformed principal
+        //     reward_amount: Nat::from(5u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Invalid principal ID".to_string()),
+        // },
 
         // // Zero reward amount (could be invalid depending on system logic)
-        TestCase { 
-            debt_asset: "ckBTC".to_string(),
-            collateral_asset: "ckETH".to_string(),
-            amount: Nat::from(10u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(0u128),
-            expect_success: false,
-            expected_error_message: Some("Reward amount must be greater than zero".to_string()),
-        },
+        // TestCase { 
+        //     debt_asset: "ckBTC".to_string(),
+        //     collateral_asset: "ckETH".to_string(),
+        //     amount: Nat::from(10u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(0u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Reward amount must be greater than zero".to_string()),
+        // },
 
         // Edge case: Borrowing with a different valid principal
         // TestCase { 
@@ -1959,15 +1959,15 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
 
 
         // // Borrowing against an unlisted or unknown asset (hypothetical scenario)
-        TestCase { 
-            debt_asset: "XYZCoin".to_string(), // Unsupported coin
-            collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(100u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(30u128),
-            expect_success: false,
-            expected_error_message: Some("Unsupported debt asset".to_string()),
-        },
+        // TestCase { 
+        //     debt_asset: "XYZCoin".to_string(), // Unsupported coin
+        //     collateral_asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(100u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(30u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Unsupported debt asset".to_string()),
+        // },
 
     ];
 

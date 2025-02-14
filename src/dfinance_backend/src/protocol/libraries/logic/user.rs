@@ -12,7 +12,7 @@ use crate::{
 };
 use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
-use ic_cdk::query;
+use ic_cdk::{query, update};
 
 
 fn get_max_value() -> Nat {
@@ -557,3 +557,193 @@ pub async fn get_liquidation_users_concurrent(
 
     liq_list
 }
+
+
+#[update]
+pub async fn create_user_reserve_with_low_health(asset: String, asset_supply: Nat, asset_borrow: Nat) -> Result<UserReserveData, Error> {
+    ic_cdk::println!("Creating user reserve with low health factor for asset: {}", asset);
+
+    if asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    if asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if asset_supply <= Nat::from(0u128) || asset_borrow <= Nat::from(0u128) {
+        ic_cdk::println!("Supply and Borrow amounts must be greater than zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let mut new_reserve = UserReserveData {
+        reserve: asset.clone(),
+        asset_supply,
+        asset_borrow,
+        is_collateral: true,
+        ..Default::default()
+    };
+
+    match asset_transfer(
+        user_principal,
+        token_canister_principal, //dtoken
+        platform_principal,
+        asset_supply,
+    )
+    .await
+    {
+        Ok(_) => {
+            ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+            Ok(())
+        }
+        Err(err) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+            Err(Error::ErrorMintTokens)
+        }
+    }
+
+    match asset_transfer_from(
+        ledger_canister_id, //ledger
+        user_principal,
+        platform_principal,
+        asset_supply.clone(),
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            println!("Asset transfer from user to backend canister executed successfully");
+            Ok(new_balance)
+        }
+        Err(_) => {
+            //Rollback user state
+            let withdraw_param = ExecuteWithdrawParams {
+                asset: params.asset.clone(),
+                is_collateral: params.is_collateral,
+                on_behalf_of: None,
+                amount: params.amount.clone(),
+            };
+            if let Err(e) = UpdateLogic::update_user_data_withdraw(
+                user_principal,
+                &reserve_cache,
+                withdraw_param.clone(),
+                &mut reserve_data,
+            )
+            .await
+            {
+                ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                if let Err(e) = release_lock(&operation_key) {
+                    ic_cdk::println!("Failed to release lock: {:?}", e);
+                }
+                return Err(e);
+            }
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            });
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(Error::ErrorMintTokens);
+        }
+    }
+     //borrow
+
+     match asset_transfer(
+        user_principal,
+        token_canister_principal, //debttoken
+        platform_principal,
+        asset_borrow,
+    )
+    .await
+    {
+        Ok(_) => {
+            ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+            Ok(())
+        }
+        Err(err) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+            Err(Error::ErrorMintTokens)
+        }
+    }
+
+    match asset_transfer_from(
+        ledger_canister_id,
+        platform_principal,
+        user_principal,
+        asset_borrow.clone(),
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            ic_cdk::println!(
+                "Asset transfer from backend to user executed successfully. New balance: {:?}",
+                new_balance
+            );
+            Ok(new_balance)
+        }
+        Err(e) => {
+            //Rollback user state
+            let repay_param = ExecuteRepayParams {
+                asset: params.asset.clone(),
+                amount: params.amount.clone(),
+                on_behalf_of: None,
+            };
+            if let Err(e) = UpdateLogic::update_user_data_repay(
+                user_principal,
+                &reserve_cache,
+                repay_param,
+                &mut reserve_data,
+            )
+            .await
+            {
+                ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                if let Err(e) = release_amount(&params.asset, &amount_requested) {
+                    ic_cdk::println!(
+                        "Failed to release amount for asset {}: {:?}",
+                        params.asset,
+                        e
+                    );
+                    if let Err(e) = release_lock(&operation_key) {
+                        ic_cdk::println!("Failed to release lock: {:?}", e);
+                    }
+                    return Err(e);
+                }
+                if let Err(e) = release_lock(&operation_key) {
+                    ic_cdk::println!("Failed to release lock: {:?}", e);
+                }
+                return Err(Error::ErrorRollBack);
+            };
+            mutate_state(|state| {
+                let asset_index = &mut state.asset_index;
+                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            });
+            ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
+            if let Err(e) = release_amount(&params.asset, &amount_requested) {
+                ic_cdk::println!(
+                    "Failed to release amount for asset {}: {:?}",
+                    params.asset,
+                    e
+                );
+                if let Err(e) = release_lock(&operation_key) {
+                    ic_cdk::println!("Failed to release lock: {:?}", e);
+                }
+                return Err(e);
+            }
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(Error::ErrorMintDebtTokens);
+        }
+    }
+
+    Ok(new_reserve)
+}1

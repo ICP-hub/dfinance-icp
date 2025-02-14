@@ -1,8 +1,9 @@
 use super::update::user_data;
-use crate::api::functions::get_balance;
+use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
-use crate::get_all_users;
+use crate::declarations::assets::ExecuteRepayParams;
+use crate::declarations::storable::Candid;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
@@ -10,10 +11,10 @@ use crate::{
     protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
     user_normalized_debt, user_normalized_supply,
 };
+use crate::{check_is_tester, get_all_users, reserve_ledger_canister_id};
 use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
 use ic_cdk::{query, update};
-
 
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
@@ -24,14 +25,14 @@ pub struct UserConfig {
     pub collateral: bool,
     pub borrowing: bool,
 }
-/* 
+/*
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
  *
  * @dev Aggregates user reserves, fetches exchange rates, and determines borrowing capacity.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
- * 
+ *
  * @return A tuple containing:
  *   - Total collateral
  *   - Total debt
@@ -94,7 +95,6 @@ pub async fn calculate_user_account_data(
             Nat::from(0u128),
             Nat::from(0u128),
             Nat::from(0u128),
-           
             max,
             Nat::from(0u128),
             false,
@@ -313,7 +313,7 @@ pub async fn calculate_user_account_data(
         has_zero_ltv_collateral,
     ))
 }
-/* 
+/*
  * @title Get User Balance in Base Currency
  * @notice Computes the user's total balance in the base currency (USD equivalent).
  *
@@ -322,7 +322,7 @@ pub async fn calculate_user_account_data(
  * @param user_principal The principal of the user whose balance is being calculated.
  * @param reserve The reserve data associated with the user's asset.
  * @param asset_price The price of the asset in the base currency.
- * 
+ *
  * @return The user's balance in base currency.
  */
 pub async fn get_user_balance_in_base_currency(
@@ -391,7 +391,7 @@ pub async fn get_user_balance_in_base_currency(
         .clone()
         .scaled_mul(asset_price.clone()))
 }
-/* 
+/*
  * @title Get User Debt in Base Currency
  * @notice Computes the user's total outstanding debt in the base currency.
  *
@@ -400,7 +400,7 @@ pub async fn get_user_balance_in_base_currency(
  * @param user_principal The principal of the user whose debt is being calculated.
  * @param reserve The reserve data associated with the user's asset.
  * @param asset_price The price of the asset in the base currency.
- * 
+ *
  * @return The user's debt in base currency.
  */
 pub async fn get_user_debt_in_base_currency(
@@ -465,7 +465,7 @@ pub async fn get_user_debt_in_base_currency(
     ic_cdk::println!("Final user debt in base currency: {}", result);
     Ok(result)
 }
-/* 
+/*
  * @title User Account Data Structure
  * @notice Stores financial data such as collateral, debt, and risk factors.
  *
@@ -481,7 +481,7 @@ pub struct UserAccountData {
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
 }
-/* 
+/*
  * @title Get Users Eligible for Liquidation
  * @notice Identifies users with a health factor below the liquidation threshold.
  *
@@ -489,7 +489,7 @@ pub struct UserAccountData {
  *
  * @param total_pages The total number of pages to fetch users from.
  * @param page_size The number of users per page.
- * 
+ *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
 #[query]
@@ -537,12 +537,15 @@ pub async fn get_liquidation_users_concurrent(
                         available_borrow: user_account_data_tuple.5,
                         has_zero_ltv_collateral: user_account_data_tuple.6,
                     };
-                    ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
+                    ic_cdk::println!(
+                        "User: {:?}, Health Factor: {:?}",
+                        user_principal,
+                        user_account_data.health_factor
+                    );
 
-                    if user_account_data.health_factor < Nat::from(100000000u128){
+                    if user_account_data.health_factor < Nat::from(100000000u128) {
                         page_liq_list.push((user_principal, user_account_data, user_data));
                     }
-                   
                 }
             }
             page_liq_list
@@ -558,22 +561,35 @@ pub async fn get_liquidation_users_concurrent(
     liq_list
 }
 
-
 #[update]
-pub async fn create_user_reserve_with_low_health(asset: String, asset_supply: Nat, asset_borrow: Nat) -> Result<UserReserveData, Error> {
-    ic_cdk::println!("Creating user reserve with low health factor for asset: {}", asset);
+pub async fn create_user_reserve_with_low_health(
+    asset_supply: String,
+    asset_borrow: String,
+    supply_tokens: Nat,
+    borrow_tokens: Nat,
+) -> Result<UserReserveData, Error> {
+    ic_cdk::println!(
+        "Creating user reserve with low health factor for supply asset: {} and borrow asset: {}",
+        asset_supply,
+        asset_borrow
+    );
 
-    if asset.trim().is_empty() {
+    if !check_is_tester() {
+        ic_cdk::println!("Invalid User");
+        return Err(Error::InvalidUser);
+    }
+
+    if asset_supply.trim().is_empty() || asset_borrow.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
     }
 
-    if asset.len() > 7 {
+    if asset_supply.len() > 7 || asset_borrow.len() > 7 {
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
-    if asset_supply <= Nat::from(0u128) || asset_borrow <= Nat::from(0u128) {
+    if supply_tokens <= Nat::from(0u128) || borrow_tokens <= Nat::from(0u128) {
         ic_cdk::println!("Supply and Borrow amounts must be greater than zero");
         return Err(Error::InvalidAmount);
     }
@@ -585,101 +601,168 @@ pub async fn create_user_reserve_with_low_health(asset: String, asset_supply: Na
         return Err(Error::AnonymousPrincipal);
     }
 
-    let mut new_reserve = UserReserveData {
-        reserve: asset.clone(),
-        asset_supply,
-        asset_borrow,
-        is_collateral: true,
-        ..Default::default()
+    let platform_principal = ic_cdk::api::id();
+    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
+    let (supply_reserve_data, borrow_reserve_data) = if asset_supply == asset_borrow {
+        let mut reserve_data = mutate_state(|state| {
+            state
+                .asset_index
+                .get(&asset_supply)
+                .map(|reserve| reserve.0.clone())
+                .ok_or(Error::NoReserveDataFound)
+        })?;
+
+        reserve_data.asset_supply += supply_tokens.clone();
+        reserve_data.asset_borrow += borrow_tokens.clone();
+        (reserve_data.clone(), reserve_data)
+    } else {
+        let mut supply_reserve_data = mutate_state(|state| {
+            state
+                .asset_index
+                .get(&asset_supply)
+                .map(|reserve| reserve.0.clone())
+                .ok_or(Error::NoReserveDataFound)
+        })?;
+
+        supply_reserve_data.asset_supply += supply_tokens.clone();
+
+        let mut borrow_reserve_data = mutate_state(|state| {
+            state
+                .asset_index
+                .get(&asset_borrow)
+                .map(|reserve| reserve.0.clone())
+                .ok_or(Error::NoReserveDataFound)
+        })?;
+
+        borrow_reserve_data.asset_supply += supply_tokens.clone();
+
+        (supply_reserve_data, borrow_reserve_data)
     };
+
+    let supply_asset_ledger_canister_id = reserve_ledger_canister_id(asset_supply.clone())?;
+    let debt_asset_ledger_canister_id = reserve_ledger_canister_id(asset_borrow.clone())?;
+
+    let mut user_data = user_data(user_principal)?;
+
+    let (supply_reserve, borrow_reserve) = if asset_supply == asset_borrow {
+        let mut reserve = UserReserveData {
+            reserve: asset_supply.clone(),
+            asset_supply: supply_tokens.clone(),
+            asset_borrow: borrow_tokens.clone(),
+            is_collateral: true,
+            ..Default::default()
+        };
+
+        // Update token balances
+        reserve.d_token_balance += supply_tokens.clone();
+        reserve.debt_token_blance += borrow_tokens.clone();
+        (reserve.clone(), reserve)
+    } else {
+        let mut supply_reserve = UserReserveData {
+            reserve: asset_supply.clone(),
+            asset_supply: supply_tokens.clone(),
+            asset_borrow: Nat::from(0u128),
+            is_collateral: true,
+            ..Default::default()
+        };
+
+        supply_reserve.d_token_balance += supply_tokens.clone();
+
+        let mut borrow_reserve = UserReserveData {
+            reserve: asset_borrow.clone(),
+            asset_supply: Nat::from(0u128),
+            asset_borrow: borrow_tokens.clone(),
+            is_collateral: false,
+            ..Default::default()
+        };
+
+        borrow_reserve.debt_token_blance += supply_tokens.clone();
+
+        (supply_reserve, borrow_reserve)
+    };
+
+    if let Some(ref mut reserves) = user_data.reserves {
+        reserves.push((asset_supply.clone(), supply_reserve.clone()));
+        if asset_supply != asset_borrow {
+            reserves.push((asset_borrow.clone(), borrow_reserve.clone()));
+        }
+    } else {
+        user_data.reserves = Some(vec![(asset_supply.clone(), supply_reserve.clone())]);
+        if asset_supply != asset_borrow {
+            user_data
+                .reserves
+                .as_mut()
+                .unwrap()
+                .push((asset_borrow.clone(), borrow_reserve.clone()));
+        }
+    }
+
+    let dtoken_principal =
+        Principal::from_text(supply_reserve_data.d_token_canister.clone().unwrap()).unwrap();
+    let debt_token_principal =
+        Principal::from_text(borrow_reserve_data.debt_token_canister.clone().unwrap()).unwrap();
 
     match asset_transfer(
         user_principal,
-        token_canister_principal, //dtoken
+        dtoken_principal, //dtoken
         platform_principal,
-        asset_supply,
+        supply_tokens.clone(),
     )
     .await
     {
-        Ok(_) => {
+        Ok(data) => {
             ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
-            Ok(())
         }
         Err(err) => {
             ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
-            Err(Error::ErrorMintTokens)
+            return Err(Error::ErrorMintTokens);
         }
     }
 
     match asset_transfer_from(
-        ledger_canister_id, //ledger
+        supply_asset_ledger_canister_id, //ledger
         user_principal,
         platform_principal,
-        asset_supply.clone(),
+        supply_tokens,
     )
     .await
     {
         Ok(new_balance) => {
-            println!("Asset transfer from user to backend canister executed successfully");
-            Ok(new_balance)
+            println!(
+                "Asset transfer from user to backend canister executed successfully = {:?}",
+                new_balance
+            );
         }
-        Err(_) => {
-            //Rollback user state
-            let withdraw_param = ExecuteWithdrawParams {
-                asset: params.asset.clone(),
-                is_collateral: params.is_collateral,
-                on_behalf_of: None,
-                amount: params.amount.clone(),
-            };
-            if let Err(e) = UpdateLogic::update_user_data_withdraw(
-                user_principal,
-                &reserve_cache,
-                withdraw_param.clone(),
-                &mut reserve_data,
-            )
-            .await
-            {
-                ic_cdk::println!("Failed to rollback user state: {:?}", e);
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-            mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
+        Err(e) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", e);
             return Err(Error::ErrorMintTokens);
         }
     }
-     //borrow
+    //borrow
 
-     match asset_transfer(
+    match asset_transfer(
         user_principal,
-        token_canister_principal, //debttoken
+        debt_token_principal, //debttoken
         platform_principal,
-        asset_borrow,
+        borrow_tokens.clone(),
     )
     .await
     {
         Ok(_) => {
             ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
-            Ok(())
         }
         Err(err) => {
             ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
-            Err(Error::ErrorMintTokens)
+            return Err(Error::ErrorMintTokens);
         }
     }
 
     match asset_transfer_from(
-        ledger_canister_id,
+        debt_asset_ledger_canister_id,
         platform_principal,
         user_principal,
-        asset_borrow.clone(),
+        borrow_tokens,
     )
     .await
     {
@@ -688,62 +771,29 @@ pub async fn create_user_reserve_with_low_health(asset: String, asset_supply: Na
                 "Asset transfer from backend to user executed successfully. New balance: {:?}",
                 new_balance
             );
-            Ok(new_balance)
         }
         Err(e) => {
-            //Rollback user state
-            let repay_param = ExecuteRepayParams {
-                asset: params.asset.clone(),
-                amount: params.amount.clone(),
-                on_behalf_of: None,
-            };
-            if let Err(e) = UpdateLogic::update_user_data_repay(
-                user_principal,
-                &reserve_cache,
-                repay_param,
-                &mut reserve_data,
-            )
-            .await
-            {
-                ic_cdk::println!("Failed to rollback user state: {:?}", e);
-                if let Err(e) = release_amount(&params.asset, &amount_requested) {
-                    ic_cdk::println!(
-                        "Failed to release amount for asset {}: {:?}",
-                        params.asset,
-                        e
-                    );
-                    if let Err(e) = release_lock(&operation_key) {
-                        ic_cdk::println!("Failed to release lock: {:?}", e);
-                    }
-                    return Err(e);
-                }
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(Error::ErrorRollBack);
-            };
-            mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
-            ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
-            if let Err(e) = release_amount(&params.asset, &amount_requested) {
-                ic_cdk::println!(
-                    "Failed to release amount for asset {}: {:?}",
-                    params.asset,
-                    e
-                );
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(Error::ErrorMintDebtTokens);
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", e);
+            return Err(Error::ErrorRollBack);
         }
     }
 
-    Ok(new_reserve)
-}1
+    mutate_state(|state| {
+        state
+            .asset_index
+            .insert(asset_supply.clone(), Candid(supply_reserve_data.clone()));
+        if asset_supply != asset_borrow {
+            state
+                .asset_index
+                .insert(asset_borrow.clone(), Candid(borrow_reserve_data.clone()));
+        }
+    });
+
+    mutate_state(|state| {
+        state
+            .user_profile
+            .insert(user_principal, Candid(user_data.clone()));
+    });
+
+    Ok(supply_reserve)
+}

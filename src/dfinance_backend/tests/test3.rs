@@ -214,7 +214,7 @@ pub struct UserReserveData {
 }
 
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
-const XRC_WASM: &str = "../../target/wasm32-unknown-unknown/release/xrc.wasm";
+
 
 fn get_user_principal() -> Principal {
     Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae").unwrap()
@@ -236,14 +236,6 @@ fn setup() -> (PocketIc, Principal) {
         Some(Principal::anonymous()),
     );
 
-    let xrc_canister = pic.create_canister();
-    pic.add_cycles(xrc_canister, 5_000_000_000_000_000); // 2T Cycles
-    let wasm = fs::read(XRC_WASM).expect("Wasm file not found, run 'dfx build'.");
-    pic.install_canister(xrc_canister, wasm, vec![], None);
-
-    ic_cdk::println!("xrc canister: {}", xrc_canister);
-    ic_cdk::println!("backend cycles = {}", pic.cycle_balance(backend_canister));
-    ic_cdk::println!("cycles = {}", pic.cycle_balance(xrc_canister));
 
     let _ = pocket_ic::PocketIc::set_controllers(
         &pic,
@@ -259,9 +251,9 @@ fn setup() -> (PocketIc, Principal) {
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
-        borrow_rate: Nat::from(0u128), // Nat format for borrow_rate
-        current_liquidity_rate: Nat::from(0u128), // Nat format for current_liquidity_rate
-        asset_supply: Nat::from(0u128), // Nat format for asset_supply
+        borrow_rate: Nat::from(0u128), 
+        current_liquidity_rate: Nat::from(0u128),
+        asset_supply: Nat::from(0u128), 
         asset_borrow: Nat::from(0u128), // Nat format for asset_borrow
         liquidity_index: Nat::from(100000000u128), // Nat format for liquidity_index
         debt_index: Nat::from(0u128),  // Nat format for debt_index

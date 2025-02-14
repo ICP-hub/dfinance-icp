@@ -35,7 +35,7 @@ use crate::declarations::assets::{
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserData, UserReserveData};
 use ic_cdk_timers::set_timer_interval;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -884,11 +884,4 @@ pub async fn post_upgrade() {
 
 export_candid!();
 
-//BUG 1. Total collateral and total debt -> updated according to  price of asset
-//2. Available borrow in real time
-//3. Burn function repay
-// 4. cal of liq_index and borrow index of user
-//5. Optimization
-//6. accuare_to_treasury for fees
-//7. liq_bot -> discuss about node or timer
-//8. frontend -> cal h.f , dont show negative apy, remove tofix
+

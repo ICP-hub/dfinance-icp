@@ -35,7 +35,7 @@ use crate::declarations::assets::{
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserData, UserReserveData};
 use ic_cdk_timers::set_timer_interval;
 use std::collections::HashMap;
 use std::time::Duration;

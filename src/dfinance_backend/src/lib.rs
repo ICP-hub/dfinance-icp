@@ -757,7 +757,7 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-// Function to store a Principal
+// Function to store a tester Principal
 #[ic_cdk::update]
 pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
     let user_principal = ic_cdk::caller();
@@ -775,7 +775,7 @@ pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
     return Ok(());
 }
 
-// Function to retrieve a Principal
+// Function to retrieve testers
 #[ic_cdk::query]
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
     let user_principal = ic_cdk::caller();
@@ -796,6 +796,24 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
         }
         Ok(testers)
     })
+}
+
+// Function for checking caller is tester or not
+#[ic_cdk::query]
+pub fn check_is_tester()-> bool {
+
+    let testers = match get_testers(){
+        Ok(data)=>data,
+        Err(error) => {
+            ic_cdk::println!("Invalid Access {:?}", error);
+            return false;
+        }
+    };
+    let user = ic_cdk::caller();
+    if testers.contains(&user){
+        return true;
+    }
+    return false;
 }
 
 /*

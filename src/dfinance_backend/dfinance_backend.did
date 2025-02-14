@@ -169,6 +169,7 @@ type UserReserveData = record {
 };
 service : (principal) -> {
   add_tester : (text, principal) -> (Result);
+  check_is_tester : () -> (bool) query;
   check_lock : () -> (Result_1);
   clear_all_locks : () -> (Result);
   create_testtoken_canister : (text, text) -> (Result_2);

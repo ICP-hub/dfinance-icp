@@ -4,6 +4,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::assets::ExecuteRepayParams;
 use crate::declarations::storable::Candid;
+use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
@@ -567,7 +568,7 @@ pub async fn create_user_reserve_with_low_health(
     asset_borrow: String,
     supply_tokens: Nat,
     borrow_tokens: Nat,
-) -> Result<UserReserveData, Error> {
+) -> Result<UserData, Error> {
     ic_cdk::println!(
         "Creating user reserve with low health factor for supply asset: {} and borrow asset: {}",
         asset_supply,
@@ -615,6 +616,7 @@ pub async fn create_user_reserve_with_low_health(
 
         reserve_data.asset_supply += supply_tokens.clone();
         reserve_data.asset_borrow += borrow_tokens.clone();
+        reserve_data.debt_index = Nat::from(100_000_000u128);
         (reserve_data.clone(), reserve_data)
     } else {
         let mut supply_reserve_data = mutate_state(|state| {
@@ -626,6 +628,7 @@ pub async fn create_user_reserve_with_low_health(
         })?;
 
         supply_reserve_data.asset_supply += supply_tokens.clone();
+        supply_reserve_data.debt_index = Nat::from(100_000_000u128);
 
         let mut borrow_reserve_data = mutate_state(|state| {
             state
@@ -636,6 +639,7 @@ pub async fn create_user_reserve_with_low_health(
         })?;
 
         borrow_reserve_data.asset_supply += supply_tokens.clone();
+        borrow_reserve_data.debt_index = Nat::from(100_000_000u128);
 
         (supply_reserve_data, borrow_reserve_data)
     };
@@ -645,62 +649,94 @@ pub async fn create_user_reserve_with_low_health(
 
     let mut user_data = user_data(user_principal)?;
 
-    let (supply_reserve, borrow_reserve) = if asset_supply == asset_borrow {
-        let mut reserve = UserReserveData {
-            reserve: asset_supply.clone(),
-            asset_supply: supply_tokens.clone(),
-            asset_borrow: borrow_tokens.clone(),
-            is_collateral: true,
-            liquidity_index: Nat::from(100_000_000u128),
-            variable_borrow_index: Nat::from(100_000_000u128),
-            ..Default::default()
+    if asset_supply == asset_borrow {
+        let mut user_reserve = user_reserve(&mut user_data, &asset_supply);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.liquidity_index = Nat::from(100_000_000u128);
+            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.d_token_balance += supply_tokens.clone();
+            reserve_data.debt_token_blance += borrow_tokens.clone();
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_collateral = true;
+            reserve_data.is_borrowed = true;
         };
+        // else {
+        //     let mut reserve = UserReserveData {
+        //         reserve: asset_supply.clone(),
+        //         asset_supply: supply_tokens.clone(),
+        //         asset_borrow: borrow_tokens.clone(),
+        //         is_collateral: true,
+        //         liquidity_index: Nat::from(100_000_000u128),
+        //         variable_borrow_index: Nat::from(100_000_000u128),
+        //         ..Default::default()
+        //     };
+
+        //     reserve.d_token_balance += supply_tokens.clone();
+        //     reserve.debt_token_blance += borrow_tokens.clone();
+        // };
 
         // Update token balances
-        reserve.d_token_balance += supply_tokens.clone();
-        reserve.debt_token_blance += borrow_tokens.clone();
-        (reserve.clone(), reserve)
+        // (reserve.clone(), reserve)
     } else {
-        let mut supply_reserve = UserReserveData {
-            reserve: asset_supply.clone(),
-            asset_supply: supply_tokens.clone(),
-            asset_borrow: Nat::from(0u128),
-            is_collateral: true,
-            liquidity_index: Nat::from(100_000_000u128),
-            variable_borrow_index: Nat::from(100_000_000u128),
-            ..Default::default()
+        let mut supply_user_reserve = user_reserve(&mut user_data, &asset_supply);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
+            reserve_data.liquidity_index = Nat::from(100_000_000u128);
+            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.d_token_balance += supply_tokens.clone();
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_collateral = true;
         };
 
-        supply_reserve.d_token_balance += supply_tokens.clone();
-
-        let mut borrow_reserve = UserReserveData {
-            reserve: asset_borrow.clone(),
-            asset_supply: Nat::from(0u128),
-            asset_borrow: borrow_tokens.clone(),
-            is_collateral: false,
-            ..Default::default()
+        let mut supply_user_reserve = user_reserve(&mut user_data, &asset_borrow);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
+            reserve_data.liquidity_index = Nat::from(100_000_000u128);
+            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.debt_token_blance += borrow_tokens.clone();
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_borrowed = true;
         };
+        // let mut supply_reserve = UserReserveData {
+        //     reserve: asset_supply.clone(),
+        //     asset_supply: supply_tokens.clone(),
+        //     asset_borrow: Nat::from(0u128),
+        //     is_collateral: true,
+        //     liquidity_index: Nat::from(100_000_000u128),
+        //     variable_borrow_index: Nat::from(100_000_000u128),
+        //     ..Default::default()
+        // };
 
-        borrow_reserve.debt_token_blance += supply_tokens.clone();
+        // supply_reserve.d_token_balance += supply_tokens.clone();
 
-        (supply_reserve, borrow_reserve)
+        // let mut borrow_reserve = UserReserveData {
+        //     reserve: asset_borrow.clone(),
+        //     asset_supply: Nat::from(0u128),
+        //     asset_borrow: borrow_tokens.clone(),
+        //     is_collateral: false,
+        //     ..Default::default()
+        // };
+
+        // borrow_reserve.debt_token_blance += supply_tokens.clone();
+
+        // (supply_reserve, borrow_reserve)
     };
 
-    if let Some(ref mut reserves) = user_data.reserves {
-        reserves.push((asset_supply.clone(), supply_reserve.clone()));
-        if asset_supply != asset_borrow {
-            reserves.push((asset_borrow.clone(), borrow_reserve.clone()));
-        }
-    } else {
-        user_data.reserves = Some(vec![(asset_supply.clone(), supply_reserve.clone())]);
-        if asset_supply != asset_borrow {
-            user_data
-                .reserves
-                .as_mut()
-                .unwrap()
-                .push((asset_borrow.clone(), borrow_reserve.clone()));
-        }
-    }
+    // if let Some(ref mut reserves) = user_data.reserves {
+    //     reserves.push((asset_supply.clone(), supply_reserve.clone()));
+    //     if asset_supply != asset_borrow {
+    //         reserves.push((asset_borrow.clone(), borrow_reserve.clone()));
+    //     }
+    // } else {
+    //     user_data.reserves = Some(vec![(asset_supply.clone(), supply_reserve.clone())]);
+    //     if asset_supply != asset_borrow {
+    //         user_data
+    //             .reserves
+    //             .as_mut()
+    //             .unwrap()
+    //             .push((asset_borrow.clone(), borrow_reserve.clone()));
+    //     }
+    // }
+
+    // ic_cdk::println!()
 
     let dtoken_principal =
         Principal::from_text(supply_reserve_data.d_token_canister.clone().unwrap()).unwrap();
@@ -799,5 +835,7 @@ pub async fn create_user_reserve_with_low_health(
             .insert(user_principal, Candid(user_data.clone()));
     });
 
-    Ok(supply_reserve)
+    ic_cdk::println!("user data success = {:?}", user_data);
+
+    Ok(user_data)
 }

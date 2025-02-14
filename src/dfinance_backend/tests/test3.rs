@@ -213,6 +213,14 @@ pub struct UserReserveData {
     pub debt_token_blance: Nat,
 }
 
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+pub struct UserData {
+    pub user_id: Option<String>,
+    pub total_collateral: Option<Nat>,
+    pub total_debt: Option<Nat>,
+    pub reserves: Option<Vec<(String, UserReserveData)>>,
+}
+
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 
 
@@ -756,7 +764,7 @@ fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Pr
         // Decode the response
         match result {
             Ok(WasmResult::Reply(response)) => {
-                let initialize_response: Result<UserReserveData, errors::Error> =
+                let initialize_response: Result<UserData, errors::Error> =
                     candid::decode_one(&response).expect("Failed to decode create_user_reserve_with_low_health response");
 
                 match initialize_response {

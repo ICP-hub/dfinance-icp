@@ -89,6 +89,7 @@ type ExecuteWithdrawParams = record {
   on_behalf_of : opt principal;
   amount : nat;
 };
+type InitArgs = record { controller_id : principal };
 type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
@@ -119,21 +120,24 @@ type ReserveData = record {
   accure_to_platform : nat;
   debt_index : nat;
 };
-type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok; Err : Error };
-type Result_10 = variant { Ok : UserData; Err : Error };
-type Result_11 = variant { Ok : text; Err : Error };
-type Result_2 = variant { Ok : principal; Err : Error };
-type Result_3 = variant { Ok : nat; Err : Error };
-type Result_4 = variant { Ok : vec principal; Err : Error };
-type Result_5 = variant { Ok : PriceCache; Err : Error };
-type Result_6 = variant { Ok : record { nat; nat64 }; Err : Error };
-type Result_7 = variant { Ok : bool; Err : Error };
-type Result_8 = variant { Ok : ReserveData; Err : Error };
-type Result_9 = variant {
+type Result = variant { Ok; Err : Error };
+type Result_1 = variant { Ok : text; Err : Error };
+type Result_10 = variant { Ok : bool; Err : Error };
+type Result_11 = variant { Ok : ReserveData; Err : Error };
+type Result_12 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
+type Result_13 = variant { Ok : UserData; Err : Error };
+type Result_14 = variant { Ok : record { nat; nat }; Err : Error };
+type Result_2 = variant { Ok : principal; Err : Error };
+type Result_3 = variant { Ok : UserReserveData; Err : Error };
+type Result_4 = variant { Ok : nat; Err : Error };
+type Result_5 = variant { Ok : vec record { text; PriceCache }; Err : Error };
+type Result_6 = variant { Ok : vec principal; Err : Error };
+type Result_7 = variant { Ok : PriceCache; Err : Error };
+type Result_8 = variant { Ok : InitArgs; Err : Error };
+type Result_9 = variant { Ok : record { nat; nat64 }; Err : Error };
 type UserAccountData = record {
   ltv : nat;
   available_borrow : nat;
@@ -165,40 +169,49 @@ type UserReserveData = record {
   is_borrowed : bool;
 };
 service : (principal) -> {
-  add_controllers : (principal, principal) -> (Result);
-  clear_all_locks : () -> (Result_1);
+  add_tester : (text, principal) -> (Result);
+  check_is_tester : () -> (bool) query;
+  check_lock : () -> (Result_1);
+  clear_all_locks : () -> (Result);
   create_testtoken_canister : (text, text) -> (Result_2);
   create_token_canister : (text, text) -> (Result_2);
+  create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_3);
   cycle_checker : () -> (nat) query;
-  execute_borrow : (ExecuteBorrowParams) -> (Result_3);
-  execute_liquidation : (ExecuteLiquidationParams) -> (Result_3);
-  execute_repay : (ExecuteRepayParams) -> (Result_3);
-  execute_supply : (ExecuteSupplyParams) -> (Result_3);
-  execute_withdraw : (ExecuteWithdrawParams) -> (Result_3);
-  faucet : (text, nat) -> (Result_3);
+  execute_borrow : (ExecuteBorrowParams) -> (Result_4);
+  execute_liquidation : (ExecuteLiquidationParams) -> (Result_4);
+  execute_repay : (ExecuteRepayParams) -> (Result_4);
+  execute_supply : (ExecuteSupplyParams) -> (Result_4);
+  execute_withdraw : (ExecuteWithdrawParams) -> (Result_4);
+  faucet : (text, nat) -> (Result_4);
   get_all_assets : () -> (vec text) query;
-  get_all_principals : () -> (Result_4) query;
+  get_all_cached_exchange_rates : () -> (Result_5) query;
+  get_all_principals : () -> (Result_6) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_2) query;
-  get_cached_exchange_rate : (text) -> (Result_5) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_6);
+  get_cached_exchange_rate : (text) -> (Result_7) query;
+  get_controller : () -> (Result_8) query;
+  get_exchange_rates : (text, opt text, nat) -> (Result_9);
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     ) query;
-  get_lock : () -> (Result_7) query;
-  get_reserve_data : (text) -> (Result_8) query;
-  get_total_supply : (principal) -> (Result_3) query;
+  get_lock : () -> (Result_10) query;
+  get_reserve_data : (text) -> (Result_11) query;
+  get_testers : () -> (Result_6) query;
+  get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
-  get_user_account_data : (opt principal) -> (Result_9);
-  get_user_data : (principal) -> (Result_10) query;
-  initialize : (text, ReserveData) -> (Result_1);
+  get_user_account_data : (opt principal) -> (Result_12);
+  get_user_data : (principal) -> (Result_13) query;
+  initialize : (text, ReserveData) -> (Result);
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result_11);
-  reset_reserve_value : (text, text, nat) -> (Result_1);
+  register_user : () -> (Result_1);
+  reset_reserve_value : (text, text, nat) -> (Result);
   to_check_controller : () -> (bool) query;
-  toggle_collateral : (text, nat, nat) -> (Result_1);
-  update_reserves_price : () -> (Result_1);
-  update_token_price : (text) -> (Result_1);
-  user_normalized_debt : (ReserveData) -> (Result_3) query;
-  user_normalized_supply : (ReserveData) -> (Result_3) query;
+  toggle_collateral : (text, nat, nat) -> (Result);
+  update_reserve_price_test : () -> (Result);
+  update_reserves_price : () -> (Result);
+  update_token_price : (text) -> (Result);
+  user_normalized_debt : (ReserveData) -> (Result_4) query;
+  user_normalized_supply : (ReserveData) -> (Result_4) query;
+  user_position : (text) -> (Result_14) query;
+  will_panic : () -> (text);
 }

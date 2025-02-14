@@ -1,4 +1,5 @@
 use crate::constants::errors::Error;
+use crate::constants::asset_data::to_check_controller;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
@@ -6,6 +7,7 @@ use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::InitArgs;
+use ic_cdk::api::is_controller;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
@@ -33,8 +35,9 @@ use crate::declarations::assets::{
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserData, UserReserveData};
 use ic_cdk_timers::set_timer_interval;
+use std::collections::HashMap;
 use std::time::Duration;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
@@ -225,7 +228,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         let price_cache_data = &state.price_cache_list;
         price_cache_data
             .get(&base_asset.to_string())
-            .map(|price_cache| price_cache.0)
+            .map(|price_cache: Candid<PriceCache>| price_cache.0)
             .ok_or_else(|| Error::NoPriceCache)
     });
 
@@ -592,6 +595,66 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
+// Function to store a tester Principal
+#[ic_cdk::update]
+pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+    if user_principal == Principal::anonymous()  {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    mutate_state(|state| {
+        state.tester_list.insert(username, principal)
+    });
+    return Ok(());
+}
+
+// Function to retrieve testers
+#[ic_cdk::query]
+pub fn get_testers() -> Result<Vec<Principal>, Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    read_state(|state| {
+        let mut testers = Vec::new();
+        let iter = state.tester_list.iter();
+        for (_, value) in iter {
+            testers.push(value.clone());
+        }
+        Ok(testers)
+    })
+}
+
+// Function for checking caller is tester or not
+#[ic_cdk::query]
+pub fn check_is_tester()-> bool {
+
+    let testers = match get_testers(){
+        Ok(data)=>data,
+        Err(error) => {
+            ic_cdk::println!("Invalid Access {:?}", error);
+            return false;
+        }
+    };
+    let user = ic_cdk::caller();
+    if testers.contains(&user){
+        return true;
+    }
+    return false;
+}
+
+
 
 /*
  * @title Get User Account Data
@@ -648,5 +711,6 @@ pub async fn post_upgrade() {
 }
 
 export_candid!();
+
 
 

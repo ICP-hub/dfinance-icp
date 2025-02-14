@@ -575,7 +575,7 @@ pub async fn to_get_reward_amount(
     };
 
     ic_cdk::println!("user normalized = {}",user_normalized_supply(collateral_reserve_data.clone()).unwrap());
-    ic_cdk::println!("liquidity index = {}",user_reserve_data.liquidity_index);
+    ic_cdk::println!("liquidity index = {:?}",user_reserve_data);
 
     collateral_balance = (collateral_balance
         .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))

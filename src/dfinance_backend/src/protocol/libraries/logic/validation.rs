@@ -159,6 +159,7 @@ impl ValidationLogic {
             Ok(interest) => interest,
             Err(e) => return Err(e),
         };
+        ic_cdk::println!("user current supply = {}", user_current_supply);
         ic_cdk::println!("interest rate = {}", supplied_interest_rate);
 
         ic_cdk::println!(

@@ -9,6 +9,7 @@ use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use serde::Serialize;
 use std::collections::HashMap;
+use crate::check_is_tester;
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct CachedPrice {
@@ -298,6 +299,12 @@ pub async fn get_exchange_rates(
 
 #[update]
 pub async fn update_reserve_price_test() -> Result<(), Error> {
+
+    if !check_is_tester(){
+        ic_cdk::println!("Invalid User");
+        return Err(Error::InvalidUser);
+    };
+
     let manual_prices: HashMap<String, Nat> = vec![
         ("ckBTC".to_string(), Nat::from(10934116666666u128)),
         ("ckETH".to_string(), Nat::from(302148333333u128)),

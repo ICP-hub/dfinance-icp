@@ -1,6 +1,11 @@
 import React from 'react';
 
 const Popup = ({ position, onClose }) => {
+
+   /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
+
   return (
     <div style={{ position: 'absolute', top: position.top + 100 , left : position.left + 850, zIndex: 10 }}>
     <div className="bg-white rounded-[12px] p-5 w-60 relative dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none shadow-lg select-none">

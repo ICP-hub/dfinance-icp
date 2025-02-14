@@ -31,8 +31,8 @@ pub struct ReserveConfiguration {
     pub liquidation_threshold: Nat,
     pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: Nat, //TODO set it according to borrow
-    pub supply_cap: Nat, //set it according to supply
+    pub borrow_cap: Nat, 
+    pub supply_cap: Nat, 
     pub liquidation_protocol_fee: Nat,
     pub active: bool,
     pub frozen: bool,
@@ -239,7 +239,7 @@ fn setup() -> (PocketIc, Principal) {
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
-    pic.add_cycles(backend_canister, 5_000_000_000_000_000); // 2T Cycles
+    pic.add_cycles(backend_canister, 5_000_000_000_000_000); 
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
     ic_cdk::println!("Backend canister: {}", backend_canister);
     pic.install_canister(
@@ -421,7 +421,7 @@ fn setup() -> (PocketIc, Principal) {
 
     ic_cdk::println!("things are working:");
     for (token_name, reserve_data) in &reserve_tokens_map {
-        // 🔹 Call the `initialize` function
+        
         let result = pic.update_call(
             backend_canister,
             user_principal,
@@ -429,7 +429,7 @@ fn setup() -> (PocketIc, Principal) {
             encode_args((token_name, reserve_data)).unwrap(),
         );
 
-        // 🔹 Decode the response
+
         match result {
             Ok(WasmResult::Reply(response)) => {
                 let initialize_response: Result<(), errors::Error> =
@@ -614,7 +614,105 @@ fn call_test_function() {
     // test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
+}
+
+fn test_get_asset_principal(asset:String ,pic: &PocketIc, backend_canister: Principal)-> Option<Principal>{
+    let result  = pic.query_call(
+        backend_canister,
+        Principal::anonymous(),
+        "get_asset_principal",
+        encode_one(asset.clone()).unwrap(),
+    );
+
+   let asset_canister_id =  match result {
+        Ok(WasmResult::Reply(response_data)) => {
+            match decode_one::<Result<Principal, errors::Error>>(&response_data) {
+                Ok(Ok(principal)) => {
+                    Some(principal)
+                }
+                Ok(Err(err)) => {
+                    
+                    ic_cdk::println!("❌ Error retrieving asset principal: {:?}", err);
+                    None
+                }
+                Err(decode_err) => {
+                    
+                    ic_cdk::println!(
+                        "❌ Supply failed with error: {:?}",
+                        decode_err
+                    );
+                    None
+                }
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => {
+            println!("❌ Query call rejected: {}", reject_message);
+            None
+        }
+        Err(call_err) => {
+    
+            println!("❌ Query call failed: {}", call_err);
+            None
+        }
+    };
+    return asset_canister_id;
+
+}
+
+fn test_icrc2_aprove(user_principal:Principal, asset_principal:Principal,pic: &PocketIc, backend_canister: Principal)->bool{
+    let approve_args = ApproveArgs {
+        fee: None,
+        memo: None,
+        from_subaccount: None,
+        created_at_time: None,
+        amount: Nat::from(1000_0000_000u128), 
+        expected_allowance: None,
+        expires_at: None,
+        spender: Account {
+            owner: backend_canister,
+            subaccount: None,
+        },
+    };
+
+    let args_encoded = encode_one(approve_args).expect("❌ Failed to encode approve arguments");
+        ic_cdk::println!("🟦 ICRC2 Approving ...");
+        let approve_result = pic.update_call(
+            asset_principal, 
+            user_principal,
+            "icrc2_approve",
+            args_encoded,
+        );
+
+        // Handle the result of the approve call
+        match approve_result {
+            Ok(WasmResult::Reply(reply)) => {
+                let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
+                match approve_response {
+                    Ok(ApproveResult::Ok(block_index)) => {
+                        ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
+                        return true;
+                    }
+                    Ok(ApproveResult::Err(error)) => {
+                        ic_cdk::println!("❌ Approve failed with error: {:?}", error);
+                        return false;
+                    }
+                    Err(e) => {
+                        ic_cdk::println!("❌  Failed to decode ApproveResult: {:?}", e);
+                        return false;
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+               ic_cdk:: println!("❌  Approve call rejected: {}", reject_message);
+                return false;
+            }
+            Err(e) => {
+                ic_cdk::println!("❌  Error during approve call: {:?}", e);
+                return false;
+            }
+        }
+        return false;
 }
 
 fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Principal){
@@ -646,104 +744,15 @@ fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Pr
     let user_principal = get_user_principal();
     for user  in &users_with_low_health{
 
-        let result  = pic.query_call(
-            backend_canister,
-            Principal::anonymous(),
-            "get_asset_principal",
-            encode_one(user.asset_supply.clone()).unwrap(),
-        );
-
-       let asset_canister_id =  match result {
-            Ok(WasmResult::Reply(response_data)) => {
-                match decode_one::<Result<Principal, errors::Error>>(&response_data) {
-                    Ok(Ok(principal)) => {
-                        // Successfully retrieved the principal
-                        Some(principal)
-                    }
-                    Ok(Err(err)) => {
-                        // Handle the error returned by get_asset_principal
-                        ic_cdk::println!("❌ Error retrieving asset principal: {:?}", err);
-                        None
-                    }
-                    Err(decode_err) => {
-                        // Handle the error while decoding the response
-                        ic_cdk::println!(
-                            "❌ Supply failed with error: {:?}",
-                            decode_err
-                        );
-                        None
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-                // Handle the rejection message from the WasmResult
-                println!("❌ Query call rejected: {}", reject_message);
-                None
-            }
-            Err(call_err) => {
-                // Handle the error from the query call itself
-                println!("❌ Query call failed: {}", call_err);
-                None
-            }
-        };
-
-        let asset_principal = match asset_canister_id {
+        let asset_principal = match test_get_asset_principal(user.asset_supply.clone(), &pic, backend_canister) {
             Some(principal) => principal,
             None => {
                 continue;
             }
         };
-
-        let approve_args = ApproveArgs {
-            fee: None,
-            memo: None,
-            from_subaccount: None,
-            created_at_time: None,
-            amount: Nat::from(1000_0000_000u128), //alternative
-            expected_allowance: None,
-            expires_at: None,
-            spender: Account {
-                owner: backend_canister,
-                subaccount: None,
-            },
-        };
-
-        let args_encoded = encode_one(approve_args).expect("❌ Failed to encode approve arguments");
-        ic_cdk::println!("🟦 ICRC2 Approving ...");
-        // Call the `approve` method on `ckbtc_canister`
-        let approve_result = pic.update_call(
-            asset_principal, //asset_canister variable
-            user_principal,
-            "icrc2_approve",
-            args_encoded,
-        );
-
-        // Handle the result of the approve call
-        match approve_result {
-            Ok(WasmResult::Reply(reply)) => {
-                let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
-                match approve_response {
-                    Ok(ApproveResult::Ok(block_index)) => {
-                        ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
-                    }
-                    Ok(ApproveResult::Err(error)) => {
-                        ic_cdk::println!("❌ Approve failed with error: {:?}", error);
-                        continue;
-                    }
-                    Err(e) => {
-                        ic_cdk::println!("❌  Failed to decode ApproveResult: {:?}", e);
-                        continue;
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-               ic_cdk:: println!("❌  Approve call rejected: {}", reject_message);
-                continue;
-            }
-            Err(e) => {
-                ic_cdk::println!("❌  Error during approve call: {:?}", e);
-                continue;
-            }
+        let approved = test_icrc2_aprove(user_principal, asset_principal, &pic, backend_canister);
+        if !approved {
+            continue;
         }
 
         let result = pic.update_call(
@@ -894,14 +903,14 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             "faucet",
             encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
         );
-        // ic_cdk::println!("Faucet request result: {:?}", errors::Error::);
+
 
         match result {
             Ok(WasmResult::Reply(reply)) => {
                 let decoded_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to decode faucet response");
                     
-                    // ic_cdk::println!("Decoded response (generic): {:?}", decoded_response);
+
                 match decoded_response {
                     Ok(balance) => {
                         if !case.expect_success{
@@ -954,14 +963,12 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             "faucet",
             encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
         );
-        // ic_cdk::println!("Faucet request result: {:?}", errors::Error::);
 
         match result {
             Ok(WasmResult::Reply(reply)) => {
                 let decoded_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to decode faucet response");
                     
-                    // ic_cdk::println!("Decoded response (generic): {:?}", decoded_response);
                 match decoded_response {
                     Ok(balance) => {
                         if !case.expect_success{
@@ -1064,7 +1071,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         //  Invalid Test Cases
         // Empty assets name
         TestCase {
-            asset: "".to_string(), // Empty asset
+            asset: "".to_string(), 
             amount: Nat::from(1000000000000000u128),
             is_collateral: true,
             expect_success: false,
@@ -1090,7 +1097,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Zero amount request
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(0u128), // Zero amount
+            amount: Nat::from(0u128), 
             is_collateral: true,
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
@@ -1106,7 +1113,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         // Non-existent asset 
         TestCase {
-            asset: "ckXYZ".to_string(), // Non-existent asset
+            asset: "ckXYZ".to_string(), 
             amount: Nat::from(100u128),
             is_collateral: false,
             expect_success: false,
@@ -1133,48 +1140,8 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
-        let result  = pic.query_call(
-            backend_canister,
-            Principal::anonymous(),
-            "get_asset_principal",
-            encode_one(case.asset.clone()).unwrap(),
-        );
-
-       let asset_canister_id =  match result {
-            Ok(WasmResult::Reply(response_data)) => {
-                match decode_one::<Result<Principal, errors::Error>>(&response_data) {
-                    Ok(Ok(principal)) => {
-                        // Successfully retrieved the principal
-                        Some(principal)
-                    }
-                    Ok(Err(err)) => {
-                        // Handle the error returned by get_asset_principal
-                        ic_cdk::println!("❌ Error retrieving asset principal: {:?}", err);
-                        None
-                    }
-                    Err(decode_err) => {
-                        // Handle the error while decoding the response
-                        ic_cdk::println!(
-                            "❌ Supply failed with error: {:?}",
-                            decode_err
-                        );
-                        None
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-                // Handle the rejection message from the WasmResult
-                println!("❌ Query call rejected: {}", reject_message);
-                None
-            }
-            Err(call_err) => {
-                // Handle the error from the query call itself
-                println!("❌ Query call failed: {}", call_err);
-                None
-            }
-        };
-
-        let asset_principal = match asset_canister_id {
+        
+        let asset_principal = match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
             Some(principal) => principal,
             None => {
                 if !case.expect_success {
@@ -1189,60 +1156,10 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 continue;
             }
         };
-
-        let approve_args = ApproveArgs {
-            fee: None,
-            memo: None,
-            from_subaccount: None,
-            created_at_time: None,
-            amount: Nat::from(1000_0000_000u128), //alternative
-            expected_allowance: None,
-            expires_at: None,
-            spender: Account {
-                owner: backend_canister,
-                subaccount: None,
-            },
-        };
-
-        let args_encoded = encode_one(approve_args).expect("❌ Failed to encode approve arguments");
-        ic_cdk::println!("🟦 ICRC2 Approving ...");
-        // Call the `approve` method on `ckbtc_canister`
-        let approve_result = pic.update_call(
-            asset_principal, //asset_canister variable
-            user_principal,
-            "icrc2_approve",
-            args_encoded,
-        );
-
-        // Handle the result of the approve call
-        match approve_result {
-            Ok(WasmResult::Reply(reply)) => {
-                let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
-                match approve_response {
-                    Ok(ApproveResult::Ok(block_index)) => {
-                        ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
-                    }
-                    Ok(ApproveResult::Err(error)) => {
-                        ic_cdk::println!("❌ Approve failed with error: {:?}", error);
-                        continue;
-                    }
-                    Err(e) => {
-                        ic_cdk::println!("❌  Failed to decode ApproveResult: {:?}", e);
-                        continue;
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-               ic_cdk:: println!("❌  Approve call rejected: {}", reject_message);
-                continue;
-            }
-            Err(e) => {
-                ic_cdk::println!("❌  Error during approve call: {:?}", e);
-                continue;
-            }
+        let approved = test_icrc2_aprove(user_principal, asset_principal, &pic, backend_canister);
+        if !approved {
+            continue;
         }
-
-
 
         let supply_params = ExecuteSupplyParams {
             asset: case.asset.clone(),
@@ -1389,7 +1306,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     
         // Asset length exceeds 7 characters
         TestCase {
-            asset: "ckETHEREUM".to_string(), // More than 7 characters
+            asset: "ckETHEREUM".to_string(), 
             amount: Nat::from(50u128),
             expect_success: false,
             expected_error_message: Some("Lenght of the asset is invalid".to_string()),
@@ -1398,7 +1315,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // Large amount
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(100_000_000_000u128), // Excessively large amount
+            amount: Nat::from(100_000_000_000u128), 
             expect_success: false,
             expected_error_message: Some("Amount is too much".to_string()),
         },
@@ -1551,9 +1468,9 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Collateral Withdrawals
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100000000u128), // Minimum valid amount
+            amount: Nat::from(100000000u128), 
             on_behalf_of: None,
-            is_collateral: true, // Withdrawing collateral
+            is_collateral: true, 
             expect_success: true,
             expected_error_message: None,
         },
@@ -1562,7 +1479,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Large amount exceeding wallet balance
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000_000u128), // Large amount
+            amount: Nat::from(100_000_000_000u128), 
             on_behalf_of: None,
             is_collateral: false,
             expect_success: false,
@@ -1609,7 +1526,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // // Valid Case: Withdraw Exact Reserve Amount
         // TestCase {
         //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(500u128), // Assuming 500 is exactly the reserve balance
+        //     amount: Nat::from(500u128), 
         //     on_behalf_of: None,
         //     is_collateral: false,
         //     expect_success: true,

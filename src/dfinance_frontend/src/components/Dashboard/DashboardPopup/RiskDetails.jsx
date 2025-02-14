@@ -17,41 +17,30 @@ import { useSelector } from "react-redux";
  */
 
 const RiskPopup = ({ onClose, userData, userAccountData }) => {
+
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
   const popupRef = useRef(null);
   const theme = useSelector((state) => state.theme.theme);
 
-  const totalCollateral =
-    parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
-  const totalDebt =
-    parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
-  const health_Factor_Value =
-    Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
-      ? Infinity
-      : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  const totalCollateral =parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
+  const totalDebt = parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
+  const health_Factor_Value = Number(userAccountData?.Ok?.[4]) / 10000000000 > 100   ? Infinity   : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
   const Ltv_Value = (totalDebt / totalCollateral) * 100;
-  const liquidationThreshold_Value =
-    Number(userAccountData?.Ok?.[3]) / 100000000 || 0
-      ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)
-      : "0.00";
+  const liquidationThreshold_Value =Number(userAccountData?.Ok?.[3]) / 100000000 || 0  ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)  : "0.00";
   const healthFactorMinValue = 1;
-  const Max_Ltv = parseFloat(
-    Number(userAccountData?.Ok?.[2]) / 100000000
-  ).toFixed(2);
+  const Max_Ltv = parseFloat(Number(userAccountData?.Ok?.[2]) / 100000000).toFixed(2);
 
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       onClose();
     }
   };
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.body.style.overflow = "";
-    };
-  }, []);
 
   /**
    * Calculates the position of the health factor value on a scale from 0 to 100.
@@ -132,16 +121,10 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
 
   const thresholdValue = parseThreshold(liquidationThreshold_Value);
   const MaxLtvValue = parseThreshold(Max_Ltv);
-  const healthFactorPosition =
-    calculateHealthFactorPosition(health_Factor_Value);
-  const healthFactorMinPosition =
-    calculateHealthFactorPosition(healthFactorMinValue);
+  const healthFactorPosition =calculateHealthFactorPosition(health_Factor_Value);
+  const healthFactorMinPosition =calculateHealthFactorPosition(healthFactorMinValue);
   const currentLTVPosition = calculateLTVPosition(Ltv_Value, 0, 100);
-  const currentLTVThresholdPosition = calculateLTVPosition(
-    thresholdValue,
-    0,
-    100
-  );
+  const currentLTVThresholdPosition = calculateLTVPosition(thresholdValue,0,100);
   const currentMaxLtvPosition = calculateMaxLTVPosition(MaxLtvValue, 0, 100);
 
   const healthFactorColor =
@@ -190,6 +173,23 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       : Ltv_Value < Max_Ltv
       ? "#1e8b47"
       : "#00FFFF";
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-bar">

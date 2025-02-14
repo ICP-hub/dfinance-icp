@@ -5,7 +5,7 @@ import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuth } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
-import { ClickAwayListener } from "@mui/base/ClickAwayListener";
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
@@ -49,6 +49,7 @@ import { toggleSound } from "../../redux/reducers/soundReducer";
  * @param {boolean} isHomeNav - Determines if the navbar is in home mode or dashboard mode.
  * @returns {JSX.Element} - Navbar component.
  */
+
 export default function Navbar({ isHomeNav }) {
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const isMobile = window.innerWidth <= 1115;

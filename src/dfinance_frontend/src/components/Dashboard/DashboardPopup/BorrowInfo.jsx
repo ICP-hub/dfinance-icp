@@ -15,22 +15,30 @@ import { Info } from "lucide-react";
  * @param {number} props.borrowRateAPR - Borrowing interest rate in APR.
  * @param {number} props.reserveFactor - Reserve factor percentage.
  */
-const BorrowInfo = ({
-  formatNumber,
-  borrowCap,
-  totalBorrowed,
-  borrowRateAPR,
-  reserveFactor,
-}) => {
-  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
-    useState(false);
 
+const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reserveFactor}) => {
+
+  /* 
+  ============================
+  STATE MANAGEMENT
+  ============================
+  */
+  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] = useState(false);
+   
+
+  // Calculate borrowing percentages
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
   const totalBorrowPercentage =
     borrowCapNumber && totalBorrowed ? totalBorrowed / borrowCapNumber : 0;
 
+  // URL Parameter Extraction
   const { id } = useParams();
   const tooltipRef = useRef(null);
+
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -39,6 +47,11 @@ const BorrowInfo = ({
     ckUSDTUsdRate,
   } = useFetchConversionRate();
 
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  // Helper function to get asset conversion rate
   const getAssetRate = (assetName) => {
     switch (assetName) {
       case "ckBTC":
@@ -56,12 +69,16 @@ const BorrowInfo = ({
     }
   };
 
+  // Calculate total borrowed asset and cap
   const assetRate = getAssetRate(id);
-  const totalBorrowedAsset =
-    assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
-  const totalBorrowedCap =
-    assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
 
+  const totalBorrowedAsset = assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
+    
+
+  const totalBorrowedCap = assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
+   
+
+  // Format numerical values
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
@@ -79,6 +96,10 @@ const BorrowInfo = ({
   const toggleReserveFactorTooltip = () =>
     setIsReserveFactorTooltipVis((prev) => !prev);
 
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
@@ -93,6 +114,10 @@ const BorrowInfo = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <div className="w-full lg:w-10/12 ">

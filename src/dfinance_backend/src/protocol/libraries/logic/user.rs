@@ -651,6 +651,8 @@ pub async fn create_user_reserve_with_low_health(
             asset_supply: supply_tokens.clone(),
             asset_borrow: borrow_tokens.clone(),
             is_collateral: true,
+            liquidity_index: Nat::from(100_000_000u128),
+            variable_borrow_index: Nat::from(100_000_000u128),
             ..Default::default()
         };
 
@@ -664,6 +666,8 @@ pub async fn create_user_reserve_with_low_health(
             asset_supply: supply_tokens.clone(),
             asset_borrow: Nat::from(0u128),
             is_collateral: true,
+            liquidity_index: Nat::from(100_000_000u128),
+            variable_borrow_index: Nat::from(100_000_000u128),
             ..Default::default()
         };
 

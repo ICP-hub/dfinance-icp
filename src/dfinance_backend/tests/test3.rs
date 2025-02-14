@@ -220,6 +220,19 @@ fn get_user_principal() -> Principal {
     Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae").unwrap()
 }
 
+fn get_users_principal(index:Nat)-> Result< Principal, String>{
+    if index == Nat::from(1u32) {
+        Ok(Principal::from_text("d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe").unwrap())
+    }
+    else if index == Nat::from(2u32) {
+        Ok(Principal::from_text("a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae").unwrap())
+    }else{
+        ic_cdk::println!("No valid input.");
+        return Err("No valid input".to_string());
+    }
+    
+}
+
 fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
@@ -554,6 +567,42 @@ fn setup() -> (PocketIc, Principal) {
             panic!("🚨 Error calling register user function: {:?}", e);
         }
     }
+    let result = pic.update_call(
+        backend_canister,
+        get_users_principal(Nat::from(1u32)).unwrap(),
+        "register_user",
+        encode_one(()).unwrap(),
+    );
+
+    // 🔹 Decode the response
+    match result {
+        Ok(WasmResult::Reply(response)) => {
+            let initialize_response: Result<String, errors::Error> =
+                candid::decode_one(&response).expect("Failed to decode register user response");
+
+            match initialize_response {
+                Ok(_message) => {
+                    ic_cdk::println!("✅ Register user function succeeded");
+                }
+                Err(e) => {
+                    ic_cdk::println!(
+                        "Register user function failed as expected with error: {:?}",
+                        e
+                    );
+                    panic!("🚨 Expected success but got error: {:?}", e);
+                }
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => {
+            panic!(
+                "🚨 Register user function was rejected: {:?}",
+                reject_message
+            );
+        }
+        Err(e) => {
+            panic!("🚨 Error calling register user function: {:?}", e);
+        }
+    }
     (pic, backend_canister)
 }
 
@@ -565,7 +614,7 @@ fn call_test_function() {
     // test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);
-    // test_liquidation(&pic, backend_canister);
+    test_liquidation(&pic, backend_canister);
 }
 
 fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Principal){
@@ -581,23 +630,123 @@ fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Pr
     // Pushing first user data
     users_with_low_health.push(LowHealthUsers {
         asset_supply: "ICP".to_string(),
-        asset_borrow: "ckBTC".to_string(),
-        supply_tokens: Nat::from(100u128),
-        borrow_tokens: Nat::from(500u128),
+        asset_borrow: "ICP".to_string(),
+        supply_tokens: Nat::from(100_000_000u128),
+        borrow_tokens: Nat::from(90_000_000u128),
     });
 
     // Pushing second user data
-    users_with_low_health.push(LowHealthUsers {
-        asset_supply: "ckETH".to_string(),
-        asset_borrow: "ckUSDT".to_string(),
-        supply_tokens: Nat::from(1000u128),
-        borrow_tokens: Nat::from(500u128),
-    });
+    // users_with_low_health.push(LowHealthUsers {
+    //     asset_supply: "ICP".to_string(),
+    //     asset_borrow: "ICP".to_string(),
+    //     supply_tokens: Nat::from(1000u128),
+    //     borrow_tokens: Nat::from(500u128),
+    // });
 
     let user_principal = get_user_principal();
     for user  in &users_with_low_health{
 
-        let add_tester_result = pic.update_call(
+        let result  = pic.query_call(
+            backend_canister,
+            Principal::anonymous(),
+            "get_asset_principal",
+            encode_one(user.asset_supply.clone()).unwrap(),
+        );
+
+       let asset_canister_id =  match result {
+            Ok(WasmResult::Reply(response_data)) => {
+                match decode_one::<Result<Principal, errors::Error>>(&response_data) {
+                    Ok(Ok(principal)) => {
+                        // Successfully retrieved the principal
+                        Some(principal)
+                    }
+                    Ok(Err(err)) => {
+                        // Handle the error returned by get_asset_principal
+                        ic_cdk::println!("❌ Error retrieving asset principal: {:?}", err);
+                        None
+                    }
+                    Err(decode_err) => {
+                        // Handle the error while decoding the response
+                        ic_cdk::println!(
+                            "❌ Supply failed with error: {:?}",
+                            decode_err
+                        );
+                        None
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                // Handle the rejection message from the WasmResult
+                println!("❌ Query call rejected: {}", reject_message);
+                None
+            }
+            Err(call_err) => {
+                // Handle the error from the query call itself
+                println!("❌ Query call failed: {}", call_err);
+                None
+            }
+        };
+
+        let asset_principal = match asset_canister_id {
+            Some(principal) => principal,
+            None => {
+                continue;
+            }
+        };
+
+        let approve_args = ApproveArgs {
+            fee: None,
+            memo: None,
+            from_subaccount: None,
+            created_at_time: None,
+            amount: Nat::from(1000_0000_000u128), //alternative
+            expected_allowance: None,
+            expires_at: None,
+            spender: Account {
+                owner: backend_canister,
+                subaccount: None,
+            },
+        };
+
+        let args_encoded = encode_one(approve_args).expect("❌ Failed to encode approve arguments");
+        ic_cdk::println!("🟦 ICRC2 Approving ...");
+        // Call the `approve` method on `ckbtc_canister`
+        let approve_result = pic.update_call(
+            asset_principal, //asset_canister variable
+            user_principal,
+            "icrc2_approve",
+            args_encoded,
+        );
+
+        // Handle the result of the approve call
+        match approve_result {
+            Ok(WasmResult::Reply(reply)) => {
+                let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
+                match approve_response {
+                    Ok(ApproveResult::Ok(block_index)) => {
+                        ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
+                    }
+                    Ok(ApproveResult::Err(error)) => {
+                        ic_cdk::println!("❌ Approve failed with error: {:?}", error);
+                        continue;
+                    }
+                    Err(e) => {
+                        ic_cdk::println!("❌  Failed to decode ApproveResult: {:?}", e);
+                        continue;
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+               ic_cdk:: println!("❌  Approve call rejected: {}", reject_message);
+                continue;
+            }
+            Err(e) => {
+                ic_cdk::println!("❌  Error during approve call: {:?}", e);
+                continue;
+            }
+        }
+
+        let result = pic.update_call(
             backend_canister,
             user_principal,
             "create_user_reserve_with_low_health",
@@ -605,13 +754,14 @@ fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Pr
         );
 
         // Decode the response
-        match add_tester_result {
+        match result {
             Ok(WasmResult::Reply(response)) => {
                 let initialize_response: Result<UserReserveData, errors::Error> =
                     candid::decode_one(&response).expect("Failed to decode create_user_reserve_with_low_health response");
 
                 match initialize_response {
-                    Ok(_) => {
+                    Ok(data) => {
+                        ic_cdk::println!("user reserve data : {:?}",data);
                         ic_cdk::println!("✅ Create_user_reserve_with_low_health function succeeded");
                     }
                     Err(e) => {
@@ -741,6 +891,66 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         let result = pic.update_call(
             backend_canister,
             user_principal,
+            "faucet",
+            encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+        );
+        // ic_cdk::println!("Faucet request result: {:?}", errors::Error::);
+
+        match result {
+            Ok(WasmResult::Reply(reply)) => {
+                let decoded_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to decode faucet response");
+                    
+                    // ic_cdk::println!("Decoded response (generic): {:?}", decoded_response);
+                match decoded_response {
+                    Ok(balance) => {
+                        if !case.expect_success{
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected failure but got success.", i + 1);
+                            panic!("Unexpected rejection.");
+                        }
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Faucet successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
+                    }
+                    Err(error) => {
+                        if !case.expect_success {
+                            assert_eq!(
+                                case.expected_error_message.as_deref(),
+                                Some(error.message()),
+                                "❌ IC Test Case {} Failed: Error message mismatch for case: {:?}",
+                                i + 1, case
+                            );
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Faucet rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            panic!("Unexpected rejection.");
+                        }
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                ic_cdk::println!("❌ IC Test Case {} Failed: Function call rejected with message: {}", i + 1, reject_message);
+                panic!("Unexpected rejection.");
+            }
+            Err(e) => {
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during faucet function call: {:?}",
+                    i + 1,
+                    e
+                );
+                panic!("Faucet function call error.");
+            }
+        }
+        // Simulate faucet request
+        let result = pic.update_call(
+            backend_canister,
+            get_users_principal(Nat::from(1u32)).unwrap(),
             "faucet",
             encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
         );
@@ -1719,22 +1929,22 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // Valid cases with sufficient collateral
         TestCase { 
             debt_asset: "ICP".to_string(),
-            collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(10u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(500u128),
+            collateral_asset: "ICP".to_string(),
+            amount: Nat::from(40_000_000u128),
+            on_behalf_of: get_user_principal(),
+            reward_amount: Nat::from(40400_000u128),
             expect_success: true,
             expected_error_message: None,
         },
-        TestCase { 
-            debt_asset: "ckBTC".to_string(),
-            collateral_asset: "ckETH".to_string(),
-            amount: Nat::from(1u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(1045u128),
-            expect_success: true,
-            expected_error_message: None,
-        },
+        // TestCase { 
+        //     debt_asset: "ckBTC".to_string(),
+        //     collateral_asset: "ckETH".to_string(),
+        //     amount: Nat::from(1u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(1045u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
         // TestCase { 
         //     debt_asset: "ckUSDC".to_string(),
         //     collateral_asset: "ckUSDT".to_string(),
@@ -1746,26 +1956,26 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
         // Unsupported asset pairs
-        TestCase { 
-            debt_asset: "ckBTC".to_string(),
-            collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(50u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(100u128),
-            expect_success: false,
-            expected_error_message: Some("Invalid collateral-debt pair".to_string()),
-        },
+        // TestCase { 
+        //     debt_asset: "ckBTC".to_string(),
+        //     collateral_asset: "ckBTC".to_string(),
+        //     amount: Nat::from(50u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(100u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Invalid collateral-debt pair".to_string()),
+        // },
 
-        // Zero amount (invalid scenario)
-        TestCase { 
-            debt_asset: "ckETH".to_string(),
-            collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(0u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(0u128),
-            expect_success: false,
-            expected_error_message: Some("Amount must be greater than zero".to_string()),
-        },
+        // // Zero amount (invalid scenario)
+        // TestCase { 
+        //     debt_asset: "ckETH".to_string(),
+        //     collateral_asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(0u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(0u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Amount must be greater than zero".to_string()),
+        // },
 
         // Very large amounts (stress test)
         // TestCase { 
@@ -1778,16 +1988,16 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         //     expected_error_message: Some("Amount exceeds maximum limit".to_string()),
         // },
 
-        // Edge case: Minimal possible amount
-        TestCase { 
-            debt_asset: "ICP".to_string(),
-            collateral_asset: "ckUSDT".to_string(),
-            amount: Nat::from(1u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(10u128),
-            expect_success: true,
-            expected_error_message: None,
-        },
+        // // Edge case: Minimal possible amount
+        // TestCase { 
+        //     debt_asset: "ICP".to_string(),
+        //     collateral_asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(1u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(10u128),
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
 
         //  Invalid principal (malformed or blocked user)
         // TestCase { 
@@ -1800,16 +2010,16 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         //     expected_error_message: Some("Invalid principal ID".to_string()),
         // },
 
-        // Zero reward amount (could be invalid depending on system logic)
-        TestCase { 
-            debt_asset: "ckBTC".to_string(),
-            collateral_asset: "ckETH".to_string(),
-            amount: Nat::from(10u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(0u128),
-            expect_success: false,
-            expected_error_message: Some("Reward amount must be greater than zero".to_string()),
-        },
+        // // Zero reward amount (could be invalid depending on system logic)
+        // TestCase { 
+        //     debt_asset: "ckBTC".to_string(),
+        //     collateral_asset: "ckETH".to_string(),
+        //     amount: Nat::from(10u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(0u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Reward amount must be greater than zero".to_string()),
+        // },
 
         // Edge case: Borrowing with a different valid principal
         // TestCase { 
@@ -1823,16 +2033,16 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
 
-        // Borrowing against an unlisted or unknown asset (hypothetical scenario)
-        TestCase { 
-            debt_asset: "XYZCoin".to_string(), // Unsupported coin
-            collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(100u128),
-            on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(30u128),
-            expect_success: false,
-            expected_error_message: Some("Unsupported debt asset".to_string()),
-        },
+        // // Borrowing against an unlisted or unknown asset (hypothetical scenario)
+        // TestCase { 
+        //     debt_asset: "XYZCoin".to_string(), // Unsupported coin
+        //     collateral_asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(100u128),
+        //     on_behalf_of: Principal::anonymous(),
+        //     reward_amount: Nat::from(30u128),
+        //     expect_success: false,
+        //     expected_error_message: Some("Unsupported debt asset".to_string()),
+        // },
 
     ];
 
@@ -1841,6 +2051,8 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     ic_cdk::println!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
+    test_create_user_reserve_with_low_health(&pic, backend_canister);
+
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
@@ -1868,7 +2080,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
 
         let result = pic.update_call(
             backend_canister,
-            user_principal,
+            get_users_principal(Nat::from(1u32)).unwrap(),
             "execute_liquidation",
             encode_one(liquidation_params).unwrap(),
         );

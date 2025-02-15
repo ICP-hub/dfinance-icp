@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Button from "../../components/Common/Button";
-import Buton from "../../components/Common/LearnMoreButton";
 import Ellipse from "../../components/Common/Ellipse";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
@@ -16,7 +15,6 @@ import {
   MAIN_NAV_LINK,
   FAQ_QUESTION,
   TAB_CARD_DATA,
-  SECURITY_CONTRIBUTORS_DATA,
 } from "../../utils/constants";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 
@@ -35,7 +33,6 @@ const Home = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentTab, setCurrentTab] = useState(MAIN_NAV_LINK[0].id);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -110,9 +107,7 @@ const Home = () => {
 
   return (
     <>
-      {}
       <div className="w-full xl3:w-[80%] xl4:w-[50%] xl3:mx-auto px-4 md:px-12 xl:px-24 relative overflow-hidden font-poppins">
-        {}
         <div className="absolute top-0 right-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"top-right"}

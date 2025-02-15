@@ -22,6 +22,9 @@ import { setUserData } from "../../redux/reducers/userReducer";
  * @returns {JSX.Element} - Returns the WalletModal component for wallet connection and switching.
  */
 const WalletModal = () => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
@@ -32,6 +35,9 @@ const WalletModal = () => {
   } = useSelector((state) => state.utility);
   const { login, logout, isAuthenticated } = useAuth();
 
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
@@ -115,6 +121,10 @@ const WalletModal = () => {
     };
     reAuthenticate();
   }, [connectedWallet, isAuthenticated]);
+
+  /* ===================================================================================
+   *                                  RENDERED COMPONENT
+   * =================================================================================== */
 
   return (
     <Modal open={isWalletModalOpen} onClose={handleWalletConnect}>

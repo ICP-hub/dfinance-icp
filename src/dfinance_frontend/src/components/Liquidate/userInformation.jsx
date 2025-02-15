@@ -3,18 +3,15 @@ import { Info, Check, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
-import { idlFactory as ledgerIdlFactory } from "../../../../declarations/token_ledger";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import { useCallback } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useAssetData from "../customHooks/useAssets";
-import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
@@ -23,20 +20,23 @@ import useUserData from "../customHooks/useUserData";
 import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
 
-const UserInformationPopup = ({
-  onClose,
-  mappedItem,
-  principal,
-  userAccountData,
-  assetSupply,
-  assetBorrow,
-  assetBalance,
-}) => {
-  const liquidateTrigger = useSelector(
-    (state) => state.liquidateUpdate.LiquidateTrigger
-  );
+const UserInformationPopup = ({onClose, mappedItem, userAccountData, assetSupply, assetBorrow, assetBalance,}) => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
 
   const { backendActor, principal: currentUserPrincipal } = useAuth();
+
+  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
+  } = useFetchConversionRate();
+  const {
+    assets, reserveData, filteredItems, fetchAssetSupply, fetchAssetBorrow,
+  } = useAssetData();
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
   const [rewardAmount, setRewardAmount] = useState();
   const [amountToRepay, setAmountToRepay] = useState();
   const [isApproved, setIsApproved] = useState(false);
@@ -59,30 +59,48 @@ const UserInformationPopup = ({
   const [error, setError] = useState(null);
   const [selectedAssetBalance, setSelectedAssetBalance] = useState(0);
   const [factor, setFactor] = useState("");
+  const [maxCollateral, setMaxCollateral] = useState(null);
+  const [maxDebtToLiq, setMaxDebtToLiq] = useState(null);
+  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
+  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
+  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
+  const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
+  const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
+  const [collateralRate, setCollateralRate] = useState(null);
+  const [collateral, setCollateralRateAmount] = useState(null);
+  const [info, setInfo] = useState(false);
+  const [isCollateralAssetSelected, setIsCollateralAssetSelected] =
+    useState(false);
+  const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
+  const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
+  const [collateralAmount, setCollateralAmount] = useState(0);
+  const [loading, setLoading] = useState();
+  const assetRates = { ckETH: ckETHUsdRate, ckBTC: ckBTCUsdRate, ckUSDC: ckUSDCUsdRate, ICP: ckICPUsdRate, ckUSDT: ckUSDTUsdRate,};
+  const [value, setValue] = useState(0);
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
 
   const dispatch = useDispatch();
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchConversionRate();
+  const liquidateTrigger = useSelector(
+    (state) => state.liquidateUpdate.LiquidateTrigger
+  );
   const fees = useSelector((state) => state.fees.fees);
+  const ledgerActors = useSelector((state) => state.ledger);
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(
+    () => Principal.fromText(currentUserPrincipal),
+    [currentUserPrincipal]
+  );
+
   const normalizedAsset = selectedAsset
     ? selectedAsset.toLowerCase()
     : "default";
@@ -93,51 +111,11 @@ const UserInformationPopup = ({
 
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
-  const [maxCollateral, setMaxCollateral] = useState(null);
-  const [maxDebtToLiq, setMaxDebtToLiq] = useState(null);
-  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
-  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
-  const {
-    assets,
-    reserveData,
-    filteredItems,
-    fetchAssetSupply,
-    fetchAssetBorrow,
-  } = useAssetData();
-  useEffect(() => {
-    const fetchSupplyData = async () => {
-      if (assets.length === 0) return;
-      setSupplyDataLoading(true);
-      try {
-        for (const asset of assets) {
-          await fetchAssetSupply(asset);
-        }
-      } catch (error) {
-        setSupplyDataLoading(false);
-        console.error("Error fetching supply data:", error);
-      } finally {
-        setSupplyDataLoading(false);
-      }
-    };
 
-    const fetchBorrowData = async () => {
-      if (assets.length === 0) return;
-      setBorrowDataLoading(true);
-      try {
-        for (const asset of assets) {
-          await fetchAssetBorrow(asset);
-        }
-      } catch (error) {
-        setBorrowDataLoading(false);
-        console.error("Error fetching borrow data:", error);
-      } finally {
-        setBorrowDataLoading(false);
-      }
-    };
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
-    fetchSupplyData();
-    fetchBorrowData();
-  }, [assets, liquidateTrigger]);
   const getAssetSupplyValue = (asset, principal) => {
     if (assetSupply[asset] !== undefined) {
       const supplyValue = Number(assetSupply[asset]);
@@ -145,6 +123,7 @@ const UserInformationPopup = ({
     }
     return;
   };
+
   const getAssetBorrowValue = (asset, principal) => {
     if (assetBorrow[asset] !== undefined) {
       const borrowValue = Number(assetBorrow[asset]);
@@ -152,127 +131,6 @@ const UserInformationPopup = ({
     }
     return;
   };
-  const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-  const assetRates = {
-    ckETH: ckETHUsdRate,
-    ckBTC: ckBTCUsdRate,
-    ckUSDC: ckUSDCUsdRate,
-    ICP: ckICPUsdRate,
-    ckUSDT: ckUSDTUsdRate,
-  };
-
-  useEffect(() => {
-    // Convert values safely
-    const totalCollateral = Number(mappedItem.collateral) / 1e8 || 0;
-    const totalDebt = Number(mappedItem.debt) / 1e8 || 0;
-    const liquidationThreshold =
-      Number(mappedItem.liquidationThreshold) / 1e8 || 0;
-
-    // Extract liquidation thresholds for each asset
-    const assetLiquidationThresholds = Array.isArray(
-      mappedItem.userData?.reserves?.[0]
-    )
-      ? mappedItem.userData?.reserves?.[0].map((mappedItem) => {
-          const assetName = mappedItem?.[0];
-
-          // Find corresponding asset in filteredItems
-          const item1 = filteredItems.find((item) => item[0] === assetName);
-
-          // Extract and convert the liquidation threshold
-          const liquidationThreshold =
-            Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
-              1e8 || 0;
-
-          console.log(
-            `Asset: ${assetName}, Liquidation Threshold: ${liquidationThreshold}`
-          );
-          return { assetName, liquidationThreshold };
-        })
-      : [];
-
-    console.log("Asset Liquidation Thresholds:", assetLiquidationThresholds);
-
-    // Get liquidation threshold for selected asset
-    const reserveliquidationThreshold =
-      assetLiquidationThresholds.find(
-        (item) => item.assetName === selectedAsset
-      )?.liquidationThreshold || 0;
-
-    console.log(
-      `Liquidation Threshold for ${selectedAsset}:`,
-      reserveliquidationThreshold
-    );
-
-    // Calculate the health factor using correct values
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold,
-      reserveliquidationThreshold
-    );
-
-    // Calculate adjusted collateral and debt values
-    const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
-    const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
-
-    let totalCollateralValue =
-      Math.trunc(
-        (parseFloat(totalCollateral) -
-          parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
-          1e8
-      ) / 1e8;
-    if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;
-    }
-
-    let totalDebtValue =
-      totalDebt - amountAdded * (assetRates[selectedDebtAsset] / 1e8);
-
-    if (totalDebtValue < 0) {
-      totalDebtValue = 0;
-    }
-
-    // Calculate liquidation values
-    let avliq = Math.trunc(liquidationThreshold * totalCollateral * 1e8) / 1e8;
-    console.log("avliq", avliq);
-
-    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
-    const multiplier = Math.pow(10, 8);
-    tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
-    if (totalCollateralValue > 0) {
-      tempLiq = tempLiq / totalCollateralValue;
-
-      // Truncate to 8 decimal places
-      const multiplier = Math.pow(10, 8);
-      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
-    }
-    console.log("tempLiq", tempLiq);
-
-    let result = (totalCollateralValue * (tempLiq / 100)) / totalDebtValue;
-    result = Math.round(result * 1e8) / 1e8;
-
-    console.log("result", result);
-
-    // Update state with new values
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-
-    // No return statement here; state updates should happen instead
-  }, [
-    mappedItem.collateral,
-    mappedItem.debt,
-    calculatedData?.maxCollateral,
-    calculatedData?.maxDebtToLiq,
-    liquidateTrigger,
-    filteredItems, // Ensure filteredItems is tracked
-    selectedAsset, // Track selectedAsset changes
-    assetRates, // Ensure assetRates is updated
-  ]);
 
   const calculateHealthFactor = (
     totalCollateral,
@@ -280,98 +138,61 @@ const UserInformationPopup = ({
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    console.log("total collateral = ", totalCollateral);
-    console.log("total debt = ", totalDebt);
-    console.log("liquidation threshold = ", liquidationThreshold);
-    console.log("reserve liquidation threshold = ", reserveliquidationThreshold);
     const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
     const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
-    console.log("amountTaken to see", amountTaken);
-    console.log("amountAdded", amountAdded);
 
-    const assetRates = {
-      ckETH: ckETHUsdRate,
-      ckBTC: ckBTCUsdRate,
-      ckUSDC: ckUSDCUsdRate,
-      ICP: ckICPUsdRate,
-      ckUSDT: ckUSDTUsdRate,
-    };
-
-    console.log("assetRates:", assetRates);
+    const assetRates = {ckETH: ckETHUsdRate ,ckBTC: ckBTCUsdRate ,ckUSDC: ckUSDCUsdRate ,ICP: ckICPUsdRate ,ckUSDT: ckUSDTUsdRate,};
 
     let totalCollateralValue =
       Math.trunc(
         (parseFloat(totalCollateral) -
           parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
-        1e8
+          1e8
       ) / 1e8;
-
-    console.log("parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8)", amountTaken * (assetRates[selectedAsset] / 1e8));
-    console.log("Initial totalCollateralValue calculation:", totalCollateralValue);
 
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
-    console.log("Total collateral value after checking for negatives:", totalCollateralValue);
-    console.log("assetRates[selectedAsset]", assetRates[selectedAsset]);
-    console.log("totalCollateral", totalCollateral);
 
     let totalDeptValue =
       Math.trunc(
         (parseFloat(totalDebt) -
           parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8))) *
-        1e8
+          1e8
       ) / 1e8;
-
-    console.log("amountAdded * (assetRates[selectedDebtAsset] / 1e8", amountAdded * (assetRates[selectedDebtAsset] / 1e8));
-    console.log("Initial totalDeptValue calculation:", totalDeptValue);
 
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
     if (totalDeptValue === 0) {
-      console.log("Total debt value is zero, returning Infinity");
       return Infinity;
     }
-    console.log("assetRates[selectedDebtAsset]", assetRates[selectedDebtAsset]);
-    console.log("totalDeptValue", totalDeptValue);
-    console.log("totalDebt", totalDebt);
 
-    console.log("liquidationThreshold", liquidationThreshold);
     let avliq = Math.trunc(liquidationThreshold * totalCollateral * 1e8) / 1e8;
-    console.log("Total avg liquidation threshold:", avliq); // previous liquidity threshold
 
-    // amount taken should be reward amount.
-    // let tempLiq = avliq - (amountTaken * reserveliquidationThreshold); // new liquidity threshold
-    let tempLiq = avliq - ((amountTaken * (assetRates[selectedAsset] / 1e8)) * reserveliquidationThreshold); // new liquidity threshold
-    console.log("tempLiq before checking collateral value:", tempLiq);
-
+    let tempLiq =
+      avliq -
+      amountTaken *
+        (assetRates[selectedAsset] / 1e8) *
+        reserveliquidationThreshold;
     if (totalCollateralValue > 0) {
-      tempLiq = tempLiq / totalCollateralValue; /// average liquidity threshold
-      console.log("tempLiq after dividing by totalCollateralValue:", tempLiq);
+      tempLiq = tempLiq / totalCollateralValue;
 
-      // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
-      console.log("tempLiq after dividing by totalCollateralValue and truncating:", tempLiq);
     }
 
-    //withdraw me minus hoga repay aur borrow same toggle add horaha to plus varna minus
-    console.log("Final tempLiq:", tempLiq);
-    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;// health factor formaula.
-    console.log("Result before rounding:", result);
-
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8;
-    console.log("Result after rounding:", result);
 
     return result;
   };
-
 
   function roundToDecimal(value, decimalPlaces) {
     const factor = Math.pow(10, decimalPlaces);
     return Math.round(value * factor) / factor;
   }
+
   const getBalanceForPrincipalAndAsset = (
     principal,
     assetName,
@@ -384,16 +205,13 @@ const UserInformationPopup = ({
     return assetBalances ? assetBalances[balanceType] || 0 : 0;
   };
 
-  const defaultAsset = "cketh";
-
+  //Asset supply calculated
   const calculateAssetSupply = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
-    console.log("reserve in asset supply", reserves);
     let currentLiquidity = 0;
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
-        console.log("Liquidity Index for", assetName, ":", currentLiquidity);
       }
     });
 
@@ -404,39 +222,20 @@ const UserInformationPopup = ({
         "dtokenBalance"
       ) || 0;
 
-    if (!currentLiquidity) return 0; 
-    console.log("assetBalance", assetBalance); 
-    console.log(
-      "getAssetSupplyValue(assetName)",
-      Number(getAssetSupplyValue(assetName))
-    );
-    console.log(
-      "multiply =",
-      Number(assetBalance) * Number(getAssetSupplyValue(assetName))
-    );
-    console.log("currentLiquidity", currentLiquidity);
-    console.log(
-      "total = ",
-      Math.trunc(
-        (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-          Number(currentLiquidity)
-      )
-    );
+    if (!currentLiquidity) return 0;
 
     return Math.trunc(
       (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
         Number(currentLiquidity)
     );
   };
-
+  //asset borrow calculated
   const calculateAssetBorrow = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
-    console.log("reserves in borrow", reserves);
     let debtIndex = 0;
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
-        console.log("Debt Index for", assetName, ":", debtIndex);
       }
     });
 
@@ -447,32 +246,19 @@ const UserInformationPopup = ({
         "debtTokenBalance"
       ) || 0;
 
-    if (!debtIndex) return 0; 
+    if (!debtIndex) return 0;
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
         Number(debtIndex)
     );
   };
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
       onClose();
     }
   };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const handleNextClick = () => {
     if (isDebtInfo) {
@@ -481,16 +267,8 @@ const UserInformationPopup = ({
       setIsDebtInfo(true);
     }
   };
-  const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
-  const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
-  const [collateralRate, setCollateralRate] = useState(null);
-  const [collateral, setCollateralRateAmount] = useState(null);
-  const [info, setInfo] = useState(false);
-  const [isCollateralAssetSelected, setIsCollateralAssetSelected] =
-    useState(false);
-  const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
-  const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
 
+  //Debt asset selection
   const handleDebtAssetSelection = (
     asset,
     assetBorrowAmount,
@@ -507,7 +285,7 @@ const UserInformationPopup = ({
     setSelectedAssetSupply(0);
     setCollateralRateAmount(0);
   };
-
+  // Collateral asset selection
   const handleAssetSelection = (
     asset,
     collateralRate,
@@ -524,16 +302,8 @@ const UserInformationPopup = ({
   const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
   };
-  const [collateralAmount, setCollateralAmount] = useState(0);
-  const ledgerActors = useSelector((state) => state.ledger);
 
-  const principalObj = useMemo(
-    () => Principal.fromText(currentUserPrincipal),
-    [currentUserPrincipal]
-  );
-
-  const [loading, setLoading] = useState();
-
+  // Aprove function
   const handleApprove = async () => {
     let ledgerActor;
     if (selectedDebtAsset === "ckBTC") {
@@ -600,55 +370,7 @@ const UserInformationPopup = ({
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await handleMaxCollateral(); 
-        if (response) {
-          setCalculatedData(response); 
-        }
-      } catch (error) {
-        console.error("Error in handleMaxCollateral:", error);
-      }
-    };
-
-    fetchData();
-  }, [
-    amountToRepay,
-    selectedDebtAsset,
-    selectedAsset,
-    liquidateTrigger,
-    collateralAmount,
-  ]);
-
-  //  Update `collateralAmount` when dependencies change
-  useEffect(() => {
-    if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
-      setCollateralAmount(collateral); // Fallback to old collateral
-      return;
-    }
-    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
-    const newCollateralAmount =
-      selectedAsset === selectedDebtAsset
-        ? amountToRepay
-        : truncateTo8Decimals(amountToRepayUSD / collateralRate);
-
-    console.log("amount to repay usd = ", amountToRepayUSD);
-    console.log("rate of collateral  = ", collateralRate);
-    console.log("amount to repay eeee = ", amountToRepay);
-    console.log(" Setting collateralAmount:", newCollateralAmount);
-    setCollateralAmount(newCollateralAmount);
-  }, [
-    selectedAsset,
-    selectedDebtAsset,
-    amountToRepay,
-    amountToRepayUSD,
-    collateralRate,
-  ]);
-
-  useEffect(() => {
-    console.log(" Updated collateralAmount:", collateralAmount);
-  }, [collateralAmount]);
+  //Function to calculate max collateral and max debt to liq
 
   function cal_max_collateral_to_liq(
     supplyAmount,
@@ -656,15 +378,6 @@ const UserInformationPopup = ({
     collateralBalance,
     selectedAsset
   ) {
-    console.log("Function cal_max_collateral_to_liq called");
-    console.log("to check agaaaa = ", Math.trunc(rewardAmount * 100000000));
-
-    console.log("supplyAmount:", supplyAmount);
-    console.log("totalDebt:", totalDebt);
-    console.log("collateralBalance:", collateralBalance);
-    console.log("selectedAsset:", selectedAsset);
-    console.log("Using Updated collateralAmount:", collateralAmount); 
-
     if (isNaN(supplyAmount) || isNaN(totalDebt) || isNaN(collateralBalance)) {
       throw new Error(
         "Invalid input parameters. All parameters must be numbers."
@@ -700,9 +413,6 @@ const UserInformationPopup = ({
     const truncatedCollateralBalance =
       truncateToEightDecimals(collateralBalance);
 
-    console.log("Truncated collateralAmount:", truncatedCollateral);
-    console.log("Truncated collateralBalance:", truncatedCollateralBalance);
-
     let finalCollateralAmount = truncateToEightDecimals(
       (truncatedCollateral + truncatedCollateral * (liquidation_bonus / 100)) *
         1e8
@@ -710,39 +420,25 @@ const UserInformationPopup = ({
 
     finalCollateralAmount = Math.trunc(finalCollateralAmount);
 
-    console.log(
-      "Updated finalCollateralAmount before returning:",
-      finalCollateralAmount
-    );
-
     const generalLiquidityBonus = (100 + liquidation_bonus) * 100;
-    console.log("General Liquidity Bonus:", generalLiquidityBonus);
 
     let maxCollateral, maxDebtToLiq;
 
     if (finalCollateralAmount > truncatedCollateralBalance) {
-      console.log("Collateral amount exceeds collateral balance, adjusting...");
       maxCollateral = truncatedCollateralBalance;
 
       const calculatedValue =
         ((truncatedCollateral * usdRate) / debtPrice) *
         (1000 / generalLiquidityBonus);
-      console.log("Calculated Debt-to-Liquidate Value:", calculatedValue);
 
       maxDebtToLiq = truncateToEightDecimals(calculatedValue);
-      console.log("Max Debt To Liquidate (Truncated):", maxDebtToLiq);
 
       setInfo(true);
     } else {
-      console.log("Collateral amount is within balance.");
       maxDebtToLiq = supplyAmount;
       maxCollateral = finalCollateralAmount;
       setInfo(false);
     }
-
-    console.log("Final maxCollateral:", maxCollateral);
-    console.log("Final maxDebtToLiq:", maxDebtToLiq);
-
     return {
       maxCollateral,
       maxDebtToLiq,
@@ -754,15 +450,12 @@ const UserInformationPopup = ({
       const supplyAmount = Math.trunc(amountToRepay * 100000000);
       const totalDebt = Number(mappedItem.debt) * 1e8;
       const selectedAssetsupply = Math.trunc(selectedAssetSupply);
-      console.log("supplyAmount", supplyAmount);
-      console.log("amount to repay again", amountToRepay);
       const response = cal_max_collateral_to_liq(
         supplyAmount,
         totalDebt,
         selectedAssetsupply,
         selectedAsset
       );
-      console.log("response", response);
       if (response) {
         return response;
       }
@@ -797,6 +490,7 @@ const UserInformationPopup = ({
     Default: "An unexpected error occurred. Please try again later.",
   };
 
+  //Liquidation main function call
   const handleConfirmLiquidation = async () => {
     setIsLoading(true);
     try {
@@ -812,11 +506,7 @@ const UserInformationPopup = ({
       const truncatedMaxCollateral =
         truncateToEightDecimals(maxCollateralValue);
       let rewardAmount = truncatedMaxCollateral;
-      console.log("reward amount", rewardAmount);
-      console.log("max collateral value", maxCollateralValue);
-      console.log("truncatedMaxCollateral", truncatedMaxCollateral);
       rewardAmount = truncateToEightDecimals(rewardAmount);
-      console.log("Final rewardAmount", rewardAmount);
 
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");
@@ -827,10 +517,8 @@ const UserInformationPopup = ({
         collateral_asset: selectedAsset,
         amount: supplyAmount,
         on_behalf_of: mappedItem?.principal?._arr,
-        reward_amount: Math.trunc(rewardAmount * 1e8), 
+        reward_amount: Math.trunc(rewardAmount * 1e8),
       };
-
-      console.log("result of = ", Math.trunc(rewardAmount * 1e8));
 
       const result = await backendActor.execute_liquidation(liquidationParams);
 
@@ -956,74 +644,6 @@ const UserInformationPopup = ({
     dispatch(toggleRefreshLiquidate());
   };
 
-  useEffect(() => {
-    if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
-      setCkBTCUsdBalance(balanceInUsd);
-    }
-  }, [ckBTCBalance, ckBTCUsdRate, liquidateTrigger]);
-
-  useEffect(() => {
-    if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
-      setCkETHUsdBalance(balanceInUsd);
-    }
-  }, [ckETHBalance, ckETHUsdRate, liquidateTrigger]);
-
-  useEffect(() => {
-    if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
-        2
-      );
-      setCkUSDCUsdBalance(balanceInUsd);
-    }
-  }, [ckUSDCBalance, ckUSDCUsdRate, liquidateTrigger]);
-
-  useEffect(() => {
-    if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
-      setCkICPUsdBalance(balanceInUsd);
-    }
-  }, [ckICPBalance, ckICPUsdRate, liquidateTrigger]);
-
-  useEffect(() => {
-    if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(
-        2
-      );
-      setCkUSDTUsdBalance(balanceInUsd);
-    }
-  }, [ckUSDTBalance, ckUSDTUsdRate, liquidateTrigger]);
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchBalance("ckBTC"),
-          fetchBalance("ckETH"),
-          fetchBalance("ckUSDC"),
-          fetchBalance("ICP"),
-          fetchBalance("ckUSDT"),
-          fetchConversionRate(),
-        ]);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, [
-    fetchBalance,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    liquidateTrigger,
-  ]);
-
   const renderDebtAssetDetails = (asset) => {
     const assetBalances = {
       ckETH: ckETHBalance,
@@ -1068,6 +688,7 @@ const UserInformationPopup = ({
       </div>
     );
   };
+
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
@@ -1081,8 +702,9 @@ const UserInformationPopup = ({
       return numericValue.toFixed(7);
     }
   };
+
   const renderAssetDetails = (asset) => {
-    if (!asset) return null; 
+    if (!asset) return null;
 
     const assetRates = {
       ckETH: ckETHUsdRate,
@@ -1092,7 +714,7 @@ const UserInformationPopup = ({
       ckUSDT: ckUSDTUsdRate,
     };
 
-    const usdRate = assetRates[asset] ? assetRates[asset] / 1e8 : null; 
+    const usdRate = assetRates[asset] ? assetRates[asset] / 1e8 : null;
     const adjustedRewardAmount =
       rewardAmount !== calculatedData?.maxCollateral / 1e8
         ? calculatedData?.maxCollateral / 1e8
@@ -1127,10 +749,9 @@ const UserInformationPopup = ({
                   : rewardAmount;
               const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : 0;
 
-              // Determine how to display the reward amount
               let displayedReward;
               if (!isFinite(rewardInUSD) || rewardInUSD === 0) {
-                displayedReward = "0.00"; 
+                displayedReward = "0.00";
               } else if (rewardInUSD < 0.01) {
                 displayedReward = `<${(0.01 / usdRate).toLocaleString(
                   undefined,
@@ -1138,7 +759,7 @@ const UserInformationPopup = ({
                     minimumFractionDigits: 8,
                     maximumFractionDigits: 8,
                   }
-                )}`; 
+                )}`;
               } else {
                 displayedReward = adjustedRewardAmount.toLocaleString(
                   undefined,
@@ -1259,12 +880,6 @@ const UserInformationPopup = ({
     );
   };
 
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    const newValue = Number(mappedItem.healthFactor) / 10000000000;
-    setValue(newValue);
-  }, [liquidateTrigger]);
   const formatNumber = useFormatNumber();
   let liquidation_bonus = "";
 
@@ -1280,6 +895,306 @@ const UserInformationPopup = ({
     liquidation_bonus =
       Number(item?.configuration?.liquidation_bonus || "0") / 100000000;
   }
+
+  const truncateToSevenDecimals = (value) => {
+    const multiplier = Math.pow(10, 8);
+    const truncated = Math.floor(value * multiplier) / multiplier;
+    return truncated.toFixed(8);
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const fetchSupplyData = async () => {
+      if (assets.length === 0) return;
+      setSupplyDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetSupply(asset);
+        }
+      } catch (error) {
+        setSupplyDataLoading(false);
+        console.error("Error fetching supply data:", error);
+      } finally {
+        setSupplyDataLoading(false);
+      }
+    };
+
+    const fetchBorrowData = async () => {
+      if (assets.length === 0) return;
+      setBorrowDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetBorrow(asset);
+        }
+      } catch (error) {
+        setBorrowDataLoading(false);
+        console.error("Error fetching borrow data:", error);
+      } finally {
+        setBorrowDataLoading(false);
+      }
+    };
+
+    fetchSupplyData();
+    fetchBorrowData();
+  }, [assets, liquidateTrigger]);
+
+  useEffect(() => {
+    const totalCollateral = Number(mappedItem.collateral) / 1e8 || 0;
+    const totalDebt = Number(mappedItem.debt) / 1e8 || 0;
+    const liquidationThreshold =
+      Number(mappedItem.liquidationThreshold) / 1e8 || 0;
+
+    const assetLiquidationThresholds = Array.isArray(
+      mappedItem.userData?.reserves?.[0]
+    )
+      ? mappedItem.userData?.reserves?.[0].map((mappedItem) => {
+          const assetName = mappedItem?.[0];
+
+          const item1 = filteredItems.find((item) => item[0] === assetName);
+
+          const liquidationThreshold =
+            Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
+              1e8 || 0;
+
+          return { assetName, liquidationThreshold };
+        })
+      : [];
+
+    const reserveliquidationThreshold =
+      assetLiquidationThresholds.find(
+        (item) => item.assetName === selectedAsset
+      )?.liquidationThreshold || 0;
+
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold,
+      reserveliquidationThreshold
+    );
+
+    const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
+    const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
+
+    let totalCollateralValue =
+      Math.trunc(
+        (parseFloat(totalCollateral) -
+          parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
+          1e8
+      ) / 1e8;
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+
+    let totalDebtValue =
+      totalDebt - amountAdded * (assetRates[selectedDebtAsset] / 1e8);
+
+    if (totalDebtValue < 0) {
+      totalDebtValue = 0;
+    }
+
+    let avliq = Math.trunc(liquidationThreshold * totalCollateral * 1e8) / 1e8;
+
+    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
+    const multiplier = Math.pow(10, 8);
+    tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    if (totalCollateralValue > 0) {
+      tempLiq = tempLiq / totalCollateralValue;
+
+      const multiplier = Math.pow(10, 8);
+      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    }
+
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDebtValue;
+    result = Math.round(result * 1e8) / 1e8;
+
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
+  }, [
+    mappedItem.collateral,
+    mappedItem.debt,
+    calculatedData?.maxCollateral,
+    calculatedData?.maxDebtToLiq,
+    liquidateTrigger,
+    filteredItems,
+    selectedAsset,
+    assetRates,
+  ]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await handleMaxCollateral();
+        if (response) {
+          setCalculatedData(response);
+        }
+      } catch (error) {
+        console.error("Error in handleMaxCollateral:", error);
+      }
+    };
+
+    fetchData();
+  }, [
+    amountToRepay,
+    selectedDebtAsset,
+    selectedAsset,
+    liquidateTrigger,
+    collateralAmount,
+  ]);
+
+  useEffect(() => {
+    if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
+      return;
+    }
+    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+    const newCollateralAmount =
+      selectedAsset === selectedDebtAsset
+        ? amountToRepay
+        : truncateTo8Decimals(amountToRepayUSD / collateralRate);
+
+    setCollateralAmount(newCollateralAmount);
+  }, [
+    selectedAsset,
+    selectedDebtAsset,
+    amountToRepay,
+    amountToRepayUSD,
+    collateralRate,
+  ]);
+
+  useEffect(() => {}, [collateralAmount]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await handleMaxCollateral();
+        if (response) {
+          setCalculatedData(response);
+        }
+      } catch (error) {
+        console.error("Error in handleMaxCollateral:", error);
+      }
+    };
+
+    fetchData();
+  }, [
+    amountToRepay,
+    selectedDebtAsset,
+    selectedAsset,
+    liquidateTrigger,
+    collateralAmount,
+  ]);
+
+  useEffect(() => {
+    if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
+      return;
+    }
+    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+    const newCollateralAmount =
+      selectedAsset === selectedDebtAsset
+        ? amountToRepay
+        : truncateTo8Decimals(amountToRepayUSD / collateralRate);
+
+    setCollateralAmount(newCollateralAmount);
+  }, [
+    selectedAsset,
+    selectedDebtAsset,
+    amountToRepay,
+    amountToRepayUSD,
+    collateralRate,
+  ]);
+
+  useEffect(() => {}, [collateralAmount]);
+
+  useEffect(() => {
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
+  }, [ckBTCBalance, ckBTCUsdRate, liquidateTrigger]);
+
+  useEffect(() => {
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
+  }, [ckETHBalance, ckETHUsdRate, liquidateTrigger]);
+
+  useEffect(() => {
+    if (ckUSDCBalance && ckUSDCUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(
+        2
+      );
+      setCkUSDCUsdBalance(balanceInUsd);
+    }
+  }, [ckUSDCBalance, ckUSDCUsdRate, liquidateTrigger]);
+
+  useEffect(() => {
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+  }, [ckICPBalance, ckICPUsdRate, liquidateTrigger]);
+
+  useEffect(() => {
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(
+        2
+      );
+      setCkUSDTUsdBalance(balanceInUsd);
+    }
+  }, [ckUSDTBalance, ckUSDTUsdRate, liquidateTrigger]);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
+          fetchConversionRate(),
+        ]);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [
+    fetchBalance,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    liquidateTrigger,
+  ]);
+
+  useEffect(() => {
+    const newValue = Number(mappedItem.healthFactor) / 10000000000;
+    setValue(newValue);
+  }, [liquidateTrigger]);
 
   useEffect(() => {
     const calculatedRewardAmount =
@@ -1316,13 +1231,6 @@ const UserInformationPopup = ({
     ckUSDTBalance,
   ]);
 
-  const truncateToSevenDecimals = (value) => {
-    const multiplier = Math.pow(10, 8);
-    const truncated = Math.floor(value * multiplier) / multiplier;
-    return truncated.toFixed(8);
-  };
-
-  // Calculate the factor based on the userAccountData and set it in state
   useEffect(() => {
     const value = Number(mappedItem.healthFactor) / 10000000000;
 
@@ -1334,6 +1242,17 @@ const UserInformationPopup = ({
       setFactor("50");
     }
   }, [userAccountData]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  /* ===================================================================================
+   *                                  RENDER-COMPONENTS
+   * =================================================================================== */
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -1537,8 +1456,6 @@ const UserInformationPopup = ({
                           Number((assetBorrow * (factor / 100)) / 1e8) * 1e8
                         ) / 1e8;
 
-                      console.log("assest borrow amount", assetBorrowAmount);
-
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =
@@ -1556,23 +1473,6 @@ const UserInformationPopup = ({
                         assetBorrowAmountInUSD =
                           assetBorrowAmount * (ckUSDTUsdRate / 1e8);
                       }
-
-                      console.log(
-                        "assetBorrowAmountInUSD",
-                        assetBorrowAmountInUSD
-                      );
-                      console.log(
-                        "ckBTCUsdRate",
-                        ckBTCUsdRate,
-                        "ckETHUsdRate",
-                        ckETHUsdRate,
-                        "ckUSDCUsdRate",
-                        ckUSDCUsdRate,
-                        "ckICPUsdRate",
-                        ckICPUsdRate,
-                        "ckUSDTUsdRate",
-                        ckUSDTUsdRate
-                      );
                       if (assetBorrow > 0) {
                         return (
                           <label
@@ -1661,7 +1561,6 @@ const UserInformationPopup = ({
                           const repayInUSD = usdRate
                             ? adjustedAmountToRepay * usdRate
                             : 0;
-                          console.log("repayin usd", repayInUSD);
                           let displayedRepayAmount;
                           if (!isFinite(repayInUSD) || repayInUSD === 0) {
                             displayedRepayAmount = "0.00";

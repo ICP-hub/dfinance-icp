@@ -17,10 +17,15 @@ export const useAuthClient = () => {
   const [backendActor, setBackendActor] = useState(null);
   const [principal, setPrincipal] = useState(null);
   const [User, setUser] = useState(null);
+  const [agent, setnewagent] = useState(null);
+
   const { connect, disconnect, isConnecting, user } = useAuth();
   const { balance, fetchBalance } = useBalance();
   const identity = useIdentity();
   const delegationType = useDelegationType();
+  const LOCAL_HOST = "http://127.0.0.1:4943";
+  const MAINNET_HOST = "https://icp0.io";
+  const HOST = process.env.DFX_NETWORK === "ic" ? MAINNET_HOST : LOCAL_HOST;
   const isInitializing = useIsInitializing();
   
 
@@ -33,6 +38,19 @@ export const useAuthClient = () => {
 
  console.log('identity',identity)
   useEffect(() => {
+
+    const initializeAgent = async () => {
+      const newAgent = new HttpAgent({ identity, host: HOST });
+
+      console.log("new agent is : ", newAgent)
+      if (process.env.DFX_NETWORK !== "ic") {
+        await newAgent.fetchRootKey();
+      }
+      setnewagent(newAgent);
+    };
+    initializeAgent();
+
+
     const initActor = async () => {
       try {
         if (user && identity ) {
@@ -40,11 +58,13 @@ export const useAuthClient = () => {
           console.log('principal',principal)
           setPrincipal(principal);
           const User =identity.getPrincipal();
+
+          // console.log("")
           setUser(User);
           // Fetch root key for local development
-          const HOST =     process.env.DFX_NETWORK === "ic"
-          ? "https://identity.ic0.app/#authorize"
-          : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
+          // const HOST =     process.env.DFX_NETWORK === "ic"
+          // ? "https://identity.ic0.app/#authorize"
+          // : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
 
           const agent = new HttpAgent({ identity, HOST });
           if (process.env.DFX_NETWORK !== "ic") {
@@ -124,15 +144,17 @@ export const useAuthClient = () => {
   // };
 
   const createLedgerActor = (canisterId, IdlFac) => {
-    const HOST =     process.env.DFX_NETWORK === "ic"
-    ? "https://identity.ic0.app/#authorize"
-    : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
+    // const HOST =     process.env.DFX_NETWORK === "ic"
+    // ? "https://identity.ic0.app/#authorize"
+    // : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
 console.log("host",HOST)
-          const agent = new HttpAgent({ identity });
+          const agent = new HttpAgent({ identity, HOST });
+
+          console.log("agentttttt", agent)
     if (process.env.DFX_NETWORK !== "production") {
       agent.fetchRootKey().catch((err) => {});
     }
-    return createTokenActor(IdlFac, { agent, canisterId });
+    return createTokenActor(IdlFac, { agent, canisterId: canisterId });
   };
 
    const checkUser = async () => {
@@ -184,6 +206,7 @@ useEffect(()=>{
   };
 
   return {
+    agent,
     isAuthenticated: !!user,
     login,
     logout,

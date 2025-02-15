@@ -312,7 +312,7 @@ const MySupply = () => {
         }
   
         try {
-          // const principal2 = Principal.fromText("tscqn-sn2xc-sxo7b-fguer-d46hb-xv4bo-bhelv-a7i44-n7azw-n4pe5-dqe");
+          const principal2 = Principal.fromText("xlwdl-22hdl-47vwj-q5moy-wqoup-ys45y-evlav-azsam-o6r2d-sxebd-4ae");
           
           const account = { owner: principal2, subaccount: [] };
 

@@ -54,6 +54,8 @@ const {  isAuthenticated } = useAuths();
         const balance = await ledgerActor.icrc1_balance_of(account);
         const formattedBalance = Number(balance) / 100000000;
 
+        console.log("unique console" , balance)
+
         switch (assetType) {
           case "ckBTC":
             setCkBTCBalance(formattedBalance);

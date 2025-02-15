@@ -6,16 +6,21 @@ import { useSelector } from "react-redux";
 import { usePageLoading } from "./components/customHooks/useLoading";
 import { useDispatch } from "react-redux";
 import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
-import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
+import { idlFactory as ledgerIdlFactory } from "./ledger.did";
 import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
+import { Actor } from "@dfinity/agent";
+import { idlFactory as ledgerIDL } from "./ledger.did";
+import Testing from "./components/customHooks/newHook";
+import { useLedgerActor } from "./aledger";
 
 export default function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [actorr, setActor] = useState();
 
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
   const theme = useSelector((state) => state.theme.theme);
@@ -33,6 +38,7 @@ export default function App() {
     principal,
     backendActor,
     createLedgerActor,
+    agent
   } = useAuths();
 
   const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
@@ -122,31 +128,68 @@ export default function App() {
     }
   };
 
+  async function xyz() {
+    console.log('sdfdsfdsfdsfdsfdsfdsfdsfadsfdgfdgfdgfdg')
+    console.log("dfgdgdfgdfgdf" , agent)
+    const ledgerActor = Actor.createActor(ledgerIDL, {
+      agent,
+      canisterId: "bw4dl-smaaa-aaaaa-qaacq-cai",
+    });
+
+
+
+    await Testing();
+
+    console.log("leder actor ", ledgerActor)
+
+    try {
+
+      let princ = Principal.fromText("ivtbt-ujvyu-pr7bm-43fi2-3p45u-cj2hn-dt32e-jzuro-effxa-rxtrl-tae");
+      const account = { owner: princ, subaccount: [] };
+      const x = await ledgerActor.icrc1_balance_of(account);
+      console.log("yzyzyz", x);
+    } catch (err) {
+      console.error("xyz errr", err)
+    }
+    // console.log("dfgdgdfgdfgdf", x);
+
+
+    console.log("dfgdgdfgdfgdf" , ledgerActor)
+
+  }
+
   /**
    * Creates ledger actors for all fetched asset principals.
    */
-  useEffect(() => {
+
+  // const balance1 = useLedgerActor(agent, )
+
+  useEffect( () => {
     if (assetPrincipal.ckBTC) {
-      const actor = createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory);
+      const actor = useLedgerActor(assetPrincipal.ckBTC, agent);
+      console.log("okkkkkkkkkk", actor)
+      setActor(actor);
       dispatch(setLedgerActor({ asset: "ckBTC", actor }));
     }
     if (assetPrincipal.ckETH) {
-      const actor = createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory);
+      const actor = useLedgerActor(assetPrincipal.ckETH, agent);
       dispatch(setLedgerActor({ asset: "ckETH", actor }));
     }
     if (assetPrincipal.ckUSDC) {
-      const actor = createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory);
+      const actor = useLedgerActor(assetPrincipal.ckUSDC, agent);
       dispatch(setLedgerActor({ asset: "ckUSDC", actor }));
     }
     if (assetPrincipal.ICP) {
-      const actor = createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory);
+      const actor = useLedgerActor(assetPrincipal.ICP, agent);
       dispatch(setLedgerActor({ asset: "ICP", actor }));
     }
     if (assetPrincipal.ckUSDT) {
-      const actor = createLedgerActor(assetPrincipal.ckUSDT, ledgerIdlFactory);
+      const actor = useLedgerActor(assetPrincipal.ckUSDT, agent);
       dispatch(setLedgerActor({ asset: "ckUSDT", actor }));
     }
   }, [assetPrincipal, dispatch]);
+
+
 
  
 
@@ -274,6 +317,11 @@ export default function App() {
   };
 
   useEffect(() => {
+    console.log("testing out somethhing");
+    console.log(Testing());
+  }, [])
+
+  useEffect(() => {
     const timeout = setTimeout(() => {
       if (isLoadingPage) {
         setIsLoadingPage(false);
@@ -285,6 +333,8 @@ export default function App() {
 
   return (
     <>
+    <h1>Testing </h1>
+    <button onClick={async () => await xyz()}>Testing out </button>
       {isAuthenticated && !isLoadingPage && (
         <Joyride
           steps={joyrideState.steps}

@@ -22,6 +22,7 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
+import { useLedgerActor } from "../../aledger";
 
 const DashboardNav = () => {
   const {
@@ -60,6 +61,7 @@ const DashboardNav = () => {
     fetchReserveData,
     createLedgerActor,
     user,
+    agent,
   } = useAuths();
   const [assetBalances, setAssetBalances] = useState([]);
   const [netWorth, setNetWorth] = useState();
@@ -117,15 +119,15 @@ const DashboardNav = () => {
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
 
-    const principalObj = useMemo(() => {
-  if (!principal) return null;  // ✅ Prevent null values
-  try {
-    return Principal.fromText(principal);
-  } catch (error) {
-    console.error("Invalid principal:", principal);
-    return null;
-  }
-}, [principal]);
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
 
   const fetchAssetData = async () => {
     const balances = [];
@@ -139,7 +141,7 @@ const DashboardNav = () => {
         debtTokenBalance: null,
       };
       if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+        const dtokenActor = useLedgerActor(dtokenId, agent, "dToken");
         if (dtokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
@@ -152,7 +154,7 @@ const DashboardNav = () => {
         }
       }
       if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+        const debtTokenActor = useLedgerActor(debtTokenId, agent, "debtToken");
 
         if (debtTokenActor) {
           try {
@@ -691,7 +693,6 @@ const DashboardNav = () => {
                       : walletDetailTabs
                     ) // Show walletDetailTabs everywhere else, including non-authenticated
                       .map((data, index) => {
-                        console.log("assetBorrow", assetBorrow);
                         if (
                           data.title === "Health Factor" &&
                           assetBorrow === 0

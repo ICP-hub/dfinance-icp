@@ -1,12 +1,16 @@
-// src/hooks/useLedgerActor.js
 import { Actor } from '@dfinity/agent';
-import { idlFactory as ledgerIDL } from './ledger.did'; // Adjust the path to your ledger IDL
+import { idlFactory as dTokenIDL } from '../../declarations/debttoken'; 
+import { idlFactory as debtTokenIDL } from '../../declarations/dtoken'; 
+import { idlFactory as ledgerIDL } from './ledger.did'; 
 
-export const useLedgerActor = (canisterId,agent) => {
-  const ledgerActor = Actor.createActor(ledgerIDL, {
+export const useLedgerActor = (canisterId, agent, tokenType) => {
+ 
+  const idlFactory = tokenType === 'dToken' ? dTokenIDL 
+                    : tokenType === 'debtToken' ? debtTokenIDL 
+                    : ledgerIDL; 
+
+  return Actor.createActor(idlFactory, {
     agent,
     canisterId,
   });
-
-  return ledgerActor;
 };

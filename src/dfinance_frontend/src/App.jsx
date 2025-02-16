@@ -14,7 +14,6 @@ import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
 import { Actor } from "@dfinity/agent";
 import { idlFactory as ledgerIDL } from "./ledger.did";
-import Testing from "./components/customHooks/newHook";
 import { useLedgerActor } from "./aledger";
 
 export default function App() {
@@ -128,35 +127,7 @@ export default function App() {
     }
   };
 
-  async function xyz() {
-    console.log('sdfdsfdsfdsfdsfdsfdsfdsfadsfdgfdgfdgfdg')
-    console.log("dfgdgdfgdfgdf" , agent)
-    const ledgerActor = Actor.createActor(ledgerIDL, {
-      agent,
-      canisterId: "bw4dl-smaaa-aaaaa-qaacq-cai",
-    });
-
-
-
-    await Testing();
-
-    console.log("leder actor ", ledgerActor)
-
-    try {
-
-      let princ = Principal.fromText("ivtbt-ujvyu-pr7bm-43fi2-3p45u-cj2hn-dt32e-jzuro-effxa-rxtrl-tae");
-      const account = { owner: princ, subaccount: [] };
-      const x = await ledgerActor.icrc1_balance_of(account);
-      console.log("yzyzyz", x);
-    } catch (err) {
-      console.error("xyz errr", err)
-    }
-    // console.log("dfgdgdfgdfgdf", x);
-
-
-    console.log("dfgdgdfgdfgdf" , ledgerActor)
-
-  }
+  
 
   /**
    * Creates ledger actors for all fetched asset principals.
@@ -167,8 +138,6 @@ export default function App() {
   useEffect( () => {
     if (assetPrincipal.ckBTC) {
       const actor = useLedgerActor(assetPrincipal.ckBTC, agent);
-      console.log("okkkkkkkkkk", actor)
-      setActor(actor);
       dispatch(setLedgerActor({ asset: "ckBTC", actor }));
     }
     if (assetPrincipal.ckETH) {
@@ -234,7 +203,6 @@ export default function App() {
    */
   const handleJoyrideCallback = (data) => {
     const { status } = data;
-    console.log("data.index", data.index);
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
         const storedData = localStorage.getItem("userGuideData");
@@ -316,10 +284,7 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    console.log("testing out somethhing");
-    console.log(Testing());
-  }, [])
+ 
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -333,8 +298,6 @@ export default function App() {
 
   return (
     <>
-    <h1>Testing </h1>
-    <button onClick={async () => await xyz()}>Testing out </button>
       {isAuthenticated && !isLoadingPage && (
         <Joyride
           steps={joyrideState.steps}

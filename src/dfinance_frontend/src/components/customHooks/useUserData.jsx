@@ -32,7 +32,6 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(User);
-      console.log("result  in user data ",result)
       return result;
     } catch (error) {
       setError(error.message);

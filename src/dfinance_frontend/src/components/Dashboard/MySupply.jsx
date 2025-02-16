@@ -38,7 +38,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
-
+import { useLedgerActor } from "../../aledger";
 /**
  * MySupply Component
  *
@@ -53,8 +53,14 @@ const MySupply = () => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const theme = useSelector((state) => state.theme.theme);
-  const { principal, fetchReserveData, createLedgerActor, user, backendActor } =
-    useAuths();
+  const {
+    principal,
+    fetchReserveData,
+    createLedgerActor,
+    user,
+    backendActor,
+    agent,
+  } = useAuths();
   const { state, pathname } = useLocation();
   const { userData, userAccountData, refetchUserData, fetchUserAccountData } =
     useUserData();
@@ -190,49 +196,35 @@ const MySupply = () => {
   // Update available borrow amount
   useEffect(() => {
     const reserves = userData?.Ok?.reserves?.[0] || [];
-    console.log("Reserves:", reserves);
 
     let updatedAvailableBorrow = 0;
 
     reserves.map((reserveGroup) => {
       const asset = reserveGroup[0];
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
-      console.log("Liquidity Index:", liquidityIndex);
 
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
-      console.log("Asset Balance for", asset, ":", assetBalance);
 
       const assetSupply =
         (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
         (Number(liquidityIndex) * 1e8);
-      console.log("Asset Supply for", asset, ":", assetSupply);
 
       const isCollateral = reserveGroup[1]?.is_collateral || true;
-      console.log("Is Collateral for", asset, ":", isCollateral);
 
       if (assetSupply > 0) {
-        console.log(
-          "Asset Supply is greater than 0. Updating Available Borrow."
-        );
         if (userAccountData?.Ok?.length > 5) {
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
-          console.log("Setting Available Borrow to borrowValue:", borrowValue);
           updatedAvailableBorrow = isCollateral ? borrowValue : 0;
         } else {
-          console.log(
-            "User account data length is insufficient. Setting Available Borrow to 0."
-          );
           updatedAvailableBorrow = 0;
         }
       }
     });
 
     setAvailableBorrow(updatedAvailableBorrow);
-    console.log("updatedAvailableBorrow", updatedAvailableBorrow);
     if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
-      console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
     } else {
       setAvailableBorrow(updatedAvailableBorrow);
@@ -247,9 +239,12 @@ const MySupply = () => {
       setShowZeroBalance(savedShowZeroBalance);
     }
   }, []);
-  console.log("principal", principal);
   const principalObj = useMemo(() => {
-    if (!principal || typeof principal !== "string" || principal.trim() === "") {
+    if (
+      !principal ||
+      typeof principal !== "string" ||
+      principal.trim() === ""
+    ) {
       console.error("Invalid principal input:", principal);
       return null;
     }
@@ -260,108 +255,94 @@ const MySupply = () => {
       return null;
     }
   }, [principal]);
-  const principal3 = "tscqn-sn2xc-sxo7b-fguer-d46hb-xv4bo-bhelv-a7i44-n7azw-n4pe5-dqe"
-  const principal2 = useMemo(
-    () => Principal.fromText(principal3.toString()),
-    [principal3]
-  );
-  console.log("type of prinipal",typeof(principal2),typeof(principal3))
+
   useEffect(() => {
     if (principalObj) {
       fetchAssetData();
     }
-  }, [principalObj,dashboardRefreshTrigger]);
-  
+  }, [principalObj, dashboardRefreshTrigger]);
+
   const fetchAssetData = async () => {
     if (!principalObj) {
       console.error("Principal is not available yet.");
       return;
     }
-  
-    console.log(`PrincipalObj when calling balance fetch:`, principalObj);
+
     const balances = [];
-  
+
     for (const asset of assets) {
-      console.log(`Fetching data for asset: ${asset}`);
-  
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-  
-      console.log(`Asset: ${asset}, dtokenId: ${dtokenId}, debtTokenId: ${debtTokenId}`);
-  
+
       if (!dtokenId || !debtTokenId) {
         console.error(`Skipping fetch: Missing token ID for ${asset}`);
         continue;
       }
-  
+
       const assetBalance = {
         asset,
         dtokenBalance: null,
         debtTokenBalance: null,
       };
-  
+
       if (dtokenId) {
-        console.log(`Creating actor for dtokenId: ${dtokenId}`);
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        console.log(`Created dtokenActor:`, dtokenActor);
-  
-        if (!dtokenActor || typeof dtokenActor.icrc1_balance_of !== "function") {
+        const dtokenActor = useLedgerActor(dtokenId, agent, "dToken");
+
+        if (
+          !dtokenActor ||
+          typeof dtokenActor.icrc1_balance_of !== "function"
+        ) {
           console.error(`Invalid dtokenActor for asset ${asset}:`, dtokenActor);
           continue;
         }
-  
-        try {
-          const principal2 = Principal.fromText("xlwdl-22hdl-47vwj-q5moy-wqoup-ys45y-evlav-azsam-o6r2d-sxebd-4ae");
-          
-          const account = { owner: principal2, subaccount: [] };
 
-          console.log(`Fetching balance with account:`, account);
-  console.log("balance =",dtokenActor.icrc1_balance_of(account))
+        try {
+          // const principal2 = Principal.fromText("xlwdl-22hdl-47vwj-q5moy-wqoup-ys45y-evlav-azsam-o6r2d-sxebd-4ae");
+
+          const account = { owner: principalObj, subaccount: [] };
+
           const balance = await dtokenActor.icrc1_balance_of(account);
-          console.log(`dToken balance for ${asset}:`, balance);
-  
-          assetBalance.dtokenBalance = Number(balance) / 100000000;
+
+          assetBalance.dtokenBalance = Number(balance);
         } catch (error) {
           console.error(`Error fetching dtoken balance for ${asset}:`, error);
         }
       }
-  
+
       if (debtTokenId) {
-        console.log(`Creating actor for debtTokenId: ${debtTokenId}`);
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-        console.log(`Created debtTokenActor:`, debtTokenActor);
-  
-        if (!debtTokenActor || typeof debtTokenActor.icrc1_balance_of !== "function") {
-          console.error(`Invalid debtTokenActor for asset ${asset}:`, debtTokenActor);
+        const debtTokenActor = useLedgerActor(debtTokenId, agent, "debtToken");
+
+        if (
+          !debtTokenActor ||
+          typeof debtTokenActor.icrc1_balance_of !== "function"
+        ) {
+          console.error(
+            `Invalid debtTokenActor for asset ${asset}:`,
+            debtTokenActor
+          );
           continue;
         }
-  
-        try {
-          const account = { owner: principal2, subaccount: [] };
 
-          console.log(`Fetching balance with account:`, account);
-          console.log("principalObj before calling icrc1_balance_of:", principalObj.toString());
+        try {
+          const account = { owner: principalObj, subaccount: [] };
 
           const balance = await debtTokenActor.icrc1_balance_of(account);
-          console.log(`Debt token balance for ${asset}:`, balance);
-  
-          assetBalance.debtTokenBalance = Number(balance) / 100000000;
+
+          assetBalance.debtTokenBalance = Number(balance);
         } catch (error) {
-          console.error(`Error fetching debt token balance for ${asset}:`, error);
+          console.error(
+            `Error fetching debt token balance for ${asset}:`,
+            error
+          );
         }
       }
-  
+
       balances.push(assetBalance);
     }
-  
+
     setAssetBalances(balances);
   };
-  
-  
-  
-  
-  
 
   const handleToggleShowAllAssets = () => {
     setShowAllAssets(!showAllAssets);
@@ -1100,22 +1081,15 @@ const MySupply = () => {
                                   assetBalances.find(
                                     (balance) => balance.asset === asset
                                   )?.dtokenBalance || 0;
-                                console.log("dtoken balance", assetBalance);
-                                console.log(
-                                  "normalize_supply",
-                                  getAssetSupplyValue(asset)
-                                );
-                                console.log("current liq = ", currentLiquidity);
+
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
                                   (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
-                                console.log("asset supply", assetSupply);
                                 const modiassetSupply =
                                   (Number(getAssetSupplyValue(asset)) /
                                     Number(currentLiquidity)) *
                                   Number(assetBalance);
-                                console.log("modified asset", modiassetSupply);
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
                                 );
@@ -3055,7 +3029,6 @@ const MySupply = () => {
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  console.log("availableBorrowinAssetBorrow", availableBorrow);
                   const ratio =
                     (totalUsdValueBorrow /
                       (availableBorrow + totalUsdValueBorrow)) *
@@ -4610,11 +4583,7 @@ const MySupply = () => {
                                         Number(total_supply) -
                                           Number(total_borrow)
                                       );
-                                      console.log(
-                                        "borrowableValue",
-                                        borrowableValue,
-                                        borrowableAssetValue
-                                      );
+
                                       handleModalOpen(
                                         "borrow",
                                         item[0],
@@ -5072,11 +5041,7 @@ const MySupply = () => {
                                           Number(total_supply) -
                                             Number(total_borrow)
                                         );
-                                        console.log(
-                                          "borrowableValue",
-                                          borrowableValue,
-                                          borrowableAssetValue
-                                        );
+
                                         handleModalOpen(
                                           "borrow",
                                           item[0],

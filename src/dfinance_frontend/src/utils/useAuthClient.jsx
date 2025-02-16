@@ -1,13 +1,19 @@
-// Combined useAuthClient for Internet Identity, NFID, and Bitfinity Integration
 import { AuthClient } from "@dfinity/auth-client";
 import { createActor } from "../../../declarations/dfinance_backend/index";
-import { createActor as createTokenActor} from "../../../declarations/token_ledger/index";
+import { createActor as createTokenActor } from "../../../declarations/token_ledger/index";
 
 import { useDispatch } from "react-redux";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useBalance, useIdentity, useAccounts, useDelegationType, useIsInitializing, useAuth ,useAgent} from '@nfid/identitykit/react'
+import {
+  useBalance,
+  useIdentity,
+  useAccounts,
+  useDelegationType,
+  useIsInitializing,
+  useAuth,
+  useAgent,
+} from "@nfid/identitykit/react";
 import { Actor, HttpAgent } from "@dfinity/agent";
-// import { loginSuccess, logoutSuccess, logoutFailure } from "../Redux/Reducers/InternetIdentityReducer";
 import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
 const AuthContext = createContext();
@@ -27,7 +33,6 @@ export const useAuthClient = () => {
   const MAINNET_HOST = "https://icp0.io";
   const HOST = process.env.DFX_NETWORK === "ic" ? MAINNET_HOST : LOCAL_HOST;
   const isInitializing = useIsInitializing();
-  
 
   const {
     isWalletCreated,
@@ -36,13 +41,10 @@ export const useAuthClient = () => {
     connectedWallet,
   } = useSelector((state) => state.utility);
 
- console.log('identity',identity)
   useEffect(() => {
-
     const initializeAgent = async () => {
       const newAgent = new HttpAgent({ identity, host: HOST });
 
-      console.log("new agent is : ", newAgent)
       if (process.env.DFX_NETWORK !== "ic") {
         await newAgent.fetchRootKey();
       }
@@ -50,21 +52,14 @@ export const useAuthClient = () => {
     };
     initializeAgent();
 
-
     const initActor = async () => {
       try {
-        if (user && identity ) {
+        if (user && identity) {
           const principal = identity.getPrincipal().toText();
-          console.log('principal',principal)
           setPrincipal(principal);
-          const User =identity.getPrincipal();
+          const User = identity.getPrincipal();
 
-          // console.log("")
           setUser(User);
-          // Fetch root key for local development
-          // const HOST =     process.env.DFX_NETWORK === "ic"
-          // ? "https://identity.ic0.app/#authorize"
-          // : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
 
           const agent = new HttpAgent({ identity, HOST });
           if (process.env.DFX_NETWORK !== "ic") {
@@ -72,8 +67,9 @@ export const useAuthClient = () => {
           }
 
           // Create actor
-          const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, { agent });
-          console.log('actor',actor)
+          const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, {
+            agent,
+          });
           setBackendActor(actor);
         }
       } catch (error) {
@@ -81,27 +77,17 @@ export const useAuthClient = () => {
       }
     };
     initActor();
-  
   }, [user, identity]);
-
 
   const login = async () => {
     try {
       await connect();
-     
-      // dispatch(
-      //   loginSuccess({
-      //     isAuthenticated: true,
-      //     identity,
-      //     principal,
-      //   })
-      // );
     } catch (error) {
       console.error("Login Error:", error);
-      // dispatch(loginFailure(error.toString()));//
+
       const setSessionTimeout = () => {
         clearTimeout(logoutTimeout);
-    
+
         logoutTimeout = setTimeout(() => {
           logout();
         }, 24 * 60 * 60 * 1000);
@@ -114,56 +100,35 @@ export const useAuthClient = () => {
     try {
       await disconnect();
       setBackendActor(null);
-      // setIsAuthenticated(false);
-      
+
       setPrincipal(null);
-      // dispatch(logoutSuccess());
+
       localStorage.removeItem("sessionStart");
       if (isSwitchingWallet == false) {
         localStorage.removeItem("connectedWallet");
         window.location.reload();
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.error("Logout Error:", error);
       dispatch(logoutFailure(error.toString()));
     }
   };
 
-  // const getIdentityProvider = (provider) => {
-  //   switch (provider) {
-  //     case "ii":
-  //       return process.env.DFX_NETWORK === "ic"
-  //         ? "https://identity.ic0.app/#authorize"
-  //         : "http://localhost:4943";
-  //     case "nfid":
-  //       return "https://nfid.one/authenticate/?applicationName=my-ic-app#authorize";
-  //     case "bifinity":
-  //       return "https://wallet.infinityswap.one/#authorize"; // Placeholder, update as needed
-  //     default:
-  //       throw new Error(`Unsupported provider: ${provider}`);
-  //   }
-  // };
-
   const createLedgerActor = (canisterId, IdlFac) => {
-    // const HOST =     process.env.DFX_NETWORK === "ic"
-    // ? "https://identity.ic0.app/#authorize"
-    // : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`;
-console.log("host",HOST)
-          const agent = new HttpAgent({ identity, HOST });
+    const agent = new HttpAgent({ identity, HOST });
 
-          console.log("agentttttt", agent)
     if (process.env.DFX_NETWORK !== "production") {
       agent.fetchRootKey().catch((err) => {});
     }
     return createTokenActor(IdlFac, { agent, canisterId: canisterId });
   };
 
-   const checkUser = async () => {
+  const checkUser = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     try {
       const result = await backendActor.register_user();
-      console.log('result',result)
       if (result.Err) {
         console.error("Error from backend:", result.Err);
         throw new Error(result.Err);
@@ -174,11 +139,11 @@ console.log("host",HOST)
       throw error;
     }
   };
-useEffect(()=>{
-  if(backendActor){
-    checkUser();
-  }
-},[backendActor])
+  useEffect(() => {
+    if (backendActor) {
+      checkUser();
+    }
+  }, [backendActor]);
   const fetchReserveData = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -211,8 +176,8 @@ useEffect(()=>{
     login,
     logout,
     identity,
-     principal,
-     User,
+    principal,
+    User,
     backendActor,
     checkUser,
     createLedgerActor,

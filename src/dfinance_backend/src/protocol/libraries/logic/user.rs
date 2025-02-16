@@ -539,7 +539,7 @@ pub async fn get_liquidation_users_concurrent(
                     };
                     ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
 
-                    if user_account_data.health_factor > Nat::from(100000000u128){
+                    if user_account_data.health_factor < Nat::from(100000000u128){
                         page_liq_list.push((user_principal, user_account_data, user_data));
                     }
                    

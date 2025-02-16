@@ -688,7 +688,7 @@ impl ValidationLogic {
             return Err(Error::LessRewardAmount);
         }
 
-        if health_factor / Nat::from(100u128) < Nat::from(SCALING_FACTOR) {
+        if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
             return Err(Error::HealthFactorLess); //TODO change name of the error
         }
 

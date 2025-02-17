@@ -67,7 +67,7 @@ const useUserData = () => {
 
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
-          setTimeout(fetchUserAccountData, 1000);
+          setTimeout(fetchUserAccountData, 500);
           return;
         }
 

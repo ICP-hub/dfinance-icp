@@ -46,7 +46,7 @@ const useFetchBalance = (ledgerActors, principal) => {
             !ledgerActor ||
             typeof ledgerActor.icrc1_balance_of !== "function"
           ) {
-            console.warn(`Ledger actor not available for ${assetType}`);
+            // console.warn(`Ledger actor not available for ${assetType}`);
             return;
           }
 

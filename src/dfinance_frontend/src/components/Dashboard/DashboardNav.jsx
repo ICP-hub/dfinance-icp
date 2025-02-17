@@ -74,6 +74,7 @@ const DashboardNav = () => {
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
   const menuRef = useRef(null);
   const { id } = useParams();
+  const [loading, setLoading] = useState(true);
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -119,6 +120,12 @@ const DashboardNav = () => {
     setNetWorth(calculatedNetWorth);
   }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
 
+  useEffect(() => {
+    if (userData && userAccountData) {
+      setLoading(false);
+    }
+  }, [userData, userAccountData, dashboardRefreshTrigger, principal]);
+  
   const principalObj = useMemo(() => {
     if (!principal) return null; // ✅ Prevent null values
     try {
@@ -249,6 +256,8 @@ const DashboardNav = () => {
             ),
         };
       } else if (item.id === 2) {
+        console.log(userAccountData);
+
         const healthValue = !userAccountData?.Ok?.[4]
           ? "-"
           : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100

@@ -186,7 +186,6 @@ pub async fn create_token_canister(
         Ok(args) => args,
         Err(e) => {
             ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
-            //TODO remove this and change return type
             return Err(Error::ErrorEncoding);
         }
     };

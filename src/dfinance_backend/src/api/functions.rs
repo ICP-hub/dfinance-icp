@@ -352,14 +352,14 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             );
             if usd_amount.clone() > user_reserve_data.faucet_limit {
                 ic_cdk::println!("amount is too much");
-                return Err(Error::AmountTooMuch); //TODO change error line
+                return Err(Error::AmountExceedsLimit); 
             }
 
             if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
                 > user_reserve_data.faucet_limit
             {
                 ic_cdk::println!("amount is too much second");
-                return Err(Error::AmountTooMuch);
+                return Err(Error::ExceedsRemainingLimit);
             }
             user_reserve_data.faucet_usage += usd_amount;
             ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
@@ -372,14 +372,14 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
             if usd_amount > new_reserve.faucet_limit {
                 ic_cdk::println!("amount is too much");
-                return Err(Error::AmountTooMuch);
+                return Err(Error::AmountExceedsLimit);
             }
 
             if (new_reserve.faucet_usage.clone() + usd_amount.clone())
                 > new_reserve.faucet_limit.clone()
             {
                 ic_cdk::println!("amount is too much second");
-                return Err(Error::AmountTooMuch);
+                return Err(Error::ExceedsRemainingLimit);
             }
 
             new_reserve.faucet_usage += usd_amount;

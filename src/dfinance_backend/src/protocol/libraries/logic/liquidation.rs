@@ -235,7 +235,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
 
-        //TODO make constant name as base currency = "USD"
         let mut collateral_amount = params.amount.clone();
         if params.collateral_asset != params.debt_asset {
             let debt_in_usd = get_exchange_rates(
@@ -280,7 +279,13 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         };
 
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
-        reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache);
+        if let Err(e) = reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&user_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         if let Err(e) = reserve::update_interest_rates(
             &mut collateral_reserve_data,
             &mut collateral_reserve_cache,

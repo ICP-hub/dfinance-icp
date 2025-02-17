@@ -18,7 +18,8 @@ use ic_cdk::api::time;
  * @notice Stores temporary values used during the treasury accrual process.
  * @dev Holds previous debt values and calculated accrual amounts.
  */
-struct AccrueToTreasuryLocalVars { //
+struct AccrueToTreasuryLocalVars {
+    //
     prev_total_variable_debt: Nat,
     curr_total_variable_debt: Nat,
     total_debt_accrued: Nat,
@@ -79,7 +80,7 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 /**
  * @title Update State Function
  *
- * @notice Updates the reserve state if the current timestamp differs from the last update timestamp. 
+ * @notice Updates the reserve state if the current timestamp differs from the last update timestamp.
  *         It ensures only necessary updates are made, such as updating indexes and accruing treasury rewards.
  *
  * @dev The function follows these steps:
@@ -92,18 +93,25 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
  *
  * @return None The function modifies `reserve_data` and `reserve_cache` in place.
  */
-pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
+pub fn update_state(
+    reserve_data: &mut ReserveData,
+    reserve_cache: &mut ReserveCache,
+) -> Result<(), Error> {
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
-        return;
+        return Ok(());
     }
 
     update_indexes(reserve_data, reserve_cache);
-    accrue_to_treasury(reserve_data, reserve_cache);
+    if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
+        ic_cdk::println!("Error accruing to treasury: {:?}", e);
+        return Err(e);
+    }
 
     reserve_data.last_update_timestamp = current_time;
+    Ok(())
 }
 
 /*
@@ -320,8 +328,7 @@ pub async fn burn_scaled(
         } else {
             ic_cdk::println!("Subtracting adjusted amount from DToken balance");
             user_state.d_token_balance -= adjusted_amount.clone();
-            // mainting threasold here.
-            // TODO: look into the threshold value again
+
             ic_cdk::println!(
                 "dtoken balance after subtraction = {}",
                 user_state.d_token_balance
@@ -387,8 +394,7 @@ pub async fn burn_scaled(
                 "debt token balance after subtraction = {}",
                 user_state.debt_token_blance
             );
-            // mainting threasold here.
-            // TODO: look into the threshold value again
+            
             if user_state.debt_token_blance < Nat::from(1000u128) {
                 user_state.debt_token_blance = Nat::from(0u128);
             }
@@ -639,7 +645,7 @@ pub async fn mint_scaled(
  *
  * @dev Determines accrued debt by comparing scaled total variable debt before and after index updates.
  *      If reserve factor is non-zero, computes mintable amount and updates treasury.
- * 
+ *
  * @param reserve_data Mutable reference to `ReserveData` (treasury accumulation).
  * @param reserve_cache Reference to `ReserveCache` (current & next debt/liquidity indices).
  *
@@ -647,14 +653,14 @@ pub async fn mint_scaled(
  * @return None. This function modifies `reserve_data`, updating the treasury accumulation.
  *
  */
-pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
-    // TODO: need to handle the error in this.
+pub fn accrue_to_treasury(
+    reserve_data: &mut ReserveData,
+    reserve_cache: &ReserveCache,
+) -> Result<(), Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    let user_principal = ic_cdk::caller();
-
     if reserve_cache.reserve_factor == Nat::from(0u128) {
-        return;
+        return Ok(());
     }
 
     vars.prev_total_variable_debt = ScalingMath::scaled_mul(
@@ -676,7 +682,7 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
     );
 
     if vars.curr_total_variable_debt < vars.prev_total_variable_debt {
-        let _ = release_lock(&user_principal);
+        return Err(Error::AmountSubtractionError);
     }
 
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
@@ -699,4 +705,5 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
             reserve_data.accure_to_platform
         );
     }
+    Ok(())
 }

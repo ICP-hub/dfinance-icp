@@ -97,60 +97,6 @@ pub fn release_lock(key: &Principal) -> Result<(), Error> {
     Ok(())
 }
 
-// TODO: remove this function no need in main code.
-#[update]
-pub fn clear_all_locks() -> Result<(), Error> {
-    ic_cdk::println!("Attempting to clear all user locks.");
-    //TODO give only admin access
-    // Attempt to acquire the mutex lock for LOCKS
-    let mut locks = match LOCKS.lock() {
-        Ok(lock) => {
-            ic_cdk::println!("Successfully acquired global lock for clearing all user locks.");
-            lock
-        }
-        Err(_) => {
-            ic_cdk::println!("Failed to acquire the global lock for clearing user locks.");
-            return Err(Error::LockAcquisitionFailed);
-        }
-    };
-
-    ic_cdk::println!("Locks state before clearing: {:?}", locks);
-
-    // Clear all the locks
-    locks.clear();
-    ic_cdk::println!("All locks cleared successfully.");
-
-    // Print the state of the locks after clearing
-    ic_cdk::println!("Locks state after clearing: {:?}", locks);
-
-    Ok(())
-}
-
-// TODO: remove this function no need.
-//TODO naming is not appropriate for this function either change it or remove it.
-#[query]
-pub fn get_all_principals() -> Result<Vec<Principal>, Error> {
-    ic_cdk::println!("Retrieving all principals from the locks.");
-
-    // Attempt to acquire the mutex lock for LOCKS
-    let locks = match LOCKS.lock() {
-        Ok(lock) => {
-            ic_cdk::println!("Successfully acquired global lock for retrieving principals.");
-            lock
-        }
-        Err(_) => {
-            ic_cdk::println!("Failed to acquire the global lock for retrieving principals.");
-            return Err(Error::LockAcquisitionFailed);
-        }
-    };
-
-    // Collect all the principals in the locks map
-    let principals: Vec<Principal> = locks.keys().cloned().collect();
-    ic_cdk::println!("Found principals: {:?}", principals);
-
-    Ok(principals)
-}
-
 /*
  * @title Asset Lock Management - Lock Amount
  * @notice Locks a specified amount of an asset for a user.

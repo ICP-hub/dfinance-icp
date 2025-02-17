@@ -55,7 +55,7 @@ export default function Navbar({ isHomeNav }) {
   const location = useLocation();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const theme = useSelector((state) => state.theme.theme);
-  const theme = useSelector((state) => state.theme.theme);
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";

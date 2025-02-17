@@ -44,6 +44,11 @@ pub async fn asset_transfer_from(
     to: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
+    ic_cdk::println!(
+        "Initiating asset transfer from {:?} to {:?} of amount {:?} via ledger_canister_id {:?}",
+        from, to, amount, ledger_canister_id
+    );
+
     let args = TransferFromArgs {
         to: TransferAccount {
             owner: to,
@@ -59,18 +64,27 @@ pub async fn asset_transfer_from(
         created_at_time: None,
         amount,
     };
-    let (result,): (TransferFromResult,) = call(ledger_canister_id, "icrc2_transfer_from", (args,))
-        .await
-        .map_err(|e| e.1)?;
-    ic_cdk::println!(
-        "asset_transfer_from executed successfully and the call result : {:?}",
-        result
-    );
-    match result {
-        TransferFromResult::Ok(balance) => Ok(balance),
-        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+
+    match call(ledger_canister_id, "icrc2_transfer_from", (args,)).await {
+        Ok((result,)) => {
+            match result {
+                TransferFromResult::Ok(balance) => {
+                    ic_cdk::println!("Transfer successful. New balance: {:?}", balance);
+                    Ok(balance)
+                }
+                TransferFromResult::Err(err) => {
+                    ic_cdk::println!("Transfer failed with error: {:?}", err);
+                    Err(format!("{:?}", err))
+                }
+            }
+        }
+        Err(e) => {
+            ic_cdk::println!("Call to ledger canister failed: {:?}", e.1);
+            Err(e.1)
+        }
     }
 }
+
 
 /*
  * @title Asset Transfer Function

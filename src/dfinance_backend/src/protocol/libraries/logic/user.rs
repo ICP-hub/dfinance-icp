@@ -1,9 +1,9 @@
 use super::update::user_data;
-use crate::api::functions::get_balance;
+use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::storable::Candid;
-use crate::get_all_users;
+use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
@@ -595,4 +595,226 @@ fn register_user() -> Result<String, Error> {
     });
 
     user_data
+}
+
+
+
+#[update]
+pub async fn create_user_reserve_with_low_health(
+    asset_supply: String,
+    asset_borrow: String,
+    supply_tokens: Nat,
+    borrow_tokens: Nat,
+) -> Result<UserData, Error> {
+    ic_cdk::println!(
+        "Creating user reserve with low health factor for supply asset: {} and borrow asset: {}",
+        asset_supply,
+        asset_borrow
+    );
+
+    if !check_is_tester() {
+        ic_cdk::println!("Invalid User");
+        return Err(Error::InvalidUser);
+    }
+
+    if asset_supply.trim().is_empty() || asset_borrow.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    if asset_supply.len() > 7 || asset_borrow.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if supply_tokens <= Nat::from(0u128) || borrow_tokens <= Nat::from(0u128) {
+        ic_cdk::println!("Supply and Borrow amounts must be greater than zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let platform_principal = ic_cdk::api::id();
+    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
+    let (supply_reserve_data, borrow_reserve_data) = if asset_supply == asset_borrow {
+        let mut reserve_data = mutate_state(|state| {
+            state
+                .asset_index
+                .get(&asset_supply)
+                .map(|reserve| reserve.0.clone())
+                .ok_or(Error::NoReserveDataFound)
+        })?;
+
+        reserve_data.asset_supply += supply_tokens.clone();
+        reserve_data.asset_borrow += borrow_tokens.clone();
+        reserve_data.debt_index = Nat::from(100_000_000u128);
+        (reserve_data.clone(), reserve_data)
+    } else {
+        let mut supply_reserve_data = mutate_state(|state| {
+            state
+                .asset_index
+                .get(&asset_supply)
+                .map(|reserve| reserve.0.clone())
+                .ok_or(Error::NoReserveDataFound)
+        })?;
+
+        supply_reserve_data.asset_supply += supply_tokens.clone();
+        supply_reserve_data.debt_index = Nat::from(100_000_000u128);
+
+        let mut borrow_reserve_data = mutate_state(|state| {
+            state
+                .asset_index
+                .get(&asset_borrow)
+                .map(|reserve| reserve.0.clone())
+                .ok_or(Error::NoReserveDataFound)
+        })?;
+
+        borrow_reserve_data.asset_supply += supply_tokens.clone();
+        borrow_reserve_data.debt_index = Nat::from(100_000_000u128);
+
+        (supply_reserve_data, borrow_reserve_data)
+    };
+
+    let supply_asset_ledger_canister_id = reserve_ledger_canister_id(asset_supply.clone())?;
+    let debt_asset_ledger_canister_id = reserve_ledger_canister_id(asset_borrow.clone())?;
+
+    let mut user_data = user_data(user_principal)?;
+
+    if asset_supply == asset_borrow {
+        let mut user_reserve = user_reserve(&mut user_data, &asset_supply);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.liquidity_index = Nat::from(100_000_000u128);
+            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.d_token_balance += supply_tokens.clone();
+            reserve_data.debt_token_blance += borrow_tokens.clone();
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_collateral = true;
+            reserve_data.is_borrowed = true;
+        };
+    } else {
+        let mut supply_user_reserve = user_reserve(&mut user_data, &asset_supply);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
+            reserve_data.liquidity_index = Nat::from(100_000_000u128);
+            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.d_token_balance += supply_tokens.clone();
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_collateral = true;
+        };
+
+        let mut supply_user_reserve = user_reserve(&mut user_data, &asset_borrow);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
+            reserve_data.liquidity_index = Nat::from(100_000_000u128);
+            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.debt_token_blance += borrow_tokens.clone();
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.is_borrowed = true;
+        };
+    };
+
+    let dtoken_principal =
+        Principal::from_text(supply_reserve_data.d_token_canister.clone().unwrap()).unwrap();
+    let debt_token_principal =
+        Principal::from_text(borrow_reserve_data.debt_token_canister.clone().unwrap()).unwrap();
+
+    match asset_transfer(
+        user_principal,
+        dtoken_principal, //dtoken
+        platform_principal,
+        supply_tokens.clone(),
+    )
+    .await
+    {
+        Ok(data) => {
+            ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+        }
+        Err(err) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+            return Err(Error::ErrorMintTokens);
+        }
+    }
+
+    match asset_transfer_from(
+        supply_asset_ledger_canister_id, //ledger
+        user_principal,
+        platform_principal,
+        supply_tokens,
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            println!(
+                "Asset transfer from user to backend canister executed successfully = {:?}",
+                new_balance
+            );
+        }
+        Err(e) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", e);
+            return Err(Error::ErrorMintTokens);
+        }
+    }
+    //borrow
+
+    match asset_transfer(
+        user_principal,
+        debt_token_principal, //debttoken
+        platform_principal,
+        borrow_tokens.clone(),
+    )
+    .await
+    {
+        Ok(_) => {
+            ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+        }
+        Err(err) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+            return Err(Error::ErrorMintTokens);
+        }
+    }
+
+    match asset_transfer_from(
+        debt_asset_ledger_canister_id,
+        platform_principal,
+        user_principal,
+        borrow_tokens,
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            ic_cdk::println!(
+                "Asset transfer from backend to user executed successfully. New balance: {:?}",
+                new_balance
+            );
+        }
+        Err(e) => {
+            ic_cdk::println!("Error: Minting failed. Error: {:?}", e);
+            return Err(Error::ErrorRollBack);
+        }
+    }
+
+    mutate_state(|state| {
+        state
+            .asset_index
+            .insert(asset_supply.clone(), Candid(supply_reserve_data.clone()));
+        if asset_supply != asset_borrow {
+            state
+                .asset_index
+                .insert(asset_borrow.clone(), Candid(borrow_reserve_data.clone()));
+        }
+    });
+
+    mutate_state(|state| {
+        state
+            .user_profile
+            .insert(user_principal, Candid(user_data.clone()));
+    });
+
+    ic_cdk::println!("user data success = {:?}", user_data);
+
+    Ok(user_data)
 }

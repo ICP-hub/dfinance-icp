@@ -1,10 +1,13 @@
 use candid::CandidType;
 use serde::Deserialize;
 
-#[derive(Debug ,CandidType, Clone, Deserialize)]
+
+#[derive(Debug ,CandidType, Deserialize)]
+#[derive(Clone)]
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,
+    RewardIsHigher,
     InvalidCanister,
     InvalidPrincipal,
     AnonymousPrincipal,
@@ -78,6 +81,7 @@ impl Error {
             Error::MaxAmountPlatform => "Platform is unable to pay right now! Try Again Later",
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
+            Error::RewardIsHigher => "Reward is higher than expected",
             Error::InvalidPrincipal => "Invalid principal id",
             Error::AnonymousPrincipal => "Anonymous principals are not allowed",
             Error::MaxAmount => "Amount must be less than user available balance",

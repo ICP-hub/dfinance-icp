@@ -62,7 +62,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-
+    //TODO check if debt amount(reward) is zero or not
     if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
@@ -201,7 +201,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
         if params.reward_amount > earned_rewards {
             ic_cdk::println!("Reward amount is greater than earned rewards");
-            return Err(Error::InvalidAmount);
+            return Err(Error::RewardIsHigher);
         }
 
         // panic!("something went wrong"); 

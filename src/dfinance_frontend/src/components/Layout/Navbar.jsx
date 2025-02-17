@@ -54,6 +54,7 @@ export default function Navbar({ isHomeNav }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const theme = useSelector((state) => state.theme.theme);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
@@ -64,7 +65,7 @@ export default function Navbar({ isHomeNav }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const { isWalletModalOpen } = useSelector((state) => state.utility);
-  const theme = useSelector((state) => state.theme.theme);
+
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
   const { isAuthenticated, login, logout, principal } = useAuth();

@@ -1,129 +1,80 @@
-use crate::declarations::assets::ReserveData;
+use crate::api::functions::get_balance;
+use crate::constants::errors::Error;
+use crate::declarations::assets::{ReserveCache, ReserveData};
+use crate::get_reserve_data;
+use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
+use crate::protocol::libraries::logic::user::calculate_user_account_data;
+use crate::protocol::libraries::math::calculate::get_exchange_rates;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
-    api::state_handler::{mutate_state, read_state},
+    api::state_handler::mutate_state,
     declarations::{
         assets::{
             ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
         },
         storable::Candid,
     },
-    implementations::reserve,
-    protocol::libraries::{
-        math::{
-            calculate::{
-                cal_average_ltv, cal_average_threshold, calculate_health_factor, calculate_ltv,
-                get_exchange_rates, UserPosition,
-            },
-            math_utils::ScalingMath,
-        },
-        types::datatypes::UserReserveData,
-    },
+    protocol::libraries::types::datatypes::UserReserveData,
 };
-use candid::Principal;
+use candid::{Nat, Principal};
+use ic_cdk::api::time;
 use ic_cdk::update;
-use ic_xrc_types::Asset;
-
+fn current_timestamp() -> u64 {
+    time() / 1_000_000_000
+}
 pub struct UpdateLogic;
 
 impl UpdateLogic {
-    // ------------- Update user data function for supply -------------
-
+    /*
+     * @title Update User Data for Supplying Assets
+     * @notice Updates user data and mints dTokens when assets are supplied.
+     *
+     * @dev Steps:
+     * 1. Fetch user data.
+     * 2. Update reserve data and collateral status.
+     * 3. Mint dTokens using `mint_scaled()`.
+     * 4. Save updated user profile.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset supply parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
     pub async fn update_user_data_supply(
         user_principal: Principal,
+        reserve_cache: &ReserveCache,
         params: ExecuteSupplyParams,
-        reserve: &ReserveData,
-        usd_amount: u128,
-    ) -> Result<(), String> {
-        // Fetch user data
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
+        reserve: &mut ReserveData,
+    ) -> Result<(), Error> {
+        ic_cdk::println!(
+            "Starting update_user_data_supply for user: {:?}",
+            user_principal
+        );
 
+        // Fetch user data
+        let user_data_result = user_data(user_principal);
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found in update_user_data_supply");
                 data
             }
             Err(e) => {
-                ic_cdk::println!("Error: {}", e);
                 return Err(e);
             }
         };
 
-        let mut usd_rate = usd_amount.scaled_div(params.amount);
-        ic_cdk::println!(
-            "Converted amount: {} to USD amount: {} with rate: {}",
-            params.amount.clone(),
-            usd_amount,
-            usd_rate
-        );
+        let mut user_reserve = user_reserve(&mut user_data, &params.asset);
 
-        // Update user's net worth and collateral
-        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
-        
-        if params.is_collateral {
-            let user_max_ltv = cal_average_ltv(
-                usd_amount,
-                0,
-                reserve.configuration.ltv,
-                user_data.total_collateral.unwrap_or(0),
-                user_data.max_ltv.unwrap_or(0),
-            );
-            ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
-            user_data.max_ltv = Some(user_max_ltv);
-            let user_thrs = cal_average_threshold(
-                usd_amount,
-                0,
-                reserve.configuration.liquidation_threshold,
-                user_data.total_collateral.unwrap_or(0),
-                user_data.liquidation_threshold.unwrap_or(0),
-            );
-            ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+        let platform_principal = ic_cdk::api::id();
 
-            user_data.liquidation_threshold = Some(user_thrs);
-            user_data.total_collateral = Some(user_data.total_collateral.unwrap_or(0) + usd_amount);
-
-            let user_position = UserPosition {
-                total_collateral_value: user_data.total_collateral.unwrap_or(0),
-                total_borrowed_value: user_data.total_debt.unwrap_or(0),
-                liquidation_threshold: user_thrs,
-            };
-
-            // Calculate and update health factor
-            let health_factor = calculate_health_factor(&user_position);
-            user_data.health_factor = Some(health_factor);
-            ic_cdk::println!("Updated user health factor: {}", health_factor);
-
-            // Calculate and update loan-to-value (LTV)
-            let ltv = calculate_ltv(&user_position);
-
-            user_data.ltv = Some(ltv);
-
-            user_data.available_borrow = Some(
-                user_data.available_borrow.unwrap()
-                    + (usd_amount.scaled_mul(reserve.configuration.ltv)) / 100,
-            );
-        }
-        // Check if the user has a reserve for the asset
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| asset_name == &params.asset),
-            None => None,
-        };
-
-        let mut user_reserve_data = UserReserveData {
-            ..Default::default()
-        };
-        if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.supply_rate = reserve.current_liquidity_rate.clone();
-            reserve_data.asset_supply += params.amount;
-            reserve_data.asset_price_when_supplied = usd_rate;
+        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.reserve = params.asset.clone();
             reserve_data.is_collateral = params.is_collateral;
+            reserve_data.last_update_timestamp = current_timestamp();
+
             if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
                 if reserve_data.is_borrowed {
                     reserve_data.is_using_as_collateral_or_borrow = true;
@@ -133,21 +84,152 @@ impl UpdateLogic {
             } else {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
-           
 
             ic_cdk::println!(
                 "Updated asset supply for existing reserve: {:?}",
                 reserve_data
             );
+            reserve_data
+        } else {
+            let new_reserve = UserReserveData {
+                reserve: params.asset.clone(),
+                is_using_as_collateral_or_borrow: true,
+                is_collateral: true,
+                last_update_timestamp: current_timestamp(),
+                ..Default::default()
+            };
+
+            if let Some(ref mut reserves) = user_data.reserves {
+                reserves.push((params.asset.clone(), new_reserve));
+            } else {
+                user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
+            }
+
+            let new_reserve_data: &mut UserReserveData = if let Some((_, reserve_data)) =
+                user_data.reserves.as_mut().and_then(|reserves| {
+                    reserves
+                        .iter_mut()
+                        .find(|(asset, _)| *asset == params.asset.clone())
+                }) {
+                reserve_data
+            } else {
+                return Err(Error::NoUserReserveDataFound);
+            };
+            new_reserve_data
+        };
+
+        let minted_result = mint_scaled(
+            reserve,
+            &mut user_reserve_data,
+            params.amount.clone(),
+            reserve_cache.next_liquidity_index.clone(),
+            user_principal,
+            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            platform_principal,
+            true,
+        )
+        .await;
+
+        match minted_result {
+            Ok(()) => {
+                ic_cdk::println!("Minting dtokens successfully");
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
+
+        mutate_state(|state| {
+            state
+                .user_profile
+                .insert(user_principal, Candid(user_data.clone()));
+        });
+
+        ic_cdk::println!("User data updated successfully");
+        Ok(())
+    }
+
+    /*
+     * @title Update User Data for Borrowing
+     * @notice Updates user data and mints debt tokens when borrowing assets.
+     *
+     * @dev Steps:
+     * 1. Fetch user and reserve data.
+     * 2. Update reserve data and mark it as borrowed.
+     * 3. Mint debt tokens using `mint_scaled()`.
+     * 4. Save updated user profile.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset borrowing parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
+    pub async fn update_user_data_borrow(
+        user_principal: Principal,
+        reserve_cache: &ReserveCache,
+        params: ExecuteBorrowParams,
+        reserve: &mut ReserveData,
+    ) -> Result<(), Error> {
+        ic_cdk::println!(
+            "Starting update_user_data_borrow for user: {:?}",
+            user_principal
+        );
+
+        let platform_principal = ic_cdk::api::id();
+
+        let asset_reserve = get_reserve_data(params.asset.clone());
+        ic_cdk::println!("Asset reserve read: {:?}", asset_reserve);
+
+        let asset_reserve_data = match asset_reserve {
+            Ok(data) => {
+                ic_cdk::println!("Reserve data found for asset: {:?}", data);
+                data
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        let user_data_result = user_data(user_principal);
+
+        let mut user_data = match user_data_result {
+            Ok(data) => {
+                ic_cdk::println!("User found: update_user_data_borrow");
+                data
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        let mut user_reserve = user_reserve(&mut user_data, &params.asset);
+        ic_cdk::println!("User reserve: {:?}", user_reserve);
+
+        // let mut user_reserve_data = match user_reserve.as_mut() {
+        //     Some((_, reserve_data)) => reserve_data,
+        //     None => return Err(Error::NoUserReserveDataFound),
+        // };
+        let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.is_borrowed = true;
+            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.last_update_timestamp = current_timestamp();
+
+            ic_cdk::println!(
+                "Updated asset borrow for existing reserve: {:?}",
+                reserve_data
+            );
+            reserve_data
         } else {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_supply: params.amount,
-                supply_rate: reserve.current_liquidity_rate,
-                asset_price_when_supplied: usd_rate,
+                asset_borrow: params.amount.clone(), //remove
+                is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
-                is_collateral: true,
+                last_update_timestamp: current_timestamp(),
+
                 ..Default::default()
             };
 
@@ -158,8 +240,149 @@ impl UpdateLogic {
             }
 
             ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
+            let new_reserve_data: &mut UserReserveData = if let Some((_, reserve_data)) =
+                user_data.reserves.as_mut().and_then(|reserves| {
+                    reserves
+                        .iter_mut()
+                        .find(|(asset, _)| *asset == params.asset.clone())
+                }) {
+                reserve_data
+            } else {
+                return Err(Error::NoUserReserveDataFound);
+            };
+            new_reserve_data
+        };
+
+        let minted_result = mint_scaled(
+            reserve,
+            &mut user_reserve_data,
+            params.amount.clone(),
+            reserve_cache.next_debt_index.clone(),
+            user_principal,
+            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
+            platform_principal,
+            false,
+        )
+        .await;
+
+        match minted_result {
+            Ok(()) => {
+                ic_cdk::println!("Minting debttokens successfully");
+            }
+            Err(e) => {
+                return Err(e);
+            }
         }
 
+        mutate_state(|state| {
+            state
+                .user_profile
+                .insert(user_principal, Candid(user_data.clone()));
+        });
+
+        ic_cdk::println!("User data updated successfully: {:?}", user_data);
+        Ok(())
+    }
+
+    /*
+     * @title Update User Data for Withdrawals
+     * @notice Handles user data updates when withdrawing assets.
+     *
+     * @dev Steps:
+     * 1. Fetch user and reserve data.
+     * 2. Update reserve and collateral status.
+     * 3. Burn dTokens using `burn_scaled()`.
+     * 4. Save updated reserve details.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset withdrawal parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
+    pub async fn update_user_data_withdraw(
+        user_principal: Principal,
+        reserve_cache: &ReserveCache,
+        params: ExecuteWithdrawParams,
+        reserve: &mut ReserveData,
+    ) -> Result<(), Error> {
+        let platform_principal = ic_cdk::api::id();
+        // Fetching user data
+        let user_data_result = user_data(user_principal);
+
+        let mut user_data = match user_data_result {
+            Ok(data) => {
+                ic_cdk::println!("User found:update_user_data_withdraw");
+                data
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        // Function to check if the user has a reserve for the asset
+        let mut user_reserve = user_reserve(&mut user_data, &params.asset);
+        let mut user_reserve_data = match user_reserve.as_mut() {
+            Some((_, reserve_data)) => reserve_data,
+            None => return Err(Error::NoUserReserveDataFound),
+        };
+
+        ic_cdk::println!("Update user state before burn: {:?}", user_reserve_data);
+        let is_borrowed = user_reserve_data.is_borrowed.clone();
+        let burn_scaled_result = burn_scaled(
+            reserve,
+            &mut user_reserve_data,
+            params.amount.clone(),
+            reserve_cache.next_liquidity_index.clone(),
+            user_principal,
+            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            platform_principal,
+            true,
+        )
+        .await;
+
+        match burn_scaled_result {
+            Ok(()) => {
+                ic_cdk::println!("Burning dToken successfully completed");
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        if let Some((_, reserve_data)) = user_reserve {
+            reserve_data.is_collateral = params.is_collateral;
+            reserve_data.last_update_timestamp = reserve.last_update_timestamp;
+            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
+                if reserve_data.is_borrowed {
+                    reserve_data.is_using_as_collateral_or_borrow = true;
+                } else {
+                    reserve_data.is_using_as_collateral_or_borrow = false;
+                }
+            } else {
+                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
+            }
+        } else {
+            ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
+            return Err(Error::NoReserveDataFound);
+        }
+
+        let dtoken_balance = get_balance(
+            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            user_principal,
+        )
+        .await?;
+        if params.is_collateral == false && dtoken_balance == Nat::from(0u128) {
+            if let Some((_, reserve_data)) = user_reserve {
+                reserve_data.is_collateral = true;
+            }
+        }
+        // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
+        //     if let Some(ref mut reserves) = user_data.reserves {
+        //         reserves.retain(|(name, _)| name != &params.asset);
+        //     }
+        // }
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -171,438 +394,172 @@ impl UpdateLogic {
         Ok(())
     }
 
-    // ------------- Update user data function for borrow -------------
-    pub async fn update_user_data_borrow(
-        user_principal: Principal,
-        params: ExecuteBorrowParams,
-        usd_amount: u128,
-    ) -> Result<(), String> {
-        let asset_reserve = read_state(|state| {
-            let asset_index = &state.asset_index;
-            asset_index
-                .get(&params.asset.to_string())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| format!("Reserve not found for asset: {}", params.asset.to_string()))
-        });
-
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
-
-        let mut user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
-                data
-            }
-            Err(e) => {
-                ic_cdk::println!("Error: {}", e);
-                return Err(e);
-            }
-        };
-
-        user_data.total_debt = Some(user_data.total_debt.unwrap_or(0) + usd_amount);
-        user_data.net_worth = Some((user_data.net_worth.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
-        let user_position = UserPosition {
-            total_collateral_value: user_data.total_collateral.unwrap_or(0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0),
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0),
-        };
-
-        let health_factor = calculate_health_factor(&user_position);
-        user_data.health_factor = Some(health_factor);
-
-        ic_cdk::println!("Updated user health factor: {}", health_factor);
-
-        let ltv = calculate_ltv(&user_position);
-        user_data.ltv = Some(ltv);
-
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == params.asset),
-            None => None,
-        };
-        let asset_reserve_data = match asset_reserve {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
-
-                data
-            }
-
-            Err(e) => {
-                ic_cdk::println!("Error: {}", e);
-
-                return Err(e);
-            }
-        };
-
-        
-
-        user_data.available_borrow = Some((user_data.available_borrow.unwrap() as i128 - usd_amount as i128).max(0) as u128);
-
-   
-        let usd_rate = usd_amount.scaled_div(params.amount);
-        if let Some((_, reserve_data)) = user_reserve {
-            
-
-            reserve_data.borrow_rate = asset_reserve_data.borrow_rate;
-            reserve_data.asset_price_when_borrowed = usd_rate;
-            reserve_data.is_borrowed = true;
-            reserve_data.is_using_as_collateral_or_borrow = true;
-            reserve_data.asset_borrow += params.amount;
-            ic_cdk::println!(
-                "Updated asset borrow for existing reserve: {:?}",
-                reserve_data
-            );
-        } else {
-            
-            let new_reserve = UserReserveData {
-                reserve: params.asset.clone(),
-                borrow_rate: asset_reserve_data.current_liquidity_rate,
-
-                asset_price_when_borrowed: usd_rate,
-                asset_borrow: params.amount,
-                is_borrowed: true,
-                is_using_as_collateral_or_borrow: true,
-                ..Default::default()
-            };
-
-            if let Some(ref mut reserves) = user_data.reserves {
-                reserves.push((params.asset.clone(), new_reserve));
-            } else {
-                user_data.reserves = Some(vec![(params.asset.clone(), new_reserve)]);
-            }
-
-            ic_cdk::println!("Added new reserve data for asset: {:?}", params.asset);
-        }
-
-        
-        mutate_state(|state| {
-            state
-                .user_profile
-                .insert(user_principal, Candid(user_data.clone()));
-        });
-
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
-        Ok(())
-    }
-
-    // ------------- Update user data function for withdraw -------------
-    pub async fn update_user_data_withdraw(
-        user_principal: Principal,
-        params: ExecuteWithdrawParams,
-        reserve: &ReserveData,
-        usd_amount: u128,
-    ) -> Result<(), String> {
-        // Fetchs user data
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
-
-        let mut user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
-                data
-            }
-            Err(e) => {
-                ic_cdk::println!("Error: {}", e);
-                return Err(e);
-            }
-        };
-
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
-        // let user_thrs = cal_average_threshold(amount_in_usd, reserve.configuration.liquidation_threshold, user_prof.total_collateral.unwrap_or(0), user_prof.liquidation_threshold.unwrap_or(0));
-        // ic_cdk::println!("user_thr {:?}", user_thrs);
-
-        // user_data.liquidation_threshold = Some(user_thrs);
-        user_data.net_worth = Some((user_data.net_worth.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
-        if params.is_collateral {
-            let user_thrs = cal_average_threshold(
-                0,
-                usd_amount.clone(),
-                reserve.configuration.liquidation_threshold,
-                user_data.total_collateral.unwrap_or(0),
-                user_data.liquidation_threshold.unwrap_or(0),
-            );
-            ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
-            user_data.liquidation_threshold = Some(user_thrs);
-
-            let user_max_ltv = cal_average_ltv(
-                0,
-                usd_amount.clone(),
-                reserve.configuration.ltv,
-                user_data.total_collateral.unwrap_or(0),
-                user_data.max_ltv.unwrap_or(0),
-            );
-            ic_cdk::println!(" user_max_ltv: {:?}", user_max_ltv);
-            user_data.max_ltv = Some(user_max_ltv);
-
-            user_data.total_collateral = Some(
-                (user_data.total_collateral.unwrap() as i128 - usd_amount.clone() as i128).max(0)
-                    as u128,
-            );
-            user_data.available_borrow = Some(
-                (user_data.available_borrow.unwrap() as i128
-                    - ((usd_amount.scaled_mul(reserve.configuration.ltv)) / 100) as i128)
-                    .max(0) as u128,
-            );
-
-            let user_position = UserPosition {
-                total_collateral_value: user_data.total_collateral.unwrap_or(0),
-                total_borrowed_value: user_data.total_debt.unwrap_or(0),
-                liquidation_threshold: user_thrs,
-            };
-
-            let health_factor = calculate_health_factor(&user_position);
-            user_data.health_factor = Some(health_factor);
-
-            ic_cdk::println!("Updated user health factor: {}", health_factor);
-
-            let ltv = calculate_ltv(&user_position);
-            user_data.ltv = Some(ltv);
-        }
-        // let available_borrow = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0).clone() - usd_amount,
-        //     user_data.total_debt.unwrap_or(0).clone(),
-        //     ltv.clone(),
-        // );
-
-        // user_data.available_borrow = Some(available_borrow);
-
-        // Checks if the reserve data for the asset already exists in the user's reserves
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == params.asset),
-            None => None,
-        };
-
-        // If the reserve exists, it will subtract the withdrawal amount from the asset supply
-        if let Some((_, reserve_data)) = user_reserve {
-            // if reserve_data.is_collateral {
-
-            //     user_data.liquidation_threshold = Some(user_thrs);
-            //     // user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone());
-            // user_data.available_borrow = Some(
-            //     ((user_data.available_borrow.unwrap() as i128 - (usd_amount.clone().scaled_mul(reserve.configuration.ltv))/100)).max(0) as u128)
-            // ;
-            // }
-            // Ensures the user has enough supply to withdraw
-            reserve_data.is_collateral = params.is_collateral;
-
-            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
-                if reserve_data.is_borrowed {
-                    reserve_data.is_using_as_collateral_or_borrow = true;
-                } else {
-                    reserve_data.is_using_as_collateral_or_borrow = false;
-                }
-            } else {
-                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
-            }
-
-            if reserve_data.asset_supply >= params.amount {
-                reserve_data.asset_supply -= params.amount;
-               
-                ic_cdk::println!(
-                    "Reduced asset supply for existing reserve: {:?}",
-                    reserve_data
-                );
-            } else {
-                ic_cdk::println!("Insufficient asset supply for withdrawal.");
-                return Err(format!(
-                    "Insufficient supply for withdrawal: requested {}, available {}",
-                    params.amount, reserve_data.asset_supply
-                ));
-            }
-            if reserve_data.asset_supply == 0 {
-                reserve_data.is_collateral = true;
-            }
-        } else {
-            // If Reserve data does not exist,it returns an error since we cannot withdraw what is not supplied
-            ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
-            return Err(format!(
-                "Cannot withdraw from a non-existing reserve for asset: {}",
-                params.asset
-            ));
-        }
-
-        // Saves the updated user data back to state
-        mutate_state(|state| {
-            state
-                .user_profile
-                .insert(user_principal, Candid(user_data.clone()));
-        });
-
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
-        Ok(())
-    }
-
-    // ------------- Update user data function for repay -------------
+    /*
+     * @title Update User Data for Repayments
+     * @notice Handles user data updates when repaying borrowed assets.
+     *
+     * @dev Steps:
+     * 1. Fetch user data.
+     * 2. Update debt status.
+     * 3. Burn debt tokens using `burn_scaled()`.
+     * 4. Update user state.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset repayment parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
     pub async fn update_user_data_repay(
         user_principal: Principal,
+        reserve_cache: &ReserveCache,
         params: ExecuteRepayParams,
-        usd_amount: u128,
-    ) -> Result<(), String> {
-        let user_data_result = mutate_state(|state| {
-            let user_profile_data = &mut state.user_profile;
-            user_profile_data
-                .get(&user_principal)
-                .map(|user| user.0.clone())
-                .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-        });
+        reserve: &mut ReserveData,
+    ) -> Result<(), Error> {
+        let platform_principal: Principal = ic_cdk::api::id();
+        ic_cdk::println!(
+            "Starting update_user_data_repay for user: {:?}",
+            user_principal
+        );
+        let user_data_result = user_data(user_principal);
 
         let mut user_data = match user_data_result {
             Ok(data) => {
-                ic_cdk::println!("User found: {:?}", data);
+                ic_cdk::println!("User found: update_user_data_repay");
                 data
             }
             Err(e) => {
-                ic_cdk::println!("Error: {}", e);
                 return Err(e);
             }
         };
-        // let ckbtc_to_usd_rate = 60554.70f64;
-        // ic_cdk::println!("ckBTC to ICP conversion rate: {}", ckbtc_to_usd_rate);
 
-        // // Convert the supplied amount (in ckBTC) to ICP
-        // let amount_in_usd = (params.amount as f64) * ckbtc_to_usd_rate;
+        ic_cdk::println!("Repay user update initial data = {:?}", user_data);
 
-        let user_position = UserPosition {
-            total_collateral_value: user_data.total_collateral.unwrap_or(0),
-            total_borrowed_value: user_data.total_debt.unwrap_or(0) - usd_amount.clone(),
-            liquidation_threshold: user_data.liquidation_threshold.unwrap_or(0),
-        };
-        user_data.total_debt = Some((user_data.total_debt.unwrap_or(0) as i128 - usd_amount as i128).max(0) as u128);
-        user_data.net_worth = Some(user_data.net_worth.unwrap_or(0) + usd_amount);
-        let health_factor = calculate_health_factor(&user_position);
-        user_data.health_factor = Some(health_factor);
-
-        ic_cdk::println!("Updated user health factor: {}", health_factor);
-
-        let ltv = calculate_ltv(&user_position);
-        user_data.ltv = Some(ltv);
-        // let available_borrow = calculate_available_borrows(
-        //     user_data.total_collateral.unwrap_or(0).clone() ,
-        //     user_data.total_debt.unwrap_or(0).clone() - usd_amount,
-        //     ltv.clone(),
-        // );
-
-        // user_data.available_borrow = Some(available_borrow);
-        user_data.available_borrow = Some(user_data.available_borrow.unwrap() + usd_amount);
-
-        // Checks if the reserve data for the asset already exists in the user's reserves
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == params.asset),
-            None => None,
+        let mut user_reserve = user_reserve(&mut user_data, &params.asset);
+        let mut user_reserve_data = match user_reserve.as_mut() {
+            Some((_, reserve_data)) => reserve_data,
+            None => return Err(Error::NoUserReserveDataFound), // or handle appropriately
         };
 
-        // If the reserve exists, it will subtract the repaid amount from the asset borrow
+        ic_cdk::println!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
+                         params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
+        let debt_token = reserve.debt_token_canister.clone().unwrap();
+        let is_collateral = user_reserve_data.is_collateral.clone();
+        let burn_scaled_result = burn_scaled(
+            reserve,
+            &mut user_reserve_data,
+            params.amount.clone(),
+            reserve_cache.next_debt_index.clone(),
+            user_principal,
+            Principal::from_text(debt_token).unwrap(),
+            platform_principal,
+            false,
+        )
+        .await;
+
+        match burn_scaled_result {
+            Ok(()) => {
+                ic_cdk::println!("Burning debttoken successfully");
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        };
+        let balance_result = get_balance(
+            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
+            user_principal,
+        )
+        .await;
+
+        let debttoken_balance = match balance_result {
+            Ok(bal) => bal,
+            Err(e) => {
+                return Err(e);
+            }
+        };
         if let Some((_, reserve_data)) = user_reserve {
-            // Ensures the user has enough borrow to repay
-            if reserve_data.asset_borrow >= params.amount {
-                reserve_data.asset_borrow -= params.amount;
-                ic_cdk::println!(
-                    "Reduced asset borrow for existing reserve: {:?}",
-                    reserve_data
-                );
-            } else {
-                ic_cdk::println!("Insufficient asset borrow for repay.");
-                return Err(format!(
-                    "Insufficient borrow for repay: requested {}, available {}",
-                    params.amount, reserve_data.asset_borrow
-                ));
+            reserve_data.last_update_timestamp = reserve.last_update_timestamp;
+            if debttoken_balance == Nat::from(0u128) {
+                reserve_data.is_borrowed = false;
+                if !reserve_data.is_collateral {
+                    reserve_data.is_using_as_collateral_or_borrow = false;
+                }
             }
         } else {
-            // If Reserve data does not exist, it returns an error since we cannot repay what is not borrowed
-            ic_cdk::println!("Error: Reserve not found for asset: {:?}", params.asset);
-            return Err(format!(
-                "Cannot repay from a non-existing reserve for asset: {}",
-                params.asset
-            ));
+            return Err(Error::NoUserReserveDataFound);
         }
 
-        // Saves the updated user data back to state
+        // if debttoken_balance == Nat::from(0u128) && is_collateral == false {
+        //     if let Some(ref mut reserves) = user_data.reserves {
+        //         reserves.retain(|(name, _)| name != &params.asset);
+        //     }
+        // }
+        ic_cdk::println!("Saving updated user data to state");
+
         mutate_state(|state| {
             state
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()));
         });
 
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
+        ic_cdk::println!("User data updated successfully");
         Ok(())
     }
 }
 
-// fn calculate_available_borrows(
-//     total_collateral_in_usd: u128,
-//     total_debt_in_usd: u128,
-//     ltv: u128,
-// ) -> u128 {
-
-//     let available_borrows_in_usd = (total_collateral_in_usd * ltv/100) /100000000;
-//     ic_cdk::println!("total_collateral_in_usd: {:?}", total_collateral_in_usd);
-//     if available_borrows_in_usd < total_debt_in_usd {
-//         return 0;
-//     }
-
-//     available_borrows_in_usd - total_debt_in_usd
-// }
-// fn calculate_available_borrows(
-//     total_collateral_in_base_currency: u128,
-//     total_debt_in_base_currency: u128,
-//     ltv: u128,
-// ) -> u128 {
-//     // Define a function for multiplying by percentage
-//     let user=ic_cdk::caller();
-
-//     fn percent_mul(amount: u128, percentage: u128) -> u128 {
-//         (amount * percentage) / 10000 // Assuming LTV is expressed in basis points (10000 = 100%)
-//     }
-
-//     let mut available_borrows_in_base_currency = percent_mul(total_collateral_in_base_currency, ltv);
-
-//     if available_borrows_in_base_currency < total_debt_in_base_currency {
-//         return 0;
-//     }
-
-//     available_borrows_in_base_currency -= total_debt_in_base_currency;
-//     available_borrows_in_base_currency
-// }
-
-
+/*
+ * @title Toggle Collateral Status
+ * @notice Allows a user to toggle the collateral status of an asset.
+ *
+ * @dev Steps:
+ * 1. Validate input parameters.
+ * 2. Check collateral and debt status.
+ * 3. Update the user's reserve data.
+ *
+ * @param asset The asset name.
+ * @param amount The amount removed from collateral.
+ * @param added_amount The amount added as collateral.
+ *
+ * @return `Ok(())` if successful.
+ */
 #[update]
+pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) -> Result<(), Error> {
+    if asset.trim().is_empty() {
+        ic_cdk::println!("Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
 
-pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) {
+    if asset.len() > 7 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if added_amount == Nat::from(0u128) && amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    if amount == Nat::from(0u128) && added_amount <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
     let user_principal = ic_cdk::caller();
 
-    // to retrieve user data.
-    let user_data_result = mutate_state(|state| {
-        let user_profile_data = &mut state.user_profile;
-        user_profile_data
-            .get(&user_principal)
-            .map(|user| user.0.clone())
-            .ok_or_else(|| format!("User not found: {}", user_principal.to_string()))
-    });
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let user_data_result = user_data(user_principal);
 
     let mut user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User found: {:?}", data);
+            ic_cdk::println!("User found toggle");
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error: {}", e);
-            return;
+            return Err(e);
         }
     };
 
@@ -612,7 +569,7 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
         asset_index
             .get(&asset.to_string().clone())
             .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| format!("Reserve not found for asset: {}", asset.to_string()))
+            .ok_or_else(|| Error::NoReserveDataFound)
     });
 
     let reserve_data = match reserve_data_result {
@@ -621,23 +578,21 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error: {}", e);
-            return;
+            ic_cdk::println!("Error: {:?}", e);
+            return Err(e);
         }
     };
 
     // exchanging amount to usd.
-    let exchange_amount = get_exchange_rates(asset.clone(), None, amount).await;
+    let exchange_amount = get_exchange_rates(asset.clone(), None, amount.clone()).await;
     let usd_amount = match exchange_amount {
         Ok((amount_in_usd, _timestamp)) => {
-            // Extracted the amount in USD
             ic_cdk::println!(" amount in USD: {:?}", amount_in_usd);
             amount_in_usd
         }
         Err(e) => {
-            // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
-            return;
+            return Err(e);
         }
     };
 
@@ -649,58 +604,81 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
             amount_in_usd
         }
         Err(e) => {
-            // Handling the error
             ic_cdk::println!("Error getting exchange rate: {:?}", e);
-            return;
+            return Err(e);
         }
     };
 
-    let user_thrs = cal_average_threshold(
-        added_usd_amount.clone(),
-        usd_amount.clone(),
-        reserve_data.configuration.liquidation_threshold,
-        // what collateral value am  i need to send new or old.
-        user_data.total_collateral.unwrap(),
-        // updated_collateral,
-        user_data.liquidation_threshold.unwrap(),
-    );
+    let mut total_collateral = Nat::from(0u128);
+    let mut total_debt = Nat::from(0u128);
+    let mut avg_ltv = Nat::from(0u128);
+    let mut health_factor = Nat::from(0u128);
+    let mut liquidation_threshold_var = Nat::from(0u128);
 
-    // user_data.total_collateral = Some(user_data.total_collateral.unwrap() - usd_amount.clone() + added_usd_amount.clone());
-    user_data.total_collateral = Some(
-        ((user_data.total_collateral.unwrap() as i128 - usd_amount.clone() as i128
-            + added_usd_amount.clone() as i128)
-            .max(0)) as u128,
-    );
-    user_data.liquidation_threshold = Some(user_thrs);
-    // user_data.available_borrow = Some(user_data.available_borrow.unwrap() - usd_amount.clone() + added_usd_amount.clone());
-    user_data.available_borrow = Some(
-        ((user_data.available_borrow.unwrap() as i128 - usd_amount.clone() as i128
-            + added_usd_amount.clone() as i128)
-            .max(0)) as u128,
-    );
-    ic_cdk::println!("User liquidation threshold: {:?}", user_thrs);
+    let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
+        calculate_user_account_data(None).await;
 
-    let user_position = UserPosition {
-        total_collateral_value: user_data.total_collateral.unwrap_or(0),
-        total_borrowed_value: user_data.total_debt.unwrap_or(0),
-        liquidation_threshold: user_thrs,
-    };
+    match user_data_result {
+        Ok((
+            t_collateral,
+            t_debt,
+            ltv,
+            liquidation_threshold,
+            h_factor,
+            _a_borrow,
+            _zero_ltv_collateral,
+        )) => {
+            total_collateral = t_collateral;
+            total_debt = t_debt;
+            avg_ltv = ltv;
+            health_factor = h_factor;
+            liquidation_threshold_var = liquidation_threshold;
 
-    let user_ltv = calculate_ltv(&user_position);
-    user_data.ltv = Some(user_ltv);
+            ic_cdk::println!("total collateral = {}", total_collateral);
+            ic_cdk::println!("total debt = {}", total_debt);
+            ic_cdk::println!("Average LTV: {}", avg_ltv);
+            ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
+            ic_cdk::println!("Health Factor: {}", health_factor);
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    }
+    if total_debt != Nat::from(0u128) {
+        let mut ltv = Nat::from(0u128);
+        if amount != Nat::from(0u128) {
+            let mut adjusted_collateral = Nat::from(0u128);
+            if total_collateral < usd_amount.clone() {
+                adjusted_collateral = Nat::from(0u128);
+            } else {
+                adjusted_collateral = total_collateral.clone() - usd_amount.clone();
+            }
 
-    let user_health = calculate_health_factor(&user_position);
-    user_data.health_factor = Some(user_health);
+            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+            if total_debt == Nat::from(0u128) {
+                ltv = Nat::from(0u128);
+            } else {
+                ltv = total_debt.scaled_div(adjusted_collateral);
+            }
+        } else {
+            let adjusted_collateral = total_collateral.clone() + added_usd_amount;
+            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+            if total_debt == Nat::from(0u128) {
+                ltv = Nat::from(0u128);
+            } else {
+                ltv = total_debt.scaled_div(adjusted_collateral);
+            }
+        }
 
-    let user_reserve = match user_data.reserves {
-        Some(ref mut reserves) => reserves
-            .iter_mut()
-            .find(|(asset_name, _)| *asset_name == asset.clone()),
-        None => None,
-    };
+        ltv = ltv * Nat::from(100u128);
+        ic_cdk::println!("New ltv: {}", ltv);
+        if ltv >= liquidation_threshold_var {
+            return Err(Error::LTVGreaterThanThreshold);
+        }
+    }
+    let user_reserve = user_reserve(&mut user_data, &asset);
 
     if let Some((_, user_reserve_data)) = user_reserve {
-        // Toggle the `is_collateral` value
         user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
 
         if user_reserve_data.is_using_as_collateral_or_borrow {
@@ -727,4 +705,44 @@ pub async fn toggle_collateral(asset: String, amount: u128, added_amount: u128) 
     });
 
     ic_cdk::println!("User data updated successfully: {:?}", user_data);
+    Ok(())
+}
+
+/*
+ * @title Fetch User Data
+ * @notice Retrieves user data from state.
+ *
+ * @param user_principal The principal ID of the user.
+ *
+ * @return `UserData` if found.
+ */
+pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
+    let user_data_result = mutate_state(|state| {
+        let user_profile_data = &mut state.user_profile;
+        user_profile_data
+            .get(&user_principal)
+            .map(|user| user.0.clone())
+            .ok_or_else(|| Error::NoUserReserveDataFound)
+    });
+    user_data_result
+}
+
+/*
+ * @title Fetch User Reserve Data
+ * @notice Retrieves reserve data for a specific asset from the user's profile.
+ *
+ * @param user_data A mutable reference to `UserData`.
+ * @param asset_name The asset name for which reserve data is required.
+ *
+ * @return `Option<&mut (String, UserReserveData)>` containing the asset name and its reserve data.
+ */
+pub fn user_reserve<'a>(
+    user_data: &'a mut UserData,
+    asset_name: &'a String,
+) -> std::option::Option<&'a mut (std::string::String, UserReserveData)> {
+    let user_reserve = match user_data.reserves {
+        Some(ref mut reserves) => reserves.iter_mut().find(|(name, _)| name == asset_name),
+        None => None,
+    };
+    user_reserve
 }

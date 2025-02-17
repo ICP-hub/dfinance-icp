@@ -8,11 +8,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import Pagination from "../Common/pagination";
-import useAssetData from "../Common/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";;
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useMemo, useCallback } from "react";
 import { Principal } from "@dfinity/principal";
@@ -22,111 +22,57 @@ import useFetchBalance from "../customHooks/useFetchBalance";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import Loading from "../Common/Loading";
-
+import MiniLoader from "../Common/MiniLoader";
+import WalletModal from "../../components/Dashboard/WalletModal";
+import Lottie from "../Common/Lottie";
 const ITEMS_PER_PAGE = 8;
 
+/**
+ * FaucetDetails Component
+ *
+ * This component displays the details of faucet assets available for users to claim.
+ * It allows users to view various assets like `ckBTC`, `ckETH`, `ckUSDC`, `ICP`, and `ckUSDT`,
+ * @returns {JSX.Element} - Returns the FaucetDetails component, including the faucet assets table and pagination controls.
+ */
 const FaucetDetails = () => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
 
-  const { isAuthenticated, principal, backendActor, createLedgerActor } =
-    useAuth();
+  const { filteredItems, loading } = useAssetData();
+  const { isAuthenticated, backendActor } = useAuth();
+  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
+  } = useFetchConversionRate();
+  
+  const navigate = useNavigate();
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  /* ===================================================================================
+   *                                  STATE-MANAGEMENT
+   * =================================================================================== */
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const navigate = useNavigate();
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchConversionRate();
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
 
-  useEffect(() => {
-    if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (parseFloat(ckBTCBalance) * ckBTCUsdRate).toFixed(2);
-      setCkBTCUsdBalance(balanceInUsd);
-    }
+  const refreshTrigger = useSelector(
+    (state) => state.faucetUpdate.refreshTrigger
+  );
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
 
-    if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (parseFloat(ckETHBalance) * ckETHUsdRate).toFixed(2);
-      setCkETHUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDCBalance) * ckUSDCUsdRate).toFixed(2);
-      setCkUSDCUsdBalance(balanceInUsd);
-    }
-
-    if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (parseFloat(ckICPBalance) * ckICPUsdRate).toFixed(2);
-      setCkICPUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (parseFloat(ckUSDTBalance) * ckUSDTUsdRate).toFixed(2);
-      setCkUSDTUsdBalance(balanceInUsd);
-    }
-
-  }, [ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckICPBalance, ckICPUsdRate, ckUSDTBalance,
-    ckUSDTUsdRate]);
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchBalance("ckBTC"),
-          fetchBalance("ckETH"),
-          fetchBalance("ckUSDC"),
-          fetchBalance("ICP"),
-          fetchBalance("ckUSDT"),
-          fetchConversionRate(),
-        ]);
-        const allAssets = await backendActor.getAllAssets();
-        setAssets(allAssets);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1500);
-      }
-    };
-
-    fetchAllData();
-  }, [
-    fetchBalance,
-    fetchConversionRate,
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance
-  ]);
+  /* ===================================================================================
+   *                                  FUNCTION
+   * =================================================================================== */
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -157,8 +103,8 @@ const FaucetDetails = () => {
       case "ICP":
         assetImage = icp;
         break;
-      case "ckUSDT": // Added case for ckUSDT
-        assetImage = ckUSDT; // Ensure ckUSDT is defined or imported
+      case "ckUSDT":
+        assetImage = ckUSDT;
         break;
       default:
         assetImage = null;
@@ -170,41 +116,127 @@ const FaucetDetails = () => {
   const closePopup = () => {
     setShowPopup(false);
   };
-
-  const { filteredItems } = useAssetData();
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-  const theme = useSelector((state) => state.theme.theme);
-  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-  const filteredReserveData = Object.fromEntries(filteredItems);
-  const formatNumber = useFormatNumber();
 
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    if (ckBTCBalance && ckBTCUsdRate) {
+      const balanceInUsd = (
+        parseFloat(ckBTCBalance) *
+        (ckBTCUsdRate / 1e8)
+      ).toFixed(2);
+      setCkBTCUsdBalance(balanceInUsd);
+    }
+
+    if (ckETHBalance && ckETHUsdRate) {
+      const balanceInUsd = (
+        parseFloat(ckETHBalance) *
+        (ckETHUsdRate / 1e8)
+      ).toFixed(2);
+      setCkETHUsdBalance(balanceInUsd);
+    }
+
+    if (ckUSDCBalance && ckUSDCUsdRate) {
+      const balanceInUsd = (
+        parseFloat(ckUSDCBalance) *
+        (ckUSDCUsdRate / 1e8)
+      ).toFixed(2);
+      setCkUSDCUsdBalance(balanceInUsd);
+    }
+
+    if (ckICPBalance && ckICPUsdRate) {
+      const balanceInUsd = (
+        parseFloat(ckICPBalance) *
+        (ckICPUsdRate / 1e8)
+      ).toFixed(2);
+      setCkICPUsdBalance(balanceInUsd);
+    }
+
+    if (ckUSDTBalance && ckUSDTUsdRate) {
+      const balanceInUsd = (
+        parseFloat(ckUSDTBalance) *
+        (ckUSDTUsdRate / 1e8)
+      ).toFixed(2);
+      setCkUSDTUsdBalance(balanceInUsd);
+    }
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
+    refreshTrigger,
+  ]);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
+          fetchConversionRate(),
+        ]);
+        const allAssets = await backendActor.getAllAssets();
+        setAssets(allAssets);
+      } catch (error) {
+        setError(error);
+      }
+    };
+
+    fetchAllData();
+  }, [
+    fetchBalance,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    refreshTrigger,
+  ]);
+  useEffect(() => {
+    if (!loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
+
+  /* ===================================================================================
+   *                                  RENDER-COMPONENTS
+   * =================================================================================== */
 
   return (
     <div className="w-full">
-      <div className="w-full flex items-center px-2">
+      <div className="w-full flex items-center px-1">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
           Test Assets
         </h1>
       </div>
 
       <div className="w-full mt-9 p-0 lg:px-1">
-        {loading ? (
+        {loading && !isSwitchingWallet && !hasLoaded ? (
           <div className="w-full mt-[180px] mb-[300px] flex justify-center items-center ">
-            <Loading isLoading={true} />
+            <MiniLoader isLoading={true} />
           </div>
         ) : currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[14rem]">
-            <div className="w-20 h-15">
-              <img
-                src="/Transaction/empty file.gif"
-                alt="empty"
-                className="w-30"
-              />
+            <div className="mb-3 -ml-3 -mt-5">
+              <Lottie />
             </div>
-            <p className="text-[#233D63] text-sm font-semibold dark:text-darkText">
-              No assets found!
+            <p className="text-[#8490ff] text-sm dark:text-[#c2c2c2] opacity-90">
+              NO ASSETS FOUND!
             </p>
           </div>
         ) : (
@@ -216,12 +248,14 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className="p-1 pl-2 -pr-7 pb-3 whitespace-nowrap"
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
+                          index === 1 ? "text-center" : ""
+                        }`}
                       >
                         {item.header}
                       </td>
                     ))}
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="hidden md:table-cell pr-[6.6rem]">
                       {FAUCET_ASSETS_TABLE_COL[2]?.header}
                     </td>
                   </tr>
@@ -230,13 +264,14 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f] text-sm rounded-lg ${index !== currentItems.length - 1
-                        ? "gradient-line-bottom"
-                        : ""
-                        }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
+                        index !== currentItems.length - 1
+                          ? "gradient-line-bottom"
+                          : ""
+                      }`}
                     >
-                      <td className="p-3 align-center py-7 px-2">
-                        <div className="w-full flex items-center justify-start min-w-[120px] gap-1 whitespace-nowrap mr-1">
+                      <td className="py-[1.5rem]">
+                        <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
                           {item[0] === "ckBTC" && (
                             <img
                               src={ckBTC}
@@ -265,9 +300,9 @@ const FaucetDetails = () => {
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
-                          {item[0] === "ckUSDT" && (  // Added for ckUSDT
+                          {item[0] === "ckUSDT" && (
                             <img
-                              src={ckUSDT} // Ensure ckUSDT is defined or imported
+                              src={ckUSDT}
                               alt="ckusdt logo"
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -275,60 +310,102 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-                      <td className="p-3 align-center">
-                        <div className="flex flex-row ml-[30px]">
+                      <td>
+                        <div className="p-3">
                           <div>
                             <center>
-                              {item[0] === "ckBTC" && (
-                                <>
-                                  <p className="text-left">{Number(ckBTCBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
-                                    ${formatNumber(ckBTCUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ckETH" && (
-                                <>
-                                  <p className="text-left">{Number(ckETHBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
-                                    ${formatNumber(ckETHUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ckUSDC" && (
-                                <>
-                                  <p className="text-left">{Number(ckUSDCBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
-                                    ${formatNumber(ckUSDCUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ICP" && (
-                                <>
-                                  <p className="text-left">{Number(ckICPBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
-                                    ${formatNumber(ckICPUsdBalance)}
-                                  </p>
-                                </>
-                              )}
-                              {item[0] === "ckUSDT" && (  // Added for ckUSDT
-                                <>
-                                  <p className="text-left">{Number(ckUSDTBalance).toLocaleString()}</p>
-                                  <p className="font-light text-left text-[11px]">
-                                    ${formatNumber(ckUSDTUsdBalance)}
-                                  </p>
-                                </>
-                              )}
+                              {(() => {
+                                const assetData = {
+                                  ckBTC: {
+                                    balance: ckBTCBalance,
+                                    usdBalance: ckBTCUsdBalance,
+                                    rate: ckBTCUsdRate,
+                                  },
+                                  ckETH: {
+                                    balance: ckETHBalance,
+                                    usdBalance: ckETHUsdBalance,
+                                    rate: ckETHUsdRate,
+                                  },
+                                  ckUSDC: {
+                                    balance: ckUSDCBalance,
+                                    usdBalance: ckUSDCUsdBalance,
+                                    rate: ckUSDCUsdRate,
+                                  },
+                                  ICP: {
+                                    balance: ckICPBalance,
+                                    usdBalance: ckICPUsdBalance,
+                                    rate: ckICPUsdRate,
+                                  },
+                                  ckUSDT: {
+                                    balance: ckUSDTBalance,
+                                    usdBalance: ckUSDTUsdBalance,
+                                    rate: ckUSDTUsdRate,
+                                  },
+                                }[item[0]];
+
+                                if (!assetData) return null;
+                                const { balance, usdBalance, rate } = assetData;
+                                const usdRate = rate / 1e8;
+                                const calculatedUsdValue = balance * usdRate;
+                                let displayedBalance;
+                                if (
+                                  !isFinite(calculatedUsdValue) ||
+                                  calculatedUsdValue === 0
+                                ) {
+                                  displayedBalance = "0.00";
+                                } else if (calculatedUsdValue < 0.01) {
+                                  displayedBalance = `<${(
+                                    0.01 / usdRate
+                                  ).toLocaleString(undefined, {
+                                    minimumFractionDigits: 7,
+                                    maximumFractionDigits: 7,
+                                  })}`;
+                                } else {
+                                  displayedBalance =
+                                    balance >= 1
+                                      ? balance.toLocaleString(undefined, {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
+                                      : balance.toLocaleString(undefined, {
+                                          minimumFractionDigits: 7,
+                                          maximumFractionDigits: 7,
+                                        });
+                                }
+                                return (
+                                  <>
+                                    <p>{displayedBalance}</p>
+                                    <p className="font-light text-[11px]">
+                                      {calculatedUsdValue === 0
+                                        ? "$0.00"
+                                        : calculatedUsdValue < 0.01
+                                        ? "<0.01$"
+                                        : `$${calculatedUsdValue.toLocaleString(
+                                            undefined,
+                                            {
+                                              minimumFractionDigits: 2,
+                                              maximumFractionDigits: 2,
+                                            }
+                                          )}`}
+                                    </p>
+                                  </>
+                                );
+                              })()}
                             </center>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 align-center -pb-5">
+                      <td className="pr-3">
                         <div className="w-full flex justify-end align-center">
                           <Button
                             title={
                               <>
-                                <span className="hidden lg:inline">Faucet</span>
+                                <span
+                                  className="hidden lg:inline"
+                                  id="faucet-button"
+                                >
+                                  Faucet
+                                </span>
                                 <span className="inline lg:hidden">
                                   <svg
                                     width="42"
@@ -358,17 +435,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            {/* <div className="w-full flex justify-center mt-10">
-              <div id="pagination" className="flex gap-2">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(
-                    FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE
-                  )}
-                  onPageChange={(page) => setCurrentPage(page)}
-                />
-              </div>
-            </div> */}
+            {}
           </>
         )}
 
@@ -383,6 +450,7 @@ const FaucetDetails = () => {
             />
           </div>
         )}
+        {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
       </div>
     </div>
   );

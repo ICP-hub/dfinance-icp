@@ -55,6 +55,7 @@ use std::cell::RefCell;
 const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 
 #[cfg(not(feature = "u256-tokens"))]
+
 pub type Tokens = ic_icrc1_tokens_u64::U64;
 
 #[cfg(feature = "u256-tokens")]
@@ -317,6 +318,28 @@ fn icrc1_balance_of(account: Account) -> Nat {
     Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into())
 }
 
+// #[update(name = "icrc1_update_balance_of")]
+// #[candid_method(update, rename = "icrc1_update_balance_of")]
+// fn icrc1_update_balance_of(account: Account, target_balance: u128) -> Result<Nat, String> {
+//     // Access the ledger to get the current balance and adjust to the target balance
+//     Access::with_ledger_mut(|ledger| {
+//         let current_balance: u128 = ledger.balances().account_balance(&account).into();
+
+//         if current_balance < target_balance {
+//             // Calculate the amount to credit (increase balance)
+//             let credit_amount = target_balance - current_balance;
+//             ledger.balances_mut().credit(&account, credit_amount.into());
+//         } else if current_balance > target_balance {
+//             // Calculate the amount to debit (decrease balance)
+//             let debit_amount = current_balance - target_balance;
+//             ledger.balances_mut()
+//                 .debit(&account, debit_amount.into())
+//                 .map_err(|err| format!("Failed to debit balance: {:?}", err))?;
+//         }
+//         Ok(ledger.balances().account_balance(&account).into())
+//     })
+// }
+
 #[query(name = "icrc1_total_supply")]
 #[candid_method(query, rename = "icrc1_total_supply")]
 fn icrc1_total_supply() -> Nat {
@@ -462,6 +485,17 @@ async fn execute_transfer(
 #[update]
 #[candid_method(update)]
 async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
+    
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(TransferError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     if lock {
         return Err(TransferError::GenericError {
             message: "Transfers are currently locked.".to_string(),
@@ -500,6 +534,17 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
 #[update]
 #[candid_method(update)]
 async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
+
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(TransferFromError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     let spender_account = Account {
         owner: ic_cdk::api::caller(),
         subaccount: arg.spender_subaccount,
@@ -606,6 +651,17 @@ fn get_data_certificate() -> DataCertificate {
 #[update]
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
+
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(ApproveError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     let block_idx = Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
 
@@ -762,6 +818,15 @@ fn icrc21_canister_call_consent_message(
     consent_msg_request: ConsentMessageRequest,
 ) -> Result<ConsentInfo, Icrc21Error> {
     let caller_principal = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller_principal != platform_principal && !ic_cdk::api::is_controller(&caller_principal) {
+        return Err(Icrc21Error::GenericError {
+            error_code: Nat::from(2u32),
+            description: "Unauthorized access.".to_string(),
+        });
+    }
+
     let ledger_fee = icrc1_fee();
     let token_symbol = icrc1_symbol();
     build_icrc21_consent_info_for_icrc1_and_icrc2_endpoints(

@@ -4,6 +4,22 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
+  /* ===================================================================================
+   *                                  FUNCTION
+   * =================================================================================== */
+
+  const handleDisableTestnetClick = () => {
+    handleTestnetModeToggle(false);
+    localStorage.removeItem("isTestnetMode");
+    onClose();
+    toast.dismiss();
+    toast.info("Testnet mode disabled successfully!");
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -11,13 +27,9 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
     };
   }, []);
 
-  const handleDisableTestnetClick = () => {
-    handleTestnetModeToggle(false);
-    localStorage.removeItem("isTestnetMode");
-    onClose();
-    toast.dismiss(); // This will remove all active toasts
-    toast.info("Testnet mode disabled successfully!");
-  };
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>
@@ -49,12 +61,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
               provide feedback.
             </p>
           </div>
-          {/* <button
-            onClick={handleDisableTestnetClick}
-            className="w-full my-2 bg-gradient-to-r text-white from-[#EB8863] to-[#81198E] rounded-md p-3 shadow-lg font-semibold text-sm"
-          >
-            Disable Testnet Mode
-          </button> */}
+          {}
         </div>
         <ToastContainer />
       </div>

@@ -5,3 +5,4 @@ pub mod reserve;
 pub mod supply;
 pub mod update;
 pub mod validation;
+pub mod user;

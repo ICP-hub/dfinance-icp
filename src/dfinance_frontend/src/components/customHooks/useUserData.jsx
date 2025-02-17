@@ -1,55 +1,112 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../utils/useAuthClient";
+import "react-toastify/dist/ReactToastify.css";
+import { Principal } from "@dfinity/principal";
+import { useSelector } from "react-redux";
+
+/**
+ * Custom hook to fetch and manage user data from the backend canister.
+ * Includes user account data, health factor, and error handling.
+ *
+ * @returns {Object} - Contains user data, health factor, error state, and refetch functions.
+ */
 const useUserData = () => {
-    const { backendActor, principal } = useAuth();
-    const [userData, setUserData] = useState(null);
-    const [healthFactorBackend, setHealthFactorBackend] = useState(0);
-    const [error, setError] = useState(null);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+  const { backendActor, principal, user, isAuthenticated } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [userAccountData, setUserAccountData] = useState(null);
+  const [healthFactorBackend, setHealthFactorBackend] = useState(0);
+  const [error, setError] = useState(null);
+  const principalArray = principal ? principal.split("") : [];
 
-    const getUserData = async (user) => {
-        if (!backendActor) {
-            throw new Error("Backend actor not initialized");
+  /**
+   * Retrieves user data from the backend.
+   * @param {string} user - The identifier for the user.
+   * @returns {Object} - The user data retrieved from the backend.
+   */
+  const getUserData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_data(user);
+      return result;
+    } catch (error) {
+      setError(error.message);
+      console.error(error.message);
+    }
+  };
+
+  const fetchUserData = async (user) => {
+    if (backendActor) {
+      try {
+        const result = await getUserData(user);
+        setUserData(result);
+      } catch (error) {
+        console.error(error.message);
+      }
+    } else {
+    }
+  };
+
+  /**
+   * Fetches account-specific data for the authenticated user.
+   * Includes handling for pending states and health factor calculation.
+   */
+  const fetchUserAccountData = async () => {
+    if (backendActor && isAuthenticated) {
+      try {
+        if (!principal || typeof principal !== "string") {
+          console.error("Invalid principal provided");
+          return;
         }
-        try {
-            const result = await backendActor.get_user_data(user);
-            console.log("get_user_data in supplypopup:", result);
+        const principalObj = Principal.fromText(principal);
+        const result = await backendActor.get_user_account_data([]);
 
-            if (result && result.Ok && Number(result.Ok.health_factor)/100000000) {
-                setHealthFactorBackend(Number(result.Ok.health_factor)/10000000000);
-            } else {
-                setError("Health factor not found");
-            }
-            return result;
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-            setError(error.message);
+        if (result?.Err === "ERROR :: Pending") {
+          console.warn("Pending state detected. Retrying...");
+          setTimeout(fetchUserAccountData, 1000);
+          return;
         }
-    };
 
-    const fetchUserData = async () => {
-        if (backendActor) {
-            try {
-                const result = await getUserData(principal.toString());
-                console.log("get_user_data:", result);
-                setUserData(result);
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-            }
+        if (result?.Ok && result.Ok[4]) {
+          const healthFactor = Number(result.Ok[4]) / 10000000000;
+          if (healthFactor) {
+            setHealthFactorBackend(healthFactor);
+          } else {
+            setError("Health factor not found");
+          }
         } else {
-            console.error("Backend actor initialization failed.");
+          setError("Invalid result format or missing health factor");
         }
-    };
 
-    useEffect(() => {
-        fetchUserData();
-    }, [principal, backendActor]);
+        if (result?.Ok) {
+          setUserAccountData(result);
+        }
+      } catch (error) {
+        console.error("Error fetching user account data:", error.message);
+      }
+    }
+  };
 
-    return {
-        userData,
-        healthFactorBackend,
-        error,
-        refetchUserData: fetchUserData, // In case you need to refetch user data
-    };
+  useEffect(() => {
+    fetchUserData(user);
+  }, [user, backendActor, dashboardRefreshTrigger]);
+
+  useEffect(() => {
+    fetchUserAccountData();
+  }, [principal, dashboardRefreshTrigger]);
+
+  return {
+    userData,
+    healthFactorBackend,
+    error,
+    userAccountData,
+    refetchUserData: fetchUserData,
+    fetchUserAccountData,
+  };
 };
 
 export default useUserData;

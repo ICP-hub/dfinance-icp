@@ -3,51 +3,46 @@ import { Info, Check, Wallet, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { Fuel } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { trackEvent } from "../../../utils/googleAnalytics";
+import { useMemo } from "react";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 
-const SupplyPopup = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange
-}) => {
-  console.log("currentColletralStatus", currentCollateralStatus)
-  const { createLedgerActor, backendActor, principal } = useAuth();
+/**
+ * SupplyPopup Component
+ *
+ * This component is a popup modal that allows users to supply an asset to a platform, taking into account factors like collateral,
+ * debt, liquidation thresholds, and the user's current health factor.
+ * It calculates the USD equivalent of the supplied amount, manages user input for supply amounts, and handles approval
+ * and supply transactions.
+ *
+ * @returns {JSX.Element} - Returns the SupplyPopup component.
+ */
+
+const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
+  
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
+  const { healthFactorBackend } = useUserData();
+  const { backendActor, principal } = useAuth();
+  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-
-  const transactionFee = 0.01;
-  const fees = useSelector((state) => state.fees.fees);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
-  const numericBalance = parseFloat(balance);
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
-  const hasEnoughBalance = balance >= transactionFee;
-  const value = currentHealthFactor;
   const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
@@ -57,71 +52,112 @@ const SupplyPopup = ({
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
 
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
 
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const fees = useSelector((state) => state.fees.fees);
+  const dispatch = useDispatch();
+  const ledgerActors = useSelector((state) => state.ledger);
 
-  const handleAmountChange = (e) => {
-    // Get the input value and remove commas for processing
-    let inputAmount = e.target.value.replace(/,/g, '');
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
 
-    // Allow only numbers and decimals
-    if (!/^\d*\.?\d*$/.test(inputAmount)) {
-      return; // If invalid input, do nothing
-    }
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
 
-    // Convert inputAmount to a number for comparison with supplyBalance
-    const numericAmount = parseFloat(inputAmount);
+  /* ===================================================================================
+   *                                  HELPERS
+   * =================================================================================== */
 
-    // Prevent the user from typing an amount greater than the supplyBalance
-    if (numericAmount > supplyBalance) {
-      // Do not update the input field or the state if the value exceeds supplyBalance
-      setError(`Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString('en-US')}`);
-      return;
-    } else {
-      setError(''); // Clear any previous error
-    }
+  const transactionFee = 0;
+  const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
-    // Split the integer and decimal parts, if applicable
-    let formattedAmount;
-    if (inputAmount.includes('.')) {
-      const [integerPart, decimalPart] = inputAmount.split('.');
-
-      // Format the integer part with commas and limit decimal places to 8 digits
-      formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart.slice(0, 8)}`;
-    } else {
-      // If no decimal, format the integer part with commas
-      formattedAmount = parseInt(inputAmount).toLocaleString('en-US');
-    }
-
-    // Update the input field value with the formatted number (with commas)
-    setAmount(formattedAmount); // Set the formatted amount in the state
-
-    // Pass the numeric value (without commas) for internal calculations
-    updateAmountAndUsdValue(inputAmount); // Pass raw numeric value for calculations
+  const errorMessages = {
+    NoReserveDataFound:
+      "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
+    FailedToUpdatePrice:
+      "Failed to update the reserve prices. Please try again later.",
+    ValidationError:
+      "The supply validation failed. Ensure your inputs are correct.",
+    InterestRateUpdateFailed:
+      "Unable to update interest rates. Please retry the operation.",
+    ErrorMintTokens:
+      "Minting of tokens failed. Your account state has been rolled back. Try again later.",
+    Default: "An unexpected error occurred. Please try again later.",
   };
 
-  const updateAmountAndUsdValue = (inputAmount) => {
-    // Ensure that the numeric value is used for calculations (no commas)
-    const numericAmount = parseFloat(inputAmount.replace(/,/g, ''));
+  if (!fees) {
+    return <p>Error: Fees data not available.</p>;
+  }
 
-    // Handle the case when the input is cleared (empty value)
+  const numericBalance = parseFloat(balance);
+  const transferFee = fees[normalizedAsset] || fees.default;
+  const transferfee = Number(transferFee);
+  const supplyBalance = numericBalance - transferfee;
+  const hasEnoughBalance = balance >= transactionFee;
+  const value = currentHealthFactor;
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  // Handles user input for supply amount
+  const handleAmountChange = (e) => {
+    let inputAmount = e.target.value;
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    }
     if (inputAmount === "") {
-      setAmount(''); // Clear the amount in state
-      setUsdValue(0); // Reset USD value
+      setAmount("");
+      updateAmountAndUsdValue("");
       return;
     }
+    const numericAmount = parseFloat(inputAmount);
+    if (numericAmount > supplyBalance) {
+      setError(
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
+          "en-US"
+        )}`
+      );
+      return;
+    } else {
+      setError("");
+    }
+    let formattedAmount;
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
 
+      formattedAmount = `${parseInt(integerPart).toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
+    } else {
+      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+    }
+    setAmount(formattedAmount);
+    updateAmountAndUsdValue(inputAmount);
+  };
+
+  // Updates the USD equivalent of the supply amount
+  const updateAmountAndUsdValue = (inputAmount) => {
+    const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+    if (inputAmount === "") {
+      setAmount("");
+      setUsdValue(0);
+      return;
+    }
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= supplyBalance) {
-        const convertedValue = numericAmount * conversionRate;
-        setUsdValue(parseFloat(convertedValue.toFixed(2)));
+        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+        const convertedValue = numericAmount * adjustedConversionRate;
+        setUsdValue(convertedValue.toFixed(8));
         setError("");
       } else {
         setError("Amount exceeds the supply balance");
@@ -131,28 +167,7 @@ const SupplyPopup = ({
     }
   };
 
-
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const convertedValue = parseFloat(amount.replace(/,/g, '')) * conversionRate;
-      setUsdValue(convertedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-  useEffect(() => {
-    if (balance && conversionRate) {
-      console.log("balance in supplypopup",balance, conversionRate);
-      const convertedMaxValue = parseFloat(balance) * conversionRate;
-      console.log("converted in supplypopup",convertedMaxValue);
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-  const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
-
+  // Approves the supply transaction
   const handleApprove = async () => {
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -163,16 +178,13 @@ const SupplyPopup = ({
       ledgerActor = ledgerActors.ckUSDC;
     } else if (asset === "ICP") {
       ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+    } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, '')) || 0;
-    let amountAsNat64 = Math.round(amount.replace(/,/g, '') * Math.pow(10, 8));
-    console.log("Amount as nat64:", amountAsNat64);
+    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-
     const totalAmount = scaledAmount + transferfee;
-
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -187,11 +199,9 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-      console.log("Approve", approval);
       setIsApproved(true);
-      console.log("isApproved state after approval:", isApproved);
       toast.success(`Approval successful!`, {
-        className: 'custom-toast',
+        className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
@@ -201,9 +211,8 @@ const SupplyPopup = ({
         progress: undefined,
       });
     } catch (error) {
-      console.error("Approval failed:", error);
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
-        className: 'custom-toast',
+        className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
@@ -216,19 +225,13 @@ const SupplyPopup = ({
   };
 
   const isCollateral = true;
-  const safeAmount = Number((amount || '').replace(/,/g, '')) || 0; // Ensure amount is not null
-  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8)); // Multiply by 10^8 for scaling
+  const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  const scaledAmount = amountAsNat64;
 
-  console.log("Amount as nat64:", amountAsNat64);
-
-  const scaledAmount = amountAsNat64; // Use scaled amount for further calculations
-
-
-
+  // Executes the supply transaction
   const handleSupplyETH = async () => {
     try {
-      console.log("Supply function called for", asset, amount);
-
       let ledgerActor;
       if (asset === "ckBTC") {
         ledgerActor = ledgerActors.ckBTC;
@@ -238,46 +241,166 @@ const SupplyPopup = ({
         ledgerActor = ledgerActors.ckUSDC;
       } else if (asset === "ICP") {
         ledgerActor = ledgerActors.ICP;
-      } else if (asset === "ckUSDT") { // Added condition for ckUSDT
+      } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
-      console.log("amountAsNat64", amountAsNat64);
-      console.log("scaledAmount", scaledAmount);
-      console.log("Backend actor", backendActor);
-      console.log(" current colletral status while supply ", currentCollateralStatus)
-      const sup = await backendActor.supply(asset, scaledAmount, currentCollateralStatus);
-      console.log("Supply", sup);
 
-      setIsPaymentDone(true);
-      setIsVisible(false);
+      const supplyParams = {
+        asset: asset,
+        is_collateral: currentCollateralStatus,
+        amount: scaledAmount,
+      };
 
-      const sound = new Audio(coinSound);
-      sound.play();
-      toast.success(`Supply successful!`, {
-        className: 'custom-toast',
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      const response = await backendActor.execute_supply(supplyParams);
+      dispatch(toggleDashboardRefresh());
+
+      if ("Ok" in response) {
+        trackEvent(
+          `Supply,${asset},${
+            scaledAmount / 100000000
+          },${currentCollateralStatus},${principalObj.toString()}`,
+          "Assets",
+          `Supply,${asset},${
+            scaledAmount / 100000000
+          },${currentCollateralStatus},${principalObj.toString()}`,
+          "Assets"
+        );
+        setIsPaymentDone(true);
+        setIsVisible(false);
+
+        if (isSoundOn) {
+          const sound = new Audio(coinSound);
+          sound.play();
+        }
+
+        toast.success(`Supply successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if ("Err" in response) {
+        const errorKey = response.Err;
+        const errorMsg = errorKey?.toString() || "An unexpected error occurred";
+
+        if (errorMsg.toLowerCase().includes("panic")) {
+          setShowPanicPopup(true);
+          setIsVisible(false);
+        } else {
+          const userFriendlyMessage =
+            errorMessages[errorKey] || errorMessages.Default;
+          console.error("Error:", errorMsg);
+
+          toast.error(`Supply failed: ${userFriendlyMessage}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+      }
     } catch (error) {
-      console.error("Supply failed:", error);
+      console.error(`Error: ${error.message || "Supply action failed!"}`);
 
-      toast.error(`Error: ${error.message || "Supply action failed!"}`, {
-        className: 'custom-toast',
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      if (error.message && error.message.toLowerCase().includes("panic")) {
+        setShowPanicPopup(true);
+        setIsVisible(false);
+      } else {
+        toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
     }
   };
+
+  const handleClosePaymentPopup = () => {
+    setIsPaymentDone(false);
+    setIsModalOpen(false);
+  };
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleSupplyETH();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const calculateHealthFactor = (
+    totalCollateral,
+    totalDebt,
+    liquidationThreshold,
+    reserveliquidationThreshold
+  ) => {
+    const amountAdded = collateral ? usdValue || 0 : 0;
+    let totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
+    if (totalDeptValue === 0) {
+      return Infinity;
+    }
+    let avliq = liquidationThreshold * totalCollateral;
+    let tempLiq =
+      (avliq + amountAdded * reserveliquidationThreshold) /
+      totalCollateralValue;
+    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+    result = Math.round(result * 1e8) / 1e8;
+    return result;
+  };
+
+  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+    if (totalCollateralValue === 0) {
+      return 0;
+    }
+    return (totalDeptValue / totalCollateralValue) * 100;
+  };
+
+  const handleMaxClick = () => {
+    const maxAmount = supplyBalance.toFixed(8);
+    const [integerPart, decimalPart] = maxAmount.split(".");
+    const formattedAmount = `${parseInt(integerPart).toLocaleString(
+      "en-US"
+    )}.${decimalPart}`;
+    setAmount(formattedAmount);
+    updateAmountAndUsdValue(maxAmount);
+  };
+
+  const formatValue = (value) => {
+    if (!value) return "0";
+    return Number(value)
+      .toFixed(8)
+      .replace(/\.?0+$/, "");
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -298,47 +421,27 @@ const SupplyPopup = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
-  const handleClosePaymentPopup = () => {
-    setIsPaymentDone(false);
-    setIsModalOpen(false);
-    window.location.reload();
-  };
-
-  const handleClick = async () => {
-    setIsLoading(true);
-    try {
-      if (isApproved) {
-        await handleSupplyETH();
-      } else {
-        await handleApprove();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
-      liquidationThreshold
+      liquidationThreshold,
+      reserveliquidationThreshold
     );
-    console.log("Health Factor:", healthFactor);
 
-    const amountTaken = 0;
-    const amountAdded = collateral ? (usdValue || 0) : 0;
-
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
+    const amountAdded = collateral ? usdValue || 0 : 0;
+    let totalCollateralValue =parseFloat(totalCollateral) + parseFloat(amountAdded);
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("LTV:", ltv);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-    //|| liquidationThreshold>ltv
+    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
   }, [
     asset,
     liquidationThreshold,
@@ -348,60 +451,40 @@ const SupplyPopup = ({
     amount,
     usdValue,
   ]);
-
-  const calculateHealthFactor = (
-    totalCollateral,
-    totalDebt,
-    liquidationThreshold
-  ) => {
-    const amountTaken = 0;
-    const amountAdded = collateral ? (usdValue || 0) : 0;
-
-    console.log(
-      "amount added",
-      amountAdded,
-      "totalCollateral",
-      totalCollateral,
-      "totalDebt",
-      totalDebt,
-      "liquidationThreshold",
-      liquidationThreshold
-    );
-
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
-    console.log("totalCollateralValue", totalCollateralValue);
-    console.log("totalDeptValue", totalDeptValue);
-    console.log("amountAdded", amountAdded);
-    console.log("liquidationThreshold", liquidationThreshold);
-    console.log("totalDebt", totalDebt);
-    if (totalDeptValue === 0) {
-      return Infinity;
+  /* ===================================================================================
+   *                                 EFFECT
+   * =================================================================================== */
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
+      setUsdValue(convertedValue.toFixed(8));
+    } else {
+      setUsdValue(0);
     }
-    return (
-      (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
-    );
-  };
+  }, [amount, conversionRate]);
 
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = balance * adjustedConversionRate;
+
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
     }
-    return (totalDeptValue / totalCollateralValue) * 100;
-  };
+  }, [amount, conversionRate]);
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
-  const handleMaxClick = () => {
-    const maxAmount = supplyBalance.toFixed(8);
-    const [integerPart, decimalPart] = maxAmount.split('.');
-    const formattedAmount = `${parseInt(integerPart).toLocaleString('en-US')}.${decimalPart}`;
-    setAmount(formattedAmount);
-    updateAmountAndUsdValue(maxAmount);
-  };
-
-
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>
@@ -413,29 +496,28 @@ const SupplyPopup = ({
               <div className="w-full flex justify-between my-2 dark:text-darkText">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 cursor-pointer p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
                 <div className="w-[50%]">
                   <input
-                    type="text" // Use text input to allow formatting
+                    type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0}
-                    className="lg:text-lg focus:outline-none bg-gray-100 rounded-md p-2 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    placeholder="Enter Amount"
+                    disabled={supplyBalance === 0 || isApproved}
+                    className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    placeholder={`Enter ${asset} Amount`}
                   />
 
-
-                  <p className="text-xs text-gray-500 px-2">
+                  <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} USD`
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2">
+                  <div className="w-auto flex items-center gap-2 mt-1">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
@@ -444,21 +526,18 @@ const SupplyPopup = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                      }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
+                      supplyBalance === 0 || isApproved
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    }`}
                     onClick={() => {
-                      if (supplyBalance > 0) {
+                      if (supplyBalance > 0 && !isApproved) {
                         handleMaxClick();
                       }
                     }}
                   >
-                    ${maxUsdValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    Max
+                    {formatValue(balance)} Max
                   </p>
                 </div>
               </div>
@@ -472,15 +551,18 @@ const SupplyPopup = ({
                   <p>Supply APY</p>
                   <p>
                     {supplyRateAPR < 0.1
-                      ? "<0.1%"
+                      ? "<0.01%"
                       : `${supplyRateAPR.toFixed(2)}%`}
                   </p>
                 </div>
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${currentCollateralStatus ? "text-green-500" : "text-red-500"
-                      }`}
+                    className={`font-semibold ${
+                      currentCollateralStatus
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
@@ -490,16 +572,17 @@ const SupplyPopup = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${healthFactorBackend > 3
-                          ? "text-green-500"
-                          : healthFactorBackend <= 1
+                        className={`${
+                          healthFactorBackend > 3
+                            ? "text-green-500"
+                            : healthFactorBackend <= 1
                             ? "text-red-500"
                             : healthFactorBackend <= 1.5
-                              ? "text-orange-600"
-                              : healthFactorBackend <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : healthFactorBackend <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {healthFactorBackend > 100
                           ? "Infinity"
@@ -507,16 +590,17 @@ const SupplyPopup = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${value > 3
-                          ? "text-green-500"
-                          : value <= 1
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                              ? "text-orange-600"
-                              : value <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -542,27 +626,20 @@ const SupplyPopup = ({
 
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center justify-start">
-              <Fuel className="w-4 h-4 mr-1" />
-              <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
-              <img
-                src={image}
-                alt="asset icon"
-                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-              />
+              {}
               <div className="relative group">
-                <Info size={16} className="ml-2 cursor-pointer" />
+                {}
 
-                {/* Tooltip */}
-                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                  Fees deducted on every transaction
-                </div>
+                {}
+                {}
               </div>
             </div>
 
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`text-xs whitespace-nowrap ${
+                  isApproved ? "text-green-500" : "text-red-500"
+                }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -571,24 +648,53 @@ const SupplyPopup = ({
             </div>
           </div>
 
-          <button
-            onClick={handleClick}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || !hasEnoughBalance || amount <= 0 || isButtonDisabled
-              ? "opacity-50 cursor-not-allowed"
-              : ""
+          <div className="flex flex-col gap-4 mt-4">
+            {/* Approve Button */}
+            <button
+              onClick={() => !isApproved && handleClick()}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                isApproved ||
+                isLoading ||
+                !hasEnoughBalance ||
+                amount <= 0 ||
+                isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
               }`}
-            disabled={isLoading || amount <= 0 || null}
-          >
-            {isApproved ? `Supply ${asset}` : `Approve ${asset} to continue`}
-          </button>
+              disabled={
+                isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+              }
+            >
+              Approve {asset} to continue
+            </button>
 
-          {/* Fullscreen Loading Overlay with Dim Background */}
+            {/* Supply Button */}
+            <button
+              onClick={() => isApproved && handleClick()}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                !isApproved ||
+                isLoading ||
+                amount <= 0 ||
+                !hasEnoughBalance ||
+                isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              disabled={
+                !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+              }
+            >
+              Supply {asset}
+            </button>
+          </div>
+
+          {}
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
               style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
+                background: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(1px)",
               }}
             >
               <div className="loader"></div>
@@ -610,7 +716,7 @@ const SupplyPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p>
+            <p className=" text-sm  lgx:text-lg whitespace-nowrap">
               You have supplied{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -619,12 +725,13 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
-                  : "0"} {asset}
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
+                  : "0"}{" "}
+                {asset}
               </strong>
             </p>
-            <p>
+            <p className="text-sm  lgx:text-lg whitespace-nowrap">
               You have received{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -633,17 +740,54 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
-                  : "0"} d{asset}
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
+                  : "0"}{" "}
+                d{asset}
               </strong>
             </p>
+
             <button
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
             >
               Close Now
             </button>
+          </div>
+        </div>
+      )}
+      {showPanicPopup && (
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center p-2 ">
+            <button
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+
+            <div
+              className="dark:bg-gradient 
+                dark:from-darkGradientStart 
+                dark:to-darkGradientEnd 
+                dark:text-darkText  "
+            >
+              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
           </div>
         </div>
       )}

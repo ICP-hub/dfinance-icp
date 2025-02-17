@@ -2,15 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
     <meta
       name="description"
       content="DFinance is an innovative lending and borrowing platform on the Internet Computer Protocol (ICP), revolutionizing DeFi with a unique liquidation model and “buy and burn” mechanisms that ensure deflationary stability and continuous value appreciation, once the token goes live. Leveraging ICP’s secure architecture, DFinance operates without a traditional safety module, providing a reliable and efficient financial ecosystem for users."
     />
+
     <title>DFinance</title>
     <base href="/" />
+    <link rel="preload" href="/Transaction/empty file.gif" as="image" />
     <link rel="icon" href="/public/home/favicon.png" />
-
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,5 +30,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-HP2ELMSQCW"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-HP2ELMSQCW");
+    </script>
   </body>
 </html>

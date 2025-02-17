@@ -1,70 +1,42 @@
 import React, { useState, useRef } from "react";
 import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
-import { Principal } from "@dfinity/principal";
-import { Fuel } from "lucide-react";
-import { useSelector,useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
 import useUserData from "../../customHooks/useUserData";
+import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import { useDispatch } from "react-redux";
 
+/**
+ * ColateralPopup Component
+ *
+ * This component allows users to enable or disable an asset as collateral.
+ * @param {Object} props - Component props
+ * @returns {JSX.Element} - Returns the ColateralPopup component.
+ */
+const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
 
-const ColateralPopup = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus  ,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
-}) => {
-  console.log("props in ColateralPopup", asset,
-    image,
-    supplyRateAPR,
-    balance,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    totalCollateral,
-    totalDebt,
-    currentCollateralStatus ,
-    isModalOpen,
-    handleModalOpen,
-    setIsModalOpen,
-    onLoadingChange)
-  const { createLedgerActor, backendActor, principal } = useAuth();
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
+  const { healthFactorBackend } = useUserData();
+  const { backendActor } = useAuth();
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [isCollateral, setIsCollateral] = useState(currentCollateralStatus);
-
- 
-  const transactionFee = 0.01;
-  const dispatch=useDispatch()
-  const fees = useSelector((state) => state.fees.fees);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
-  const numericBalance = parseFloat(balance);
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   const value = currentHealthFactor;
-
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -72,75 +44,170 @@ const ColateralPopup = ({
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [assetRates, setassetRates] = useState([]);
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const [error, SetError] = useState(null);
 
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
 
-  const ledgerActors = useSelector((state) => state.ledger);
-  console.log("ledgerActors", ledgerActors);
+  const dispatch = useDispatch();
+
+  /**
+   *
+   * This function is responsible for enabling or disabling an asset as collateral.
+   * It calls the backend to update the collateral status and handles errors, such as price fetch failure or LTV threshold violations.
+   * After a successful operation, the collateral status is updated.
+   * @param {string} asset - The asset being toggled as collateral
+   * @param {number} assetSupply - The supply balance of the asset
+   * @throws {Error} - Throws error if the backend responds with failure
+   */
 
   async function toggleCollateral(asset, assetSupply) {
     try {
-      // Scale factor for two decimal places (adjust if needed)
-      // const scaleFactor = 100; 
-  
-      // Determine the values based on the isCollateral condition
-      const addedAmount = currentCollateralStatus  ? BigInt(0) : BigInt(Math.round(assetSupply * 100000000)); // Pass assetSupply as added amount if toggled is false
-      const amount =currentCollateralStatus ? BigInt(Math.round(assetSupply * 100000000)) : BigInt(0); // Pass assetSupply if toggled is true, otherwise 0
-  
-      // Call the backend function `toggle_collateral` with the asset, amount, and addedAmount
-      console.log("added amount & amount", addedAmount, amount);
-      await backendActor.toggle_collateral(
+      const addedAmount = currentCollateralStatus
+        ? BigInt(0)
+        : BigInt(Math.round(assetSupply * 100000000));
+      const amount = currentCollateralStatus
+        ? BigInt(Math.round(assetSupply * 100000000))
+        : BigInt(0);
+
+      const response = await backendActor.toggle_collateral(
         asset,
-        Number(amount),// Convert back to a decimal for the backend if necessary
+        Number(amount),
         addedAmount
       );
+
+      if (response?.Err) {
+        const errorMsg = response.Err;
+
+        // Handle panic errors
+        if (
+          typeof errorMsg === "string" &&
+          errorMsg.toLowerCase().includes("panic")
+        ) {
+          setShowPanicPopup(true);
+
+          throw new Error("Panic detected: " + errorMsg);
+        }
+
+        if (errorMsg?.ExchangeRateError === null) {
+          toast.error("Price fetch failed", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          SetError(
+            "Price fetch failed: Your assets are safe, try again after some time."
+          );
+          throw new Error("ExchangeRateError: Price fetch failed.");
+        }
+        if (errorMsg?.LTVGreaterThanThreshold === null) {
+          const errorText =
+            "Collateral update failed: LTV exceeds the allowable threshold.";
+          toast.error(errorText, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          throw new Error("LTVGreaterThanThreshold: " + errorText);
+        }
+
+        throw new Error(JSON.stringify(errorMsg));
+      }
+
       setIsCollateral(currentCollateralStatus);
-      console.log("Collateral toggled successfully", isCollateral);
     } catch (error) {
-      console.error("Error toggling collateral:", error);
-      throw error; // Re-throw the error to handle it in the caller
+      console.error("Error in toggleCollateral:", error);
+      throw error;
     }
   }
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  const handleToggleCollateral = async () => {
+    setIsLoading(true);
+    try {
+      await toggleCollateral(asset, assetSupply);
+      dispatch(toggleDashboardRefresh());
+      toast.success("Collateral updated successfully!");
+      setIsPaymentDone(true);
+      setIsVisible(false);
+    } catch (error) {
+      console.error("Error updating collateral:", error);
+      const errorMessage = error?.message || "An unexpected error occurred.";
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClosePaymentPopup = () => {
+    setIsPaymentDone(false);
+    setIsModalOpen(false);
+  };
+
+  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+    if (totalCollateralValue === 0) {
+      return 0;
+    }
+    return (totalDeptValue / totalCollateralValue) * 100;
+  };
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleSupplyETH();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const formatValue = (value) => {
+    const numericValue = parseFloat(value);
+
+    if (isNaN(numericValue)) {
+      return "0";
+    }
+
+    if (numericValue === 0) {
+      return "0";
+    } else if (numericValue >= 1) {
+      return numericValue.toFixed(2);
+    } else {
+      return numericValue.toFixed(7);
+    }
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
   useEffect(() => {
     if (assetSupply && conversionRate) {
-      const convertedValue = parseFloat(assetSupply) * conversionRate;
-      setUsdValue(convertedValue);
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
+      const truncatedValue = Math.trunc(convertedValue * 1e8) / 1e8;
+      setUsdValue(truncatedValue);
     } else {
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-  
-  const handleToggleCollateral = async () => {
-    setIsLoading(true); // Start loading
-    try {
-      // Calculate the asset value
-      
-  
-      // Call the function with the calculated asset value
-      await toggleCollateral(asset, assetSupply);
-  
-      // If no error, display success message
-      toast.success("Collateral updated successfully!");
-      
-      setIsPaymentDone(true);
-      setIsVisible(false);
-    } catch (error) {
-      // Display an error message if something goes wrong
-      console.error("Error toggling collateral", error);
-      toast.error("Error updating collateral.");
-    } finally {
-      setIsLoading(false); // Stop loading
-    }
-  };
-  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -161,134 +228,92 @@ const ColateralPopup = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
-  const handleClosePaymentPopup = () => {
-    setIsPaymentDone(false);
-    setIsModalOpen(false);
-    window.location.reload();
-    
-  };
-
-console.log("toggle status ",currentCollateralStatus )
-useEffect(() => {
-  // Calculate the asset value using the corresponding rate
-   // Assuming this function returns the correct value
-
-  const adjustedCollateral = currentCollateralStatus 
-  ? Math.max(totalCollateral - usdValue, 0) // Subtract asset value when collateral is active and ensure it's not negative
-  : Math.max(totalCollateral + usdValue, 0); // Add asset value and ensure it's not negative
-
-   // Add asset value when collateral is inactive (enabling)
-console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
-  const healthFactor = calculateHealthFactor(
-    adjustedCollateral, // Use adjusted collateral
-    totalDebt,
-    liquidationThreshold
-  );
-  console.log("Health Factor:", healthFactor);
-
-  const ltv = calculateLTV(adjustedCollateral, totalDebt); // Adjust LTV as well
-  console.log("LTV:", ltv);
-
-  setPrevHealthFactor(currentHealthFactor);
-  
-  // Set the current health factor, converting to "Infinity" if > 100
-  setCurrentHealthFactor(
-    healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-  );
-
-  // Disable the button if the health factor is less than or equal to 1
-  setIsButtonDisabled(healthFactor <= 1);
-  
-  if (healthFactor <= 1) {
-    toast.dismiss();
-    toast.info("Health Factor Less than 1");
-  }
-
-}, [
-  asset,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  amount,
-  usdValue,
-  currentCollateralStatus, // Make sure to include currentCollateralStatus in dependencies
-  totalCollateral,         // Include totalCollateral to trigger the effect when it changes
-  totalDebt                // Include totalDebt for health factor calculations
-]);
-
-
-  const calculateHealthFactor = (
-    adjustedCollateral,
-    totalDebt,
-    liquidationThreshold
-  ) => {
-    // const amountTaken = 0;
-    // const amountAdded = usdValue || 0;
-
-    console.log(
-      
-      "totalCollateral",
-      adjustedCollateral,
-      "totalDebt",
-      totalDebt,
-      "liquidationThreshold",
-      liquidationThreshold
-    );
-
-    const totalCollateralValue =
-      parseFloat(totalCollateral);
+  useEffect(() => {
+    const Collateral = currentCollateralStatus
+      ? Math.max(totalCollateral - usdValue, 0)
+      : Math.max(totalCollateral + usdValue, 0);
+    const adjustedCollateral = Math.trunc(Collateral * 1e8) / 1e8;
+    const totalCollateralValue = parseFloat(adjustedCollateral);
     const totalDeptValue = parseFloat(totalDebt);
-    console.log("totalCollateralValue", totalCollateralValue);
-    console.log("totalDeptValue", totalDeptValue);
-    // console.log("amountAdded", amountAdded);
-    console.log("liquidationThreshold", liquidationThreshold);
-    console.log("totalDebt", totalDebt);
+    let result;
     if (totalDeptValue === 0) {
-      return Infinity;
-    }
-    return (
-      (adjustedCollateral * (liquidationThreshold / 100)) / totalDeptValue
-    );
-  };
+      result = Infinity;
+    } else {
+      let avliq = liquidationThreshold * totalCollateral;
+      let tempLiq = currentCollateralStatus
+        ? avliq - usdValue * reserveliquidationThreshold
+        : avliq + usdValue * reserveliquidationThreshold;
 
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return (totalDeptValue / totalCollateralValue) * 100;
-  };
-
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const handleClick = async () => {
-    setIsLoading(true);
-    try {
-      if (isApproved) {
-        await handleSupplyETH();
-      } else {
-        await handleApprove();
+      if (totalCollateralValue > 0) {
+        tempLiq = tempLiq / totalCollateralValue;
       }
-    } finally {
-      setIsLoading(false);
+      result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
+      result = Math.round(result * 1e8) / 1e8;
     }
-  };
+
+    const healthFactor = result;
+    const ltv = calculateLTV(adjustedCollateral, totalDebt);
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
+    setIsButtonDisabled(healthFactor <= 1);
+
+    if (healthFactor <= 1) {
+      toast.dismiss();
+      toast.info("Health Factor Less than 1", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+    currentCollateralStatus,
+    totalCollateral,
+    totalDebt,
+  ]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
+
   return (
     <>
       {isVisible && (
         <div className="supply-popup" ref={modalRef}>
           <h1 className="font-normal text-xl">Review {asset}</h1>
           <div className="flex flex-col gap-2 mt-5 text-sm">
-          {currentCollateralStatus  ? (
+            {currentCollateralStatus ? (
               <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
                 <p className="text-yellow-700 dark:text-yellow-500">
-                  Disabling {asset} as collateral affects your borrowing power and
-                  Health Factor.
+                  Disabling {asset} as collateral affects your borrowing power
+                  and Health Factor.
                 </p>
               </div>
             ) : (
               <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
                 <p className="text-yellow-700 dark:text-yellow-500">
-                Enabling {asset} as collateral increases your borrowing power and Health Factor. However, it can get liquidated if your health factor drops below 1.
+                  Enabling {asset} as collateral increases your borrowing power
+                  and Health Factor. However, it can get liquidated if your
+                  health factor drops below 1.
                 </p>
               </div>
             )}
@@ -306,7 +331,7 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
                       alt="connect_wallet_icon"
                       className="object-cover w-6 h-6 rounded-full"
                     />
-                    <span className="text-lg">{assetSupply}</span>
+                    <span className="text-lg">{formatValue(assetSupply)}</span>
                     <span className="text-lg">{asset}</span>
                   </div>
                 </div>
@@ -358,25 +383,7 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
             </div>
           </div>
 
-          <div className="w-full flex justify-between items-center mt-3">
-            <div className="flex items-center justify-start">
-              <Fuel className="w-4 h-4 mr-1" />
-              <h1 className="text-lg font-semibold mr-1">{transferFee}</h1>
-              <img
-                src={image}
-                alt="asset icon"
-                className="object-cover w-5 h-5 rounded-full" // Ensure the image is fully rounded
-              />
-              <div className="relative group">
-                <Info size={16} className="ml-2 cursor-pointer" />
-
-                {/* Tooltip */}
-                <div className="absolute left-1/2 transform -translate-x-1/3 bottom-full mb-4 hidden group-hover:flex items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-4 shadow-lg border border-gray-300 whitespace-nowrap">
-                  Fees deducted on every transaction
-                </div>
-              </div>
-            </div>
-          </div>
+          
           {value <= 1 ? (
             <div className="w-full flex flex-col my-3 space-y-2">
               <div className="w-full flex bg-[#BA5858] p-3 rounded-lg">
@@ -400,20 +407,20 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
                 ? "opacity-50 cursor-not-allowed"
                 : ""
             }`}
-            disabled={isButtonDisabled || isLoading} // Disable the button during loading
+            disabled={isButtonDisabled || isLoading}
           >
-           {currentCollateralStatus 
+            {currentCollateralStatus
               ? `Disable ${asset} as collateral`
               : `Enable ${asset} as collateral`}
           </button>
 
-          {/* Fullscreen Loading Overlay with Dim Background */}
+          
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
               style={{
-                background: "rgba(0, 0, 0, 0.4)", // Dim background
-                backdropFilter: "blur(1px)", // Blur effect
+                background: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(1px)",
               }}
             >
               <div className="loader"></div>
@@ -436,9 +443,9 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <p>
-  Your {asset} is {currentCollateralStatus  ? " not used" : "used"} as collateral
-</p>
-
+              Your {asset} is {currentCollateralStatus ? " not used" : "used"}{" "}
+              as collateral
+            </p>
 
             <button
               onClick={handleClosePaymentPopup}
@@ -447,6 +454,44 @@ console.log("asset value ", usdValue ,adjustedCollateral, totalCollateral)
               Close Now
             </button>
           </div>
+          {showPanicPopup && (
+            <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+              <div className="w-full flex flex-col items-center p-2 ">
+                <button
+                  onClick={handleClosePaymentPopup}
+                  className="text-gray-400 focus:outline-none self-end button1"
+                >
+                  <X size={24} />
+                </button>
+
+                <div
+                  className="dark:bg-gradient 
+                          dark:from-darkGradientStart 
+                          dark:to-darkGradientEnd 
+                          dark:text-darkText  "
+                >
+                  <h1 className="font-semibold text-xl mb-4 ">
+                    Important Message
+                  </h1>
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Thanks for helping us improve DFinance! <br></br> You’ve
+                    uncovered a bug, and our dev team is on it.
+                  </p>
+
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Your account is temporarily locked while we investigate and
+                    fix the issue. <br />
+                  </p>
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    We appreciate your contribution and have logged your
+                    ID—testers like you are key to making DFinance better!{" "}
+                    <br />
+                    If you have any questions, feel free to reach out.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

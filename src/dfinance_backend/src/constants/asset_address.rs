@@ -1,2 +1,15 @@
-pub const DEFAULT: &str = "gsyb3-neiyj-ybncb-5xjnt-nh2kf-u3h3b-bvtqm-4uyzh-uqkvk-yrvqd-oae";
+use crate::constants::errors::Error;
+use candid::Principal;
 
+use crate::get_controller;
+
+pub fn default() -> Result<Principal, Error> {
+    let default_var = match get_controller() {
+        Ok(init_args) => init_args.controller_id,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    Ok(default_var)
+}

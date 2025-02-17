@@ -1,239 +1,234 @@
-// use candid::{CandidType, Deserialize};
-// // all the values will store in u128 for better precision
-// use serde::Serialize;
-// #[derive(Debug, CandidType, Deserialize, Clone)]
-// pub struct ReserveData {
-//     pub asset_name: Option<String>,
-//     pub id: u16,
-//     pub d_token_canister: Option<String>,
-//     pub debt_token_canister: Option<String>,
-//     pub borrow_rate: f64, 
-//     pub supply_rate_apr: Option<f64>, 
-//     pub total_supply: f64,
-//     pub total_borrowed: f64,
-//     pub liquidity_index: f64,
-//     pub current_liquidity_rate: f64,
-//     pub debt_index: f64,
-//     pub configuration: ReserveConfiguration,
-//     pub can_be_collateral: Option<bool>,
-//     pub last_update_timestamp: u64,
-// }
-
-// #[derive(CandidType, Deserialize, Clone, Debug)]
-// pub struct ReserveCache {
-//     pub reserve_configuration: ReserveConfiguration,
-//     //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100)
-//     pub curr_liquidity_index: f64,
-//     pub next_liquidity_index: f64,
-//     pub curr_liquidity_rate: f64,
-//     pub d_token_canister: Option<String>,
-//     pub debt_token_canister: Option<String>,
-//     pub reserve_last_update_timestamp: u64,
-//     pub curr_debt_index: f64,
-//     pub curr_debt_rate: f64,
-//     pub next_debt_rate: f64,
-//     pub next_debt_index: f64,
-//     pub debt_last_update_timestamp: u64,
-//     pub reserve_factor: u16,
-
-// }
-
-// #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
-// pub struct ReserveConfiguration {
-//     pub ltv: u16,
-//     pub liquidation_threshold: u16,
-//     pub liquidation_bonus: u16,  
-//     pub borrowing_enabled: bool, 
-//     pub borrow_cap: u64,
-//     pub supply_cap: u64,               
-//     pub liquidation_protocol_fee: u16, 
-//     pub active: bool,
-//     pub frozen: bool,
-//     pub paused: bool,
-//     pub reserve_factor: u16,
-// }
-
-
-// #[derive(CandidType, Deserialize, Clone, Debug)]
-// pub struct ExecuteSupplyParams {
-//     pub asset: String,
-//     pub amount: u128,
-//     pub is_collateral: bool,
-
-// }
-
-// #[derive(CandidType, Deserialize, Clone)]
-// pub struct CalculateInterestRatesParams {
-//     pub unbacked: u128,
-//     pub liquidity_added: u128,
-//     pub liquidity_taken: u128,
-//     pub total_stable_debt: u128,
-//     pub total_variable_debt: u128,
-//     pub average_stable_borrow_rate: u128,
-//     pub reserve_factor: u128,
-//     pub reserve: String,
-//     pub d_token: String,
-// }
-
-// #[derive(CandidType, Deserialize, Clone)]
-// pub struct InitReserveParams {
-//     pub asset: String,
-//     pub d_token_address: String,
-//     pub stable_debt_address: String,
-//     pub variable_debt_address: String,
-//     pub interest_rate_strategy_address: String,
-//     pub reserves_count: u64,
-//     pub max_number_reserves: u64,
-// }
-
-// #[derive(CandidType, Deserialize, Clone, PartialEq)]
-// pub enum InterestRateMode {
-//     None,
-//     Stable,
-//     Variable,
-// }
-
-// #[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
-// pub struct ExecuteBorrowParams {
-//     pub asset: String,
-//     pub amount: u128,
-// }
-
-// #[derive(CandidType, Deserialize, Clone, Debug)]
-// pub struct ExecuteRepayParams {
-//     pub asset: String,
-//     pub amount: u128,
-//     pub on_behalf_of: Option<String>,
-// }
-
-// #[derive(CandidType, Deserialize, Clone, Debug)]
-// pub struct ExecuteWithdrawParams {
-//     pub asset: String,
-//     pub amount: u128,
-//     pub on_behalf_of: Option<String>,
-//     pub is_collateral: bool,
-// }
-
-
-
-    // pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.
-
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
+
+/* 
+ * @title Reserve Data
+ * @notice Stores information about a reserve of an asset.
+ * @dev This struct contains details about asset reserves, including borrowing and liquidity rates.
+ * 
+ * @param asset_name The name of the asset (e.g., "ICP", "BTC").
+ * @param id Unique identifier for the reserve.
+ * @param d_token_canister The principal ID of the dToken canister.
+ * @param debt_token_canister The principal ID of the debt token canister.
+ * @param borrow_rate The current borrow interest rate.
+ * @param current_liquidity_rate The liquidity rate of the asset.
+ * @param asset_supply The total supply of the asset in the reserve.
+ * @param asset_borrow The total borrowed amount of the asset.
+ * @param liquidity_index The latest liquidity index.
+ * @param debt_index The latest debt index.
+ * @param configuration The configuration settings for the reserve.
+ * @param can_be_collateral Indicates if the asset can be used as collateral.
+ * @param last_update_timestamp The last recorded update timestamp.
+ * @param accure_to_platform The amount accrued to the platform.
+ */
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
     pub asset_name: Option<String>,
     pub id: u16,
     pub d_token_canister: Option<String>,
     pub debt_token_canister: Option<String>,
-    pub borrow_rate: u128, 
-    pub supply_rate_apr: Option<u128>, 
-    pub total_supply: u128,
-    pub total_borrowed: u128,
-    pub liquidity_index: u128,
-    pub current_liquidity_rate: u128,
-    pub debt_index: u128,
+    pub borrow_rate: Nat, 
+    pub current_liquidity_rate: Nat,
+    pub asset_supply: Nat,
+    pub asset_borrow: Nat,
+    pub liquidity_index: Nat,
+    pub debt_index: Nat,
     pub configuration: ReserveConfiguration,
     pub can_be_collateral: Option<bool>,
     pub last_update_timestamp: u64,
-    pub userlist: Option<Vec<(String, bool)>>
+    pub accure_to_platform: Nat,
 }
 
+/* 
+ * @title Reserve Cache
+ * @notice Stores cached data related to a reserve of an asset.
+ * @dev This struct caches important reserve data for faster access and calculations.
+ *
+ * @param reserve_configuration The configuration details of the reserve.
+ * @param curr_liquidity_index The current liquidity index.
+ * @param next_liquidity_index The projected next liquidity index.
+ * @param curr_liquidity_rate The current liquidity rate.
+ * @param reserve_last_update_timestamp The last recorded update timestamp for the reserve.
+ * @param curr_debt_index The current debt index.
+ * @param next_debt_index The projected next debt index.
+ * @param curr_debt_rate The current debt rate.
+ * @param next_debt_rate The projected next debt rate.
+ * @param debt_last_update_timestamp The last recorded update timestamp for the debt.
+ * @param reserve_factor The reserve factor.
+ * @param curr_debt The current total debt.
+ * @param next_debt The projected next debt amount.
+ * @param curr_supply The current total supply.
+ */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ReserveCache {
     pub reserve_configuration: ReserveConfiguration,
-    //Liquidity Index(t)=Liquidity Index(t−1) ×(1+ Borrow Interest Rate×Δt/365×100)
-    pub curr_liquidity_index: u128,
-    pub next_liquidity_index: u128,
-    pub curr_liquidity_rate: u128,
-    pub d_token_canister: Option<String>,
-    pub debt_token_canister: Option<String>,
+    pub curr_liquidity_index: Nat,
+    pub next_liquidity_index: Nat,
+    pub curr_liquidity_rate: Nat,
     pub reserve_last_update_timestamp: u64,
-    pub curr_debt_index: u128,
-    pub curr_debt_rate: u128,
-    pub next_debt_rate: u128,
-    pub next_debt_index: u128,
+    pub curr_debt_index: Nat,
+    pub next_debt_index: Nat,
+    pub curr_debt_rate: Nat,
+    pub next_debt_rate: Nat,
     pub debt_last_update_timestamp: u64,
-    pub reserve_factor: u128,
+    pub reserve_factor: Nat,
 
+    pub curr_debt: Nat,
+    pub next_debt: Nat,
+    pub curr_supply: Nat,
+   
 }
 
+/* 
+ * @title Reserve Configuration
+ * @notice Defines the configuration settings for a reserve of an asset.
+ * @dev This struct includes parameters affecting borrowing, liquidation, and supply behavior.
+ *
+ * @param ltv The loan-to-value ratio.
+ * @param liquidation_threshold The threshold for liquidation.
+ * @param liquidation_bonus The penalty for liquidation.
+ * @param borrowing_enabled Indicates if borrowing is enabled.
+ * @param borrow_cap The maximum borrowable amount.
+ * @param supply_cap The maximum supply limit.
+ * @param liquidation_protocol_fee The fee charged on liquidation.
+ * @param active Indicates if the reserve is currently active.
+ * @param frozen Indicates if the reserve is frozen.
+ * @param paused Indicates if transactions are paused.
+ * @param reserve_factor The portion of interest that accrues to the protocol.
+ */
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct ReserveConfiguration {
-    pub ltv: u128,
-    pub liquidation_threshold: u128,
-    pub liquidation_bonus: u128,  
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub liquidation_bonus: Nat,  
     pub borrowing_enabled: bool, 
-    pub borrow_cap: u128,
-    pub supply_cap: u128,               
-    pub liquidation_protocol_fee: u128, 
+    pub borrow_cap: Nat,   //TODO set it according to borrow
+    pub supply_cap: Nat,   //set it according to supply     
+    pub liquidation_protocol_fee: Nat, 
     pub active: bool,
     pub frozen: bool,
     pub paused: bool,
-    pub reserve_factor: u128,
+    pub reserve_factor: Nat,
 }
 
-
+/* 
+ * @title Execute Supply Parameters
+ * @notice Defines parameters required to execute a supply transaction.
+ * 
+ * @param asset The asset to supply.
+ * @param amount The amount of the asset to be supplied.
+ * @param is_collateral Indicates if the supplied asset should be used as collateral.
+ */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteSupplyParams {
     pub asset: String,
-    pub amount: u128,
+    pub amount: Nat,
     pub is_collateral: bool,
 
 }
 
+/* 
+ * @title Interest Rate Calculation Parameters
+ * @notice Defines the parameters required to calculate interest rates.
+ * @dev These parameters are used in the interest rate model to determine the borrow and supply rates.
+ *
+ * @param unbacked The amount of unbacked liquidity.
+ * @param liquidity_added The amount of liquidity added to the reserve.
+ * @param liquidity_taken The amount of liquidity removed from the reserve.
+ * @param total_stable_debt The total stable debt in the reserve.
+ * @param total_variable_debt The total variable debt in the reserve.
+ * @param average_stable_borrow_rate The average borrow rate for stable debt.
+ * @param reserve_factor The reserve factor that determines the portion of interest retained by the protocol.
+ * @param reserve The asset name for which interest rates are being calculated.
+ * @param d_token The address of the dToken associated with the reserve.
+ */
 #[derive(CandidType, Deserialize, Clone)]
 pub struct CalculateInterestRatesParams {
-    pub unbacked: u128,
-    pub liquidity_added: u128,
-    pub liquidity_taken: u128,
-    pub total_stable_debt: u128,
-    pub total_variable_debt: u128,
-    pub average_stable_borrow_rate: u128,
-    pub reserve_factor: u128,
+    pub unbacked: Nat,
+    pub liquidity_added: Nat,
+    pub liquidity_taken: Nat,
+    pub total_stable_debt: Nat,
+    pub total_variable_debt: Nat,
+    pub average_stable_borrow_rate: Nat,
+    pub reserve_factor: Nat,
     pub reserve: String,
     pub d_token: String,
 }
 
-#[derive(CandidType, Deserialize, Clone)]
-pub struct InitReserveParams {
-    pub asset: String,
-    pub d_token_address: String,
-    pub stable_debt_address: String,
-    pub variable_debt_address: String,
-    pub interest_rate_strategy_address: String,
-    pub reserves_count: u64,
-    pub max_number_reserves: u64,
-}
 
-#[derive(CandidType, Deserialize, Clone, PartialEq)]
-pub enum InterestRateMode {
-    None,
-    Stable,
-    Variable,
-}
 
+/* 
+ * @title Execute Borrow Parameters
+ * @notice Defines the parameters required to execute a borrow transaction.
+ *
+ * @param asset The asset being borrowed.
+ * @param amount The amount of the asset to borrow.
+ */
 #[derive(Debug, CandidType, Deserialize, Clone, PartialEq)]
 pub struct ExecuteBorrowParams {
     pub asset: String,
-    pub amount: u128,
+    pub amount: Nat,
 }
 
+/* 
+ * @title Execute Repay Parameters
+ * @notice Defines the parameters required to execute a repayment transaction.
+ *
+ * @param asset The asset being repaid.
+ * @param amount The amount of the asset being repaid.
+ * @param on_behalf_of Optional: The principal ID of the user on whose behalf the repayment is made.
+ */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteRepayParams {
     pub asset: String,
-    pub amount: u128,
-    pub on_behalf_of: Option<String>,
+    pub amount: Nat,
+    pub on_behalf_of: Option<Principal>,
 }
 
+/* 
+ * @title Execute Withdraw Parameters
+ * @notice Defines parameters required to execute a withdrawal transaction.
+ *
+ * @param asset The asset being withdrawn.
+ * @param amount The amount to withdraw.
+ * @param on_behalf_of Optional: The principal of the user on whose behalf the withdrawal is made.
+ * @param is_collateral Indicates if the asset being withdrawn was used as collateral.
+ */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteWithdrawParams {
     pub asset: String,
-    pub amount: u128,
-    pub on_behalf_of: Option<String>,
+    pub amount: Nat,
+    pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
 
+/* 
+ * @title Initialize Arguments
+ * @notice Defines the arguments required to initialize the protocol.
+ * 
+ * @param controller_id The principal ID of the controller.
+ */
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct InitArgs {
+    pub controller_id: Principal
+}
 
+/* 
+ * @title Execute Liquidation Parameters
+ * @notice Defines parameters required to execute a liquidation transaction.
+ *
+ * @param debt_asset The asset being liquidated.
+ * @param collateral_asset The collateral asset.
+ * @param amount The amount being liquidated.
+ * @param on_behalf_of The principal on whose behalf liquidation is performed.
+ * @param reward_amount The reward amount for the liquidator.
+ */
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExecuteLiquidationParams {
+    pub debt_asset: String,
+    pub collateral_asset: String,
+    pub amount: Nat,
+    pub on_behalf_of: Principal,
+    pub reward_amount: Nat,
+}
 
-    // pub accrued_to_treasury: u128,  //portion of interest or fees collected by a decentralized finance (DeFi) protocol that is allocated to the protocol's treasury or reserve fund.

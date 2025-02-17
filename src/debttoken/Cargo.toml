@@ -1,0 +1,57 @@
+[package]
+name = "debttoken"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+# [dependencies]
+# candid = "0.10"
+# ic-cdk = "0.13"
+# ic-cdk-timers = "0.7" # Feel free to remove this dependency if you don't need timers
+
+# [[bin]]
+# name = "ic-icrc1-ledger"
+# git = "https://github.com/dfinity/ic.git", path = "src/main.rs"
+
+[dependencies]
+async-trait = { workspace = true }
+candid = { workspace = true }
+ciborium = { workspace = true }
+hex = { workspace = true }
+ic-base-types = { git = "https://github.com/dfinity/ic.git" }
+ic-canister-log = { git = "https://github.com/dfinity/ic.git" }
+ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git" }
+ic-cdk = { workspace = true }
+ic-cdk-macros = { workspace = true }
+ic-crypto-tree-hash = { git = "https://github.com/dfinity/ic.git" }
+ic-icrc1 = { git = "https://github.com/dfinity/ic.git" }
+ic-icrc1-ledger = { git = "https://github.com/dfinity/ic.git" }
+ic-icrc1-tokens-u256 = { git = "https://github.com/dfinity/ic.git", optional = true }
+ic-icrc1-tokens-u64 = { git = "https://github.com/dfinity/ic.git"}
+ic-ledger-canister-core = { git = "https://github.com/dfinity/ic.git" }
+ic-ledger-core = { git = "https://github.com/dfinity/ic.git" }
+ic-ledger-hash-of = { git = "https://github.com/dfinity/ic.git"}
+ic-metrics-encoder = "1.1.1"
+icrc-ledger-client = { git = "https://github.com/dfinity/ic.git"}
+icrc-ledger-types = { git = "https://github.com/dfinity/ic.git"}
+num-traits = { workspace = true }
+serde = { workspace = true }
+serde_bytes = { workspace = true }
+
+[dev-dependencies]
+candid_parser = { workspace = true }
+cddl = "0.9.4"
+ic-icrc1-ledger-sm-tests = { git = "https://github.com/dfinity/ic.git"}
+ic-state-machine-tests = { git = "https://github.com/dfinity/ic.git"}
+ic-test-utilities-load-wasm = { git = "https://github.com/dfinity/ic.git"}
+leb128 = "0.2.4"
+proptest = "1.0"
+
+[features]
+default = []
+get-blocks-disabled = []
+u256-tokens = ["dep:ic-icrc1-tokens-u256"]

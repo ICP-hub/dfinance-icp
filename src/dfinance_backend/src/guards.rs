@@ -1,12 +1,20 @@
 use candid::Principal;
 use ic_cdk::caller;
+use crate::constants::errors::Error;
 
+/*
+ * @title Caller Identity Validation
+ * @dev Ensures that the caller is authenticated and not an anonymous principal.
+ *      This function is used to restrict access to authorized users only.
+ *
+ * @returns `Ok(())` if the caller is authenticated.
+ */
 
-/// Check if the caller is not anonymous.
-pub fn caller_is_not_anonymous() -> Result<(), String> {
+pub fn caller_is_not_anonymous() -> Result<(), Error> {
     if caller() == Principal::anonymous() {
-        Err("Anonymous caller not authorized.".to_string())
+        Err(Error::AnonymousPrincipal)
     } else {
         Ok(())
     }
 }
+

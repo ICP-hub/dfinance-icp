@@ -4,27 +4,52 @@ const initialState = {
   isWalletConnected: false,
   isWalletModalOpen: false,
   assetDetailFilter: "Supply Info",
-  isTestnetMode: false, // Default to false
+  isTestnetMode: false, 
+  connectedWallet: null,
+  isSwitchingWallet: false, 
 }
 
 const utilitySlice = createSlice({
   name: "utility",
   initialState,
   reducers: {
-    // set wallet created status
+
     setIsWalletConnected: (state, action) => {
       state.isWalletConnected = action.payload
     },
-    // set asset detail filter
+
     setAssetDetailFilter: (state, action) => {
       state.assetDetailFilter = action.payload
     },
+
     setWalletModalOpen: (state, action) => {
-      state.isWalletModalOpen = action.payload
+      state.isWalletModalOpen = action.payload.isOpen;
+      state.isSwitchingWallet = action.payload.isSwitching;
     },
 
+    setConnectedWallet: (state, action) => {
+      state.connectedWallet = action.payload;
+      localStorage.setItem("connectedWallet", action.payload); 
+    },
+
+    disconnectWallet: (state) => {
+      state.connectedWallet = null;
+      state.isWalletConnected = false;
+    },
+
+    setIsSwitchingWallet: (state, action) => {
+      state.isSwitchingWallet = action.payload;
+    }
   },
 })
 
-export const { setIsWalletConnected, setAssetDetailFilter, setWalletModalOpen } = utilitySlice.actions
-export default utilitySlice.reducer
+export const { 
+  setIsWalletConnected, 
+  setAssetDetailFilter, 
+  setWalletModalOpen, 
+  setConnectedWallet, 
+  disconnectWallet, 
+  setIsSwitchingWallet 
+} = utilitySlice.actions;
+
+export default utilitySlice.reducer;

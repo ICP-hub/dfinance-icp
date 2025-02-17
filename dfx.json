@@ -10,9 +10,47 @@
         }
       }
     },
+    "cketh_ledger": {
+            "type": "custom",
+            "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",
+            "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz",
+            "remote": {
+                "id": {
+                    "ic": "ss2fx-dyaaa-aaaar-qacoq-cai"
+                }
+            }
+        },
+    "token_ledger": {
+      "candid": "src/token_ledger/token_ledger.did",
+      "package": "token_ledger",
+      "type": "rust"
+    },
+    
     "dfinance_backend": {
       "candid": "src/dfinance_backend/dfinance_backend.did",
       "package": "dfinance_backend",
+      "type": "rust"
+    },
+    "xrc": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",
+      "id": "uf6dk-hyaaa-aaaaq-qaaaq-cai",
+      "wasm": "https://github.com/THLO/xrc_demo/raw/refs/heads/main/xrc/xrc.wasm.gz",
+      "remote": {
+        "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",
+        "id": {
+          "ic": "uf6dk-hyaaa-aaaaq-qaaaq-cai"
+        }
+      }
+    },
+    "dtoken": {
+      "candid": "src/dtoken/dtoken.did",
+      "package": "dtoken",
+      "type": "rust"
+    },
+    "debttoken": {
+      "candid": "src/debttoken/debttoken.did",
+      "package": "debttoken",
       "type": "rust"
     },
     "dfinance_frontend": {
@@ -25,7 +63,7 @@
       "type": "assets",
       "workspace": "dfinance_frontend"
     },
-    "internet_identity" : {
+    "internet_identity": {
       "type": "pull",
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     }

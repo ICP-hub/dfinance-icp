@@ -1,5 +1,22 @@
 [workspace]
-members = [
-    "src/dfinance_backend"
-]
+members = ["src/dfinance_backend", "src/dtoken", "src/debttoken", "src/token_ledger"]
 resolver = "2"
+
+[workspace.dependencies]
+async-trait = "0.1"
+bytes = "1.6.0"
+candid = { version = "0.10.6" }
+candid_parser = { version = "0.1.2" }
+ciborium = "0.2.1"
+hex = { version = "0.4.3", features = ["serde"] }
+ic-cdk = "0.13.2"
+ic-cdk-macros = "0.9.0"
+
+num-traits = { version = "0.2.14", features = ["libm"] }
+
+regex = "1.10.4"
+
+serde = { version = "1.0.203", features = ["derive"] }
+serde_bytes = "0.11.14"
+
+

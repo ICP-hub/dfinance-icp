@@ -4,12 +4,8 @@ import { useSelector } from 'react-redux';
 const Ellipse = ({ position, width, height, fill, className, props }) => {
 
     const theme = useSelector((state) => state.theme.theme);
-
-    // Default colors
     const lightModeFill = "#8CC0D7";
     const darkModeFill = "#2A1F9D";
-  
-    // Determine the fill color based on the current theme
     const fillColor = theme === 'dark' ? darkModeFill : lightModeFill
 
     switch (position) {

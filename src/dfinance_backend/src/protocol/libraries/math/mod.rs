@@ -1,1 +1,2 @@
-pub mod mathUtils;
+pub mod math_utils;
+pub mod calculate;

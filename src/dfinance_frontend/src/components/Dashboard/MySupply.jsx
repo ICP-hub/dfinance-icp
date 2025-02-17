@@ -38,7 +38,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
-import { useLedgerActor } from "../../aledger";
+import { useLedgerActor } from "../customHooks/CustomLedger";
 /**
  * MySupply Component
  *

@@ -22,7 +22,7 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
-import { useLedgerActor } from "../../aledger";
+import { useLedgerActor } from "../customHooks/CustomLedger";
 
 const DashboardNav = () => {
   const {

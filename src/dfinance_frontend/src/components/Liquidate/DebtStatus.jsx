@@ -18,7 +18,7 @@ import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import Lottie from "../Common/Lottie";
-import { useLedgerActor } from "../../aledger";
+import { useLedgerActor } from "../customHooks/CustomLedger";
 /**
  * DebtStatus Component
  *

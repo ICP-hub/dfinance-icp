@@ -24,7 +24,7 @@ export const useAuthClient = () => {
   const [principal, setPrincipal] = useState(null);
   const [User, setUser] = useState(null);
   const [agent, setnewagent] = useState(null);
-
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { connect, disconnect, isConnecting, user } = useAuth();
   const { balance, fetchBalance } = useBalance();
   const identity = useIdentity();
@@ -43,7 +43,10 @@ export const useAuthClient = () => {
 
   useEffect(() => {
     const initializeAgent = async () => {
-      const newAgent = new HttpAgent({ identity, host: HOST });
+      const newAgent = new HttpAgent({
+        identity: identity || undefined,
+        host: HOST,
+      });
 
       if (process.env.DFX_NETWORK !== "ic") {
         await newAgent.fetchRootKey();
@@ -54,24 +57,29 @@ export const useAuthClient = () => {
 
     const initActor = async () => {
       try {
+        let agent;
+        let principal;
+
         if (user && identity) {
-          const principal = identity.getPrincipal().toText();
+          principal = identity.getPrincipal().toText();
           setPrincipal(principal);
-          const User = identity.getPrincipal();
-
-          setUser(User);
-
-          const agent = new HttpAgent({ identity, HOST });
+          setUser(identity.getPrincipal());
+          setIsAuthenticated(true);
+          agent = new HttpAgent({ identity, host: HOST });
           if (process.env.DFX_NETWORK !== "ic") {
             await agent.fetchRootKey();
           }
-
-          // Create actor
-          const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, {
-            agent,
-          });
-          setBackendActor(actor);
+        } else {
+          agent = new HttpAgent({ host: HOST });
+          if (process.env.DFX_NETWORK !== "ic") {
+            await agent.fetchRootKey();
+          }
         }
+
+        const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, {
+          agent,
+        });
+        setBackendActor(actor);
       } catch (error) {
         console.error("Error initializing actor:", error.message);
       }
@@ -100,7 +108,7 @@ export const useAuthClient = () => {
     try {
       await disconnect();
       setBackendActor(null);
-
+      setIsAuthenticated(false);
       setPrincipal(null);
 
       localStorage.removeItem("sessionStart");
@@ -172,7 +180,7 @@ export const useAuthClient = () => {
 
   return {
     agent,
-    isAuthenticated: !!user,
+    isAuthenticated,
     login,
     logout,
     identity,

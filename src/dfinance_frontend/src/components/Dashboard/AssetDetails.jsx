@@ -34,7 +34,12 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 import Borrow from "./DashboardPopup/BorrowPopup";
-
+import { useLedgerActor } from "../customHooks/CustomLedger";
+import {
+  ConnectWallet,
+  useBalance,
+  useIdentityKit,
+} from "@nfid/identitykit/react";
 
 /**
  * AssetDetails Component
@@ -64,6 +69,7 @@ const AssetDetails = () => {
     backendActor,
     fetchReserveData,
     createLedgerActor,
+    agent,
   } = useAuths();
   const location = useLocation();
   const { assetData } = location.state || {};
@@ -122,7 +128,9 @@ const AssetDetails = () => {
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const { userData, userAccountData } = useUserData();
-  
+  const ConnectBtn = ({ onClick }) => (
+    <Button title="Connect Wallet" onClickHandler={onClick} />
+  );
   const handleModalOpen = (
     type,
     asset,
@@ -164,15 +172,15 @@ const AssetDetails = () => {
     });
   };
 
-    const principalObj = useMemo(() => {
-  if (!principal) return null;  // ✅ Prevent null values
-  try {
-    return Principal.fromText(principal);
-  } catch (error) {
-    console.error("Invalid principal:", principal);
-    return null;
-  }
-}, [principal]);
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
 
   useEffect(() => {
     if (userData && userAccountData) {
@@ -195,7 +203,7 @@ const AssetDetails = () => {
       };
 
       if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+        const dtokenActor = useLedgerActor(dtokenId, agent, "dToken");
         if (dtokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
@@ -209,7 +217,7 @@ const AssetDetails = () => {
       }
 
       if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+        const debtTokenActor = useLedgerActor(debtTokenId, agent, "debtToken");
 
         if (debtTokenActor) {
           try {
@@ -332,7 +340,7 @@ const AssetDetails = () => {
           setSupplyRate(supply_rate);
           setTotalSupply(total_supply);
           setTotalBorrow(total_borrow);
-          const remainingBorrowable = ((total_supply* 0.85) - total_borrow) ;
+          const remainingBorrowable = total_supply * 0.85 - total_borrow;
           const assetRates = {
             ckBTC: ckBTCUsdRate,
             ckETH: ckETHUsdRate,
@@ -808,12 +816,9 @@ const AssetDetails = () => {
               Please connect a wallet to view your personal information here.
             </p>
             <div className="w-full mt-4">
-              <Button
-                title={"Connect Wallet"}
-                onClickHandler={handleWalletConnect}
-                className={
-                  "my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-3 px-8 shadow-lg font-semibold text-sm'"
-                }
+              <ConnectWallet
+                connectButtonComponent={ConnectBtn}
+                className="rounded-full bg-black"
               />
             </div>
           </div>
@@ -1083,7 +1088,6 @@ const AssetDetails = () => {
               )}
             </div>
             <div>
-              {console.log("borrowableValue", borrowableValue)}
               <div className="border mt-6 rounded-xl px-3 py-2">
                 <div className="flex items-center gap-2">
                   <p className=" text-[12px] my-1 text-darkTextSecondary1">
@@ -1227,10 +1231,6 @@ const AssetDetails = () => {
                           ) || 0;
                         const LiquidationThreshold =
                           Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
-                        console.log(
-                          "LiquidationThreshold",
-                          LiquidationThreshold
-                        );
                         const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
                         const total_supply =
                           Number(assetData?.Ok?.asset_supply || 0) / 100000000;
@@ -1263,11 +1263,6 @@ const AssetDetails = () => {
                           );
                           return; // Exit the function if borrowable value or ckBalance is 0
                         }
-                        console.log(
-                          "borrowableValue",
-                          borrowableValue,
-                          borrowableAssetValue
-                        );
                         handleModalOpen(
                           "borrow",
                           id,

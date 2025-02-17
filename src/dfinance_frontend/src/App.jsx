@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState} from "react";
 import { useNavigate, useRoutes } from "react-router-dom";
 import { useAuths } from "./utils/useAuthClient";
 import routesList from "./routes/routes";
@@ -6,20 +6,15 @@ import { useSelector } from "react-redux";
 import { usePageLoading } from "./components/customHooks/useLoading";
 import { useDispatch } from "react-redux";
 import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
-import { idlFactory as ledgerIdlFactory } from "./ledger.did";
-import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "./joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
-import { Actor } from "@dfinity/agent";
-import { idlFactory as ledgerIDL } from "./ledger.did";
-import { useLedgerActor } from "./aledger";
+import { useLedgerActor } from "./components/customHooks/CustomLedger";
 
 export default function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [actorr, setActor] = useState();
 
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
   const theme = useSelector((state) => state.theme.theme);

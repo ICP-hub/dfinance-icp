@@ -1,7 +1,7 @@
 import { Actor } from '@dfinity/agent';
-import { idlFactory as dTokenIDL } from '../../declarations/debttoken'; 
-import { idlFactory as debtTokenIDL } from '../../declarations/dtoken'; 
-import { idlFactory as ledgerIDL } from './ledger.did'; 
+import { idlFactory as dTokenIDL } from '../../../../declarations/debttoken'; 
+import { idlFactory as debtTokenIDL } from '../../../../declarations/dtoken'; 
+import { idlFactory as ledgerIDL } from '../../../../declarations/token_ledger'; 
 
 export const useLedgerActor = (canisterId, agent, tokenType) => {
  

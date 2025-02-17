@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
-import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Modal } from "@mui/material";
 import { useAuths } from "../../utils/useAuthClient";
 import FaucetDetails from "../../components/Faucet/FaucetDetails";
 import Element from "../../../public/element/Elements.svg";
-import { setUserData } from "../../redux/reducers/userReducer";
+
 import {
-  setIsWalletConnected,
+  
   setWalletModalOpen,
-  setConnectedWallet,
+  
 } from "../../redux/reducers/utilityReducer";
-import icplogo from "../../../public/wallet/icp.png";
-import plug from "../../../public/wallet/plug.png";
-import bifinity from "../../../public/wallet/bifinity.png";
-import nfid from "../../../public/wallet/nfid.png";
+
 import WalletModal from "../../components/Dashboard/WalletModal";
+import {
+  ConnectWallet,
+  useBalance,
+  useIdentityKit,
+} from "@nfid/identitykit/react";
+import { FaWallet } from "react-icons/fa";
 
 /**
  * Faucet component allows users to receive testnet assets for testing purposes.
@@ -33,15 +34,22 @@ const Faucet = () => {
   const { isAuthenticated } = useAuths();
   const [isTestnetMode, setIsTestnetMode] = useState(true);
 
-  const handleWalletConnect = () => {
-    dispatch(
-      setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
-    );
-  };
+  
 
-  const handleTestnetModeToggle = () => {
-    setIsTestnetMode((prevMode) => !prevMode);
-  };
+    const ConnectBtn = ({ onClick }) => (
+      <button
+        className="bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+        onClick={onClick}
+      >
+  
+        <div className="flex items-center justify-center">
+          <p className="hidden md:flex">Connect Wallet</p>
+          <div>
+            <FaWallet size={17} className="ml-0 md:hidden" />
+          </div>
+        </div>
+      </button>
+    );
 
   return (
     <>
@@ -74,12 +82,10 @@ const Faucet = () => {
                 Please connect your wallet to get free testnet assets
               </p>
 
-              <Button
-                title="Connect Wallet"
-                onClickHandler={handleWalletConnect}
+              <ConnectWallet
+                connectButtonComponent={ConnectBtn}
+                className="rounded-full bg-[#1c1b39]"
               />
-
-              {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
             </div>
           )}
         </>

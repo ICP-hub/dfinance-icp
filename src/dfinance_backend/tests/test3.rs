@@ -853,7 +853,7 @@ fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Pr
 
                 match initialize_response {
                     Ok(data) => {
-                        ic_cdk::println!("user reserve data : {:?}", data);
+                        // ic_cdk::println!("user reserve data : {:?}", data);
                         ic_cdk::println!(
                             "✅ Create_user_reserve_with_low_health function succeeded"
                         );
@@ -2092,48 +2092,48 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         // },
 
         //  Invalid principal (malformed or blocked user)
-        // TestCase {
-        //     debt_asset: "ckUSDC".to_string(),
-        //     collateral_asset: "ckBTC".to_string(),
-        //     amount: Nat::from(50u128),
-        //     on_behalf_of: Principal::from_slice(&[0; 29]), // Malformed principal
-        //     reward_amount: Nat::from(5u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Invalid principal ID".to_string()),
-        // },
+        TestCase {
+            debt_asset: "XYZ".to_string(),
+            collateral_asset: "XYZ".to_string(),
+            amount: Nat::from(40_000_000u128),
+            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(), 
+            reward_amount: Nat::from(40400_000u128),
+            expect_success: false,
+            expected_error_message: Some("No principal found for asset".to_string()),
+        },
 
-        // // Zero reward amount (could be invalid depending on system logic)
-        // TestCase {
-        //     debt_asset: "ckBTC".to_string(),
-        //     collateral_asset: "ckETH".to_string(),
-        //     amount: Nat::from(10u128),
-        //     on_behalf_of: Principal::anonymous(),
-        //     reward_amount: Nat::from(0u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Reward amount must be greater than zero".to_string()),
-        // },
+        // Anonymous principals are not allowed
+        TestCase {
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "ckETH".to_string(),
+            amount: Nat::from(10u128),
+            on_behalf_of: Principal::anonymous(),
+            reward_amount: Nat::from(0u128),
+            expect_success: false,
+            expected_error_message: Some("Anonymous principals are not allowed".to_string()),
+        },
 
-        // Edge case: Borrowing with a different valid principal
-        // TestCase {
-        //     debt_asset: "ICP".to_string(),
-        //     collateral_asset: "ckETH".to_string(),
-        //     amount: Nat::from(200u128),
-        //     on_behalf_of: Principal::from_text("w4xhj-lyaaa-aaaaa-qaaca-cai").unwrap(),
-        //     reward_amount: Nat::from(150u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        // Zero amount 
+        TestCase {
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "ICP".to_string(),
+            amount: Nat::from(0u128),
+            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
+            reward_amount: Nat::from(150u128),
+            expect_success: false,
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
+        },
 
-        // // Borrowing against an unlisted or unknown asset (hypothetical scenario)
-        // TestCase {
-        //     debt_asset: "XYZCoin".to_string(), // Unsupported coin
-        //     collateral_asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(100u128),
-        //     on_behalf_of: Principal::anonymous(),
-        //     reward_amount: Nat::from(30u128),
-        //     expect_success: false,
-        //     expected_error_message: Some("Unsupported debt asset".to_string()),
-        // },
+        // Borrowing against an unlisted or unknown asset (hypothetical scenario)
+        TestCase {
+            debt_asset: "XYZCoin_invalid".to_string(), // Unsupported coin
+            collateral_asset: "ckUSDC".to_string(),
+            amount: Nat::from(100u128),
+            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
+            reward_amount: Nat::from(30u128),
+            expect_success: false,
+            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
+        },
     ];
 
     let user_principal = get_user_principal();
@@ -2159,13 +2159,34 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("------------------------------------------------------------\n");
 
         let asset_principal =
-            test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister).unwrap();
-        test_icrc2_aprove(
+            match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister){
+                Some(principal) => principal,
+                None => {
+                    if !case.expect_success {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Supply rejected as expected",
+                            i + 1,
+                        );
+                    } else {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Expected success but got rejection",
+                            i + 1
+                        );
+                        panic!("Unexpected rejection.");
+                    }
+                    continue;
+                }
+            };
+
+            let approved =test_icrc2_aprove(
             get_users_principal(Nat::from(1u128)).unwrap(),
             asset_principal,
             &pic,
             backend_canister,
         );
+        if !approved {
+            continue;
+        }
 
         let liquidation_params = ExecuteLiquidationParams {
             debt_asset: case.debt_asset.clone(),

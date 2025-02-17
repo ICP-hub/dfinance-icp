@@ -7,14 +7,12 @@ use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
 use declarations::assets::InitArgs;
-use ic_cdk::api::is_controller;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
-
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -35,9 +33,8 @@ use crate::declarations::assets::{
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::{UserData, UserReserveData};
+use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
-use std::collections::HashMap;
 use std::time::Duration;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
@@ -65,7 +62,18 @@ pub async fn init(args: Principal) {
     schedule_midnight_task().await;
 }
 
-
+/*
+ * @title Get Controller Information
+ * @dev Retrieves the controller ID from the state. The function looks for metadata 
+ *      associated with a specific key and returns the `controller_id` from `InitArgs`
+ *      if available. If no controller is found or an error occurs while reading the state, 
+ *      an appropriate error is returned.
+ *
+ * @returns 
+ *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
+ *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
+ *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ */
 pub fn get_controller() -> Result<InitArgs, Error> {
 
     match read_state(|state| {
@@ -595,7 +603,22 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-// Function to store a tester Principal
+/*
+ * @title Add Tester (For Testing Purpose - Pocket IC)
+ * @dev This function allows the current controller to add a new tester by associating 
+ *      a username with a principal ID. It ensures that only controllers can add testers.
+ *      The function checks if the caller is a valid user (not anonymous) and whether the 
+ *      caller is a controller. If these conditions are met, the tester is added to the 
+ *      `tester_list` in the state.
+ * 
+ * @param username The username of the tester to be added.
+ * @param principal The principal ID of the tester to be added.
+ * 
+ * @returns 
+ *      - `Ok(())`: If the tester was successfully added.
+ *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
+ *      - `Err(Error::ErrorNotController)`: If the caller is not a controller.
+ */
 #[ic_cdk::update]
 pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
     let user_principal = ic_cdk::caller();
@@ -613,7 +636,16 @@ pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
     return Ok(());
 }
 
-// Function to retrieve testers
+/*
+ * @title Get Testers (For Testing Purpose - Pocket IC)
+ * @dev This function retrieves the list of testers associated with the canister. It checks if the caller 
+ *      is a valid user (not anonymous) and then fetches the list of testers from the state. The function 
+ *      returns a vector of principal IDs representing the testers.
+ * 
+ * @returns 
+ *      - `Ok(Vec<Principal>)`: A list of principal IDs for all testers.
+ *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
+ */
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
     let user_principal = ic_cdk::caller();
 
@@ -631,7 +663,17 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
     })
 }
 
-// Function for checking caller is tester or not
+/*
+ * @title Check if Caller is a Tester (For Testing Purpose - Pocket IC)
+ * @dev This function checks if the caller is a registered tester. It retrieves the list of testers from 
+ *      the state and compares the caller’s principal ID with the list. The function returns `true` if the 
+ *      caller is a tester, and `false` otherwise. If there's an error fetching the testers list, the function 
+ *      logs the error and returns `false`.
+ * 
+ * @returns 
+ *      - `true`: If the caller is found in the list of testers.
+ *      - `false`: If the caller is not a tester or if there is an error retrieving the tester list.
+ */
 #[ic_cdk::query]
 pub fn check_is_tester()-> bool {
 

@@ -261,14 +261,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         }
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
 
-        // let bonus = collateral_amount.clone().scaled_mul(
-        //     collateral_reserve_data
-        //         .configuration
-        //         .liquidation_bonus
-        //         .clone()
-        //         / Nat::from(100u128),
-        // ) / Nat::from(SCALING_FACTOR);
-        // ic_cdk::println!("bonus: {}", bonus);
         let reward_amount: Nat = params.reward_amount.clone();
         ic_cdk::println!("reward_amount: {}", reward_amount);
 

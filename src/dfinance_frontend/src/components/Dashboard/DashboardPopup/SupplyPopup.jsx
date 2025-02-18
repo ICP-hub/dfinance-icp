@@ -18,38 +18,26 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * SupplyPopup Component
  *
  * This component is a popup modal that allows users to supply an asset to a platform, taking into account factors like collateral,
- * debt, liquidation thresholds, and the user's current health factor. 
- * It calculates the USD equivalent of the supplied amount, manages user input for supply amounts, and handles approval 
- * and supply transactions. 
+ * debt, liquidation thresholds, and the user's current health factor.
+ * It calculates the USD equivalent of the supplied amount, manages user input for supply amounts, and handles approval
+ * and supply transactions.
  *
  * @returns {JSX.Element} - Returns the SupplyPopup component.
  */
 
-const SupplyPopup = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus,
-  Ltv,
-  borrowableValue,
-  borrowableAssetValue,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
-}) => {
-  const dispatch = useDispatch();
-  const { backendActor, principal } = useAuths();
-  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const fees = useSelector((state) => state.fees.fees);
+const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
+  
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const { healthFactorBackend } = useUserData();
+  const { backendActor, principal } = useAuths();
+  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -65,6 +53,28 @@ const SupplyPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const fees = useSelector((state) => state.fees.fees);
+  const dispatch = useDispatch();
+  const ledgerActors = useSelector((state) => state.ledger);
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
+  /* ===================================================================================
+   *                                  HELPERS
+   * =================================================================================== */
 
   const transactionFee = 0;
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
@@ -94,24 +104,9 @@ const SupplyPopup = ({
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor;
 
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
-
-    const principalObj = useMemo(() => {
-  if (!principal) return null;  // ✅ Prevent null values
-  try {
-    return Principal.fromText(principal);
-  } catch (error) {
-    console.error("Invalid principal:", principal);
-    return null;
-  }
-}, [principal]);
-
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
@@ -171,29 +166,6 @@ const SupplyPopup = ({
       setError("Amount must be a positive number");
     }
   };
-
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue =
-        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue.toFixed(8));
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = balance * adjustedConversionRate;
-
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-  const ledgerActors = useSelector((state) => state.ledger);
 
   // Approves the supply transaction
   const handleApprove = async () => {
@@ -356,25 +328,6 @@ const SupplyPopup = ({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
-
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -393,40 +346,6 @@ const SupplyPopup = ({
     }
   };
 
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold,
-      reserveliquidationThreshold
-    );
-
-    const amountAdded = collateral ? usdValue || 0 : 0;
-    let totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;
-    }
-    let totalDeptValue = parseFloat(totalDebt);
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
-    }
-
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-  }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-  ]);
-
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -434,7 +353,6 @@ const SupplyPopup = ({
     reserveliquidationThreshold
   ) => {
     const amountAdded = collateral ? usdValue || 0 : 0;
-   
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -448,7 +366,6 @@ const SupplyPopup = ({
       return Infinity;
     }
     let avliq = liquidationThreshold * totalCollateral;
-
     let tempLiq =
       (avliq + amountAdded * reserveliquidationThreshold) /
       totalCollateralValue;
@@ -480,6 +397,94 @@ const SupplyPopup = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold,
+      reserveliquidationThreshold
+    );
+
+    const amountAdded = collateral ? usdValue || 0 : 0;
+    let totalCollateralValue =parseFloat(totalCollateral) + parseFloat(amountAdded);
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
+
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+  ]);
+  /* ===================================================================================
+   *                                 EFFECT
+   * =================================================================================== */
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
+      setUsdValue(convertedValue.toFixed(8));
+    } else {
+      setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = balance * adjustedConversionRate;
+
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>

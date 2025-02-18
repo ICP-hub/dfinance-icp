@@ -5,7 +5,7 @@ import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuths } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
-import ClickAwayListener from '@mui/material/ClickAwayListener';
+import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
@@ -21,8 +21,6 @@ import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
 import {
   ConnectWallet,
-  useBalance,
-  useIdentityKit,
 } from "@nfid/identitykit/react";
 import {
   DASHBOARD_TOP_NAV_LINK,
@@ -110,63 +108,9 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   };
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleCloseDropdownOnScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
-    };
-  }, []);
 
 
-  useEffect(() => {
-    setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
-    setShowTestnetPopup(false);
-    setIsPopupVisible(false);
-    setDropdownVisible(false);
-  }, [location]);
-
-  const handleEthChange = (e) => {
-    const value = e.target.value;
-    setEthValue(value);
-    const eth = parseFloat(value);
-    const inch = eth * 32.569;
-    setOneInchValue(inch.toFixed(2));
-  };
-
-  const handleOneInchChange = (e) => {
-    const value = e.target.value;
-    setOneInchValue(value);
-    const inch = parseFloat(value);
-    const eth = inch / 32.569;
-    setEthValue(eth.toFixed(2));
-  };
-
-  const handleSwitchClick = () => {
-    const temp = ethValue;
-    setEthValue(oneInchValue);
-    setOneInchValue(temp);
-    setInterchangeValues(!interchangeValues);
-
-    setSelectedToken(selectedToken === "ETH" ? "1INCH" : "ETH");
-  };
-  const handleTransaction = () => {
-    if (selectedToken === "ETH" && Number(ethValue) > balance) {
-      setInsufficientBalance(true);
-    } else {
-    }
-  };
-  const handleInputFocus = () => {
-    setShowTransactionOverlay(true);
-    setIsInputFocused(true);
-  };
-
-  const handleInputBlur = () => {
-    setShowTransactionOverlay(false);
-    setIsInputFocused(false);
-  };
-
+  
 
   const handleCreateInternetIdentity = () => {
     login();
@@ -384,13 +328,13 @@ export default function Navbar({ isHomeNav }) {
     };
   }, []);
 
-
-  function truncatePrincipal(principal) {
-    if (principal && principal.length > 10) {
-      return `${principal.substring(0, 6)}...${principal.substring(principal.length - 4)}`;
+  function truncatePrincipal(principal, length = 10) {
+    if (principal && principal.length > length) {
+      return `${principal.substring(0, length)}...`;
     }
-    return principal; // Return as-is if it's already short
+    return principal;
   }
+
   React.useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
@@ -414,240 +358,222 @@ export default function Navbar({ isHomeNav }) {
   return (
     <>
       <ClickAwayListener onClickAway={handleClickAway}>
-      <div className="w-full">
-        <nav className="w-full py-4 md:py-5 dxl:py-9 flex items-center justify-between">
-          <div className="flex justify-center items-center ">
-            <img
-              src={theme === "dark" ? DFinanceDark : DFinanceLight}
-              alt="DFinance"
-              onClick={handleLogoClick}
-              className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
-              style={{
-                imageRendering: "-webkit-optimize-contrast",
-                imageRendering: "crisp-edges",
-              }}
-            />
-
-            {!isHomeNav && isTestnetMode && (
-              <button
-                className="bg-[#4659CF]  z-50  hover:bg-blue-700 text-white font-bold rounded-full md:rounded  text-[12px] p-1 md:px-2 md:py-[1px] md:pt-[2px] mt-[1px] ml-3"
-                onClick={handleButtonClick}
-              >
-                <div className="flex items-center justify-center">
-                  <p className="hidden md:flex">TESTNET</p>
-                  <Info size={15} className=" ml-0 md:ml-1 -mt-[1px]" />
-                </div>
-              </button>
-            )}
-
-            {showTestnetPopup && (
-              <TestnetModePopup
-                onClose={handleClosePopup}
-                handleTestnetModeToggle={handleTestnetModeToggle}
+        <div className="w-full">
+          <nav className="w-full py-4 md:py-5 dxl:py-9 flex items-center justify-between">
+            <div className="flex justify-center items-center ">
+              <img
+                src={theme === "dark" ? DFinanceDark : DFinanceLight}
+                alt="DFinance"
+                onClick={handleLogoClick}
+                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
+                style={{
+                  imageRendering: "-webkit-optimize-contrast",
+                  imageRendering: "crisp-edges",
+                }}
               />
-            )}
-            <ToastContainer
-              position="top-center"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              transition:Bounce
-              pauseOnHover
-              theme={isDarkMode ? "dark" : "light"}
-              className="z-60 mt-6 "
-            />
-          </div>
-          {!isMobile && (
-            <>
-              <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
-                {!isHomeNav
-                  ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                      if (link.alwaysPresent) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      } else if (isTestnetMode && link.testnet) {
-                        return (
-                          <React.Fragment key={index}>
+
+              {!isHomeNav && isTestnetMode && (
+                <button
+                  className="bg-[#4659CF]  z-50  hover:bg-blue-700 text-white font-bold rounded-full md:rounded  text-[12px] p-1 md:px-2 md:py-[1px] md:pt-[2px] mt-[1px] ml-3"
+                  onClick={handleButtonClick}
+                >
+                  <div className="flex items-center justify-center">
+                    <p className="hidden md:flex">TESTNET</p>
+                    <Info size={15} className=" ml-0 md:ml-1 -mt-[1px]" />
+                  </div>
+                </button>
+              )}
+
+              {showTestnetPopup && (
+                <TestnetModePopup
+                  onClose={handleClosePopup}
+                  handleTestnetModeToggle={handleTestnetModeToggle}
+                />
+              )}
+              <ToastContainer
+                position="top-center"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                transition:Bounce
+                pauseOnHover
+                theme={isDarkMode ? "dark" : "light"}
+                className="z-60 mt-6 "
+              />
+            </div>
+            {!isMobile && (
+              <>
+                <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
+                  {!isHomeNav
+                    ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
+                        if (link.alwaysPresent) {
+                          return (
                             <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (isTestnetMode && link.testnet) {
+                          return (
+                            <React.Fragment key={index}>
+                              <NavLink
+                                to={link.route}
+                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                              >
+                                {link.title}
+                              </NavLink>
+                              {link.title === "Faucet" && (
+                                <>
+                                  <span
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
+                                    onClick={handlePopupToggle}
+                                  >
+                                    •••
+                                  </span>
+                                  {isPopupVisible && (
+                                    <Popup
+                                      position={popupPosition}
+                                      onClose={() => setIsPopupVisible(false)}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </React.Fragment>
+                          );
+                        } else if (!isTestnetMode && !link.testnet) {
+                          return (
+                            <NavLink
+                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                            {link.title === "Faucet" && (
-                              <>
-                                <span
-                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                  onClick={handlePopupToggle}
-                                >
-                                  •••
-                                </span>
-                                {isPopupVisible && (
-                                  <Popup
-                                    position={popupPosition}
-                                    onClose={() => setIsPopupVisible(false)}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </React.Fragment>
-                        );
-                      } else if (!isTestnetMode && !link.testnet) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      return null;
-                    })
-                  : HOME_TOP_NAV_LINK.map((link, index) => (
-                      <NavLink
-                        key={index}
-                        target={link.target}
-                        to={link.route}
-                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                      >
-                        {link.title}
-                      </NavLink>
-                    ))}
-              </div>
-            </>
-          )}
-
-          {isHomeNav ? (
-            <div className="flex gap-2">
-              <div className="text-nowrap">
-                {isMobile2 ? (
-                  <div
-                    className="w-10 h-10 border-b-[0.3px] border-gray-400 dark:border-gray-600 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/90 dark:to-[#81198E]/90 flex items-center justify-center rounded-lg shadow-[#00000040] shadow-sm cursor-pointer mr-1 button1"
-                    onClick={handleLaunchApp}
-                  >
-                    <IoIosRocket color="white" size={28} />
-                  </div>
-                ) : (
-                  <Button title="Launch App" onClickHandler={handleLaunchApp} />
-                )}
-              </div>
-
-              <div className="flex align-center justify-center">
-                {renderThemeToggle && <ThemeToggle />}
-              </div>
-
-              {isMobile && (
-                <div className="flex justify-center align-center items-center">
-                  <div
-                    onClick={() => setIsMobileNav(!isMobileNav)}
-                    className="cursor-pointer"
-                  >
-                    {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
-                  </div>
+                          );
+                        }
+                        return null;
+                      })
+                    : HOME_TOP_NAV_LINK.map((link, index) => (
+                        <NavLink
+                          key={index}
+                          target={link.target}
+                          to={link.route}
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                 </div>
-              )}
-            </div>
-          ) : isAuthenticated ? (
-            <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-              {}
-              <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
-                {!isMobile2 && (
-                  <div
-                    className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button1"
-                    onClick={handleSwitchWallet}
-                  >
-                    <img
-                      src={loader}
-                      alt="square"
-                      className="object-contain w-5 h-5 -mr-[3px]"
-                    />
+              </>
+            )}
 
-                    <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold ml-1">
-                      {truncatePrincipal(principal, 6)}
-                    </span>
+            {isHomeNav ? (
+              <div className="flex gap-2">
+                <div className="text-nowrap">
+                  {isMobile2 ? (
+                    <div
+                      className="w-10 h-10 border-b-[0.3px] border-gray-400 dark:border-gray-600 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/90 dark:to-[#81198E]/90 flex items-center justify-center rounded-lg shadow-[#00000040] shadow-sm cursor-pointer mr-1 button1"
+                      onClick={handleLaunchApp}
+                    >
+                      <IoIosRocket color="white" size={28} />
+                    </div>
+                  ) : (
+                    <Button
+                      title="Launch App"
+                      onClickHandler={handleLaunchApp}
+                    />
+                  )}
+                </div>
+
+                <div className="flex align-center justify-center">
+                  {renderThemeToggle && <ThemeToggle />}
+                </div>
+
+                {isMobile && (
+                  <div className="flex justify-center align-center items-center">
+                    <div
+                      onClick={() => setIsMobileNav(!isMobileNav)}
+                      className="cursor-pointer"
+                    >
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                    </div>
                   </div>
                 )}
-
-                {switchWalletDrop && (
-                  <>
+              </div>
+            ) : isAuthenticated ? (
+              <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
+                {}
+                <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
+                  {!isMobile2 && (
                     <div
-                      className="fixed inset-0 bg-black opacity-40 z-50"
-                      onClick={() => setSwitchWalletDrop(false)}
-                      style={{ pointerEvents: "none" }}
-                    ></div>
-                    <div
-                      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[160px] lg1:-left-[60px] lg1:transform lg1:-translate-x-1/2 lg1:mt-2 min-w-[300px] md:px-5 md:py-6 px-5 py-6 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ pointerEvents: "auto" }}
+                      className="flex items-center lg:gap-1 py-[9px] px-3 overflow-hidden button1"
+                      onClick={handleSwitchWallet}
                     >
-                      <div className="w-full flex items-center gap-2">
-                        <img src={loader} alt="square" className="w-8 h-8" />
-                        <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
-                          {truncatePrincipal(principal, 20)}
-                        </h1>
-                      </div>
-                      <div className="flex flex-col-reverse   lg:block">
-                        <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
-                          <Button
-                            title="Switch Wallet"
-                            className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
-                            onClickHandler={switchWallet}
-                          />
-                          <Button
-                            title="Disconnect"
-                            className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100%  dark:text-darkText dark:bg-[#BA5858] border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
-                            onClickHandler={handleLogout}
-                          />
+                      <img
+                        src={loader}
+                        alt="square"
+                        className="object-contain w-5 h-5 -mr-[3px]"
+                      />
+
+                      <span className="sxxs:text-[10px] lg:text-[10px] lg1:text-[12px] font-bold ml-1">
+                        {truncatePrincipal(principal, 10)}
+                      </span>
+                    </div>
+                  )}
+
+                  {switchWalletDrop && (
+                    <>
+                      <div
+                        className="fixed inset-0 bg-black opacity-40 z-50"
+                        onClick={() => setSwitchWalletDrop(false)}
+                        style={{ pointerEvents: "none" }}
+                      ></div>
+                      <div
+                        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 lg1:absolute lg1:top-[160px] lg1:-left-[60px] lg1:transform lg1:-translate-x-1/2 lg1:mt-2 min-w-[300px] md:px-5 md:py-6 px-5 py-6 rounded-xl bg-white mb-4 z-50 dark:bg-darkOverlayBackground dark:border-none"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ pointerEvents: "auto" }}
+                      >
+                        <div className="w-full flex items-center gap-2">
+                          <img src={loader} alt="square" className="w-8 h-8" />
+                          <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
+                            {truncatePrincipal(principal, 20)}
+                          </h1>
                         </div>
-
-                        <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                          {}
-                          <div className="hidden lg1:flex justify-center">
-                            <div
-                              className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
-                              style={{ height: "70px", width: "160px" }}
-                            >
-                              <span
-                                className="  text-blue-800 dark:text-darkTextSecondary"
-                                style={{ right: "55%" }}
-                              >
-                                Network
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <img
-                                  src={icplogo}
-                                  alt="Icp Logo"
-                                  className="w-6 h-6"
-                                />
-                                <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
-                                  ICP
-                                </span>
-                              </div>
-                            </div>
+                        <div className="flex flex-col-reverse   lg:block">
+                          <div className="w-full flex flex-col lg1:flex-row justify-center mt-3  gap-3">
+                            <Button
+                              title="Switch Wallet"
+                              className=" z-20 py-2 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2"
+                              // onClickHandler={switchWallet}
+                            />
+                            <Button
+                              title="Disconnect"
+                              className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100%  dark:text-darkText dark:bg-[#BA5858] border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light"
+                              onClickHandler={handleLogout}
+                            />
                           </div>
-                          <div className="lg1:hidden lg:flex justify-center">
-                            <div className="flex-1 flex flex-col  justify-center border border-gray-200 p-3 rounded-xl text-sm  dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col">
-                              <div className="flex gap-5">
-                                <div className="flex items-center justify-center">
-                                  <p className="text-blue-800 dark:text-darkText">
-                                    Network
-                                  </p>
-                                </div>
 
-                                <div className="flex items-center ml-auto">
+                          <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
+                            {}
+                            <div className="hidden lg1:flex justify-center">
+                              <div
+                                className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
+                                style={{ height: "70px", width: "160px" }}
+                              >
+                                <span
+                                  className="  text-blue-800 dark:text-darkTextSecondary"
+                                  style={{ right: "55%" }}
+                                >
+                                  Network
+                                </span>
+                                <div className="flex items-center gap-1">
                                   <img
                                     src={icplogo}
                                     alt="Icp Logo"
@@ -659,59 +585,223 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-                          </div>
-                          {}
-                          <div className=" w-full flex justify-center">
-                            <div
-                              className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
-                              style={{ height: "70px", width: "160px" }}
-                            >
-                              <button
-                                className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary button1"
-                                onClick={copyToClipboard}
-                              >
-                                <GrCopy className="h-5 w-4 ml-4 lg1:ml-6" />
-                                <span className="ml-1">Copy principal</span>
-                              </button>
-                              <button
-                                className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
-                                onClick={() =>
-                                  (window.location.href = "/faucet")
-                                }
-                              >
-                                <CiShare1 className="h-5 -ml-[1px] w-[18px] dark:text-darkText" />
-                                <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
-                                  Faucet Asset
-                                </span>
-                              </button>
+                            <div className="lg1:hidden lg:flex justify-center">
+                              <div className="flex-1 flex flex-col  justify-center border border-gray-200 p-3 rounded-xl text-sm  dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col">
+                                <div className="flex gap-5">
+                                  <div className="flex items-center justify-center">
+                                    <p className="text-blue-800 dark:text-darkText">
+                                      Network
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center ml-auto">
+                                    <img
+                                      src={icplogo}
+                                      alt="Icp Logo"
+                                      className="w-6 h-6"
+                                    />
+                                    <span className="ml-2 text-base font-bold text-blue-800 dark:text-darkText">
+                                      ICP
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>{" "}
+                            {}
+                            <div className=" w-full flex justify-center">
+                              <div
+                                className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
+                                style={{ height: "70px", width: "160px" }}
+                              >
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center -ml-4 dark:text-darkTextSecondary button1"
+                                  onClick={copyToClipboard}
+                                >
+                                  <GrCopy className="h-5 w-4 ml-4 lg1:ml-6" />
+                                  <span className="ml-1">Copy principal</span>
+                                </button>
+                                <button
+                                  className="text-blue-800 hover:text-gray-800 flex items-center mt-2 dark:text-darkTextSeconday button1"
+                                  onClick={() =>
+                                    (window.location.href = "/faucet")
+                                  }
+                                >
+                                  <CiShare1 className="h-5 -ml-[1px] w-[18px] dark:text-darkText" />
+                                  <span className="ml-1 text-nowrap dark:text-darkTextSecondary">
+                                    Faucet Asset
+                                  </span>
+                                </button>
+                              </div>
+                            </div>{" "}
+                          </div>
                         </div>
                       </div>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center justify-center">
+                  <div className="relative">
+                    {!isMobile && (
+                      <img
+                        src={settingsIcon}
+                        alt="settings_icon"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button1"
+                        onClick={handleDropdownToggle}
+                      />
+                    )}
+                    {dropdownVisible && (
+                      <>
+                        <div
+                          className="fixed inset-0 bg-black bg-opacity-50 z-50"
+                          onClick={() => setDropdownVisible(false)}
+                        ></div>
+                        <div
+                          className="absolute w-[280px] top-[55px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
+                            Settings
+                          </h2>
+
+                          {}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-row items-center justify-around">
+                              <label
+                                htmlFor="darkMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                              >
+                                Dark Mode
+                              </label>
+                            </div>
+                            <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                              <span className="text-[13px] mr-2">
+                                {isDarkMode ? "ON" : "OFF"}
+                              </span>
+                              <CustomizedSwitches
+                                checked={isDarkMode}
+                                onChange={handleDarkModeToggle}
+                              />
+                            </div>
+                          </div>
+
+                          {}
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <label
+                                htmlFor="testnetMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
+                              >
+                                Testnet Mode
+                              </label>
+                            </div>
+                            <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                              <span className="text-[13px] mr-2">
+                                {isTestnetMode ? "ON" : "OFF"}
+                              </span>
+                              <CustomizedSwitches
+                                checked={isTestnetMode}
+                                // onChange={handleTestnetModeToggle}
+                              />
+                            </div>
+                          </div>
+
+                          {}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-row items-center justify-around relative group">
+                              <label
+                                htmlFor="soundMode"
+                                className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText flex items-center"
+                              >
+                                Sound
+                                <Info
+                                  size={16}
+                                  className="ml-2 cursor-pointer"
+                                />
+                              </label>
+
+                              {}
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
+                                Enabling this will allow the user to hear sound
+                                when supply, borrow, repay, or withdraw actions
+                                are performed.
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
+                              <span className="text-[13px] mr-2">
+                                {isSoundOn ? "ON" : "OFF"}
+                              </span>
+                              <CustomizedSwitches
+                                checked={isSoundOn}
+                                onChange={handleSoundToggle}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
+                          <div className="flex w-full align-center justify-center mb-2">
+                            <button
+                              type="button"
+                              className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
+                              onClick={handleTour}
+                            >
+                              Start Guide Tour
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {isMobile && (
+                  <div className="flex justify-center align-center items-center">
+                    <div
+                      onClick={() => setIsMobileNav(!isMobileNav)}
+                      className="cursor-pointer"
+                    >
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
-              <div className="flex items-center justify-center">
-                <div className="relative">
-                  {!isMobile && (
-                    <img
-                      src={settingsIcon}
-                      alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button1"
-                      onClick={handleDropdownToggle}
-                    />
-                  )}
-                  {dropdownVisible && (
-                    <>
-                      <div
-                        className="fixed inset-0 bg-black bg-opacity-50 z-50"
-                        onClick={() => setDropdownVisible(false)}
-                      ></div>
-                      <div
-                        className="absolute w-[280px] top-[55px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+            ) : (
+              <div className="flex gap-3">
+                {/* <button
+                  className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+                  onClick={handleWalletConnect}
+                >
+                  <div className="flex items-center justify-center">
+                    <p className="hidden md:flex">Connect Wallet</p>
+                    <div>
+                      <FaWallet size={17} className="ml-0 md:hidden" />
+                    </div>
+                  </div>
+                </button> */}
+                <ConnectWallet
+                  connectButtonComponent={ConnectBtn}
+                  className="rounded-full bg-black"
+                />
+                <div className="flex items-center justify-center">
+                  <div className="relative">
+                    {!isMobile ? (
+                      <img
+                        src={settingsIcon}
+                        alt="settings_icon"
+                        className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button1"
+                        onClick={handleDropdownToggle}
+                      />
+                    ) : (
+                      <div className="flex justify-center align-center items-center ml-1">
+                        <div
+                          onClick={() => setIsMobileNav(!isMobileNav)}
+                          className="cursor-pointer"
+                        >
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                        </div>
+                      </div>
+                    )}
+                    {dropdownVisible && (
+                      <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
                           Settings
                         </h2>
@@ -753,158 +843,18 @@ export default function Navbar({ isHomeNav }) {
                             </span>
                             <CustomizedSwitches
                               checked={isTestnetMode}
-                              // onChange={handleTestnetModeToggle}
+                              onChange={handleTestnetModeToggle}
                             />
                           </div>
                         </div>
-
-                        {}
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex flex-row items-center justify-around relative group">
-                            <label
-                              htmlFor="soundMode"
-                              className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText flex items-center"
-                            >
-                              Sound
-                              <Info size={16} className="ml-2 cursor-pointer" />
-                            </label>
-
-                            {}
-                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
-                              Enabling this will allow the user to hear sound
-                              when supply, borrow, repay, or withdraw actions
-                              are performed.
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
-                            <span className="text-[13px] mr-2">
-                              {isSoundOn ? "ON" : "OFF"}
-                            </span>
-                            <CustomizedSwitches
-                              checked={isSoundOn}
-                              onChange={handleSoundToggle}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex align-center justify-center w-[93%] border-t-2 dark:border-gray-300/20 border-gray-500/25 mx-auto my-4 mb-5"></div>
-                        <div className="flex w-full align-center justify-center mb-2">
-                          <button
-                            type="button"
-                            className="w-[95%] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg p-[9px] px-8 shadow-sm shadow-[#00000040] font-medium text-[12px] h-auto z-10 opacity-100"
-                            onClick={handleTour}
-                          >
-                            Start Guide Tour
-                          </button>
-                        </div>
                       </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {isMobile && (
-                <div className="flex justify-center align-center items-center">
-                  <div
-                    onClick={() => setIsMobileNav(!isMobileNav)}
-                    className="cursor-pointer"
-                  >
-                    {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              {/* <button
-                  className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
-                  onClick={handleWalletConnect}
-                >
-                  <div className="flex items-center justify-center">
-                    <p className="hidden md:flex">Connect Wallet</p>
-                    <div>
-                      <FaWallet size={17} className="ml-0 md:hidden" />
-                    </div>
-                  </div>
-                </button> */}
-              <ConnectWallet
-                connectButtonComponent={ConnectBtn}
-                className="rounded-full bg-black"
-              />
-              <div className="flex items-center justify-center">
-                <div className="relative">
-                  {!isMobile ? (
-                    <img
-                      src={settingsIcon}
-                      alt="settings_icon"
-                      className="object-contain w-[40px] h-[40px] cursor-pointer sxs3:hidden md:block lg:block ml-1 button1"
-                      onClick={handleDropdownToggle}
-                    />
-                  ) : (
-                    <div className="flex justify-center align-center items-center ml-1">
-                      <div
-                        onClick={() => setIsMobileNav(!isMobileNav)}
-                        className="cursor-pointer"
-                      >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
-                      </div>
-                    </div>
-                  )}
-                  {dropdownVisible && (
-                    <div className="absolute w-[280px] top-[80px] right-0 mt-2 p-3 bg-[#ffffff] text-[#2A1F9D] border-gray-300 rounded-xl shadow-md z-50 dark:bg-darkOverlayBackground dark:text-darkTextSecondary dark:border-none">
-                      <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
-                        Settings
-                      </h2>
-
-                      {}
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex flex-row items-center justify-around">
-                          <label
-                            htmlFor="darkMode"
-                            className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
-                          >
-                            Dark Mode
-                          </label>
-                        </div>
-                        <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
-                          <span className="text-[13px] mr-2">
-                            {isDarkMode ? "ON" : "OFF"}
-                          </span>
-                          <CustomizedSwitches
-                            checked={isDarkMode}
-                            onChange={handleDarkModeToggle}
-                          />
-                        </div>
-                      </div>
-
-                      {}
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="testnetMode"
-                            className="ml-2 text-lg font-semibold text-[#2A1F9D] dark:text-darkText"
-                          >
-                            Testnet Mode
-                          </label>
-                        </div>
-                        <div className="flex items-center justify-center ml-3 place-content-center -mr-4">
-                          <span className="text-[13px] mr-2">
-                            {isTestnetMode ? "ON" : "OFF"}
-                          </span>
-                          <CustomizedSwitches
-                            checked={isTestnetMode}
-                            onChange={handleTestnetModeToggle}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
-            </div>
-          )}
-        </nav>
-      </div>
+            )}
+          </nav>
+        </div>
       </ClickAwayListener>
 
       <MobileTopNav

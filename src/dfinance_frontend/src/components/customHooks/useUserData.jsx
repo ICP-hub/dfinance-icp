@@ -40,7 +40,7 @@ const useUserData = () => {
   };
 
   const fetchUserData = async (User) => {
-    if (backendActor) {
+    if (backendActor && User) {
       try {
         const result = await getUserData(User);
         setUserData(result);
@@ -58,19 +58,19 @@ const useUserData = () => {
   const fetchUserAccountData = async () => {
     if (backendActor && isAuthenticated) {
       try {
-        if (!principal || typeof principal !== "string") {
+        if (!principal || typeof principal !== "string" || principal === "null") {
           console.error("Invalid principal provided");
           return;
         }
         const principalObj = Principal.fromText(principal);
         const result = await backendActor.get_user_account_data([]);
-
+  
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
           setTimeout(fetchUserAccountData, 500);
           return;
         }
-
+  
         if (result?.Ok && result.Ok[4]) {
           const healthFactor = Number(result.Ok[4]) / 10000000000;
           if (healthFactor) {
@@ -81,7 +81,7 @@ const useUserData = () => {
         } else {
           setError("Invalid result format or missing health factor");
         }
-
+  
         if (result?.Ok) {
           setUserAccountData(result);
         }
@@ -90,6 +90,7 @@ const useUserData = () => {
       }
     }
   };
+  
 
   useEffect(() => {
     fetchUserData(User);

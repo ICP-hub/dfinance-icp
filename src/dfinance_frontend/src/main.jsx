@@ -9,9 +9,13 @@ import { store } from "./redux/store";
 import { AuthProvider, useAuths } from "./utils/useAuthClient";
 import { BrowserRouter } from "react-router-dom";
 import { IdentityKitProvider, IdentityKitTheme } from "@nfid/identitykit/react";
-import { IdentityKitAuthType, NFIDW, Plug, InternetIdentity } from "@nfid/identitykit";
+import {
+  IdentityKitAuthType,
+  NFIDW,
+  Plug,
+  InternetIdentity,
+} from "@nfid/identitykit";
 import "@nfid/identitykit/react/styles.css";
-
 
 Modal.setAppElement("#root");
 
@@ -24,7 +28,7 @@ const signerClientOptions = {
   targets: initialTargets,
   maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000),
   idleOptions: {
-    idleTimeout: 4 * 60 * 60 * 1000,
+    idleTimeout: 24 * 60 * 60 * 1000,
     disableIdle: false,
   },
   keyType: "Ed25519",
@@ -35,7 +39,7 @@ const AppWrapper = () => {
   const identityKitTheme =
     theme === "dark" ? IdentityKitTheme.DARK : IdentityKitTheme.LIGHT;
 
-  const { backendActor ,fetchReserveData} = useAuths();
+  const { backendActor, fetchReserveData } = useAuths();
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const [updatedTargets, setUpdatedTargets] = useState(initialTargets);
 
@@ -53,24 +57,22 @@ const AppWrapper = () => {
 
             setUpdatedTargets((prevTargets) => {
               const newTargets = [...prevTargets, result];
-             
+
               return newTargets;
             });
 
             // Fetch reserve data and include dtokenId & debtTokenId
             const reserveDataForAsset = await fetchReserveData(asset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-            const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+            const debtTokenId =
+              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
 
             setUpdatedTargets((prevTargets) => {
-              const newTargets = [
-                ...prevTargets,
-                dtokenId,
-                debtTokenId,
-              ].filter(Boolean);
+              const newTargets = [...prevTargets, dtokenId, debtTokenId].filter(
+                Boolean
+              );
               return newTargets;
             });
-
           } catch (error) {
             console.error(`Error fetching principal for ${asset}:`, error);
           }
@@ -97,19 +99,19 @@ const AppWrapper = () => {
     targets: updatedTargets,
   };
 
-
   return (
     <IdentityKitProvider
-      onConnectSuccess={(res) => console.log("logged in successfully", res)}
+      onConnectSuccess={(res) => {
+        console.log("logged in successfully", res);
+        window.location.reload(); // Reload the page after successful login
+      }}
       onDisconnect={(res) => console.log("logged out successfully", res)}
       signers={signers}
       theme={identityKitTheme}
       authType={IdentityKitAuthType.DELEGATION}
       signerClientOptions={signerClientOptionsWithTargets}
     >
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <App />
     </IdentityKitProvider>
   );
 };
@@ -122,9 +124,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       authType={IdentityKitAuthType.DELEGATION}
       signerClientOptions={signerClientOptions}
     >
-      <AuthProvider>
-        <AppWrapper />
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppWrapper />
+        </AuthProvider>
+      </BrowserRouter>
     </IdentityKitProvider>
   </Provider>
 );

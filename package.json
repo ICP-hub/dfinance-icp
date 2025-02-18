@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "@canvasjs/react-charts": "^1.0.2",
+    "@dfinity/agent": "^2.3.0",
     "@dfinity/auth-client": "^1.4.0",
     "@dfinity/ledger-icp": "^2.2.2",
     "@emotion/react": "^11.14.0",

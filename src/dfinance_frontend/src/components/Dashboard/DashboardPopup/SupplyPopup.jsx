@@ -434,11 +434,7 @@ const SupplyPopup = ({
     reserveliquidationThreshold
   ) => {
     const amountAdded = collateral ? usdValue || 0 : 0;
-    console.log("totalCollateral", totalCollateral);
-    console.log("totalDebt", totalDebt);
-    console.log("liquidationThreshold", liquidationThreshold);
-    console.log("amountAdded", amountAdded);
-    console.log("reserveliquidationThreshold", reserveliquidationThreshold);
+   
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -452,14 +448,12 @@ const SupplyPopup = ({
       return Infinity;
     }
     let avliq = liquidationThreshold * totalCollateral;
-    console.log("avliq", avliq);
+
     let tempLiq =
       (avliq + amountAdded * reserveliquidationThreshold) /
       totalCollateralValue;
-    console.log("tempLiq", tempLiq);
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8;
-    console.log("result", result);
     return result;
   };
 

@@ -208,12 +208,10 @@ const useAssetData = (searchQuery = "") => {
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
 
-        console.log("Data successfully fetched and state updated.");
       } catch (err) {
         console.error("Error during fetch:", err.message);
         setError(err.message);
       } finally {
-        console.log("Fetch completed.");
         setLoading(false);
       }
     };

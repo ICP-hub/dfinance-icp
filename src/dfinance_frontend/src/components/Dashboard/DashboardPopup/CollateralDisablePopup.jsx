@@ -24,6 +24,13 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
 
   const { healthFactorBackend } = useUserData();
   const { backendActor } = useAuths();
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -38,7 +45,6 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, SetError] = useState(null);
-
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */

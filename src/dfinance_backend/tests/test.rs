@@ -195,10 +195,7 @@ pub struct ExecuteWithdrawParams {
     pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
-/*
- * @title User Reserve Data
- * @dev Stores the user's balance and reserve-related details.
- */
+
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserReserveData {
     pub reserve: String,
@@ -445,11 +442,11 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         // Decode the response
         match result {
             Ok(WasmResult::Reply(response)) => {
-                let initialize_response: Result<UserData, errors::Error> =
+                let create_user_response: Result<UserData, errors::Error> =
                     candid::decode_one(&response)
                         .expect("Failed to decode create_user_reserve_with_low_health response");
 
-                match initialize_response {
+                match create_user_response {
                     Ok(data) => {
                         ic_cdk::println!(
                             "✅ Create_user_reserve_with_low_health function succeeded"
@@ -492,10 +489,10 @@ fn test_add_tester(pic: &PocketIc, backend_canister: Principal, user_principal: 
     // Decode the response
     match add_tester_result {
         Ok(WasmResult::Reply(response)) => {
-            let initialize_response: Result<(), errors::Error> =
+            let add_tester_response: Result<(), errors::Error> =
                 candid::decode_one(&response).expect("Failed to decode add tester response");
 
-            match initialize_response {
+            match add_tester_response {
                 Ok(()) => {
                     ic_cdk::println!("✅ Add Tester function succeeded");
                 }
@@ -1023,10 +1020,10 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
 
             match result {
                 Ok(WasmResult::Reply(reply)) => {
-                    let decoded_response: Result<Nat, errors::Error> =
+                    let faucet_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to decode faucet response");
 
-                    match decoded_response {
+                    match faucet_response {
                         Ok(balance) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
@@ -1839,7 +1836,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                 None => {
                     if !case.expect_success {
                         ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Supply rejected as expected",
+                            "✅ IC Test Case {} Passed: Repay rejected as expected",
                             i + 1,
                         );
                     } else {
@@ -1864,7 +1861,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                     continue;
                 }
                 ic_cdk::println!(
-                    "✅ IC Test Case {} Passed: Supply rejected as expected",
+                    "✅ IC Test Case {} Passed: Repay rejected as expected",
                     i + 1,
                 );
             } else {
@@ -2010,7 +2007,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: true,
             expected_error_message: None,
         },
-        // Edge case: Minimal possible amount
+        // Invalid burn amount : with 0 reward
         TestCase {
             debt_asset: "ckETH".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -2032,7 +2029,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         },
         
 
-        // Very large amounts (stress test)
+        // Health factor is falling below 1
         TestCase {
             debt_asset: "ckETH".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -2138,7 +2135,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                     continue;
                 }
                 ic_cdk::println!(
-                    "✅ IC Test Case {} Passed: Supply rejected as expected",
+                    "✅ IC Test Case {} Passed: Liquidation rejected as expected",
                     i + 1,
                 );
             } else {

@@ -43,6 +43,25 @@ const AppWrapper = () => {
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const [updatedTargets, setUpdatedTargets] = useState(initialTargets);
 
+  
+
+  const getAssetPrinciple = async (asset) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_asset_principal(asset);
+      return result.Ok.toText();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const signerClientOptionsWithTargets = {
+    ...signerClientOptions,
+    targets: updatedTargets,
+  };
+  
   useEffect(() => {
     if (backendActor) {
       const fetchAssetPrinciple = async () => {
@@ -61,7 +80,7 @@ const AppWrapper = () => {
               return newTargets;
             });
 
-            // Fetch reserve data and include dtokenId & debtTokenId
+            
             const reserveDataForAsset = await fetchReserveData(asset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
             const debtTokenId =
@@ -81,29 +100,11 @@ const AppWrapper = () => {
       fetchAssetPrinciple();
     }
   }, [backendActor]);
-
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_asset_principal(asset);
-      return result.Ok.toText();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const signerClientOptionsWithTargets = {
-    ...signerClientOptions,
-    targets: updatedTargets,
-  };
-
   return (
     <IdentityKitProvider
       onConnectSuccess={(res) => {
         console.log("logged in successfully", res);
-        window.location.reload(); // Reload the page after successful login
+        window.location.reload(); 
       }}
       onDisconnect={(res) => console.log("logged out successfully", res)}
       signers={signers}

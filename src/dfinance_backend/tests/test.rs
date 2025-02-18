@@ -532,10 +532,10 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principa
     // 🔹 Decode the response
     match result {
         Ok(WasmResult::Reply(response)) => {
-            let initialize_response: Result<String, errors::Error> =
+            let register_user_response: Result<String, errors::Error> =
                 candid::decode_one(&response).expect("Failed to decode register user response");
 
-            match initialize_response {
+            match register_user_response {
                 Ok(_message) => {
                     ic_cdk::println!("✅ Register user function succeeded");
                 }
@@ -746,7 +746,6 @@ fn setup() -> (PocketIc, Principal) {
     //================= Initialize ==================
     // 🔹 Call the `initialize` function
 
-    ic_cdk::println!("things are working:");
     for (token_name, reserve_data) in &reserve_tokens_map {
         let result = pic.update_call(
             backend_canister,
@@ -799,10 +798,10 @@ fn setup() -> (PocketIc, Principal) {
     // 🔹 Decode the response
     match result {
         Ok(WasmResult::Reply(response)) => {
-            let initialize_response: Result<(), errors::Error> = candid::decode_one(&response)
+            let update_reserve_response: Result<(), errors::Error> = candid::decode_one(&response)
                 .expect("Failed to decode reserve price cache response");
 
-            match initialize_response {
+            match update_reserve_response {
                 Ok(_message) => {
                     ic_cdk::println!("✅ update reserve price function succeeded");
                 }
@@ -953,10 +952,10 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
 
         match result {
             Ok(WasmResult::Reply(reply)) => {
-                let decoded_response: Result<Nat, errors::Error> =
+                let faucet_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to decode faucet response");
 
-                match decoded_response {
+                match faucet_response {
                     Ok(balance) => {
                         if !case.expect_success {
                             ic_cdk::println!(
@@ -1155,14 +1154,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 "Amount must be less than user available balance".to_string(),
             ),
         },
-        // // testcase will work only if this asset has not been faucet
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: Nat::from(1000000000u128),
-        //     is_collateral: true,
-        //     expect_success: false,
-        //     expected_error_message: Some("Amount must be less than user available balance".to_string()),
-        // },
 
         // Zero amount request
         TestCase {

@@ -1,4 +1,5 @@
 use crate::constants::errors::Error;
+use crate::constants::asset_data::to_check_controller;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
@@ -12,7 +13,6 @@ use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
-
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -62,7 +62,18 @@ pub async fn init(args: Principal) {
     schedule_midnight_task().await;
 }
 
-
+/*
+ * @title Get Controller Information
+ * @dev Retrieves the controller ID from the state. The function looks for metadata 
+ *      associated with a specific key and returns the `controller_id` from `InitArgs`
+ *      if available. If no controller is found or an error occurs while reading the state, 
+ *      an appropriate error is returned.
+ *
+ * @returns 
+ *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
+ *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
+ *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ */
 pub fn get_controller() -> Result<InitArgs, Error> {
 
     match read_state(|state| {
@@ -225,7 +236,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         let price_cache_data = &state.price_cache_list;
         price_cache_data
             .get(&base_asset.to_string())
-            .map(|price_cache| price_cache.0)
+            .map(|price_cache: Candid<PriceCache>| price_cache.0)
             .ok_or_else(|| Error::NoPriceCache)
     });
 
@@ -592,6 +603,95 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
+/*
+ * @title Add Tester (For Testing Purpose - Pocket IC)
+ * @dev This function allows the current controller to add a new tester by associating 
+ *      a username with a principal ID. It ensures that only controllers can add testers.
+ *      The function checks if the caller is a valid user (not anonymous) and whether the 
+ *      caller is a controller. If these conditions are met, the tester is added to the 
+ *      `tester_list` in the state.
+ * 
+ * @param username The username of the tester to be added.
+ * @param principal The principal ID of the tester to be added.
+ * 
+ * @returns 
+ *      - `Ok(())`: If the tester was successfully added.
+ *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
+ *      - `Err(Error::ErrorNotController)`: If the caller is not a controller.
+ */
+#[ic_cdk::update]
+pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+    if user_principal == Principal::anonymous()  {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    mutate_state(|state| {
+        state.tester_list.insert(username, principal)
+    });
+    return Ok(());
+}
+
+/*
+ * @title Get Testers (For Testing Purpose - Pocket IC)
+ * @dev This function retrieves the list of testers associated with the canister. It checks if the caller 
+ *      is a valid user (not anonymous) and then fetches the list of testers from the state. The function 
+ *      returns a vector of principal IDs representing the testers.
+ * 
+ * @returns 
+ *      - `Ok(Vec<Principal>)`: A list of principal IDs for all testers.
+ *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
+ */
+pub fn get_testers() -> Result<Vec<Principal>, Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+    read_state(|state| {
+        let mut testers = Vec::new();
+        let iter = state.tester_list.iter();
+        for (_, value) in iter {
+            testers.push(value.clone());
+        }
+        Ok(testers)
+    })
+}
+
+/*
+ * @title Check if Caller is a Tester (For Testing Purpose - Pocket IC)
+ * @dev This function checks if the caller is a registered tester. It retrieves the list of testers from 
+ *      the state and compares the caller’s principal ID with the list. The function returns `true` if the 
+ *      caller is a tester, and `false` otherwise. If there's an error fetching the testers list, the function 
+ *      logs the error and returns `false`.
+ * 
+ * @returns 
+ *      - `true`: If the caller is found in the list of testers.
+ *      - `false`: If the caller is not a tester or if there is an error retrieving the tester list.
+ */
+#[ic_cdk::query]
+pub fn check_is_tester()-> bool {
+
+    let testers = match get_testers(){
+        Ok(data)=>data,
+        Err(error) => {
+            ic_cdk::println!("Invalid Access {:?}", error);
+            return false;
+        }
+    };
+    let user = ic_cdk::caller();
+    if testers.contains(&user){
+        return true;
+    }
+    return false;
+}
+
+
 
 /*
  * @title Get User Account Data
@@ -648,5 +748,6 @@ pub async fn post_upgrade() {
 }
 
 export_candid!();
+
 
 

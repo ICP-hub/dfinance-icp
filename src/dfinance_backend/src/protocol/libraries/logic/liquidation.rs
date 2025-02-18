@@ -62,7 +62,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-
+    //TODO check if debt amount(reward) is zero or not
     if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
@@ -201,7 +201,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
         if params.reward_amount > earned_rewards {
             ic_cdk::println!("Reward amount is greater than earned rewards");
-            return Err(Error::InvalidAmount);
+            return Err(Error::RewardIsHigher);
         }
 
         // panic!("something went wrong"); 
@@ -235,7 +235,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
 
-        //TODO make constant name as base currency = "USD"
         let mut collateral_amount = params.amount.clone();
         if params.collateral_asset != params.debt_asset {
             let debt_in_usd = get_exchange_rates(
@@ -262,14 +261,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         }
         ic_cdk::println!("Collateral amount rate: {}", collateral_amount);
 
-        // let bonus = collateral_amount.clone().scaled_mul(
-        //     collateral_reserve_data
-        //         .configuration
-        //         .liquidation_bonus
-        //         .clone()
-        //         / Nat::from(100u128),
-        // ) / Nat::from(SCALING_FACTOR);
-        // ic_cdk::println!("bonus: {}", bonus);
         let reward_amount: Nat = params.reward_amount.clone();
         ic_cdk::println!("reward_amount: {}", reward_amount);
 
@@ -280,7 +271,13 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         };
 
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
-        reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache);
+        if let Err(e) = reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&user_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         if let Err(e) = reserve::update_interest_rates(
             &mut collateral_reserve_data,
             &mut collateral_reserve_cache,
@@ -575,7 +572,7 @@ pub async fn to_get_reward_amount(
     };
 
     ic_cdk::println!("user normalized = {}",user_normalized_supply(collateral_reserve_data.clone()).unwrap());
-    ic_cdk::println!("liquidity index = {}",user_reserve_data.liquidity_index);
+    ic_cdk::println!("liquidity index = {:?}",user_reserve_data);
 
     collateral_balance = (collateral_balance
         .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))

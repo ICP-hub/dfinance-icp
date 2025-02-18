@@ -4,6 +4,22 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
+  /* ===================================================================================
+   *                                  FUNCTION
+   * =================================================================================== */
+
+  const handleDisableTestnetClick = () => {
+    handleTestnetModeToggle(false);
+    localStorage.removeItem("isTestnetMode");
+    onClose();
+    toast.dismiss();
+    toast.info("Testnet mode disabled successfully!");
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -11,13 +27,9 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
     };
   }, []);
 
-  const handleDisableTestnetClick = () => {
-    handleTestnetModeToggle(false);
-    localStorage.removeItem("isTestnetMode");
-    onClose();
-    toast.dismiss(); 
-    toast.info("Testnet mode disabled successfully!");
-  };
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>

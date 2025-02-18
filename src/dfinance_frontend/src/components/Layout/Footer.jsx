@@ -7,6 +7,7 @@ import {
 } from "../../utils/constants";
 import Ellipse from "../Common/Ellipse";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
+
 const Footer = () => {
   const location = useLocation();
   const navigate = useNavigate();

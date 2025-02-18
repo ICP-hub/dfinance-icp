@@ -310,7 +310,7 @@ pub fn test_icrc2_aprove(
         memo: None,
         from_subaccount: None,
         created_at_time: None,
-        amount: amount,
+        amount,
         expected_allowance: None,
         expires_at: None,
         spender: Account {
@@ -318,7 +318,6 @@ pub fn test_icrc2_aprove(
             subaccount: None,
         },
     };
-
     let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
     ic_cdk::println!("🟦 ICRC2 Approving ...");
     let approve_result = pic.update_call(
@@ -842,11 +841,11 @@ fn setup() -> (PocketIc, Principal) {
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
-    // test_supply(&pic, backend_canister);
+    test_supply(&pic, backend_canister);
     // test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
 }
 
 
@@ -881,7 +880,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(10000u128), // 0.0001 ckUSDT
+            amount: Nat::from(1000000u128), // 0.000001 ckUSDT
             expect_success: true,
             expected_error_message: None,
         },
@@ -1226,14 +1225,8 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     continue;
                 }
             };
-        let amount = if case.amount.clone() <= Nat::from(0u128) {
-            Nat::from(1u128)
-        }else{
-            case.amount.clone()
-        };
-        ic_cdk::println!("why to do= {:?}",amount);
-        ic_cdk::println!("amoutn now = {:?}",case.amount.clone());
-        let approved = test_icrc2_aprove(user_principal, asset_principal, &pic, backend_canister,  amount);
+   
+        let approved = test_icrc2_aprove(user_principal, asset_principal, &pic, backend_canister,  case.amount.clone());
         if !approved {
             if !case.expect_success {
                 ic_cdk::println!(

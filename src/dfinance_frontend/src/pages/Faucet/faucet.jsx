@@ -26,7 +26,6 @@ import { FaWallet } from "react-icons/fa";
  * @returns {JSX.Element} - Returns the Faucet component.
  */
 const Faucet = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility

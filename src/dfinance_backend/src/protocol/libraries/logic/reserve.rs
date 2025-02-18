@@ -1,8 +1,5 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
-use crate::api::resource_manager::get_repay_locked_amount;
-use crate::api::resource_manager::release_lock;
-use crate::api::resource_manager::repay_lock_amount;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
@@ -15,13 +12,13 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
 
-/* 
+/*
  * @title Accrual Treasury Variables
  * @notice Stores temporary values used during the treasury accrual process.
  * @dev Holds previous debt values and calculated accrual amounts.
  */
-
 struct AccrueToTreasuryLocalVars {
+    //
     prev_total_variable_debt: Nat,
     curr_total_variable_debt: Nat,
     total_debt_accrued: Nat,
@@ -38,7 +35,8 @@ impl Default for AccrueToTreasuryLocalVars {
         }
     }
 }
-/* 
+
+/*
  * @title Timestamp Utility
  * @notice Returns the current timestamp in seconds.
  * @dev Converts nanoseconds from `time()` API to seconds.
@@ -47,7 +45,8 @@ impl Default for AccrueToTreasuryLocalVars {
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000
 }
-/* 
+
+/*
  * @title Reserve Cache Generator
  * @notice Generates a cache structure from `ReserveData`.
  * @dev This function copies essential reserve parameters into `ReserveCache` for quick access.
@@ -77,38 +76,44 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     }
 }
 
-/// @title Update State Function
-/// @notice This function updates the state of the reserve data by checking if the state needs to be updated based on the current timestamp.
-///         It performs necessary operations such as updating indexes and accruing rewards to the treasury if the state is out of date.
-///         The function ensures that only necessary updates are made and prevents redundant state updates.
-///
-/// @dev The function follows a structured workflow:
-///      1. **Timestamp Check**: Compares the current timestamp with the `last_update_timestamp` in `reserve_data` to determine if an update is needed.
-///      2. **Update Indexes**: If the timestamp has changed, it proceeds to update the reserve indexes and accrue treasury rewards.
-///      3. **Accrue to Treasury**: Calls the `accrue_to_treasury` function to update any funds that need to be accrued to the treasury.
-///      4. **Update Last Update Timestamp**: Sets the `last_update_timestamp` to the current timestamp to mark the state as updated.
-///
-/// @param reserve_data The mutable reference to the `ReserveData` that holds the current state of the reserve, including the last update timestamp.
-/// @param reserve_cache The mutable reference to the `ReserveCache` that stores additional reserve-related data used for updates.
-///
-/// @return None This function does not return any value. It modifies the state of `reserve_data` and `reserve_cache` based on the updates.
-///
-/// @error None This function does not have explicit error handling, as it primarily operates on state updates and timestamp comparison.
-pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
+/**
+ * @title Update State Function
+ *
+ * @notice Updates the reserve state if the current timestamp differs from the last update timestamp.
+ *         It ensures only necessary updates are made, such as updating indexes and accruing treasury rewards.
+ *
+ * @dev The function follows these steps:
+ *      1. Compares the current timestamp with the last update timestamp.
+ *      2. If outdated, updates reserve indexes and accrues treasury rewards.
+ *      3. Updates the last update timestamp to the current time.
+ *
+ * @param reserve_data The mutable reference to the `ReserveData` struct.
+ * @param reserve_cache The mutable reference to the `ReserveCache` struct.
+ *
+* @return Result<(), Error> Returns a success message if updated successfully or an error if failed.
+ */
+pub fn update_state(
+    reserve_data: &mut ReserveData,
+    reserve_cache: &mut ReserveCache,
+) -> Result<(), Error> {
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
-        return;
+        return Ok(());
     }
 
     update_indexes(reserve_data, reserve_cache);
-    accrue_to_treasury(reserve_data, reserve_cache);
+    if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
+        ic_cdk::println!("Error accruing to treasury: {:?}", e);
+        return Err(e);
+    }
 
     reserve_data.last_update_timestamp = current_time;
+    Ok(())
 }
 
-/* 
+/*
  * @title Update Indexes
  * @notice Updates liquidity and debt indices based on reserve data.
  * @dev Uses linear interest for liquidity and compounded interest for debt.
@@ -116,7 +121,7 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
  * @param reserve_data Reference to `ReserveData` for reserve state.
  * @param reserve_cache Reference to `ReserveCache` for liquidity/debt details.
  *
- * @return None (modifies `reserve_data` and `reserve_cache`).
+ * @return Result<(), Error> Returns `Ok` if the update indexes are successfully updated, or an error if the update indexes fails.
  */
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     if reserve_cache.curr_liquidity_rate != Nat::from(0u128) {
@@ -147,15 +152,24 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
     }
 }
 
-/* 
- * @title Update State
- * @notice Ensures the reserve state is up-to-date by adjusting indices and accruing treasury rewards.
- * @dev Compares timestamps, updates indices, and records changes.
+/*
+ * @title Update Interest Rates
+ * @notice Updates the interest rates based on collateral changes and debt levels.
+ *         It calculates new liquidity and debt rates, and updates the reserve data accordingly.
  *
- * @param reserve_data Reference to `ReserveData` for reserve state.
- * @param reserve_cache Reference to `ReserveCache` for additional data.
+ * @dev The function follows these steps:
+ *      1. Calculates the total debt using the current debt index.
+ *      2. Initializes the interest rate parameters based on the asset.
+ *      3. Calculates the new liquidity and debt rates using the updated collateral and debt data.
+ *      4. Updates the reserve data with the new interest rates.
+ *      5. Returns an error if the calculation fails.
  *
- * @return None (modifies `reserve_data` and `reserve_cache`).
+ * @param reserve_data The mutable reference to the `ReserveData` struct containing the current reserve state.
+ * @param reserve_cache The mutable reference to the `ReserveCache` struct holding the current reserve-related data.
+ * @param liq_taken The amount of collateral taken during liquidation.
+ * @param liq_added The amount of collateral added to the reserve.
+ *
+ * @return Result<(), Error> Returns `Ok` if the interest rates are successfully updated, or an error if the calculation fails.
  */
 pub async fn update_interest_rates(
     reserve_data: &mut ReserveData,
@@ -167,6 +181,8 @@ pub async fn update_interest_rates(
         .curr_debt
         .clone()
         .scaled_mul(reserve_cache.next_debt_index.clone());
+    ic_cdk::println!("curr debt {}", reserve_cache.curr_debt);
+    ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
     let asset = reserve_data
         .asset_name
         .clone()
@@ -201,7 +217,7 @@ pub async fn update_interest_rates(
     Ok(())
 }
 
-/* 
+/*
  * @title Token Burn Handler
  * @notice Handles token burning, adjusting user and reserve states.
  *
@@ -268,11 +284,6 @@ pub async fn burn_scaled(
             return Err(err);
         }
     };
-    // if balance.clone() > adjusted_amount.clone()
-    //     && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    // {
-    //     adjusted_amount = balance.clone();
-    // }
     ic_cdk::println!("burn balance = {}", balance);
     ic_cdk::println!("adjusted balance = {}", adjusted_amount);
     let mut balance_increase = Nat::from(0u128);
@@ -293,10 +304,6 @@ pub async fn burn_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
         ic_cdk::println!(
             "dtoken vs adjusted {} {}",
@@ -311,8 +318,7 @@ pub async fn burn_scaled(
         } else {
             ic_cdk::println!("Subtracting adjusted amount from DToken balance");
             user_state.d_token_balance -= adjusted_amount.clone();
-            // mainting threasold here.
-            // TODO: look into the threshold value again
+
             ic_cdk::println!(
                 "dtoken balance after subtraction = {}",
                 user_state.d_token_balance
@@ -355,11 +361,6 @@ pub async fn burn_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.variable_borrow_index.clone()));
-
         ic_cdk::println!("Balance increase calculated: {}", balance_increase);
         ic_cdk::println!(
             "adjusted_amount {} {}",
@@ -378,8 +379,7 @@ pub async fn burn_scaled(
                 "debt token balance after subtraction = {}",
                 user_state.debt_token_blance
             );
-            // mainting threasold here.
-            // TODO: look into the threshold value again
+
             if user_state.debt_token_blance < Nat::from(1000u128) {
                 user_state.debt_token_blance = Nat::from(0u128);
             }
@@ -477,7 +477,7 @@ pub async fn burn_scaled(
     }
 }
 
-/* 
+/*
  * @title Token Mint Handler
  *
  * @dev Adjusts mint amount, updates balances, modifies supply/borrow data,
@@ -519,11 +519,6 @@ pub async fn mint_scaled(
         amount.clone().scaled_div(index.clone())
     };
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
-    // if amount.clone() > adjusted_amount.clone()
-    //     && amount.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    // {
-    //     adjusted_amount = amount.clone();
-    // }
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     if adjusted_amount == Nat::from(0u128) {
@@ -556,10 +551,7 @@ pub async fn mint_scaled(
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
+
         println!("balance incr dtoken{}", balance_increase);
         if user_state.liquidity_index == Nat::from(0u128) {
             user_state.d_token_balance = amount.clone();
@@ -585,10 +577,6 @@ pub async fn mint_scaled(
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.variable_borrow_index.clone()));
         println!("balance incr debttoken{}", balance_increase);
         if user_state.variable_borrow_index == Nat::from(0u128) {
             user_state.debt_token_blance = amount.clone();
@@ -624,28 +612,28 @@ pub async fn mint_scaled(
     }
 }
 
-/* 
+/*
  * @title Treasury Accrual Handler
  * @notice Calculates and mints accrued debt to the treasury based on reserve factor.
- *
- * @param reserve_data Mutable reference to `ReserveData` (treasury accumulation).
- * @param reserve_cache Reference to `ReserveCache` (current & next debt/liquidity indices).
  *
  * @dev Determines accrued debt by comparing scaled total variable debt before and after index updates.
  *      If reserve factor is non-zero, computes mintable amount and updates treasury.
  *
+ * @param reserve_data Mutable reference to `ReserveData` (treasury accumulation).
+ * @param reserve_cache Reference to `ReserveCache` (current & next debt/liquidity indices).
+ *
+ *
  * @return None. This function modifies `reserve_data`, updating the treasury accumulation.
  *
  */
-
-pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
-    // TODO: need to handle the error in this.
+pub fn accrue_to_treasury(
+    reserve_data: &mut ReserveData,
+    reserve_cache: &ReserveCache,
+) -> Result<(), Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    let user_principal = ic_cdk::caller();
-
     if reserve_cache.reserve_factor == Nat::from(0u128) {
-        return;
+        return Ok(());
     }
 
     vars.prev_total_variable_debt = ScalingMath::scaled_mul(
@@ -667,7 +655,7 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
     );
 
     if vars.curr_total_variable_debt < vars.prev_total_variable_debt {
-        let _ = release_lock(&user_principal);
+        return Err(Error::AmountSubtractionError);
     }
 
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
@@ -690,4 +678,5 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
             reserve_data.accure_to_platform
         );
     }
+    Ok(())
 }

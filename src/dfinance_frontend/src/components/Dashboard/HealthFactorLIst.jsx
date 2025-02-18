@@ -1,5 +1,4 @@
-import { useLocation } from "react-router-dom";
-import { ChevronRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { useAuths } from "../../utils/useAuthClient";
 import { SlidersHorizontal, SlidersVertical } from "lucide-react";
@@ -18,6 +17,9 @@ import Error from "../../pages/Error";
  */
 
 const HealthFactorList = () => {
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
   const { backendActor, isAuthenticated } = useAuths();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
@@ -26,8 +28,7 @@ const HealthFactorList = () => {
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
-  const { assets, reserveData, filteredItems, error, loading } =
-    useAssetData(searchQuery);
+  const { assets, reserveData, filteredItems, error, loading } = useAssetData(searchQuery);
   const [showFilter, setShowFilter] = useState(false);
   const [healthFilter, setHealthFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -36,6 +37,9 @@ const HealthFactorList = () => {
   const cachedData = useRef({});
   const popupRef = useRef(null);
 
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
   /**
    * Checks the status of the backend controller using the `to_check_controller` method.
    * It updates the `like` state based on the result from the backend.
@@ -55,22 +59,6 @@ const HealthFactorList = () => {
       setError("Failed to fetch controller status");
     }
   };
-
-  useEffect(() => {
-    checkControllerStatus();
-  }, [backendActor]);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowFilter(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   /**
    * This function retrieves the list of all users from the backend by calling `get_all_users` method.
@@ -92,10 +80,6 @@ const HealthFactorList = () => {
     }
   };
 
-  useEffect(() => {
-    getAllUsers();
-  }, []);
-
   /**
    * This function fetches the user account data for a specific principal. It uses caching to avoid fetching data
    * for the same principal multiple times. The fetched data is stored in the `cachedData` ref.
@@ -103,7 +87,7 @@ const HealthFactorList = () => {
    * @param {string} principal - The principal of the user whose account data is being fetched.
    */
   const fetchUserAccountDataWithCache = async (principal) => {
-    setHealthFactorLoading(true)
+    setHealthFactorLoading(true);
     if (!principal || cachedData.current[principal]) return;
 
     try {
@@ -115,54 +99,18 @@ const HealthFactorList = () => {
       }
     } catch (error) {
       console.error(` Error fetching data for principal: ${principal}`, error);
-      setHealthFactorLoading(false)
-    }finally{
-      setHealthFactorLoading(false)
+      setHealthFactorLoading(false);
+    } finally {
+      setHealthFactorLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (!users || users.length === 0) return;
-    Promise.all(
-      users.map(([principal]) => {
-        if (principal) return fetchUserAccountDataWithCache(principal);
-        return null;
-      })
-    )
-      .then(() => console.log(" All user account data fetched"))
-      .catch((error) =>
-        console.error(" Error fetching user account data in batch:", error)
-      );
-  }, [users]);
-
-  useEffect(() => {
-    if (!userAccountData || Object.keys(userAccountData).length === 0) return;
-    const updatedHealthFactors = {};
-    Object.entries(userAccountData).forEach(([principal, data]) => {
-      if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
-        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
-      } else {
-        updatedHealthFactors[principal] = null;
-      }
-    });
-
-    setHealthFactors(updatedHealthFactors);
-  }, [userAccountData]);
-
-  const handleNavigate = (path) => {
-    navigate(path);
-  };
-
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
   };
 
   const showSearchBar = () => {
     setShowSearch(!showSearch);
   };
+
   const openPopup = (principal, data) => {
     if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
-
     const extractedData = {
       principal,
       totalCollateral: Number(data.Ok[0]) / 1e8,
@@ -184,6 +132,62 @@ const HealthFactorList = () => {
     setSelectedUser(null);
   };
 
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+  useEffect(() => {
+    checkControllerStatus();
+  }, [backendActor]);
+
+  
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    getAllUsers();
+  }, []);
+
+
+  useEffect(() => {
+    if (!users || users.length === 0) return;
+    Promise.all(
+      users.map(([principal]) => {
+        if (principal) return fetchUserAccountDataWithCache(principal);
+        return null;
+      })
+    )
+      .then(() => console.log(" All user account data fetched"))
+      .catch((error) =>
+        console.error(" Error fetching user account data in batch:", error)
+      );
+  }, [users]);
+
+  
+  useEffect(() => {
+    if (!userAccountData || Object.keys(userAccountData).length === 0) return;
+    const updatedHealthFactors = {};
+    Object.entries(userAccountData).forEach(([principal, data]) => {
+      if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
+        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
+      } else {
+        updatedHealthFactors[principal] = null;
+      }
+    });
+
+    setHealthFactors(updatedHealthFactors);
+  }, [userAccountData]);
+
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -195,6 +199,7 @@ const HealthFactorList = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [closePopup]);
+
 
   useEffect(() => {
     if (selectedUser) {
@@ -210,8 +215,7 @@ const HealthFactorList = () => {
         const healthFactor = Number(data.Ok[4]) / 1e10;
         const principalStr = principal.toLowerCase();
 
-        const matchesSearch =
-          !searchQuery ||
+        const matchesSearch = !searchQuery ||
           principalStr.includes(searchQuery.toLowerCase()) ||
           healthFactor.toString().includes(searchQuery);
 
@@ -230,6 +234,10 @@ const HealthFactorList = () => {
     };
   }, [selectedUser]);
 
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
   return like ? (
     <div id="health-page" className="w-full">
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8 relative">
@@ -362,7 +370,8 @@ const HealthFactorList = () => {
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : Object.keys(userAccountData).length === 0 && !healthFactorLoading ? (
+        ) : Object.keys(userAccountData).length === 0 &&
+          !healthFactorLoading ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="mb-7 -ml-3 -mt-5">
               <Lottie />
@@ -373,102 +382,109 @@ const HealthFactorList = () => {
           </div>
         ) : (
           <div className="w-full">
-          <div className="w-full overflow-auto content">
-            <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText border-collapse">
-              <thead>
-                <tr className="text-left text-[#233D63] dark:text-darkTextSecondary dark:opacity-80">
-                  <th className="px-1 py-5">User Principal</th>
-                  <th className="px-3 py-5 hidden sm:table-cell text-center">
-                    Total Collateral
-                  </th>
-                  <th className="px-3 py-5 hidden sm:table-cell text-center">
-                    Total Borrowed
-                  </th>
-                  <th className="px-3 py-5 text-center">Health Factor</th>
-                  <th className="px-3 py-5 text-end">User Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(userAccountData)
-                  .filter(([principal, data]) => {
-                    if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7)
-                      return false;
-        
-                    const healthFactor = Number(data.Ok[4]) / 1e10;
-                    const principalStr = principal.toLowerCase();
-        
-                    const matchesSearch =
-                      !searchQuery ||
-                      principalStr.includes(searchQuery.toLowerCase()) ||
-                      healthFactor.toString().includes(searchQuery);
-        
-                    const matchesFilter =
-                      !healthFilter ||
-                      (healthFilter === "<1" && healthFactor < 1) ||
-                      (healthFilter === ">1" && healthFactor > 1) ||
-                      (healthFilter === "∞" && healthFactor > 100);
-        
-                    return matchesSearch && matchesFilter;
-                  })
-                  .map(([principal, data], index) => {
-                    const totalCollateral = Number(data.Ok[0]) / 1e8;
-                    const totalBorrowed = Number(data.Ok[1]) / 1e8;
-                    const healthFactor = Number(data.Ok[4]) / 1e10;
-        
-                    return (
-                      <tr
-                        key={index}
-                        className="w-full font-bold hover:bg-[#ddf5ff8f] border-b border-gray-300"
-                      >
-                        <td className="px-1 py-6 text-left">
-                          {principal.length > 20
-                            ? `${principal.substring(0, 20)}...`
-                            : principal}
-                        </td>
-                        <td className="px-3 py-6 hidden sm:table-cell text-center">
-                          ${totalCollateral.toFixed(2)}
-                        </td>
-                        <td className="px-3 py-6 hidden sm:table-cell text-center">
-                          ${totalBorrowed.toFixed(2)}
-                        </td>
-                        <td className="px-3 py-6 text-center">
-                          <span
-                            className={` ${
-                              healthFactor > 100
-                                ? "text-yellow-500"
-                                : healthFactor === 0
-                                ? "text-red-500"
-                                : healthFactor > 3
-                                ? "text-green-500"
-                                : healthFactor <= 1
-                                ? "text-red-500"
-                                : healthFactor <= 1.5
-                                ? "text-orange-600"
-                                : healthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                            }`}
-                          >
-                            {healthFactor > 100 ? "♾️" : healthFactor.toFixed(2)}
-                          </span>
-                        </td>
-        
-                        <td className="px-3 py-6 text-end">
-                          <button
-                            onClick={() => openPopup(principal, data, healthFactor)}
-                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white px-5 py-1 text-xs rounded-md hover:bg-opacity-80 transition"
-                          >
-                            More
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+            <div className="w-full overflow-auto content">
+              <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText border-collapse">
+                <thead>
+                  <tr className="text-left text-[#233D63] dark:text-darkTextSecondary dark:opacity-80">
+                    <th className="px-1 py-5">User Principal</th>
+                    <th className="px-3 py-5 hidden sm:table-cell text-center">
+                      Total Collateral
+                    </th>
+                    <th className="px-3 py-5 hidden sm:table-cell text-center">
+                      Total Borrowed
+                    </th>
+                    <th className="px-3 py-5 text-center">Health Factor</th>
+                    <th className="px-3 py-5 text-end">User Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(userAccountData)
+                    .filter(([principal, data]) => {
+                      if (
+                        !data?.Ok ||
+                        !Array.isArray(data.Ok) ||
+                        data.Ok.length < 7
+                      )
+                        return false;
+
+                      const healthFactor = Number(data.Ok[4]) / 1e10;
+                      const principalStr = principal.toLowerCase();
+
+                      const matchesSearch =
+                        !searchQuery ||
+                        principalStr.includes(searchQuery.toLowerCase()) ||
+                        healthFactor.toString().includes(searchQuery);
+
+                      const matchesFilter =
+                        !healthFilter ||
+                        (healthFilter === "<1" && healthFactor < 1) ||
+                        (healthFilter === ">1" && healthFactor > 1) ||
+                        (healthFilter === "∞" && healthFactor > 100);
+
+                      return matchesSearch && matchesFilter;
+                    })
+                    .map(([principal, data], index) => {
+                      const totalCollateral = Number(data.Ok[0]) / 1e8;
+                      const totalBorrowed = Number(data.Ok[1]) / 1e8;
+                      const healthFactor = Number(data.Ok[4]) / 1e10;
+
+                      return (
+                        <tr
+                          key={index}
+                          className="w-full font-bold hover:bg-[#ddf5ff8f] border-b border-gray-300"
+                        >
+                          <td className="px-1 py-6 text-left">
+                            {principal.length > 20
+                              ? `${principal.substring(0, 20)}...`
+                              : principal}
+                          </td>
+                          <td className="px-3 py-6 hidden sm:table-cell text-center">
+                            ${totalCollateral.toFixed(2)}
+                          </td>
+                          <td className="px-3 py-6 hidden sm:table-cell text-center">
+                            ${totalBorrowed.toFixed(2)}
+                          </td>
+                          <td className="px-3 py-6 text-center">
+                            <span
+                              className={` ${
+                                healthFactor > 100
+                                  ? "text-yellow-500"
+                                  : healthFactor === 0
+                                  ? "text-red-500"
+                                  : healthFactor > 3
+                                  ? "text-green-500"
+                                  : healthFactor <= 1
+                                  ? "text-red-500"
+                                  : healthFactor <= 1.5
+                                  ? "text-orange-600"
+                                  : healthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                              }`}
+                            >
+                              {healthFactor > 100
+                                ? "♾️"
+                                : healthFactor.toFixed(2)}
+                            </span>
+                          </td>
+
+                          <td className="px-3 py-6 text-end">
+                            <button
+                              onClick={() =>
+                                openPopup(principal, data, healthFactor)
+                              }
+                              className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white px-5 py-1 text-xs rounded-md hover:bg-opacity-80 transition"
+                            >
+                              More
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        
         )}
       </div>
 
@@ -545,8 +561,6 @@ const HealthFactorList = () => {
                 </span>
               </p>
             </div>
-
-            
           </div>
         </div>
       )}

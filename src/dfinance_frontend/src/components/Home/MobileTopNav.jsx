@@ -11,7 +11,6 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 import { Info } from "lucide-react";
-import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import loader from "../../../public/Helpers/loader.svg";
 import { setUserData } from "../../redux/reducers/userReducer";
 import {
@@ -19,13 +18,9 @@ import {
   HOME_TOP_NAV_LINK,
   generateRandomUsername,
 } from "../../utils/constants";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-} from "../../redux/reducers/utilityReducer";
+import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import Button from "../Common/Button";
 import icplogo from "../../../public/wallet/icp.png";
-import { ArrowUpDown } from "lucide-react";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
@@ -34,78 +29,37 @@ const MobileTopNav = ({
   isMobileNav,
   setIsMobileNav,
   isHomeNav,
-  handleCreateInternetIdentity,
   handleLogout,
 }) => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-
-  const handleSoundToggle = () => {
-    dispatch(toggleSound());
-  };
-
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
 
-  const handleTestnetModeToggle = () => {
-    navigate("/dashboard");
-    dispatch(toggleTestnetMode());
-  };
-
-  useEffect(() => {
-    if (previousIsTestnetMode.current !== isTestnetMode) {
-      if (previousIsTestnetMode.current !== undefined) {
-        toast.dismiss();
-      }
-      toast.success(
-        `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
-      );
-      previousIsTestnetMode.current = isTestnetMode;
-    }
-  }, [isTestnetMode]);
-
-  const handleDarkModeToggle = () => {
-    dispatch(toggleTheme());
-    setIsDarkMode((prevMode) => {
-      const newMode = !prevMode;
-      localStorage.setItem("isDarkMode", JSON.stringify(newMode));
-      return newMode;
-    });
-  };
-
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    const bodyElement = document.body;
-    if (theme === "dark") {
-      htmlElement.classList.add("dark");
-      bodyElement.classList.add("dark");
-      bodyElement.style.backgroundColor = "#070a18";
-      setIsDarkMode(true);
-    } else {
-      htmlElement.classList.remove("dark");
-      bodyElement.classList.remove("dark");
-      bodyElement.style.backgroundColor = "";
-      setIsDarkMode(false);
-    }
-  }, [theme]);
-
+  /* ===================================================================================
+   *                 Derived State, UI Variables, and Route-Based Flags
+   * =================================================================================== */
   const isLargeScreen = useMediaQuery("(min-width: 1134px)");
   const isMobile2 = window.innerWidth <= 640;
 
-  const {
-    isAuthenticated,
-    login,
-    logout,
-    principal,
-    accountIdString,
-  } = useAuths();
+  const { isAuthenticated, login, logout, principal, accountIdString } =
+    useAuths();
 
   useEffect(() => {
     if (isAuthenticated === true) {
@@ -122,10 +76,6 @@ const MobileTopNav = ({
       dispatch(setUserData(null));
     }
   }, [isAuthenticated]);
-
-  const handleClose = () => {
-    setIsMobileNav(false);
-  };
 
   const copyToClipboard = () => {
     if (principal) {
@@ -162,9 +112,26 @@ const MobileTopNav = ({
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
 
-  useEffect(() => {
-    setSwitchWalletDrop(false);
-  }, [location]);
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  const handleSoundToggle = () => {
+    dispatch(toggleSound());
+  };
+
+  const handleDarkModeToggle = () => {
+    dispatch(toggleTheme());
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      localStorage.setItem("isDarkMode", JSON.stringify(newMode));
+      return newMode;
+    });
+  };
+
+  const handleClose = () => {
+    setIsMobileNav(false);
+  };
 
   const handleSwitchWallet = () => {
     if (switchWalletDrop) {
@@ -174,11 +141,9 @@ const MobileTopNav = ({
     }
   };
 
-  const handleViewOnExplorerClick = () => {};
-
-  if (isLargeScreen) {
-    return null;
-  }
+  // if (isLargeScreen) {
+  //   return <></>;
+  // }
 
   const switchWallet = () => {
     dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
@@ -190,6 +155,62 @@ const MobileTopNav = ({
     handleClose();
     navigate("/dashboard");
   };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    if (previousIsTestnetMode.current !== isTestnetMode) {
+      if (previousIsTestnetMode.current !== undefined) {
+        toast.dismiss();
+      }
+      toast.success(
+        `Testnet mode ${isTestnetMode ? "enabled" : "disabled"} successfully!`
+      );
+      previousIsTestnetMode.current = isTestnetMode;
+    }
+  }, [isTestnetMode]);
+
+  useEffect(() => {
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    if (theme === "dark") {
+      htmlElement.classList.add("dark");
+      bodyElement.classList.add("dark");
+      bodyElement.style.backgroundColor = "#070a18";
+      setIsDarkMode(true);
+    } else {
+      htmlElement.classList.remove("dark");
+      bodyElement.classList.remove("dark");
+      bodyElement.style.backgroundColor = "";
+      setIsDarkMode(false);
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    if (isAuthenticated === true) {
+      dispatch(
+        setUserData({
+          name: generateRandomUsername(),
+          isAuth: isAuthenticated,
+          principal,
+          imageUrl:
+            "https://res.cloudinary.com/dzfc0ty7q/image/upload/v1714272826/avatars/Web3_Avatar-36_xouxfd.svg",
+        })
+      );
+    } else {
+      dispatch(setUserData(null));
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    setSwitchWalletDrop(false);
+  }, [location]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <Drawer
@@ -259,7 +280,6 @@ const MobileTopNav = ({
                     </h1>
                   </div>
                   <div className="flex flex-col-reverse   lg:block">
-
                     <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
                       <div className="hidden lg1:flex justify-center">
                         <div

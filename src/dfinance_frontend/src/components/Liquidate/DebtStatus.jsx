@@ -15,8 +15,6 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssetData from "../customHooks/useAssets";
 import MiniLoader from "../Common/MiniLoader";
-import { idlFactory } from "../../../../declarations/dtoken";
-import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import Lottie from "../Common/Lottie";
 import { useLedgerActor } from "../customHooks/CustomLedger";
 /**
@@ -199,6 +197,7 @@ const DebtStatus = () => {
       fetchAssetData();
     }
   }, [principalObj, liquidateTrigger]);
+  
   const fetchAssetData = async () => {
     const balances = {};
 

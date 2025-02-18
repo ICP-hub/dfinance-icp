@@ -25,10 +25,34 @@ ChartJS.register(ArcElement, Tooltip);
  * @returns {JSX.Element} - Returns the DashboardCards component.
  */
 const DashboardCards = () => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
   const navigate = useNavigate();
   const { backendActor } = useAuths();
   const formatNumber = useFormatNumber();
 
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+  } = useFetchConversionRate();
+
+  const {
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
+  } = useFetchBalanceBackend();
+
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
   const [searchQuery, setSearchQuery] = useState("");
   const [like, setLike] = useState(false);
   const [notification, setNotification] = useState("");
@@ -46,23 +70,9 @@ const DashboardCards = () => {
   const [userAccountData, setUserAccountData] = useState({});
   const [healthFactors, setHealthFactors] = useState({});
 
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-  } = useFetchConversionRate();
-  const {
-    ckBTCBalance,
-    ckETHBalance,
-    ckUSDCBalance,
-    ckICPBalance,
-    ckUSDTBalance,
-    fetchBalance,
-  } = useFetchBalanceBackend();
-
+  /* ===================================================================================
+   *                                  EFFECTS & FUNCTIONS
+   * =================================================================================== */
   useEffect(() => {
     fetchBalance("ckBTC");
     fetchBalance("ckETH");
@@ -528,6 +538,10 @@ const DashboardCards = () => {
       }
     });
   };
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>

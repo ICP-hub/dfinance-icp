@@ -462,6 +462,17 @@ async fn execute_transfer(
 #[update]
 #[candid_method(update)]
 async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
+
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(TransferError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     if lock {
         return Err(TransferError::GenericError {
             message: "Transfers are currently locked.".to_string(),
@@ -500,6 +511,17 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
 #[update]
 #[candid_method(update)]
 async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
+
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(TransferFromError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     let spender_account = Account {
         owner: ic_cdk::api::caller(),
         subaccount: arg.spender_subaccount,
@@ -606,6 +628,17 @@ fn get_data_certificate() -> DataCertificate {
 #[update]
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
+
+    let caller = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+        return Err(ApproveError::GenericError {
+            message: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     let block_idx = Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
 
@@ -762,6 +795,15 @@ fn icrc21_canister_call_consent_message(
     consent_msg_request: ConsentMessageRequest,
 ) -> Result<ConsentInfo, Icrc21Error> {
     let caller_principal = ic_cdk::api::caller();
+    let platform_principal = ic_cdk::api::id();
+
+    if caller_principal != platform_principal && !ic_cdk::api::is_controller(&caller_principal) {
+        return Err(Icrc21Error::GenericError {
+            description: "Unauthorized access.".to_string(),
+            error_code: Nat::from(2u32),
+        });
+    }
+
     let ledger_fee = icrc1_fee();
     let token_symbol = icrc1_symbol();
     build_icrc21_consent_info_for_icrc1_and_icrc2_endpoints(

@@ -9,11 +9,7 @@ export const Header = () => {
   return (
     <header>
       <div>
-        <div></div>
-
         <MenuItems items={items} />
-
-        <div></div>
       </div>
     </header>
   );

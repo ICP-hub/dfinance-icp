@@ -6,7 +6,6 @@ import MobileTopNav from "../Home/MobileTopNav";
 import { useAuths } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
 import ClickAwayListener from '@mui/material/ClickAwayListener';
-;
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import Button from "../Common/Button";
@@ -14,7 +13,6 @@ import { useRef } from "react";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import { FaWallet } from "react-icons/fa";
 import loader from "../../../public/Helpers/loader.svg";
-import { INITIAL_ETH_VALUE, INITIAL_1INCH_VALUE } from "../../utils/constants";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,10 +29,7 @@ import {
   HOME_TOP_NAV_LINK,
   generateRandomUsername,
 } from "../../utils/constants";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-} from "../../redux/reducers/utilityReducer";
+import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import ThemeToggle from "../Common/ThemeToggle";
 import settingsIcon from "../../../public/Helpers/Settings.svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
@@ -55,43 +50,54 @@ import { toggleSound } from "../../redux/reducers/soundReducer";
  * @param {boolean} isHomeNav - Determines if the navbar is in home mode or dashboard mode.
  * @returns {JSX.Element} - Navbar component.
  */
+
 export default function Navbar({ isHomeNav }) {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { isAuthenticated, login, logout, principal } = useAuths();
+  const navigate = useNavigate();
+  const location = useLocation();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const theme = useSelector((state) => state.theme.theme);
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("isDarkMode");
+    return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
+  });
   const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
-  const { isWalletModalOpen, isWalletConnected } = useSelector(
-    (state) => state.utility
-  );
-  const theme = useSelector((state) => state.theme.theme);
+  const { isWalletModalOpen } = useSelector((state) => state.utility);
+
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
 
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
+
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem("isDarkMode");
-    return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
-  });
   const [isMobileNav, setIsMobileNav] = useState(false);
   const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
-  const [ethValue, setEthValue] = useState("0.00");
-  const [oneInchValue, setOneInchValue] = useState("0.00");
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [selectedToken, setSelectedToken] = useState("ETH");
-  const [balance, setBalance] = useState(0);
-  const [insufficientBalance, setInsufficientBalance] = useState(false);
   const [showTestnetPopup, setShowTestnetPopup] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
-
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  const hash = window.location.hash;
 
   const handleSoundToggle = () => {
     dispatch(toggleSound());
   };
+
   const handleTour = () => {
     dispatch(joyRideTrigger());
     navigate("/dashboard");
@@ -112,8 +118,6 @@ export default function Navbar({ isHomeNav }) {
     };
   }, []);
 
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     setSwitchWalletDrop(false);
@@ -162,8 +166,7 @@ export default function Navbar({ isHomeNav }) {
     setShowTransactionOverlay(false);
     setIsInputFocused(false);
   };
-  const { isAuthenticated, login, logout, principal, accountIdString } =
-    useAuths();
+
 
   const handleCreateInternetIdentity = () => {
     login();
@@ -184,13 +187,6 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleClosePopup = () => {
-    setShowTestnetPopup(false);
-  };
-  const handleSwitchToken = () => {
-    setSwitchTokenDrop(!switchTokenDrop);
-    setSwitchWalletDrop(false);
-    setIsPopupVisible(false);
-    setDropdownVisible(false);
     setShowTestnetPopup(false);
   };
 
@@ -245,21 +241,87 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-  const handleViewOnExplorerClick = () => {};
-
   const handleLaunchApp = () => {
     navigate("/dashboard");
   };
-  const handleClose = () => {
-    setSwitchTokenDrop(false);
-  };
+
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
 
-  const [showTransactionOverlay, setShowTransactionOverlay] = useState(false);
+  const handleTestnetModeToggle = () => {
+    navigate("/dashboard");
+    dispatch(toggleTestnetMode());
+  };
+
+  const handleDropdownToggle = () => {
+    setDropdownVisible((prevVisible) => !prevVisible);
+    setSwitchTokenDrop(false);
+    setSwitchWalletDrop(false);
+    setShowTestnetPopup(false);
+    setIsPopupVisible(false);
+  };
+
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
+  };
+
+  const handlePopupToggle = () => {
+    setIsPopupVisible((prevVisible) => !prevVisible);
+    setSwitchWalletDrop(false);
+    setSwitchTokenDrop(false);
+    setDropdownVisible(false);
+  };
+
+  const handleDarkModeToggle = () => {
+    dispatch(toggleTheme());
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      localStorage.setItem("isDarkMode", JSON.stringify(newMode));
+      return newMode;
+    });
+  };
+
+  const truncateString = (str, maxLength) => {
+    return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
+  };
+
+  const switchWallet = () => {
+    dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
+  };
+
+  const handleLogoClick = () => {
+    if (location.pathname === "/") {
+      window.scrollTo(0, 0);
+    } else {
+      navigate("/dashboard");
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    }
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleCloseDropdownOnScroll);
+    return () => {
+      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    setSwitchWalletDrop(false);
+    setSwitchTokenDrop(false);
+    setShowTestnetPopup(false);
+    setIsPopupVisible(false);
+    setDropdownVisible(false);
+  }, [location]);
+
   useEffect(() => {
     if (isAuthenticated === true) {
       dispatch(
@@ -288,10 +350,6 @@ export default function Navbar({ isHomeNav }) {
       </div>
     </button>
   );
-  const handleTestnetModeToggle = () => {
-    navigate("/dashboard");
-    dispatch(toggleTestnetMode());
-  };
 
   useEffect(() => {
     if (previousIsTestnetMode.current !== isTestnetMode) {
@@ -310,16 +368,6 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [isTestnetMode]);
 
-  const handleDropdownToggle = () => {
-    setDropdownVisible((prevVisible) => !prevVisible);
-    setSwitchTokenDrop(false);
-    setSwitchWalletDrop(false);
-    setShowTestnetPopup(false);
-    setIsPopupVisible(false);
-  };
-
-  const hash = window.location.hash;
-
   useEffect(() => {
     if (hash) {
       const ele = document.querySelector(hash);
@@ -329,35 +377,13 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [hash]);
 
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
-
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  };
-
   useEffect(() => {
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
 
-  const handlePopupToggle = () => {
-    setIsPopupVisible((prevVisible) => !prevVisible);
-    setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
-    setDropdownVisible(false);
-  };
-
-  const handleDarkModeToggle = () => {
-    dispatch(toggleTheme());
-    setIsDarkMode((prevMode) => {
-      const newMode = !prevMode;
-      localStorage.setItem("isDarkMode", JSON.stringify(newMode));
-      return newMode;
-    });
-  };
 
   function truncatePrincipal(principal) {
     if (principal && principal.length > 10) {
@@ -381,20 +407,9 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [theme, isDarkMode]);
 
-  const switchWallet = () => {
-    dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
-  };
-
-  const handleLogoClick = () => {
-    if (location.pathname === "/") {
-      window.scrollTo(0, 0);
-    } else {
-      navigate("/dashboard");
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
-    }
-  };
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>

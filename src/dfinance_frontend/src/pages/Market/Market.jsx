@@ -1,5 +1,5 @@
 import { ChevronRight, X } from "lucide-react";
-import React, { useEffect, useState ,useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
@@ -8,28 +8,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { useAuths } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
-import icplogo from "../../../public/wallet/icp.png";
-import nfid from "../../../public/wallet/nfid.png";
-import Pagination from "../../components/Common/pagination";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssetData from "../../components/customHooks/useAssets";
-import { setUserData } from "../../redux/reducers/userReducer";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-  setConnectedWallet,
-} from "../../redux/reducers/utilityReducer";
-import { Principal } from "@dfinity/principal";
-import useFormatNumber from "../../components/customHooks/useFormatNumber";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import Loading from "../../components/Common/Loading";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
+import { Principal } from "@dfinity/candid/lib/cjs/idl";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -41,6 +30,10 @@ const ITEMS_PER_PAGE = 8;
  * @returns {JSX.Element} - Returns the component.
  */
 const WalletDetails = () => {
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
+
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -49,9 +42,13 @@ const WalletDetails = () => {
   const [selectedAssetData, setSelectedAssetData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-
+  const { filteredItems, loading } = useAssetData(searchQuery);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -59,11 +56,12 @@ const WalletDetails = () => {
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
+
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
@@ -75,6 +73,21 @@ const WalletDetails = () => {
     totalReserveFactor,
     interestAccure,
   } = useAssetData();
+
+  /* ===================================================================================
+   *                 Derived State, UI Variables, and Route-Based Flags
+   * =================================================================================== */
+
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const filteredReserveData = Object.fromEntries(filteredItems);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   const convertToNumber = (value) => {
     if (typeof value === "string") {
@@ -89,6 +102,80 @@ const WalletDetails = () => {
     }
     return 0;
   };
+
+  const showSearchBar = () => {
+    setShowSearch(!Showsearch);
+  };
+
+  const handleDetailsClick = (asset, assetData) => {
+    setSelectedAsset(asset);
+    navigate(`/market/asset-details/${asset}`, { state: { assetData } });
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+  const handleSearchInputChange = (event) => {
+    setSearchQuery(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleChevronClick = (assetName) => {
+    const selectedAssetData = currentItems.find(
+      (item) => item[0] === assetName
+    );
+    if (selectedAssetData) {
+      setSelectedAssetData(selectedAssetData);
+    }
+    setShowPopup(true);
+  };
+
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      closePopup();
+    }
+  };
+
+  const formatValue = (num) => {
+    if (num < 1) return num.toFixed(7);
+
+    if (num >= 1e12)
+      return num % 1e12 === 0
+        ? num / 1e12 + "T"
+        : (num / 1e12).toFixed(2) + "T";
+    if (num >= 1e9)
+      return num % 1e9 === 0 ? num / 1e9 + "B" : (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6)
+      return num % 1e6 === 0 ? num / 1e6 + "M" : (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3)
+      return num % 1e3 === 0 ? num / 1e3 + "K" : (num / 1e3).toFixed(2) + "K";
+
+    return num.toFixed(2);
+  };
+
+  function getUsdRate(assetType) {
+    switch (assetType) {
+      case "ckBTC":
+        return ckBTCUsdRate / 1e8;
+      case "ckETH":
+        return ckETHUsdRate / 1e8;
+      case "ckUSDC":
+        return ckUSDCUsdRate / 1e8;
+      case "ICP":
+        return ckICPUsdRate / 1e8;
+      case "ckUSDT":
+        return ckUSDTUsdRate / 1e8;
+      default:
+        return 0;
+    }
+  }
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
 
   useEffect(() => {
     const supply = convertToNumber(totalSupplySize);
@@ -141,33 +228,10 @@ const WalletDetails = () => {
     dashboardRefreshTrigger,
   ]);
 
-  const showSearchBar = () => {
-    setShowSearch(!Showsearch);
-  };
-
-  const itemsPerPage = 8;
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
- const principalObj = useMemo(() => {
-     if (!principal) return null; // ✅ Prevent null values
-     try {
-       return Principal.fromText(principal);
-     } catch (error) {
-       console.error("Invalid principal:", principal);
-       return null;
-     }
-   }, [principal]);
-
-  const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
-    navigate(`/market/asset-details/${asset}`, { state: { assetData } });
-  };
-
-  const closePopup = () => {
-    setShowPopup(false);
-  };
 
   useEffect(() => {
     if (isWalletCreated) {
@@ -175,39 +239,6 @@ const WalletDetails = () => {
     }
   }, [isWalletCreated]);
 
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1);
-  };
-
-  const { assets, reserveData, filteredItems, error, loading } =
-    useAssetData(searchQuery);
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-
-  const filteredReserveData = Object.fromEntries(filteredItems);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
-  const handleChevronClick = (assetName) => {
-    const selectedAssetData = currentItems.find(
-      (item) => item[0] === assetName
-    );
-    if (selectedAssetData) {
-      setSelectedAssetData(selectedAssetData);
-    }
-    setShowPopup(true);
-  };
-
-  const popupRef = useRef(null);
-
-  const handleOutsideClick = (event) => {
-    if (popupRef.current && !popupRef.current.contains(event.target)) {
-      closePopup();
-    }
-  };
   useEffect(() => {
     if (showPopup) {
       document.addEventListener("mousedown", handleOutsideClick);
@@ -229,47 +260,15 @@ const WalletDetails = () => {
     };
   }, [showPopup]);
 
-  const formatNumber = useFormatNumber();
-
-  const formatValue = (num) => {
-    if (num < 1) return num.toFixed(7);
-
-    if (num >= 1e12)
-      return num % 1e12 === 0
-        ? num / 1e12 + "T"
-        : (num / 1e12).toFixed(2) + "T";
-    if (num >= 1e9)
-      return num % 1e9 === 0 ? num / 1e9 + "B" : (num / 1e9).toFixed(2) + "B";
-    if (num >= 1e6)
-      return num % 1e6 === 0 ? num / 1e6 + "M" : (num / 1e6).toFixed(2) + "M";
-    if (num >= 1e3)
-      return num % 1e3 === 0 ? num / 1e3 + "K" : (num / 1e3).toFixed(2) + "K";
-
-    return num.toFixed(2);
-  };
-  
-
   useEffect(() => {
     if (!loading) {
       setHasLoaded(true);
     }
   }, [loading]);
-  function getUsdRate(assetType) {
-    switch (assetType) {
-      case "ckBTC":
-        return ckBTCUsdRate / 1e8;
-      case "ckETH":
-        return ckETHUsdRate / 1e8;
-      case "ckUSDC":
-        return ckUSDCUsdRate / 1e8;
-      case "ICP":
-        return ckICPUsdRate / 1e8;
-      case "ckUSDT":
-        return ckUSDTUsdRate / 1e8;
-      default:
-        return 0;
-    }
-  }
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <div id="market-page1" className="w-full" key={dashboardRefreshTrigger}>

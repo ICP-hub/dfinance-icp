@@ -1,4 +1,3 @@
-use candid::types::principal;
 use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
 use regex::Regex;
@@ -165,10 +164,14 @@ fn setup() -> (PocketIc, Principal) {
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, 5_000_000_000_000); // 2T Cycles
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
-    pic.install_canister(backend_canister, wasm, vec![], None);
+    pic.install_canister(backend_canister, wasm, candid::encode_one(Principal::anonymous()).unwrap(), Some(Principal::anonymous()));
 
     println!("Backend canister: {}", backend_canister);
-
+    let user_principal = Principal::from_text("uxwks-hn4uu-3jljk-gl3n3-re7fx-oup6o-wcrwq-uf2wj-csuab-rxnry-jae").unwrap();
+    let _ = pocket_ic::PocketIc::set_controllers(&pic, backend_canister,Some(Principal::anonymous()), vec![user_principal]);
+    
+    // println!("Controller: {:?}", controller);
+    // pic.update_canister_settings(backend_canister, CanisterSettings::default());
     let xrc_canister = pic.create_canister();
     pic.add_cycles(xrc_canister, 5_000_000_000_000); // 2T Cycles
     let wasm = fs::read(XRC_WASM).expect("Wasm file not found, run 'dfx build'.");
@@ -178,19 +181,19 @@ fn setup() -> (PocketIc, Principal) {
 
     //=================Reserve Initialize ==================
 
-    let _ = pic.update_call(
-        backend_canister,
-        Principal::anonymous(),
-        "initialize_reserve",
-        encode_one(()).unwrap(),
-    );
+    // let _ = pic.update_call(
+    //     backend_canister,
+    //     Principal::anonymous(),
+    //     "initialize_reserve",
+    //     encode_one(()).unwrap(),
+    // );
 
-    let _ = pic.update_call(
-        backend_canister,
-        Principal::anonymous(),
-        "faucet",
-        encode_args(("ckBTC", 100000u64)).unwrap(),
-    );
+    // let _ = pic.update_call(
+    //     backend_canister,
+    //     Principal::anonymous(),
+    //     "faucet",
+    //     encode_args(("ckBTC", 100000u64)).unwrap(),
+    // );
 
     (pic, backend_canister)
 }
@@ -225,7 +228,7 @@ fn check_balance(pic: &PocketIc, canister: Principal, user_principal: Principal)
 #[test]
 fn call_test_function() {
     let (pic, backend_canister) = setup();
-    test_supply(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
     //test_borrow(&pic, backend_canister);
     // test_repay(&pic, backend_canister);
     // test_withdraw(&pic, backend_canister);

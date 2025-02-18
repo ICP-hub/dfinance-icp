@@ -16,6 +16,9 @@ import Pagination from "../Common/pagination";
 const ITEMS_PER_PAGE = 10;
 
 const TransactionHistory = () => {
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
   const [Showsearch, setShowSearch] = useState(false);
   const [filteredTransactionHistory, setFilteredTransactionHistory] =
     useState(transactionHistory);
@@ -29,7 +32,11 @@ const TransactionHistory = () => {
   const { isWalletCreated, isWalletModalOpen } = useSelector(
     (state) => state.utility
   );
+  const [searchQuery, setSearchQuery] = useState("");
 
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
   const handleWalletConnect = () => {
     dispatch(setWalletModalOpen(!isWalletModalOpen));
   };
@@ -38,8 +45,6 @@ const TransactionHistory = () => {
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
-
-  const [searchQuery, setSearchQuery] = useState("");
 
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
@@ -108,6 +113,9 @@ const TransactionHistory = () => {
     });
   };
 
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
   return (
     <div className="relative w-full lg:w-12/12">
       {transactionHistory.length === 0 && (

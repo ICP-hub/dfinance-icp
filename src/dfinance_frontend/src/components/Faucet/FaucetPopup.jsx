@@ -20,9 +20,18 @@ import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
  * @returns {JSX.Element} - Returns the FaucetPopup component.
  */
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
-  const dispatch = useDispatch();
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const { backendActor } = useAuths();
-  const modalRef = useRef(null);
+  const { userData } = useUserData();
+  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate,fetchConversionRate,fetchBalance } = useFetchConversionRate();
+
+  /* ===================================================================================
+   *                                 STATE-MANAGEMENT
+   * =================================================================================== */
+
   const [loading, setLoading] = useState(false);
   const [faucetBTC, setFaucetBTC] = useState(0);
   const [faucetETH, setFaucetETH] = useState(0);
@@ -32,8 +41,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
-  const { userData } = useUserData();
-
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -49,118 +56,21 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ICP: 0,
     ckUSDT: 0,
   };
-
   const [FaucetUsage, setFaucetUsage] = useState(initialUsages);
   const [FaucetLimit, setFaucetLimit] = useState(initialLimits);
-  const [remainingFaucet, setRemainingFaucet] = useState(0);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+ 
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
 
-  useEffect(() => {
-    if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
-      const updatedLimits = { ...initialLimits };
-      const updatedUsages = { ...initialUsages };
-      userData.Ok.reserves[0].forEach((reserveGroup) => {
-        const asset = reserveGroup[0];
-        if (!asset) return;
-        const faucetLimit = reserveGroup[1]?.faucet_limit
-          ? Number(reserveGroup[1].faucet_limit)
-          : initialLimits[asset];
-        const faucetUsage = reserveGroup[1]?.faucet_usage
-          ? Number(reserveGroup[1].faucet_usage)
-          : initialUsages[asset];
+  const modalRef = useRef(null);
+  const dispatch = useDispatch();
 
-        updatedLimits[asset] = faucetLimit;
-        updatedUsages[asset] = faucetUsage;
-      });
-
-      setFaucetLimit(updatedLimits);
-      setFaucetUsage(updatedUsages);
-    } else {
-    }
-  }, [userData]);
-
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    fetchBalance,
-  } = useFetchConversionRate();
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        await Promise.all([
-          fetchBalance("ckBTC"),
-          fetchBalance("ckETH"),
-          fetchBalance("ckUSDC"),
-          fetchBalance("ICP"),
-          fetchBalance("ckUSDT"),
-          fetchConversionRate(),
-        ]);
-      } catch (error) {}
-    };
-    fetchAllData();
-  }, [fetchBalance, fetchConversionRate]);
-
-  useEffect(() => {
-    if (ckBTCUsdRate && ckBTCUsdRate > 0) {
-      const btcAmount =
-        (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
-      console.log(
-        "btc",
-        FaucetLimit[asset],
-        FaucetUsage[asset],
-        ckBTCUsdRate,
-        btcAmount
-      );
-      const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
-      console.log("tr", truncatedBtcAmount);
-      setFaucetBTC(truncatedBtcAmount);
-    }
-
-    if (ckETHUsdRate && ckETHUsdRate > 0) {
-      const ethAmount =
-        (FaucetLimit[asset] - FaucetUsage[asset]) / ckETHUsdRate;
-      const truncatedBtcAmount = Math.trunc(ethAmount * 1e8) / 1e8;
-      setFaucetETH(truncatedBtcAmount);
-    }
-
-    if (ckUSDCUsdRate && ckUSDCUsdRate > 0) {
-      const usdcAmount =
-        (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDCUsdRate;
-      const truncatedBtcAmount = Math.trunc(usdcAmount * 1e8) / 1e8;
-      setFaucetUSDC(truncatedBtcAmount);
-    }
-
-    if (ckICPUsdRate && ckICPUsdRate > 0) {
-      const icpAmount =
-        (FaucetLimit[asset] - FaucetUsage[asset]) / ckICPUsdRate;
-      const truncatedBtcAmount = Math.trunc(icpAmount * 1e8) / 1e8;
-      setFaucetICP(truncatedBtcAmount);
-    }
-
-    if (ckUSDTUsdRate && ckUSDTUsdRate > 0) {
-      const usdTAmount =
-        (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
-      const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
-
-      setFaucetUSDT(truncatedBtcAmount);
-    }
-  }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
+  /* ===================================================================================
+   *                                 FUNCTION
+   * =================================================================================== */
 
   const getFaucetAmount = () => {
     switch (asset) {
@@ -178,10 +88,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         return null;
     }
   };
-  useEffect(() => {
-    const faucetAmount = getFaucetAmount();
-    setExchangeRate(faucetAmount);
-  }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP, faucetUSDT]);
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value.replace(/,/g, "");
@@ -240,6 +146,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       "The asset is not supported. Please select a valid asset.",
     LowWalletBalance: "Insufficient wallet balance. Please try again later.",
     AmountTooMuch: "The requested amount exceeds the faucet limit.",
+    AmountExceedsLimit: "Requested amount exceeds the total faucet limit.",
+    ExceedsRemainingLimit: "Requested amount exceeds the remaining faucet limit.",
     ErrorFaucetTokens:
       "An error occurred while transferring tokens. Please try again.",
     Default:
@@ -268,7 +176,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8));
-        console.log("natAmount", natAmount);
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
         if (numericAmount > availableAmount) {
           toast.error(`Faucet limit exceeded! `, {
@@ -341,13 +248,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     }
   };
 
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const handleClose = () => {
     setShowFaucetPayment(false);
     onClose();
@@ -408,6 +308,113 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     }
   };
 
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
+          fetchConversionRate(),
+        ]);
+      } catch (error) {}
+    };
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate]);
+
+  useEffect(() => {
+    if (ckBTCUsdRate && ckBTCUsdRate > 0) {
+      const btcAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
+
+      const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
+      setFaucetBTC(truncatedBtcAmount);
+    }
+
+    if (ckETHUsdRate && ckETHUsdRate > 0) {
+      const ethAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckETHUsdRate;
+      const truncatedBtcAmount = Math.trunc(ethAmount * 1e8) / 1e8;
+      setFaucetETH(truncatedBtcAmount);
+    }
+
+    if (ckUSDCUsdRate && ckUSDCUsdRate > 0) {
+      const usdcAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDCUsdRate;
+      const truncatedBtcAmount = Math.trunc(usdcAmount * 1e8) / 1e8;
+      setFaucetUSDC(truncatedBtcAmount);
+    }
+
+    if (ckICPUsdRate && ckICPUsdRate > 0) {
+      const icpAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckICPUsdRate;
+      const truncatedBtcAmount = Math.trunc(icpAmount * 1e8) / 1e8;
+      setFaucetICP(truncatedBtcAmount);
+    }
+
+    if (ckUSDTUsdRate && ckUSDTUsdRate > 0) {
+      const usdTAmount =
+        (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
+      const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
+
+      setFaucetUSDT(truncatedBtcAmount);
+    }
+  }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
+      const updatedLimits = { ...initialLimits };
+      const updatedUsages = { ...initialUsages };
+      userData.Ok.reserves[0].forEach((reserveGroup) => {
+        const asset = reserveGroup[0];
+        if (!asset) return;
+        const faucetLimit = reserveGroup[1]?.faucet_limit
+          ? Number(reserveGroup[1].faucet_limit)
+          : initialLimits[asset];
+        const faucetUsage = reserveGroup[1]?.faucet_usage
+          ? Number(reserveGroup[1].faucet_usage)
+          : initialUsages[asset];
+
+        updatedLimits[asset] = faucetLimit;
+        updatedUsages[asset] = faucetUsage;
+      });
+
+      setFaucetLimit(updatedLimits);
+      setFaucetUsage(updatedUsages);
+    } else {
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    const faucetAmount = getFaucetAmount();
+    setExchangeRate(faucetAmount);
+  }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP, faucetUSDT]);
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   useEffect(() => {
     const resetFaucetLimitsAtMidnight = () => {
       const now = new Date();
@@ -429,7 +436,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     return () => {};
   }, []);
-
+  /* ===================================================================================
+   *                                  RENDER-COMPONENTS
+   * =================================================================================== */
   return (
     <>
       {!showFaucetPayment && (

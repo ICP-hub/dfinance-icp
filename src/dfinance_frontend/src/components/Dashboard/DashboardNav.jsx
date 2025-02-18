@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_CARD_DATA } from "../../utils/constants";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { X } from "lucide-react";
 import { useAuths } from "../../utils/useAuthClient";
@@ -25,35 +25,15 @@ import { Info } from "lucide-react";
 import { useLedgerActor } from "../customHooks/CustomLedger";
 
 const DashboardNav = () => {
-  const {
-    assets,
-    totalMarketSize,
-    totalSupplySize,
-    totalBorrowSize,
-    asset_supply,
-    asset_borrow,
-    fetchAssetBorrow,
-    fetchAssetSupply,
-    reserveData,
-  } = useAssetData();
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-  } = useFetchConversionRate();
-  const {
-    userData,
-    healthFactorBackend,
-    refetchUserData,
-    userAccountData,
-    fetchUserAccountData,
-  } = useUserData();
-  const dashboardRefreshTrigger = useSelector(
-    (state) => state.dashboardUpdate.refreshDashboardTrigger
-  );
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { assets, totalMarketSize, totalSupplySize, totalBorrowSize, asset_supply, asset_borrow, fetchAssetBorrow, fetchAssetSupply, reserveData } = useAssetData();
+  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate} = useFetchConversionRate();
+  const { userData, userAccountData } = useUserData();
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const totalUsdValueBorrow = useSelector((state) => state.borrowSupply.totalUsdValueBorrow);
+  const totalUsdValueSupply = useSelector((state) => state.borrowSupply.totalUsdValueSupply);
   const tooltipRef = useRef(null);
   const {
     isAuthenticated,
@@ -63,17 +43,23 @@ const DashboardNav = () => {
     user,
     agent,
   } = useAuths();
+  const { id } = useParams();
+  const dropdownRef = useRef(null);
+  const theme = useSelector((state) => state.theme.theme);
+  const menuRef = useRef(null);
+  const { state, pathname } = useLocation();
+  const formatNumber = useFormatNumber();
+
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
   const [assetBalances, setAssetBalances] = useState([]);
   const [netWorth, setNetWorth] = useState();
   const [netApy, setNetApy] = useState(0);
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const dropdownRef = useRef(null);
-  const theme = useSelector((state) => state.theme.theme);
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
-  const menuRef = useRef(null);
-  const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -92,12 +78,13 @@ const DashboardNav = () => {
       count: "-",
     },
   ]);
+
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 },
     { id: 1, title: "Total Available", count: 0 },
     { id: 2, title: "Total Borrows", count: 0 },
   ]);
-  const { state, pathname } = useLocation();
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const navigate = useNavigate();
   const [isDrop, setIsDrop] = useState(false);
@@ -106,12 +93,7 @@ const DashboardNav = () => {
   const [currentValueData, setCurrentValueData] = useState(
     state || TAB_CARD_DATA[0]
   );
-  const totalUsdValueBorrow = useSelector(
-    (state) => state.borrowSupply.totalUsdValueBorrow
-  );
-  const totalUsdValueSupply = useSelector(
-    (state) => state.borrowSupply.totalUsdValueSupply
-  );
+
 
   const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
 
@@ -136,17 +118,31 @@ const DashboardNav = () => {
     }
   }, [principal]);
 
+
+   /* ===================================================================================
+   *                    Derived State, UI Variables, and Route-Based Flags
+   * =================================================================================== */
+   const shouldRenderRiskDetailsButton = !pathname.includes("/market") && !pathname.includes("/governance")
+    && !pathname.includes("/dashboard/transaction-history") && !pathname.startsWith("/dashboard/asset-details/");
+
+   const assetImages = { ckBTC: ckBTC, ckETH: ckETH, ckUSDC: ckUSDC, ICP: icp, ckUSDT: ckUSDT };
+   const isAssetDetailsPage = location.pathname.startsWith("/dashboard/asset-details/") || location.pathname.startsWith("/market/asset-details/");
+   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
+   const assetImage = assetImages[id] || null;
+   const isDashboardRoute = location.pathname === "/dashboard";
+   const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
+   const isMarketRoute = location.pathname === "/market";
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
   const fetchAssetData = async () => {
     const balances = [];
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
+      const assetBalance = { asset, dtokenBalance: null, debtTokenBalance: null };
       if (dtokenId) {
         const dtokenActor = useLedgerActor(dtokenId, agent, "dToken");
         if (dtokenActor) {
@@ -179,26 +175,8 @@ const DashboardNav = () => {
       }
       balances.push(assetBalance);
     }
-
     setAssetBalances(balances);
   };
-
-  useEffect(() => {
-    fetchAssetData();
-  }, [assets, principalObj, dashboardRefreshTrigger]);
-
-  useEffect(() => {}, [assetBalances]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      for (const asset of assets) {
-        fetchAssetSupply(asset);
-        fetchAssetBorrow(asset);
-      }
-    };
-
-    fetchData();
-  }, [assets, dashboardRefreshTrigger]);
 
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
@@ -215,26 +193,6 @@ const DashboardNav = () => {
     }
     return `noBorrow`;
   };
-
-  const toggleTooltip = () => {
-    setIsTooltipVisible((prev) => !prev);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-        setIsTooltipVisible(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const formatNumber = useFormatNumber();
 
   const updateNetWorthAndHealthFactor = (data) => {
     if (!data || !data.Ok) return;
@@ -296,25 +254,6 @@ const DashboardNav = () => {
     setWalletDetailTab(updatedTab);
   };
 
-  useEffect(() => {
-    if (userData && reserveData) {
-      updateNetWorthAndHealthFactor(userData);
-    }
-  }, [
-    userData,
-    reserveData,
-    totalUsdValueSupply,
-    totalUsdValueBorrow,
-    userAccountData,
-    dashboardRefreshTrigger,
-  ]);
-
-  useEffect(() => {
-    if (netApy !== undefined) {
-      updateNetApy();
-    }
-  }, [netApy, dashboardRefreshTrigger]);
-
   const getConversionRate = (asset) => {
     switch (asset) {
       case "ckBTC":
@@ -332,9 +271,9 @@ const DashboardNav = () => {
     }
   };
 
-  useEffect(() => {
-    fetchConversionRate();
-  }, [fetchConversionRate, dashboardRefreshTrigger]);
+  const toggleTooltip = () => {
+    setIsTooltipVisible((prev) => !prev);
+  };
 
   const calculateNetSupplyApy = useCallback(
     (reserves, reserveData) => {
@@ -350,29 +289,14 @@ const DashboardNav = () => {
         if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok)
           return;
         const conversionRate = getConversionRate(assetKey);
-        const supplyApy =
-          Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) /
-          100000000;
-        const debtApy =
-          Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
-        const currentLiquidity = userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === assetKey
-        )?.[1]?.liquidity_index;
-        const assetBalance =
-          assetBalances?.find((balance) => balance.asset === assetKey)
-            ?.dtokenBalance || 0;
-        const assetSupply =
-          (Number(assetBalance) * Number(getAssetSupplyValue(assetKey))) /
-            Number(currentLiquidity) || 0;
-        const DebtIndex = userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === assetKey
-        )?.[1]?.variable_borrow_index;
-        const assetBorrowBalance =
-          assetBalances.find((balance) => balance.asset === assetKey)
-            ?.debtTokenBalance || 0;
-        const assetBorrowed =
-          (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey))) /
-            Number(DebtIndex) || 0;
+        const supplyApy = Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) / 100000000;
+        const debtApy = Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
+        const currentLiquidity = userData?.Ok?.reserves[0]?.find( (reserveGroup) => reserveGroup[0] === assetKey)?.[1]?.liquidity_index;
+        const assetBalance = assetBalances?.find((balance) => balance.asset === assetKey) ?.dtokenBalance || 0;
+        const assetSupply = (Number(assetBalance) * Number(getAssetSupplyValue(assetKey))) / Number(currentLiquidity) || 0;
+        const DebtIndex = userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey )?.[1]?.variable_borrow_index;
+        const assetBorrowBalance = assetBalances.find((balance) => balance.asset === assetKey) ?.debtTokenBalance || 0;
+        const assetBorrowed = (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey))) /Number(DebtIndex) || 0;
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD += assetBorrowedInUSD;
         weightedDebtApySum += assetBorrowedInUSD * debtApy;
@@ -388,45 +312,131 @@ const DashboardNav = () => {
     [reserveData, assetBalances]
   );
 
+  const handleOpenPopup = () => {
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDrop(false);
+    }
+    if (menuRef.current && !menuRef.current.contains(event.target)) {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const toggleMenu = () => {
+    if (!isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  /*FUNCTION MIGHT BE USED LATER */
+  // const toggleDropdown = () => {
+  //   if (!isDrop) {
+  //     document.addEventListener("mousedown", handleClickOutside);
+  //   } else {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   }
+  //   setIsDrop(!isDrop);
+  // };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+  useEffect(() => {
+    const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+    setNetWorth(calculatedNetWorth);
+  }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
+
+
+
+  useEffect(() => {
+    fetchAssetData();
+  }, [assets, principalObj, dashboardRefreshTrigger]);
+
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      for (const asset of assets) {
+        fetchAssetSupply(asset);
+        fetchAssetBorrow(asset);
+      }
+    };
+
+    fetchData();
+  }, [assets, dashboardRefreshTrigger]);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setIsTooltipVisible(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if (userData && reserveData) {
+      updateNetWorthAndHealthFactor(userData);
+    }
+  }, [ userData, reserveData, totalUsdValueSupply, totalUsdValueBorrow, userAccountData, dashboardRefreshTrigger, ]);
+
+
+  useEffect(() => {
+    if (netApy !== undefined) {
+      updateNetApy();
+    }
+  }, [netApy, dashboardRefreshTrigger]);
+
+  
+  useEffect(() => {
+    fetchConversionRate();
+  }, [fetchConversionRate, dashboardRefreshTrigger]);
+
+
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
-
-        const calculatedNetApy = calculateNetSupplyApy(
-          reservesData,
-          reserveData
-        );
+        const calculatedNetApy = calculateNetSupplyApy( reservesData, reserveData);
         setNetApy(calculatedNetApy);
         let totalBorrow = 0;
+
         reservesData.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
           const reserve = reserveGroup[1];
-          const currentLiquidity = userData?.Ok?.reserves[0]?.find(
-            (reserveGroup) => reserveGroup[0] === asset
-          )?.[1]?.liquidity_index;
-          const assetBalance =
-            assetBalances?.find((balance) => balance.asset === asset)
-              ?.dtokenBalance || 0;
-          const supply =
-            (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-              Number(currentLiquidity) || 0;
+          const currentLiquidity = userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)?.[1]?.liquidity_index;
+          const assetBalance = assetBalances?.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
+          const supply =(Number(assetBalance) * Number(getAssetSupplyValue(asset))) / Number(currentLiquidity) || 0;
+
           if (supply) {
             setAssetSupply(supply);
           }
-          const DebtIndex = userData?.Ok?.reserves[0]?.find(
-            (reserveGroup) => reserveGroup[0] === asset
-          )?.[1]?.variable_borrow_index;
-          const assetBorrowBalance =
-            assetBalances.find((balance) => balance.asset === asset)
-              ?.debtTokenBalance || 0;
-          const borrow =
-            (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-              Number(DebtIndex) || 0;
+
+          const DebtIndex = userData?.Ok?.reserves[0]?.find( (reserveGroup) => reserveGroup[0] === asset)?.[1]?.variable_borrow_index;
+          const assetBorrowBalance = assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance || 0;
+          const borrow = (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) / Number(DebtIndex) || 0;
+          
           if (borrow > 0) {
             totalBorrow += borrow;
           }
+
         });
+
         if (totalBorrow > 0) {
           setAssetBorrow(totalBorrow);
         } else {
@@ -436,13 +446,8 @@ const DashboardNav = () => {
 
       updateState();
     }
-  }, [
-    userData,
-    reserveData,
-    calculateNetSupplyApy,
-    assetBalances,
-    dashboardRefreshTrigger,
-  ]);
+  }, [ userData, reserveData, calculateNetSupplyApy, assetBalances, dashboardRefreshTrigger, ]);
+
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
@@ -451,7 +456,6 @@ const DashboardNav = () => {
     }
   }, [userData, dashboardRefreshTrigger]);
 
-  useEffect(() => {}, [netApy]);
 
   useEffect(() => {
     const updateWalletDetailTabs = () => {
@@ -480,11 +484,8 @@ const DashboardNav = () => {
 
             const supply = convertToNumber(totalSupplySize);
             const borrow = convertToNumber(totalBorrowSize);
-            const result =
-              !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
-            const formattedResult = formatNumber(
-              result === "0.00" ? "0" : result
-            );
+            const result =  !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
+            const formattedResult = formatNumber( result === "0.00" ? "0" : result );
             return {
               ...item,
               count: (
@@ -516,30 +517,15 @@ const DashboardNav = () => {
     if (totalSupplySize !== null && totalBorrowSize !== null) {
       updateWalletDetailTabs();
     }
-  }, [
-    assets,
-    totalSupplySize,
-    totalBorrowSize,
-    userAccountData,
-    dashboardRefreshTrigger,
-  ]);
+  }, [ assets, totalSupplySize, totalBorrowSize, userAccountData, dashboardRefreshTrigger, ]);
 
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setIsDrop(false);
-    }
-
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setIsMenuOpen(false);
-    }
-  };
 
   useEffect(() => {
     const handleBodyOverflow = () => {
       if (isMenuOpen) {
         document.body.style.overflow = "hidden";
       } else {
-        document.body.style.overflow = ""; // Reset to default
+        document.body.style.overflow = ""; 
       }
     };
 
@@ -549,81 +535,29 @@ const DashboardNav = () => {
     }
 
     return () => {
-      document.body.style.overflow = ""; // Ensure reset on unmount
+      document.body.style.overflow = ""; 
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
 
-  const toggleDropdown = () => {
-    if (!isDrop) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-    setIsDrop(!isDrop);
-  };
 
-  const toggleMenu = () => {
-    if (!isMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-    setIsMenuOpen(!isMenuOpen);
-  };
 
   useEffect(() => {
     const asset = TAB_CARD_DATA.find((item) => item.id === currentValueIndex);
     setCurrentValueData(asset);
   }, [currentValueIndex, dashboardRefreshTrigger]);
 
+
+  
   useEffect(() => {
     if (state && state.id !== undefined) {
       setCurrentValueIndex(state.id);
     }
   }, [state, dashboardRefreshTrigger]);
 
-  const handleOpenPopup = () => {
-    setIsPopupOpen(true);
-  };
-
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-  };
-
-  const isDashboardSupplyOrMain = pathname === "/dashboard";
-
-  const handleAssetSelect = (index) => {
-    setCurrentValueIndex(index);
-    setIsDrop(false);
-  };
-
-  const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
-
-  const shouldRenderRiskDetailsButton =
-    !pathname.includes("/market") &&
-    !pathname.includes("/governance") &&
-    !pathname.includes("/dashboard/transaction-history") &&
-    !pathname.startsWith("/dashboard/asset-details/");
-
-  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-  const shouldRenderTransactionHistoryButton = pathname === "/dashboard";
-  const isAssetDetailsPage =
-    location.pathname.startsWith("/dashboard/asset-details/") ||
-    location.pathname.startsWith("/market/asset-details/");
-
-  const assetImages = {
-    ckBTC: ckBTC,
-    ckETH: ckETH,
-    ckUSDC: ckUSDC,
-    ICP: icp,
-    ckUSDT: ckUSDT,
-  };
-
-  const assetImage = assetImages[id] || null;
-  const isDashboardRoute = location.pathname === "/dashboard";
-  const isMarketRoute = location.pathname === "/market";
-
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
   return (
     <div className="w-full ">
       {["/dashboard", "/market", "/governance"].includes(pathname) && (
@@ -696,11 +630,11 @@ const DashboardNav = () => {
 
                   <div className="flex flex-wrap items-center gap-4 mt-2">
                     {(isDashboardRoute
-                      ? isAuthenticated // Check if it's the dashboard page and if authenticated
+                      ? isAuthenticated 
                         ? walletDetailTab
                         : []
                       : walletDetailTabs
-                    ) // Show walletDetailTabs everywhere else, including non-authenticated
+                    ) 
                       .map((data, index) => {
                         if (
                           data.title === "Health Factor" &&

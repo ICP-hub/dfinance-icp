@@ -30,47 +30,18 @@ const ITEMS_PER_PAGE = 8;
 /**
  * FaucetDetails Component
  *
- * This component displays the details of faucet assets available for users to claim. 
- * It allows users to view various assets like `ckBTC`, `ckETH`, `ckUSDC`, `ICP`, and `ckUSDT`, 
+ * This component displays the details of faucet assets available for users to claim.
+ * It allows users to view various assets like `ckBTC`, `ckETH`, `ckUSDC`, `ICP`, and `ckUSDT`,
  * @returns {JSX.Element} - Returns the FaucetDetails component, including the faucet assets table and pagination controls.
  */
 const FaucetDetails = () => {
-  const [showPopup, setShowPopup] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const navigate = useNavigate();
-  const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
-  const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-  const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
-  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-  const [balance, setBalance] = useState(null);
-  const [usdBalance, setUsdBalance] = useState(null);
-  const [conversionRate, setConversionRate] = useState(null);
-  const [error, setError] = useState(null);
-  const [hasLoaded, setHasLoaded] = useState(false);
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
 
   const { filteredItems, loading } = useAssetData();
-  const refreshTrigger = useSelector(
-    (state) => state.faucetUpdate.refreshTrigger
-  );
   const { isAuthenticated, principal, backendActor, createLedgerActor } =
     useAuths();
-    const principalObj = useMemo(() => {
-  if (!principal) return null;  // ✅ Prevent null values
-  try {
-    return Principal.fromText(principal);
-  } catch (error) {
-    console.error("Invalid principal:", principal);
-    return null;
-  }
-}, [principal]);
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -86,6 +57,96 @@ const FaucetDetails = () => {
     fetchBalance,
   } = useFetchConversionRate();
 
+  const navigate = useNavigate();
+
+  /* ===================================================================================
+   *                                  STATE-MANAGEMENT
+   * =================================================================================== */
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
+  const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
+  const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
+  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
+  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
+  const [error, setError] = useState(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const refreshTrigger = useSelector(
+    (state) => state.faucetUpdate.refreshTrigger
+  );
+
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
+
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
+
+  /* ===================================================================================
+   *                                  FUNCTION
+   * =================================================================================== */
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (
+      currentPage < Math.ceil(FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE)
+    ) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleFaucetClick = (asset) => {
+    let assetImage;
+    switch (asset) {
+      case "ckBTC":
+        assetImage = ckBTC;
+        break;
+      case "ckETH":
+        assetImage = cekTH;
+        break;
+      case "ckUSDC":
+        assetImage = ckUSDC;
+        break;
+      case "ICP":
+        assetImage = icp;
+        break;
+      case "ckUSDT":
+        assetImage = ckUSDT;
+        break;
+      default:
+        assetImage = null;
+    }
+    setSelectedAsset({ asset, assetImage });
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * ===============================================================================*/
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (
@@ -169,63 +230,15 @@ const FaucetDetails = () => {
     ckUSDTBalance,
     refreshTrigger,
   ]);
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (
-      currentPage < Math.ceil(FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE)
-    ) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handleFaucetClick = (asset) => {
-    let assetImage;
-    switch (asset) {
-      case "ckBTC":
-        assetImage = ckBTC;
-        break;
-      case "ckETH":
-        assetImage = cekTH;
-        break;
-      case "ckUSDC":
-        assetImage = ckUSDC;
-        break;
-      case "ICP":
-        assetImage = icp;
-        break;
-      case "ckUSDT":
-        assetImage = ckUSDT;
-        break;
-      default:
-        assetImage = null;
-    }
-    setSelectedAsset({ asset, assetImage });
-    setShowPopup(true);
-  };
-
   useEffect(() => {
     if (!loading) {
       setHasLoaded(true);
     }
   }, [loading]);
 
-  const closePopup = () => {
-    setShowPopup(false);
-  };
-
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-  const theme = useSelector((state) => state.theme.theme);
-  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-  const filteredReserveData = Object.fromEntries(filteredItems);
-  const formatNumber = useFormatNumber();
+  /* ===================================================================================
+   *                                  RENDER-COMPONENTS
+   * =================================================================================== */
 
   return (
     <div className="w-full">

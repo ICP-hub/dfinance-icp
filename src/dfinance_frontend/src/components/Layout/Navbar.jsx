@@ -763,6 +763,23 @@ export default function Navbar({ isHomeNav }) {
               </div>
             ) : (
               <div className="flex gap-3">
+                <button className=" flex items-center gap-1 z-20 py-2 px-4  ml-2   focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button2">
+                  {/* Custom Gradient Star */}
+                  <img
+                    src={star}
+                    alt="DFinance"
+                    className="w-5 h-5 sm:w-3 sm:h-3 lg:w-5 lg:h-5"
+                    style={{
+                      imageRendering: "-webkit-optimize-contrast",
+                      imageRendering: "crisp-edges",
+                    }}
+                  />
+
+                  {/* Gradient Text */}
+                  <span className="bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent font-semibold text-xs lg:flex hidden ">
+                    0.00
+                  </span>
+                </button>
                 <button
                   className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
                   onClick={handleWalletConnect}

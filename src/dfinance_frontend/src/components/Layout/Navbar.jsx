@@ -34,6 +34,7 @@ import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
 import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
+import star from "../../../public/Helpers/settings.svg";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
 /**
@@ -87,7 +88,9 @@ export default function Navbar({ isHomeNav }) {
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-
+  const handleNavigate = () => {
+    navigate("/pointsystem");
+  };
   const hash = window.location.hash;
 
   const handleSoundToggle = () => {
@@ -482,7 +485,27 @@ export default function Navbar({ isHomeNav }) {
                 )}
               </div>
             ) : isAuthenticated ? (
-              <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
+              <div className="hidden lg:flex gap-2 sxs3:flex md:flex select-none items-center h-[60px]">
+                <button
+                  onClick={handleNavigate}
+                  className=" flex items-center gap-2 z-20 py-2.5 px-6  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button1"
+                >
+                  {/* Custom Gradient Star */}
+                  <img
+                    src={star}
+                    alt="DFinance"
+                    className="w-5 h-5 sm:w-4 sm:h-4 lg:w-5 lg:h-5"
+                    style={{
+                      imageRendering: "-webkit-optimize-contrast",
+                      imageRendering: "crisp-edges",
+                    }}
+                  />
+
+                  {/* Gradient Text */}
+                  <span className="bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent font-semibold">
+                    0.00
+                  </span>
+                </button>
                 {}
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                   {!isMobile2 && (

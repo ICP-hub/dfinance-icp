@@ -26,7 +26,7 @@ import {
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import ThemeToggle from "../Common/ThemeToggle";
-import settingsIcon from "../../../public/Helpers/Settings.svg";
+import settingsIcon from "../../../public/Helpers/Settings(1).svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";

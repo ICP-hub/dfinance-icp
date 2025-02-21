@@ -1669,7 +1669,7 @@ export const FAQ_QUESTIONS_POINTSYSTEM = [
     id: 0,
     question: "How do I earn points?",
     answer:
-      "Using any product on Dfinance will earn you points. Some actions earn more than others. See the Rates & Boosts tab for more info.",
+      "Taking any action on Dfinance will earn you points. Some actions earn more than others. See the Rates & Boosts tab for more info.",
   },
   {
     id: 1,
@@ -1681,7 +1681,7 @@ export const FAQ_QUESTIONS_POINTSYSTEM = [
     id: 2,
     question: "I’m not a whale. Do I have any shot at being competitive points?",
     answer:
-      " Yes, you do. Even though position size and duration are key factors in determining points accrual, there will be various boosts throughout phase 1 where you can boost your points per dollar. Other opportunities to earn points by being active in our community channels and providing feedback will also be rewarded. Just use the product, stay engaged, and we will reward our earliest members.",
+      " Yes, you do. Even though position size and duration are key factors in determining points accrual, there will be various boosts throughout phase 1 where you can boost your points per dollar. Other opportunities to earn points by being active in our community channels and providing feedback will also be rewarded. Just use the protocol, stay engaged, and we will reward our earliest members.",
   },
   {
     id: 3,

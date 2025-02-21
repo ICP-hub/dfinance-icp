@@ -52,7 +52,6 @@ const Breakdown = () => {
       [`${section}-${index}`]: !prev[`${section}-${index}`],
     }));
   };
-  
 
   const formatNumber = (num) => num.toLocaleString();
 
@@ -100,24 +99,26 @@ const Breakdown = () => {
                 <h3 className="text-sm font-semibold ss1:font-[500]">
                   {section}
                 </h3>
+              </div>
+              <div className="flex gap-4">
                 <div className="text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
                   <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                     Count:
                   </span>{" "}
                   {totalTransactionCount}
                 </div>
+                <button
+                  onClick={() => toggleSectionVisibility(section)}
+                  className="text-sm text-[#2A1F9D] dark:text-darkText flex items-center"
+                >
+                  {isVisible ? "Hide" : "Show"}
+                  {isVisible ? (
+                    <EyeOff size={16} className="ml-2" />
+                  ) : (
+                    <Eye size={16} className="ml-2" />
+                  )}
+                </button>
               </div>
-              <button
-                onClick={() => toggleSectionVisibility(section)}
-                className="text-sm text-[#2A1F9D] dark:text-darkText flex items-center"
-              >
-                {isVisible ? "Hide" : "Show"}
-                {isVisible ? (
-                  <EyeOff size={16} className="ml-2" />
-                ) : (
-                  <Eye size={16} className="ml-2" />
-                )}
-              </button>
             </div>
 
             {isVisible && (
@@ -194,26 +195,25 @@ const Breakdown = () => {
                   <div>
                     {/* Small Screen View */}
                     <div className="grid grid-cols-3 gap-10 py-4 font-[500] text-sm text-[#233D63] dark:text-darkTextSecondary mb-2">
-                      <div className=" flex items-center text-center ">
-                        Asset
+                      <div className="justify-self-start ml-3">Asset</div>
+                      <div className="justify-self-center whitespace-nowrap">
+                        Points Accrued
                       </div>
-                      <div className="flex items-center text-center text-nowrap -ml-4">
-                        Points Accured{" "}
-                      </div>
-
-                      <div className="flex items-center text-center ml-6 ">More</div>
+                      <div className="justify-self-end mr-4">More</div>
                     </div>
+
                     {currentTransactions.length > 0 ? (
                       currentTransactions.map((tx, index) => (
                         <div
-                            key={index}
-                            className={`grid grid-cols-3 gap-16 py-4 text-[#2A1F9D] text-sm dark:text-darkText  rounded-lg  ${
-                              index !== currentTransactions - 1
-                                ? "gradient-line-bottom"
-                                : ""
-                            }`}
-                          >
-                          <div className="flex items-center text-center space-x-2">
+                          key={index}
+                          className={`grid grid-cols-3 gap-16 py-5 text-[#2A1F9D] text-sm dark:text-darkText  rounded-lg  ${
+                            index !== currentTransactions - 1
+                              ? "gradient-line-bottom"
+                              : ""
+                          }`}
+                        >
+                          {/* Asset Image & Name - Aligned to Start */}
+                          <div className="flex items-center space-x-2 justify-self-start ml-3">
                             <img
                               src={tx.imageUrl}
                               alt={tx.assetName}
@@ -221,11 +221,14 @@ const Breakdown = () => {
                             />
                             <span>{tx.assetName}</span>
                           </div>
-                          <div className="flex items-center text-center px-4">
+
+                          {/* Asset Points - Aligned to Center */}
+                          <div className="flex items-center justify-self-center">
                             {(tx.assetPoints * tx.amount).toLocaleString()}
                           </div>
 
-                          <div className="flex items-center text-center px-4">
+                          {/* Chevron Button - Aligned to End */}
+                          <div className="flex items-center justify-self-end mr-5">
                             <button
                               onClick={() => toggleDropdown(section, index)}
                             >
@@ -239,29 +242,34 @@ const Breakdown = () => {
 
                           {/* Additional Info Dropdown */}
                           {openDropdown[`${section}-${index}`] && (
-                            <div className="col-span-3 -mt-8 p-2 text-sm font-medium shadow-md border-1 ring-1 text-[#2A1F9D] dark:text-darkText rounded-lg">
+                            <div className="col-span-3 -mt-8 p-2 text-[13px] font-medium shadow-md border-1 ring-1 text-[#2A1F9D] dark:text-darkText rounded-lg">
                               <p>
-                                <span className="font-[500] text-[#233D63] dark:text-darkTextSecondary">
+                                <span className="dark:text-gray-400 text-gray-600">
                                   Assets Points:
                                 </span>{" "}
-                                {tx.assetPoints.toLocaleString()}
+                                <span className="text-gray-800 dark:text-white">
+                                  {tx.assetPoints.toLocaleString()}
+                                </span>
                               </p>
                               <p>
-                                <span className="font-[500] text-[#233D63] dark:text-darkTextSecondary">
+                                <span className="dark:text-gray-400 text-gray-600">
                                   Amount:
                                 </span>{" "}
-                                ${tx.amount.toLocaleString()}
+                                <span className="text-gray-800 dark:text-white">
+                                  ${tx.amount.toLocaleString()}
+                                </span>
                               </p>
 
                               <p className="mt-1">
-                                <span className="font-[500] text-[#233D63] dark:text-darkTextSecondary">
+                                <span className="dark:text-gray-400 text-gray-600">
                                   Timestamp:
                                 </span>{" "}
-                                <span className="text-gray-500 ml-1">
-                                  {new Date(tx.timestamp).toLocaleDateString(
+                                <span className="text-gray-800 dark:text-white  ml-1">
+                                {new Date(tx.timestamp).toLocaleDateString(
                                     "en-GB"
                                   )}
-                                </span>{" "}
+                                </span>
+                                
                                 <strong className="ml-1 text-gray-600 dark:text-gray-400">
                                   {new Date(tx.timestamp).toLocaleTimeString(
                                     "en-GB"

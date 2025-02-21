@@ -23,7 +23,7 @@ const HeroSection = ({ onSectionChange }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full p-4 sm:p-8 lg:p-8 text-[#2A1F9D] text-lg dark:text-darkTextSecondary">
+    <div className="flex flex-col items-center justify-center w-full p-4 sm:p-8 lg:p-8 text-[#2A1F9D] text-lg dark:text-darkTextSecondary -mt-7">
       {/* Logo and Tagline */}
       <div className="text-center mb-4">
         <div className="flex items-center justify-center gap-2">
@@ -41,7 +41,7 @@ const HeroSection = ({ onSectionChange }) => {
           </span>
         </div>
         <p className="text-[12px] sm:text-[12px] lg:text-[14px] mt-2 text-[#233D63] dark:text-darkTextSecondary1">
-          Earn Rewards by deploying assets into various products on DFinance
+        Earn rewards based on actions like supplying, borrowing, and deploying assets into various products on DFinance.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ const HeroSection = ({ onSectionChange }) => {
       <div className="flex gap-2 w-full justify-center pt-2 border-t border-gray-600 opacity-50"></div>
 
       {/* Small Screen Dropdown Navigation */}
-      <div className="w-full flex justify-center mt-2">
+      <div className="w-full flex justify-center mt-5 mb-3">
         <div className="w-full sm:hidden flex flex-col items-center rounded-lg overflow-hidden">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -62,7 +62,7 @@ const HeroSection = ({ onSectionChange }) => {
           </button>
 
           {isDropdownOpen && (
-            <div className="mt-1 w-full bg-[#4659CF]/20 dark:bg-bottom-left-to-top-right-gradient rounded-lg">
+            <div className="mt-4 w-full bg-[#4659CF]/20 dark:bg-bottom-left-to-top-right-gradient rounded-lg">
               {Object.keys(sectionNames).map((section) => (
                 <button
                   key={section}
@@ -91,7 +91,7 @@ const HeroSection = ({ onSectionChange }) => {
             <button
               key={section}
               onClick={() => handleSectionChange(section)}
-              className={`text-xs sm:text-sm lg:text-base px-3 sm:px-4 py-1 sm:py-2 rounded-md transition ${
+              className={`text-[12px] sm:text-[13px] lg:text-[14px] px-3 sm:px-4 py-1 sm:py-2 rounded-md transition ${
                 activeSection === section
                   ? "flex items-center gap-2 z-20 focus:outline-none box shadow-lg text-sm font-semibold rounded-lg text-[#2A1F9D] dark:text-darkTextSecondary"
                   : "text-[#233D63] dark:text-darkTextSecondary1"

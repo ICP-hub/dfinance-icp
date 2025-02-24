@@ -2181,7 +2181,6 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                             );
                         }
                     }
-                    
                     Err(e) => {
                         if !case.expect_success {
                             if case.expected_error_message.as_deref() != Some(e.message()) {

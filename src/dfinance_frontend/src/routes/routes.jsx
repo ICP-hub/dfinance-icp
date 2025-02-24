@@ -14,6 +14,7 @@ import DashboardCards from "../pages/info/info"
 import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
 import PointSystemPage from "../components/pointSystem/pointSystem"
+import DFinanceGov from "../pages/Governance/DFinanceGov"
 
 export default [
   {
@@ -38,7 +39,7 @@ export default [
     ),
   },
   {
-    path: "/2a45fg",
+    path: "/admin",
     element: (
       <MainDashboard includeDashboardNav={false}>
         <Outlet /> {/* ✅ Required for child routes to work */}
@@ -109,6 +110,14 @@ export default [
     element: (
       <MainDashboard includeDashboardNav={false}>
         <StakeDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Governance",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        < DFinanceGov/>
       </MainDashboard>
     ),
   },

@@ -424,7 +424,7 @@ export default function Navbar({ isHomeNav }) {
                               )}
                             </React.Fragment>
                           );
-                        } else if (!isTestnetMode && !link.testnet) {
+                        } else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
                           return (
                             <NavLink
                               key={index}
@@ -436,6 +436,7 @@ export default function Navbar({ isHomeNav }) {
                           );
                         }
                         return null;
+                        
                       })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
                         <NavLink
@@ -697,7 +698,7 @@ export default function Navbar({ isHomeNav }) {
                               </span>
                               <CustomizedSwitches
                                 checked={isTestnetMode}
-                                // onChange={handleTestnetModeToggle}
+                                onChange={handleTestnetModeToggle}
                               />
                             </div>
                           </div>

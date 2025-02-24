@@ -32,6 +32,7 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
+      console.log("result",result)
       return result;
     } catch (error) {
       setError(error.message);

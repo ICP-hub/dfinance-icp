@@ -8,7 +8,17 @@ import Lottie from "../../components/Common/Lottie";
 import useAssetData from "../customHooks/useAssets";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Error from "../../pages/Error";
-
+import { Infinity, Download } from "lucide-react";
+import * as XLSX from "xlsx"; 
+import { saveAs } from "file-saver";
+import { Principal } from "@dfinity/principal";
+import { idlFactory } from "../../../../declarations/dtoken";
+import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import ckETH from "../../../public/assests-icon/cketh.png";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
 /**
  * HealthFactorList Component
  *
@@ -20,7 +30,8 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const { backendActor, isAuthenticated } = useAuth();
+  const { backendActor, isAuthenticated, fetchReserveData, createLedgerActor } =
+    useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const [userAccountData, setUserAccountData] = useState({});
@@ -28,11 +39,21 @@ const HealthFactorList = () => {
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
-  const { assets, reserveData, filteredItems, error, loading } = useAssetData(searchQuery);
+  const {
+    assets,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+    loading: filteredDataLoading,
+  } = useAssetData();
+
   const [showFilter, setShowFilter] = useState(false);
   const [healthFilter, setHealthFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [assetBalances, setAssetBalances] = useState([]);
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const cachedData = useRef({});
   const popupRef = useRef(null);
@@ -109,6 +130,78 @@ const HealthFactorList = () => {
     setShowSearch(!showSearch);
   };
 
+  console.log("users", users);
+
+  const fetchAssetData = async () => {
+    const balances = {};
+
+    await Promise.all(
+      users.map(async ([principal, userData]) => {
+        if (!principal) return; 
+
+        const userBalances = {};
+
+        await Promise.all(
+          assets.map(async (asset) => {
+            const reserveDataForAsset = await fetchReserveData(asset);
+            console.log("reserveDataForAsset", reserveDataForAsset);
+            const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+            const debtTokenId =
+              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+            console.log("dtokenId", dtokenId);
+            const assetBalance = {
+              dtokenBalance: null,
+              debtTokenBalance: null,
+            };
+
+            try {
+              const formattedPrincipal = Principal.fromText(
+                principal.toString()
+              );
+              const account = { owner: formattedPrincipal, subaccount: [] };
+
+             
+              if (dtokenId) {
+                const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+                if (dtokenActor) {
+                  const balance = await dtokenActor.icrc1_balance_of(account);
+                  assetBalance.dtokenBalance = Number(balance);
+                }
+              }
+
+             
+              if (debtTokenId) {
+                const debtTokenActor = createLedgerActor(
+                  debtTokenId,
+                  idlFactory1
+                );
+                if (debtTokenActor) {
+                  const balance = await debtTokenActor.icrc1_balance_of(
+                    account
+                  );
+                  assetBalance.debtTokenBalance = Number(balance);
+                }
+              }
+            } catch (error) {
+              console.error(`Error processing balances for ${asset}:`, error);
+            }
+
+           
+            userBalances[asset] = assetBalance;
+          })
+        );
+
+        
+        balances[principal] = userBalances;
+      })
+    );
+
+    
+    setAssetBalances(balances);
+  };
+
+  console.log("assetBalances", assetBalances);
+
   const openPopup = (principal, data) => {
     if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
     const extractedData = {
@@ -127,11 +220,259 @@ const HealthFactorList = () => {
 
     setSelectedUser(extractedData);
   };
+  const getAssetSupplyValue = (asset, principal) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset]);
+      return supplyValue;
+    }
+    return;
+  };
 
+  const getAssetBorrowValue = (asset, principal) => {
+    if (asset_borrow[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset]);
+      return borrowValue;
+    }
+    return;
+  };
   const closePopup = () => {
     setSelectedUser(null);
   };
+  const downloadExcel = () => {
+    if (!userAccountData || Object.keys(userAccountData).length === 0) {
+      console.error("No data available to export.");
+      return;
+    }
 
+    
+    const data = Object.entries(userAccountData).map(([principal, user]) => ({
+      Principal: principal,
+      "Total Collateral": user.Ok
+        ? (Number(user.Ok[0]) / 1e8).toFixed(2)
+        : "N/A",
+      "Total Borrowed": user.Ok ? (Number(user.Ok[1]) / 1e8).toFixed(2) : "N/A",
+      "Available Borrow": user.Ok
+        ? (Number(user.Ok[2]) / 1e8).toFixed(2)
+        : "N/A",
+      "Liquidation Threshold": user.Ok
+        ? (Number(user.Ok[3]) / 1e8).toFixed(2)
+        : "N/A",
+      "Health Factor":
+        user.Ok && Number(user.Ok[4]) >= 3.4028236692093848e28
+          ? "Infinity"
+          : user.Ok
+          ? (Number(user.Ok[4]) / 1e10).toFixed(2)
+          : "N/A",
+      "Total Debt": user.Ok ? (Number(user.Ok[5]) / 1e8).toFixed(2) : "N/A",
+    }));
+
+    
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users Data");
+
+    
+    worksheet["!cols"] = [
+      { wch: 60 }, 
+      { wch: 20 }, 
+      { wch: 20 }, 
+      { wch: 20 }, 
+      { wch: 25 }, 
+      { wch: 20 }, 
+      { wch: 20 }, 
+    ];
+
+    
+    worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+
+   
+    worksheet["!autofilter"] = { ref: "A1:G1" };
+
+    
+    const range = XLSX.utils.decode_range(worksheet["!ref"]);
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: 0, c: C }); 
+      if (!worksheet[cell_address]) continue;
+
+     
+      worksheet[cell_address].s = {
+        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } }, 
+        fill: { fgColor: { rgb: "4F81BD" } }, 
+        alignment: { horizontal: "center", vertical: "center" },
+      };
+    }
+
+   
+    const fileName = `User_Health_Factors_${new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")}.xlsx`;
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+      cellStyles: true, 
+    });
+
+    const dataBlob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(dataBlob, fileName);
+  };
+
+  const downloadUserData = (selectedUser) => {
+    if (!selectedUser) {
+      console.error("No user selected.");
+      return;
+    }
+
+    const userData = users
+      .find(([principal]) => principal.toString() === selectedUser.principal)
+      ?.at(1);
+    if (!userData) {
+      console.error("User data not found.");
+      return;
+    }
+
+    const reserves = userData?.reserves || [];
+
+    const data = reserves.flat().map(([asset, assetInfo]) => {
+      const currentLiquidity = Number(assetInfo?.liquidity_index / 1e8 || 0n);
+      const currentDebtIndex = Number(
+        assetInfo?.variable_borrow_index / 1e8 || 0n
+      );
+
+      const userAssetBalance = assetBalances[selectedUser.principal]?.[
+        asset
+      ] || {
+        dtokenBalance: 0,
+        debtTokenBalance: 0,
+      };
+
+      const assetBalance = Number(userAssetBalance.dtokenBalance) || 0;
+      const debtBalance = Number(userAssetBalance.debtTokenBalance) || 0;
+
+      const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
+      const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
+
+      const assetSupply =
+        currentLiquidity > 0
+          ? (assetBalance * supplyValue) / (currentLiquidity * 1e8)
+          : 0;
+
+      const assetBorrow =
+        currentDebtIndex > 0
+          ? (debtBalance * borrowValue) / (currentDebtIndex * 1e8)
+          : 0;
+
+      return {
+        Principal: selectedUser.principal,
+        Asset: asset,
+        "Liquidity Index": currentLiquidity || 0,
+        "Variable Borrow Index": currentDebtIndex || 0,
+        "Total Asset Supply": formatValue(assetSupply),
+        "Total Asset Borrow": formatValue(assetBorrow),
+      };
+    });
+
+    
+    const overviewData = [
+      {
+        Principal: selectedUser.principal,
+        "Total Collateral": selectedUser.totalCollateral.toFixed(2),
+        "Total Borrowed": selectedUser.totalBorrowed.toFixed(2),
+        "Available Borrow": selectedUser.availableBorrow.toFixed(2),
+        "Liquidation Threshold": selectedUser.liquidationThreshold.toFixed(2),
+        "Health Factor": selectedUser.healthFactor,
+        "Total Debt": selectedUser.totalDebt.toFixed(2),
+      },
+    ];
+
+   
+    const workbook = XLSX.utils.book_new();
+
+   
+    const overviewSheet = XLSX.utils.json_to_sheet(overviewData);
+    XLSX.utils.book_append_sheet(workbook, overviewSheet, "Overview");
+
+    
+    const reservesSheet = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, reservesSheet, "User Reserves");
+
+  
+    const overviewColumnWidths = [
+      { wch: 60 }, 
+      { wch: 20 }, 
+      { wch: 20 },
+      { wch: 20 }, 
+      { wch: 25 }, 
+      { wch: 20 }, 
+      { wch: 20 }, 
+    ];
+
+    const reservesColumnWidths = [
+      { wch: 60 }, 
+      { wch: 20 }, 
+      { wch: 18 }, 
+      { wch: 22 }, 
+      { wch: 20 }, 
+      { wch: 20 }, 
+    ];
+
+    overviewSheet["!cols"] = overviewColumnWidths;
+    reservesSheet["!cols"] = reservesColumnWidths;
+    
+    Object.keys(overviewSheet).forEach((cell) => {
+      if (cell.match(/^[A-Z]1$/)) {
+        
+        overviewSheet[cell].s = { font: { bold: true } };
+      }
+    });
+
+    
+    Object.keys(reservesSheet).forEach((cell) => {
+      if (cell.match(/^[A-Z]1$/)) {
+       
+        reservesSheet[cell].s = { font: { bold: true } };
+      }
+    });
+
+   
+    overviewSheet["!autofilter"] = { ref: "A1:G1" }; 
+    overviewSheet["!freeze"] = { xSplit: 0, ySplit: 1 }; 
+
+   
+    reservesSheet["!autofilter"] = { ref: "A1:F1" };
+    reservesSheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+
+    
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const dataBlob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(dataBlob, `${selectedUser.principal}_data.xlsx`);
+  };
+
+  const formatValue = (num) => {
+    if (num < 1) return num.toFixed(7);
+
+    if (num >= 1e12)
+      return num % 1e12 === 0
+        ? num / 1e12 + "T"
+        : (num / 1e12).toFixed(2) + "T";
+    if (num >= 1e9)
+      return num % 1e9 === 0 ? num / 1e9 + "B" : (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6)
+      return num % 1e6 === 0 ? num / 1e6 + "M" : (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3)
+      return num % 1e3 === 0 ? num / 1e3 + "K" : (num / 1e3).toFixed(2) + "K";
+
+    return num.toFixed(2);
+  };
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -139,7 +480,6 @@ const HealthFactorList = () => {
     checkControllerStatus();
   }, [backendActor]);
 
-  
   useEffect(() => {
     function handleClickOutside(event) {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
@@ -152,11 +492,9 @@ const HealthFactorList = () => {
     };
   }, []);
 
-
   useEffect(() => {
     getAllUsers();
   }, []);
-
 
   useEffect(() => {
     if (!users || users.length === 0) return;
@@ -172,7 +510,6 @@ const HealthFactorList = () => {
       );
   }, [users]);
 
-  
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
     const updatedHealthFactors = {};
@@ -187,7 +524,6 @@ const HealthFactorList = () => {
     setHealthFactors(updatedHealthFactors);
   }, [userAccountData]);
 
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -199,7 +535,6 @@ const HealthFactorList = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [closePopup]);
-
 
   useEffect(() => {
     if (selectedUser) {
@@ -215,7 +550,8 @@ const HealthFactorList = () => {
         const healthFactor = Number(data.Ok[4]) / 1e10;
         const principalStr = principal.toLowerCase();
 
-        const matchesSearch = !searchQuery ||
+        const matchesSearch =
+          !searchQuery ||
           principalStr.includes(searchQuery.toLowerCase()) ||
           healthFactor.toString().includes(searchQuery);
 
@@ -233,8 +569,46 @@ const HealthFactorList = () => {
       document.body.style.overflow = "auto";
     };
   }, [selectedUser]);
+  useEffect(() => {
+    const fetchSupplyData = async () => {
+      if (assets.length === 0) return;
+      // setSupplyDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetSupply(asset);
+        }
+      } catch (error) {
+        // setSupplyDataLoading(false);
+        console.error("Error fetching supply data:", error);
+      } finally {
+        // setSupplyDataLoading(false);
+      }
+    };
 
+    const fetchBorrowData = async () => {
+      if (assets.length === 0) return;
+      // setBorrowDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetBorrow(asset);
+        }
+      } catch (error) {
+        // setBorrowDataLoading(false);
+        console.error("Error fetching borrow data:", error);
+      } finally {
+        // setBorrowDataLoading(false);
+      }
+    };
 
+    fetchSupplyData();
+    fetchBorrowData();
+  }, [assets]);
+  useEffect(() => {
+    if (users.length > 0) {
+      fetchAssetData();
+    }
+  }, [users, assets]);
+  console.log("asset_supply", asset_supply, asset_borrow);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -307,14 +681,42 @@ const HealthFactorList = () => {
               </linearGradient>
             </defs>
           </svg>
+          {showSearch && (
+            <div className="absolute top-full left-0 w-full px-3 mt-2 md:hidden">
+              <input
+                type="text"
+                name="search"
+                id="search"
+                placeholder="Search assets"
+                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[4px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${
+                  showSearch
+                    ? "animate-fade-left flex"
+                    : "animate-fade-right hidden"
+                }`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
 
-          <div className="relative ml-3">
+          <div className="relative ml-3 flex items-center space-x-4">
+            {/* Filter Icon */}
             <SlidersHorizontal
               size={20}
               onClick={() => setShowFilter(!showFilter)}
               className="cursor-pointer transition-colors duration-300 
-           text-[#695fd4] dark:text-white hover:text-[#4c43b8]"
+             text-[#695fd4] dark:text-white hover:text-[#4c43b8]"
             />
+
+            {/* Download Excel Icon */}
+            <Download
+              size={20}
+              onClick={downloadExcel} // Calls function to download the Excel sheet
+              className="cursor-pointer transition-colors duration-300 
+            text-[#695fd4] dark:text-white hover:text-[#4c43b8]"
+            />
+
+            {/* Filter Dropdown */}
             {showFilter && (
               <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
                 <div
@@ -383,23 +785,31 @@ const HealthFactorList = () => {
         ) : (
           <div className="w-full">
             <div className="w-full overflow-auto content">
-              <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText border-collapse">
+              <table className="w-full text-[#2A1F9D] font-[500] text-sm dark:text-darkText border-collapse mt-4">
                 <thead>
                   <tr className="text-left text-[#233D63] dark:text-darkTextSecondary dark:opacity-80">
-                    <th className="px-1 py-5">User Principal</th>
-                    <th className="px-3 py-5 hidden sm:table-cell text-center">
+                    <th className="text-xs lg:text-sm px-1 py-5">
+                      User Principal
+                    </th>
+                    <th className="text-xs lg:text-sm px-3 py-5 hidden sm:table-cell text-center">
                       Total Collateral
                     </th>
-                    <th className="px-3 py-5 hidden sm:table-cell text-center">
+                    <th className="text-xs lg:text-sm px-3 py-5 hidden sm:table-cell text-center">
                       Total Borrowed
                     </th>
-                    <th className="px-3 py-5 text-center">Health Factor</th>
-                    <th className="px-3 py-5 text-end">User Details</th>
+                    <th className="text-xs lg:text-sm px-3 py-5 text-center">
+                      Health Factor
+                    </th>
+                    <th className="text-xs lg:text-sm px-3 py-5 text-end">
+                      User Details
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(userAccountData)
-                    .filter(([principal, data]) => {
+                  {(() => {
+                    const filteredUsers = Object.entries(
+                      userAccountData
+                    ).filter(([principal, data]) => {
                       if (
                         !data?.Ok ||
                         !Array.isArray(data.Ok) ||
@@ -422,8 +832,26 @@ const HealthFactorList = () => {
                         (healthFilter === "∞" && healthFactor > 100);
 
                       return matchesSearch && matchesFilter;
-                    })
-                    .map(([principal, data], index) => {
+                    });
+
+                    if (filteredUsers.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan="5" className="text-center py-10">
+                            <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
+                              <div className="mb-7 -ml-3 -mt-5">
+                                <Lottie />
+                              </div>
+                              <p className="text-[#8490ff] text-sm font-medium dark:text-[#c2c2c2]">
+                                NO USERS FOUND!
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filteredUsers.map(([principal, data], index) => {
                       const totalCollateral = Number(data.Ok[0]) / 1e8;
                       const totalBorrowed = Number(data.Ok[1]) / 1e8;
                       const healthFactor = Number(data.Ok[4]) / 1e10;
@@ -444,9 +872,10 @@ const HealthFactorList = () => {
                           <td className="px-3 py-6 hidden sm:table-cell text-center">
                             ${totalBorrowed.toFixed(2)}
                           </td>
+
                           <td className="px-3 py-6 text-center">
                             <span
-                              className={` ${
+                              className={`flex items-center justify-center ${
                                 healthFactor > 100
                                   ? "text-yellow-500"
                                   : healthFactor === 0
@@ -462,9 +891,15 @@ const HealthFactorList = () => {
                                   : "text-orange-300"
                               }`}
                             >
-                              {healthFactor > 100
-                                ? "♾️"
-                                : healthFactor.toFixed(2)}
+                              {healthFactor > 100 ? (
+                                <Infinity
+                                  size={20}
+                                  strokeWidth={2}
+                                  className="text-[#2A1F9D] dark:text-darkText"
+                                />
+                              ) : (
+                                healthFactor.toFixed(2)
+                              )}
                             </span>
                           </td>
 
@@ -480,7 +915,8 @@ const HealthFactorList = () => {
                           </td>
                         </tr>
                       );
-                    })}
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -492,78 +928,159 @@ const HealthFactorList = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div
             ref={popupRef}
-            className="bg-white dark:bg-darkOverlayBackground dark:text-darkText p-6 rounded-xl shadow-lg w-80 relative"
+            className="bg-white dark:bg-darkOverlayBackground shadow-xl ring-1 ring-black/10 dark:ring-white/20 flex flex-col text-white dark:text-darkText z-50 rounded-[20px] p-6 w-[325px] lg1:w-[400px]"
           >
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
-              onClick={closePopup}
-            >
-              <X size={22} />
-            </button>
+            {/* Header with Download Icon */}
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-[#FCBD78] dark:text-darkText text-center">
+                User Details
+              </h3>
 
-            <h3 className="text-lg font-bold mb-4 text-[#2A1F9D] dark:text-darkText">
-              User Details
-            </h3>
-            <p className="text-sm">
-              <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
-                Principal:
-              </span>
-              <span className="text-[#2A1F9D] dark:text-darkText ">
-                {" "}
+              {/* 📥 Download Icon */}
+              <Download
+                size={20}
+                className="cursor-pointer text-[#4659CF] dark:text-darkTextSecondary hover:text-[#FCBD78]"
+                onClick={() => downloadUserData(selectedUser)}
+              />
+            </div>
+
+            <p className="text-sm mt-4">
+              <span className="text-[#233D63] dark:text-darkText">
                 {selectedUser.principal}
               </span>
             </p>
 
-            <div className="flex flex-col gap-3 mt-4">
-              <p className="text-sm">
+            {/* User Assets Section */}
+            <div className="mt-4">
+              <h4 className="text-sm font-bold text-[#4659CF] dark:text-darkTextSecondary">
+                User Assets:
+              </h4>
+              <div className="flex flex-wrap gap-4 mt-2">
+                {users
+                  .find(
+                    ([principal]) =>
+                      principal.toString() === selectedUser.principal
+                  )
+                  ?.at(1)
+                  ?.reserves?.flat()
+                  ?.map(([asset, assetInfo]) => {
+                    // Extract values
+                    const currentLiquidity = Number(
+                      assetInfo?.liquidity_index || 0n
+                    );
+                    const currentDebtIndex = Number(
+                      assetInfo?.variable_borrow_index || 0n
+                    );
+
+                    // Extract user balances
+                    const userAssetBalance = assetBalances[
+                      selectedUser.principal
+                    ]?.[asset] || {
+                      dtokenBalance: 0,
+                      debtTokenBalance: 0,
+                    };
+
+                    const assetBalance =
+                      Number(userAssetBalance.dtokenBalance) || 0;
+                    const debtBalance =
+                      Number(userAssetBalance.debtTokenBalance) || 0;
+
+                    const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
+                    const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
+
+                    // Compute asset supply & borrow
+                    const assetSupply =
+                      currentLiquidity > 0
+                        ? (assetBalance * supplyValue) /
+                          (currentLiquidity * 1e8)
+                        : 0;
+
+                    const assetBorrow =
+                      currentDebtIndex > 0
+                        ? (debtBalance * borrowValue) / (currentDebtIndex * 1e8)
+                        : 0;
+
+                    return (
+                      <div key={asset} className="relative group">
+                        {/* 🌟 Asset Image */}
+                        <img
+                          src={
+                            asset === "ckBTC"
+                              ? ckBTC
+                              : asset === "ckETH"
+                              ? ckETH
+                              : asset === "ckUSDC"
+                              ? ckUSDC
+                              : asset === "ICP"
+                              ? icp
+                              : asset === "ckUSDT"
+                              ? ckUSDT
+                              : undefined
+                          }
+                          alt={asset}
+                          className="w-8 h-8 rounded-full"
+                        />
+
+                        {/* ✨ Hover Effect to Show Supply & Borrow ✨ */}
+                        <div className="absolute hidden group-hover:block bg-[#fcfafa] text-[#233D63] lg:left-1/2 left-28 transform -translate-x-1/2 shadow-xl ring-2 ring-black/30 dark:ring-white/40 w-[180px] dark:bg-darkOverlayBackground dark:text-darkText text-xs rounded-lg p-2 bottom-14 z-50">
+                          <p>Asset Supply: {formatValue(assetSupply)}</p>
+                          <p>Asset Borrow: {formatValue(assetBorrow)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* User Information */}
+            <div className="bg-gray-100 hover:bg-gray-200 dark:bg-[#1D1B40] text-[#233D63] dark:text-darkText rounded-xl p-5 flex flex-col space-y-3 mt-4">
+              <p className="text-sm flex justify-between">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Available Borrow:
                 </span>
-                <span className="text-[#2A1F9D] dark:text-darkText ">
-                  {" "}
-                  ${selectedUser.availableBorrow.toFixed(2)}
-                </span>
+                <span>${selectedUser.availableBorrow.toFixed(2)}</span>
               </p>
 
-              <p className="text-sm">
+              <p className="text-sm flex justify-between">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Liquidation Threshold:
                 </span>
-                <span className="text-[#2A1F9D] dark:text-darkText ">
-                  {" "}
-                  ${selectedUser.liquidationThreshold.toFixed(2)}
-                </span>
+                <span>${selectedUser.liquidationThreshold.toFixed(2)}</span>
               </p>
 
-              <p className="text-sm sm:hidden">
+              <p className="text-sm flex justify-between sm:hidden">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Total Collateral:
                 </span>
-                <span className="text-[#2A1F9D] dark:text-darkText ">
-                  ${selectedUser.totalCollateral.toFixed(2)}
-                </span>
+                <span>${selectedUser.totalCollateral.toFixed(2)}</span>
               </p>
-              <p className="text-sm sm:hidden">
+
+              <p className="text-sm flex justify-between sm:hidden">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Total Borrowed:
                 </span>
-                <span className="text-[#2A1F9D] dark:text-darkText ">
-                  ${selectedUser.totalBorrowed.toFixed(2)}
-                </span>
+                <span>${selectedUser.totalBorrowed.toFixed(2)}</span>
               </p>
 
-              <p className="text-sm">
+              <p className="text-sm flex justify-between">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Total Debt:
                 </span>
-                <span className="text-[#2A1F9D] dark:text-darkText ">
-                  ${selectedUser.totalDebt.toFixed(2)}
-                </span>
+                <span>${selectedUser.totalDebt.toFixed(2)}</span>
               </p>
             </div>
+
+            {/* Close Button */}
+            <button
+              className="mt-6 w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-xl shadow-md px-5 py-1 text-lg font-semibold"
+              onClick={closePopup}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
+
       {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
     </div>
   ) : (

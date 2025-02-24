@@ -25,7 +25,12 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 
-const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleLogout}) => {
+const MobileTopNav = ({
+  isMobileNav,
+  setIsMobileNav,
+  isHomeNav,
+  handleLogout,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -364,7 +369,11 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleLogout}) =
                     {link.title === "Faucet" && <>{}</>}
                   </React.Fragment>
                 );
-              } else if (!isTestnetMode && !link.testnet) {
+              } else if (
+                !isTestnetMode &&
+                !link.testnet &&
+                link.title !== "Faq"
+              ) {
                 return (
                   <NavLink
                     key={index}

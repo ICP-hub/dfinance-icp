@@ -54,7 +54,7 @@ const DashboardCards = () => {
    *                                  STATE MANAGEMENT
    * =================================================================================== */
   const [searchQuery, setSearchQuery] = useState("");
-  const [like, setLike] = useState(true);
+  const [like, setLike] = useState(false);
   const [notification, setNotification] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -106,23 +106,23 @@ const DashboardCards = () => {
   /**
    * Checks the controller status from the backend.
    */
-  // const checkControllerStatus = async () => {
-  //   if (!backendActor) {
-  //     throw new Error("Backend actor not initialized");
-  //   }
-  //   try {
-  //     const result = await backendActor.to_check_controller();
-  //     console.log("Controller Status:", result);
-  //     setLike(result);
-  //   } catch (err) {
-  //     console.error("Error fetching controller status:", err);
-  //     setError("Failed to fetch controller status");
-  //   }
-  // };
+  const checkControllerStatus = async () => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.to_check_controller();
+      console.log("Controller Status:", result);
+      setLike(result);
+    } catch (err) {
+      console.error("Error fetching controller status:", err);
+      setError("Failed to fetch controller status");
+    }
+  };
 
-  // useEffect(() => {
-  //   checkControllerStatus();
-  // }, [backendActor]);
+  useEffect(() => {
+    checkControllerStatus();
+  }, [backendActor]);
 
   const [cardData, setCardData] = useState([
     { title: "Users", value: "Loading...", link: "/users" },

@@ -5,7 +5,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import CheckCircleIcon from "../../../public/Helpers/tabler_blend-mode.svg";
 import borrowIcon from "../../../public/Helpers/tabler_transaction-dollar.svg";
 import { useNavigate } from "react-router-dom";
-
+import star from "../../../public/Helpers/settings.svg";
 import { useAuth } from "../../utils/useAuthClient";
 import { FAQ_QUESTIONS_POINTSYSTEM } from "../../utils/constants";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -56,11 +56,11 @@ const PointSystemPage = () => {
             <div className="max-w-7xl mx-auto space-y-10">
               {/* Rates Section */}
               <div>
-                <h2 className="text-2xl font-bold mb-6 text-[#2A1F9D] dark:text-darkTextSecondary">
+                <h2 className="text-2xl -mt-5 font-bold mb-6 text-[#2A1F9D] dark:text-darkTextSecondary">
                   Rates
                 </h2>
                 <div className="grid grid-cols-1 lgx:grid-cols-2 gap-6">
-                  <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40  flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl ">
+                  <div className="bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50  flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl ">
                     <h3 className="text-xl font-semibold flex items-center gap-2 mb-4 text-[#2A1F9D] dark:text-darkTextSecondary1">
                       <div className="flex items-center">
                         <svg
@@ -89,21 +89,42 @@ const PointSystemPage = () => {
                         <span className="ml-2">Lending Positions</span>
                       </div>
                     </h3>
-                    <ul className="text-sm space-y-2 text-[#2A1F9D] dark:text-darkTextSecondary">
-                      <li>
-                        ✔️ <b>3</b> points per dollar per day in Stables
-                      </li>
-                      <li>
-                        ✔️ <b>2</b> points per dollar per day in BTC/ETH/ICP
-                      </li>
-                      <li>
-                        ✔️ <b>1</b> point per dollar per day in anything else
-                        (e.g., Liquid Staked tokens)
-                      </li>
+                    <ul className="text-[13px] space-y-2 text-[#2A1F9D] dark:text-darkTextSecondary">
+                      {[
+                        {
+                          points: 3,
+                          text: "points per dollar per day in Stables (ckUSDC, ckUSDT).",
+                        },
+                        {
+                          points: 2,
+                          text: "points per dollar per day in ckBTC, ckETH, ICP.",
+                        },
+                        {
+                          points: 1,
+                          text: "point per dollar per day in anything else (e.g., Liquid staked tokens).",
+                        },
+                      ].map((item, index) => (
+                        <li key={index} className="flex items-start gap-1">
+                          <div className="w-6 flex items-center justify-center">
+                            <img
+                              src={star}
+                              alt="DFinance"
+                              className="w-5 h-5"
+                              style={{
+                                imageRendering: "-webkit-optimize-contrast",
+                                imageRendering: "crisp-edges",
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <b>{item.points}</b> {item.text}
+                          </div>
+                        </li>
+                      ))}
                     </ul>
                   </div>
 
-                  <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
+                  <div className="bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
                     <h3 className="text-xl font-semibold flex items-center gap-2 mb-4 text-[#2A1F9D] dark:text-darkTextSecondary1">
                       <div className="flex items-center">
                         <svg
@@ -132,17 +153,38 @@ const PointSystemPage = () => {
                         <span className="ml-2">Borrow Positions</span>
                       </div>
                     </h3>
-                    <ul className="text-sm space-y-2 text-[#2A1F9D] dark:text-darkTextSecondary">
-                      <li>
-                        ✔️ <b>3</b> points per dollar per day in anything else
-                        (e.g., Liquid Staked tokens)
-                      </li>
-                      <li>
-                        ✔️ <b>2</b> points per dollar per day in BTC/ETH/ICP
-                      </li>
-                      <li>
-                        ✔️ <b>1</b> point per dollar per day in Stables
-                      </li>
+                    <ul className="text-[13px] space-y-2 text-[#2A1F9D] dark:text-darkTextSecondary">
+                      {[
+                        {
+                          points: 3,
+                          text: "points per dollar per day in anything else (e.g., Liquid staked tokens).",
+                        },
+                        {
+                          points: 2,
+                          text: "points per dollar per day in ckBTC, ckETH, ICP.",
+                        },
+                        {
+                          points: 1,
+                          text: "point per dollar per day in Stables (ckUSDC, ckUSDT).",
+                        },
+                      ].map((item, index) => (
+                        <li key={index} className="flex items-start gap-1">
+                          <div className="w-6 flex items-center justify-center">
+                            <img
+                              src={star}
+                              alt="DFinance"
+                              className="w-5 h-5"
+                              style={{
+                                imageRendering: "-webkit-optimize-contrast",
+                                imageRendering: "crisp-edges",
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <b>{item.points}</b> {item.text}
+                          </div>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -154,43 +196,39 @@ const PointSystemPage = () => {
                   Boosts
                 </h2>
                 <div className="grid grid-cols-1 lgx:grid-cols-2 gap-6">
-                  <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
+                  <div className="bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
                     <h3 className="text-lg font-semibold mb-2 text-[#2A1F9D] dark:text-darkTextSecondary1">
                       First 7 Days
                     </h3>
-                    <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">
+                    <p className="text-[13px] text-[#2A1F9D] dark:text-darkTextSecondary">
                       Lending within the first 7 days gives you a permanent
                       boost of <b>2x</b> for as long as those funds remain in
                       those positions.
                     </p>
                   </div>
-                  <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
+                  <div className="bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
                     <h3 className="text-lg font-semibold mb-2 text-[#2A1F9D] dark:text-darkTextSecondary1">
                       Same Asset
                     </h3>
-                    <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">
+                    <p className="text-[13px] text-[#2A1F9D] dark:text-darkTextSecondary">
                       If you provide the same asset in lending and borrowing
                       positions, points are decreased by <b>0.5x</b>.
                     </p>
                   </div>
-                  <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
+                  <div className="bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
                     <h3 className="text-lg font-semibold mb-2 text-[#2A1F9D] dark:text-darkTextSecondary1">
                       Liquidity
                     </h3>
-                    <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">
-                      We can reduce the points by <b>0.5x</b> for the debt user
-                      and increase the points by 1.5x for the liquidator for the
-                      particular transaction.
+                    <p className="text-[13px] text-[#2A1F9D] dark:text-darkTextSecondary">
+                    The debt user's points are reduced by <strong>0.5x</strong>, while the liquidator's points are increased by <strong>1.5x</strong> for the particular transaction.
                     </p>
                   </div>
-                  <div className="bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
+                  <div className="bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 flex flex-col dark:bg-bottom-left-to-top-right-gradient p-8 rounded-2xl shadow-xl">
                     <h3 className="text-lg font-semibold mb-2 text-[#2A1F9D] dark:text-darkTextSecondary1">
                       Repay
                     </h3>
-                    <p className="text-sm text-[#2A1F9D] dark:text-darkTextSecondary">
-                      We calculate the debt amount repaid and the collateral
-                      amount being liquidated, then adjust points by{" "}
-                      <b>1x/1.5</b> for both on the user side.
+                    <p className="text-[13px] text-[#2A1F9D] dark:text-darkTextSecondary">
+                    Points are adjusted by <strong>1x/1.5</strong> based on the debt amount repaid and the collateral amount liquidated on the user side.
                     </p>
                   </div>
                 </div>
@@ -204,14 +242,14 @@ const PointSystemPage = () => {
           <div className="p-0 md:p-6 text-[#2A1F9D] dark:text-darkText">
             {/* Replace with informational cards or an FAQ */}
             <div className="">
-              <h2 className="text-2xl font-bold mb-4 text-[#2A1F9D] dark:text-darkTextSecondary">
+              <h2 className="text-xl md:text-2xl font-bold mb-6 text-[#2A1F9D] dark:text-darkTextSecondary -mt-2">
                 How the Points System Works
               </h2>
 
               {/* Overview */}
-              <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText ">
-                <h3 className="font-semibold text-lg">Overview</h3>
-                <p className="text-[14px] font-normal">
+              <div className="p-5 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl mb-7 text-[#2A1F9D] dark:text-darkText ">
+                <h3 className="font-semibold text-lg mb-2">Overview</h3>
+                <p className="text-[13px] font-normal dark:text-white/80">
                   The points system rewards users for engaging in lending,
                   borrowing, and providing liquidity. Points can be redeemed for
                   exclusive rewards and increase based on boosts and multipliers
@@ -220,42 +258,42 @@ const PointSystemPage = () => {
               </div>
 
               {/* How Points Are Earned */}
-              <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText">
+              <div className="p-5 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl mb-7 text-[#2A1F9D] dark:text-darkText">
                 <h3 className="font-semibold text-lg">How Points Are Earned</h3>
-                <ul className="list-disc ml-6 mt-2 text-[14px] font-normal">
-                  <li>
-                    <b>Lending Points:</b> Earn 3 points per dollar per day in
-                    stablecoins, 2 points in BTC/ETH/ICP, and 1 point in other
+                <ul className="list-disc ml-6 mt-2 text-[13px] font-normal dark:text-white/80">
+                  <li className="mb-2">
+                    <span className="font-semibold dark:text-white/90">Lending Points:</span> Earn 3 points per dollar per day in
+                    stablecoins, 2 points in ckBTC, ckETH, ICP, and 1 point in other
                     assets.
                   </li>
-                  <li>
-                    <b>Borrowing Points:</b> Accumulate points at 3 points per
-                    dollar in other assets, 2 points in BTC/ETH/ICP, and 1 point
+                  <li className="mb-2">
+                    <span className="font-semibold dark:text-white/90">Borrowing Points:</span> Accumulate points at 3 points per
+                    dollar in other assets, 2 points in ckBTC, ckETH, ICP, and 1 point
                     in stablecoins.
                   </li>
-                  <li>
-                    <b>Liquidity Points:</b> Earned by providing liquidity in
+                  <li className="mb-2">
+                    <span className="font-semibold dark:text-white/90">Liquidity Points:</span> Earned by providing liquidity in
                     the platform’s pools, with rates based on asset type.
                   </li>
                 </ul>
               </div>
 
               {/* Boosts and Multipliers */}
-              <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText">
+              <div className="p-5 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl mb-7 text-[#2A1F9D] dark:text-darkText">
                 <h3 className="font-semibold text-lg">
                   Boosts and Multipliers
                 </h3>
-                <ul className="list-disc ml-6 mt-2 text-[14px] font-normal">
-                  <li>
-                    <b>First 7 Days Boost:</b> Lending within the first 7 days
+                <ul className="list-disc ml-6 mt-2 text-[13px] dark:text-white/80">
+                  <li className="mb-2">
+                    <span className="font-semibold dark:text-white/90">First 7 Days Boost:</span> Lending within the first 7 days
                     gives a permanent 2x boost.
                   </li>
-                  <li>
-                    <b>Same Asset Boost:</b> Providing the same asset in both
+                  <li className="mb-2">
+                    <span className="font-semibold dark:text-white/90">Same Asset Boost:</span> Providing the same asset in both
                     lending and borrowing positions reduces points by 0.5x.
                   </li>
-                  <li>
-                    <b>Liquidity Boost:</b> Boosts points by 1.5x for the
+                  <li className="mb-2">
+                    <span className="font-semibold dark:text-white/90">Liquidity Boost:</span> Boosts points by 1.5x for the
                     liquidator and reduces by 0.5x for the debt user in specific
                     transactions.
                   </li>
@@ -263,9 +301,9 @@ const PointSystemPage = () => {
               </div>
 
               {/* Point Redemption */}
-              <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg mb-4 text-[#2A1F9D] dark:text-darkText">
+              <div className="p-5 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl mb-7 text-[#2A1F9D] dark:text-darkText">
                 <h3 className="font-semibold text-lg">Point Redemption</h3>
-                <p className="text-[14px] font-normal">
+                <p className="text-[13px] font-normal dark:text-white/80 mt-2">
                   Redeem points for rewards, access to exclusive content, or
                   other benefits. Redemptions may have minimum point
                   requirements and are subject to availability.
@@ -273,17 +311,17 @@ const PointSystemPage = () => {
               </div>
 
               {/* Examples */}
-              <div className="p-4 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 dark:bg-bottom-left-to-top-right-gradient rounded-lg text-[#2A1F9D] dark:text-darkText">
-                <h3 className="font-semibold text-lg">Example</h3>
-                <p className="text-[14px] font-normal">
+              <div className="p-5 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl text-[#2A1F9D] dark:text-darkText">
+                <h3 className="font-semibold text-lg mb-2">Example</h3>
+                <p className="text-[13px] font-normal dark:text-white/80">
                   For example, 3 x $100 in stable coin lent = 300 points. With
-                  the bonus = 600 points
+                  the bonus = 600 points.
                 </p>
               </div>
             </div>
 
             <section className="mt-10" id="faq">
-              <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+              <div className="w-full p-5 md:p-10 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 rounded-2xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                 <div className="w-full">
                   <h1 className="text-[25px] font-inter md:text-[45px] font-extralight text-[#2A1F9D] dark:text-darkText">
                     Frequently Asked Questions

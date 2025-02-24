@@ -26,7 +26,7 @@ import {
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import ThemeToggle from "../Common/ThemeToggle";
-import settingsIcon from "../../../public/Helpers/Settings.svg";
+import settingsIcon from "../../../public/Helpers/Settings(1).svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -489,13 +489,13 @@ export default function Navbar({ isHomeNav }) {
               <div className="hidden lg:flex gap-2 sxs3:flex md:flex select-none items-center h-[60px]">
                 <button
                   onClick={handleNavigate}
-                  className=" flex items-center gap-2 z-20 py-2.5 px-6  focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button1"
+                  className=" flex items-center gap-2 z-20 py-2.5 px-4 focus:outline-none box bg-transparent  shadow-lg  text-sm font-light rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white button1"
                 >
                   {/* Custom Gradient Star */}
                   <img
                     src={star}
                     alt="DFinance"
-                    className="w-5 h-5 sm:w-4 sm:h-4 lg:w-5 lg:h-5"
+                    className="w-5 h-5 lg:w-5 lg:h-5 hidden sm:block"
                     style={{
                       imageRendering: "-webkit-optimize-contrast",
                       imageRendering: "crisp-edges",

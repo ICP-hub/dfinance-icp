@@ -311,7 +311,7 @@ const PointSystemPage = () => {
               </div>
 
               {/* Examples */}
-              <div className="p-4 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl text-[#2A1F9D] dark:text-darkText">
+              <div className="p-5 bg-gradient-to-r from-[#4659CF]/50 via-[#D379AB]/50 to-[#FCBD78]/50 dark:bg-bottom-left-to-top-right-gradient rounded-2xl text-[#2A1F9D] dark:text-darkText">
                 <h3 className="font-semibold text-lg mb-2">Example</h3>
                 <p className="text-[13px] font-normal dark:text-white/80">
                   For example, 3 x $100 in stable coin lent = 300 points. With

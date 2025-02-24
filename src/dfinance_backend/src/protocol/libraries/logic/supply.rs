@@ -367,7 +367,8 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         // Updates the liquidity index
         reserve::update_state(&mut reserve_data, &mut reserve_cache);
         ic_cdk::println!("Reserve state updated successfully");
-
+        //user balance-> a token balance * nextliqindex
+        //if param.amount == type max, then amount to withdraw = user_balance
         if let Err(e) = ValidationLogic::validate_withdraw(
             &reserve_data,
             params.amount.clone(),
@@ -387,7 +388,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         if let Err(e) = reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
-            params.amount.clone(),
+            params.amount.clone(), //amount to withdraw
             Nat::from(0u128),
         )
         .await

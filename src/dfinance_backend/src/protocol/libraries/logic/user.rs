@@ -2,6 +2,7 @@ use super::update::user_data;
 use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
+use crate::declarations::assets::ExecuteRepayParams;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::types::datatypes::UserData;
@@ -11,6 +12,7 @@ use crate::{
     protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
     user_normalized_debt, user_normalized_supply,
 };
+use crate::{check_is_tester, get_all_users, reserve_ledger_canister_id};
 use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
 use ic_cdk::{query, update};
@@ -675,7 +677,7 @@ pub async fn create_user_reserve_with_low_health(
                 .ok_or(Error::NoReserveDataFound)
         })?;
 
-        borrow_reserve_data.asset_supply += supply_tokens.clone();
+        borrow_reserve_data.asset_borrow += borrow_tokens.clone();
         borrow_reserve_data.debt_index = Nat::from(100_000_000u128);
 
         (supply_reserve_data, borrow_reserve_data)
@@ -707,8 +709,8 @@ pub async fn create_user_reserve_with_low_health(
             reserve_data.is_collateral = true;
         };
 
-        let mut supply_user_reserve = user_reserve(&mut user_data, &asset_borrow);
-        let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
+        let mut borrow_user_reserve = user_reserve(&mut user_data, &asset_borrow);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = borrow_user_reserve {
             reserve_data.liquidity_index = Nat::from(100_000_000u128);
             reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
             reserve_data.debt_token_blance += borrow_tokens.clone();

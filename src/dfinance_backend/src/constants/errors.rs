@@ -42,6 +42,8 @@ pub enum Error {
     NoPriceCache,
     EmptyAsset,
     LowWalletBalance,
+    AmountExceedsLimit, 
+    ExceedsRemainingLimit,
     AmountTooMuch,
     InvalidAssetLength,
     NoUserReserveDataFound,
@@ -67,7 +69,8 @@ pub enum Error {
     FailedToReleaseLock,
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
-    AmountSubtractionError
+    AmountSubtractionError,
+    USERCANNOTBELIQUIDATED
 }
 
 impl Error {
@@ -113,6 +116,8 @@ impl Error {
             Error::ErrorPriceCache => "Error in fetching price cache",
             Error::EmptyAsset => "Asset cannot be an empty string",
             Error::LowWalletBalance => "wallet balance is low",
+            Error::AmountExceedsLimit => "Requested amount exceeds the total faucet limit.",
+            Error::ExceedsRemainingLimit => "Requested amount exceeds the remaining faucet limit.",
             Error::AmountTooMuch => "Amount is too much",
             Error::InvalidAssetLength => "Lenght of the asset is invalid",
             Error::InvalidBurnAmount => "Invalid burn amount",
@@ -137,7 +142,8 @@ impl Error {
             Error::FailedToReleaseLock => "Failed to release lock",
             Error::LockOperationInProgess => "Another operation is already in progress for user",
             Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
-            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract"
+            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
+            Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible"
         }
     }
 }

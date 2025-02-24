@@ -17,7 +17,6 @@ use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
 use ic_cdk::{query, update};
 
-
 fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
 }
@@ -28,14 +27,14 @@ pub struct UserConfig {
     pub borrowing: bool,
 }
 
-/* 
+/*
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
  *
  * @dev Aggregates user reserves, fetches exchange rates, and determines borrowing capacity.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
- * 
+ *
  * @return A tuple containing:
  *   - Total collateral
  *   - Total debt
@@ -98,7 +97,6 @@ pub async fn calculate_user_account_data(
             Nat::from(0u128),
             Nat::from(0u128),
             Nat::from(0u128),
-           
             max,
             Nat::from(0u128),
             false,
@@ -318,7 +316,7 @@ pub async fn calculate_user_account_data(
     ))
 }
 
-/* 
+/*
  * @title Get User Balance in Base Currency
  * @notice Computes the user's total balance in the base currency (USD equivalent).
  *
@@ -327,7 +325,7 @@ pub async fn calculate_user_account_data(
  * @param user_principal The principal of the user whose balance is being calculated.
  * @param reserve The reserve data associated with the user's asset.
  * @param asset_price The price of the asset in the base currency.
- * 
+ *
  * @return The user's balance in base currency.
  */
 pub async fn get_user_balance_in_base_currency(
@@ -385,7 +383,6 @@ pub async fn get_user_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    // Ask : get normailse incone function does not exist.
     ic_cdk::println!(
         "last of the base currency  = {}",
         user_scaled_balanced_normalized
@@ -397,7 +394,7 @@ pub async fn get_user_balance_in_base_currency(
         .scaled_mul(asset_price.clone()))
 }
 
-/* 
+/*
  * @title Get User Debt in Base Currency
  * @notice Computes the user's total outstanding debt in the base currency.
  *
@@ -406,7 +403,7 @@ pub async fn get_user_balance_in_base_currency(
  * @param user_principal The principal of the user whose debt is being calculated.
  * @param reserve The reserve data associated with the user's asset.
  * @param asset_price The price of the asset in the base currency.
- * 
+ *
  * @return The user's debt in base currency.
  */
 pub async fn get_user_debt_in_base_currency(
@@ -472,7 +469,7 @@ pub async fn get_user_debt_in_base_currency(
     Ok(result)
 }
 
-/* 
+/*
  * @title User Account Data Structure
  * @notice Stores financial data such as collateral, debt, and risk factors.
  *
@@ -489,7 +486,7 @@ pub struct UserAccountData {
     pub has_zero_ltv_collateral: bool,
 }
 
-/* 
+/*
  * @title Get Users Eligible for Liquidation
  * @notice Identifies users with a health factor below the liquidation threshold.
  *
@@ -497,7 +494,7 @@ pub struct UserAccountData {
  *
  * @param total_pages The total number of pages to fetch users from.
  * @param page_size The number of users per page.
- * 
+ *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
 #[query]
@@ -545,12 +542,15 @@ pub async fn get_liquidation_users_concurrent(
                         available_borrow: user_account_data_tuple.5,
                         has_zero_ltv_collateral: user_account_data_tuple.6,
                     };
-                    ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
+                    ic_cdk::println!(
+                        "User: {:?}, Health Factor: {:?}",
+                        user_principal,
+                        user_account_data.health_factor
+                    );
 
-                    if user_account_data.health_factor < Nat::from(100000000u128){
+                    if user_account_data.health_factor < Nat::from(100000000u128) {
                         page_liq_list.push((user_principal, user_account_data, user_data));
                     }
-                   
                 }
             }
             page_liq_list
@@ -565,7 +565,6 @@ pub async fn get_liquidation_users_concurrent(
 
     liq_list
 }
-
 
 /*
  * @title Register User
@@ -599,8 +598,24 @@ fn register_user() -> Result<String, Error> {
     user_data
 }
 
-
-
+/*
+ * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC)
+ * @notice Identifies users with a health factor below the liquidation threshold,
+ *         enabling liquidation testing for Pocket IC.
+ *
+ * @dev This function has been designed specifically for testing purposes in Pocket IC
+ *      by identifying users who fall below the threshold required for liquidation.
+ *
+ * @param asset_supply The asset being supplied by the user (e.g., collateral asset).
+ * @param asset_borrow The asset being borrowed by the user.
+ * @param supply_tokens The number of supply tokens the user wants to add to the reserve.
+ * @param borrow_tokens The number of borrow tokens the user wants to take out from the reserve.
+ *
+ * @return Result<UserData, Error>:
+ *         - Ok(UserData): The successfully updated user data, containing their reserve information.
+ *         - Err(Error): An error if any validation or process fails, such as invalid input data or
+ *           failed token transfers.
+ */
 #[update]
 pub async fn create_user_reserve_with_low_health(
     asset_supply: String,

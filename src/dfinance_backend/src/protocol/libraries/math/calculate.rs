@@ -1,9 +1,7 @@
-
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
-use crate::protocol;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
@@ -294,6 +292,18 @@ pub async fn get_exchange_rates(
     }
 }
 
+
+/*
+ * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
+ * @dev This function checks if the caller is a valid tester for Pocket IC and iterates over the assets in the state,
+ *      updating their price caches with manually defined prices. If no price is found for an asset, 
+ *      it logs the absence of the price. If a price cache does not exist, a new one is created.
+ * @param None
+ * @returns 
+ *      - `Ok(())`: if the price update process completes successfully.
+ *      - `Err(Error::InvalidUser)`: if the caller is not a valid tester.
+ *      - `Err(Error::ExchangeRateError)`: if updating the price cache fails.
+ */
 #[update]
 pub async fn update_reserve_price_test() -> Result<(), Error> {
 

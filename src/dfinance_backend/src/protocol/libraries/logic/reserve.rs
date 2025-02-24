@@ -1,6 +1,5 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
-use crate::api::resource_manager::release_lock;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
@@ -18,7 +17,8 @@ use ic_cdk::api::time;
  * @notice Stores temporary values used during the treasury accrual process.
  * @dev Holds previous debt values and calculated accrual amounts.
  */
-struct AccrueToTreasuryLocalVars { //
+struct AccrueToTreasuryLocalVars {
+    //
     prev_total_variable_debt: Nat,
     curr_total_variable_debt: Nat,
     total_debt_accrued: Nat,
@@ -79,7 +79,7 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
 /**
  * @title Update State Function
  *
- * @notice Updates the reserve state if the current timestamp differs from the last update timestamp. 
+ * @notice Updates the reserve state if the current timestamp differs from the last update timestamp.
  *         It ensures only necessary updates are made, such as updating indexes and accruing treasury rewards.
  *
  * @dev The function follows these steps:
@@ -90,20 +90,27 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
  * @param reserve_data The mutable reference to the `ReserveData` struct.
  * @param reserve_cache The mutable reference to the `ReserveCache` struct.
  *
- * @return None The function modifies `reserve_data` and `reserve_cache` in place.
+* @return Result<(), Error> Returns a success message if updated successfully or an error if failed.
  */
-pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
+pub fn update_state(
+    reserve_data: &mut ReserveData,
+    reserve_cache: &mut ReserveCache,
+) -> Result<(), Error> {
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
-        return;
+        return Ok(());
     }
 
     update_indexes(reserve_data, reserve_cache);
-    accrue_to_treasury(reserve_data, reserve_cache);
+    if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
+        ic_cdk::println!("Error accruing to treasury: {:?}", e);
+        return Err(e);
+    }
 
     reserve_data.last_update_timestamp = current_time;
+    Ok(())
 }
 
 /*
@@ -114,7 +121,7 @@ pub fn update_state(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveC
  * @param reserve_data Reference to `ReserveData` for reserve state.
  * @param reserve_cache Reference to `ReserveCache` for liquidity/debt details.
  *
- * @return None (modifies `reserve_data` and `reserve_cache`).
+ * @return Result<(), Error> Returns `Ok` if the update indexes are successfully updated, or an error if the update indexes fails.
  */
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     if reserve_cache.curr_liquidity_rate != Nat::from(0u128) {
@@ -277,11 +284,6 @@ pub async fn burn_scaled(
             return Err(err);
         }
     };
-    // if balance.clone() > adjusted_amount.clone()
-    //     && balance.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    // {
-    //     adjusted_amount = balance.clone();
-    // }
     ic_cdk::println!("burn balance = {}", balance);
     ic_cdk::println!("adjusted balance = {}", adjusted_amount);
     let mut balance_increase = Nat::from(0u128);
@@ -302,10 +304,6 @@ pub async fn burn_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
         ic_cdk::println!("balance_increase calculated = {}", balance_increase);
         ic_cdk::println!(
             "dtoken vs adjusted {} {}",
@@ -320,8 +318,7 @@ pub async fn burn_scaled(
         } else {
             ic_cdk::println!("Subtracting adjusted amount from DToken balance");
             user_state.d_token_balance -= adjusted_amount.clone();
-            // mainting threasold here.
-            // TODO: look into the threshold value again
+
             ic_cdk::println!(
                 "dtoken balance after subtraction = {}",
                 user_state.d_token_balance
@@ -364,11 +361,6 @@ pub async fn burn_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.variable_borrow_index.clone()));
-
         ic_cdk::println!("Balance increase calculated: {}", balance_increase);
         ic_cdk::println!(
             "adjusted_amount {} {}",
@@ -387,8 +379,7 @@ pub async fn burn_scaled(
                 "debt token balance after subtraction = {}",
                 user_state.debt_token_blance
             );
-            // mainting threasold here.
-            // TODO: look into the threshold value again
+
             if user_state.debt_token_blance < Nat::from(1000u128) {
                 user_state.debt_token_blance = Nat::from(0u128);
             }
@@ -528,11 +519,6 @@ pub async fn mint_scaled(
         amount.clone().scaled_div(index.clone())
     };
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
-    // if amount.clone() > adjusted_amount.clone()
-    //     && amount.clone() - adjusted_amount.clone() < Nat::from(1000u128)
-    // {
-    //     adjusted_amount = amount.clone();
-    // }
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     //acuire transaction lock
@@ -566,10 +552,7 @@ pub async fn mint_scaled(
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.liquidity_index.clone())); //fetch from user
+
         println!("balance incr dtoken{}", balance_increase);
         if user_state.liquidity_index == Nat::from(0u128) {
             user_state.d_token_balance = amount.clone();
@@ -595,10 +578,6 @@ pub async fn mint_scaled(
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
-        // balance_increase = (balance.clone().scaled_mul(index.clone()))
-        //     - (balance
-        //         .clone()
-        //         .scaled_mul(user_state.variable_borrow_index.clone()));
         println!("balance incr debttoken{}", balance_increase);
         if user_state.variable_borrow_index == Nat::from(0u128) {
             user_state.debt_token_blance = amount.clone();
@@ -640,7 +619,7 @@ pub async fn mint_scaled(
  *
  * @dev Determines accrued debt by comparing scaled total variable debt before and after index updates.
  *      If reserve factor is non-zero, computes mintable amount and updates treasury.
- * 
+ *
  * @param reserve_data Mutable reference to `ReserveData` (treasury accumulation).
  * @param reserve_cache Reference to `ReserveCache` (current & next debt/liquidity indices).
  *
@@ -648,14 +627,14 @@ pub async fn mint_scaled(
  * @return None. This function modifies `reserve_data`, updating the treasury accumulation.
  *
  */
-pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &ReserveCache) {
-    // TODO: need to handle the error in this.
+pub fn accrue_to_treasury(
+    reserve_data: &mut ReserveData,
+    reserve_cache: &ReserveCache,
+) -> Result<(), Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    let user_principal = ic_cdk::caller();
-
     if reserve_cache.reserve_factor == Nat::from(0u128) {
-        return;
+        return Ok(());
     }
 
     vars.prev_total_variable_debt = ScalingMath::scaled_mul(
@@ -677,7 +656,7 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
     );
 
     if vars.curr_total_variable_debt < vars.prev_total_variable_debt {
-        let _ = release_lock(&user_principal);
+        return Err(Error::AmountSubtractionError);
     }
 
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
@@ -700,4 +679,5 @@ pub fn accrue_to_treasury(reserve_data: &mut ReserveData, reserve_cache: &Reserv
             reserve_data.accure_to_platform
         );
     }
+    Ok(())
 }

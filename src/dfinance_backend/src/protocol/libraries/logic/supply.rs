@@ -1,4 +1,3 @@
-
 use crate::api::functions::asset_transfer_from;
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
@@ -112,7 +111,13 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
@@ -365,7 +370,13 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity index
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
         //user balance-> a token balance * nextliqindex
         //if param.amount == type max, then amount to withdraw = user_balance

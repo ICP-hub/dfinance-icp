@@ -2,7 +2,6 @@ use candid::{CandidType, Deserialize};
 use candid::{Nat, Principal};
 use serde::Serialize;
 
-// TODO: anishka can you look on these comment only onece for the cheking purpose.
 /* 
  * @title Transfer From Arguments
  * @notice Defines the arguments for transferring assets.

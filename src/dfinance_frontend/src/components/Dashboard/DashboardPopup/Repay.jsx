@@ -23,19 +23,34 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the Repay component, allowing users to input and execute repayment transactions.
  */
 
-const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const Repay = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-
-  /* ===================================================================================
-   *                                 STATE MANAGEMENT
-   * =================================================================================== */
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -66,10 +81,15 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
    *                                  MEMOIZATION
    * =================================================================================== */
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -520,7 +540,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       totalDeptValue = 0;
     }
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    
+
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
@@ -570,7 +590,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2  mt-1">
+                  <div className="w-auto flex items-center gap-2 mb-7">
                     <img
                       src={image}
                       alt="Item Image"
@@ -578,23 +598,33 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 text-right w-full mt-1">
-                    Wallet Balance:
-                  </p>
-                  <p
-                    className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (assetBorrow > 0 && !isApproved) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {truncateToSevenDecimals(supplyBalance)} Max
-                  </p>
+                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
+                    {/* Wallet Balance label (Always on top in small screens) */}
+                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+                      Wallet Balance:
+                    </p>
+
+                    {/* Value and Max button in same line below on small screens */}
+                    <div className="flex gap-1 items-center">
+                      <p className="text-[10px] text-gray-500">
+                        {truncateToSevenDecimals(supplyBalance)}
+                      </p>
+                      <p
+                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                          assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        }`}
+                        onClick={() => {
+                          if (assetBorrow > 0 && !isApproved) {
+                            handleMaxClick();
+                          }
+                        }}
+                      >
+                        Max
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -864,3 +894,4 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
 };
 
 export default Repay;
+

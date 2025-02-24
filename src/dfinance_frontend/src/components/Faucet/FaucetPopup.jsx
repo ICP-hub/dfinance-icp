@@ -146,6 +146,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       "The asset is not supported. Please select a valid asset.",
     LowWalletBalance: "Insufficient wallet balance. Please try again later.",
     AmountTooMuch: "The requested amount exceeds the faucet limit.",
+    AmountExceedsLimit: "Requested amount exceeds the total faucet limit.",
+    ExceedsRemainingLimit: "Requested amount exceeds the remaining faucet limit.",
     ErrorFaucetTokens:
       "An error occurred while transferring tokens. Please try again.",
     Default:

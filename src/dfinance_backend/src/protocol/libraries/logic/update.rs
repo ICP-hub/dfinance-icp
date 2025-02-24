@@ -207,10 +207,6 @@ impl UpdateLogic {
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         ic_cdk::println!("User reserve: {:?}", user_reserve);
 
-        // let mut user_reserve_data = match user_reserve.as_mut() {
-        //     Some((_, reserve_data)) => reserve_data,
-        //     None => return Err(Error::NoUserReserveDataFound),
-        // };
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
@@ -378,11 +374,7 @@ impl UpdateLogic {
                 reserve_data.is_collateral = true;
             }
         }
-        // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
-        //     if let Some(ref mut reserves) = user_data.reserves {
-        //         reserves.retain(|(name, _)| name != &params.asset);
-        //     }
-        // }
+
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -490,11 +482,6 @@ impl UpdateLogic {
             return Err(Error::NoUserReserveDataFound);
         }
 
-        // if debttoken_balance == Nat::from(0u128) && is_collateral == false {
-        //     if let Some(ref mut reserves) = user_data.reserves {
-        //         reserves.retain(|(name, _)| name != &params.asset);
-        //     }
-        // }
         ic_cdk::println!("Saving updated user data to state");
 
         mutate_state(|state| {

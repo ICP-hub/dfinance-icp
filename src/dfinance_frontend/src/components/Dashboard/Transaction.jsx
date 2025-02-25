@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
+import {  useLocation } from 'react-router-dom';
+import {  useSelector } from 'react-redux';
 import { useAuth } from "../../utils/useAuthClient";
 import WalletModal from './WalletModal';
 
 const TransactionDetail = () => {
-  const dispatch = useDispatch();
-  const { isWalletCreated, isWalletModalOpen, isSwitchingWallet } = useSelector(state => state.utility);
-  const { isAuthenticated, login } = useAuth();
+  const {  isSwitchingWallet } = useSelector(state => state.utility);
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const { transaction } = location.state;
-  const navigate = useNavigate();
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
-  };
 
   return (
     <div className="relative w-full mt-10 md:w-12/12 mx-auto my-6 min-h-[380px] md:min-h-[530px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-start justify-start bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">

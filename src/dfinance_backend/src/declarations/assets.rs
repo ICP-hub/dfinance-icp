@@ -155,45 +155,7 @@ pub struct CalculateInterestRatesParams {
     pub d_token: String,
 }
 
-/* 
- * @title Reserve Initialization Parameters
- * @notice Defines the parameters required to initialize a reserve.
- * @dev This struct includes details needed to register a new asset in the lending protocol.
- *
- * @param asset The name of the asset (e.g., "ICP", "BTC").
- * @param d_token_address The address of the dToken for this reserve.
- * @param stable_debt_address The address of the stable debt token for this reserve.
- * @param variable_debt_address The address of the variable debt token for this reserve.
- * @param interest_rate_strategy_address The contract address handling interest rate calculations.
- * @param reserves_count The current count of reserves in the system.
- * @param max_number_reserves The maximum allowed number of reserves in the system.
- */
-#[derive(CandidType, Deserialize, Clone)]
-pub struct InitReserveParams {
-    pub asset: String,
-    pub d_token_address: String,
-    pub stable_debt_address: String,
-    pub variable_debt_address: String,
-    pub interest_rate_strategy_address: String,
-    pub reserves_count: u64,
-    pub max_number_reserves: u64,
-}
 
-/* 
- * @title Interest Rate Modes
- * @notice Defines the different modes of interest rates.
- * @dev Determines whether a loan has a stable, variable, or no interest rate.
- * 
- * @variant None No interest rate is applied.
- * @variant Stable The loan has a fixed interest rate.
- * @variant Variable The loan has a dynamic interest rate that changes based on market conditions.
- */
-#[derive(CandidType, Deserialize, Clone, PartialEq)]
-pub enum InterestRateMode {
-    None,
-    Stable,
-    Variable,
-}
 
 /* 
  * @title Execute Borrow Parameters

@@ -2,8 +2,16 @@ import { Check, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 const FaucetPayment = ({ asset, amount, onClose }) => {
+  /* ===================================================================================
+   *                                  STATE-MANAGEMENT
+   * =================================================================================== */
+
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -27,6 +35,10 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
   if (!isVisible) {
     return null;
   }
+
+  /* ===================================================================================
+   *                                  RENDER-COMPONENT
+   * =================================================================================== */
 
   return (
     <div

@@ -14,9 +14,6 @@ use ic_cdk::api::time;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
-// use ic_cdk::api::management_canister::http_request::{
-//     http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
-// };
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 struct Account {
@@ -228,6 +225,7 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
         }
     }
 }
+
 /*
  * @title Token Faucet
  * @notice This function allows users to request tokens from the faucet for a specified asset and amount.
@@ -321,24 +319,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             return Err(Error::LowWalletBalance);
         }
 
-        // if (balance.clone() - amount.clone()) == Nat::from(0u128) {
-        //     ic_cdk::println!("wallet balance is low");
-        //     if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
-        //         ic_cdk::println!("Failed to send admin notification: {:?}", e);
-        //         return Err(e);
-        //     };
-        // }
-
-        // if (balance.clone() - amount.clone())
-        //     <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
-        // {
-        //     ic_cdk::println!("wallet balance is low");
-        //     if let Err(e) = send_admin_notifications("final", asset.clone()).await {
-        //         ic_cdk::println!("Failed to send admin notification: {:?}", e);
-        //         return Err(e);
-        //     };
-        // }
-
         let mut rate: Option<Nat> = None;
 
         match get_cached_exchange_rate(asset.clone()) {
@@ -377,14 +357,14 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             );
             if usd_amount.clone() > user_reserve_data.faucet_limit {
                 ic_cdk::println!("amount is too much");
-                return Err(Error::AmountTooMuch); //TODO change error line
+                return Err(Error::AmountExceedsLimit); 
             }
 
             if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
                 > user_reserve_data.faucet_limit
             {
                 ic_cdk::println!("amount is too much second");
-                return Err(Error::AmountTooMuch);
+                return Err(Error::ExceedsRemainingLimit);
             }
             user_reserve_data.faucet_usage += usd_amount;
             ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
@@ -397,14 +377,14 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
             if usd_amount > new_reserve.faucet_limit {
                 ic_cdk::println!("amount is too much");
-                return Err(Error::AmountTooMuch);
+                return Err(Error::AmountExceedsLimit);
             }
 
             if (new_reserve.faucet_usage.clone() + usd_amount.clone())
                 > new_reserve.faucet_limit.clone()
             {
                 ic_cdk::println!("amount is too much second");
-                return Err(Error::AmountTooMuch);
+                return Err(Error::ExceedsRemainingLimit);
             }
 
             new_reserve.faucet_usage += usd_amount;

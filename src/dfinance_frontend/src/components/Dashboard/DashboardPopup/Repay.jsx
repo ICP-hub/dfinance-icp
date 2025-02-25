@@ -43,16 +43,14 @@ const Repay = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
-  const fees = useSelector((state) => state.fees.fees);
   const { backendActor, principal } = useAuth();
-  const dispatch = useDispatch();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -72,7 +70,30 @@ const Repay = ({
   const [maxAmount, setMaxAmount] = useState("0");
   const [maxClicked, setMaxClicked] = useState(false);
 
-  const value = 5.23;
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const fees = useSelector((state) => state.fees.fees);
+  const dispatch = useDispatch();
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
@@ -141,34 +162,6 @@ const Repay = ({
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
-
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-
-      const numericAmount = Number(amount.replace(/,/g, ""));
-
-      let convertedValue = numericAmount * adjustedConversionRate;
-
-      const truncatedValue = (
-        Math.floor(convertedValue * Math.pow(10, 8)) / Math.pow(10, 8)
-      ).toFixed(7);
-
-      setUsdValue(truncatedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  useEffect(() => {
-    if (assetBorrow && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
@@ -258,12 +251,6 @@ const Repay = ({
       });
     }
   };
-
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
 
   const errorMessages = {
     NoCanisterIdFound:
@@ -404,41 +391,6 @@ const Repay = ({
     }
   };
 
-  //   const handlePanicCall = async () => {
-  //     try {
-  //       const result = await backendActor.will_panic();
-  // console.log("result", result);
-  //       // If the function somehow returns a value without panicking
-  //       toast.success(`Backend response: ${result}`, {
-  //         className: "custom-toast",
-  //         position: "top-center",
-  //         autoClose: 3000,
-  //         hideProgressBar: false,
-  //         closeOnClick: true,
-  //         pauseOnHover: true,
-  //         draggable: true,
-  //       });
-  //     } catch (error) {
-  //       console.error("Caught panic error:", error);
-
-  //       // Check if error message contains panic indication
-  //       if (error.message && error.message.toLowerCase().includes("panic")) {
-  //         setShowPanicPopup(true);
-  //         setIsVisible(false);
-  //       } else {
-  //         toast.error(`Error: ${error.message || "Unexpected error occurred"}`, {
-  //           className: "custom-toast",
-  //           position: "top-center",
-  //           autoClose: 3000,
-  //           hideProgressBar: false,
-  //           closeOnClick: true,
-  //           pauseOnHover: true,
-  //           draggable: true,
-  //         });
-  //       }
-  //     }
-  //   };
-
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -449,7 +401,6 @@ const Repay = ({
     try {
       if (isApproved) {
         await handleRepayETH();
-        // await handlePanicCall();
       } else {
         await handleApprove();
       }
@@ -457,56 +408,6 @@ const Repay = ({
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
-
-  // Updates health factor based on repayment amount
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold
-    );
-    const amountAdded = usdValue || 0;
-    let totalCollateralValue = parseFloat(totalCollateral);
-    if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;
-    }
-    let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
-    }
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-  }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-  ]);
 
   const calculateHealthFactor = (
     totalCollateral,
@@ -564,6 +465,100 @@ const Repay = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+
+      const numericAmount = Number(amount.replace(/,/g, ""));
+
+      let convertedValue = numericAmount * adjustedConversionRate;
+
+      const truncatedValue = (
+        Math.floor(convertedValue * Math.pow(10, 8)) / Math.pow(10, 8)
+      ).toFixed(7);
+
+      setUsdValue(truncatedValue);
+    } else {
+      setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (assetBorrow && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    const amountAdded = usdValue || 0;
+    let totalCollateralValue = parseFloat(totalCollateral);
+
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+
+    setPrevHealthFactor(currentHealthFactor);
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+  ]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
+
   return (
     <>
       {isVisible && (
@@ -595,7 +590,7 @@ const Repay = ({
                   </p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2  mt-1">
+                  <div className="w-auto flex items-center gap-2 mb-7">
                     <img
                       src={image}
                       alt="Item Image"
@@ -603,23 +598,33 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 text-right w-full mt-1">
-                    Wallet Balance:
-                  </p>
-                  <p
-                    className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (assetBorrow > 0 && !isApproved) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {truncateToSevenDecimals(supplyBalance)} Max
-                  </p>
+                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
+                    {/* Wallet Balance label (Always on top in small screens) */}
+                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+                      Wallet Balance:
+                    </p>
+
+                    {/* Value and Max button in same line below on small screens */}
+                    <div className="flex gap-1 items-center">
+                      <p className="text-[10px] text-gray-500">
+                        {truncateToSevenDecimals(supplyBalance)}
+                      </p>
+                      <p
+                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                          assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        }`}
+                        onClick={() => {
+                          if (assetBorrow > 0 && !isApproved) {
+                            handleMaxClick();
+                          }
+                        }}
+                      >
+                        Max
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -889,3 +894,4 @@ const Repay = ({
 };
 
 export default Repay;
+

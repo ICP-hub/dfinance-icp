@@ -1,21 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Button from "../../components/Common/Button";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Modal } from "@mui/material";
 import { useAuth } from "../../utils/useAuthClient";
 import FaucetDetails from "../../components/Faucet/FaucetDetails";
 import Element from "../../../public/element/Elements.svg";
-import { setUserData } from "../../redux/reducers/userReducer";
 import {
-  setIsWalletConnected,
   setWalletModalOpen,
-  setConnectedWallet,
 } from "../../redux/reducers/utilityReducer";
-import icplogo from "../../../public/wallet/icp.png";
-import plug from "../../../public/wallet/plug.png";
-import bifinity from "../../../public/wallet/bifinity.png";
-import nfid from "../../../public/wallet/nfid.png";
 import WalletModal from "../../components/Dashboard/WalletModal";
 
 /**
@@ -25,7 +16,6 @@ import WalletModal from "../../components/Dashboard/WalletModal";
  * @returns {JSX.Element} - Returns the Faucet component.
  */
 const Faucet = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility

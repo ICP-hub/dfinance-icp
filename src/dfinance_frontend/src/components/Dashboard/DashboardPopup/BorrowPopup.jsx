@@ -20,55 +20,32 @@ import useAssetData from "../../customHooks/useAssets";
  *
  * @param {Object} props - Component properties.
  */
-const Borrow = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus,
-  Ltv,
-  borrowableValue: borrowableValueprop,
-  borrowableAssetValue: borrowableAssetValueprop,
-  total_supply,
-  total_borrow,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
-}) => {
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-  } = useFetchConversionRate();
-  const [availableBorrow, setAvailableBorrow] = useState([]);
-  const dashboardRefreshTrigger = useSelector(
-    (state) => state.dashboardUpdate.refreshDashboardTrigger
-  );
+
+ const Borrow = ({ asset,image, supplyRateAPR,balance,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,totalCollateral,totalDebt,currentCollateralStatus,Ltv,borrowableValue: borrowableValueprop, borrowableAssetValue: borrowableAssetValueprop, total_supply, total_borrow, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
+
+
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
+  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, } = useFetchConversionRate();
   const { filteredItems } = useAssetData();
-  const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
   const { userData, userAccountData } = useUserData();
-  const ledgerActors = useSelector((state) => state.ledger);
+  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { healthFactorBackend } = useUserData();
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
+  const [availableBorrow, setAvailableBorrow] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
-    useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -83,9 +60,28 @@ const Borrow = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Fetches asset data and updates supply/borrow values.
-   */
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dispatch = useDispatch();
+  const ledgerActors = useSelector((state) => state.ledger);
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  // Fetches asset data and updates supply/borrow values.
   const fetchAssetData = () => {
     const item = filteredItems.find((item) => item[0] === asset);
     if (item && item[1]?.Ok) {
@@ -97,22 +93,12 @@ const Borrow = ({
     }
   };
 
-  /**
-   * Calculates borrowable values based on conversion rates.
-   */
-  const calculateBorrowableValues = (
-    asset,
-    availableBorrow,
-    remainingBorrowable
+  //   Calculates borrowable values based on conversion rates.
+  const calculateBorrowableValues = (asset, availableBorrow, remainingBorrowable
   ) => {
     let borrowableValue = null;
     let borrowableAssetValue = null;
-    const assetRates = {
-      ckBTC: ckBTCUsdRate,
-      ckETH: ckETHUsdRate,
-      ckUSDC: ckUSDCUsdRate,
-      ICP: ckICPUsdRate,
-      ckUSDT: ckUSDTUsdRate,
+    const assetRates = { ckBTC: ckBTCUsdRate,ckETH: ckETHUsdRate,ckUSDC: ckUSDCUsdRate,ICP: ckICPUsdRate,ckUSDT: ckUSDTUsdRate,
     };
     const rate = assetRates[asset] / 1e8;
     if (rate) {
@@ -129,65 +115,7 @@ const Borrow = ({
     return { borrowableValue, borrowableAssetValue };
   };
 
-  useEffect(() => {
-    const updateValues = async () => {
-      setLoading(true);
-      try {
-        await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
-        const updatedValues = calculateBorrowableValues(
-          asset,
-          availableBorrow,
-          remainingBorrowable
-        );
-        setBorrowableValue(updatedValues.borrowableValue);
-        setBorrowableAssetValue(updatedValues.borrowableAssetValue);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-      }
-    };
-    updateValues();
-    // const intervalId = setInterval(updateValues, 1000);
-    // return () => {
-    //   clearInterval(intervalId);
-    // };
-  }, [
-    asset,
-    filteredItems,
-    totalSupply,
-    totalBorrow,
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-  ]);
-
-  useEffect(() => {
-    if (userAccountData?.Ok?.length > 5) {
-      const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      console.log("remainingBorrowable in borrow", remainingBorrowable);
-      const borrowValue =
-        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
-      setAvailableBorrow(borrowValue);
-    } else {
-      setAvailableBorrow(0);
-    }
-  }, [userAccountData, userData, dashboardRefreshTrigger]);
-
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
-
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
-
+  // Function for check acknowledgement
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
   };
@@ -207,9 +135,8 @@ const Borrow = ({
       "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
-  /**
-   * Handles the borrow action by interacting with the backend.
-   */
+
+   // Handles the borrow action by interacting with the backend.
   const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
@@ -326,77 +253,6 @@ const Borrow = ({
   const numericBalance = parseFloat(balance);
   const supplyBalance = numericBalance;
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
-
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold
-    );
-    const amountTaken = usdValue || 0;
-    const amountAdded = 0;
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-
-    if (value < 2 && value > 1) {
-      setIsAcknowledgmentRequired(true);
-    } else {
-      setIsAcknowledgmentRequired(false);
-      setIsAcknowledged(false);
-    }
-
-    if (ltv * 100 >= liquidationThreshold) {
-      toast.dismiss();
-      toast.info("LTV Exceeded!");
-    }
-
-    if (
-      healthFactor <= 1 ||
-      ltv * 100 >= liquidationThreshold ||
-      (isAcknowledgmentRequired && !isAcknowledged)
-    ) {
-      setIsButtonDisabled(true);
-    } else {
-      setIsButtonDisabled(false);
-    }
-  }, [
-    asset,
-    reserveliquidationThreshold,
-    liquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-    isAcknowledged,
-    value,
-    isAcknowledgmentRequired,
-    setIsAcknowledged,
-  ]);
-
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -422,8 +278,6 @@ const Borrow = ({
     const result = nextTotalDebt / totalCollateral;
     return result;
   };
-
-  const { healthFactorBackend } = useUserData();
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
@@ -474,17 +328,6 @@ const Borrow = ({
     }
   };
 
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue =
-        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue.toFixed(7));
-    } else {
-      setUsdValue("");
-    }
-  }, [amount, conversionRate]);
-
   const handleMaxClick = () => {
     const maxAmount = parseFloat(borrowableValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
@@ -501,6 +344,151 @@ const Borrow = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const updateValues = async () => {
+      setLoading(true);
+      try {
+        await fetchAssetData();
+        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const updatedValues = calculateBorrowableValues(
+          asset,
+          availableBorrow,
+          remainingBorrowable
+        );
+        setBorrowableValue(updatedValues.borrowableValue);
+        setBorrowableAssetValue(updatedValues.borrowableAssetValue);
+      } 
+      catch (error) {
+        console.error("Error fetching data:", error);
+      } 
+      finally {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+    };
+    updateValues();
+  }, [
+    asset,
+    filteredItems,
+    totalSupply,
+    totalBorrow,
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  ]);
+
+  useEffect(() => {
+    if (userAccountData?.Ok?.length > 5) {
+      const remainingBorrowable = total_supply * 0.85 - total_borrow;
+      const borrowValue =remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      setAvailableBorrow(borrowValue);
+    } else {
+      setAvailableBorrow(0);
+    }
+  }, [userAccountData, userData, dashboardRefreshTrigger]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    const amountTaken = usdValue || 0;
+    const amountAdded = 0;
+
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+     
+    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
+    
+    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
+
+    setPrevHealthFactor(currentHealthFactor);
+
+    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2) );
+    
+    if (value < 2 && value > 1) {
+      setIsAcknowledgmentRequired(true);
+    }
+     else {
+      setIsAcknowledgmentRequired(false);
+      setIsAcknowledged(false);
+    }
+
+    if (ltv * 100 >= liquidationThreshold) {
+      toast.dismiss();
+      toast.info("LTV Exceeded!");
+    }
+
+    if (
+      healthFactor <= 1 ||
+      ltv * 100 >= liquidationThreshold ||
+      (isAcknowledgmentRequired && !isAcknowledged)
+    ) {
+      setIsButtonDisabled(true);
+    } else {
+      setIsButtonDisabled(false);
+    }
+  }, [
+    asset,
+    reserveliquidationThreshold,
+    liquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+    isAcknowledged,
+    value,
+    isAcknowledgmentRequired,
+    setIsAcknowledged,
+  ]);
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
+      setUsdValue(convertedValue.toFixed(7));
+    } else {
+      setUsdValue("");
+    }
+  }, [amount, conversionRate]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>

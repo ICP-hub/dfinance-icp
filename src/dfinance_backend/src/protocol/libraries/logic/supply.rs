@@ -11,39 +11,33 @@ use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
 use candid::{Nat, Principal};
 use ic_cdk::update;
-// -------------------------------------
-// ----------- SUPPLY LOGIC ------------
-// -------------------------------------
 
-/// @title Execute Supply Function
-/// @notice This function allows users to supply a specified amount of assets to the platform, performing all necessary checks, state updates, and validations.
-///         It first validates the input parameters, checks the caller's identity, acquires a lock, and proceeds with a sequence of operations
-///         including validating the supply request, updating user and reserve data, and transferring the asset from the user to the platform.
-///         If any operation fails, it rolls back previous changes and ensures that all resources are properly released, including locks and amounts.
-///
-/// @dev The function follows a structured workflow:
-///      1. **Input validation**: Ensures the asset name is valid, the amount is greater than zero, and that the caller is not anonymous.
-///      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
-///      3. **State mutation**: The reserve data and user profile are updated in the canister's state.
-///      4. **Supply validation**: Checks whether the supply request complies with platform rules (e.g., limits, available reserves).
-///      5. **Asset transfer**: Transfers the specified asset from the user to the platform's backend canister.
-///      6. **Rollback mechanism**: In case of a failure in any part of the process, the function reverts any changes made to the system and releases resources.
-///
-/// @param params The parameters needed to execute the supply operation, including:
-///               - `asset`: The name of the asset to be supplied.
-///               - `amount`: The amount of the asset to be supplied.
-///               - `is_collateral`: A flag indicating whether the asset is being used as collateral.
-///
-/// @return Result<Nat, Error> Returns the new balance of the user after a successful asset transfer or an error code if any operation fails.
-///
-/// @error Error::EmptyAsset If the asset name is empty.
-/// @error Error::InvalidAssetLength If the asset name exceeds the maximum length.
-/// @error Error::InvalidAmount If the supply amount is less than or equal to zero.
-/// @error Error::AnonymousPrincipal If the caller is an anonymous principal.
-/// @error Error::LockAcquisitionFailed If the lock acquisition fails.
-/// @error Error::NoReserveDataFound If the reserve data for the asset cannot be found.
-/// @error Error::SupplyValidationFailed If the supply request fails validation.
-/// @error Error::ErrorMintTokens If the system fails to mint necessary tokens during the supply process.
+/*
+-------------------------------------
+----------- SUPPLY LOGIC ------------
+-------------------------------------
+ */
+
+/*
+ * @title Execute Supply Function
+ * @notice Allows users to supply assets to the platform, handling validation, state updates, and asset transfer.
+ *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
+ *
+ * @dev The function follows these steps:
+ *      1. Validates input parameters (asset name, amount, and caller's identity).
+ *      2. Acquires a lock to ensure only one operation per user at a time.
+ *      3. Updates the reserve data and user profile state.
+ *      4. Validates the supply request against platform rules (e.g., limits, reserves).
+ *      5. Transfers the asset from the user to the platform.
+ *      6. Rolls back any changes and releases resources if an error occurs.
+ *
+ * @param params Parameters for the supply operation:
+ *               - `asset`: The name of the asset being supplied.
+ *               - `amount`: The amount of the asset being supplied.
+ *               - `is_collateral`: Flag indicating if the asset is collateral.
+ *
+ * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
+ */
 #[update]
 pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
@@ -122,7 +116,13 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
@@ -241,41 +241,33 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     result
 }
 
-// -------------------------------------
-// ---------- WITHDRAW LOGIC -----------
-// -------------------------------------
+/*
+-------------------------------------
+---------- WITHDRAW LOGIC -----------
+-------------------------------------
+*/
 
-/// @title Execute Withdraw Function
-/// @notice This function allows users to withdraw a specified amount of assets from the platform, performing all necessary checks, state updates, and validations.
-///         It first validates the input parameters, checks the caller's identity, acquires a lock, and proceeds with a sequence of operations
-///         including validating the withdrawal request, updating user and reserve data, and transferring the asset to the user or liquidator.
-///         If any operation fails, it rolls back previous changes and ensures that all resources are properly released, including locks and amounts.
-///
-/// @dev The function follows a structured workflow:
-///      1. **Input validation**: Ensures the asset name is valid (non-empty), the amount is greater than zero, and that the caller is not anonymous.
-///      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
-///      3. **State mutation**: The reserve data and user profile are updated in the canister's state.
-///      4. **Withdraw validation**: Checks whether the withdrawal request complies with platform rules (e.g., limits, available assets).
-///      5. **Asset transfer**: Transfers the requested amount of asset from the platform's reserve to the user or liquidator, if applicable.
-///      6. **Rollback mechanism**: In case of a failure in any part of the process, the function reverts any changes made to the system and releases resources.
-///
-/// @param params The parameters needed to execute the withdraw operation, including:
-///               - `asset`: The name of the asset to be withdrawn.
-///               - `amount`: The amount of the asset to be withdrawn.
-///               - `is_collateral`: A flag indicating whether the asset is being used as collateral.
-///               - `on_behalf_of`: An optional principal who is requesting the withdrawal on behalf of another user.
-///
-/// @return Result<Nat, Error> Returns the new balance of the user after a successful asset transfer or an error code if any operation fails.
-///
-/// @error Error::EmptyAsset If the asset name is empty.
-/// @error Error::InvalidAssetLength If the asset name exceeds the maximum length.
-/// @error Error::InvalidAmount If the withdrawal amount is less than or equal to zero.
-/// @error Error::AnonymousPrincipal If the caller or the "on_behalf_of" principal is anonymous.
-/// @error Error::LockAcquisitionFailed If the lock acquisition fails.
-/// @error Error::NoReserveDataFound If the reserve data for the asset cannot be found.
-/// @error Error::WithdrawValidationFailed If the withdrawal request fails validation.
-/// @error Error::ErrorRollBack If the withdrawal process fails and rollback operations cannot be completed.
-/// @error Error::ErrorBurnTokens If the burn operation fails after the transfer.
+/*
+ * @title Execute Withdraw Function
+ * @notice Allows users to withdraw assets from the platform, handling validation, state updates, and asset transfer.
+ *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
+ *
+ * @dev The function follows these steps:
+ *      1. Validates input parameters (asset name, amount, and caller's identity).
+ *      2. Acquires a lock to ensure only one operation per user at a time.
+ *      3. Updates the reserve data and user profile state.
+ *      4. Validates the withdrawal request against platform rules (e.g., limits, available assets).
+ *      5. Transfers the requested asset from the platform to the user or liquidator.
+ *      6. Rolls back any changes and releases resources if an error occurs.
+ *
+ * @param params Parameters for the withdraw operation:
+ *               - `asset`: The name of the asset being withdrawn.
+ *               - `amount`: The amount of the asset being withdrawn.
+ *               - `is_collateral`: Flag indicating if the asset is collateral.
+ *               - `on_behalf_of`: Optional principal requesting the withdrawal on behalf of another user.
+ *
+ * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
+ */
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
@@ -388,9 +380,16 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity index
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
-
+        //user balance-> a token balance * nextliqindex
+        //if param.amount == type max, then amount to withdraw = user_balance
         if let Err(e) = ValidationLogic::validate_withdraw(
             &reserve_data,
             params.amount.clone(),
@@ -410,7 +409,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         if let Err(e) = reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
-            params.amount.clone(),
+            params.amount.clone(), //amount to withdraw
             Nat::from(0u128),
         )
         .await

@@ -26,24 +26,23 @@ fn current_timestamp() -> u64 {
 pub struct UpdateLogic;
 
 impl UpdateLogic {
-   /* 
- * @title Update User Data for Supplying Assets
- * @notice Updates user data and mints dTokens when assets are supplied.
- *
- * @dev Steps:
- * 1. Fetch user data.
- * 2. Update reserve data and collateral status.
- * 3. Mint dTokens using `mint_scaled()`.
- * 4. Save updated user profile.
- *
- * @param user_principal The user's principal.
- * @param reserve_cache Reference to `ReserveCache`.
- * @param params Asset supply parameters.
- * @param reserve Mutable reference to `ReserveData`.
- *
- * @return `Ok(())` if successful.
- */
-
+    /*
+     * @title Update User Data for Supplying Assets
+     * @notice Updates user data and mints dTokens when assets are supplied.
+     *
+     * @dev Steps:
+     * 1. Fetch user data.
+     * 2. Update reserve data and collateral status.
+     * 3. Mint dTokens using `mint_scaled()`.
+     * 4. Save updated user profile.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset supply parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
     pub async fn update_user_data_supply(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
@@ -149,23 +148,24 @@ impl UpdateLogic {
         ic_cdk::println!("User data updated successfully");
         Ok(())
     }
-/* 
- * @title Update User Data for Borrowing
- * @notice Updates user data and mints debt tokens when borrowing assets.
- *
- * @dev Steps:
- * 1. Fetch user and reserve data.
- * 2. Update reserve data and mark it as borrowed.
- * 3. Mint debt tokens using `mint_scaled()`.
- * 4. Save updated user profile.
- *
- * @param user_principal The user's principal.
- * @param reserve_cache Reference to `ReserveCache`.
- * @param params Asset borrowing parameters.
- * @param reserve Mutable reference to `ReserveData`.
- *
- * @return `Ok(())` if successful.
- */
+
+    /*
+     * @title Update User Data for Borrowing
+     * @notice Updates user data and mints debt tokens when borrowing assets.
+     *
+     * @dev Steps:
+     * 1. Fetch user and reserve data.
+     * 2. Update reserve data and mark it as borrowed.
+     * 3. Mint debt tokens using `mint_scaled()`.
+     * 4. Save updated user profile.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset borrowing parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
     pub async fn update_user_data_borrow(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
@@ -207,10 +207,6 @@ impl UpdateLogic {
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         ic_cdk::println!("User reserve: {:?}", user_reserve);
 
-        // let mut user_reserve_data = match user_reserve.as_mut() {
-        //     Some((_, reserve_data)) => reserve_data,
-        //     None => return Err(Error::NoUserReserveDataFound),
-        // };
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
@@ -225,7 +221,7 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_borrow: params.amount.clone(), //remove
+                // asset_borrow: params.amount.clone(), //remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),
@@ -284,24 +280,23 @@ impl UpdateLogic {
         Ok(())
     }
 
-   /* 
- * @title Update User Data for Withdrawals
- * @notice Handles user data updates when withdrawing assets.
- *
- * @dev Steps:
- * 1. Fetch user and reserve data.
- * 2. Update reserve and collateral status.
- * 3. Burn dTokens using `burn_scaled()`.
- * 4. Save updated reserve details.
- *
- * @param user_principal The user's principal.
- * @param reserve_cache Reference to `ReserveCache`.
- * @param params Asset withdrawal parameters.
- * @param reserve Mutable reference to `ReserveData`.
- *
- * @return `Ok(())` if successful.
- */
-
+    /*
+     * @title Update User Data for Withdrawals
+     * @notice Handles user data updates when withdrawing assets.
+     *
+     * @dev Steps:
+     * 1. Fetch user and reserve data.
+     * 2. Update reserve and collateral status.
+     * 3. Burn dTokens using `burn_scaled()`.
+     * 4. Save updated reserve details.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset withdrawal parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
     pub async fn update_user_data_withdraw(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
@@ -379,11 +374,7 @@ impl UpdateLogic {
                 reserve_data.is_collateral = true;
             }
         }
-        // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
-        //     if let Some(ref mut reserves) = user_data.reserves {
-        //         reserves.retain(|(name, _)| name != &params.asset);
-        //     }
-        // }
+
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -395,24 +386,23 @@ impl UpdateLogic {
         Ok(())
     }
 
-  /* 
- * @title Update User Data for Repayments
- * @notice Handles user data updates when repaying borrowed assets.
- *
- * @dev Steps:
- * 1. Fetch user data.
- * 2. Update debt status.
- * 3. Burn debt tokens using `burn_scaled()`.
- * 4. Update user state.
- *
- * @param user_principal The user's principal.
- * @param reserve_cache Reference to `ReserveCache`.
- * @param params Asset repayment parameters.
- * @param reserve Mutable reference to `ReserveData`.
- *
- * @return `Ok(())` if successful.
- */
-
+    /*
+     * @title Update User Data for Repayments
+     * @notice Handles user data updates when repaying borrowed assets.
+     *
+     * @dev Steps:
+     * 1. Fetch user data.
+     * 2. Update debt status.
+     * 3. Burn debt tokens using `burn_scaled()`.
+     * 4. Update user state.
+     *
+     * @param user_principal The user's principal.
+     * @param reserve_cache Reference to `ReserveCache`.
+     * @param params Asset repayment parameters.
+     * @param reserve Mutable reference to `ReserveData`.
+     *
+     * @return `Ok(())` if successful.
+     */
     pub async fn update_user_data_repay(
         user_principal: Principal,
         reserve_cache: &ReserveCache,
@@ -492,11 +482,6 @@ impl UpdateLogic {
             return Err(Error::NoUserReserveDataFound);
         }
 
-        // if debttoken_balance == Nat::from(0u128) && is_collateral == false {
-        //     if let Some(ref mut reserves) = user_data.reserves {
-        //         reserves.retain(|(name, _)| name != &params.asset);
-        //     }
-        // }
         ic_cdk::println!("Saving updated user data to state");
 
         mutate_state(|state| {
@@ -509,7 +494,8 @@ impl UpdateLogic {
         Ok(())
     }
 }
-/* 
+
+/*
  * @title Toggle Collateral Status
  * @notice Allows a user to toggle the collateral status of an asset.
  *
@@ -524,7 +510,6 @@ impl UpdateLogic {
  *
  * @return `Ok(())` if successful.
  */
-
 #[update]
 pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) -> Result<(), Error> {
     if asset.trim().is_empty() {
@@ -714,15 +699,15 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     ic_cdk::println!("User data updated successfully: {:?}", user_data);
     Ok(())
 }
-/* 
+
+/*
  * @title Fetch User Data
  * @notice Retrieves user data from state.
  *
  * @param user_principal The principal ID of the user.
- * 
+ *
  * @return `UserData` if found.
  */
-
 pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
     let user_data_result = mutate_state(|state| {
         let user_profile_data = &mut state.user_profile;
@@ -733,16 +718,16 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
     });
     user_data_result
 }
-/* 
+
+/*
  * @title Fetch User Reserve Data
  * @notice Retrieves reserve data for a specific asset from the user's profile.
  *
  * @param user_data A mutable reference to `UserData`.
  * @param asset_name The asset name for which reserve data is required.
- * 
+ *
  * @return `Option<&mut (String, UserReserveData)>` containing the asset name and its reserve data.
  */
-
 pub fn user_reserve<'a>(
     user_data: &'a mut UserData,
     asset_name: &'a String,

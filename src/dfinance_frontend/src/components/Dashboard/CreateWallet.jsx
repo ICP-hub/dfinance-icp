@@ -1,39 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Button from "../Common/Button";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-  setConnectedWallet,
-} from "../../redux/reducers/utilityReducer";
-import { Modal } from "@mui/material";
+import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import MySupply from "./MySupply";
-import icplogo from "../../../public/wallet/icp.png";
-import nfid from "../../../public/wallet/nfid.png";
-import { Principal } from "@dfinity/principal";
-import { setUserData } from "../../redux/reducers/userReducer";
-import { idlFactory as ledgerIdlFactoryckETH } from "../../../../declarations/cketh_ledger";
-import { idlFactory as ledgerIdlFactoryckBTC } from "../../../../declarations/ckbtc_ledger";
-import { useMemo } from "react";
 import WalletModal from "./WalletModal";
-import { Wallet } from "lucide-react";
 
 const CreateWallet = () => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
   const dispatch = useDispatch();
-  const { isWalletModalOpen, isSwitchingWallet } = useSelector(
-    (state) => state.utility
-  );
-  const { isAuthenticated, principal, createLedgerActor } = useAuth();
-  const handleWalletConnect = () => {
-    dispatch(
-      setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
-    );
-  };
-  const principalObj = Principal.fromText(principal);
+  const { isWalletModalOpen, isSwitchingWallet } = useSelector((state) => state.utility);
+  const { isAuthenticated } = useAuth();
+  const handleWalletConnect = () => {dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })); };
 
+   /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
   return (
     <>
       {isAuthenticated ? (

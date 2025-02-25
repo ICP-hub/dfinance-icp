@@ -10,24 +10,20 @@ import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger"
 import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
-import { getSteps, getStyles } from "./joyrideConfig";
+import { getSteps, getStyles } from "../src/components/Common/joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
 
 export default function App() {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
-  const theme = useSelector((state) => state.theme.theme);
-  const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
-  const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
-
-  const isMobile = window.innerWidth <= 1115;
-  const isMobile2 = window.innerWidth <= 640;
-
   const { loading } = useAssetData();
   const isLoading = usePageLoading();
   const routes = useRoutes(routesList);
+
   const {
     isAuthenticated,
     principal,
@@ -36,15 +32,36 @@ export default function App() {
     reloadLogin,
   } = useAuth();
 
+  const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
+  const theme = useSelector((state) => state.theme.theme);
+
+  /* ===================================================================================
+   *                 Derived State, UI Variables
+   * =================================================================================== */
+
+  const joyRideBackground = theme === "dark" ? "#29283B" : "#fcfafa";
+  const joyTextColor = theme === "dark" ? "#fff" : "#4a5568";
+  const isMobile = window.innerWidth <= 1115;
+  const isMobile2 = window.innerWidth <= 640;
+
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isTourVisible, setIsTourVisible] = React.useState(isTourRunning);
   const [assetPrincipal, setAssetPrincipal] = useState({});
+  const [triggerDispatch, setTriggerDispatch] = useState(false);
   const [joyrideState, setJoyrideState] = useState({
     run: true,
     steps: [],
     styles: {},
   });
 
-  useEffect(() => { 
+  /* ===================================================================================
+   *                                  EFFECTS & FUNCTIONS
+   * =================================================================================== */
+
+  useEffect(() => {
     setIsTourVisible(isTourRunning);
   }, [isTourRunning]);
 
@@ -179,8 +196,6 @@ export default function App() {
     }
   }, [isAuthenticated, principal, isTourVisible]);
 
-  const [triggerDispatch, setTriggerDispatch] = useState(false);
-
   useEffect(() => {
     if (triggerDispatch) {
       dispatch(joyRideTrigger());
@@ -285,6 +300,10 @@ export default function App() {
 
     return () => clearTimeout(timeout);
   }, [isLoadingPage]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>

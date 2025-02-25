@@ -27,6 +27,7 @@ pub struct UserConfig {
     pub collateral: bool,
     pub borrowing: bool,
 }
+
 /*
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -315,6 +316,7 @@ pub async fn calculate_user_account_data(
         has_zero_ltv_collateral,
     ))
 }
+
 /*
  * @title Get User Balance in Base Currency
  * @notice Computes the user's total balance in the base currency (USD equivalent).
@@ -382,7 +384,6 @@ pub async fn get_user_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    // Ask : get normailse incone function does not exist.
     ic_cdk::println!(
         "last of the base currency  = {}",
         user_scaled_balanced_normalized
@@ -393,6 +394,7 @@ pub async fn get_user_balance_in_base_currency(
         .clone()
         .scaled_mul(asset_price.clone()))
 }
+
 /*
  * @title Get User Debt in Base Currency
  * @notice Computes the user's total outstanding debt in the base currency.
@@ -467,6 +469,7 @@ pub async fn get_user_debt_in_base_currency(
     ic_cdk::println!("Final user debt in base currency: {}", result);
     Ok(result)
 }
+
 /*
  * @title User Account Data Structure
  * @notice Stores financial data such as collateral, debt, and risk factors.
@@ -483,6 +486,7 @@ pub struct UserAccountData {
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
 }
+
 /*
  * @title Get Users Eligible for Liquidation
  * @notice Identifies users with a health factor below the liquidation threshold.
@@ -563,6 +567,56 @@ pub async fn get_liquidation_users_concurrent(
     liq_list
 }
 
+/*
+ * @title Register User
+ * @dev Registers a new user if they do not already exist.
+ * @returns A string message indicating success.
+ */
+#[update]
+fn register_user() -> Result<String, Error> {
+    ic_cdk::println!("function is register running");
+
+    let user_principal: Principal = ic_cdk::api::caller();
+    ic_cdk::println!("user principal register = {} ", user_principal);
+
+    if user_principal == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let user_data = mutate_state(|state| {
+        let user_index = &mut state.user_profile;
+        match user_index.get(&user_principal) {
+            Some(_) => Ok("User available".to_string()),
+            None => {
+                let default_user_data = UserData::default();
+                user_index.insert(user_principal.clone(), Candid(default_user_data));
+                Ok("User added".to_string())
+            }
+        }
+    });
+
+    user_data
+}
+
+/*
+ * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC)
+ * @notice Identifies users with a health factor below the liquidation threshold,
+ *         enabling liquidation testing for Pocket IC.
+ *
+ * @dev This function has been designed specifically for testing purposes in Pocket IC
+ *      by identifying users who fall below the threshold required for liquidation.
+ *
+ * @param asset_supply The asset being supplied by the user (e.g., collateral asset).
+ * @param asset_borrow The asset being borrowed by the user.
+ * @param supply_tokens The number of supply tokens the user wants to add to the reserve.
+ * @param borrow_tokens The number of borrow tokens the user wants to take out from the reserve.
+ *
+ * @return Result<UserData, Error>:
+ *         - Ok(UserData): The successfully updated user data, containing their reserve information.
+ *         - Err(Error): An error if any validation or process fails, such as invalid input data or
+ *           failed token transfers.
+ */
 #[update]
 pub async fn create_user_reserve_with_low_health(
     asset_supply: String,
@@ -639,7 +693,7 @@ pub async fn create_user_reserve_with_low_health(
                 .ok_or(Error::NoReserveDataFound)
         })?;
 
-        borrow_reserve_data.asset_supply += supply_tokens.clone();
+        borrow_reserve_data.asset_borrow += borrow_tokens.clone();
         borrow_reserve_data.debt_index = Nat::from(100_000_000u128);
 
         (supply_reserve_data, borrow_reserve_data)
@@ -671,8 +725,8 @@ pub async fn create_user_reserve_with_low_health(
             reserve_data.is_collateral = true;
         };
 
-        let mut supply_user_reserve = user_reserve(&mut user_data, &asset_borrow);
-        let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
+        let mut borrow_user_reserve = user_reserve(&mut user_data, &asset_borrow);
+        let mut user_reserve_data = if let Some((_, reserve_data)) = borrow_user_reserve {
             reserve_data.liquidity_index = Nat::from(100_000_000u128);
             reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
             reserve_data.debt_token_blance += borrow_tokens.clone();

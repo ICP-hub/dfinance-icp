@@ -426,7 +426,7 @@ pub async fn burn_scaled(
         .await
         {
             Ok(_) => {
-                ic_cdk::println!("Minting successful");
+                ic_cdk::println!("Burning successful");
                 Ok(())
             }
             Err(err) => {

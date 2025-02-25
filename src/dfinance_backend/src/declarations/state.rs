@@ -8,4 +8,6 @@ pub struct State {
     pub canister_list:CanisterList, 
     pub meta_data: MetaData,
     pub tester_list:TesterList,
+    pub requests: Requests,
+    pub blocked_users:BlockedUsers,
 }

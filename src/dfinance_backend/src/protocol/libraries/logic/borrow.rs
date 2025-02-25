@@ -4,7 +4,7 @@ use crate::api::state_handler::*;
 use crate::constants::errors::Error;
 use crate::reserve_ledger_canister_id;
 use crate::declarations::storable::Candid;
-use crate::api::functions::asset_transfer_from;
+use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -71,6 +71,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let operation_key = user_principal;
@@ -376,6 +381,11 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
         };
 
     let operation_key = user_principal;
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
 
     if params.on_behalf_of.is_none() {
         ic_cdk::println!("inside the on behalf");

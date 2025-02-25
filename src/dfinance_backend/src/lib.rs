@@ -1,6 +1,6 @@
 use crate::constants::errors::Error;
-use crate::constants::asset_data::to_check_controller;
 use api::functions::get_balance;
+use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
@@ -204,6 +204,12 @@ fn register_user() -> Result<String, Error> {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+    
 
     let user_data = mutate_state(|state| {
         let user_index = &mut state.user_profile;
@@ -757,62 +763,6 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-// Function to store a tester Principal
-#[ic_cdk::update]
-pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
-    let user_principal = ic_cdk::caller();
-    if user_principal == Principal::anonymous()  {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-    if !to_check_controller(){
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
-    mutate_state(|state| {
-        state.tester_list.insert(username, principal)
-    });
-    return Ok(());
-}
-
-
-// Function to retrieve testers
-pub fn get_testers() -> Result<Vec<Principal>, Error> {
-    let user_principal = ic_cdk::caller();
-
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-    
-    read_state(|state| {
-        let mut testers = Vec::new();
-        let iter = state.tester_list.iter();
-        for (_, value) in iter {
-            testers.push(value.clone());
-        }
-        Ok(testers)
-    })
-}
-
-// Function for checking caller is tester or not
-#[ic_cdk::query]
-pub fn check_is_tester()-> bool {
-
-    let testers = match get_testers(){
-        Ok(data)=>data,
-        Err(error) => {
-            ic_cdk::println!("Invalid Access {:?}", error);
-            return false;
-        }
-    };
-    let user = ic_cdk::caller();
-    if testers.contains(&user){
-        return true;
-    }
-    return false;
-}
-
 /*
  * @title Force Panic
  * @dev This function intentionally panics for testing purposes.
@@ -835,6 +785,12 @@ fn will_panic() -> String {
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+    
     ic_cdk::println!("error in user = {:?}", on_behalf);
     let result = calculate_user_account_data(on_behalf).await;
     result

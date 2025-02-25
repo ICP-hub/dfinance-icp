@@ -66,7 +66,9 @@ pub enum Error {
     FailedToReleaseLock,
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
-    AmountSubtractionError
+    AmountSubtractionError,
+    TOOMANYREQUESTS,
+    BLOCKEDFORONEHOUR,
 }
 
 impl Error {
@@ -135,7 +137,9 @@ impl Error {
             Error::FailedToReleaseLock => "Failed to release lock",
             Error::LockOperationInProgess => "Another operation is already in progress for user",
             Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
-            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract"
+            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
+            Error::TOOMANYREQUESTS => "You are temporarily blocked",
+            Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
         }
     }
 }

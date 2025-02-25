@@ -1,12 +1,11 @@
-
-use crate::api::functions::asset_transfer_from;
+use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
-use crate::protocol::libraries::logic::update::UpdateLogic;
+use crate::protocol::libraries::logic::update::{user_data, UpdateLogic};
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
@@ -16,13 +15,12 @@ use ic_cdk::update;
 // ----------- SUPPLY LOGIC ------------
 // -------------------------------------
 
-
 /// @title Execute Supply Function
 /// @notice This function allows users to supply a specified amount of assets to the platform, performing all necessary checks, state updates, and validations.
 ///         It first validates the input parameters, checks the caller's identity, acquires a lock, and proceeds with a sequence of operations
 ///         including validating the supply request, updating user and reserve data, and transferring the asset from the user to the platform.
 ///         If any operation fails, it rolls back previous changes and ensures that all resources are properly released, including locks and amounts.
-/// 
+///
 /// @dev The function follows a structured workflow:
 ///      1. **Input validation**: Ensures the asset name is valid, the amount is greater than zero, and that the caller is not anonymous.
 ///      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
@@ -30,14 +28,14 @@ use ic_cdk::update;
 ///      4. **Supply validation**: Checks whether the supply request complies with platform rules (e.g., limits, available reserves).
 ///      5. **Asset transfer**: Transfers the specified asset from the user to the platform's backend canister.
 ///      6. **Rollback mechanism**: In case of a failure in any part of the process, the function reverts any changes made to the system and releases resources.
-/// 
+///
 /// @param params The parameters needed to execute the supply operation, including:
 ///               - `asset`: The name of the asset to be supplied.
 ///               - `amount`: The amount of the asset to be supplied.
 ///               - `is_collateral`: A flag indicating whether the asset is being used as collateral.
-/// 
+///
 /// @return Result<Nat, Error> Returns the new balance of the user after a successful asset transfer or an error code if any operation fails.
-/// 
+///
 /// @error Error::EmptyAsset If the asset name is empty.
 /// @error Error::InvalidAssetLength If the asset name exceeds the maximum length.
 /// @error Error::InvalidAmount If the supply amount is less than or equal to zero.
@@ -68,6 +66,11 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let operation_key = user_principal;
@@ -105,7 +108,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset = {:?}",data);
+                ic_cdk::println!("Reserve data found for asset = {:?}", data);
                 data
             }
             Err(e) => {
@@ -247,7 +250,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 ///         It first validates the input parameters, checks the caller's identity, acquires a lock, and proceeds with a sequence of operations
 ///         including validating the withdrawal request, updating user and reserve data, and transferring the asset to the user or liquidator.
 ///         If any operation fails, it rolls back previous changes and ensures that all resources are properly released, including locks and amounts.
-/// 
+///
 /// @dev The function follows a structured workflow:
 ///      1. **Input validation**: Ensures the asset name is valid (non-empty), the amount is greater than zero, and that the caller is not anonymous.
 ///      2. **Lock acquisition**: Ensures only one operation can proceed at a time for a user.
@@ -255,15 +258,15 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 ///      4. **Withdraw validation**: Checks whether the withdrawal request complies with platform rules (e.g., limits, available assets).
 ///      5. **Asset transfer**: Transfers the requested amount of asset from the platform's reserve to the user or liquidator, if applicable.
 ///      6. **Rollback mechanism**: In case of a failure in any part of the process, the function reverts any changes made to the system and releases resources.
-/// 
+///
 /// @param params The parameters needed to execute the withdraw operation, including:
 ///               - `asset`: The name of the asset to be withdrawn.
 ///               - `amount`: The amount of the asset to be withdrawn.
 ///               - `is_collateral`: A flag indicating whether the asset is being used as collateral.
 ///               - `on_behalf_of`: An optional principal who is requesting the withdrawal on behalf of another user.
-/// 
+///
 /// @return Result<Nat, Error> Returns the new balance of the user after a successful asset transfer or an error code if any operation fails.
-/// 
+///
 /// @error Error::EmptyAsset If the asset name is empty.
 /// @error Error::InvalidAssetLength If the asset name exceeds the maximum length.
 /// @error Error::InvalidAmount If the withdrawal amount is less than or equal to zero.
@@ -318,6 +321,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             }
             (user_principal, None)
         };
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
 
     let operation_key = user_principal;
     // Acquire the lock

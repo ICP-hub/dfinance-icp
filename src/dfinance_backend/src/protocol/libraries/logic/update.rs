@@ -1,4 +1,4 @@
-use crate::api::functions::get_balance;
+use crate::api::functions::{get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
@@ -551,6 +551,11 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let user_data_result = user_data(user_principal);

@@ -1,5 +1,5 @@
 use super::update::user_data;
-use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance};
+use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::assets::ExecuteRepayParams;
@@ -582,6 +582,11 @@ fn register_user() -> Result<String, Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let user_data = mutate_state(|state| {

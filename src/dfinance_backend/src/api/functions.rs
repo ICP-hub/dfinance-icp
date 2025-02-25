@@ -490,6 +490,11 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
  * - `Nat` - The current cycle balance of the canister.
  */
 #[query]
-pub async fn cycle_checker() -> Nat {
-    Nat::from(api::canister_balance128())
+pub async fn cycle_checker() -> Result<Nat, Error> {
+    let caller = ic_cdk::caller();
+    if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    Ok(Nat::from(api::canister_balance128()))
 }

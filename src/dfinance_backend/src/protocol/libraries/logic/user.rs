@@ -379,7 +379,15 @@ pub async fn get_user_balance_in_base_currency(
         }
     };
     ic_cdk::println!("user balance normailized supply = {:?}", normalized_supply);
-    let user_scaled_balanced_normalized = user_scaled_balance.scaled_mul(normalized_supply);
+    ic_cdk::println!("user liq index {}", reserve.liquidity_index.clone());
+    let user_scaled = if reserve.liquidity_index != Nat::from(0u128) {
+        user_scaled_balance.clone().scaled_div(reserve.liquidity_index.clone())
+    } else {
+        user_scaled_balance.clone()
+    };
+    
+    ic_cdk::println!("user_scaled = {}", user_scaled);
+    let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
     ic_cdk::println!(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized

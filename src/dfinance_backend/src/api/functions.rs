@@ -357,7 +357,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             );
             if usd_amount.clone() > user_reserve_data.faucet_limit {
                 ic_cdk::println!("amount is too much");
-                return Err(Error::AmountExceedsLimit); 
+                return Err(Error::AmountExceedsLimit);
             }
 
             if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
@@ -570,6 +570,24 @@ pub fn request_limiter() -> Result<(), Error> {
     });
 
     Ok(())
+}
+
+#[update]
+pub fn unblock_user(user_id: Principal) -> String {
+    let caller = ic_cdk::caller();
+
+    if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("Unauthorized access attempt");
+        return "Unauthorized: Only the controller can unblock users.".to_string();
+    }
+
+    let removed = mutate_state(|state| state.blocked_users.remove(&user_id));
+
+    if removed.is_some() {
+        format!("User {} has been unblocked successfully.", user_id)
+    } else {
+        format!("User {} was not in the blocked list.", user_id)
+    }
 }
 
 fn current_timestamp() -> u64 {

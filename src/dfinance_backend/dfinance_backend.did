@@ -201,6 +201,7 @@ service : (principal) -> {
   reset_reserve_value : (text, text, nat) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
+  unblock_user : (principal) -> (text);
   update_reserve_price_test : () -> (Result_1);
   update_reserves_price : () -> (Result_1);
   update_token_price : (text) -> (Result_1);

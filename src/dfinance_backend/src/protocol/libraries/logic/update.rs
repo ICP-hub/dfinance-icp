@@ -1,4 +1,4 @@
-use crate::api::functions::get_balance;
+use crate::api::functions::{get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
@@ -221,7 +221,7 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_borrow: params.amount.clone(), //remove
+                // asset_borrow: params.amount.clone(), //remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),
@@ -536,6 +536,11 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let user_data_result = user_data(user_principal);

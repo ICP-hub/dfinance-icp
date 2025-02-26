@@ -1,5 +1,5 @@
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::mutate_state;
+use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
@@ -10,6 +10,7 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::api;
+use ic_cdk::api::time;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
@@ -20,6 +21,12 @@ struct Account {
     subaccount: Option<Vec<u8>>,
 }
 
+// Define a struct to hold request count and last request time
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct RequestTracker {
+    count: u32,
+    last_request_time: u64,
+}
 /*
  * @title Asset Transfer From Function
  * @notice Transfers assets from one principal to another using the ICRC-2 standard.
@@ -43,7 +50,10 @@ pub async fn asset_transfer_from(
 ) -> Result<Nat, String> {
     ic_cdk::println!(
         "Initiating asset transfer from {:?} to {:?} of amount {:?} via ledger_canister_id {:?}",
-        from, to, amount, ledger_canister_id
+        from,
+        to,
+        amount,
+        ledger_canister_id
     );
 
     let args = TransferFromArgs {
@@ -63,25 +73,22 @@ pub async fn asset_transfer_from(
     };
 
     match call(ledger_canister_id, "icrc2_transfer_from", (args,)).await {
-        Ok((result,)) => {
-            match result {
-                TransferFromResult::Ok(balance) => {
-                    ic_cdk::println!("Transfer successful. New balance: {:?}", balance);
-                    Ok(balance)
-                }
-                TransferFromResult::Err(err) => {
-                    ic_cdk::println!("Transfer failed with error: {:?}", err);
-                    Err(format!("{:?}", err))
-                }
+        Ok((result,)) => match result {
+            TransferFromResult::Ok(balance) => {
+                ic_cdk::println!("Transfer successful. New balance: {:?}", balance);
+                Ok(balance)
             }
-        }
+            TransferFromResult::Err(err) => {
+                ic_cdk::println!("Transfer failed with error: {:?}", err);
+                Err(format!("{:?}", err))
+            }
+        },
         Err(e) => {
             ic_cdk::println!("Call to ledger canister failed: {:?}", e.1);
             Err(e.1)
         }
     }
 }
-
 
 /*
  * @title Asset Transfer Function
@@ -259,6 +266,11 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+
     let operation_key = user_principal;
     // Acquire the lock
     {
@@ -392,6 +404,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
         ic_cdk::println!("user data before submit = {:?}", user_data);
 
+        // Ask: dont you think that this should be on the last of the code.
         mutate_state(|state| {
             state
                 .user_profile
@@ -490,6 +503,157 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
  * - `Nat` - The current cycle balance of the canister.
  */
 #[query]
-pub async fn cycle_checker() -> Nat {
-    Nat::from(api::canister_balance128())
+pub async fn cycle_checker() -> Result<Nat, Error> {
+    let caller = ic_cdk::caller();
+    if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    Ok(Nat::from(api::canister_balance128()))
 }
+
+const REQUEST_LIMIT: u32 = 100; // Maximum allowed requests within the defined time window
+const TIME_WINDOW: u64 = 3600; // Time window in seconds (one hour)
+const BLOCK_DURATION: u64 = 43200; // Block duration in seconds (12 hours = 43200 seconds)
+
+pub fn request_limiter() -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+    let current_time_stamp = current_timestamp();
+    ic_cdk::println!("Current time: {}", current_time_stamp);
+
+    // Check if user is blocked
+    if let Some(unblock_time) = mutate_state(|state| state.blocked_users.get(&caller_id)) {
+        ic_cdk::println!("User is blocked until: {}", unblock_time);
+        if unblock_time > current_time_stamp {
+            return Err(Error::TOOMANYREQUESTS);
+        } else {
+            mutate_state(|state| {
+                state.blocked_users.remove(&caller_id); // Unblock user
+            });
+        }
+    }
+
+    let mut entry = mutate_state(|state| {
+        state
+            .requests
+            .get(&caller_id)
+            .map(|candid| candid.0.clone())
+            .unwrap_or(RequestTracker {
+                count: 0,
+                last_request_time: current_time_stamp,
+            })
+    });
+
+    if current_time_stamp - entry.last_request_time > TIME_WINDOW {
+        // Reset request count if outside time window
+        entry.count = 0;
+        entry.last_request_time = current_time_stamp;
+    }
+
+    entry.count += 1;
+
+    if entry.count > REQUEST_LIMIT {
+        // Block user if exceeding request limit
+        mutate_state(|state| {
+            state
+                .blocked_users
+                .insert(caller_id.clone(), current_time_stamp + BLOCK_DURATION);
+        });
+        mutate_state(|state| {
+            state.requests.remove(&caller_id);
+        });
+        return Err(Error::BLOCKEDFORONEHOUR);
+    }
+
+    mutate_state(|state| {
+        state.requests.insert(caller_id.clone(), Candid(entry));
+    });
+
+    Ok(())
+}
+
+fn current_timestamp() -> u64 {
+    time() / 1_000_000_000
+}
+
+// async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Error> {
+//     let message = match stage {
+//         "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
+//         "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
+//         "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
+//         _ => "".to_string(),
+//     };
+
+//     let subject = "Faucet Amount Low - Mint More Tokens".to_string();
+//     if let Err(e) = send_email_via_sendgrid(subject, message).await {
+//         ic_cdk::println!("Failed to send email: {:?}", e);
+//         return Err(e);
+//     }
+//     Ok(())
+// }
+
+// pub async fn send_email_via_sendgrid(subject: String, message: String) -> Result<String, Error> {
+//     let url = "https://api.sendgrid.com/v3/mail/send";
+//     let api_key = "";
+
+//     let request_headers = vec![
+//         HttpHeader {
+//             name: "Authorization".to_string(),
+//             value: format!("Bearer {}", api_key),
+//         },
+//         HttpHeader {
+//             name: "Content-Type".to_string(),
+//             value: "application/json".to_string(),
+//         },
+//     ];
+
+//     ic_cdk::println!("Headers prepared: {:?}", request_headers);
+
+//     let email_data = json!( {
+//         "personalizations": [
+//             {
+//                 "to": [{"email": "sativikverma@gmail.com"}],
+//                 "subject": subject
+//             }
+//         ],
+//         "from": { "email": "jyotirmay2000gupta@gmail.com" },
+//         "content": [
+//             {
+//                 "type": "text/plain",
+//                 "value": message,
+//             }
+//         ]
+//     });
+
+//     ic_cdk::println!("Email data prepared: {}", email_data);
+
+//     let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
+
+//     let request = CanisterHttpRequestArgument {
+//         url: url.to_string(),
+//         method: HttpMethod::POST,
+//         body: request_body,
+//         max_response_bytes: None,
+//         transform: None,
+//         headers: request_headers,
+//     };
+
+//     ic_cdk::println!("Request prepared: {:?}", request);
+
+//     // Send the HTTP request to SendGrid
+//     let timeout = 120_000_000_000;
+//     ic_cdk::println!("Sending HTTP request with timeout: {}", timeout);
+
+//     match http_request(request, timeout).await {
+//         Ok((response,)) => {
+//             let response_body =
+//                 String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
+//             ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
+//             Ok("Email sent successfully".to_string())
+//         }
+//         Err((r, m)) => {
+//             ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
+//             Err(Error::EmailError)
+//         }
+//     }
+// }

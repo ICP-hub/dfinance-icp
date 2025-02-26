@@ -63,8 +63,9 @@ const useUserData = () => {
           return;
         }
         const principalObj = Principal.fromText(principal);
-        const result = await backendActor.get_user_account_data([]);
-
+        
+        const result = await backendActor.get_user_account_data([]); //debtbalance list, dtokenbalance
+        console.log("User account data:", result);
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
           setTimeout(fetchUserAccountData, 1000);

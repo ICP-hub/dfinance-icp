@@ -426,7 +426,7 @@ pub async fn burn_scaled(
         .await
         {
             Ok(_) => {
-                ic_cdk::println!("Minting successful");
+                ic_cdk::println!("Burning successful");
                 Ok(())
             }
             Err(err) => {
@@ -521,6 +521,7 @@ pub async fn mint_scaled(
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
+    //acuire transaction lock
     if adjusted_amount == Nat::from(0u128) {
         ic_cdk::println!("Error: Invalid mint amount");
         return Err(Error::InvalidMintAmount);
@@ -559,7 +560,7 @@ pub async fn mint_scaled(
             user_state.d_token_balance += adjusted_amount.clone();
         }
         ic_cdk::println!("new dtoken balance {}", user_state.d_token_balance);
-        reserve.asset_supply += adjusted_amount;
+        reserve.asset_supply += adjusted_amount; //get_trans_amount
         println!("updated asset supply{}", reserve.asset_supply);
         println!("user new dtoken balance {}", user_state.d_token_balance);
         user_state.liquidity_index = index;

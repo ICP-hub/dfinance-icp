@@ -1,7 +1,7 @@
 use ic_cdk::{api, update};
 use candid::{Nat, Principal};
 use crate::constants::errors::Error;
-use crate::api::functions::get_balance;
+use crate::api::functions::{get_balance, request_limiter};
 use crate::api::state_handler::read_state;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow::execute_repay;
@@ -88,6 +88,11 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(Error::AnonymousPrincipal);
     }
 
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+    
     let user_key = params.on_behalf_of;
     // Acquire lock for the target user
     if let Err(e) = acquire_lock(&user_key) {

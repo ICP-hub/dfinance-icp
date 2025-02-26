@@ -386,7 +386,7 @@ const DashboardNav = () => {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
         const calculatedNetApy = calculateNetSupplyApy( reservesData, reserveData);
-        setNetApy(calculatedNetApy);
+        setNetApy(calculatedNetApy * 100);
         let totalBorrow = 0;
 
         reservesData.forEach((reserveGroup) => {

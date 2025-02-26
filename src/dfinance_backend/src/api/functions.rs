@@ -512,9 +512,9 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
     Ok(Nat::from(api::canister_balance128()))
 }
 
-const REQUEST_LIMIT: u32 = 100; // Maximum allowed requests within the defined time window
-const TIME_WINDOW: u64 = 3600; // Time window in seconds (one hour)
-const BLOCK_DURATION: u64 = 43200; // Block duration in seconds (12 hours = 43200 seconds)
+const REQUEST_LIMIT: u32 = 2400; // Maximum allowed requests within the defined time window
+const TIME_WINDOW: u64 = 86400; // Time window in seconds (one hour)
+const BLOCK_DURATION: u64 = 3600; // Block duration in seconds (12 hours = 43200 seconds)
 
 pub fn request_limiter() -> Result<(), Error> {
     let caller_id = ic_cdk::caller();

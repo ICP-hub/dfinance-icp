@@ -554,12 +554,12 @@ const WalletDetails = () => {
 
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
-                          {Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                          {Number(item?.[1]?.Ok?.current_liquidity_rate) * 100 /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                                Number(item?.[1]?.Ok?.current_liquidity_rate) * 100 /
                                 100000000
                               ).toFixed(2)}%`}
                         </div>
@@ -651,10 +651,10 @@ const WalletDetails = () => {
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
-                          {Number(item?.[1]?.Ok?.borrow_rate) / 100000000 < 0.01
+                          {Number(item?.[1]?.Ok?.borrow_rate) * 100 / 100000000 < 0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.borrow_rate) / 100000000
+                                Number(item?.[1]?.Ok?.borrow_rate) * 100 / 100000000
                               ).toFixed(2)}%`}
                         </div>
                       </td>
@@ -762,14 +762,14 @@ const WalletDetails = () => {
                           {" "}
                           {Number(
                             selectedAssetData[1].Ok.current_liquidity_rate
-                          ) /
+                          ) * 100 /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
                                 Number(
                                   selectedAssetData[1].Ok.current_liquidity_rate
-                                ) / 100000000
+                                ) * 100 / 100000000
                               ).toFixed(2)}%`}
                         </p>
                       </div>
@@ -801,12 +801,12 @@ const WalletDetails = () => {
                           Borrow APY:
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {Number(selectedAssetData[1].Ok.borrow_rate) /
+                          {Number(selectedAssetData[1].Ok.borrow_rate) * 100 /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(selectedAssetData[1].Ok.borrow_rate) /
+                                Number(selectedAssetData[1].Ok.borrow_rate) * 100 /
                                 100000000
                               ).toFixed(2)}%`}
                         </p>

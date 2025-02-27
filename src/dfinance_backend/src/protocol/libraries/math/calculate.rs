@@ -10,7 +10,6 @@ use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateRes
 use serde::Serialize;
 use std::collections::HashMap;
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct CachedPrice {
     pub price: Nat,
@@ -65,6 +64,15 @@ impl PriceCache {
  */
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous()
+        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
     if let Err(e) = request_limiter() {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
@@ -110,17 +118,14 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
  */
-#[update]
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
-
     if let Err(e) = request_limiter() {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
-    
+
     if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await {
         return Err(e);
-
     };
 
     Ok(())
@@ -144,7 +149,6 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
     ic_cdk::println!("all tokens are = {:?}", tokens);
     tokens
 }
-
 
 /*
  * @title Fetch Exchange Rates
@@ -223,7 +227,7 @@ pub async fn get_exchange_rates(
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
             Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-        //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+            //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,
@@ -304,14 +308,13 @@ pub async fn get_exchange_rates(
     }
 }
 
-
 /*
  * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
  * @dev This function checks if the caller is a valid tester for Pocket IC and iterates over the assets in the state,
- *      updating their price caches with manually defined prices. If no price is found for an asset, 
+ *      updating their price caches with manually defined prices. If no price is found for an asset,
  *      it logs the absence of the price. If a price cache does not exist, a new one is created.
  * @param None
- * @returns 
+ * @returns
  *      - `Ok(())`: if the price update process completes successfully.
  *      - `Err(Error::InvalidUser)`: if the caller is not a valid tester.
  *      - `Err(Error::ExchangeRateError)`: if updating the price cache fails.
@@ -404,5 +407,3 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
     ic_cdk::println!("Price update process completed successfully.");
     Ok(())
 }
-
-

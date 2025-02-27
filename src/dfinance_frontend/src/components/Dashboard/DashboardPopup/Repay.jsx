@@ -23,14 +23,33 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the Repay component, allowing users to input and execute repayment transactions.
  */
 
-const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const Repay = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
 
   /* ===================================================================================
@@ -356,6 +375,11 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         )
       ) {
         message = "You cannot repay more than you owe.";
+      } else if (
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister")
+      ) {
+        message = "Canister is out of cycles. Admin has been notified.";
       }
 
       toast.error(`Error: ${message}`, {
@@ -520,7 +544,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       totalDeptValue = 0;
     }
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    
+
     setPrevHealthFactor(currentHealthFactor);
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)

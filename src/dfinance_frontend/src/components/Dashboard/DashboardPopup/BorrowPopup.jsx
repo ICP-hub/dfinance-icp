@@ -21,18 +21,44 @@ import useAssetData from "../../customHooks/useAssets";
  * @param {Object} props - Component properties.
  */
 
- const Borrow = ({ asset,image, supplyRateAPR,balance,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,totalCollateral,totalDebt,currentCollateralStatus,Ltv,borrowableValue: borrowableValueprop, borrowableAssetValue: borrowableAssetValueprop, total_supply, total_borrow, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-
-
+const Borrow = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue: borrowableValueprop,
+  borrowableAssetValue: borrowableAssetValueprop,
+  total_supply,
+  total_borrow,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, } = useFetchConversionRate();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
   const { filteredItems } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();
 
   /* ===================================================================================
@@ -45,7 +71,8 @@ import useAssetData from "../../customHooks/useAssets";
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
+    useState(false);
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +91,9 @@ import useAssetData from "../../customHooks/useAssets";
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -94,11 +123,19 @@ import useAssetData from "../../customHooks/useAssets";
   };
 
   //   Calculates borrowable values based on conversion rates.
-  const calculateBorrowableValues = (asset, availableBorrow, remainingBorrowable
+  const calculateBorrowableValues = (
+    asset,
+    availableBorrow,
+    remainingBorrowable
   ) => {
     let borrowableValue = null;
     let borrowableAssetValue = null;
-    const assetRates = { ckBTC: ckBTCUsdRate,ckETH: ckETHUsdRate,ckUSDC: ckUSDCUsdRate,ICP: ckICPUsdRate,ckUSDT: ckUSDTUsdRate,
+    const assetRates = {
+      ckBTC: ckBTCUsdRate,
+      ckETH: ckETHUsdRate,
+      ckUSDC: ckUSDCUsdRate,
+      ICP: ckICPUsdRate,
+      ckUSDT: ckUSDTUsdRate,
     };
     const rate = assetRates[asset] / 1e8;
     if (rate) {
@@ -135,8 +172,7 @@ import useAssetData from "../../customHooks/useAssets";
       "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
-
-   // Handles the borrow action by interacting with the backend.
+  // Handles the borrow action by interacting with the backend.
   const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
@@ -151,34 +187,28 @@ import useAssetData from "../../customHooks/useAssets";
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
+  
     const borrowParams = {
       asset: asset,
       amount: scaledAmount,
     };
+  
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
-
+  
       if ("Ok" in borrowResult) {
         trackEvent(
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString(),
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`,
           "Assets",
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString()
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`
         );
+  
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
+  
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -189,18 +219,41 @@ import useAssetData from "../../customHooks/useAssets";
           draggable: true,
           progress: undefined,
         });
+  
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-
+        console.error("errorKey",errorKey)
         if (errorMessage.toLowerCase().includes("panic")) {
           setPanicMessage(
             "A critical system error occurred. Please try again later."
           );
           setShowPanicPopup(true);
+        } else if (errorMessage.toLowerCase().includes("out of cycles") || errorMessage.includes("reject text: canister")) {
+          toast.error("Canister is out of cycles. Controller has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMessage.toLowerCase().includes("BorrowCapExceeded")) {
+          toast.error("Borrow cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           toast.error(errorMessage, {
             className: "custom-toast",
@@ -213,20 +266,49 @@ import useAssetData from "../../customHooks/useAssets";
             progress: undefined,
           });
         }
-
+  
         setIsPaymentDone(false);
         setIsVisible(true);
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
-
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+  
+      const message = error.message || "Borrow action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("reject text: canister");
+      const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
+  
+      if (isPanicError) {
         setPanicMessage(
           "A critical system error occurred. Please try again later."
         );
         setShowPanicPopup(true);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Controller has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isBorrowCapExceeded) {
+        toast.error("Borrow cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -237,13 +319,14 @@ import useAssetData from "../../customHooks/useAssets";
           progress: undefined,
         });
       }
-
+  
       setIsPaymentDone(false);
       setIsVisible(true);
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -362,11 +445,9 @@ import useAssetData from "../../customHooks/useAssets";
         );
         setBorrowableValue(updatedValues.borrowableValue);
         setBorrowableAssetValue(updatedValues.borrowableAssetValue);
-      } 
-      catch (error) {
+      } catch (error) {
         console.error("Error fetching data:", error);
-      } 
-      finally {
+      } finally {
         setTimeout(() => {
           setLoading(false);
         }, 1000);
@@ -388,7 +469,8 @@ import useAssetData from "../../customHooks/useAssets";
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      const borrowValue =remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      const borrowValue =
+        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -429,20 +511,22 @@ import useAssetData from "../../customHooks/useAssets";
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
 
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
-     
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    console.log("totalCollateralValue",totalCollateralValue,totalCollateral,amountAdded)
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    
-    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
 
+    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
+     console.log("ltv",ltv)
     setPrevHealthFactor(currentHealthFactor);
 
-    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2) );
-    
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
+
     if (value < 2 && value > 1) {
       setIsAcknowledgmentRequired(true);
-    }
-     else {
+    } else {
       setIsAcknowledgmentRequired(false);
       setIsAcknowledged(false);
     }

@@ -14,7 +14,10 @@ import useAssetData from "../customHooks/useAssets";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
-import { setTotalUsdValueBorrow, setTotalUsdValueSupply } from "../../redux/reducers/borrowSupplyReducer";
+import {
+  setTotalUsdValueBorrow,
+  setTotalUsdValueSupply,
+} from "../../redux/reducers/borrowSupplyReducer";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import MySupplyModal from "./MySupplyModal";
 import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
@@ -31,6 +34,7 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
+import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 
 /**
  * MySupply Component
@@ -45,14 +49,41 @@ const MySupply = () => {
    * =================================================================================== */
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor } = useAuth();
-  const { userData, userAccountData } = useUserData();
+  const {
+    userData,
+    userAccountData,
+    isFreezePopupVisible,
+    setIsFreezePopupVisible,
+  } = useUserData();
   const tooltipRef = useRef(null);
-  const {  ckBTCUsdRate,  ckETHUsdRate,  ckUSDCUsdRate,  ckICPUsdRate,  ckUSDTUsdRate,  fetchConversionRate,  ckBTCBalance,  ckETHBalance, 
-    ckUSDCBalance,  ckICPBalance, ckUSDTBalance, fetchBalance} = useFetchConversionRate();
-  const { assets, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow, loading: filteredDataLoading} = useAssetData();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
+  const {
+    assets,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+    loading: filteredDataLoading,
+  } = useAssetData();
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const formatNumber = useFormatNumber();
 
@@ -76,12 +107,52 @@ const MySupply = () => {
   );
   const [hasLoaded, setHasLoaded] = useState(false);
   const [Collateral, setCollateral] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState({ isOpen: false, type: "",  asset: "", image: "", balance: ""});
+  const [isModalOpen, setIsModalOpen] = useState({
+    isOpen: false,
+    type: "",
+    asset: "",
+    image: "",
+    balance: "",
+  });
 
-  const handleModalOpen = ( type, asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, 
-    assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue,  borrowableAssetValue, total_supply,  total_borrow ) => {
-    setIsModalOpen({ isOpen: true, type: type, asset: asset, image: image, supplyRateAPR: supplyRateAPR, balance: balance, liquidationThreshold: liquidationThreshold, 
-      reserveliquidationThreshold: reserveliquidationThreshold, assetSupply: assetSupply,  assetBorrow: assetBorrow,  totalCollateral: totalCollateral,  totalDebt: totalDebt,  currentCollateralStatus: currentCollateralStatus,  Ltv: Ltv,  borrowableValue: borrowableValue,  borrowableAssetValue: borrowableAssetValue,  total_supply: total_supply,  total_borrow: total_borrow,
+  const handleModalOpen = (
+    type,
+    asset,
+    image,
+    supplyRateAPR,
+    balance,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    totalCollateral,
+    totalDebt,
+    currentCollateralStatus,
+    Ltv,
+    borrowableValue,
+    borrowableAssetValue,
+    total_supply,
+    total_borrow
+  ) => {
+    setIsModalOpen({
+      isOpen: true,
+      type: type,
+      asset: asset,
+      image: image,
+      supplyRateAPR: supplyRateAPR,
+      balance: balance,
+      liquidationThreshold: liquidationThreshold,
+      reserveliquidationThreshold: reserveliquidationThreshold,
+      assetSupply: assetSupply,
+      assetBorrow: assetBorrow,
+      totalCollateral: totalCollateral,
+      totalDebt: totalDebt,
+      currentCollateralStatus: currentCollateralStatus,
+      Ltv: Ltv,
+      borrowableValue: borrowableValue,
+      borrowableAssetValue: borrowableAssetValue,
+      total_supply: total_supply,
+      total_borrow: total_borrow,
     });
   };
 
@@ -188,7 +259,10 @@ const MySupply = () => {
     return availableBorrowNumber > 0 && total_supply > total_borrow;
   });
 
-  const isTableDisabled = !userData?.Ok?.reserves || !userData?.Ok?.reserves[0] || availableBorrow == 0 ||
+  const isTableDisabled =
+    !userData?.Ok?.reserves ||
+    !userData?.Ok?.reserves[0] ||
+    availableBorrow == 0 ||
     userData?.Ok?.reserves[0].every(
       (reserveGroup) =>
         asset_supply === 0n || reserveGroup[1]?.is_collateral === false
@@ -213,7 +287,7 @@ const MySupply = () => {
    */
   const fetchAssetData = async () => {
     const balances = [];
-    
+
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
@@ -306,13 +380,21 @@ const MySupply = () => {
    * @param {number} remainingBorrowable - The remaining amount available for borrowing.
    * @returns {object} - Returns an object containing the calculated borrowable value and asset value.
    */
-  const calculateBorrowableValues = ( item, availableBorrow, remainingBorrowable ) => {
+  const calculateBorrowableValues = (
+    item,
+    availableBorrow,
+    remainingBorrowable
+  ) => {
     let borrowableValue = "0.00000000";
     let borrowableAssetValue = "0.0000";
 
     if (Number(availableBorrow)) {
       const assetRates = {
-        ckBTC: ckBTCUsdRate, ckETH: ckETHUsdRate, ckUSDC: ckUSDCUsdRate, ICP: ckICPUsdRate, ckUSDT: ckUSDTUsdRate,
+        ckBTC: ckBTCUsdRate,
+        ckETH: ckETHUsdRate,
+        ckUSDC: ckUSDCUsdRate,
+        ICP: ckICPUsdRate,
+        ckUSDT: ckUSDTUsdRate,
       };
 
       const rate = assetRates[item[0]] / 1e8;
@@ -360,8 +442,12 @@ const MySupply = () => {
     reserves.map((reserveGroup) => {
       const asset = reserveGroup[0];
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
-      const assetBalance = assetBalances.find((balance) => balance.asset === asset)  ?.dtokenBalance || 0;
-      const assetSupply = (Number(assetBalance) * Number(getAssetSupplyValue(asset))) / (Number(liquidityIndex) * 1e8);
+      const assetBalance =
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.dtokenBalance || 0;
+      const assetSupply =
+        (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
+        (Number(liquidityIndex) * 1e8);
       const isCollateral = reserveGroup[1]?.is_collateral || true;
 
       if (assetSupply > 0) {
@@ -386,7 +472,18 @@ const MySupply = () => {
     }
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
 
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
 
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
+  
   useEffect(() => {
     const savedShowZeroBalance = JSON.parse(
       localStorage.getItem("showZeroBalance")
@@ -396,11 +493,9 @@ const MySupply = () => {
     }
   }, []);
 
-
   useEffect(() => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
-
 
   useEffect(() => {
     const fetchSupplyData = async () => {
@@ -437,13 +532,11 @@ const MySupply = () => {
     fetchBorrowData();
   }, [assets, dashboardRefreshTrigger]);
 
-
   useEffect(() => {
     if (!filteredDataLoading) {
       setHasLoaded(true);
     }
   }, [filteredDataLoading]);
-
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
@@ -485,9 +578,19 @@ const MySupply = () => {
       ).toFixed(2);
       setCkUSDTUsdBalance(balanceInUsd);
     }
-  }, [ ckBTCBalance, ckBTCUsdRate, ckETHBalance, ckETHUsdRate, ckUSDCBalance, ckUSDCUsdRate, ckUSDTBalance, ckUSDTUsdRate, 
-    ckICPBalance, ckICPUsdRate, dashboardRefreshTrigger ]);
-
+  }, [
+    ckBTCBalance,
+    ckBTCUsdRate,
+    ckETHBalance,
+    ckETHUsdRate,
+    ckUSDCBalance,
+    ckUSDCUsdRate,
+    ckUSDTBalance,
+    ckUSDTUsdRate,
+    ckICPBalance,
+    ckICPUsdRate,
+    dashboardRefreshTrigger,
+  ]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -508,11 +611,9 @@ const MySupply = () => {
     fetchAllData();
   }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger]);
 
-
   useEffect(() => {
     setValueChanged(true);
   }, [availableBorrow, filteredItems]);
-
 
   useEffect(() => {
     if (valueChanged) {
@@ -520,15 +621,12 @@ const MySupply = () => {
     }
   }, [valueChanged, availableBorrow, filteredItems]);
 
-
   useEffect(() => {
     if (filteredItems && filteredItems.length > 0) {
       const item = filteredItems[0][1].Ok;
       setCollateral(item.can_be_collateral);
     }
   }, [filteredItems, dashboardRefreshTrigger]);
-
-
 
   useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
@@ -564,8 +662,6 @@ const MySupply = () => {
       setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData, dashboardRefreshTrigger]);
-
-
 
   useEffect(() => {
     let totalSupply = 0;
@@ -799,9 +895,16 @@ const MySupply = () => {
                   <div className="ml-5">
                     {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
-                      const currentLiquidity = userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset )?.[1]?.liquidity_index;
-                      const assetBalance = assetBalances.find((balance) => balance.asset === asset) ?.dtokenBalance || 0;
-                      const assetSupply = (Number(assetBalance) *   Number(getAssetSupplyValue(asset))) / (Number(currentLiquidity) * 1e8);
+                      const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+                        (reserveGroup) => reserveGroup[0] === asset
+                      )?.[1]?.liquidity_index;
+                      const assetBalance =
+                        assetBalances.find((balance) => balance.asset === asset)
+                          ?.dtokenBalance || 0;
+                      const assetSupply =
+                        (Number(assetBalance) *
+                          Number(getAssetSupplyValue(asset))) /
+                        (Number(currentLiquidity) * 1e8);
                       let usdValue = 0;
 
                       // Determine USD value based on asset type
@@ -867,8 +970,13 @@ const MySupply = () => {
                     !userData?.Ok?.reserves[0] ||
                     userData?.Ok?.reserves[0].filter((reserveGroup) => {
                       const asset = reserveGroup[0];
-                      const assetBalance = assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance;
-                      return ((assetBalance > 0 || assetBalance === undefined) &&getAssetSupplyValue(reserveGroup[0]) > 0n); // Check both conditions
+                      const assetBalance = assetBalances.find(
+                        (balance) => balance.asset === asset
+                      )?.dtokenBalance;
+                      return (
+                        (assetBalance > 0 || assetBalance === undefined) &&
+                        getAssetSupplyValue(reserveGroup[0]) > 0n
+                      ); // Check both conditions
                     }).length === 0 ? (
                     noSupplyMessage
                   ) : (
@@ -879,7 +987,10 @@ const MySupply = () => {
                           : userData?.Ok?.reserves[0]
                               ?.filter((reserveGroup) => {
                                 const asset = reserveGroup[0];
-                                const assetBalance = assetBalances.find((balance) => balance.asset === asset )?.dtokenBalance || 0;
+                                const assetBalance =
+                                  assetBalances.find(
+                                    (balance) => balance.asset === asset
+                                  )?.dtokenBalance || 0;
                                 return (
                                   assetBalance > 0 &&
                                   getAssetSupplyValue(reserveGroup[0]) > 0n
@@ -887,11 +998,25 @@ const MySupply = () => {
                               })
                               .map((reserveGroup, index, filteredReserves) => {
                                 const asset = reserveGroup[0];
-                                const currentLiquidity = userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset )?.[1]?.liquidity_index;
-                                const assetBalance = assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
-                                const assetSupply = (Number(assetBalance) *  Number(getAssetSupplyValue(asset))) /(Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
-                                const modiassetSupply = (Number(getAssetSupplyValue(asset)) /   Number(currentLiquidity)) * Number(assetBalance);
-                                const item = filteredItems.find((item) => item[0] === asset);
+                                const currentLiquidity =
+                                  userData?.Ok?.reserves[0]?.find(
+                                    (reserveGroup) => reserveGroup[0] === asset
+                                  )?.[1]?.liquidity_index;
+                                const assetBalance =
+                                  assetBalances.find(
+                                    (balance) => balance.asset === asset
+                                  )?.dtokenBalance || 0;
+                                const assetSupply =
+                                  (Number(assetBalance) *
+                                    Number(getAssetSupplyValue(asset))) /
+                                  (Number(currentLiquidity) * 1e8); // Dividing by 1e8 to adjust the value
+                                const modiassetSupply =
+                                  (Number(getAssetSupplyValue(asset)) /
+                                    Number(currentLiquidity)) *
+                                  Number(assetBalance);
+                                const item = filteredItems.find(
+                                  (item) => item[0] === asset
+                                );
 
                                 const collateralStatus =
                                   reserveGroup[1]?.is_collateral;
@@ -1006,14 +1131,14 @@ const MySupply = () => {
                                               !isFinite(usdValue) ||
                                               usdValue === 0
                                             ) {
-                                              return "0.00"; 
+                                              return "0.00";
                                             } else if (usdValue < 0.01) {
                                               return `<${(
                                                 0.01 / usdRate
                                               ).toLocaleString(undefined, {
                                                 minimumFractionDigits: 7,
                                                 maximumFractionDigits: 7,
-                                              })}`; 
+                                              })}`;
                                             } else {
                                               return assetSupply >= 1
                                                 ? assetSupply.toLocaleString(
@@ -1072,9 +1197,9 @@ const MySupply = () => {
                                               !isFinite(usdValue) ||
                                               usdValue === 0
                                             ) {
-                                              return "$0.00"; 
+                                              return "$0.00";
                                             } else if (usdValue < 0.01) {
-                                              return "<0.01$"; 
+                                              return "<0.01$";
                                             } else {
                                               return `$${usdValue.toLocaleString(
                                                 undefined,
@@ -1133,7 +1258,7 @@ const MySupply = () => {
                                             const currentLiquidity =
                                               userData?.Ok?.reserves[0]?.find(
                                                 (reserveGroup) =>
-                                                  reserveGroup[0] === item[0] 
+                                                  reserveGroup[0] === item[0]
                                               )?.[1]?.liquidity_index;
                                             const assetBalance =
                                               assetBalances.find(
@@ -1146,12 +1271,12 @@ const MySupply = () => {
                                                 Number(
                                                   getAssetSupplyValue(asset)
                                                 )) /
-                                              (Number(currentLiquidity) * 1e8); 
+                                              (Number(currentLiquidity) * 1e8);
 
                                             const DebtIndex =
                                               userData?.Ok?.reserves[0]?.find(
                                                 (reserveGroup) =>
-                                                  reserveGroup[0] === item[0] 
+                                                  reserveGroup[0] === item[0]
                                               )?.[1]?.variable_borrow_index;
 
                                             const assetBorrowBalance =
@@ -1226,7 +1351,7 @@ const MySupply = () => {
                                           const currentLiquidity =
                                             userData?.Ok?.reserves[0]?.find(
                                               (reserveGroup) =>
-                                                reserveGroup[0] === item[0] 
+                                                reserveGroup[0] === item[0]
                                             )?.[1]?.liquidity_index;
                                           const assetBalance =
                                             assetBalances.find(
@@ -1239,12 +1364,12 @@ const MySupply = () => {
                                               Number(
                                                 getAssetSupplyValue(asset)
                                               )) /
-                                            (Number(currentLiquidity) * 1e8); 
+                                            (Number(currentLiquidity) * 1e8);
 
                                           const DebtIndex =
                                             userData?.Ok?.reserves[0]?.find(
                                               (reserveGroup) =>
-                                                reserveGroup[0] === item[0] 
+                                                reserveGroup[0] === item[0]
                                             )?.[1]?.variable_borrow_index;
 
                                           const assetBorrowBalance =
@@ -1308,7 +1433,7 @@ const MySupply = () => {
                                           const currentLiquidity =
                                             userData?.Ok?.reserves[0]?.find(
                                               (reserveGroup) =>
-                                                reserveGroup[0] === item[0] 
+                                                reserveGroup[0] === item[0]
                                             )?.[1]?.liquidity_index;
                                           const assetBalance =
                                             assetBalances.find(
@@ -1321,12 +1446,12 @@ const MySupply = () => {
                                               Number(
                                                 getAssetSupplyValue(asset)
                                               )) /
-                                            (Number(currentLiquidity) * 1e8); 
+                                            (Number(currentLiquidity) * 1e8);
 
                                           const DebtIndex =
                                             userData?.Ok?.reserves[0]?.find(
                                               (reserveGroup) =>
-                                                reserveGroup[0] === item[0] 
+                                                reserveGroup[0] === item[0]
                                             )?.[1]?.variable_borrow_index;
 
                                           const assetBorrowBalance =
@@ -1469,7 +1594,7 @@ const MySupply = () => {
                                 const asset = reserveGroup[0];
                                 const currentLiquidity =
                                   userData?.Ok?.reserves[0]?.find(
-                                    (reserveGroup) => reserveGroup[0] === asset 
+                                    (reserveGroup) => reserveGroup[0] === asset
                                   )?.[1]?.liquidity_index;
                                 const assetBalance =
                                   assetBalances.find(
@@ -1479,7 +1604,7 @@ const MySupply = () => {
                                 const assetSupply =
                                   (Number(assetBalance) *
                                     Number(getAssetSupplyValue(asset))) /
-                                  (Number(currentLiquidity) * 1e8); 
+                                  (Number(currentLiquidity) * 1e8);
 
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
@@ -2846,7 +2971,6 @@ const MySupply = () => {
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  console.log("availableBorrowinAssetBorrow", availableBorrow);
                   const ratio =
                     (totalUsdValueBorrow /
                       (availableBorrow + totalUsdValueBorrow)) *
@@ -4935,7 +5059,13 @@ const MySupply = () => {
           </div>
         </div>
       </div>
+
       {renderModalOpen(isModalOpen.type)}
+      {isFreezePopupVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+          <FreezeCanisterPopup onClose={() => setIsFreezePopupVisible(false)} />
+        </div>
+      )}
     </div>
   );
 };

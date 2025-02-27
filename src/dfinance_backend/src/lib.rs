@@ -6,6 +6,7 @@ use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
+use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
 use ic_cdk::api::is_controller;
 use ic_cdk::{init, query};
@@ -15,6 +16,7 @@ use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_account_data;
 
+use protocol::libraries::logic::user::calculate_user_asset_data;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -657,12 +659,14 @@ pub fn check_is_tester()-> bool {
  * @param on_behalf (Optional) The principal requesting the data.
  * @returns A tuple containing user financial data.
  */
-#[update]
+#[query]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
+    dtoken_balance: Option<Vec<AssetData>>,
+    debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     ic_cdk::println!("error in user = {:?}", on_behalf);
-    let result = calculate_user_account_data(on_behalf).await;
+    let result = calculate_user_asset_data(on_behalf,dtoken_balance,debt_token_balance).await;
     result
 }
 

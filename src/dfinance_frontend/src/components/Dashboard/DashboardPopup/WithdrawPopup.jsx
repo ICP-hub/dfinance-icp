@@ -24,8 +24,26 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the WithdrawPopup component.
  */
 
-const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const WithdrawPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -298,14 +316,29 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
 
-      const isPanicError =
-        error.message && error.message.toLowerCase().includes("panic");
+      const message = error.message || "Withdraw action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
 
       if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Withdraw action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -495,7 +528,8 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
+      const convertedValue =
+        Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);

@@ -17,6 +17,8 @@ import useFetchConversionRate from "../../components/customHooks/useFetchConvers
 import WalletModal from "../../components/Dashboard/WalletModal";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
+import useUserData from "../../components/customHooks/useUserData";
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -73,7 +75,12 @@ const WalletDetails = () => {
     totalReserveFactor,
     interestAccure,
   } = useAssetData();
-
+  const {
+    userData,
+    userAccountData,
+    isFreezePopupVisible,
+    setIsFreezePopupVisible,
+  } = useUserData();
   /* ===================================================================================
    *                 Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
@@ -260,7 +267,17 @@ const WalletDetails = () => {
       setHasLoaded(true);
     }
   }, [loading]);
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
 
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -829,7 +846,13 @@ const WalletDetails = () => {
                 </div>
               </div>
             )}
-
+            {isFreezePopupVisible && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+                <FreezeCanisterPopup
+                  onClose={() => setIsFreezePopupVisible(false)}
+                />
+              </div>
+            )}
             {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
           </div>
         )}

@@ -4625,7 +4625,7 @@ const MySupply = () => {
                                     key={index}
                                     className="p-2 lgx:pl-4 font-[500]"
                                   >
-                                    <div className="inline-flex relative gap-1 -ml-3">
+                                    <div className="inline-flex relative gap-1 -ml-2">
                                       <p>
                                         {index === 2
                                           ? item.header1

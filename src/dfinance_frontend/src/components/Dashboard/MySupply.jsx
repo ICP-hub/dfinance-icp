@@ -34,7 +34,7 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
-
+import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 /**
  * MySupply Component
  *
@@ -53,7 +53,8 @@ const MySupply = () => {
   );
   const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor } = useAuth();
-  const { userData, userAccountData } = useUserData();
+  const { userData, userAccountData ,isFreezePopupVisible,
+    setIsFreezePopupVisible, } = useUserData();
   const tooltipRef = useRef(null);
   const {
     ckBTCUsdRate,
@@ -474,6 +475,16 @@ const MySupply = () => {
       setShowZeroBalance(savedShowZeroBalance);
     }
   }, []);
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isFreezePopupVisible]);
 
   useEffect(() => {
     fetchAssetData();
@@ -5049,6 +5060,11 @@ const MySupply = () => {
         </div>
       </div>
       {renderModalOpen(isModalOpen.type)}
+      {isFreezePopupVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+          <FreezeCanisterPopup onClose={() => setIsFreezePopupVisible(false)} />
+        </div>
+      )}
     </div>
   );
 };

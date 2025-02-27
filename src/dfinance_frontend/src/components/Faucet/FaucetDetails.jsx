@@ -25,6 +25,8 @@ import Loading from "../Common/Loading";
 import MiniLoader from "../Common/MiniLoader";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import Lottie from "../Common/Lottie";
+import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
+import useUserData from "../customHooks/useUserData";
 const ITEMS_PER_PAGE = 8;
 
 /**
@@ -43,7 +45,8 @@ const FaucetDetails = () => {
   const { isAuthenticated, backendActor } = useAuth();
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
   } = useFetchConversionRate();
-  
+  const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
+
   const navigate = useNavigate();
 
   /* ===================================================================================
@@ -123,6 +126,18 @@ const FaucetDetails = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
@@ -447,6 +462,13 @@ const FaucetDetails = () => {
               onClose={closePopup}
               asset={selectedAsset?.asset}
               assetImage={selectedAsset?.assetImage}
+            />
+          </div>
+        )}
+        {isFreezePopupVisible && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+            <FreezeCanisterPopup
+              onClose={() => setIsFreezePopupVisible(false)}
             />
           </div>
         )}

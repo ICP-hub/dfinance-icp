@@ -29,7 +29,7 @@ const DashboardNav = () => {
    * =================================================================================== */
   const { assets, totalMarketSize, totalSupplySize, totalBorrowSize, asset_supply, asset_borrow, fetchAssetBorrow, fetchAssetSupply, reserveData } = useAssetData();
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate} = useFetchConversionRate();
-  const { userData, userAccountData } = useUserData();
+  const { userData, userAccountData ,healthFactorBackend,setIsFreezePopupVisible,isFreezePopupVisible,} = useUserData();
   const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const totalUsdValueBorrow = useSelector((state) => state.borrowSupply.totalUsdValueBorrow);
   const totalUsdValueSupply = useSelector((state) => state.borrowSupply.totalUsdValueSupply);
@@ -46,30 +46,79 @@ const DashboardNav = () => {
    *                                  STATE MANAGEMENT
    * =================================================================================== */
   const [assetBalances, setAssetBalances] = useState([]);
-  const [netWorth, setNetWorth] = useState();
-  const [netApy, setNetApy] = useState(0);
+ 
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  
+  const getStoredValue = (key, principal, defaultValue) => {
+    if (!principal) return defaultValue;
+    const storedData = sessionStorage.getItem(`${key}_${principal}`);
+    return storedData !== null ? JSON.parse(storedData) : defaultValue;
+  };
+
+  const [netWorth, setNetWorth] = useState(() =>
+    getStoredValue("netWorth", principal, null)
+  );
+
+  const [netApy, setNetApy] = useState(() => {
+    const storedNetApy = getStoredValue("netApy", principal, null);
+    
+    return storedNetApy === "<0.01" ? "<0.01" : parseFloat(storedNetApy);
+  });
+  
+  
+  
+  
+  const formatNetApy = (value) => {
+   
+    if (value === "<0.01") {
+      return value;
+    }
+  
+    
+    return value.toFixed(4);
+  };
+  
+
+  const [healthFactor, setHealthFactor] = useState(() =>
+    getStoredValue("healthFactor", principal, null)
+  );
+
+ 
 
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
       title: "Net Worth",
-      count: "-",
+      count:
+        netWorth !== null ? (
+          <>
+            <span style={{ fontWeight: "lighter" }}>$</span>
+            {formatNumber(netWorth)}
+          </>
+        ) : (
+          "-"
+        ),
     },
     {
       id: 1,
       title: "Net APY",
-      count: "-",
+      count:
+        netApy !== null
+          ? typeof netApy === "string" && netApy === "<0.01"
+            ? "<0.01%" // If netApy is "<0.01", return it as is
+            : `${formatNetApy(netApy)}%` // Use the formatNetApy function for formatting
+          : "-",
     },
+    
     {
       id: 2,
       title: "Health Factor",
-      count: "-",
+      count: healthFactor !== null ? healthFactor : "-",
     },
   ]);
-
+  
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 },
     { id: 1, title: "Total Available", count: 0 },
@@ -169,63 +218,56 @@ const DashboardNav = () => {
     return `noBorrow`;
   };
 
-  const updateNetWorthAndHealthFactor = (data) => {
-    if (!data || !data.Ok) return;
-    const { net_worth, health_factor } = data.Ok;
-    const updatedTab = walletDetailTab.map((item) => {
-      if (item.id === 0) {
-        return {
-          ...item,
-          count:
-            calculatedNetWorth && calculatedNetWorth < 0.01 ? (
-              "0"
-            ) : calculatedNetWorth ? (
-              <>
-                <span style={{ fontWeight: "lighter" }}>$</span>
-                {formatNumber(calculatedNetWorth)}
-              </>
-            ) : (
-              "-"
-            ),
-        };
-      } else if (item.id === 2) {
-        const healthValue = !userAccountData?.Ok?.[4]
-          ? "-"
-          : Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
-          ? "♾️"
-          : parseFloat(
-              (Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2)
-            );
-        return {
-          ...item,
-          count: healthValue,
-        };
-      }
-      return item;
-    });
+  useEffect(() => {
+    if (
+      totalUsdValueSupply !== undefined &&
+      totalUsdValueBorrow !== undefined &&
+      principal 
+    ) {
+      const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
 
-    setWalletDetailTab(updatedTab);
-  };
+      setNetWorth((prev) => {
+        const newValue =
+          calculatedNetWorth > 0.01 || prev !== null
+            ? calculatedNetWorth
+            : prev;
+        sessionStorage.setItem(
+          `netWorth_${principal}`,
+          JSON.stringify(newValue)
+        ); 
+        return newValue;
+      });
 
-  const updateNetApy = () => {
-    const updatedTab = walletDetailTab.map((item) => {
-      if (item.id === 1) {
-        return {
-          ...item,
-          count:
-            netApy !== 0
-              ? netApy < 0.01
-                ? "<0.01%"
-                : `${netApy.toFixed(4)}%`
-              : "-",
-        };
-      }
+      setWalletDetailTab((prevTab) =>
+        prevTab.map((item) =>
+          item.id === 0
+            ? {
+                ...item,
+                count:
+                  calculatedNetWorth > 0.01 ? (
+                    <>
+                      <span style={{ fontWeight: "lighter" }}>$</span>
+                      {formatNumber(calculatedNetWorth)}
+                    </>
+                  ) : (
+                    prevTab.find((p) => p.id === 0)?.count || "-"
+                  ), 
+              }
+            : item
+        )
+      );
+    }
+  }, [
+    totalUsdValueSupply,
+    totalUsdValueBorrow,
+    dashboardRefreshTrigger,
+    principal,
+  ]);
 
-      return item;
-    });
+ 
 
-    setWalletDetailTab(updatedTab);
-  };
+
+  
 
   const getConversionRate = (asset) => {
     switch (asset) {
@@ -325,10 +367,87 @@ const DashboardNav = () => {
    *                                  EFFECTS
    * =================================================================================== */
   useEffect(() => {
-    const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
-    setNetWorth(calculatedNetWorth);
-  }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
+    // Check if netApy is a valid number and principal is set
+    if (netApy !== null && !isNaN(netApy) && principal) {
+      // If netApy is NaN, set it to "<0.01"
+      const formattedNetApy = isNaN(netApy) || netApy < 0.01 ? "<0.01" : netApy.toFixed(4);
+  
+      // Store the formatted netApy value in sessionStorage
+      sessionStorage.setItem(`netApy_${principal}`, JSON.stringify(formattedNetApy));
+  
+      // Update wallet details with the formatted count
+      setWalletDetailTab((prevTab) =>
+        prevTab.map((item) =>
+          item.id === 1
+            ? {
+                ...item,
+                count: formattedNetApy === "<0.01" ? "<0.01%" : `${formattedNetApy}%`,
+              }
+            : item
+        )
+      );
+    }
+  }, [netApy, dashboardRefreshTrigger, principal]);
+  
+  
+  
+  
 
+  useEffect(() => {
+    if (userAccountData?.Ok?.[4] !== undefined && principal) {
+      const calculatedHealthFactor =
+        Number(healthFactorBackend) > 100
+          ? "♾️"
+          : parseFloat(Number(healthFactorBackend).toFixed(2));
+
+      setHealthFactor((prev) => {
+        const newValue =
+          calculatedHealthFactor !== undefined ? calculatedHealthFactor : prev;
+        sessionStorage.setItem(
+          `healthFactor_${principal}`,
+          JSON.stringify(newValue)
+        ); 
+        return newValue;
+      });
+
+      setWalletDetailTab((prevTab) =>
+        prevTab.map((item) =>
+          item.id === 2
+            ? {
+                ...item,
+                count: calculatedHealthFactor,
+              }
+            : item
+        )
+      );
+    }
+  }, [userAccountData, dashboardRefreshTrigger, principal]);
+
+ 
+  useEffect(() => {
+    if (principal) {
+      const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
+      if (storedNetWorth) {
+        setNetWorth(JSON.parse(storedNetWorth));
+      }
+
+      const storedNetApy = sessionStorage.getItem(`netApy_${principal}`);
+      if (storedNetApy) {
+        setWalletDetailTab((prevTab) =>
+          prevTab.map((item) =>
+            item.id === 1 ? { ...item, count: JSON.parse(storedNetApy) } : item
+          )
+        );
+      }
+
+      const storedHealthFactor = sessionStorage.getItem(
+        `healthFactor_${principal}`
+      );
+      if (storedHealthFactor) {
+        setHealthFactor(JSON.parse(storedHealthFactor));
+      }
+    }
+  }, [principal]);
 
 
   useEffect(() => {
@@ -361,21 +480,6 @@ const DashboardNav = () => {
     };
   }, []);
 
-
-  useEffect(() => {
-    if (userData && reserveData) {
-      updateNetWorthAndHealthFactor(userData);
-    }
-  }, [ userData, reserveData, totalUsdValueSupply, totalUsdValueBorrow, userAccountData, dashboardRefreshTrigger, ]);
-
-
-  useEffect(() => {
-    if (netApy !== undefined) {
-      updateNetApy();
-    }
-  }, [netApy, dashboardRefreshTrigger]);
-
-  
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);

@@ -290,6 +290,31 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
         if (errorMsg.toLowerCase().includes("panic")) {
           setShowPanicPopup(true);
           setIsVisible(false);
+        } else if (
+          errorMsg.toLowerCase().includes("out of cycles") ||
+          errorMsg.includes("Reject text: Canister")
+        ) {
+          toast.error("Canister is out of cycles. Admin has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+          toast.error("Supply cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           const userFriendlyMessage =
             errorMessages[errorKey] || errorMessages.Default;
@@ -310,11 +335,42 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     } catch (error) {
       console.error(`Error: ${error.message || "Supply action failed!"}`);
 
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+      const message = error.message || "Supply action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
+      const isSupplyCapExceeded = message
+        .toLowerCase()
+        .includes("SupplyCapExceeded");
+
+      if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isSupplyCapExceeded) {
+        toast.error("Supply cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,

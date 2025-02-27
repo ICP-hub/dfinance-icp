@@ -65,6 +65,7 @@ impl PriceCache {
  */
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
+    
     if let Err(e) = request_limiter() {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
@@ -110,7 +111,6 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
  */
-#[update]
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
 
     if let Err(e) = request_limiter() {

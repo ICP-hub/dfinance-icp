@@ -137,7 +137,7 @@ import useAssetData from "../../customHooks/useAssets";
 
 
    // Handles the borrow action by interacting with the backend.
-  const handleBorrowETH = async () => {
+   const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -151,34 +151,28 @@ import useAssetData from "../../customHooks/useAssets";
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
+  
     const borrowParams = {
       asset: asset,
       amount: scaledAmount,
     };
+  
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
-
+  
       if ("Ok" in borrowResult) {
         trackEvent(
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString(),
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`,
           "Assets",
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString()
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`
         );
+  
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
+  
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -189,18 +183,41 @@ import useAssetData from "../../customHooks/useAssets";
           draggable: true,
           progress: undefined,
         });
+  
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-
+        console.error("errorKey",errorKey)
         if (errorMessage.toLowerCase().includes("panic")) {
           setPanicMessage(
             "A critical system error occurred. Please try again later."
           );
           setShowPanicPopup(true);
+        } else if (errorMessage.toLowerCase().includes("out of cycles") || errorMessage.includes("reject text: canister")) {
+          toast.error("Canister is out of cycles. Controller has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMessage.toLowerCase().includes("BorrowCapExceeded")) {
+          toast.error("Borrow cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           toast.error(errorMessage, {
             className: "custom-toast",
@@ -213,20 +230,49 @@ import useAssetData from "../../customHooks/useAssets";
             progress: undefined,
           });
         }
-
+  
         setIsPaymentDone(false);
         setIsVisible(true);
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
-
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+  
+      const message = error.message || "Borrow action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("reject text: canister");
+      const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
+  
+      if (isPanicError) {
         setPanicMessage(
           "A critical system error occurred. Please try again later."
         );
         setShowPanicPopup(true);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Controller has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isBorrowCapExceeded) {
+        toast.error("Borrow cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -237,7 +283,7 @@ import useAssetData from "../../customHooks/useAssets";
           progress: undefined,
         });
       }
-
+  
       setIsPaymentDone(false);
       setIsVisible(true);
     } finally {

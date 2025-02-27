@@ -42,7 +42,6 @@ const DebtStatus = () => {
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userAccountData, setUserAccountData] = useState({});
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(false);
@@ -131,25 +130,6 @@ const DebtStatus = () => {
     } catch (error) {
       console.error("Error fetching liquidation users:", error);
       throw error;
-    }
-  };
-
-  /**
-   * Fetches and caches user account data to avoid redundant API calls.
-   * @param {Object} userData - The user data object.
-   */
-  const fetchUserAccountDataWithCache = async (userData) => {
-    const principal = userData?.principal;
-    if (!principal || cachedData.current[principal]) return;
-
-    try {
-      const result = await backendActor.get_user_account_data([principal]);
-      if (result) {
-        cachedData.current[principal] = result;
-        setUserAccountData((prev) => ({ ...prev, [principal]: result }));
-      }
-    } catch (error) {
-      console.error(`Error fetching data for principal: ${principal}`, error);
     }
   };
 
@@ -407,23 +387,6 @@ const DebtStatus = () => {
 
     loadUsers();
   }, [totalUsers, liquidateTrigger]);
-
-  useEffect(() => {
-    cachedData.current = {};
-    if (!users || users.length === 0) return;
-    Promise.all(
-      users.map((userData) => {
-        const principal = userData[0];
-        if (principal)
-          return fetchUserAccountDataWithCache({ ...userData, principal });
-        return null;
-      })
-    )
-      .then(() => console.log("All user account data fetched"))
-      .catch((error) =>
-        console.error("Error fetching user account data in batch:", error)
-      );
-  }, [users, liquidateTrigger]);
 
   useEffect(() => {
     if (currentItems.length > 0) {

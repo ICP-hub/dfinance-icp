@@ -376,6 +376,11 @@ const Repay = ({
         )
       ) {
         message = "You cannot repay more than you owe.";
+      } else if (
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister")
+      ) {
+        message = "Canister is out of cycles. Admin has been notified.";
       }
 
       toast.error(`Error: ${message}`, {

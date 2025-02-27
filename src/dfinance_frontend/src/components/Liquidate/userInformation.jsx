@@ -499,20 +499,19 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       const maxCollateralValue = calculatedData?.maxCollateral
         ? calculatedData.maxCollateral / 1e8
         : 0;
-
+  
       const truncateToEightDecimals = (num) => {
         return Math.trunc(num * 1e8) / 1e8;
       };
-
-      const truncatedMaxCollateral =
-        truncateToEightDecimals(maxCollateralValue);
+  
+      const truncatedMaxCollateral = truncateToEightDecimals(maxCollateralValue);
       let rewardAmount = truncatedMaxCollateral;
       rewardAmount = truncateToEightDecimals(rewardAmount);
-
+  
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");
       }
-
+  
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
@@ -520,29 +519,16 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
         on_behalf_of: mappedItem?.principal?._arr,
         reward_amount: Math.trunc(rewardAmount * 1e8),
       };
-
+  
       const result = await backendActor.execute_liquidation(liquidationParams);
-
+  
       if ("Ok" in result) {
         trackEvent(
-          "Liq:" +
-          selectedDebtAsset +
-          "," +
-          selectedAsset +
-          "," +
-          Number(amountToRepay).toLocaleString() +
-          "," +
-          mappedItem.principal.toString(),
+          `Liq:${selectedDebtAsset},${selectedAsset},${Number(amountToRepay).toLocaleString()},${mappedItem.principal.toString()}`,
           "Assets",
-          "Liq:" +
-          selectedDebtAsset +
-          "," +
-          selectedAsset +
-          "," +
-          Number(amountToRepay).toLocaleString() +
-          "," +
-          mappedItem.principal.toString()
+          `Liq:${selectedDebtAsset},${selectedAsset},${Number(amountToRepay).toLocaleString()},${mappedItem.principal.toString()}`
         );
+  
         toast.success(`Liquidation successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -556,9 +542,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
         setTransactionResult("success");
       } else if ("Err" in result) {
         const errorKey = result.Err;
-        const errorMessage = String(errorKey);
-        const errorMsg = errorKey?.toString() || "An unexpected error occurred";
-
+        const errorMessage = String(errorKey).toLowerCase();
+  
         if (errorKey?.ExchangeRateError === null) {
           toast.error("Price fetch failed", {
             className: "custom-toast",
@@ -570,9 +555,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             draggable: true,
             progress: undefined,
           });
-          setError(
-            "Price fetch failed: Your assets are safe, try again after some time."
-          );
+          setError("Price fetch failed: Your assets are safe, try again later.");
         } else if (errorKey?.HealthFactorLess === null) {
           toast.error("Health factor too high", {
             className: "custom-toast",
@@ -585,14 +568,71 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             progress: undefined,
           });
           setError("Health Factor too high to proceed for liquidation.");
-        } else if (errorMessage.toLowerCase().includes("panic")) {
+        } else if (errorKey?.MaxAmount === null) {
+          toast.error("Liquidation amount exceeds maximum allowed.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setError("The liquidation amount you entered exceeds the allowed maximum.");
+        } else if (errorKey?.LessRewardAmount === null) {
+          toast.error("Reward amount is too low for liquidation.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setError("The reward amount is too low for liquidation to proceed.");
+        } else if (errorMessage.includes("panic")) {
           setShowPanicPopup(true);
           setShowWarningPopup(false);
+        } else if (errorMessage.includes("out of cycles") || errorMessage.includes("reject text: canister")) {
+          toast.error("Canister is out of cycles. Admin has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMessage.includes("borrowcapexceeded")) {
+          toast.error("Borrow cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMessage.includes("collateral too low")) {
+          toast.error("Collateral is too low for liquidation.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           const userFriendlyMessage =
             errorMessages[errorKey] || errorMessages.Default;
           console.error("Error:", errorKey);
-
+  
           toast.error(`Liquidation failed: ${userFriendlyMessage}`, {
             className: "custom-toast",
             position: "top-center",
@@ -608,12 +648,41 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Liquidation action failed!"}`);
-
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+  
+      const message = error.message ? error.message.toLowerCase() : "Liquidation action failed!";
+      const isPanicError = message.includes("panic");
+      const isOutOfCyclesError = message.includes("out of cycles") || message.includes("reject text: canister");
+      const isMaxAmountExceeded = message.includes("MaxAmount");
+      const isLessRewardAmount = message.includes("LessRewardAmount");
+  
+      if (isPanicError) {
         setShowPanicPopup(true);
         setShowWarningPopup(false);
-      } else {
-        toast.error(`Error: ${error.message || "Liquidation action failed!"}`, {
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } 
+      else if (isMaxAmountExceeded) {
+        toast.error("Liquidation amount exceeds maximum allowed.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isLessRewardAmount) {
+        toast.error("Reward amount is too low for liquidation.", {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -624,7 +693,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
           progress: undefined,
         });
       }
-
       setTransactionResult("failure");
     } finally {
       setIsLoading(false);

@@ -298,14 +298,29 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
 
-      const isPanicError =
-        error.message && error.message.toLowerCase().includes("panic");
+      const message = error.message || "Withdraw action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
 
       if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Withdraw action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -320,6 +335,7 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
       setIsLoading(false);
     }
   };
+
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);

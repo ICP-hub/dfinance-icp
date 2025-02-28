@@ -110,25 +110,45 @@ const Repay = ({
    */
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
+  
+    // Remove invalid characters (allow only numbers and a single decimal point)
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure there's only one decimal point
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Convert to a number
     let numericAmount = parseFloat(inputAmount);
     if (isNaN(numericAmount)) numericAmount = 0;
+  
+    // Limit decimal places to 8
+    const truncateToEightDecimals = (num) => {
+      const factor = Math.pow(10, 8);
+      return Math.floor(num * factor) / factor;
+    };
+  
     if (numericAmount > assetBorrow) {
       numericAmount = assetBorrow;
-      inputAmount = truncateToSevenDecimals(assetBorrow).toString();
     }
+  
+    numericAmount = truncateToEightDecimals(numericAmount);
+  
+    // Convert back to string to retain decimal formatting
+    inputAmount = numericAmount.toString();
+  
     setAmount(inputAmount);
     setMaxClicked(inputAmount === assetBorrow.toString());
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   /**
    * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
@@ -162,6 +182,13 @@ const Repay = ({
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  console.log(truncatedValue); // Debugging: Check if it's correctly formatted
 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
@@ -547,8 +574,13 @@ const Repay = ({
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
 
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
   }, [
     asset,
@@ -576,7 +608,7 @@ const Repay = ({
                 <h1>Amount</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="flex flex-col items-start w-auto gap-8">
+                <div className="flex flex-col items-start w-[40%] gap-8">
                   <input
                     type="text"
                     value={amount}
@@ -658,24 +690,21 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
+                      {console.log("truncatedValue", truncatedValue)}
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {parseFloat(
-                          healthFactorBackend > 100
-                            ? "Infinity"
-                            : parseFloat(healthFactorBackend).toFixed(2)
-                        )}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span

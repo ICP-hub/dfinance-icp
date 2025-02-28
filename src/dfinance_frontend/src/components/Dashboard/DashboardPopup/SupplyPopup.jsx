@@ -453,7 +453,14 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
-
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  console.log(truncatedValue); // Debugging: Check if it's correctly formatted
+  
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -497,7 +504,15 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+    
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+    
   }, [
     asset,
     liquidationThreshold,
@@ -629,20 +644,20 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {healthFactorBackend > 100
+                        {truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)}
+                          : (truncatedValue)}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span

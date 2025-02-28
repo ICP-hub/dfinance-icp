@@ -1,6 +1,6 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
-use api::functions::request_limiter;
+use api::functions::{request_limiter,BlockedUserDetails, RequestTracker};
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
@@ -31,11 +31,13 @@ use crate::declarations::assets::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
     ExecuteWithdrawParams,
 };
+
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
+use std::collections::HashMap;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
 
@@ -616,7 +618,7 @@ async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("get_user_account_data") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

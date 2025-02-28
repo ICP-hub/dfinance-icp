@@ -74,7 +74,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("execute_borrow") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
@@ -391,7 +391,7 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     let operation_key = user_principal;
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("execute_repay") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

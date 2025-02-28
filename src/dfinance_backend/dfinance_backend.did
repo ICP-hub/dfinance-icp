@@ -199,12 +199,11 @@ service : (principal) -> {
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
   reset_reserve_value : (text, text, nat) -> (Result_1);
+  retrieve_request_info : (principal) -> (vec record { text; nat32 }) query;
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
-  unblock_user : (principal) -> (text);
   update_reserve_price_test : () -> (Result_1);
   update_reserves_price : () -> (Result_1);
-  update_token_price : (text) -> (Result_1);
   user_normalized_debt : (ReserveData) -> (Result_3) query;
   user_normalized_supply : (ReserveData) -> (Result_3) query;
 }

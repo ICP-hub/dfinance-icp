@@ -301,8 +301,10 @@ impl ValidationLogic {
             if adjusted_collateral != Nat::from(0u128) {
                 ltv = total_debt.scaled_div(adjusted_collateral);
                 ltv = ltv * Nat::from(100u128);
-                println!("New ltv: {}", ltv);
+                ic_cdk::println!("New ltv: {}", ltv);
             }
+
+            ic_cdk::println!("New to check ltv: {}", ltv);
 
             if ltv >= liquidation_threshold_var {
                 return Err(Error::LTVGreaterThanThreshold);

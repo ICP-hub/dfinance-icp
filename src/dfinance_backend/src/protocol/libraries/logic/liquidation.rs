@@ -88,7 +88,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(Error::AnonymousPrincipal);
     }
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("execute_liquidation") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

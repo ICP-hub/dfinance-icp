@@ -53,8 +53,12 @@ const MySupply = () => {
   );
   const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor } = useAuth();
-  const { userData, userAccountData ,isFreezePopupVisible,
-    setIsFreezePopupVisible, } = useUserData();
+  const {
+    userData,
+    userAccountData,
+    isFreezePopupVisible,
+    setIsFreezePopupVisible,
+  } = useUserData();
   const tooltipRef = useRef(null);
   const {
     ckBTCUsdRate,

@@ -159,7 +159,6 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
  * @param amount The amount of the base asset to convert.
  * @returns Result<(Nat, u64), ()> - Returns the exchange rate value and the timestamp.
  */
-#[ic_cdk_macros::update]
 pub async fn get_exchange_rates(
     base_asset_symbol: String,
     quote_asset_symbol: Option<String>,

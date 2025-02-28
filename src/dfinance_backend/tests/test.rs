@@ -372,7 +372,8 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
     users_with_low_health.push(LowHealthUsersData {
         user_principal: get_users_principal(Nat::from(1u32)).unwrap(),
         asset_supply: "ICP".to_string(),
-        asset_borrow: "ICP".to_string(),
+        asset_borrow: 
+        "ICP".to_string(),
         supply_tokens: Nat::from(100_000_000u128), // 1 icp
         borrow_tokens: Nat::from(90_000_000u128), // 0.9 icp
     });
@@ -679,7 +680,7 @@ fn setup() -> (PocketIc, Principal) {
         d_token_canister: None,
         debt_token_canister: None,
         borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(1u128),
+        current_liquidity_rate: Nat::from(0u128),
         asset_supply: Nat::from(0u128),
         asset_borrow: Nat::from(0u128),
         liquidity_index: Nat::from(100000000u128),

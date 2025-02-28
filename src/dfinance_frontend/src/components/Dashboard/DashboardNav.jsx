@@ -84,30 +84,53 @@ const DashboardNav = () => {
   const getStoredValue = (key, principal, defaultValue) => {
     if (!principal) return defaultValue;
     const storedData = sessionStorage.getItem(`${key}_${principal}`);
-    return storedData !== null ? JSON.parse(storedData) : defaultValue;
+    
+    if (storedData === null) return defaultValue;
+  
+    // If it's a valid number, return it as a number; otherwise, return as a string
+    return isNaN(storedData) ? storedData : Number(storedData);
   };
-
+  
   const [netWorth, setNetWorth] = useState(() =>
     getStoredValue("netWorth", principal, null)
   );
   const [netApy, setNetApy] = useState(() => {
+    if (!principal) return "-"; // If no principal, return "-"
+  
+    // Retrieve netApy only for the active principal
     const storedNetApy = getStoredValue("netApy", principal, null);
-    // If stored value is "<0.01", return it as is
-    return storedNetApy === "<0.01" ? "<0.01" : parseFloat(storedNetApy);
+  
+    // If stored value is exactly "<0.01%", return it as is
+    if (storedNetApy === "<0.01%") {
+      return "<0.01%";
+    }
+  
+    // Ensure we handle numbers correctly, removing "%" if present
+    const numericValue =
+      storedNetApy !== null && storedNetApy.includes("%")
+        ? parseFloat(storedNetApy.replace("%", ""))
+        : parseFloat(storedNetApy);
+  
+    // If valid number and less than 0.01, return "<0.01%", otherwise return formatted value
+    return !isNaN(numericValue)
+      ? numericValue < 0.01
+        ? "<0.01%"
+        : numericValue
+      : "-";
   });
   
   
-  // Function to format netApy
-  // Function to format netApy
-  const formatNetApy = (value) => {
-    // Return "<0.01%" if netApy is "<0.01"
-    if (value === "<0.01") {
-      return value;
-    }
   
-    // Otherwise, format the value to 4 decimal places
-    return value.toFixed(4);
+  
+  
+  
+  // Function to format netApy
+  // Function to format netApy
+  const formatNetApy = (apy) => {
+    const num = parseFloat(apy); 
+    return isNaN(num) ? "-" : num.toFixed(4);
   };
+  
   
 
   const [healthFactor, setHealthFactor] = useState(() =>
@@ -119,7 +142,7 @@ const DashboardNav = () => {
       id: 0,
       title: "Net Worth",
       count:
-        netWorth !== null ? (
+        netWorth ? (
           <>
             <span style={{ fontWeight: "lighter" }}>$</span>
             {formatNumber(netWorth)}
@@ -132,19 +155,21 @@ const DashboardNav = () => {
       id: 1,
       title: "Net APY",
       count:
-        netApy !== null
-          ? typeof netApy === "string" && netApy === "<0.01"
-            ? "<0.01%" // If netApy is "<0.01", return it as is
-            : `${formatNetApy(netApy)}%` // Use the formatNetApy function for formatting
+        netApy !== null && netApy !== undefined
+          ? netApy === "<0.01%" // Check with percentage symbol
+            ? "<0.01%"
+            : !isNaN(parseFloat(netApy)) // Ensure valid number before formatting
+            ? `${formatNetApy(netApy)}%`
+            : "-"
           : "-",
     },
-    
     {
       id: 2,
       title: "Health Factor",
-      count: healthFactor !== null ? healthFactor : "-",
+      count: healthFactor ? healthFactor : "-",
     },
   ]);
+  
 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 },
@@ -265,47 +290,61 @@ const DashboardNav = () => {
     if (
       totalUsdValueSupply !== undefined &&
       totalUsdValueBorrow !== undefined &&
-      principal 
+      principal
     ) {
       const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
-
+  
+      // Retrieve the stored net worth from sessionStorage
+      const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
+      const parsedStoredNetWorth = storedNetWorth ? JSON.parse(storedNetWorth) : null;
+  
       setNetWorth((prev) => {
-        const newValue =
-          calculatedNetWorth > 0.01 || prev !== null
-            ? calculatedNetWorth
-            : prev;
-        sessionStorage.setItem(
-          `netWorth_${principal}`,
-          JSON.stringify(newValue)
-        ); 
+        let newValue =
+          prev === null && totalUsdValueSupply === 0 && totalUsdValueBorrow === 0
+            ? "-"
+            : calculatedNetWorth;
+  
+        // If the new value is 0 and there's a stored value, keep the stored value
+        if (newValue === 0 && parsedStoredNetWorth !== null) {
+          newValue = parsedStoredNetWorth;
+        }
+  
+        // Update sessionStorage only if the value changes and is not 0
+        if (newValue !== prev && newValue !== 0) {
+          sessionStorage.setItem(`netWorth_${principal}`, JSON.stringify(newValue));
+        }
+  
         return newValue;
       });
-
+  
+      // Use parsedStoredNetWorth if calculatedNetWorth is 0
+      const displayNetWorth =
+        calculatedNetWorth === 0 && parsedStoredNetWorth !== null
+          ? parsedStoredNetWorth
+          : calculatedNetWorth;
+  
       setWalletDetailTab((prevTab) =>
         prevTab.map((item) =>
           item.id === 0
             ? {
                 ...item,
                 count:
-                  calculatedNetWorth > 0.01 ? (
-                    <>
-                      <span style={{ fontWeight: "lighter" }}>$</span>
-                      {formatNumber(calculatedNetWorth)}
-                    </>
-                  ) : (
-                    prevTab.find((p) => p.id === 0)?.count || "-"
-                  ), 
+                  netWorth === "-" && totalUsdValueSupply === 0 && totalUsdValueBorrow === 0
+                    ? "-"
+                    : (
+                        <>
+                          <span style={{ fontWeight: "lighter" }}>$</span>
+                          {formatNumber(displayNetWorth)}
+                        </>
+                      ),
               }
             : item
         )
       );
     }
-  }, [
-    totalUsdValueSupply,
-    totalUsdValueBorrow,
-    dashboardRefreshTrigger,
-    principal,
-  ]);
+  }, [totalUsdValueSupply, totalUsdValueBorrow, dashboardRefreshTrigger, principal]);
+  
+  
 
  
 
@@ -398,6 +437,10 @@ const DashboardNav = () => {
       setIsMenuOpen(false);
     }
   };
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); 
+  };
 
   const toggleMenu = () => {
     if (!isMenuOpen) {
@@ -423,38 +466,45 @@ const DashboardNav = () => {
    * =================================================================================== */
 
   useEffect(() => {
-    // Check if netApy is a valid number and principal is set
-    if (netApy !== null && !isNaN(netApy) && principal) {
-      // If netApy is NaN, set it to "<0.01"
-      const formattedNetApy = isNaN(netApy) || netApy < 0.01 ? "<0.01" : netApy.toFixed(4);
+    if (principal && netApy !== "-" && netApy !== null && !isNaN(parseFloat(netApy))) {
+      // Get stored value (always a string)
+      const storedValue = sessionStorage.getItem(`netApy_${principal}`);
   
-      // Store the formatted netApy value in sessionStorage
-      sessionStorage.setItem(`netApy_${principal}`, JSON.stringify(formattedNetApy));
+      // Format the current netApy properly
+      let formattedNetApy = parseFloat(netApy) < 0.01 ? "<0.01%" : `${parseFloat(netApy).toFixed(4)}%`;
   
-      // Update wallet details with the formatted count
+      console.log("Stored Value:", storedValue, "Formatted Net Apy:", formattedNetApy); // Debugging
+  
+      // Only update if the formatted value is different from the stored value
+      if (storedValue !== formattedNetApy) {
+        console.log("Updating session storage:", formattedNetApy);
+        sessionStorage.setItem(`netApy_${principal}`, formattedNetApy);
+      }
+  
+      // Update wallet details only if necessary
       setWalletDetailTab((prevTab) =>
         prevTab.map((item) =>
-          item.id === 1
-            ? {
-                ...item,
-                count: formattedNetApy === "<0.01" ? "<0.01%" : `${formattedNetApy}%`,
-              }
+          item.id === 1 && item.count !== formattedNetApy
+            ? { ...item, count: formattedNetApy }
             : item
         )
       );
     }
-  }, [netApy, dashboardRefreshTrigger, principal]);
+  }, [ dashboardRefreshTrigger, principal]);
   
   
   
   
-
+  
+  
+  
   useEffect(() => {
     if (userAccountData?.Ok?.[4] !== undefined && principal) {
+      const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
       const calculatedHealthFactor =
         Number(healthFactorBackend) > 100
           ? "♾️"
-          : parseFloat(Number(healthFactorBackend).toFixed(2));
+          : parseFloat(Number(truncatedValue));
 
       setHealthFactor((prev) => {
         const newValue =
@@ -477,39 +527,32 @@ const DashboardNav = () => {
         )
       );
     }
-  }, [userAccountData, dashboardRefreshTrigger, principal]);
+  }, [userAccountData,dashboardRefreshTrigger, principal]);
 
  
-  useEffect(() => {
-    if (principal) {
-      const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
-      if (storedNetWorth) {
-        setNetWorth(JSON.parse(storedNetWorth));
-      }
-
-      const storedNetApy = sessionStorage.getItem(`netApy_${principal}`);
-      if (storedNetApy) {
-        setWalletDetailTab((prevTab) =>
-          prevTab.map((item) =>
-            item.id === 1 ? { ...item, count: JSON.parse(storedNetApy) } : item
-          )
-        );
-      }
-
-      const storedHealthFactor = sessionStorage.getItem(
-        `healthFactor_${principal}`
-      );
-      if (storedHealthFactor) {
-        setHealthFactor(JSON.parse(storedHealthFactor));
-      }
-    }
-  }, [principal]);
+  // useEffect(() => {
+  //   if (principal) {
+  //     const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
+  //     setNetWorth(storedNetWorth ? JSON.parse(storedNetWorth) : "-");
+  
+  //     const storedNetApy = sessionStorage.getItem(`netApy_${principal}`);
+  //     setWalletDetailTab((prevTab) =>
+  //       prevTab.map((item) =>
+  //         item.id === 1 ? { ...item, count: storedNetApy ? JSON.parse(storedNetApy) : "-" } : item
+  //       )
+  //     );
+  
+  //     const storedHealthFactor = sessionStorage.getItem(`healthFactor_${principal}`);
+  //     setHealthFactor(storedHealthFactor ? JSON.parse(storedHealthFactor) : "-");
+  //   }
+  // }, [principal]);
+  
 
   
-  useEffect(() => {
-    const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
-    setNetWorth(calculatedNetWorth);
-  }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
+  // useEffect(() => {
+  //   const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+  //   setNetWorth(calculatedNetWorth);
+  // }, [totalUsdValueBorrow, totalUsdValueSupply, dashboardRefreshTrigger]);
 
   useEffect(() => {
     fetchAssetData();
@@ -550,7 +593,7 @@ const DashboardNav = () => {
           reservesData,
           reserveData
         );
-        setNetApy(calculatedNetApy);
+        setNetApy(calculatedNetApy*100);
         let totalBorrow = 0;
 
         reservesData.forEach((reserveGroup) => {

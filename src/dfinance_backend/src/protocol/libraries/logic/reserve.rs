@@ -11,6 +11,11 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
 use ic_cdk::api::time;
+use crate::api::resource_manager::{
+    lock_transaction_amount,
+    release_transaction_lock,
+    get_locked_transaction_amount,
+};
 
 /*
  * @title Accrual Treasury Variables
@@ -526,11 +531,22 @@ pub async fn mint_scaled(
         ic_cdk::println!("Error: Invalid mint amount");
         return Err(Error::InvalidMintAmount);
     }
+    
+    if let Err(e) = lock_transaction_amount(
+        &reserve.asset_name.clone().unwrap(),
+        &adjusted_amount,
+    ) {
+        return Err(e);
+    }
+    ic_cdk::println!("Fetching user balance... {:?}",get_locked_transaction_amount(&reserve.asset_name.clone().unwrap()));
 
     let balance_result = get_balance(token_canister_principal, user_principal).await;
     let balance = match balance_result {
         Ok(bal) => bal,
         Err(err) => {
+            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            }
             ic_cdk::println!("Error converting balance to u128: {:?}", err);
             return Err(Error::ErrorGetBalance);
         }
@@ -540,7 +556,7 @@ pub async fn mint_scaled(
 
     let mut balance_increase = Nat::from(0u128);
     if minting_dtoken {
-        println!("minting dtoken");
+        ic_cdk::println!("minting dtoken");
 
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
@@ -548,6 +564,9 @@ pub async fn mint_scaled(
             .scaled_mul(user_state.liquidity_index.clone());
 
         if balance_indexed < balance_user_indexed {
+            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            }
             return Err(Error::AmountSubtractionError);
         }
 
@@ -560,13 +579,16 @@ pub async fn mint_scaled(
             user_state.d_token_balance += adjusted_amount.clone();
         }
         ic_cdk::println!("new dtoken balance {}", user_state.d_token_balance);
-        reserve.asset_supply += adjusted_amount; //get_trans_amount
-        println!("updated asset supply{}", reserve.asset_supply);
+        // reserve.asset_supply += adjusted_amount;
+        ic_cdk::println!("before updating asset supply = {:?}", reserve.asset_supply);
+        ic_cdk::println!("locked amount = {:?}", get_locked_transaction_amount(&reserve.asset_name.clone().unwrap()));
+        reserve.asset_supply += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
+        ic_cdk::println!("updated asset supply {}", reserve.asset_supply);
         println!("user new dtoken balance {}", user_state.d_token_balance);
         user_state.liquidity_index = index;
         println!("user new liq index {}", user_state.liquidity_index);
     } else {
-        println!("minting debttoken");
+        ic_cdk::println!("minting debttoken");
 
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
@@ -574,6 +596,9 @@ pub async fn mint_scaled(
             .scaled_mul(user_state.variable_borrow_index.clone());
 
         if balance_indexed < balance_user_indexed {
+            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            }
             return Err(Error::AmountSubtractionError);
         }
 
@@ -586,10 +611,12 @@ pub async fn mint_scaled(
         }
 
         println!("new debt balance {}", user_state.debt_token_blance);
-        reserve.asset_borrow += adjusted_amount;
+        // reserve.asset_borrow +=adjusted_amount;
+        reserve.asset_borrow += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
         user_state.variable_borrow_index = index;
         println!("new debt index {}", user_state.variable_borrow_index);
     }
+
 
     let newmint = amount + balance_increase;
     println!("minted token {}", newmint);
@@ -603,10 +630,16 @@ pub async fn mint_scaled(
     .await
     {
         Ok(_) => {
+            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            }
             ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
             Ok(())
         }
         Err(err) => {
+            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            }
             ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
             Err(Error::ErrorMintTokens)
         }

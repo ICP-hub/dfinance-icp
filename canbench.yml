@@ -2,4 +2,7 @@ build_cmd:
   cargo build --release --target wasm32-unknown-unknown --features canbench-rs
 
 wasm_path:
-  ./target/wasm32-unknown-unknown/release/ic_stable_structure_implementation_backend.wasm
+  ./target/wasm32-unknown-unknown/release/dfinance_backend.wasm
+
+init_args:
+  hex : 4449444c000168011d1f34a20f9cd2d3881485eab047447cd6456489c33ca36e9f613cd9a502

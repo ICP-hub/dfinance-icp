@@ -38,6 +38,11 @@ use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
 
+// Include the benchmarks module
+#[cfg(feature = "canbench-rs")]
+mod canbench_tests;
+
+
 const ONE_DAY: Duration = Duration::from_secs(86400);
 
 /*

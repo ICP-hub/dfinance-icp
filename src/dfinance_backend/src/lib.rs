@@ -1,7 +1,7 @@
 use crate::constants::errors::Error;
-use api::functions::get_balance;
-use api::functions::{request_limiter,BlockedUserDetails, RequestTracker};
 use api::functions::reset_faucet_usage;
+use api::functions::{get_balance, SessionStorageData};
+use api::functions::{request_limiter, BlockedUserDetails, RequestTracker};
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
@@ -37,7 +37,6 @@ use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
-use std::collections::HashMap;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
 
@@ -66,28 +65,20 @@ pub async fn init(args: Principal) {
 
 /*
  * @title Get Controller Information
- * @dev Retrieves the controller ID from the state. The function looks for metadata 
+ * @dev Retrieves the controller ID from the state. The function looks for metadata
  *      associated with a specific key and returns the `controller_id` from `InitArgs`
- *      if available. If no controller is found or an error occurs while reading the state, 
+ *      if available. If no controller is found or an error occurs while reading the state,
  *      an appropriate error is returned.
  *
- * @returns 
+ * @returns
  *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
  *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
  *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
  */
 pub fn get_controller() -> Result<InitArgs, Error> {
-
-    match read_state(|state| {
-        state
-            .meta_data
-            .get(&0)
-            .ok_or_else(|| Error::UserNotFound)
-    }) {
-        Ok(va) => {
-            Ok(va.0)
-        },
-        Err(_) => return Err(Error::ErrorNotController)
+    match read_state(|state| state.meta_data.get(&0).ok_or_else(|| Error::UserNotFound)) {
+        Ok(va) => Ok(va.0),
+        Err(_) => return Err(Error::ErrorNotController),
     }
 }
 
@@ -115,7 +106,7 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
  * @returns The user data if found.
  */
 #[query]
-fn get_user_data(user: Principal) -> Result<UserData, Error> {
+pub fn get_user_data(user: Principal) -> Result<UserData, Error> {
     if user == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
@@ -204,7 +195,6 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     })
 }
 
-
 /*
  * @title Get Cached Exchange Rate
  * @dev Retrieves the cached exchange rate for a given asset.
@@ -254,7 +244,6 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         }
     }
 }
-
 
 /*
  * @title Get Asset Supply
@@ -552,8 +541,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     if reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
         return Ok(reserve_data.debt_index);
-    }
-    else {
+    } else {
         ic_cdk::println!(
             "Previous borrow index & rate: {:?} {:?}",
             reserve_data.debt_index,
@@ -573,7 +561,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
         return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
     }
 }
-
 
 /*
  * @title Get Lock Status
@@ -605,8 +592,6 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-
-
 /*
  * @title Get User Account Data
  * @dev Fetches the user’s account data.
@@ -617,12 +602,11 @@ pub fn get_total_users() -> usize {
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-
     if let Err(e) = request_limiter("get_user_account_data") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
-    
+
     ic_cdk::println!("error in user = {:?}", on_behalf);
     let result = calculate_user_account_data(on_behalf).await;
     result
@@ -667,7 +651,100 @@ pub async fn post_upgrade() {
     schedule_midnight_task().await;
 }
 
+#[update]
+// Function to store session data
+pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    if connected_wallet.len() > 15 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if session_start <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    let session_data = SessionStorageData {
+        connected_wallet,
+        session_start,
+    };
+
+    // Save the updated request history
+    mutate_state(|state| {
+        state
+            .session_details
+            .insert(caller_id, Candid(session_data));
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_caller_session() -> Result<SessionStorageData, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state
+            .session_details
+            .get(&caller_id)
+            .map(|data| data.0.clone()) // Extract value
+            .unwrap_or_else(|| SessionStorageData {
+                // Default value
+                connected_wallet: "".to_string(),
+                session_start: Nat::from(0u128),
+            })
+    }))
+}
+
+#[update]
+pub fn store_user_guide() -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    mutate_state(|state| {
+        state.user_guide_data.insert(caller_id, true);
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_user_guide() -> Result<bool, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state.user_guide_data.get(&caller_id).unwrap_or(false)
+    }))
+}
+
+// TODO: cycles update
+#[query]
+pub fn cycle_threshold_crossed() -> bool {
+    let available_cycles = ic_cdk::api::canister_balance128();
+    let threshold = 2_592_000;
+
+    available_cycles < threshold
+}
+
 export_candid!();
-
-
-

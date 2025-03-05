@@ -132,12 +132,16 @@ type Result_2 = variant { Ok : UserData; Err : Error };
 type Result_3 = variant { Ok : nat; Err : Error };
 type Result_4 = variant { Ok : principal; Err : Error };
 type Result_5 = variant { Ok : PriceCache; Err : Error };
-type Result_6 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_6 = variant { Ok : SessionStorageData; Err : Error };
 type Result_7 = variant { Ok : bool; Err : Error };
 type Result_8 = variant { Ok : ReserveData; Err : Error };
 type Result_9 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
+};
+type SessionStorageData = record {
+  session_start : nat;
+  connected_wallet : text;
 };
 type UserAccountData = record {
   ltv : nat;
@@ -185,7 +189,7 @@ service : (principal) -> {
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_4) query;
   get_cached_exchange_rate : (text) -> (Result_5) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_6);
+  get_caller_session : () -> (Result_6) query;
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     ) query;
@@ -195,11 +199,14 @@ service : (principal) -> {
   get_total_users : () -> (nat64) query;
   get_user_account_data : (opt principal) -> (Result_9);
   get_user_data : (principal) -> (Result_2) query;
+  get_user_guide : () -> (Result_7) query;
   initialize : (text, ReserveData) -> (Result_1);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
   reset_reserve_value : (text, text, nat) -> (Result_1);
   retrieve_request_info : (principal) -> (vec record { text; nat32 }) query;
+  store_session_data : (text, nat) -> (Result_1);
+  store_user_guide : () -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

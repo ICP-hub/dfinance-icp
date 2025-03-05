@@ -33,6 +33,12 @@ pub struct BlockedUserDetails {
     blocked_time: u64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct SessionStorageData {
+    pub connected_wallet: String,
+    pub session_start: Nat,
+}
+
 /*
  * @title Asset Transfer From Function
  * @notice Transfers assets from one principal to another using the ICRC-2 standard.
@@ -543,7 +549,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
             .unwrap_or(false)
     });
 
-   let tocheck=   read_state(|state| {
+    let tocheck = read_state(|state| {
         state
             .blocked_users
             .get(&caller_id)
@@ -673,6 +679,47 @@ pub fn retrieve_request_info(caller_id: Principal) -> Vec<(String, u32)> {
             })
             .unwrap_or_default()
     })
+}
+
+
+#[ic_cdk::inspect_message]
+pub fn inspect_message() {
+    let method_name = ic_cdk::api::call::method_name();
+    let caller_id = ic_cdk::caller();
+    let current_time_stamp = current_timestamp();
+
+    ic_cdk::println!(
+        "[InspectMessage] Caller: {:?}, Method: {}, Timestamp: {}",
+        caller_id,
+        method_name,
+        current_time_stamp
+    );
+
+    // Read state to check if the user is blocked from this function
+    let is_blocked = read_state(|state| {
+        state
+            .blocked_users
+            .get(&caller_id)
+            .and_then(|candid| candid.0.get(&method_name).cloned())
+            .map(|details| details.blocked_time > current_time_stamp)
+            .unwrap_or(false)
+    });
+
+    ic_cdk::println!("is_blocked = {:?}", is_blocked);
+
+    if is_blocked {
+        ic_cdk::println!(
+            "[InspectMessage] User {:?} is blocked from '{}' until further notice.",
+            caller_id,
+            method_name
+        );
+        ic_cdk::println!("You are temporarily blocked from using this function");
+        ic_cdk::api::call::reject("You are temporarily blocked from using this function.");
+        return;
+    }
+
+    ic_cdk::println!("[InspectMessage] Execution allowed for {}", method_name);
+    ic_cdk::api::call::accept_message(); // Explicitly allow the request
 }
 
 // #[update]

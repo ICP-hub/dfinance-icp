@@ -66,6 +66,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(Error::InvalidAmount);
     }
 
+    #[cfg(feature = "canbench-rs")]
+    let user_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+    #[cfg(not(feature = "canbench-rs"))]
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
 
@@ -380,6 +384,11 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
             }
             (user_principal, Some(liquidator_principal))
         } else {
+
+            #[cfg(feature = "canbench-rs")]
+            let user_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+            #[cfg(not(feature = "canbench-rs"))]
             let user_principal = ic_cdk::caller();
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");

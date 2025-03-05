@@ -263,6 +263,11 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         return Err(Error::InvalidAmount);
     }
 
+
+    #[cfg(feature = "canbench-rs")]
+    let user_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+    #[cfg(not(feature = "canbench-rs"))]
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
@@ -510,6 +515,10 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
  */
 #[query]
 pub async fn cycle_checker() -> Result<Nat, Error> {
+    #[cfg(feature = "canbench-rs")]
+    let caller = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+    #[cfg(not(feature = "canbench-rs"))]
     let caller = ic_cdk::caller();
     if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
         ic_cdk::println!("principals are not allowed");

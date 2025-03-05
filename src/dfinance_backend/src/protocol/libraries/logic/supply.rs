@@ -54,7 +54,10 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
+    #[cfg(feature = "canbench-rs")]
+    let user_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
 
+    #[cfg(not(feature = "canbench-rs"))]
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous() {
@@ -295,6 +298,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
             let user_principal = on_behalf_of;
+            #[cfg(feature = "canbench-rs")]
+            let liquidator_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+            #[cfg(not(feature = "canbench-rs"))]
             let liquidator_principal = ic_cdk::caller();
             if liquidator_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
@@ -306,7 +313,12 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             }
             (user_principal, Some(liquidator_principal))
         } else {
+            #[cfg(feature = "canbench-rs")]
+            let user_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+            #[cfg(not(feature = "canbench-rs"))]
             let user_principal = ic_cdk::caller();
+
             if user_principal == Principal::anonymous() {
                 ic_cdk::println!("Anonymous principals are not allowed");
                 return Err(Error::AnonymousPrincipal);

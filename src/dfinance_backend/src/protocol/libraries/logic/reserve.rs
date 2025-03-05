@@ -328,9 +328,9 @@ pub async fn burn_scaled(
                 "dtoken balance after subtraction = {}",
                 user_state.d_token_balance
             );
-            if user_state.d_token_balance < Nat::from(1000u128) {
-                user_state.d_token_balance = Nat::from(0u128);
-            }
+            // if user_state.d_token_balance < Nat::from(1000u128) {
+            //     user_state.d_token_balance = Nat::from(0u128);
+            // }
         }
 
         ic_cdk::println!("Updated DToken balance: {}", user_state.d_token_balance);
@@ -385,9 +385,9 @@ pub async fn burn_scaled(
                 user_state.debt_token_blance
             );
 
-            if user_state.debt_token_blance < Nat::from(1000u128) {
-                user_state.debt_token_blance = Nat::from(0u128);
-            }
+            // if user_state.debt_token_blance < Nat::from(1000u128) {
+                // user_state.debt_token_blance = Nat::from(0u128);
+            // }
         }
 
         ic_cdk::println!(
@@ -443,20 +443,20 @@ pub async fn burn_scaled(
         if amount < balance_increase {
             return Err(Error::AmountSubtractionError);
         }
-        let mut amount_to_burn = amount - balance_increase;
+        let  amount_to_burn = amount - balance_increase;
         ic_cdk::println!("Burning tokens, initial amount: {}", amount_to_burn);
 
-        if balance.clone() > amount_to_burn.clone()
-            && balance.clone() - amount_to_burn.clone() < Nat::from(1000u128)
-        {
-            ic_cdk::println!("Adjusting burn amount to balance");
-            amount_to_burn = balance.clone();
-            if burn_dtoken {
-                user_state.d_token_balance = Nat::from(0u128);
-            } else {
-                user_state.debt_token_blance = Nat::from(0u128);
-            }
-        }
+        // if balance.clone() > amount_to_burn.clone()
+        //     && balance.clone() - amount_to_burn.clone() < Nat::from(1000u128)
+        // {
+        //     ic_cdk::println!("Adjusting burn amount to balance");
+        //     amount_to_burn = balance.clone();
+        //     if burn_dtoken {
+        //         user_state.d_token_balance = Nat::from(0u128);
+        //     } else {
+        //         user_state.debt_token_blance = Nat::from(0u128);
+        //     }
+        // }
         ic_cdk::println!(
             "balance_increase is not greater than amount, amount_to_burn = {}",
             amount_to_burn

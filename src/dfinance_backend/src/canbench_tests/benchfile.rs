@@ -2,7 +2,7 @@ use super::*;
 use canbench_rs::bench;
 use crate::protocol::libraries::logic::supply::*;
 use crate::protocol::libraries::logic::borrow::*;
-use crate::protocol::libraries::logic::user::register_user;
+use crate::protocol::libraries::logic::user::{register_user, get_liquidation_users_concurrent};
 use crate::api::functions::*;
 use crate::{get_all_assets};
 use candid::{Nat, Principal};
@@ -18,9 +18,14 @@ use crate::declarations::assets::{
 };
 use crate::constants::asset_data::*;
 
-
-
-
+#[bench]
+fn bench_get_liquidity_concurrent(){
+    let total_pages = 4usize;
+    let page_size = 50usize;
+    ic_cdk::spawn(async move{
+    let _result = get_liquidation_users_concurrent(total_pages.clone(), page_size.clone()).await;
+    });
+}
 
 #[bench]
 fn cycle_checker_bench() {

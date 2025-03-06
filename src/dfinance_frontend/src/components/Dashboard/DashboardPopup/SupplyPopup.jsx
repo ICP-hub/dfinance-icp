@@ -290,6 +290,31 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
         if (errorMsg.toLowerCase().includes("panic")) {
           setShowPanicPopup(true);
           setIsVisible(false);
+        } else if (
+          errorMsg.toLowerCase().includes("out of cycles") ||
+          errorMsg.includes("Reject text: Canister")
+        ) {
+          toast.error("Canister is out of cycles. Admin has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+          toast.error("Supply cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           const userFriendlyMessage =
             errorMessages[errorKey] || errorMessages.Default;
@@ -310,11 +335,42 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     } catch (error) {
       console.error(`Error: ${error.message || "Supply action failed!"}`);
 
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+      const message = error.message || "Supply action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
+      const isSupplyCapExceeded = message
+        .toLowerCase()
+        .includes("SupplyCapExceeded");
+
+      if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isSupplyCapExceeded) {
+        toast.error("Supply cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -397,7 +453,14 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
-
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  console.log(truncatedValue); // Debugging: Check if it's correctly formatted
+  
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -441,7 +504,15 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+    
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+    
   }, [
     asset,
     liquidationThreshold,
@@ -573,20 +644,20 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {healthFactorBackend > 100
+                        {truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)}
+                          : (truncatedValue)}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -704,7 +775,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -716,7 +787,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className=" text-sm  lgx:text-lg whitespace-nowrap">
+            <p className=" text-sm  lgx:text-lg text-center">
               You have supplied{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -731,7 +802,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                 {asset}
               </strong>
             </p>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               <strong>
                 {scaledAmount / 100000000

@@ -8,6 +8,8 @@ import { ChevronLeft } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import DebtStatus from "./DebtStatus";
 import WalletModal from "../Dashboard/WalletModal";
+import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
+import useUserData from "../customHooks/useUserData";
 
 /**
  * Liquidate Component
@@ -22,13 +24,14 @@ const Liquidate = () => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
   const { isAuthenticated } = useAuth();
+  const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -51,7 +54,6 @@ const Liquidate = () => {
     }
   }, [isWalletCreated, isAuthenticated]);
 
-
   const handleLiquidateClick = () => {
     if (!isAuthenticated) {
       setShowWarning(true);
@@ -63,6 +65,18 @@ const Liquidate = () => {
   const handleBackClick = () => {
     setShowDebtStatus(false);
   };
+
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
 
   return (
     <>
@@ -114,6 +128,13 @@ const Liquidate = () => {
           <DebtStatus onBackClick={handleBackClick} />
         )}
 
+        {isFreezePopupVisible && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+            <FreezeCanisterPopup
+              onClose={() => setIsFreezePopupVisible(false)}
+            />
+          </div>
+        )}
         {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
       </div>
     </>

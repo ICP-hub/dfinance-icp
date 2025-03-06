@@ -129,15 +129,11 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleSwitchWallet = () => {
-    if (switchWalletDrop) {
-      logout();
-    } else {
-      setSwitchWalletDrop(!switchWalletDrop);
-      setSwitchTokenDrop(false);
-      setDropdownVisible(false);
-      setIsPopupVisible(false);
-      setShowTestnetPopup(false);
-    }
+    setSwitchWalletDrop(!switchWalletDrop);
+    setSwitchTokenDrop(false);
+    setDropdownVisible(false);
+    setIsPopupVisible(false);
+    setShowTestnetPopup(false);
   };
 
   const handleClickAway = () => {

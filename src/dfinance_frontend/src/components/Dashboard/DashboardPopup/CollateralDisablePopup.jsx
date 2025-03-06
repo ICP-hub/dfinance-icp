@@ -193,7 +193,12 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
       return numericValue.toFixed(7);
     }
   };
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
 
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -254,8 +259,13 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
     const healthFactor = result;
     const ltv = calculateLTV(adjustedCollateral, totalDebt);
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
     setIsButtonDisabled(healthFactor <= 1);
 
@@ -342,20 +352,20 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {healthFactorBackend > 100
+                        {truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)}
+                          : (truncatedValue)}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -430,7 +440,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}

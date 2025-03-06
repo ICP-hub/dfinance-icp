@@ -747,7 +747,7 @@ pub fn get_user_guide() -> Result<bool, Error> {
 #[query]
 pub fn cycle_threshold_crossed() -> bool {
     let available_cycles = ic_cdk::api::canister_balance128();
-    let threshold = 2_592_000;
+    let threshold = 7_592_000;
 
     available_cycles < threshold
 }

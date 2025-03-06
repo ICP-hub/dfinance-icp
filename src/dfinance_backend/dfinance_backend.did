@@ -179,6 +179,7 @@ service : (principal) -> {
   check_is_tester : () -> (bool) query;
   create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_2);
   cycle_checker : () -> (Result_3) query;
+  cycle_threshold_crossed : () -> (bool) query;
   execute_borrow : (ExecuteBorrowParams) -> (Result_3);
   execute_liquidation : (ExecuteLiquidationParams) -> (Result_3);
   execute_repay : (ExecuteRepayParams) -> (Result_3);
@@ -204,6 +205,7 @@ service : (principal) -> {
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
   reset_reserve_value : (text, text, nat) -> (Result_1);
+  retrieve_blocked_users : (principal) -> (vec record { text; nat64 }) query;
   retrieve_request_info : (principal) -> (vec record { text; nat32 }) query;
   store_session_data : (text, nat) -> (Result_1);
   store_user_guide : () -> (Result_1);

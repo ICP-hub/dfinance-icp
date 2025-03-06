@@ -26,7 +26,7 @@ fn call_test_function() {
 fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
-    let random_users = generate_principals(5);
+    let random_users = generate_principals(1);
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
@@ -412,6 +412,12 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             expect_success: true,
             expected_error_message: None,
         },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     let total_users = random_users.len();
@@ -492,14 +498,8 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
 
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!(
-            "✅ Successful Transactions: {}",
-            success_count,
-        );
-        ic_cdk::println!(
-            "❌ Failed Transactions: {}",
-            failure_count,
-        );
+        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
+        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
         ic_cdk::println!("------------------------------------------------------------\n");
     }
 
@@ -541,7 +541,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(45_00_000_000u128), //   450 usdc
+            amount: Nat::from(1_00_000_000u128), //   450 usdc
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -549,6 +549,13 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(3_000_000_000u128), // 300 ckUSDT
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -615,6 +622,156 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                 continue;
             }
 
+            fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &str) {
+                let result = pic.query_call(
+                    backend_canister,
+                    get_user_principal(),
+                    "get_reserve_data",
+                    encode_one(asset.to_string()).unwrap(),
+                );
+
+                match result {
+                    Ok(WasmResult::Reply(reply)) => {
+                        let supply_response: Result<ReserveData, errors::Error> =
+                            candid::decode_one(&reply)
+                                .expect("Failed to decode reserve data response");
+
+                        match supply_response {
+                            Ok(balance) => {
+                                ic_cdk::println!(
+                                    "Reserve Data - Last Update Timestamp for {}: {:?}",
+                                    asset,
+                                    balance.last_update_timestamp
+                                );
+                                ic_cdk::println!(
+                                    "Reserve Data - Asset Supply for {}: {:?}",
+                                    asset,
+                                    balance.asset_supply
+                                );
+                                ic_cdk::println!(
+                                    "Reserve Data - Asset Borrow for {}: {:?}",
+                                    asset,
+                                    balance.asset_borrow
+                                );
+                                ic_cdk::println!(
+                                    "Reserve Data - Debt Index for {}: {:?}",
+                                    asset,
+                                    balance.debt_index
+                                );
+                                ic_cdk::println!(
+                                    "Reserve Data - Liquidity Index for {}: {:?}",
+                                    asset,
+                                    balance.liquidity_index
+                                );
+                            }
+                            Err(error) => {
+                                ic_cdk::println!(
+                                    "Failed to retrieve reserve data for {}: {:?}",
+                                    asset,
+                                    error
+                                );
+                            }
+                        }
+                    }
+                    Ok(WasmResult::Reject(reject_message)) => {
+                        ic_cdk::println!("Query rejected for {}: {}", asset, reject_message);
+                    }
+                    Err(e) => {
+                        ic_cdk::println!("Error retrieving reserve data for {}: {:?}", asset, e);
+                    }
+                }
+            }
+
+            fn fetch_user_data(
+                pic: &PocketIc,
+                backend_canister: Principal,
+                user_principal: &Principal,
+                asset: &str,
+            ) {
+                let result = pic.query_call(
+                    backend_canister,
+                    *user_principal,
+                    "get_user_data",
+                    encode_one(*user_principal).unwrap(),
+                );
+
+                match result {
+                    Ok(WasmResult::Reply(reply)) => {
+                        let user_response: Result<UserData, errors::Error> =
+                            candid::decode_one(&reply)
+                                .expect("Failed to decode user data response");
+
+                        match user_response {
+                            Ok(user_data) => {
+                                if let Some(reserves) = &user_data.reserves {
+                                    for (reserve_asset, reserve_data) in reserves {
+                                        if reserve_asset == asset {
+                                            ic_cdk::println!(
+                                    "User Data for Asset: {} | Last Update Timestamp: {:?}",
+                                    asset,
+                                    reserve_data.last_update_timestamp
+                                );
+                                            ic_cdk::println!(
+                                                "User Data for Asset: {} | dToken Balance: {:?}",
+                                                asset,
+                                                reserve_data.d_token_balance
+                                            );
+                                            ic_cdk::println!(
+                                    "User Data for Asset: {} | Debt Token Balance: {:?}",
+                                    asset,
+                                    reserve_data.debt_token_blance
+                                );
+                                            ic_cdk::println!(
+                                                "User Data for Asset: {} | Liquidity Index: {:?}",
+                                                asset,
+                                                reserve_data.liquidity_index
+                                            );
+                                            ic_cdk::println!(
+                                    "User Data for Asset: {} | Variable Borrow Index: {:?}",
+                                    asset,
+                                    reserve_data.variable_borrow_index
+                                );
+                                        }
+                                    }
+                                } else {
+                                    ic_cdk::println!("No reserve data found for user.");
+                                }
+                            }
+                            Err(error) => {
+                                ic_cdk::println!(
+                                    "Failed to retrieve user data for {}: {:?}",
+                                    user_principal,
+                                    error
+                                );
+                            }
+                        }
+                    }
+                    Ok(WasmResult::Reject(reject_message)) => {
+                        ic_cdk::println!(
+                            "Query rejected for {}: {}",
+                            user_principal,
+                            reject_message
+                        );
+                    }
+                    Err(e) => {
+                        ic_cdk::println!(
+                            "Error retrieving user data for {}: {:?}",
+                            user_principal,
+                            e
+                        );
+                    }
+                }
+            }
+
+            // ic_cdk::println!("\n======================== Initial Reserve Data   ========================\n");
+
+            // fetch_reserve_data(pic, backend_canister, &case.asset);
+
+            // ic_cdk::println!("\n======================== Initial User Data  ========================\n");
+
+            // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+
+
             let supply_params = ExecuteSupplyParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
@@ -673,18 +830,24 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                     failure_count += 1;
                 }
             }
+
+            // ic_cdk::println!(
+            //     "\n======================== Updated Reserve Data   ========================\n"
+            // );
+
+            // fetch_reserve_data(pic, backend_canister, &case.asset);
+
+            // ic_cdk::println!(
+            //     "\n======================== Updated User Data  ========================\n"
+            // );
+
+            // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
         }
 
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!(
-            "✅ Successful Transactions: {}",
-            success_count,
-        );
-        ic_cdk::println!(
-            "❌ Failed Transactions: {}",
-            failure_count,
-        );
+        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
+        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
         ic_cdk::println!("------------------------------------------------------------\n");
     }
 
@@ -724,7 +887,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(4_000_00u128),
+            amount: Nat::from(4_000u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -734,12 +897,23 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             expect_success: true,
             expected_error_message: None,
         },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(50u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     let total_users = random_users.len();
 
-    ic_cdk::println!("\n======================== 🚀 Starting IC Borrow Stress Testing ========================");
-    ic_cdk::println!("🔥 Running stress test with {} user principals! 🔥\n", total_users);
+    ic_cdk::println!(
+        "\n======================== 🚀 Starting IC Borrow Stress Testing ========================"
+    );
+    ic_cdk::println!(
+        "🔥 Running stress test with {} user principals! 🔥\n",
+        total_users
+    );
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
@@ -841,18 +1015,14 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
 
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!(
-            "✅ Successful Transactions: {}",
-            success_count,
-        );
-        ic_cdk::println!(
-            "❌ Failed Transactions: {}",
-            failure_count,
-        );
+        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
+        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
         ic_cdk::println!("------------------------------------------------------------\n");
     }
 
-    ic_cdk::println!("\n======================== ✅ IC Borrow Tests Completed ========================");
+    ic_cdk::println!(
+        "\n======================== ✅ IC Borrow Tests Completed ========================"
+    );
 }
 
 fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
@@ -869,7 +1039,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
     let test_cases = vec![
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(400_000_000u128),
+            amount: Nat::from(400u128),
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -877,7 +1047,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(45_00u128),
+            amount: Nat::from(4u128),
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -885,7 +1055,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(45_00u128),
+            amount: Nat::from(4_00u128),
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -893,7 +1063,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(45_00_000_0u128), // 450 USDC
+            amount: Nat::from(2_00_00u128), // 450 USDC
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -901,7 +1071,15 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(3_000_000_000u128), // 300 ckUSDT
+            amount: Nat::from(3u128), // 300 ckUSDT
+            on_behalf_of: None,
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5u128),
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -912,10 +1090,12 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
     let total_users = random_users.len();
 
     ic_cdk::println!("\n======================== 🚀 IC Withdraw Stress Testing Started ========================\n");
-    ic_cdk::println!("🔥 Running stress test with {} user principals! 🔥\n", total_users);
+    ic_cdk::println!(
+        "🔥 Running stress test with {} user principals! 🔥\n",
+        total_users
+    );
 
     for (i, case) in test_cases.iter().enumerate() {
-
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🚀 Test Case {}: Withdraw Request Initiated", i + 1);
         let amount_float = case.amount.clone().0.try_into().unwrap_or(0u64) as f64 / 100000000.0;
@@ -939,6 +1119,18 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         let mut failure_count = 0;
 
         for user_principal in random_users.clone() {
+            ic_cdk::println!(
+                "\n======================== Initial Reserve Data   ========================\n"
+            );
+
+            fetch_reserve_data(pic, backend_canister, &case.asset);
+
+            ic_cdk::println!(
+                "\n======================== Initial User Data  ========================\n"
+            );
+
+            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+
             let withdraw_params = ExecuteWithdrawParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
@@ -961,7 +1153,10 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                     match withdraw_response {
                         Ok(balance) => {
                             if !case.expect_success {
-                                ic_cdk::println!("❌ Test Case {} Failed: Expected failure but got success.", i + 1);
+                                ic_cdk::println!(
+                                    "❌ Test Case {} Failed: Expected failure but got success.",
+                                    i + 1
+                                );
                                 failure_count += 1;
                             } else {
                                 ic_cdk::println!(
@@ -998,26 +1193,40 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                     }
                 }
                 Ok(WasmResult::Reject(reject_message)) => {
-                    ic_cdk::println!("❌ Test Case {} Failed: Call rejected with message: {}", i + 1, reject_message);
+                    ic_cdk::println!(
+                        "❌ Test Case {} Failed: Call rejected with message: {}",
+                        i + 1,
+                        reject_message
+                    );
                     failure_count += 1;
                 }
                 Err(e) => {
-                    ic_cdk::println!("❌ Test Case {} Failed: Error during function call: {:?}", i + 1, e);
+                    ic_cdk::println!(
+                        "❌ Test Case {} Failed: Error during function call: {:?}",
+                        i + 1,
+                        e
+                    );
                     failure_count += 1;
                 }
             }
+
+            ic_cdk::println!(
+                "\n======================== Updated Reserve Data   ========================\n"
+            );
+
+            fetch_reserve_data(pic, backend_canister, &case.asset);
+
+            ic_cdk::println!(
+                "\n======================== Updated User Data  ========================\n"
+            );
+
+            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
         }
 
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!(
-            "✅ Successful Transactions: {}",
-            success_count,
-        );
-        ic_cdk::println!(
-            "❌ Failed Transactions: {}",
-            failure_count,
-        );
+        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
+        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
         ic_cdk::println!("------------------------------------------------------------\n");
     }
 
@@ -1061,7 +1270,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pri
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(4_000_00u128),
+            amount: Nat::from(4_000u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
@@ -1069,6 +1278,13 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pri
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(30_000_000u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(50u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

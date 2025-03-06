@@ -418,6 +418,8 @@ pub async fn burn_scaled(
         user_state.variable_borrow_index = index;
     }
 
+    ic_cdk::println!("balance_increase in burning: {}", balance_increase);
+
     if balance_increase > amount {
         let amount_to_mint = balance_increase - amount;
         ic_cdk::println!("Minting tokens, amount: {}", amount_to_mint);
@@ -431,7 +433,7 @@ pub async fn burn_scaled(
         .await
         {
             Ok(_) => {
-                ic_cdk::println!("Burning successful");
+                ic_cdk::println!("Miniting interest successful");
                 Ok(())
             }
             Err(err) => {
@@ -443,6 +445,7 @@ pub async fn burn_scaled(
         if amount < balance_increase {
             return Err(Error::AmountSubtractionError);
         }
+        ic_cdk::println!("Burning tokens, amount: {}", amount);
         let  amount_to_burn = amount - balance_increase;
         ic_cdk::println!("Burning tokens, initial amount: {}", amount_to_burn);
 

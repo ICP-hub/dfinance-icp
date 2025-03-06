@@ -148,6 +148,11 @@ pub async fn calculate_interest_rates(
     let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
     ic_cdk::println!("Total Supply: {:?}", total_supply);
     ic_cdk::println!("Liquidity in reserve: {:?}", reserve.asset_supply);
+    ic_cdk::println!("liq_added: {:?}", liq_added);
+    ic_cdk::println!("liq_taken: {:?}", liq_taken);
+    // if liq_added < liq_taken{
+    //     return Err(Error::AmountSubtractionError);
+    // }
     // ic_cdk::println!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());
     let available_liq = total_supply.clone() + liq_added.clone() - liq_taken.clone();
     

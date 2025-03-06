@@ -94,6 +94,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
         let amount_nat = params.amount.clone();
+        ic_cdk::println!("Supply amount: {:?}", amount_nat);
 
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;

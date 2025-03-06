@@ -690,6 +690,24 @@ pub fn retrieve_request_info(caller_id: Principal) -> Vec<(String, u32)> {
     })
 }
 
+#[query]
+pub fn retrieve_blocked_users(caller_id: Principal) -> Vec<(String, u64)> {
+    read_state(|state| {
+        state
+            .blocked_users
+            .get(&caller_id)
+            .map(|candid| {
+                candid
+                    .0
+                    .iter()
+                    .map(|(function, details)| (function.clone(), details.blocked_time)) // Extract function name & blocked timestamp
+                    .collect::<Vec<(String, u64)>>()
+            })
+            .unwrap_or_default()
+    })
+}
+
+
 
 #[ic_cdk::inspect_message]
 pub fn inspect_message() {

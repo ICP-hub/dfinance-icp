@@ -53,7 +53,7 @@ const DebtStatus = () => {
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const cachedData = useRef({});
-
+  const [userAccountData, setUserAccountData] = useState([]);
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -125,8 +125,15 @@ const DebtStatus = () => {
           userData: userData,
         })
       );
-
-      return parsedResult;
+      
+      setUserAccountData((prev) => ({
+        ...prev,
+        ...parsedResult.reduce((acc, { principal, userAccountData }) => {
+          acc[principal] = userAccountData;
+          return acc;
+        }, {}),
+      }));
+    return parsedResult;
     } catch (error) {
       console.error("Error fetching liquidation users:", error);
       throw error;

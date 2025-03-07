@@ -1044,7 +1044,7 @@ fn register_user() -> Result<String, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("register_user") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

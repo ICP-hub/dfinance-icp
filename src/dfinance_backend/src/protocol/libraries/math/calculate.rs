@@ -73,7 +73,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
         return Err(Error::InvalidPrincipal);
     }
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("update_reserves_price") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
@@ -119,7 +119,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  * @param asset The name of the asset whose price needs to be updated.
  */
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("update_token_price") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

@@ -27,6 +27,13 @@ pub struct RequestTracker {
     count: u32,
     last_request_time: u64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct SessionStorageData {
+    pub connected_wallet: String,
+    pub session_start: Nat,
+}
+
 /*
  * @title Asset Transfer From Function
  * @notice Transfers assets from one principal to another using the ICRC-2 standard.

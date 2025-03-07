@@ -29,7 +29,6 @@ const DashboardNav = () => {
    * =================================================================================== */
   const {
     assets,
-    totalMarketSize,
     totalSupplySize,
     totalBorrowSize,
     asset_supply,
@@ -48,11 +47,10 @@ const DashboardNav = () => {
   } = useFetchConversionRate();
   const {
     userData,
-    userAccountData,
     healthFactorBackend,
-    setIsFreezePopupVisible,
-    isFreezePopupVisible,
+    userAccountData,
   } = useUserData();
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
@@ -76,7 +74,6 @@ const DashboardNav = () => {
    *                                  STATE MANAGEMENT
    * =================================================================================== */
   const [assetBalances, setAssetBalances] = useState([]);
-
   const [assetSupply, setAssetSupply] = useState(0);
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);

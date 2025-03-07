@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
+import {  Check, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { useEffect } from "react";
 import { toast } from "react-toastify";

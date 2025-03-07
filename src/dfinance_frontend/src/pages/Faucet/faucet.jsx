@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import Button from "../../components/Common/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
-import FaucetDetails from "../../components/Faucet/FaucetDetails";
 import Element from "../../../public/element/Elements.svg";
-import {
-  setWalletModalOpen,
-} from "../../redux/reducers/utilityReducer";
-import WalletModal from "../../components/Dashboard/WalletModal";
-
+import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
+import MiniLoader from "../../components/Common/MiniLoader";
+const FaucetDetails = lazy(() =>
+  import("../../components/Faucet/FaucetDetails")
+);
+const WalletModal = lazy(() =>
+  import("../../components/Dashboard/WalletModal")
+);
 /**
  * Faucet component allows users to receive testnet assets for testing purposes.
  * Users must connect their wallet to receive assets.
@@ -47,7 +49,15 @@ const Faucet = () => {
             </p>
           </div>
           {isAuthenticated ? (
-            <FaucetDetails />
+            <Suspense
+              fallback={
+                <div className="flex justify-center items-center min-h-[50vh]">
+                  <MiniLoader />
+                </div>
+              }
+            >
+              <FaucetDetails />
+            </Suspense>
           ) : (
             <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[450px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
               <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
@@ -69,7 +79,15 @@ const Faucet = () => {
                 onClickHandler={handleWalletConnect}
               />
 
-              {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+              <Suspense
+                fallback={
+                  <div className="flex justify-center items-center min-h-[50vh]">
+                    <MiniLoader />
+                  </div>
+                }
+              >
+                {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+              </Suspense>
             </div>
           )}
         </>

@@ -1,7 +1,7 @@
 use candid::Principal;
 use ic_stable_structures::StableBTreeMap;
 
-use crate::api::functions::RequestTracker;
+use crate::api::functions::{RequestTracker, SessionStorageData};
 use crate::declarations::assets::InitArgs;
 use crate::declarations::{assets::ReserveData, storable::Candid};
 use crate::protocol::libraries::math::calculate::PriceCache;
@@ -16,5 +16,7 @@ pub type TesterList =  StableBTreeMap<String,Principal, VMem>;
 pub type MetaData =  StableBTreeMap<u32,Candid<InitArgs>, VMem>;
 pub type Requests =  StableBTreeMap<Principal, Candid<RequestTracker>, VMem>;
 pub type BlockedUsers =  StableBTreeMap<Principal,u64, VMem>;
+pub type SessionDetails = StableBTreeMap<Principal, Candid<SessionStorageData>, VMem>; 
+pub type UserGuideData = StableBTreeMap<Principal, bool, VMem>;  
 
 

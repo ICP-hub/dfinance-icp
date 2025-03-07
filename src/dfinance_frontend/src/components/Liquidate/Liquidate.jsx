@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
-import { ChevronLeft } from "lucide-react";
-import { useLocation } from "react-router-dom";
 import DebtStatus from "./DebtStatus";
 import WalletModal from "../Dashboard/WalletModal";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
@@ -26,7 +24,6 @@ const Liquidate = () => {
    * =================================================================================== */
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );

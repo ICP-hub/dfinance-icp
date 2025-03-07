@@ -9,3 +9,5 @@ pub const META_DATA: MemoryId = MemoryId::new(5);
 pub const TESTER_LIST: MemoryId = MemoryId::new(6);
 pub const REQUESTS: MemoryId = MemoryId::new(7);
 pub const BLOCKED_USERS: MemoryId = MemoryId::new(8);
+pub const SESSION_DETAILS: MemoryId = MemoryId::new(9);
+pub const USER_GUIDE_DATA: MemoryId = MemoryId::new(10);

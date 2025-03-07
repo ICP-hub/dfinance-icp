@@ -2,6 +2,7 @@ use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
+use api::functions::SessionStorageData;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
@@ -660,6 +661,93 @@ fn time_until_midnight() -> Duration {
 #[ic_cdk::post_upgrade]
 pub async fn post_upgrade() {
     schedule_midnight_task().await;
+}
+
+#[update]
+// Function to store session data
+pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    if connected_wallet.len() > 15 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if session_start <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    let session_data = SessionStorageData {
+        connected_wallet,
+        session_start,
+    };
+
+    // Save the updated request history
+    mutate_state(|state| {
+        state
+            .session_details
+            .insert(caller_id, Candid(session_data));
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_caller_session() -> Result<SessionStorageData, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state
+            .session_details
+            .get(&caller_id)
+            .map(|data| data.0.clone()) // Extract value
+            .unwrap_or_else(|| SessionStorageData {
+                // Default value
+                connected_wallet: "".to_string(),
+                session_start: Nat::from(0u128),
+            })
+    }))
+}_
+
+#[update]
+pub fn store_user_guide() -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    mutate_state(|state| {
+        state.user_guide_data.insert(caller_id, true);
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_user_guide() -> Result<bool, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state.user_guide_data.get(&caller_id).unwrap_or(false)
+    }))
 }
 
 export_candid!();

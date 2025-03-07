@@ -160,7 +160,6 @@ const MySupply = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
-  const [toggled, set] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [calculatedReserves, setCalculatedReserves] = useState([]);
   const [totalAssetSupply, setTotalAssetSupply] = useState(0);
@@ -179,7 +178,6 @@ const MySupply = () => {
    *                 Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
-
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"

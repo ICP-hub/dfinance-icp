@@ -51,7 +51,6 @@ const DashboardCards = () => {
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    fetchConversionRate,
   } = useFetchConversionRate();
 
   const {
@@ -68,14 +67,11 @@ const DashboardCards = () => {
    * =================================================================================== */
   const [searchQuery, setSearchQuery] = useState("");
   const [like, setLike] = useState(false);
-  const [notification, setNotification] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [threshold] = useState(5000000000000);
   const [tokenThreshold] = useState(10000);
   const [users, setUsers] = useState([]);
-  const [lastEmailDate, setLastEmailDate] = useState(null);
-  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [assetBalance, setAssetBalances] = useState([]);

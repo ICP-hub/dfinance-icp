@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
-import { Info, Check, Wallet, X } from "lucide-react";
+import {  Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
-import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
@@ -25,15 +24,36 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the SupplyPopup component.
  */
 
-const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const SupplyPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const approveButtonRef = useRef(null);
+  const supplyButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   /* ===================================================================================
    *                                 STATE MANAGEMENT
@@ -458,6 +478,30 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
    *                                  EFFECTS
    * =================================================================================== */
 
+   useEffect(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault(); // Prevent accidental double triggering
+  
+          if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+            closeButtonRef.current.click();
+          } else if (
+            approveButtonRef.current &&
+            !approveButtonRef.current.disabled
+          ) {
+            approveButtonRef.current.click();
+          } else if (supplyButtonRef.current && !supplyButtonRef.current.disabled) {
+            supplyButtonRef.current.click();
+          }
+        }
+      };
+  
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -486,7 +530,8 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     );
 
     const amountAdded = collateral ? usdValue || 0 : 0;
-    let totalCollateralValue =parseFloat(totalCollateral) + parseFloat(amountAdded);
+    let totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
@@ -497,7 +542,9 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+    );
   }, [
     asset,
     liquidationThreshold,
@@ -707,6 +754,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
           <div className="flex flex-col gap-4 mt-4">
             {/* Approve Button */}
             <button
+              ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                 isApproved ||
@@ -726,6 +774,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
 
             {/* Supply Button */}
             <button
+              ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                 !isApproved ||
@@ -763,6 +812,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
+             ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 focus:outline-none self-end button1"
             >
@@ -804,6 +854,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
             </p>
 
             <button
+             ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
             >
@@ -816,6 +867,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center p-2 ">
             <button
+             ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 focus:outline-none self-end button1"
             >

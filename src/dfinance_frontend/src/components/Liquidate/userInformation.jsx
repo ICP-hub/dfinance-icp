@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Info, Check, X, TriangleAlert } from "lucide-react";
+import { Info, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
@@ -30,7 +30,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
   } = useFetchConversionRate();
   const {
-    assets, reserveData, filteredItems, fetchAssetSupply, fetchAssetBorrow,
+    assets, filteredItems, fetchAssetSupply, fetchAssetBorrow,
   } = useAssetData();
 
   /* ===================================================================================
@@ -50,7 +50,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
   const [calculatedData, setCalculatedData] = useState(null);
-  const [userdata, setUserData] = useState();
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
@@ -59,15 +58,11 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   const [error, setError] = useState(null);
   const [selectedAssetBalance, setSelectedAssetBalance] = useState(0);
   const [factor, setFactor] = useState("");
-  const [maxCollateral, setMaxCollateral] = useState(null);
-  const [maxDebtToLiq, setMaxDebtToLiq] = useState(null);
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-  const [amountBorrowUSD, setAmountBorrowUSD] = useState(null);
   const [selectedAssetSupply, setSelectedAssetSupply] = useState(null);
   const [collateralRate, setCollateralRate] = useState(null);
   const [collateral, setCollateralRateAmount] = useState(null);
@@ -96,11 +91,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
    *                                  MEMOIZATION
    * =================================================================================== */
 
-  const principalObj = useMemo(
-    () => Principal.fromText(currentUserPrincipal),
-    [currentUserPrincipal]
-  );
-
   const normalizedAsset = selectedAsset
     ? selectedAsset.toLowerCase()
     : "default";
@@ -108,9 +98,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -187,11 +174,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
     return result;
   };
-
-  function roundToDecimal(value, decimalPlaces) {
-    const factor = Math.pow(10, decimalPlaces);
-    return Math.round(value * factor) / factor;
-  }
 
   const getBalanceForPrincipalAndAsset = (
     principal,
@@ -322,8 +304,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
     const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
     const totalAmount = supplyAmount + transferFee;
-
-    const totalAmountAsNumber = Number(totalAmount);
 
     try {
       setIsLoading(true);
@@ -788,7 +768,6 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       rewardAmount !== calculatedData?.maxCollateral / 1e8
         ? calculatedData?.maxCollateral / 1e8
         : rewardAmount;
-    const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : null;
     const bonusValue =
       ((calculatedData?.maxCollateral / 1e8) * liquidation_bonus) / 100;
 

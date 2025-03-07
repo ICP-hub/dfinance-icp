@@ -4,6 +4,7 @@
     "npm": ">=7.0.0"
   },
   "name": "dfinance",
+  "sideEffects": false,
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "prebuild": "npm run prebuild --workspaces --if-present",
@@ -48,7 +49,6 @@
     "react-chartjs-2": "^5.2.0",
     "react-circular-progressbar": "^2.1.0",
     "react-dom": "^18.3.1",
-    "react-ga": "^3.3.1",
     "react-ga4": "^2.1.0",
     "react-icons": "^5.2.1",
     "react-joyride": "^2.9.3",
@@ -63,5 +63,8 @@
     "swiper": "^11.1.4",
     "tailwind-scrollbar": "^3.1.0",
     "tailwindcss-animated": "^1.0.1"
+  },
+  "devDependencies": {
+    "vite-plugin-compression": "^0.5.1"
   }
 }

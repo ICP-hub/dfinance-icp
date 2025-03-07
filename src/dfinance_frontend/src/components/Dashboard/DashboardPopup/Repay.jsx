@@ -1,4 +1,4 @@
-import { Info, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../../utils/useAuthClient";
@@ -46,10 +46,11 @@ const Repay = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const approveButtonRef = useRef(null);
+  const repayButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const { healthFactorBackend } = useUserData();
+  const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
 
   const [amount, setAmount] = useState(null);
@@ -474,6 +475,29 @@ const Repay = ({
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          approveButtonRef.current &&
+          !approveButtonRef.current.disabled
+        ) {
+          approveButtonRef.current.click();
+        } else if (repayButtonRef.current && !repayButtonRef.current.disabled) {
+          repayButtonRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (amount && conversionRate) {
@@ -741,6 +765,7 @@ const Repay = ({
               <div className="flex flex-col gap-4 mt-4">
                 {/* Approve Button */}
                 <button
+                  ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                     isApproved ||
@@ -765,6 +790,7 @@ const Repay = ({
 
                 {/* Repay Button */}
                 <button
+                  ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                     !isApproved ||
@@ -807,6 +833,7 @@ const Repay = ({
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
             >
@@ -861,6 +888,7 @@ const Repay = ({
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center p-2 ">
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 focus:outline-none self-end button1"
             >
@@ -899,4 +927,3 @@ const Repay = ({
 };
 
 export default Repay;
-

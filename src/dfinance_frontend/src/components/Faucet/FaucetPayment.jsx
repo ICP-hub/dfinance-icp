@@ -2,6 +2,8 @@ import { Check, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 const FaucetPayment = ({ asset, amount, onClose }) => {
+   const faucetButtonRef = useRef(null);
+    const closeButtonRef = useRef(null);
   /* ===================================================================================
    *                                  STATE-MANAGEMENT
    * =================================================================================== */
@@ -12,6 +14,27 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          faucetButtonRef.current &&
+          !faucetButtonRef.current.disabled
+        ) {
+          faucetButtonRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -47,6 +70,7 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
     >
       <div className="w-full flex flex-col items-center">
         <button
+         ref={closeButtonRef}
           onClick={handleClose}
           className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
         >

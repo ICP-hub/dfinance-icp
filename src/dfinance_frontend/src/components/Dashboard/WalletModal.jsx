@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Modal } from "@mui/material";
-import Button from "../Common/Button";
 import icplogo from "../../../public/wallet/icp.png";
 import nfid from "../../../public/wallet/nfid.png";
 import {

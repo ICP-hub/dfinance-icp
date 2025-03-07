@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import useAssetData from "../customHooks/useAssets";
 
 const HeroSection = () => {
-  const { totalMarketSize, totalSupplySize, totalBorrowSize } = useAssetData();
+  const {  totalSupplySize } = useAssetData();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

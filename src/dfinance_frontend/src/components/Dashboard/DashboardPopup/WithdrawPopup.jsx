@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import Button from "../../Common/Button";
-import { Info } from "lucide-react";
-import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { Check, Wallet, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -29,6 +26,8 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
+    const withdrawButtonRef = useRef(null);
+    const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
@@ -428,6 +427,28 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
    *                                  EFFECTS
    * =================================================================================== */
 
+    useEffect(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault(); // Prevent accidental double triggering
+  
+          if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+            closeButtonRef.current.click();
+          } else if (
+            withdrawButtonRef.current &&
+            !withdrawButtonRef.current.disabled
+          ) {
+            withdrawButtonRef.current.click();
+          }
+        }
+      };
+  
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }, []);
+
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
@@ -699,19 +720,21 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
             </div>
           </div>
           <div>
-            <Button
-              onClickHandler={
-                isLoading || amount <= 0 || isButtonDisabled
-                  ? null
-                  : handleWithdraw
-              }
+            <button
+             ref={withdrawButtonRef}
+             onClick={
+              isLoading || amount <= 0 || isButtonDisabled
+                ? null
+                : handleWithdraw
+            }
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
                 isLoading || amount <= 0 || isButtonDisabled
                   ? "opacity-50 cursor-not-allowed"
                   : ""
               }`}
-              title="Withdraw"
-            />
+                  >
+                Withdraw
+              </button>
           </div>
           {isLoading && (
             <div
@@ -730,6 +753,7 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
+             ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
             >
@@ -777,6 +801,7 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center p-2 ">
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 focus:outline-none self-end button1"
             >

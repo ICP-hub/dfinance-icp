@@ -1,29 +1,34 @@
-import CreateWallet from "../components/Dashboard/CreateWallet"
-import Market from "../pages/Market/Market"
-import MainDashboard from "../pages/Dashboard/MainDashboard"
-import Home from "../pages/Home/Home"
-import Error from "../pages/Error"
-import AssetDetails from "../components/Dashboard/AssetDetails"
-import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
-import StakeDetails from "../pages/Stake/Stake"
-import Faucet from "../pages/Faucet/faucet"
-import TransactionDetail from "../components/Dashboard/Transaction"
-import Liquidate from "../components/Liquidate/Liquidate"
-import DebtStatus from "../components/Liquidate/DebtStatus"
-import DashboardCards from "../pages/info/info"
-import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
+import { lazy, Suspense } from "react";
 import { Outlet } from "react-router-dom";
+import MainDashboard from "../pages/Dashboard/MainDashboard";
+import Home from "../pages/Home/Home";
+import MiniLoader from "../components/Common/MiniLoader";
+import CreateWallet from "../components/Dashboard/CreateWallet";
+import Market from "../pages/Market/Market";
+import Faucet from "../pages/Faucet/faucet";
+
+// Lazy loaded components
+const Error = lazy(() => import("../pages/Error"));
+const DashboardCards = lazy(() => import("../pages/info/info"));
+const HealthFactorList = lazy(() => import("../components/Dashboard/HealthFactorLIst"));
+const TransactionHistoryBox = lazy(() => import("../components/Dashboard/TransactionHistory"));
+const TransactionDetail = lazy(() => import("../components/Dashboard/Transaction"));
+const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
+const StakeDetails = lazy(() => import("../pages/Stake/Stake"));
+const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
+
 export default [
   {
     path: "/",
     element: <Home />,
   },
-  
   {
     path: "*",
-      element: (
+    element: (
       <MainDashboard includeDashboardNav={false}>
-        <Error></Error> 
+        <Suspense fallback={<MiniLoader />}>
+          <Error />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -31,17 +36,27 @@ export default [
     path: "/2a45fg",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Outlet /> {/* ✅ Required for child routes to work */}
+        <Suspense fallback={<MiniLoader />}>
+          <Outlet />
+        </Suspense>
       </MainDashboard>
     ),
     children: [
       {
-        index: true, // ✅ Loads DashboardCards when visiting /2a45fg
-        element: <DashboardCards />,
+        index: true,
+        element: (
+          <Suspense fallback={<MiniLoader />}>
+            <DashboardCards />
+          </Suspense>
+        ),
       },
       {
-        path: "health-factor-list", // ✅ This makes it /2a45fg/health-factor-list
-        element: <HealthFactorList />,
+        path: "health-factor-list",
+        element: (
+          <Suspense fallback={<MiniLoader />}>
+            <HealthFactorList />
+          </Suspense>
+        ),
       },
     ],
   },
@@ -57,7 +72,9 @@ export default [
     path: "/market/asset-details/:id?",
     element: (
       <MainDashboard>
-        <AssetDetails />
+        <Suspense fallback={<MiniLoader />}>
+          <AssetDetails />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -65,23 +82,29 @@ export default [
     path: "/dashboard/asset-details/:id?",
     element: (
       <MainDashboard>
-        <AssetDetails />
+        <Suspense fallback={<MiniLoader />}>
+          <AssetDetails />
+        </Suspense>
       </MainDashboard>
     ),
   },
   {
     path: "/dashboard/transaction-history",
     element: (
-      <MainDashboard >
-        <TransactionHistoryBox />
+      <MainDashboard>
+        <Suspense fallback={<MiniLoader />}>
+          <TransactionHistoryBox />
+        </Suspense>
       </MainDashboard>
     ),
   },
   {
     path: "/dashboard/transaction/:id",
     element: (
-      <MainDashboard >
-        <TransactionDetail />
+      <MainDashboard>
+        <Suspense fallback={<MiniLoader />}>
+          <TransactionDetail />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -89,16 +112,17 @@ export default [
     path: "/market",
     element: (
       <MainDashboard>
-        <Market/>
+        <Market />
       </MainDashboard>
     ),
   },
- 
   {
     path: "/stake",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <StakeDetails />
+        <Suspense fallback={<MiniLoader />}>
+          <StakeDetails />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -106,7 +130,7 @@ export default [
     path: "/Faucet",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Faucet/>
+        <Faucet />
       </MainDashboard>
     ),
   },
@@ -114,7 +138,9 @@ export default [
     path: "/Liquidate",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Liquidate/>
+        <Suspense fallback={<MiniLoader />}>
+          <Liquidate />
+        </Suspense>
       </MainDashboard>
     ),
   },

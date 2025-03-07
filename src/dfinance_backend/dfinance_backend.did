@@ -129,6 +129,8 @@ type ReserveData = record {
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok; Err : Error };
 type Result_10 = variant { Ok : text; Err : Error };
+type Result_11 = variant { Ok : vec record { text; nat64 }; Err : Error };
+type Result_12 = variant { Ok : vec record { text; nat32 }; Err : Error };
 type Result_2 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
@@ -208,10 +210,12 @@ service : (principal) -> {
   initialize : (text, ReserveData) -> (Result_1);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
+  remove_blocked_function : (principal, text) -> (Result_1);
   reset_reserve_value : (text, text, nat) -> (Result_1);
+  retrieve_blocked_users : (principal) -> (Result_11) query;
+  retrieve_request_info : (principal) -> (Result_12) query;
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
-  unblock_user : (principal) -> (text);
   update_reserve_price_test : () -> (Result_1);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt : (ReserveData) -> (Result_4) query;

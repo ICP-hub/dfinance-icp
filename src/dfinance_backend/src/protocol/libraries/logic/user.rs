@@ -960,7 +960,7 @@ pub struct UserAccountData {
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
-#[query]
+#[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
     page_size: usize,
@@ -1007,7 +1007,7 @@ pub async fn get_liquidation_users_concurrent(
                     };
                     ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
 
-                    if user_account_data.health_factor < Nat::from(100000000u128){
+                    if user_account_data.health_factor < Nat::from(10000000000u128){
                         page_liq_list.push((user_principal, user_account_data, user_data));
                     }
                    

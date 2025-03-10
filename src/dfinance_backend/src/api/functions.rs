@@ -767,7 +767,7 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
 }
 
 #[query]
-fn is_function_blocked(function_name: String) ->Result<bool,Error> {
+pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
     let caller_id = ic_cdk::caller();
     let current_time_stamp = current_timestamp();
 

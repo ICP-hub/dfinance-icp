@@ -9,10 +9,13 @@ import StakeDetails from "../pages/Stake/Stake"
 import Faucet from "../pages/Faucet/faucet"
 import TransactionDetail from "../components/Dashboard/Transaction"
 import Liquidate from "../components/Liquidate/Liquidate"
-import DebtStatus from "../components/Liquidate/DebtStatus"
 import DashboardCards from "../pages/info/info"
 import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
+const ADMIN_ROUTE = process.env.DFX_ADMIN || "/default";
+const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE || "/default";
+console.log("ADMIN_ROUTE", ADMIN_ROUTE);
+console.log("HEALTH_FACTOR_ROUTE", HEALTH_FACTOR_ROUTE);
 export default [
   {
     path: "/",
@@ -28,23 +31,24 @@ export default [
     ),
   },
   {
-    path: "/2a45fg",
+    path: ADMIN_ROUTE,  
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Outlet /> {/* ✅ Required for child routes to work */}
+        <Outlet /> 
       </MainDashboard>
     ),
     children: [
       {
-        index: true, // ✅ Loads DashboardCards when visiting /2a45fg
+        index: true, 
         element: <DashboardCards />,
       },
       {
-        path: "health-factor-list", // ✅ This makes it /2a45fg/health-factor-list
+        path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""), 
         element: <HealthFactorList />,
       },
     ],
   },
+  
   {
     path: "/dashboard",
     element: (

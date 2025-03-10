@@ -24,6 +24,7 @@ const useUserData = () => {
     fetchReserveData,
     createLedgerActor,
   } = useAuth();
+
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
@@ -48,11 +49,29 @@ const useUserData = () => {
     } catch (error) {
       setError(error.message);
       console.error(error.message);
-      if (error.message.toLowerCase().includes("freeze canister")) {
-        setIsFreezePopupVisible(true);
-      }
+      
     }
   };
+  const getCycleFreezing = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.cycle_threshold_crossed();
+      console.log("result", result);
+  
+     
+      if (result === true) {
+        setIsFreezePopupVisible(true);
+      }
+      
+      return result;
+    } catch (error) {
+      setError(error.message);
+      console.error(error.message);
+    }
+  };
+  
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -131,17 +150,14 @@ const useUserData = () => {
         }
         const principalObj = Principal.fromText(principal);
 
-        // Extract reserves from userData
         const reserves = userData?.Ok?.reserves?.[0] || [];
 
-        // Separate objects for asset balances and borrow balances
         let assetBalancesObj = [];
         let borrowBalancesObj = [];
 
         reserves.forEach((reserveGroup) => {
-          const asset = reserveGroup[0]; // Extract asset name from reserveGroup
+          const asset = reserveGroup[0]; 
 
-          // Match asset with assetBalances
           const assetBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0n;
@@ -149,7 +165,6 @@ const useUserData = () => {
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
 
-          // Only include non-zero balances, push into respective arrays
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -164,22 +179,18 @@ const useUserData = () => {
           }
         });
 
-        console.log("Asset Balances Set:", assetBalancesObj);
-        console.log("Borrow Balances Set:", borrowBalancesObj);
+       
 
-        // If no balances exist, pass an empty array instead of null
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
         const borrowBalancesParam =
           borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
 
-        // Call backend with separate sets for asset and borrow balances
         const result = await backendActor.get_user_account_data(
           [],
           assetBalancesParam,
           borrowBalancesParam
         );
-        console.log("result reslut", result);
 
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
@@ -216,6 +227,11 @@ const useUserData = () => {
       fetchUserAccountData();
     }
   }, [userData, assetBalances, dashboardRefreshTrigger]);
+  useEffect(() => {
+    
+    getCycleFreezing();
+    
+  }, [user, dashboardRefreshTrigger]);
 
   useEffect(() => {
     fetchAssetData();

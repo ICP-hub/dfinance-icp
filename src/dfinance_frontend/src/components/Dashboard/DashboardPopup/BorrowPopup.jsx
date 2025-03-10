@@ -436,7 +436,7 @@ import useAssetData from "../../customHooks/useAssets";
     ckICPUsdRate,
     ckUSDTUsdRate,
   ]);
-
+console.log("borrowableValue",borrowableValue)
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;

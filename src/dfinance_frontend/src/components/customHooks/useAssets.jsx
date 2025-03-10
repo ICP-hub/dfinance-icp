@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-import { idlFactory } from "../../../../declarations/dtoken";
-import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
+
 import { useDispatch, useSelector } from "react-redux";
 
 /**
@@ -221,7 +220,6 @@ const useAssetData = (searchQuery = "") => {
   }, [
     assets,
     fetchReserveData,
-    principal,
     ckUSDTUsdRate,
     ckICPUsdRate,
     ckUSDCUsdRate,

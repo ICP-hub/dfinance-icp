@@ -661,7 +661,13 @@ fn time_until_midnight() -> Duration {
 pub async fn post_upgrade() {
     schedule_midnight_task().await;
 }
+#[query]
+pub fn cycle_threshold_crossed() -> bool {
+    let available_cycles = ic_cdk::api::canister_balance128();
+    let threshold = 7_592_000;
 
+    available_cycles < threshold
+}
 export_candid!();
 
 

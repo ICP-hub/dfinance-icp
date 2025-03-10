@@ -86,29 +86,45 @@ export const useAuthClient = (options = defaultOptions) => {
   const login = async (provider) => {
     return new Promise(async (resolve, reject) => {
       try {
+        if (!authClient) {
+          console.error("AuthClient not initialized. Cannot log in.");
+          reject("AuthClient not initialized.");
+          return;
+        }
+  
         if (
           authClient.isAuthenticated() &&
           !(await authClient.getIdentity().getPrincipal().isAnonymous())
         ) {
+          console.log("User is already authenticated.");
           updateClient(authClient);
           resolve(authClient);
-        } else {
-          const opt = getLoginOptions(provider);
-          authClient.login({
-            ...opt,
-            onError: (error) => reject(error),
-            onSuccess: () => {
-              updateClient(authClient);
-              setSessionTimeout();
-              resolve(authClient);
-            },
-          });
+          return;
         }
+  
+        const supportedProviders = ["ii", "nfid", "bifinity"];
+        if (!supportedProviders.includes(provider)) {
+          console.error(`Unsupported provider: ${provider}`);
+          reject(`Unsupported provider: ${provider}`);
+          return;
+        }
+  
+        const opt = getLoginOptions(provider);
+        authClient.login({
+          ...opt,
+          onError: (error) => reject(error),
+          onSuccess: () => {
+            updateClient(authClient);
+            setSessionTimeout();
+            resolve(authClient);
+          },
+        });
       } catch (error) {
         reject(error);
       }
     });
   };
+  
 
   const setSessionTimeout = () => {
     clearTimeout(logoutTimeout);

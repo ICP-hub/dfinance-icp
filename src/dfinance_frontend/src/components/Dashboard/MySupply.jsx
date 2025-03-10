@@ -464,7 +464,6 @@ const MySupply = () => {
     setAvailableBorrow(updatedAvailableBorrow);
 
     if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
-      console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
     } else {
       setAvailableBorrow(updatedAvailableBorrow);
@@ -2972,7 +2971,6 @@ const MySupply = () => {
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  console.log("availableBorrowinAssetBorrow", availableBorrow);
                   const ratio =
                     (totalUsdValueBorrow /
                       (availableBorrow + totalUsdValueBorrow)) *
@@ -4530,11 +4528,7 @@ const MySupply = () => {
                                         Number(total_supply) -
                                           Number(total_borrow)
                                       );
-                                      console.log(
-                                        "borrowableValue",
-                                        borrowableValue,
-                                        borrowableAssetValue
-                                      );
+                                     
                                       handleModalOpen(
                                         "borrow",
                                         item[0],
@@ -4993,11 +4987,7 @@ const MySupply = () => {
                                           Number(total_supply) -
                                             Number(total_borrow)
                                         );
-                                        console.log(
-                                          "borrowableValue",
-                                          borrowableValue,
-                                          borrowableAssetValue
-                                        );
+                                        
                                         handleModalOpen(
                                           "borrow",
                                           item[0],

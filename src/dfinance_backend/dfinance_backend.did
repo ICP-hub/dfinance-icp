@@ -181,6 +181,7 @@ service : (principal) -> {
   check_is_tester : () -> (bool) query;
   create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_3);
   cycle_checker : () -> (Result_4) query;
+  cycle_threshold_crossed : () -> (bool) query;
   execute_borrow : (ExecuteBorrowParams) -> (Result_4);
   execute_liquidation : (ExecuteLiquidationParams) -> (Result_4);
   execute_repay : (ExecuteRepayParams) -> (Result_4);

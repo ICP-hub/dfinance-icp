@@ -111,43 +111,54 @@ const Repay = ({
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
   
+    // ✅ Allow empty input (so the user can delete input)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
   
-    // Remove invalid characters (allow only numbers and a single decimal point)
-    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-  
-    // Ensure there's only one decimal point
-    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    // ✅ Allow numbers & a single decimal (even without digits after `.`)
+    if (!/^\d{0,8}(\.\d{0,8})?$/.test(inputAmount)) {
+      return; // Ignore invalid input (e.g., letters, multiple dots)
     }
   
-    // Convert to a number
+    // ✅ Convert valid input to a number
     let numericAmount = parseFloat(inputAmount);
-    if (isNaN(numericAmount)) numericAmount = 0;
   
-    // Limit decimal places to 8
+    // ✅ Allow typing "." alone but don't parse it yet
+    if (inputAmount === ".") {
+      setAmount("0.");
+      return;
+    }
+  
+    // ✅ Limit decimal places to 8
     const truncateToEightDecimals = (num) => {
       const factor = Math.pow(10, 8);
       return Math.floor(num * factor) / factor;
     };
   
-    if (numericAmount > assetBorrow) {
-      numericAmount = assetBorrow;
+    // ✅ Prevent exceeding `assetBorrow` but allow intermediate values
+    if (!isNaN(numericAmount) && numericAmount > assetBorrow) {
+      return; // Don't update state if it's greater than assetBorrow
     }
   
-    numericAmount = truncateToEightDecimals(numericAmount);
+    // ✅ Truncate decimals to 8 places & ensure 8 digits max before decimal
+    if (numericAmount) {
+      let parts = inputAmount.split(".");
+      let integerPart = parts[0].slice(0, 8); // ✅ Limit integer part to 8 digits
+      let decimalPart = parts[1] ? parts[1].slice(0, 8) : ""; // ✅ Limit decimals to 8 places
   
-    // Convert back to string to retain decimal formatting
-    inputAmount = numericAmount.toString();
+      inputAmount = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+    }
   
-    setAmount(inputAmount);
+    // ✅ Update state correctly
+    setAmount(inputAmount); // Keep raw input (e.g., "12.")
     setMaxClicked(inputAmount === assetBorrow.toString());
     updateAmountAndUsdValue(inputAmount);
   };
+  
+  
   
 
   /**

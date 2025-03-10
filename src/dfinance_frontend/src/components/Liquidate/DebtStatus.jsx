@@ -18,7 +18,7 @@ import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import Lottie from "../Common/Lottie";
-
+import pLimit from "p-limit";
 /**
  * DebtStatus Component
  *
@@ -42,6 +42,7 @@ const DebtStatus = () => {
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(false);
@@ -49,11 +50,13 @@ const DebtStatus = () => {
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [userLoadingStates, setUserLoadingStates] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const cachedData = useRef({});
-
+ const [userAccountData, setUserAccountData] = useState({});
+  const [healthFactors, setHealthFactors] = useState({});
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -69,11 +72,12 @@ const DebtStatus = () => {
   } = useAssetData();
   const navigate = useNavigate();
   const {
-    getAllUsers,
+    
     user,
     backendActor,
     fetchReserveData,
     createLedgerActor,
+    isAuthenticated
   } = useAuth();
 
   const showSearchBar = () => {
@@ -86,19 +90,32 @@ const DebtStatus = () => {
   /**
    * Fetches the total number of users from the backend.
    */
-  const getTotalUser = async () => {
-    if (!backendActor) {
-      console.error("Error: Backend actor is not initialized.");
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const totalUser = await backendActor.get_total_users();
-      setTotalUsers(totalUser);
-    } catch (error) {
-      console.error("Error fetching total users:", error);
-      throw error;
-    }
-  };
+    const getAllUsers = async () => {
+      if (!backendActor) {
+        console.error("Backend actor not initialized");
+        return;
+      }
+  
+      try {
+        const allUsers = await backendActor.get_all_users();
+        console.log("Retrieved Users:", allUsers);
+  
+        // ✅ Use a Set to Store Unique Users
+        const uniqueUsers = new Map();
+  
+        for (const user of allUsers) {
+          uniqueUsers.set(user[0], user); // Use Map to ensure unique values
+        }
+  
+        setUsers([...uniqueUsers.values()]); // ✅ Convert Map back to array & update state
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+  
+    useEffect(() => {
+      getAllUsers();
+    }, []);
 
   /**
    * Fetches a list of users eligible for liquidation.
@@ -106,33 +123,260 @@ const DebtStatus = () => {
    * @param {number} pageSize - The number of users per page.
    * @returns {Promise<Array>} - Returns an array of liquidation users.
    */
-  const fetchLiquidationUsers = async (totalPages, pageSize) => {
-    try {
-      const result = await backendActor.get_liquidation_users_concurrent(
-        totalPages,
-        pageSize
-      );
-      const parsedResult = result.map(
-        ([principal, userAccountData, userData]) => ({
-          principal: Principal.fromUint8Array(principal),
-          collateral: userAccountData.collateral,
-          debt: userAccountData.debt,
-          ltv: userAccountData.ltv,
-          liquidationThreshold: userAccountData.liquidation_threshold,
-          healthFactor: userAccountData.health_factor,
-          availableBorrow: userAccountData.available_borrow,
-          hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
-          userData: userData,
+  useEffect(() => {
+    console.log("User:", user);
+    console.log("Users:", users);
+    console.log("UserAccountData:", userAccountData);
+  
+    if (
+      users &&
+      Array.isArray(users) &&
+      Object.keys(userAccountData || {}).length === users.length
+    ) {
+      const filtered = users
+        .map((item) => {
+          if (!item || !item[0]) return null;
+  
+          const principal = item[0];
+          const accountData = userAccountData?.[principal];
+  
+          // ✅ Fix `totalDebt` to prevent NaN
+          const totalDebt = Number(accountData?.Ok?.[1] || 0n) / 1e8;
+          const healthFactor = accountData
+            ? Number(accountData?.Ok?.[4] || 0n) / 1e10
+            : 0;
+  
+          return {
+            reserves: item[1]?.reserves || [],
+            principal: principal,
+            healthFactor: healthFactor,
+            item,
+            totalDebt,
+          };
         })
-      );
-
-      return parsedResult;
-    } catch (error) {
-      console.error("Error fetching liquidation users:", error);
-      throw error;
+        .filter(
+          (mappedItem) =>
+            mappedItem &&
+            mappedItem.healthFactor > 1 &&
+            mappedItem.principal.toText() !== user.toText() && // ✅ Fix `.toString()` issue
+            mappedItem.totalDebt > 0
+        );
+  
+      setFilteredUsers(filtered);
+      console.log("Filtered Users:", filtered);
     }
-  };
-
+  }, [users, userAccountData, user]);
+  
+  /**
+   * Fetches and caches user account data to avoid redundant API calls.
+   * @param {Object} userData - The user data object.
+   */
+  console.log("filteredUsers",filteredUsers)
+ const fetchUserAccountDataWithCache = async (principal) => {
+     if (backendActor && isAuthenticated) {
+       const principalString = principal.toString();
+ 
+       const userBalance = assetBalances[principalString];
+       if (!userBalance) {
+         return;
+       }
+       console.log("userBalance before function:", userBalance);
+ 
+       if (cachedData.current[principalString]) {
+         setUserAccountData((prev) => ({
+           ...prev,
+           [principalString]: cachedData.current[principalString],
+         }));
+         return;
+       }
+ 
+       try {
+         if (!principalString || cachedData.current[principalString]) return;
+ 
+         const principalObj = Principal.fromText(principalString);
+ 
+         if (!userBalance) {
+           console.error(
+             "No data found for userBalance for this principal:",
+             principalString
+           );
+ 
+           return;
+         }
+         const user = users.find(
+           ([userPrincipal]) => userPrincipal.toString() === principalString
+         );
+ 
+         if (user) {
+           const userInfo = user[1];
+           console.log("userInfo", userInfo);
+ 
+           const reserves = userInfo?.reserves?.flat() || [];
+           console.log("reserves:", reserves);
+ 
+           let assetBalancesObj = [];
+           let borrowBalancesObj = [];
+ 
+           reserves.forEach(([asset, assetInfo]) => {
+             console.log("assetInfo:", assetInfo);
+ 
+             const assetBalances = BigInt(
+               userBalance?.[asset]?.dtokenBalance || 0
+             );
+             const borrowBalances = BigInt(
+               userBalance?.[asset]?.debtTokenBalance || 0
+             );
+ 
+             if (assetBalances > 0n) {
+               assetBalancesObj.push({
+                 balance: assetBalances,
+                 name: asset,
+               });
+             }
+             if (borrowBalances > 0n) {
+               borrowBalancesObj.push({
+                 balance: borrowBalances,
+                 name: asset,
+               });
+             }
+           });
+ 
+           const assetBalancesParam =
+             assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
+           const borrowBalancesParam =
+             borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
+ 
+           const result = await backendActor.get_user_account_data(
+             [principalObj],
+             assetBalancesParam,
+             borrowBalancesParam
+           );
+ 
+           console.log("Backend result:", result);
+ 
+           if (result?.Err === "ERROR :: Pending") {
+             console.warn("Pending state detected. Retrying...");
+             setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
+             return;
+           }
+ 
+           if (result?.Ok) {
+             cachedData.current[principalString] = result;
+             setUserAccountData((prev) => ({
+               ...prev,
+               [principalString]: result,
+             }));
+           }
+         } else {
+           console.error("User not found for principal:", principalString);
+         }
+       } catch (error) {
+         console.error("Error fetching user account data:", error.message);
+       } finally {
+       }
+     }
+   };
+ 
+   useEffect(() => {
+    console.log("useEffect triggered");
+    console.log("Users:", users);
+    console.log("Total users:", users?.length);
+    console.log("Asset balance:", assetBalances);
+  
+    if (!users || users.length === 0) {
+      console.log("No users found, exiting useEffect.");
+      return;
+    }
+  
+    // ✅ Filter users with Health Factor < 1 before processing
+    const filteredUsers = users.filter(([principal, userData]) => {
+      const rawHealthFactor = userAccountData?.[principal]?.Ok?.[4] || 0n; // Get raw value
+      const healthFactor = rawHealthFactor >= 340282366920938463463374607431768211455n
+        ? Infinity // Convert max BigInt to Infinity
+        : Number(rawHealthFactor) / 1e10; // Otherwise, process normally
+    
+      console.log(`User: ${principal}, Health Factor: ${healthFactor}`);
+    
+      return healthFactor < 1; // ✅ Correctly filters non-infinity users
+    });
+    
+  
+    console.log(`Filtered Users (Health Factor < 1): ${filteredUsers.length}`);
+  
+    if (filteredUsers.length === 0) {
+      console.log("No users found with health factor < 1, skipping processing.");
+      return;
+    }
+  
+    // Dynamically determine batch size based on filtered user count
+    const totalUsers = filteredUsers.length;
+    let batchSize;
+  
+    if (totalUsers >= 10000) {
+      batchSize = 1000;
+    } else if (totalUsers >= 5000) {
+      batchSize = 500;
+    } else if (totalUsers >= 2000) {
+      batchSize = 100;
+    } else {
+      batchSize = 100; // ✅ Reduced batch size for better control
+    }
+  
+    console.log(`Batch size determined: ${batchSize}`);
+  
+    const userChunks = [];
+    for (let i = 0; i < totalUsers; i += batchSize) {
+      userChunks.push(filteredUsers.slice(i, i + batchSize));
+    }
+  
+    console.log(`Total batches created: ${userChunks.length}`);
+  
+    // ✅ Limit concurrency per batch (process all batches together, but queue inside each batch)
+    const processBatchesInParallelWithQueue = async () => {
+      try {
+        await Promise.all(
+          userChunks.map(async (batch, batchIndex) => {
+            console.log(
+              `🚀 Starting Batch ${batchIndex + 1} (size: ${batch.length})`
+            );
+  
+            // Each batch gets its own `p-limit(1)` to process requests **one by one** inside the batch
+            const batchQueue = pLimit(1);
+  
+            await Promise.all(
+              batch.map(([principal]) =>
+                batchQueue(async () => {
+                  if (principal) {
+                    console.log(
+                      `Requesting data for: ${principal} in Batch ${
+                        batchIndex + 1
+                      }`
+                    );
+                    await fetchUserAccountDataWithCache(principal);
+                    console.log(
+                      `✅ Completed request for: ${principal} in Batch ${
+                        batchIndex + 1
+                      }`
+                    );
+                  }
+                })
+              )
+            );
+  
+            console.log(`✅ Completed Batch ${batchIndex + 1}`);
+          })
+        );
+  
+        console.log("🎉 All batches completed!");
+      } catch (error) {
+        console.error("❌ Error in processing batches:", error);
+      }
+    };
+  
+    processBatchesInParallelWithQueue();
+  }, [users, assetBalances, userAccountData]); // ✅ Added `userAccountData` to dependencies
+  
+console.log("userAccountData",userAccountData)
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -143,77 +387,111 @@ const DebtStatus = () => {
   };
 
   const relevantItems = liquidationUsers.filter((item) => {
-    console.log("Item:", item.debt);
+    console.log("Item:", item); // ✅ Check full structure
+  
+    if (!Array.isArray(item) || item.length < 2) return false; // ✅ Ensure valid structure
+  
+    const principalObj = item[0]; // ✅ Extract `Principal` correctly
+    if (!principalObj || typeof principalObj.toText !== "function") return false; // ✅ Ensure it's valid
+  
+    const principal = principalObj.toText(); // ✅ Convert Principal properly
+    const userData = item[1]; // ✅ User's financial data
+  
+    // ✅ Ensure `total_debt` and `total_collateral` exist & are arrays
+    const debt = Array.isArray(userData.total_debt) && userData.total_debt.length > 0 ? userData.total_debt[0] : 0n;
+    const collateral = Array.isArray(userData.total_collateral) && userData.total_collateral.length > 0 ? userData.total_collateral[0] : 0n;
+  
+    // ✅ Debug logs
+    console.log(`Principal: ${principal}, User: ${user.toString()}`);
+    console.log(`Debt: ${debt}, Collateral: ${collateral}`);
+  
     return (
-      item.principal?._arr.toText() !== user.toString() &&
-      item.debt !== 0n &&
-      item.collateral !== 0n
+      principal !== user.toString() && // ✅ Compare properly
+      debt !== 0n && 
+      collateral !== 0n
     );
   });
+  
+  console.log("Final relevantItems:", relevantItems);
+  
 
   const ITEMS_PER_PAGE = 8;
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
+console.log("currentItems",currentItems)
+  
+useEffect(() => {
+    if (users.length > 0) {
+      fetchAssetData();
+    }
+  }, [users, assets]);
 
-  const fetchAssetData = async () => {
+const fetchAssetData = async () => {
     const balances = {};
+    const totalUsers = users.length;
+    let batchSize;
 
-    await Promise.all(
-      currentItems.map(async (mappedItem) => {
-        const principal = mappedItem.principal?._arr;
+    if (totalUsers >= 10000) {
+      batchSize = 1000;
+    } else if (totalUsers >= 5000) {
+      batchSize = 500;
+    } else if (totalUsers >= 2000) {
+      batchSize = 100;
+    } else {
+      batchSize = 100; // If fewer users, process all at once
+    }
+ // Adjust this based on your system's capacity
+
+    const processUsersInBatches = async (usersBatch) => {
+      for (const [principal, userData] of usersBatch) {
+        if (!principal) continue;
+
         const userBalances = {};
 
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
+            console.log("reserveDataForAsset", reserveDataForAsset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
             const debtTokenId =
               reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+            console.log("dtokenId", dtokenId);
 
             const assetBalance = {
               dtokenBalance: null,
               debtTokenBalance: null,
             };
 
-            const account = { owner: principal, subaccount: [] };
+            try {
+              const formattedPrincipal = Principal.fromText(
+                principal.toString()
+              );
+              const account = { owner: formattedPrincipal, subaccount: [] };
 
-            if (dtokenId) {
-              const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-              if (dtokenActor) {
-                try {
+              if (dtokenId) {
+                const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+                if (dtokenActor) {
                   const balance = await dtokenActor.icrc1_balance_of(account);
-                  const formattedBalance = Number(balance);
-                  assetBalance.dtokenBalance = formattedBalance;
-                } catch (error) {
-                  console.error(
-                    `Error fetching dtoken balance for ${asset}:`,
-                    error
-                  );
+                  assetBalance.dtokenBalance = Number(balance);
                 }
               }
-            }
 
-            if (debtTokenId) {
-              const debtTokenActor = createLedgerActor(
-                debtTokenId,
-                idlFactory1
-              );
-              if (debtTokenActor) {
-                try {
+              if (debtTokenId) {
+                const debtTokenActor = createLedgerActor(
+                  debtTokenId,
+                  idlFactory1
+                );
+                if (debtTokenActor) {
                   const balance = await debtTokenActor.icrc1_balance_of(
                     account
                   );
-                  const formattedBalance = Number(balance);
-                  assetBalance.debtTokenBalance = formattedBalance;
-                } catch (error) {
-                  console.error(
-                    `Error fetching debt token balance for ${asset}:`,
-                    error
-                  );
+                  assetBalance.debtTokenBalance = Number(balance);
                 }
               }
+            } catch (error) {
+              console.error(`Error processing balances for ${asset}:`, error);
             }
 
             userBalances[asset] = assetBalance;
@@ -221,11 +499,23 @@ const DebtStatus = () => {
         );
 
         balances[principal] = userBalances;
-      })
-    );
 
-    setAssetBalances(balances);
+        // ✅ Update state progressively to avoid UI freeze
+        setAssetBalances((prevBalances) => ({
+          ...prevBalances,
+          [principal]: userBalances,
+        }));
+      }
+    };
+
+    // ✅ Process users in batches
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      await processUsersInBatches(batch);
+    }
   };
+
+  
 
   const getBalanceForPrincipalAndAsset = (
     principal,
@@ -324,9 +614,14 @@ const DebtStatus = () => {
     }
   };
 
-  const truncateText = (text, length) => {
-    return text.length > length ? text.substring(0, length) + "..." : text;
+  const truncateText = (text, maxLength) => {
+    if (!text || typeof text !== "string") {
+      return ""; // ✅ Return an empty string if text is undefined or not a string
+    }
+  
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
+  
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -346,53 +641,32 @@ const DebtStatus = () => {
    *                                  EFFECTS
    * =================================================================================== */
 
+ 
+
+  
+
+  
   useEffect(() => {
-    (async () => {
-      try {
-        await getTotalUser();
-      } catch (error) {
-        console.error("Failed to fetch total users:", error.message);
+    if (!userAccountData || Object.keys(userAccountData).length === 0) return;
+
+    const updatedHealthFactors = {};
+
+    Object.entries(userAccountData).forEach(([principal, data]) => {
+      if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
+        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
+      } else {
+        updatedHealthFactors[principal] = null;
       }
-    })();
-  }, []);
+    });
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersData = await getAllUsers();
-        setUsers(usersData);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-    fetchUsers();
-  }, [getAllUsers, liquidateTrigger]);
+    console.log(
+      " Updated Health Factors (Divided by 1e8):",
+      updatedHealthFactors
+    );
+    setHealthFactors(updatedHealthFactors);
+  }, [userAccountData]);
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      setLiquidationLoading(true);
-      try {
-        const usersPerPage = 10;
-        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-
-        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
-        setLiquidationUsers(data);
-      } catch (err) {
-        console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later.");
-      } finally {
-        setLiquidationLoading(false);
-      }
-    };
-
-    loadUsers();
-  }, [totalUsers, liquidateTrigger]);
-
-  useEffect(() => {
-    if (currentItems.length > 0) {
-      fetchAssetData();
-    }
-  }, [liquidationUsers, assets, users, liquidateTrigger]);
+ 
 
   useEffect(() => {
     const fetchSupplyData = async () => {

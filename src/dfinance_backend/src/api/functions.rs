@@ -519,7 +519,7 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
     Ok(Nat::from(api::canister_balance128()))
 }
 
-const REQUEST_LIMIT: u32 = 2;// Maximum allowed requests within the defined time window
+const REQUEST_LIMIT: u32 = 100;// Maximum allowed requests within the defined time window
 const TIME_WINDOW: u64 = 3600; // Time window in seconds (one hour)
 const BLOCK_DURATION: u64 = 43200; // Block duration in seconds (12 hours = 43200 seconds)
 

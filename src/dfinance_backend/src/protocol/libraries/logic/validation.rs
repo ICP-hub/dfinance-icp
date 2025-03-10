@@ -8,7 +8,7 @@ use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{get_asset_debt, get_cached_exchange_rate, user_normalized_supply};
+use crate::{get_asset_debt, get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
 
 pub struct ValidationLogic;
@@ -640,7 +640,15 @@ impl ValidationLogic {
             }
         };
 
-        if repay_amount > debt_amount {
+        let normalized_debt_amount  = debt_amount.clone()
+            .scaled_mul(user_normalized_debt(repay_reserve_data.clone()).unwrap());
+
+        ic_cdk::println!("normalizesd {:?}", normalized_debt_amount);
+
+        ic_cdk::println!("User debt: {:?}", debt_amount);
+        ic_cdk::println!("Repay amount: {:?}", repay_amount);
+
+        if repay_amount > normalized_debt_amount {
             return Err(Error::InvalidAmount);
         }
 

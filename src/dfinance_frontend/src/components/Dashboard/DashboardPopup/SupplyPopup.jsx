@@ -13,6 +13,7 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * SupplyPopup Component
@@ -48,7 +49,7 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_supply");
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
@@ -72,7 +73,6 @@ const SupplyPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -299,7 +299,7 @@ const SupplyPopup = ({
       };
 
       const response = await backendActor.execute_supply(supplyParams);
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in response) {
         trackEvent(
@@ -374,7 +374,6 @@ const SupplyPopup = ({
             console.error(
               "You are temporarily blocked from using this function"
             );
-            // handleBlockedError();
 
             toast.error(
               "You are temporarily blocked from using this function",
@@ -613,35 +612,6 @@ const SupplyPopup = ({
     amount,
     usdValue,
   ]);
-
-  useEffect(() => {
-    const blockedData = JSON.parse(localStorage.getItem("blockedData")) || {};
-  
-    if (blockedData[principal]) {
-      const { blockedUntil } = blockedData[principal];
-  
-      if (new Date().getTime() < blockedUntil) {
-        setIsBlocked(true);
-      } else {
-        setIsBlocked(false);
-        delete blockedData[principal]; // Cleanup expired block for this principal
-        localStorage.setItem("blockedData", JSON.stringify(blockedData));
-      }
-    }
-  }, [principal]); // Runs whenever the principal changes
-
-  const handleBlockedError = () => {
-    const blockedData = JSON.parse(localStorage.getItem("blockedData")) || {};
-  
-    blockedData[principal] = {
-      blockedUntil: new Date().getTime() + 12 * 60 * 60 * 1000, // 12 hours from now
-    };
-  
-    localStorage.setItem("blockedData", JSON.stringify(blockedData));
-    setIsBlocked(true);
-  };
-  
-  
 
   useEffect(() => {
     if (amount && conversionRate) {
@@ -985,4 +955,3 @@ const SupplyPopup = ({
 };
 
 export default SupplyPopup;
-

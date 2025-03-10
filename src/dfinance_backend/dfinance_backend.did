@@ -196,7 +196,7 @@ service : (principal) -> {
   get_exchange_rates : (text, opt text, nat) -> (Result_7);
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
-    ) query;
+    );
   get_lock : () -> (Result_8) query;
   get_reserve_data : (text) -> (Result_9) query;
   get_total_supply : (principal) -> (Result_4) query;
@@ -208,6 +208,7 @@ service : (principal) -> {
     ) -> (Result_2) query;
   get_user_data : (principal) -> (Result_3) query;
   initialize : (text, ReserveData) -> (Result_1);
+  is_function_blocked : (text) -> (Result_8) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
   remove_blocked_function : (principal, text) -> (Result_1);

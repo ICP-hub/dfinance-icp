@@ -60,4 +60,4 @@ RESERVE_DATA="(
 )"
 
 # Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" --ic && dfx canister call $CANISTER_NAME update_reserves_price --ic
+dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" --ic  --ic

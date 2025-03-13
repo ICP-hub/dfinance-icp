@@ -8,7 +8,7 @@ use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{get_asset_debt, get_cached_exchange_rate, user_normalized_supply};
+use crate::{get_asset_debt, get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
 
 pub struct ValidationLogic;
@@ -640,8 +640,16 @@ impl ValidationLogic {
             }
         };
 
-        if repay_amount > debt_amount {
-            return Err(Error::InvalidAmount);
+        let normalized_debt_amount  = debt_amount.clone()
+            .scaled_mul(user_normalized_debt(repay_reserve_data.clone()).unwrap());
+
+        ic_cdk::println!("normalizesd {:?}", normalized_debt_amount);
+
+        ic_cdk::println!("User debt: {:?}", debt_amount);
+        ic_cdk::println!("Repay amount: {:?}", repay_amount);
+
+        if repay_amount > normalized_debt_amount {
+            return Err(Error::RepayMoreThanDebt);
         }
 
         let repay_ledger_canister_id = read_state(|state| {
@@ -661,7 +669,7 @@ impl ValidationLogic {
         };
 
         if liquidator_wallet_balance < repay_amount {
-            return Err(Error::MaxAmount);
+            return Err(Error::LowWalletBalance);
         }
 
         let mut total_collateral = Nat::from(0u128);
@@ -692,7 +700,7 @@ impl ValidationLogic {
         }
 
         if total_collateral < reward_amount {
-            return Err(Error::LessRewardAmount);
+            return Err(Error::RewardIsHigher);
         }
 
         if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {

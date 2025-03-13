@@ -99,41 +99,64 @@ const DashboardNav = () => {
  
 
   const [netApy, setNetApy] = useState(() => {
-    if (!principal) return "-"; // If no principal, return "-"
+    if (!principal) return "0.00%"; // Default value if no principal
   
-    // Retrieve netApy only for the active principal
-    const storedNetApy = getStoredValue("netApy", principal, null);
+    const storageKey = `netApy_${principal}`;
+    const storedValue = sessionStorage.getItem(storageKey);
   
-    // If stored value is exactly "<0.01%", return it as is
-    if (storedNetApy === "<0.01%") {
-      return "<0.01%";
-    }
-  
-    // Ensure we handle numbers correctly, removing "%" if present
-    const numericValue =
-      storedNetApy !== null && storedNetApy.includes("%")
-        ? parseFloat(storedNetApy.replace("%", ""))
-        : parseFloat(storedNetApy);
-  
-    // If valid number and less than 0.01, return "<0.01%", otherwise return formatted value
-    return !isNaN(numericValue)
-      ? numericValue < 0.01
-        ? "<0.01%"
-        : numericValue
-      : "-";
+    return storedValue ? `${parseFloat(storedValue).toFixed(4)}%` : "0.00%";
   });
   
-  
-  
-  
-  
-  
-  // Function to format netApy
-  // Function to format netApy
+  const prevNetApy = useRef("-"); // Store last valid APY
+
   const formatNetApy = (apy) => {
-    const num = parseFloat(apy); 
-    return isNaN(num) ? "-" : num.toFixed(4);
+    const num = parseFloat(apy);
+  
+    if (isNaN(num)) return prevNetApy.current || "-"; // 🔥 Fallback if NaN
+    if (num === 0) return prevNetApy.current || "-"; // 🔥 Never show 0.00%
+    if (num <= 0.01) return "<0.01%"; // ✅ Show "<0.01%" for 0.01 or lower
+  
+    return `${num.toFixed(4)}%`;
   };
+  
+
+// ✅ Initialize from sessionStorage if available
+useEffect(() => {
+  if (principal) {
+    const storageKey = `netApy_${principal}`;
+    const storedValue = sessionStorage.getItem(storageKey);
+
+    if (storedValue && !isNaN(parseFloat(storedValue))) {
+      const formattedStoredValue = formatNetApy(storedValue);
+      setNetApy(formattedStoredValue);
+      prevNetApy.current = formattedStoredValue; // ✅ Store last valid APY
+    }
+  }
+}, [principal]);
+
+// ✅ Keep sessionStorage updated, never storing 0.00%
+useEffect(() => {
+  if (principal && netApy !== "-" && !isNaN(parseFloat(netApy))) {
+    const storageKey = `netApy_${principal}`;
+    const numericNetApy = parseFloat(netApy);
+
+    if (numericNetApy > 0 || netApy === "<0.01%") { // 🔥 Store only positive values or "<0.01%"
+      console.log("Updating session storage:", numericNetApy);
+      sessionStorage.setItem(storageKey, numericNetApy.toString());
+      prevNetApy.current = formatNetApy(numericNetApy); // ✅ Save last valid APY
+    }
+
+    setWalletDetailTab((prevTab) =>
+      prevTab.map((item) =>
+        item.id === 1 && item.count !== formatNetApy(numericNetApy)
+          ? { ...item, count: formatNetApy(numericNetApy) }
+          : item
+      )
+    );
+  }
+}, [dashboardRefreshTrigger, principal, netApy]);
+
+
   
   
 
@@ -289,7 +312,7 @@ const DashboardNav = () => {
     }
     return `noBorrow`;
   };
-
+  
   useEffect(() => {
     if (
       totalUsdValueSupply !== undefined &&
@@ -300,12 +323,12 @@ const DashboardNav = () => {
   
       // Retrieve the stored net worth from sessionStorage
       const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
-      const parsedStoredNetWorth = storedNetWorth ? JSON.parse(storedNetWorth) : null;
+      const parsedStoredNetWorth = storedNetWorth ? JSON.parse(storedNetWorth) : 0.00;
   
       setNetWorth((prev) => {
         let newValue =
-          prev === null && totalUsdValueSupply === 0 && totalUsdValueBorrow === 0
-            ? "-"
+          totalUsdValueSupply === 0 && totalUsdValueBorrow === 0
+            ? 0.00 // Ensure net worth is set to 0 instead of "-"
             : calculatedNetWorth;
   
         // If the new value is 0 and there's a stored value, keep the stored value
@@ -314,14 +337,14 @@ const DashboardNav = () => {
         }
   
         // Update sessionStorage only if the value changes and is not 0
-        if (newValue !== prev && newValue !== 0) {
+        if (newValue !== prev) {
           sessionStorage.setItem(`netWorth_${principal}`, JSON.stringify(newValue));
         }
   
         return newValue;
       });
   
-      // Use parsedStoredNetWorth if calculatedNetWorth is 0
+      // Ensure UI displays "$0.00" instead of "-"
       const displayNetWorth =
         calculatedNetWorth === 0 && parsedStoredNetWorth !== null
           ? parsedStoredNetWorth
@@ -332,15 +355,12 @@ const DashboardNav = () => {
           item.id === 0
             ? {
                 ...item,
-                count:
-                  netWorth === "-" && totalUsdValueSupply === 0 && totalUsdValueBorrow === 0
-                    ? "-"
-                    : (
-                        <>
-                          <span style={{ fontWeight: "lighter" }}>$</span>
-                          {formatNumber(displayNetWorth)}
-                        </>
-                      ),
+                count: (
+                  <>
+                    <span style={{ fontWeight: "lighter" }}>$</span>
+                    {formatNumber(displayNetWorth, 2)}
+                  </>
+                ),
               }
             : item
         )
@@ -350,8 +370,8 @@ const DashboardNav = () => {
   
   
   
-  
-  
+
+ 
 
   const getConversionRate = (asset) => {
     switch (asset) {
@@ -382,49 +402,64 @@ const DashboardNav = () => {
       let weightedDebtApySum = 0;
       let numerator = 0;
       let denominator = 0;
-
+  
       reserves.forEach((reserve) => {
         const assetKey = reserve[0];
+  
         if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok)
           return;
-        const conversionRate = getConversionRate(assetKey);
+  
+        const conversionRate = getConversionRate(assetKey) || 0;
         const supplyApy =
-          Number(reserveData[assetKey].Ok.current_liquidity_rate || 0n) /
+          (Number(reserveData[assetKey].Ok.current_liquidity_rate) || 0) /
           100000000;
         const debtApy =
-          Number(reserveData[assetKey].Ok.borrow_rate || 0n) / 100000000;
-        const currentLiquidity = userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === assetKey
-        )?.[1]?.liquidity_index;
+          (Number(reserveData[assetKey].Ok.borrow_rate) || 0) / 100000000;
+  
+        const currentLiquidity =
+          userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey)
+            ?.[1]?.liquidity_index || 1; // 🔥 Avoid division by zero
+  
         const assetBalance =
           assetBalances?.find((balance) => balance.asset === assetKey)
             ?.dtokenBalance || 0;
+  
         const assetSupply =
-          (Number(assetBalance) * Number(getAssetSupplyValue(assetKey))) /
-            Number(currentLiquidity) || 0;
-        const DebtIndex = userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === assetKey
-        )?.[1]?.variable_borrow_index;
+          (Number(assetBalance) * Number(getAssetSupplyValue(assetKey) || 0)) /
+          Number(currentLiquidity) || 0;
+  
+        const DebtIndex =
+          userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey)
+            ?.[1]?.variable_borrow_index || 1; // 🔥 Avoid division by zero
+  
         const assetBorrowBalance =
           assetBalances.find((balance) => balance.asset === assetKey)
             ?.debtTokenBalance || 0;
+  
         const assetBorrowed =
-          (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey))) /
-            Number(DebtIndex) || 0;
+          (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey) || 0)) /
+          Number(DebtIndex) || 0;
+  
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD += assetBorrowedInUSD;
         weightedDebtApySum += assetBorrowedInUSD * debtApy;
+  
         const assetSupplyInUSD = assetSupply * conversionRate;
         totalSuppliedInUSD += assetSupplyInUSD;
         weightedApySum += assetSupplyInUSD * supplyApy;
+  
         numerator += weightedApySum - weightedDebtApySum;
         denominator += totalSuppliedInUSD;
       });
-
-      return denominator > 0 ? numerator / denominator : 0;
+  
+      if (denominator === 0) return NaN; // 🚀 Return NaN instead of 0 to ensure "-" is displayed
+  
+      const netApy = numerator / denominator;
+      return netApy < 0.0001 ? 0.0001 : netApy; // ✅ Never return 0, instead set a minimum threshold
     },
     [reserveData, assetBalances]
   );
+  
 
   const handleOpenPopup = () => {
     setIsPopupOpen(true);
@@ -469,32 +504,33 @@ const DashboardNav = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-  useEffect(() => {
-    if (principal && netApy !== "-" && netApy !== null && !isNaN(parseFloat(netApy))) {
-      // Get stored value (always a string)
-      const storedValue = sessionStorage.getItem(`netApy_${principal}`);
+
+  // useEffect(() => {
+  //   if (principal && netApy !== "-" && netApy !== null && !isNaN(parseFloat(netApy))) {
+  //     // Get stored value (always a string)
+  //     const storedValue = sessionStorage.getItem(`netApy_${principal}`);
   
-      // Format the current netApy properly
-      let formattedNetApy = parseFloat(netApy) < 0.01 ? "<0.01%" : `${parseFloat(netApy).toFixed(4)}%`;
+  //     // Format the current netApy properly
+  //     let formattedNetApy = parseFloat(netApy) < 0.01 ? "<0.01%" : `${parseFloat(netApy).toFixed(4)}%`;
   
-      console.log("Stored Value:", storedValue, "Formatted Net Apy:", formattedNetApy); // Debugging
+  //     console.log("Stored Value:", storedValue, "Formatted Net Apy:", formattedNetApy); // Debugging
   
-      // Only update if the formatted value is different from the stored value
-      if (storedValue !== formattedNetApy) {
-        console.log("Updating session storage:", formattedNetApy);
-        sessionStorage.setItem(`netApy_${principal}`, formattedNetApy);
-      }
+  //     // Only update if the formatted value is different from the stored value
+  //     if (storedValue !== formattedNetApy) {
+  //       console.log("Updating session storage:", formattedNetApy);
+  //       sessionStorage.setItem(`netApy_${principal}`, formattedNetApy);
+  //     }
   
-      // Update wallet details only if necessary
-      setWalletDetailTab((prevTab) =>
-        prevTab.map((item) =>
-          item.id === 1 && item.count !== formattedNetApy
-            ? { ...item, count: formattedNetApy }
-            : item
-        )
-      );
-    }
-  }, [ dashboardRefreshTrigger, principal]);
+  //     // Update wallet details only if necessary
+  //     setWalletDetailTab((prevTab) =>
+  //       prevTab.map((item) =>
+  //         item.id === 1 && item.count !== formattedNetApy
+  //           ? { ...item, count: formattedNetApy }
+  //           : item
+  //       )
+  //     );
+  //   }
+  // }, [ dashboardRefreshTrigger, principal]);
   
   
   
@@ -508,7 +544,7 @@ const DashboardNav = () => {
       const calculatedHealthFactor =
         Number(healthFactorBackend) > 100
           ? "♾️"
-          : (Number(truncatedValue));
+          : parseFloat(Number(truncatedValue));
 
       setHealthFactor((prev) => {
         const newValue =
@@ -593,30 +629,43 @@ const DashboardNav = () => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
-        const calculatedNetApy = calculateNetSupplyApy(
-          reservesData,
-          reserveData
-        );
-        setNetApy(calculatedNetApy*100);
+        const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
+  
+        console.log("Raw Net APY:", calculatedNetApy); // 🔍 Debugging log
+  
+        // 🚀 Keep showing "-" until we get a valid number
+        if (!calculatedNetApy || isNaN(calculatedNetApy)) {
+          console.log("Waiting for valid Net APY...");
+          setNetApy("-"); 
+          return;
+        }
+  
+        const formattedApy = calculatedNetApy * 100;
+        console.log("Formatted Net APY:", formattedApy); // 🔍 Debugging log
+  
+        setNetApy(formattedApy < 0.01 ? "<0.01%" : formattedApy.toFixed(4) + "%"); 
+  
         let totalBorrow = 0;
-
         reservesData.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
           const reserve = reserveGroup[1];
           const currentLiquidity = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.liquidity_index;
+  
+          console.log("Asset:", asset, "Liquidity Index:", currentLiquidity); // 🔍 Debugging log
+  
           const assetBalance =
             assetBalances?.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0;
           const supply =
             (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
               Number(currentLiquidity) || 0;
-
+  
           if (supply) {
             setAssetSupply(supply);
           }
-
+  
           const DebtIndex = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.variable_borrow_index;
@@ -626,19 +675,19 @@ const DashboardNav = () => {
           const borrow =
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
               Number(DebtIndex) || 0;
-
+  
+          console.log("Asset Borrow:", asset, "Debt Index:", DebtIndex, "Borrow:", borrow); // 🔍 Debugging log
+  
           if (borrow > 0) {
             totalBorrow += borrow;
           }
         });
-
-        if (totalBorrow > 0) {
-          setAssetBorrow(totalBorrow);
-        } else {
-          setAssetBorrow(0);
-        }
+  
+        console.log("Total Borrow:", totalBorrow); // 🔍 Debugging log
+  
+        setAssetBorrow(totalBorrow > 0 ? totalBorrow : 0);
       };
-
+  
       updateState();
     }
   }, [
@@ -648,6 +697,9 @@ const DashboardNav = () => {
     assetBalances,
     dashboardRefreshTrigger,
   ]);
+  
+  
+  
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
@@ -838,7 +890,6 @@ const DashboardNav = () => {
                         : []
                       : walletDetailTabs
                     ).map((data, index) => {
-                      console.log("assetBorrow", assetBorrow);
                       if (data.title === "Health Factor" && assetBorrow === 0) {
                         return null;
                       }

@@ -542,7 +542,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     // Check if user is blocked for this specific function
     let is_blocked = mutate_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(function_name).cloned())
             .map(|details| details.blocked_time > current_time_stamp)
@@ -551,7 +551,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
     let tocheck = read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(function_name).cloned())
     });
@@ -570,7 +570,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     // Retrieve user's request history
     let mut user_requests = mutate_state(|state| {
         state
-            .requests
+            .userrequests
             .get(&caller_id)
             .map(|candid| candid.0.clone())
             .unwrap_or_default()
@@ -614,7 +614,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
         // Retrieve existing blocked functions or create new map
         let mut blocked_functions = mutate_state(|state| {
             state
-                .blocked_users
+                .restrict_users
                 .get(&caller_id)
                 .map(|candid| candid.0.clone())
                 .unwrap_or_default()
@@ -631,7 +631,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
         // Save updated blocked functions list
         mutate_state(|state| {
             state
-                .blocked_users
+                .restrict_users
                 .insert(caller_id, Candid(blocked_functions));
         });
 
@@ -640,7 +640,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
         // Save updated request history
         mutate_state(|state| {
-            state.requests.insert(caller_id, Candid(user_requests));
+            state.userrequests.insert(caller_id, Candid(user_requests));
         });
 
         return Err(Error::BLOCKEDFORONEHOUR);
@@ -651,7 +651,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
     // Save the updated request history
     mutate_state(|state| {
-        state.requests.insert(caller_id, Candid(user_requests));
+        state.userrequests.insert(caller_id, Candid(user_requests));
     });
 
     ic_cdk::println!(
@@ -679,7 +679,7 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
 
     Ok(read_state(|state| {
         state
-            .requests
+            .userrequests
             .get(&caller_id)
             .map(|candid| {
                 candid
@@ -707,7 +707,7 @@ pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>
     }
     Ok(read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .map(|candid| {
                 candid
@@ -734,7 +734,7 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
     }
 
     mutate_state(|state| {
-        if let Some(mut candid) = state.blocked_users.get(&caller_id) {
+        if let Some(mut candid) = state.restrict_users.get(&caller_id) {
             let blocked_functions = &mut candid.0; // Get the inner BTreeMap
 
             if blocked_functions.remove(&function_name).is_some() {
@@ -746,10 +746,10 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
 
                 // If no functions remain blocked, remove the user from the blocked list
                 if blocked_functions.is_empty() {
-                    state.blocked_users.remove(&caller_id);
+                    state.restrict_users.remove(&caller_id);
                 } else {
                     state
-                        .blocked_users
+                        .restrict_users
                         .insert(caller_id, Candid(blocked_functions.clone()));
                 }
 
@@ -778,7 +778,7 @@ pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
 
     Ok(read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(&function_name).cloned())
             .map(|details| details.blocked_time > current_time_stamp)
@@ -802,7 +802,7 @@ pub fn inspect_message() {
     // Read state to check if the user is blocked from this function
     let is_blocked = read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(&method_name).cloned())
             .map(|details| details.blocked_time > current_time_stamp)

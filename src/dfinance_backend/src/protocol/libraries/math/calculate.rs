@@ -119,11 +119,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  * @param asset The name of the asset whose price needs to be updated.
  */
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
-    if let Err(e) = request_limiter("update_token_price") {
-        ic_cdk::println!("Error limiting error: {:?}", e);
-        return Err(e);
-    }
-
+   
     if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await {
         return Err(e);
     };

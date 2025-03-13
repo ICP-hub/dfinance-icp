@@ -19,12 +19,13 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
+import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 
 const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSupply, assetBorrow, assetBalance, }) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_liquidation");
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
@@ -321,6 +322,19 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
   // Aprove function
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     let ledgerActor;
     if (selectedDebtAsset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -532,6 +546,19 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
   //Liquidation main function call
   const handleConfirmLiquidation = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     setIsLoading(true);
     try {
       const truncateToEightDecimals = (num) => {
@@ -590,7 +617,22 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       } else if ("Err" in result) {
         const errorKey = result.Err;
         const errorMessage = String(errorKey).toLowerCase();
-  
+        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+          console.error("You are temporarily blocked from using this function");
+
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          return; // Stop function execution to prevent further errors
+        }
+
         if (errorKey?.ExchangeRateError === null) {
           toast.error("Price fetch failed", {
             className: "custom-toast",
@@ -1113,9 +1155,14 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
     // Update health factor states
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor> 100 ? "Infinity" : healthFactor.toFixed(2)
-      );
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
   }, [
     mappedItem.collateral,
     mappedItem.debt,

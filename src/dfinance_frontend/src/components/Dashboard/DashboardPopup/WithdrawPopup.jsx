@@ -525,17 +525,21 @@ const WithdrawPopup = ({
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
     console.log("liq_thresh", ltv * 100, tempLiq);
-    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
+    if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
+      console.log("Toast Triggered: LTV Exceeded!");
     }
+
     if (
-      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
+      (healthFactor <= 1 || (assetBorrow > 0 && ltv * 100 >= tempLiq)) &&
       currentCollateralStatus
     ) {
       setIsButtonDisabled(true);
+      console.log("Button Disabled: TRUE");
     } else {
       setIsButtonDisabled(false);
+      console.log("Button Disabled: FALSE");
     }
   }, [
     asset,

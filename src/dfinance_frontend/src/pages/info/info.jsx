@@ -186,11 +186,16 @@ const DashboardCards = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+  
     const response = await backendActor.cycle_checker();
-    console.log("response cycle checker", response);
-    return response.toString();
+    console.log("Raw response from cycle_checker:", response);
+  
+    // Extract value from response
+    const cycles = response.Ok ?? "Error retrieving cycles";
+    console.log("Extracted cycle value:", cycles);
+  
+    return cycles.toString();
   };
-
   /**
    * Sends email notifications when cycle or token thresholds are breached.
    * @param {string} subject - Email subject.
@@ -605,7 +610,7 @@ const DashboardCards = () => {
   
           // Call backend with separate sets for asset and borrow balances
           const result = await backendActor.get_user_account_data(
-            [], // Pass the principal (empty array for the first parameter)
+            [principalObj], // Pass the principal (empty array for the first parameter)
             assetBalancesParam, // Pass asset balances wrapped in an array
             borrowBalancesParam // Pass borrow balances wrapped in an array
           );
@@ -642,7 +647,7 @@ const DashboardCards = () => {
     if (!users || users.length === 0) return;
   
     // Fetch user account data for each user concurrently using Promise.all
-    Promise.all(
+    Promise.all( 
       users.map(([principal]) => {
         if (principal) return fetchUserAccountDataWithCache(principal); // Call for each user
         return null;
@@ -651,7 +656,8 @@ const DashboardCards = () => {
       .then(() => console.log("All user account data fetched"))
       .catch((error) =>
         console.error("Error fetching user account data in batch:", error)
-      );
+      ); 
+    
   }, [users, assetBalance]);
 
   useEffect(() => {

@@ -94,67 +94,83 @@ const DashboardNav = () => {
   const [netWorth, setNetWorth] = useState(() =>
     getStoredValue("netWorth", principal, null)
   );
-  
-
- 
 
   const [netApy, setNetApy] = useState(() => {
-    if (!principal) return "0.00%"; // Default value if no principal
+    if (!principal) return "-"; // Default to "-" if no principal
   
     const storageKey = `netApy_${principal}`;
     const storedValue = sessionStorage.getItem(storageKey);
   
-    return storedValue ? `${parseFloat(storedValue).toFixed(4)}%` : "0.00%";
+    return storedValue && storedValue !== "-" ? `${parseFloat(storedValue).toFixed(4)}%` : "-";
   });
   
   const prevNetApy = useRef("-"); // Store last valid APY
-
+  
   const formatNetApy = (apy) => {
     const num = parseFloat(apy);
   
-    if (isNaN(num)) return prevNetApy.current || "-"; // 🔥 Fallback if NaN
-    if (num === 0) return prevNetApy.current || "-"; // 🔥 Never show 0.00%
-    if (num <= 0.01) return "<0.01%"; // ✅ Show "<0.01%" for 0.01 or lower
+    if (isNaN(num)) return "-"; // 🔥 Always return "-" if NaN
+    if (num === 0) return "-"; // 🔥 Never show 0.00%, always "-"
+    if (num <= 0.01) return "<0.01%"; //  Show "<0.01%" for very small APY
   
     return `${num.toFixed(4)}%`;
   };
   
-
-// ✅ Initialize from sessionStorage if available
-useEffect(() => {
-  if (principal) {
-    const storageKey = `netApy_${principal}`;
-    const storedValue = sessionStorage.getItem(storageKey);
-
-    if (storedValue && !isNaN(parseFloat(storedValue))) {
-      const formattedStoredValue = formatNetApy(storedValue);
-      setNetApy(formattedStoredValue);
-      prevNetApy.current = formattedStoredValue; // ✅ Store last valid APY
+  //  Retrieve stored APY if available
+  useEffect(() => {
+    if (principal) {
+      const storageKey = `netApy_${principal}`;
+      const storedValue = sessionStorage.getItem(storageKey);
+  
+      if (storedValue && !isNaN(parseFloat(storedValue))) {
+        const formattedStoredValue = formatNetApy(storedValue);
+        setNetApy(formattedStoredValue);
+        prevNetApy.current = formattedStoredValue; //  Store last valid APY
+      } else if (storedValue === "-") {
+        setNetApy("-"); //  Ensure "-" is used if stored
+      }
     }
-  }
-}, [principal]);
-
-// ✅ Keep sessionStorage updated, never storing 0.00%
-useEffect(() => {
-  if (principal && netApy !== "-" && !isNaN(parseFloat(netApy))) {
-    const storageKey = `netApy_${principal}`;
-    const numericNetApy = parseFloat(netApy);
-
-    if (numericNetApy > 0 || netApy === "<0.01%") { // 🔥 Store only positive values or "<0.01%"
-      console.log("Updating session storage:", numericNetApy);
-      sessionStorage.setItem(storageKey, numericNetApy.toString());
-      prevNetApy.current = formatNetApy(numericNetApy); // ✅ Save last valid APY
+  }, [principal]);
+  
+  //  Keep sessionStorage updated, ensuring "-" is stored and displayed when applicable
+  useEffect(() => {
+    if (principal) {
+      const storageKey = `netApy_${principal}`;
+      const numericNetApy = parseFloat(netApy);
+  
+      let newValue;
+  
+      //  If netApy is exactly "-", store and display "-"
+      if (netApy === "-") {
+        console.log("Net APY is '-', storing '-' in sessionStorage.");
+        sessionStorage.setItem(storageKey, "-");
+        newValue = "-";
+      }
+      //  If netApy is exactly 0, also store and display "-"
+      else if (numericNetApy === 0) {
+        console.log("Net APY is 0, showing '-' instead.");
+        sessionStorage.setItem(storageKey, "-");
+        newValue = "-";
+      }
+      //  Otherwise, store and display the valid APY
+      else {
+        console.log("Updating session storage:", numericNetApy);
+        sessionStorage.setItem(storageKey, numericNetApy.toString());
+        newValue = formatNetApy(numericNetApy);
+        prevNetApy.current = newValue; //  Save last valid APY
+      }
+  
+      //  Update UI correctly
+      setWalletDetailTab((prevTab) =>
+        prevTab.map((item) =>
+          item.id === 1 ? { ...item, count: newValue } : item
+        )
+      );
     }
+  }, [dashboardRefreshTrigger, principal, netApy]);
+  
 
-    setWalletDetailTab((prevTab) =>
-      prevTab.map((item) =>
-        item.id === 1 && item.count !== formatNetApy(numericNetApy)
-          ? { ...item, count: formatNetApy(numericNetApy) }
-          : item
-      )
-    );
-  }
-}, [dashboardRefreshTrigger, principal, netApy]);
+
 
 
   
@@ -186,7 +202,7 @@ useEffect(() => {
           ? netApy === "<0.01%" // Check with percentage symbol
             ? "<0.01%"
             : !isNaN(parseFloat(netApy)) // Ensure valid number before formatting
-            ? `${formatNetApy(netApy)}%`
+            ? `${formatNetApy(netApy)}`
             : "-"
           : "-",
     },
@@ -315,58 +331,70 @@ useEffect(() => {
   
   useEffect(() => {
     if (
-      totalUsdValueSupply !== undefined &&
-      totalUsdValueBorrow !== undefined &&
-      principal
+        typeof totalUsdValueSupply === "number" &&
+        typeof totalUsdValueBorrow === "number" &&
+        principal
     ) {
-      const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
-  
-      // Retrieve the stored net worth from sessionStorage
-      const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
-      const parsedStoredNetWorth = storedNetWorth ? JSON.parse(storedNetWorth) : 0.00;
-  
-      setNetWorth((prev) => {
-        let newValue =
-          totalUsdValueSupply === 0 && totalUsdValueBorrow === 0
-            ? 0.00 // Ensure net worth is set to 0 instead of "-"
-            : calculatedNetWorth;
-  
-        // If the new value is 0 and there's a stored value, keep the stored value
-        if (newValue === 0 && parsedStoredNetWorth !== null) {
-          newValue = parsedStoredNetWorth;
+        const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+        console.log("💰 totalUsdValueSupply:", totalUsdValueSupply);
+        console.log("💸 totalUsdValueBorrow:", totalUsdValueBorrow);
+        console.log("📊 Calculated Net Worth:", calculatedNetWorth);
+
+        // Retrieve stored net worth from sessionStorage
+        const storageKey = `netWorth_${principal}`;
+        const storedNetWorth = sessionStorage.getItem(storageKey);
+        const parsedStoredNetWorth = storedNetWorth ? JSON.parse(storedNetWorth) : null;
+
+        let newValue = calculatedNetWorth; //  Always prefer new calculated value
+
+        //  If **calculatedNetWorth is exactly 0**, store **0.00**
+        if (calculatedNetWorth === 0) {
+            newValue = 0.00;
         }
-  
-        // Update sessionStorage only if the value changes and is not 0
-        if (newValue !== prev) {
-          sessionStorage.setItem(`netWorth_${principal}`, JSON.stringify(newValue));
+        //  Otherwise, ensure we don’t keep an incorrect stored value
+        else if (parsedStoredNetWorth !== null && !isNaN(parsedStoredNetWorth) && calculatedNetWorth === null) {
+            newValue = parsedStoredNetWorth;
         }
-  
-        return newValue;
-      });
-  
-      // Ensure UI displays "$0.00" instead of "-"
-      const displayNetWorth =
-        calculatedNetWorth === 0 && parsedStoredNetWorth !== null
-          ? parsedStoredNetWorth
-          : calculatedNetWorth;
-  
-      setWalletDetailTab((prevTab) =>
-        prevTab.map((item) =>
-          item.id === 0
-            ? {
-                ...item,
-                count: (
-                  <>
-                    <span style={{ fontWeight: "lighter" }}>$</span>
-                    {formatNumber(displayNetWorth, 2)}
-                  </>
-                ),
-              }
-            : item
-        )
-      );
+
+        console.log("📌 Stored Net Worth:", parsedStoredNetWorth);
+        console.log("🔄 Updating to:", newValue);
+
+        //  Update sessionStorage **only if the new value is different**
+        if (newValue !== parsedStoredNetWorth) {
+            sessionStorage.setItem(storageKey, JSON.stringify(newValue));
+        }
+
+        //  Ensure React updates the state
+        setNetWorth((prev) => {
+            if (prev !== newValue) return newValue;
+            return prev; // Prevent redundant re-renders
+        });
+
+        //  Update wallet details UI
+        setWalletDetailTab((prevTab) =>
+            prevTab.map((item) =>
+                item.id === 0
+                    ? {
+                        ...item,
+                        count: (
+                            <>
+                                <span style={{ fontWeight: "lighter" }}>$</span>
+                                {formatNumber(newValue, 2)}
+                            </>
+                        ),
+                    }
+                    : item
+            )
+        );
     }
-  }, [totalUsdValueSupply, totalUsdValueBorrow, dashboardRefreshTrigger, principal]);
+}, [totalUsdValueSupply, totalUsdValueBorrow, dashboardRefreshTrigger, principal]);
+
+
+
+
+
+
+
   
   
   
@@ -455,7 +483,7 @@ useEffect(() => {
       if (denominator === 0) return NaN; // 🚀 Return NaN instead of 0 to ensure "-" is displayed
   
       const netApy = numerator / denominator;
-      return netApy < 0.0001 ? 0.0001 : netApy; // ✅ Never return 0, instead set a minimum threshold
+      return netApy < 0.0001 ? 0.0001 : netApy; //  Never return 0, instead set a minimum threshold
     },
     [reserveData, assetBalances]
   );
@@ -552,7 +580,7 @@ useEffect(() => {
         sessionStorage.setItem(
           `healthFactor_${principal}`,
           JSON.stringify(newValue)
-        );
+        ); 
         return newValue;
       });
 
@@ -635,6 +663,7 @@ useEffect(() => {
   
         // 🚀 Keep showing "-" until we get a valid number
         if (!calculatedNetApy || isNaN(calculatedNetApy)) {
+          console.log("calculatedNetApy",calculatedNetApy)
           console.log("Waiting for valid Net APY...");
           setNetApy("-"); 
           return;
@@ -697,7 +726,7 @@ useEffect(() => {
     assetBalances,
     dashboardRefreshTrigger,
   ]);
-  
+  console.log("netApy",netApy)
   
   
 

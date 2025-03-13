@@ -183,13 +183,6 @@ const Repay = ({
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
-  const truncateToDecimals = (num, decimals) => {
-    const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
-  };
-
-  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
-  console.log(truncatedValue); // Debugging: Check if it's correctly formatted
 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 

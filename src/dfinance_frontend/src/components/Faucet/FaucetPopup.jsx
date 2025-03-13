@@ -229,6 +229,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             });
   
             setLoading(false);
+            handleClose()
             return;
           }
           const userFriendlyMessage =

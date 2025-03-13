@@ -9,6 +9,7 @@ import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRa
 import useUserData from "../../customHooks/useUserData";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import { useDispatch } from "react-redux";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * ColateralPopup Component
@@ -22,7 +23,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("toggle_collateral");
   const { healthFactorBackend } = useUserData();
   const { backendActor } = useAuth();
   const { conversionRate, error: conversionError } =
@@ -65,6 +66,20 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
 
   async function toggleCollateral(asset, assetSupply) {
     try {
+      if (isBlocked) {
+        toast.error("You are temporarily blocked from using this function", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsModalOpen(false)
+        return; // Prevent function execution
+      }
       const addedAmount = currentCollateralStatus
         ? BigInt(0)
         : BigInt(Math.round(assetSupply * 100000000));
@@ -80,7 +95,21 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
 
       if (response?.Err) {
         const errorMsg = response.Err;
-
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+          console.error("You are temporarily blocked from using this function");
+  
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setIsLoading(false)}
         // Handle panic errors
         if (
           typeof errorMsg === "string" &&
@@ -140,6 +169,19 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
    * =================================================================================== */
 
   const handleToggleCollateral = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     setIsLoading(true);
     try {
       await toggleCollateral(asset, assetSupply);

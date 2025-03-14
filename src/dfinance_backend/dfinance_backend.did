@@ -209,6 +209,7 @@ service : (principal) -> {
     ) -> (Result_2) query;
   get_user_data : (principal) -> (Result_3) query;
   initialize : (text, ReserveData) -> (Result_1);
+  is_function_blocked : (text) -> (Result_8) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
   remove_blocked_function : (principal, text) -> (Result_1);

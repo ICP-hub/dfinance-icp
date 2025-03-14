@@ -649,7 +649,7 @@ impl ValidationLogic {
         ic_cdk::println!("Repay amount: {:?}", repay_amount);
 
         if repay_amount > normalized_debt_amount {
-            return Err(Error::InvalidAmount);
+            return Err(Error::RepayMoreThanDebt);
         }
 
         let repay_ledger_canister_id = read_state(|state| {
@@ -669,7 +669,7 @@ impl ValidationLogic {
         };
 
         if liquidator_wallet_balance < repay_amount {
-            return Err(Error::MaxAmount);
+            return Err(Error::LowWalletBalance);
         }
 
         let mut total_collateral = Nat::from(0u128);
@@ -700,7 +700,7 @@ impl ValidationLogic {
         }
 
         if total_collateral < reward_amount {
-            return Err(Error::LessRewardAmount);
+            return Err(Error::RewardIsHigher);
         }
 
         if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {

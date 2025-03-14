@@ -14,8 +14,7 @@ import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
 const ADMIN_ROUTE = process.env.DFX_ADMIN || "/default";
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE || "/default";
-console.log("ADMIN_ROUTE", ADMIN_ROUTE);
-console.log("HEALTH_FACTOR_ROUTE", HEALTH_FACTOR_ROUTE);
+
 export default [
   {
     path: "/",

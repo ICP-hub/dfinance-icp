@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * WithdrawPopup Component
@@ -47,6 +48,7 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("execute_withdraw");
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
@@ -214,6 +216,20 @@ const WithdrawPopup = ({
    */
 
   const handleWithdraw = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -290,7 +306,22 @@ const WithdrawPopup = ({
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
+        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
+          console.error("You are temporarily blocked from using this function");
 
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setIsLoading(false);
+        }
         if (isPanicError) {
           setShowPanicPopup(true);
           setIsVisible(false);
@@ -504,8 +535,6 @@ const WithdrawPopup = ({
     console.log("Loan-to-Value (LTV):", ltv);
 
     setPrevHealthFactor(currentHealthFactor);
-    console.log("Previous Health Factor Set To:", currentHealthFactor);
-
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -514,12 +543,7 @@ const WithdrawPopup = ({
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
-    console.log(
-      "Current Health Factor Set To:",
-      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
-    );
-
-    console.log("LTV * 100:", ltv * 100, "Temp Liq:", tempLiq);
+    console.log("liq_thresh", ltv * 100, tempLiq);
     if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
@@ -707,7 +731,9 @@ const WithdrawPopup = ({
                       }`}
                     >
                       {(
-                        truncatedValue > 100 ? "Infinity" : truncatedValue
+                        truncatedValue > 100
+                          ? "Infinity"
+                          : (truncatedValue)
                       )}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>

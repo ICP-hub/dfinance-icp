@@ -7,6 +7,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
 import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
+import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 
 /**
  * FaucetPopup Component
@@ -23,7 +24,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("faucet");
   const { backendActor } = useAuth();
   const { userData } = useUserData();
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate,fetchConversionRate,fetchBalance } = useFetchConversionRate();
@@ -166,6 +167,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
    * @param {string} asset - The asset selected by the user to claim.
    */
   const handleFaucet = async (asset) => {
+     if (isBlocked) {
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          return; // Prevent function execution
+        }
+
     setLoading(true);
     try {
       if (backendActor) {
@@ -192,6 +207,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             progress: undefined,
           });
           setLoading(false);
+          dispatch(toggleRefresh());
           return;
         }
 
@@ -200,7 +216,26 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
         if (result.Err) {
           const errorKey = result.Err;
-          console.log(errorKey);
+          console.error(errorKey);
+
+          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+            console.error("You are temporarily blocked from using this function");
+  
+            toast.error("You are temporarily blocked from using this function", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+  
+            setLoading(false);
+            handleClose()
+            return;
+          }
           const userFriendlyMessage =
             errorMessages[errorKey] ||
             "An unexpected error occurred, please try again later.";

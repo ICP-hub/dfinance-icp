@@ -19,6 +19,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
+import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 
 const UserInformationPopup = ({
   onClose,
@@ -31,7 +32,7 @@ const UserInformationPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_liquidation");
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
   const {
@@ -253,9 +254,9 @@ const UserInformationPopup = ({
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
     let currentLiquidity = 0;
     reserves.map((reserveGroup) => {
-      if (reserveGroup[0] === assetName) {
-        currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
-      }
+        if (reserveGroup[0] === assetName) {
+            currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
+        }
     });
 
     const assetBalance =
@@ -263,7 +264,7 @@ const UserInformationPopup = ({
         mappedItem.principal,
         assetName,
         "dtokenBalance"
-      ) || 0;
+    ) || 0;
 
     if (!currentLiquidity) return 0;
 
@@ -277,9 +278,9 @@ const UserInformationPopup = ({
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
     let debtIndex = 0;
     reserves.map((reserveGroup) => {
-      if (reserveGroup[0] === assetName) {
-        debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
-      }
+        if (reserveGroup[0] === assetName) {
+            debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
+        }
     });
 
     const assetBorrowBalance =
@@ -287,7 +288,7 @@ const UserInformationPopup = ({
         mappedItem.principal,
         assetName,
         "debtTokenBalance"
-      ) || 0;
+    ) || 0;
 
     if (!debtIndex) return 0;
 
@@ -295,7 +296,7 @@ const UserInformationPopup = ({
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
         Number(debtIndex)
     );
-  };
+};
 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
@@ -359,6 +360,19 @@ const UserInformationPopup = ({
 
   // Aprove function
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     let ledgerActor;
     if (selectedDebtAsset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -497,9 +511,9 @@ const UserInformationPopup = ({
       const calculatedValue =
         ((truncatedCollateralBalance * usdRate) / debtPrice) *
         (10000 / generalLiquidityBonus);
-      console.log("calculatedvalue ==;", calculatedValue);
-      maxDebtToLiq = truncateToEightDecimals(calculatedValue);
-
+      
+      maxDebtToLiq = Math.trunc(calculatedValue);
+      console.log("calculatedvalue ==;",maxDebtToLiq);
       setInfo(false);
     } else {
       maxDebtToLiq = supplyAmount;
@@ -569,19 +583,39 @@ const UserInformationPopup = ({
 
   //Liquidation main function call
   const handleConfirmLiquidation = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     setIsLoading(true);
     try {
-      const supplyAmount = Math.trunc(amountToRepay * 100000000);
-      const maxCollateralValue = calculatedData?.maxCollateral
-        ? calculatedData.maxCollateral / 1e8
-        : 0;
-
       const truncateToEightDecimals = (num) => {
         return Math.trunc(num * 1e8) / 1e8;
       };
+      const maxDebtToLiqValue = calculatedData?.maxDebtToLiq
+      ? calculatedData.maxDebtToLiq / 1e8
+      : 0;
+    
+      const truncatedMaxDebtToLiq = truncateToEightDecimals(maxDebtToLiqValue);
+      
+      let supplyAmount = truncateToEightDecimals(truncatedMaxDebtToLiq);
+      supplyAmount = Math.trunc(supplyAmount * 100000000);
 
-      const truncatedMaxCollateral =
-        truncateToEightDecimals(maxCollateralValue);
+      const maxCollateralValue = calculatedData?.maxCollateral
+        ? calculatedData.maxCollateral / 1e8
+        : 0;
+  
+      console.log("max coll",maxCollateralValue);
+      const truncatedMaxCollateral = truncateToEightDecimals(maxCollateralValue);
       let rewardAmount = truncatedMaxCollateral;
       rewardAmount = truncateToEightDecimals(rewardAmount);
 
@@ -624,6 +658,21 @@ const UserInformationPopup = ({
       } else if ("Err" in result) {
         const errorKey = result.Err;
         const errorMessage = String(errorKey).toLowerCase();
+        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+          console.error("You are temporarily blocked from using this function");
+
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          return; // Stop function execution to prevent further errors
+        }
 
         if (errorKey?.ExchangeRateError === null) {
           toast.error("Price fetch failed", {
@@ -1156,9 +1205,16 @@ const UserInformationPopup = ({
     );
     console.log("calculated health ==:", healthFactor);
 
+
+    // Update health factor states
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
   }, [
     mappedItem.collateral,
@@ -1228,26 +1284,6 @@ const UserInformationPopup = ({
 
   useEffect(() => {}, [collateralAmount]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await handleMaxCollateral();
-        if (response) {
-          setCalculatedData(response);
-        }
-      } catch (error) {
-        console.error("Error in handleMaxCollateral:", error);
-      }
-    };
-
-    fetchData();
-  }, [
-    amountToRepay,
-    selectedDebtAsset,
-    selectedAsset,
-    liquidateTrigger,
-    collateralAmount,
-  ]);
 
   useEffect(() => {
     if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
@@ -1269,7 +1305,6 @@ const UserInformationPopup = ({
     collateralRate,
   ]);
 
-  useEffect(() => {}, [collateralAmount]);
 
   useEffect(() => {
     if (ckBTCBalance && ckBTCUsdRate) {
@@ -1965,36 +2000,39 @@ const UserInformationPopup = ({
               {renderAssetDetails(selectedAsset)}
 
               {(!isCollateralAssetSelected ||
-                !(amountToRepay <= selectedAssetBalance)) && (
-                <div className="w-full flex flex-col my-3 space-y-2">
-                  <div
-                    className={`w-full flex p-2 rounded-lg text-white ${
-                      !isCollateralAssetSelected
-                        ? "bg-[#6e3d17]"
-                        : "bg-[#BA5858]"
-                    }`}
-                  >
-                    <div className=" flex items-center justify-center">
-                      <div className="warning-icon-container">
-                        {isCollateralAssetSelected ? (
-                          <div className="warning-icon-container">
-                            <TriangleAlert />
-                          </div>
-                        ) : (
-                          <div className="info-icon-container">
-                            <Info className="text-[#f6ba43]   w-3 h-4 mb-0.2" />
-                          </div>
-                        )}
+                  (amountToRepay === calculatedData?.maxDebtToLiq
+                    ? (console.log("Amount to repay equals maxDebtToLiq"), false)  // Log if equal
+                    : (console.log("Comparing maxDebtToLiq with selectedAssetBalance"), 
+                      !(calculatedData?.maxDebtToLiq/1e8 <= selectedAssetBalance)))
+                ) && (
+                  <div className="w-full flex flex-col my-3 space-y-2">
+                    <div
+                      className={`w-full flex p-2 rounded-lg text-white ${!isCollateralAssetSelected
+                          ? "bg-[#6e3d17]"
+                          : "bg-[#BA5858]"
+                        }`}
+                    >
+                      <div className=" flex items-center justify-center">
+                        <div className="warning-icon-container">
+                          {isCollateralAssetSelected ? (
+                            <div className="warning-icon-container">
+                              <TriangleAlert />
+                            </div>
+                          ) : (
+                            <div className="info-icon-container">
+                              <Info className="text-[#f6ba43]   w-3 h-4 mb-0.2" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="w-11/12 text-[12px] flex items-center text-white ml-1">
+                        {!isCollateralAssetSelected
+                          ? "Select a collateral asset to see reward"
+                          : "Amount to repay exceeds available balance of the selected asset"}
                       </div>
                     </div>
-                    <div className="w-11/12 text-[12px] flex items-center text-white ml-1">
-                      {!isCollateralAssetSelected
-                        ? "Select a collateral asset to see reward"
-                        : "Amount to repay exceeds available balance of the selected asset"}
-                    </div>
                   </div>
-                </div>
-              )}
+                )}
               {/* <div className="flex justify-start mt-1">
                 {!isCollateralAssetSelected && (
                   <div className="w-full flex flex-col my-3 space-y-2">

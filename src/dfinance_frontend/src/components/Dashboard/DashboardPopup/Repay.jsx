@@ -12,6 +12,7 @@ import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRa
 import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * Repay Component
@@ -46,7 +47,7 @@ const Repay = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
@@ -220,6 +221,20 @@ const Repay = ({
    *
    */
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -305,6 +320,20 @@ const Repay = ({
    * This function executes the repayment transaction. It calls the backend to perform the repayment for the specified asset.
    */
   const handleRepayETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -366,6 +395,25 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+          console.error("You are temporarily blocked from using this function");
+
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          setIsLoading(false)
+          setIsModalOpen(false);
+          return;
+        }
+
         if (errorMsg?.AmountSubtractionError === null) {
           toast.error("Repay failed: You cannot repay more than you owe.", {
             className: "custom-toast",
@@ -509,6 +557,8 @@ const Repay = ({
       .replace(/\.?0+$/, "");
   };
 
+  
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -619,7 +669,7 @@ const Repay = ({
                 <h1>Amount</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="flex flex-col items-start w-[40%] gap-8">
+                <div className="flex flex-col items-start w-[45%] gap-8">
                   <input
                     type="text"
                     value={amount}
@@ -715,7 +765,11 @@ const Repay = ({
                             : "text-orange-300"
                         }`}
                       >
-                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
+                        {(
+                          truncatedValue > 100
+                            ? "Infinity"
+                            : (truncatedValue)
+                        )}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -939,4 +993,3 @@ const Repay = ({
 };
 
 export default Repay;
-

@@ -527,6 +527,11 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     let caller_id = ic_cdk::caller();
     let current_time_stamp = current_timestamp();
 
+    // if caller_id == Principal::anonymous() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
+
     ic_cdk::println!(
         "[RequestLimiter] Caller: {:?}, Function: {}, Timestamp: {}",
         caller_id,
@@ -537,7 +542,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     // Check if user is blocked for this specific function
     let is_blocked = mutate_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(function_name).cloned())
             .map(|details| details.blocked_time > current_time_stamp)
@@ -546,7 +551,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
     let tocheck = read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(function_name).cloned())
     });
@@ -565,7 +570,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     // Retrieve user's request history
     let mut user_requests = mutate_state(|state| {
         state
-            .requests
+            .userrequests
             .get(&caller_id)
             .map(|candid| candid.0.clone())
             .unwrap_or_default()
@@ -609,7 +614,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
         // Retrieve existing blocked functions or create new map
         let mut blocked_functions = mutate_state(|state| {
             state
-                .blocked_users
+                .restrict_users
                 .get(&caller_id)
                 .map(|candid| candid.0.clone())
                 .unwrap_or_default()
@@ -626,7 +631,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
         // Save updated blocked functions list
         mutate_state(|state| {
             state
-                .blocked_users
+                .restrict_users
                 .insert(caller_id, Candid(blocked_functions));
         });
 
@@ -635,7 +640,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
         // Save updated request history
         mutate_state(|state| {
-            state.requests.insert(caller_id, Candid(user_requests));
+            state.userrequests.insert(caller_id, Candid(user_requests));
         });
 
         return Err(Error::BLOCKEDFORONEHOUR);
@@ -646,7 +651,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
     // Save the updated request history
     mutate_state(|state| {
-        state.requests.insert(caller_id, Candid(user_requests));
+        state.userrequests.insert(caller_id, Candid(user_requests));
     });
 
     ic_cdk::println!(
@@ -662,14 +667,19 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>, Error> {
     // let caller_id = ic_cdk::caller();
 
-    if !to_check_controller(){
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    if !to_check_controller() {
         ic_cdk::println!("Only controller allowed");
         return Err(Error::ErrorNotController);
     }
 
     Ok(read_state(|state| {
         state
-            .requests
+            .userrequests
             .get(&caller_id)
             .map(|candid| {
                 candid
@@ -686,13 +696,18 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
 #[query]
 pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
 
-    if !to_check_controller(){
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    if !to_check_controller() {
         ic_cdk::println!("Only controller allowed");
         return Err(Error::ErrorNotController);
     }
     Ok(read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .map(|candid| {
                 candid
@@ -708,15 +723,20 @@ pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>
 #[update]
 pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> Result<(), Error> {
 
-    if !to_check_controller(){
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    if !to_check_controller() {
         ic_cdk::println!("Only controller allowed");
         return Err(Error::ErrorNotController);
     }
-    
+
     mutate_state(|state| {
-        if let Some(mut candid) = state.blocked_users.get(&caller_id) {
+        if let Some(mut candid) = state.restrict_users.get(&caller_id) {
             let blocked_functions = &mut candid.0; // Get the inner BTreeMap
-            
+
             if blocked_functions.remove(&function_name).is_some() {
                 ic_cdk::println!(
                     "[RequestLimiter] Unblocked function '{}' for user {:?}",
@@ -726,9 +746,11 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
 
                 // If no functions remain blocked, remove the user from the blocked list
                 if blocked_functions.is_empty() {
-                    state.blocked_users.remove(&caller_id);
+                    state.restrict_users.remove(&caller_id);
                 } else {
-                    state.blocked_users.insert(caller_id, Candid(blocked_functions.clone()));
+                    state
+                        .restrict_users
+                        .insert(caller_id, Candid(blocked_functions.clone()));
                 }
 
                 return Ok(());
@@ -744,8 +766,25 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
     })
 }
 
+#[query]
+pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
+    let caller_id = ic_cdk::caller();
+    let current_time_stamp = current_timestamp();
 
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
 
+    Ok(read_state(|state| {
+        state
+            .restrict_users
+            .get(&caller_id)
+            .and_then(|candid| candid.0.get(&function_name).cloned())
+            .map(|details| details.blocked_time > current_time_stamp)
+            .unwrap_or(false)
+    }))
+}
 
 #[ic_cdk::inspect_message]
 pub fn inspect_message() {
@@ -763,7 +802,7 @@ pub fn inspect_message() {
     // Read state to check if the user is blocked from this function
     let is_blocked = read_state(|state| {
         state
-            .blocked_users
+            .restrict_users
             .get(&caller_id)
             .and_then(|candid| candid.0.get(&method_name).cloned())
             .map(|details| details.blocked_time > current_time_stamp)

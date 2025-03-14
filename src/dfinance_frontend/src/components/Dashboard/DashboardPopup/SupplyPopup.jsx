@@ -459,7 +459,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
   };
   
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
-  console.log(truncatedValue); // Debugging: Check if it's correctly formatted
+  console.log(truncatedValue); 
   
   /* ===================================================================================
    *                                  EFFECTS

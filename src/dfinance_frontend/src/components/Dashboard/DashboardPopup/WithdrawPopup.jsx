@@ -24,8 +24,26 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the WithdrawPopup component.
  */
 
-const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const WithdrawPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -97,46 +115,45 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-  
+
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-  
+
     // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-  
+
     // Ensure only one decimal point exists
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-  
+
     // Split integer and decimal parts
     const parts = inputAmount.split(".");
-  
+
     // Restrict the integer part to 8 digits
     if (parts[0].length > 8) {
       parts[0] = parts[0].slice(0, 8);
     }
-  
+
     // Restrict the decimal part to 8 digits
     if (parts[1] && parts[1].length > 8) {
       parts[1] = parts[1].slice(0, 8);
     }
-  
+
     inputAmount = parts.join(".");
-  
+
     // Convert to number and check against assetSupply
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
       inputAmount = truncateToSevenDecimals(assetSupply).toString();
     }
-  
+
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
-  
 
   /**
    * This function updates the USD equivalent of the withdrawal amount based on the conversion rate. It also checks if the
@@ -346,7 +363,6 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
     }
   };
 
-
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -445,7 +461,7 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
 
   useEffect(() => {
     console.log("=== Debugging useEffect Start ===");
-  
+
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
@@ -453,62 +469,65 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
       reserveliquidationThreshold
     );
     console.log("Calculated Health Factor:", healthFactor);
-  
+
     const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
     console.log("Amount Taken:", amountTaken);
-  
+
     const amountAdded = 0;
     const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
-  
+
     const totalCollateralValue = truncateTo8Decimals(
       parseFloat(totalCollateral) - parseFloat(amountTaken)
     );
     console.log("Total Collateral :", totalCollateral);
     console.log("Total Collateral Value:", totalCollateralValue);
-  
+
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
     console.log("Total Debt Value:", totalDeptValue);
-  
+
     let avliq = liquidationThreshold * totalCollateral;
     console.log("Available Liquidation Value (avliq):", avliq);
-  
+
     let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
     console.log("Temp Liquidation Threshold Before Adjustment:", tempLiq);
-  
+
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
-  
+
       // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
     }
     console.log("Final Temp Liquidation Threshold:", tempLiq);
-  
+
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("Loan-to-Value (LTV):", ltv);
-  
+
     setPrevHealthFactor(currentHealthFactor);
     console.log("Previous Health Factor Set To:", currentHealthFactor);
-  
+
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
     };
-  
+
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
-    console.log("Current Health Factor Set To:", healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2));
-  
+    console.log(
+      "Current Health Factor Set To:",
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+
     console.log("LTV * 100:", ltv * 100, "Temp Liq:", tempLiq);
-    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
+    if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
       console.log("Toast Triggered: LTV Exceeded!");
     }
-  
+
     if (
-      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
+      (healthFactor <= 1 || (assetBorrow > 0 && ltv * 100 >= tempLiq)) &&
       currentCollateralStatus
     ) {
       setIsButtonDisabled(true);
@@ -517,9 +536,8 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
       setIsButtonDisabled(false);
       console.log("Button Disabled: FALSE");
     }
-  
+
     console.log("=== Debugging useEffect End ===");
-  
   }, [
     asset,
     liquidationThreshold,
@@ -530,7 +548,6 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
     usdValue,
     liq_thresh,
   ]);
-  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -554,7 +571,8 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
+      const convertedValue =
+        Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -688,10 +706,8 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
                           : "text-orange-300"
                       }`}
                     >
-                      {parseFloat(
-                        truncatedValue > 100
-                          ? "Infinity"
-                          : (truncatedValue)
+                      {(
+                        truncatedValue > 100 ? "Infinity" : truncatedValue
                       )}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>

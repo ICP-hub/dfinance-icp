@@ -3089,7 +3089,7 @@ const MySupply = () => {
                                     (item) => item[0] === asset
                                   );
 
-                                  const assetData = item[1].Ok;
+                                  const assetData = item[1]?.Ok;
 
                                   const total_supply =
                                     Number(assetData?.asset_supply || 0) /

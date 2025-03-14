@@ -41,6 +41,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
+  
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -192,8 +194,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           setLoading(false);
           return;
         }
+
         const result = await backendActor.faucet(asset, natAmount);
         dispatch(toggleRefresh());
+
         if (result.Err) {
           const errorKey = result.Err;
           console.log(errorKey);
@@ -228,11 +232,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       }
     } catch (error) {
       console.error(error.message);
-  
+
       // ✅ **Check for "Out of Cycles" Error**
       if (
         error.message.includes("out of cycles") ||
-        error.message.includes("Reject text: Canister") // Matches error pattern
+        error.message.includes("Reject text: Canister")
       ) {
         toast.error(
           "Canister is out of cycles. Please wait, the admin has been notified.",
@@ -247,7 +251,27 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             progress: undefined,
           }
         );
-  
+
+      // ✅ **Check for "panic" error and show panic popup**
+      } else if (
+        error.message.toLowerCase().includes("panic") ||
+        error.message.includes("panicked at")
+      ) {
+        setShowPanicPopup(true); // ✅ Trigger panic popup
+        toast.error(
+          "A critical error occurred. Please contact support immediately.",
+          {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          }
+        );
+
       } else {
         toast.error(`Error: ${error.message}`, {
           className: "custom-toast",
@@ -264,6 +288,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       setLoading(false);
     }
   };
+
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -578,6 +603,41 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           <FaucetPayment asset={asset} amount={amount} onClose={handleClose} />
         </div>
       )}
+      {showPanicPopup && (
+              <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+                <div className="w-full flex flex-col items-center p-2 ">
+                  <button
+                    onClick={handleClose}
+                    className="text-gray-400 focus:outline-none self-end button1"
+                  >
+                    <X size={24} />
+                  </button>
+      
+                  <div
+                    className="dark:bg-gradient 
+                      dark:from-darkGradientStart 
+                      dark:to-darkGradientEnd 
+                      dark:text-darkText  "
+                  >
+                    <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                      Thanks for helping us improve DFinance! <br></br> You’ve
+                      uncovered a bug, and our dev team is on it.
+                    </p>
+      
+                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                      Your account is temporarily locked while we investigate and fix
+                      the issue. <br />
+                    </p>
+                    <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                      We appreciate your contribution and have logged your ID—testers
+                      like you are key to making DFinance better! <br />
+                      If you have any questions, feel free to reach out.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
     </>
   );
 };

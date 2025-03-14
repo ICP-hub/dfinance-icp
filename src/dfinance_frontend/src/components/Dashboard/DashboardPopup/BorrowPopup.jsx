@@ -192,10 +192,9 @@ import useAssetData from "../../customHooks/useAssets";
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
         console.error("errorKey",errorKey)
         if (errorMessage.toLowerCase().includes("panic")) {
-          setPanicMessage(
-            "A critical system error occurred. Please try again later."
-          );
+          
           setShowPanicPopup(true);
+          setIsVisible(false);
         } else if (errorMessage.toLowerCase().includes("out of cycles") || errorMessage.includes("reject text: canister")) {
           toast.error("Canister is out of cycles. Controller has been notified.", {
             className: "custom-toast",
@@ -245,10 +244,10 @@ import useAssetData from "../../customHooks/useAssets";
       const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
   
       if (isPanicError) {
-        setPanicMessage(
-          "A critical system error occurred. Please try again later."
-        );
+        
         setShowPanicPopup(true);
+        setIsVisible(false);
+        
       } else if (isOutOfCyclesError) {
         toast.error("Canister is out of cycles. Controller has been notified.", {
           className: "custom-toast",
@@ -400,6 +399,11 @@ import useAssetData from "../../customHooks/useAssets";
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+useEffect(() => {
+  if (showPanicPopup) {
+    setIsVisible(false);
+  }
+}, [showPanicPopup]);
 
   useEffect(() => {
     const updateValues = async () => {

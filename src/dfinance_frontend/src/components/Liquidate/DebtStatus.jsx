@@ -42,20 +42,20 @@ const DebtStatus = () => {
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
-  const [liquidationLoading, setLiquidationLoading] = useState(false);
+  const [liquidationLoading, setLiquidationLoading] = useState(true);
   const [error, setError] = useState("");
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
+
   const [userLoadingStates, setUserLoadingStates] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const cachedData = useRef({});
- const [userAccountData, setUserAccountData] = useState({});
+  const [userAccountData, setUserAccountData] = useState({});
   const [healthFactors, setHealthFactors] = useState({});
   /* ===================================================================================
    *                                  HOOKS
@@ -72,12 +72,11 @@ const DebtStatus = () => {
   } = useAssetData();
   const navigate = useNavigate();
   const {
-    
     user,
     backendActor,
     fetchReserveData,
     createLedgerActor,
-    isAuthenticated
+    isAuthenticated,
   } = useAuth();
 
   const showSearchBar = () => {
@@ -90,32 +89,32 @@ const DebtStatus = () => {
   /**
    * Fetches the total number of users from the backend.
    */
-    const getAllUsers = async () => {
-      if (!backendActor) {
-        console.error("Backend actor not initialized");
-        return;
+  const getAllUsers = async () => {
+    if (!backendActor) {
+      console.error("Backend actor not initialized");
+      return;
+    }
+
+    try {
+      const allUsers = await backendActor.get_all_users();
+      console.log("Retrieved Users:", allUsers);
+
+      // ✅ Use a Set to Store Unique Users
+      const uniqueUsers = new Map();
+
+      for (const user of allUsers) {
+        uniqueUsers.set(user[0], user); // Use Map to ensure unique values
       }
-  
-      try {
-        const allUsers = await backendActor.get_all_users();
-        console.log("Retrieved Users:", allUsers);
-  
-        // ✅ Use a Set to Store Unique Users
-        const uniqueUsers = new Map();
-  
-        for (const user of allUsers) {
-          uniqueUsers.set(user[0], user); // Use Map to ensure unique values
-        }
-  
-        setUsers([...uniqueUsers.values()]); // ✅ Convert Map back to array & update state
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-  
-    useEffect(() => {
-      getAllUsers();
-    }, []);
+
+      setUsers([...uniqueUsers.values()]); // ✅ Convert Map back to array & update state
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
+    getAllUsers();
+  }, []);
 
   /**
    * Fetches a list of users eligible for liquidation.
@@ -124,194 +123,164 @@ const DebtStatus = () => {
    * @returns {Promise<Array>} - Returns an array of liquidation users.
    */
   useEffect(() => {
-    console.log("User:", user);
-    console.log("Users:", users);
-    console.log("UserAccountData:", userAccountData);
-  
-    if (
-      users &&
-      Array.isArray(users) &&
-      Object.keys(userAccountData || {}).length === users.length
-    ) {
-      const filtered = users
-        .map((item) => {
-          if (!item || !item[0]) return null;
-  
-          const principal = item[0];
-          const accountData = userAccountData?.[principal];
-  
-          // ✅ Fix `totalDebt` to prevent NaN
-          const totalDebt = Number(accountData?.Ok?.[1] || 0n) / 1e8;
-          const healthFactor = accountData
-            ? Number(accountData?.Ok?.[4] || 0n) / 1e10
-            : 0;
-  
-          return {
-            reserves: item[1]?.reserves || [],
-            principal: principal,
-            healthFactor: healthFactor,
-            item,
-            totalDebt,
-          };
-        })
-        .filter(
-          (mappedItem) =>
-            mappedItem &&
-            mappedItem.healthFactor > 1 &&
-            mappedItem.principal.toText() !== user.toText() && // ✅ Fix `.toString()` issue
-            mappedItem.totalDebt > 0
-        );
-  
-      setFilteredUsers(filtered);
-      console.log("Filtered Users:", filtered);
+    if (!userAccountData || !users) return;
+
+    console.log("🔄 Checking and updating filtered users dynamically...");
+
+    let foundUser = false; // ✅ Flag to track if a user is found
+
+    users.forEach(([principal, userData]) => {
+      const accountData = userAccountData?.[principal]; // ✅ Get user account data
+      if (
+        !accountData?.Ok ||
+        !Array.isArray(accountData.Ok) ||
+        accountData.Ok.length < 7
+      )
+        return;
+
+      const rawHealthFactor = accountData.Ok[4] || 0n;
+      const healthFactor =
+        rawHealthFactor >= 340282366920938463463374607431768211455n
+          ? Infinity // ✅ Convert max BigInt to Infinity
+          : Number(rawHealthFactor) / 1e10;
+
+      if (healthFactor < 1) {
+        foundUser = true; // ✅ Mark that at least one user is found
+
+        setFilteredUsers((prevFilteredUsers) => {
+          if (
+            prevFilteredUsers.some(
+              (user) => user.principal.toText() === principal.toText()
+            )
+          ) {
+            return prevFilteredUsers;
+          }
+          return [...prevFilteredUsers, { principal, userData, accountData }];
+        });
+      }
+    });
+
+    // ✅ Set `setLiquidationLoading(false)` only if users are found
+    if (foundUser) {
+      setLiquidationLoading(false);
     }
-  }, [users, userAccountData, user]);
-  
+  }, [userAccountData]);
+  // ✅ Only runs when `userAccountData` updates
+
   /**
    * Fetches and caches user account data to avoid redundant API calls.
    * @param {Object} userData - The user data object.
    */
-  console.log("filteredUsers",filteredUsers)
- const fetchUserAccountDataWithCache = async (principal) => {
-     if (backendActor && isAuthenticated) {
-       const principalString = principal.toString();
- 
-       const userBalance = assetBalances[principalString];
-       if (!userBalance) {
-         return;
-       }
-       console.log("userBalance before function:", userBalance);
- 
-       if (cachedData.current[principalString]) {
-         setUserAccountData((prev) => ({
-           ...prev,
-           [principalString]: cachedData.current[principalString],
-         }));
-         return;
-       }
- 
-       try {
-         if (!principalString || cachedData.current[principalString]) return;
- 
-         const principalObj = Principal.fromText(principalString);
- 
-         if (!userBalance) {
-           console.error(
-             "No data found for userBalance for this principal:",
-             principalString
-           );
- 
-           return;
-         }
-         const user = users.find(
-           ([userPrincipal]) => userPrincipal.toString() === principalString
-         );
- 
-         if (user) {
-           const userInfo = user[1];
-           console.log("userInfo", userInfo);
- 
-           const reserves = userInfo?.reserves?.flat() || [];
-           console.log("reserves:", reserves);
- 
-           let assetBalancesObj = [];
-           let borrowBalancesObj = [];
- 
-           reserves.forEach(([asset, assetInfo]) => {
-             console.log("assetInfo:", assetInfo);
- 
-             const assetBalances = BigInt(
-               userBalance?.[asset]?.dtokenBalance || 0
-             );
-             const borrowBalances = BigInt(
-               userBalance?.[asset]?.debtTokenBalance || 0
-             );
- 
-             if (assetBalances > 0n) {
-               assetBalancesObj.push({
-                 balance: assetBalances,
-                 name: asset,
-               });
-             }
-             if (borrowBalances > 0n) {
-               borrowBalancesObj.push({
-                 balance: borrowBalances,
-                 name: asset,
-               });
-             }
-           });
- 
-           const assetBalancesParam =
-             assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
-           const borrowBalancesParam =
-             borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
- 
-           const result = await backendActor.get_user_account_data(
-             [principalObj],
-             assetBalancesParam,
-             borrowBalancesParam
-           );
- 
-           console.log("Backend result:", result);
- 
-           if (result?.Err === "ERROR :: Pending") {
-             console.warn("Pending state detected. Retrying...");
-             setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
-             return;
-           }
- 
-           if (result?.Ok) {
-             cachedData.current[principalString] = result;
-             setUserAccountData((prev) => ({
-               ...prev,
-               [principalString]: result,
-             }));
-           }
-         } else {
-           console.error("User not found for principal:", principalString);
-         }
-       } catch (error) {
-         console.error("Error fetching user account data:", error.message);
-       } finally {
-       }
-     }
-   };
- 
-   useEffect(() => {
+  useEffect(() => {
+    console.log(
+      `✅ Filtered Users Updated (Health Factor < 1): ${filteredUsers.length}`
+    );
+  }, [filteredUsers]); // ✅ Logs every time `filteredUsers` updates
+
+  const fetchUserAccountDataWithCache = async (principal) => {
+    if (!backendActor || !isAuthenticated) return;
+
+    const principalString = principal.toString();
+
+    // ✅ Check if data already exists in cache
+    if (cachedData.current[principalString]) {
+        console.log("Returning cached data for:", principalString);
+        setUserAccountData((prev) => ({
+            ...prev,
+            [principalString]: cachedData.current[principalString],
+        }));
+        return;
+    }
+
+    try {
+        const principalObj = Principal.fromText(principalString);
+        const userBalance = assetBalances[principalString];
+
+        if (!userBalance) {
+            return;
+        }
+
+        // ✅ Find user data
+        const user = users.find(([userPrincipal]) => userPrincipal.toString() === principalString);
+        if (!user) {
+            console.error("User not found for principal:", principalString);
+            return;
+        }
+
+        const userInfo = user[1];
+        const reserves = userInfo?.reserves?.flat() || [];
+
+        let assetBalancesObj = [];
+        let borrowBalancesObj = [];
+
+        reserves.forEach(([asset, assetInfo]) => {
+            const assetBalance = BigInt(userBalance?.[asset]?.dtokenBalance || 0);
+            const borrowBalance = BigInt(userBalance?.[asset]?.debtTokenBalance || 0);
+
+            if (assetBalance > 0n) {
+                assetBalancesObj.push({ balance: assetBalance, name: asset });
+            }
+            if (borrowBalance > 0n) {
+                borrowBalancesObj.push({ balance: borrowBalance, name: asset });
+            }
+        });
+
+        const assetBalancesParam = assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
+        const borrowBalancesParam = borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
+
+        // ✅ Fetch user data from backend
+        const result = await backendActor.get_user_account_data(
+            [principalObj],
+            assetBalancesParam,
+            borrowBalancesParam
+        );
+
+        console.log("Backend result:", result);
+
+        // ✅ Handle pending state (retry mechanism)
+        if (result?.Err === "ERROR :: Pending") {
+            console.warn("Pending state detected. Retrying...");
+            setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
+            return;
+        }
+
+        // ✅ Store in cache and state if data is valid
+        if (result?.Ok) {
+            cachedData.current[principalString] = result; // ✅ Save to cache
+            setUserAccountData((prev) => ({
+                ...prev,
+                [principalString]: result,
+            }));
+        }
+    } catch (error) {
+        console.error("Error fetching user account data:", error.message);
+    }
+};
+
+// ✅ Function to clear cache manually (if needed)
+const clearUserCache = () => {
+    cachedData.current = {};
+    console.log("User cache cleared.");
+};
+
+
+  // Install via `npm i p-limit`
+
+  useEffect(() => {
     console.log("useEffect triggered");
     console.log("Users:", users);
     console.log("Total users:", users?.length);
     console.log("Asset balance:", assetBalances);
-  
+
     if (!users || users.length === 0) {
       console.log("No users found, exiting useEffect.");
       return;
     }
-  
-    // ✅ Filter users with Health Factor < 1 before processing
-    const filteredUsers = users.filter(([principal, userData]) => {
-      const rawHealthFactor = userAccountData?.[principal]?.Ok?.[4] || 0n; // Get raw value
-      const healthFactor = rawHealthFactor >= 340282366920938463463374607431768211455n
-        ? Infinity // Convert max BigInt to Infinity
-        : Number(rawHealthFactor) / 1e10; // Otherwise, process normally
-    
-      console.log(`User: ${principal}, Health Factor: ${healthFactor}`);
-    
-      return healthFactor < 1; // ✅ Correctly filters non-infinity users
-    });
-    
-  
-    console.log(`Filtered Users (Health Factor < 1): ${filteredUsers.length}`);
-  
-    if (filteredUsers.length === 0) {
-      console.log("No users found with health factor < 1, skipping processing.");
-      return;
-    }
-  
-    // Dynamically determine batch size based on filtered user count
-    const totalUsers = filteredUsers.length;
+
+    // Dynamically determine batch size based on user count
+    const totalUsers = users.length;
     let batchSize;
-  
+
     if (totalUsers >= 10000) {
       batchSize = 1000;
     } else if (totalUsers >= 5000) {
@@ -319,18 +288,18 @@ const DebtStatus = () => {
     } else if (totalUsers >= 2000) {
       batchSize = 100;
     } else {
-      batchSize = 100; // ✅ Reduced batch size for better control
+      batchSize = 100; // If fewer users, process all at once
     }
-  
+
     console.log(`Batch size determined: ${batchSize}`);
-  
+
     const userChunks = [];
     for (let i = 0; i < totalUsers; i += batchSize) {
-      userChunks.push(filteredUsers.slice(i, i + batchSize));
+      userChunks.push(users.slice(i, i + batchSize));
     }
-  
+
     console.log(`Total batches created: ${userChunks.length}`);
-  
+
     // ✅ Limit concurrency per batch (process all batches together, but queue inside each batch)
     const processBatchesInParallelWithQueue = async () => {
       try {
@@ -339,10 +308,10 @@ const DebtStatus = () => {
             console.log(
               `🚀 Starting Batch ${batchIndex + 1} (size: ${batch.length})`
             );
-  
+
             // Each batch gets its own `p-limit(1)` to process requests **one by one** inside the batch
-            const batchQueue = pLimit(1);
-  
+            const batchQueue = pLimit(25);
+
             await Promise.all(
               batch.map(([principal]) =>
                 batchQueue(async () => {
@@ -362,21 +331,22 @@ const DebtStatus = () => {
                 })
               )
             );
-  
+
             console.log(`✅ Completed Batch ${batchIndex + 1}`);
           })
         );
-  
+
         console.log("🎉 All batches completed!");
       } catch (error) {
         console.error("❌ Error in processing batches:", error);
       }
     };
-  
+
     processBatchesInParallelWithQueue();
-  }, [users, assetBalances, userAccountData]); // ✅ Added `userAccountData` to dependencies
-  
-console.log("userAccountData",userAccountData)
+  }, [users, assetBalances]);
+  // ✅ Added `userAccountData` to dependencies
+
+  console.log("userAccountData", userAccountData);
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -386,136 +356,145 @@ console.log("userAccountData",userAccountData)
     setShowPopup(false);
   };
 
-  const relevantItems = liquidationUsers.filter((item) => {
-    console.log("Item:", item); // ✅ Check full structure
-  
-    if (!Array.isArray(item) || item.length < 2) return false; // ✅ Ensure valid structure
-  
-    const principalObj = item[0]; // ✅ Extract `Principal` correctly
-    if (!principalObj || typeof principalObj.toText !== "function") return false; // ✅ Ensure it's valid
-  
-    const principal = principalObj.toText(); // ✅ Convert Principal properly
-    const userData = item[1]; // ✅ User's financial data
-  
-    // ✅ Ensure `total_debt` and `total_collateral` exist & are arrays
-    const debt = Array.isArray(userData.total_debt) && userData.total_debt.length > 0 ? userData.total_debt[0] : 0n;
-    const collateral = Array.isArray(userData.total_collateral) && userData.total_collateral.length > 0 ? userData.total_collateral[0] : 0n;
-  
-    // ✅ Debug logs
-    console.log(`Principal: ${principal}, User: ${user.toString()}`);
-    console.log(`Debt: ${debt}, Collateral: ${collateral}`);
-  
-    return (
-      principal !== user.toString() && // ✅ Compare properly
-      debt !== 0n && 
-      collateral !== 0n
-    );
-  });
-  
+  const relevantItems = filteredUsers.filter(
+    ({ principal, userData, accountData }) => {
+      console.log("Item:", { principal, userData, accountData }); // ✅ Log to verify
+
+      if (!principal || !userData || !accountData?.Ok) return false; // ✅ Ensure valid structure
+
+      // ✅ Extract health factor from `accountData.Ok[4]`
+      const rawHealthFactor = accountData.Ok[4] || 0n;
+      const healthFactor =
+        rawHealthFactor >= 340282366920938463463374607431768211455n
+          ? Infinity // ✅ Convert max BigInt to Infinity
+          : Number(rawHealthFactor) / 1e10;
+
+      // ✅ Debt and collateral now from `accountData.Ok`
+      const debt = Number(accountData.Ok[1]) / 1e8 || 0; // ✅ Debt from `accountData.Ok[0]`
+      const collateral = Number(accountData.Ok[0]) / 1e8 || 0; // ✅ Collateral from `accountData.Ok[1]`
+
+      // ✅ Debug logs
+      console.log(`Principal: ${principal.toText()}, User: ${user.toString()}`);
+      console.log(
+        `Debt: ${debt}, Collateral: ${collateral}, Health Factor: ${healthFactor}`
+      );
+
+      return (
+        principal.toText() !== user.toString() && // ✅ Exclude the logged-in user
+        debt > 0 && // ✅ Ensure the user has some debt
+        collateral > 0 && // ✅ Ensure the user has some collateral
+        healthFactor < 1 // ✅ Only include users with health factor < 1
+      );
+    }
+  );
+
+  console.log(`✅ Relevant Items Count: ${relevantItems.length}`);
+
   console.log("Final relevantItems:", relevantItems);
-  
 
   const ITEMS_PER_PAGE = 8;
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
-console.log("currentItems",currentItems)
-  
-useEffect(() => {
+  console.log("currentItems", currentItems);
+
+  useEffect(() => {
     if (users.length > 0) {
       fetchAssetData();
     }
   }, [users, assets]);
 
-const fetchAssetData = async () => {
-    const balances = {};
-    const totalUsers = users.length;
-    let batchSize;
+  const fetchAssetData = async () => {
+    const batchSize = 50; // ✅ Increased for better speed (Adjust as needed)
+    const concurrencyLimit = pLimit(20); // ✅ Fetch **20 users at a time**
 
-    if (totalUsers >= 10000) {
-      batchSize = 1000;
-    } else if (totalUsers >= 5000) {
-      batchSize = 500;
-    } else if (totalUsers >= 2000) {
-      batchSize = 100;
-    } else {
-      batchSize = 100; // If fewer users, process all at once
+    console.log(`🚀 Fetching Asset Data in Batches of ${batchSize}...`);
+
+    const userChunks = [];
+    for (let i = 0; i < users.length; i += batchSize) {
+      userChunks.push(users.slice(i, i + batchSize));
     }
- // Adjust this based on your system's capacity
 
-    const processUsersInBatches = async (usersBatch) => {
-      for (const [principal, userData] of usersBatch) {
-        if (!principal) continue;
+    console.log(`📦 Total Batches: ${userChunks.length}`);
 
-        const userBalances = {};
+    const processUsersInBatch = async (usersBatch) => {
+      await Promise.allSettled(
+        usersBatch.map(([principal]) =>
+          concurrencyLimit(async () => {
+            if (!principal) return;
+            const userBalances = {};
 
-        await Promise.all(
-          assets.map(async (asset) => {
-            const reserveDataForAsset = await fetchReserveData(asset);
-            console.log("reserveDataForAsset", reserveDataForAsset);
-            const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-            const debtTokenId =
-              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-            console.log("dtokenId", dtokenId);
+            await Promise.allSettled(
+              assets.map(async (asset) => {
+                const reserveDataForAsset = await fetchReserveData(asset);
+                const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+                const debtTokenId =
+                  reserveDataForAsset?.Ok?.debt_token_canister?.[0];
 
-            const assetBalance = {
-              dtokenBalance: null,
-              debtTokenBalance: null,
-            };
+                const assetBalance = {
+                  dtokenBalance: null,
+                  debtTokenBalance: null,
+                };
 
-            try {
-              const formattedPrincipal = Principal.fromText(
-                principal.toString()
-              );
-              const account = { owner: formattedPrincipal, subaccount: [] };
-
-              if (dtokenId) {
-                const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-                if (dtokenActor) {
-                  const balance = await dtokenActor.icrc1_balance_of(account);
-                  assetBalance.dtokenBalance = Number(balance);
-                }
-              }
-
-              if (debtTokenId) {
-                const debtTokenActor = createLedgerActor(
-                  debtTokenId,
-                  idlFactory1
-                );
-                if (debtTokenActor) {
-                  const balance = await debtTokenActor.icrc1_balance_of(
-                    account
+                try {
+                  const formattedPrincipal = Principal.fromText(
+                    principal.toString()
                   );
-                  assetBalance.debtTokenBalance = Number(balance);
+                  const account = { owner: formattedPrincipal, subaccount: [] };
+
+                  if (dtokenId) {
+                    const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+                    if (dtokenActor) {
+                      const balance = await dtokenActor.icrc1_balance_of(
+                        account
+                      );
+                      assetBalance.dtokenBalance = Number(balance);
+                    }
+                  }
+
+                  if (debtTokenId) {
+                    const debtTokenActor = createLedgerActor(
+                      debtTokenId,
+                      idlFactory1
+                    );
+                    if (debtTokenActor) {
+                      const balance = await debtTokenActor.icrc1_balance_of(
+                        account
+                      );
+                      assetBalance.debtTokenBalance = Number(balance);
+                    }
+                  }
+                } catch (error) {
+                  console.error(
+                    `❌ Error fetching balance for ${asset}:`,
+                    error
+                  );
                 }
-              }
-            } catch (error) {
-              console.error(`Error processing balances for ${asset}:`, error);
-            }
 
-            userBalances[asset] = assetBalance;
+                userBalances[asset] = assetBalance;
+              })
+            );
+
+            // ✅ Update state progressively to avoid UI freeze
+            setAssetBalances((prev) => ({
+              ...prev,
+              [principal]: userBalances,
+            }));
           })
-        );
-
-        balances[principal] = userBalances;
-
-        // ✅ Update state progressively to avoid UI freeze
-        setAssetBalances((prevBalances) => ({
-          ...prevBalances,
-          [principal]: userBalances,
-        }));
-      }
+        )
+      );
     };
 
-    // ✅ Process users in batches
-    for (let i = 0; i < users.length; i += batchSize) {
-      const batch = users.slice(i, i + batchSize);
-      await processUsersInBatches(batch);
+    // ✅ Process all batches efficiently
+    for (let batchIndex = 0; batchIndex < userChunks.length; batchIndex++) {
+      console.log(`🚀 Processing Batch ${batchIndex + 1}...`);
+      await processUsersInBatch(userChunks[batchIndex]);
+      console.log(`✅ Completed Batch ${batchIndex + 1}`);
     }
-  };
 
-  
+    console.log("🎉 All Asset Data Fetched Successfully!");
+  };
 
   const getBalanceForPrincipalAndAsset = (
     principal,
@@ -558,7 +537,7 @@ const fetchAssetData = async () => {
 
     const assetBalance =
       getBalanceForPrincipalAndAsset(
-        mappedItem.principal?._arr,
+        mappedItem.principal,
         assetName,
         "dtokenBalance"
       ) || 0;
@@ -584,7 +563,7 @@ const fetchAssetData = async () => {
 
     const assetBorrowBalance =
       getBalanceForPrincipalAndAsset(
-        mappedItem.principal?._arr,
+        mappedItem.principal,
         assetName,
         "debtTokenBalance"
       ) || 0;
@@ -618,10 +597,11 @@ const fetchAssetData = async () => {
     if (!text || typeof text !== "string") {
       return ""; // ✅ Return an empty string if text is undefined or not a string
     }
-  
-    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+
+    return text.length > maxLength
+      ? text.substring(0, maxLength) + "..."
+      : text;
   };
-  
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -641,11 +621,6 @@ const fetchAssetData = async () => {
    *                                  EFFECTS
    * =================================================================================== */
 
- 
-
-  
-
-  
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
 
@@ -665,8 +640,6 @@ const fetchAssetData = async () => {
     );
     setHealthFactors(updatedHealthFactors);
   }, [userAccountData]);
-
- 
 
   useEffect(() => {
     const fetchSupplyData = async () => {
@@ -767,8 +740,7 @@ const fetchAssetData = async () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => {
-                    const userLoading =
-                      userLoadingStates[item.principal?._arr.toText()];
+                    const userLoading = userLoadingStates[item.principal];
                     return (
                       <tr
                         key={index}
@@ -780,118 +752,197 @@ const fetchAssetData = async () => {
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
-                            <p>
-                              {truncateText(
-                                item.principal?._arr?.toString(),
-                                14
-                              )}
-                            </p>
+                            <p>{truncateText(item.principal.toString(), 14)}</p>
                           </div>
                         </td>
                         <td className="p-2 align-top py-8 ">
                           <div className="flex flex-row ml-2 mt-2">
                             <div>
                               <p className="font-medium">
-                                {`$${formatValue(Number(item.debt) / 1e8)}`}
+                                {`$${formatValue(
+                                  Number(item?.accountData?.Ok?.[1]) / 1e8
+                                )}`}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
-                            {Array.isArray(item?.userData?.reserves?.[0]) &&
-                              item?.userData?.reserves?.[0].map(
-                                (mappedItem, index) => {
-                                  const assetName = mappedItem?.[0];
-                                  const assetSupply = calculateAssetSupply(
-                                    assetName,
-                                    item
-                                  );
-                                  const assetBorrow = calculateAssetBorrow(
-                                    assetName,
-                                    item
+                            {console.log(
+                              "item?.userData?.reserves",
+                              item?.userData?.reserves
+                            )}
+
+                            {/* Ensure reserves exist & correctly group asset data */}
+                            {Array.isArray(item?.userData?.reserves) &&
+                              item.userData.reserves.map(
+                                (reserveArray, index) => {
+                                  if (
+                                    !Array.isArray(reserveArray) ||
+                                    reserveArray.length === 0
+                                  )
+                                    return null;
+
+                                  console.log(
+                                    "🔹 reserveArray (All Reserves Together):",
+                                    reserveArray
                                   );
 
-                                  if (assetBorrow > 0) {
-                                    return (
-                                      <img
-                                        key={index}
-                                        src={
-                                          assetName === "ckBTC"
-                                            ? ckBTC
-                                            : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
-                                        }
-                                        alt={assetName || "asset"}
-                                        className="rounded-[50%] w-7"
-                                      />
-                                    );
-                                  }
-                                  return null;
+                                  // Collect all valid assets where `assetBorrow > 0`
+                                  const allBorrowedAssets = reserveArray
+                                    .map((mappedItem) => {
+                                      if (
+                                        !Array.isArray(mappedItem) ||
+                                        mappedItem.length < 2
+                                      )
+                                        return null;
+
+                                      console.log(
+                                        "🔹 Processing mappedItem (Asset Data):",
+                                        mappedItem
+                                      );
+
+                                      const assetName = mappedItem[0];
+                                      const assetSupply = calculateAssetSupply(
+                                        assetName,
+                                        item
+                                      );
+                                      const assetBorrow = calculateAssetBorrow(
+                                        assetName,
+                                        item
+                                      );
+
+                                      if (assetBorrow > 0) {
+                                        return {
+                                          assetName,
+                                          assetSupply,
+                                          assetBorrow,
+                                        };
+                                      }
+                                      return null; // Exclude assets with `assetBorrow = 0`
+                                    })
+                                    .filter(Boolean); // Remove null values
+
+                                  console.log(
+                                    "✅ Borrowed Assets (Filtered):",
+                                    allBorrowedAssets
+                                  );
+
+                                  return allBorrowedAssets.length > 0 ? (
+                                    <div key={index} className="flex gap-2">
+                                      {allBorrowedAssets.map((asset, i) => (
+                                        <div
+                                          key={`${asset.assetName}-${i}`}
+                                          className="flex flex-col items-center"
+                                        >
+                                          <img
+                                            src={
+                                              asset.assetName === "ckBTC"
+                                                ? ckBTC
+                                                : asset.assetName === "ckETH"
+                                                ? ckETH
+                                                : asset.assetName === "ckUSDC"
+                                                ? ckUSDC
+                                                : asset.assetName === "ICP"
+                                                ? icp
+                                                : asset.assetName === "ckUSDT"
+                                                ? ckUSDT
+                                                : undefined
+                                            }
+                                            alt={asset.assetName || "asset"}
+                                            className="rounded-[50%] w-7"
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : null; // Return nothing if no valid assets exist
                                 }
                               )}
                           </div>
                         </td>
+
                         <td className="p-5 align-top hidden md:table-cell py-8">
                           <div className="flex gap-2 items-center">
+                            {console.log(
+                              "item?.userData?.reserves",
+                              item?.userData?.reserves
+                            )}
+
+                            {/* Ensure reserves exist & correctly group asset data */}
                             {Array.isArray(item?.userData?.reserves?.[0]) &&
-                              item?.userData?.reserves?.[0].map(
-                                (mappedItem, index) => {
-                                  const assetName = mappedItem?.[0];
-                                  const assetSupply = calculateAssetSupply(
-                                    assetName,
-                                    item
-                                  );
-                                  const assetBorrow = calculateAssetBorrow(
-                                    assetName,
-                                    item
-                                  );
-                                  const item1 = filteredItems.find(
-                                    (item) => item[0] === assetName
-                                  );
-                                  const reserveliquidationThreshold =
-                                    Number(
-                                      item1?.[1]?.Ok.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000 || 0;
-                                  console.log(
-                                    "reserveliquidationThreshold",
-                                    reserveliquidationThreshold
-                                  );
-                                  if (assetSupply > 0) {
-                                    return (
+                              (() => {
+                                const allSuppliedAssets =
+                                  item?.userData?.reserves?.[0]
+                                    .map((mappedItem, index) => {
+                                      const assetName = mappedItem?.[0];
+                                      const assetSupply = calculateAssetSupply(
+                                        assetName,
+                                        item
+                                      );
+                                      const assetBorrow = calculateAssetBorrow(
+                                        assetName,
+                                        item
+                                      );
+
+                                      // Find reserve details for liquidation threshold
+                                      const item1 = filteredItems.find(
+                                        (itm) => itm[0] === assetName
+                                      );
+                                      const reserveliquidationThreshold =
+                                        Number(
+                                          item1?.[1]?.Ok.configuration
+                                            .liquidation_threshold
+                                        ) / 100000000 || 0;
+
+                                      console.log(
+                                        "reserveliquidationThreshold",
+                                        reserveliquidationThreshold
+                                      );
+
+                                      // Only return assets with supply > 0
+                                      if (assetSupply > 0) {
+                                        return {
+                                          assetName,
+                                          assetSupply,
+                                        };
+                                      }
+                                      return null;
+                                    })
+                                    .filter(Boolean); // Remove null values
+
+                                console.log(
+                                  "All Supplied Assets:",
+                                  allSuppliedAssets
+                                );
+
+                                return allSuppliedAssets.length > 0 ? (
+                                  <div className="flex gap-2">
+                                    {allSuppliedAssets.map((asset, i) => (
                                       <img
-                                        key={index}
+                                        key={`${asset.assetName}-${i}`}
                                         src={
-                                          assetName === "ckBTC"
+                                          asset.assetName === "ckBTC"
                                             ? ckBTC
-                                            : assetName === "ckETH"
+                                            : asset.assetName === "ckETH"
                                             ? ckETH
-                                            : assetName === "ckUSDC"
+                                            : asset.assetName === "ckUSDC"
                                             ? ckUSDC
-                                            : assetName === "ICP"
+                                            : asset.assetName === "ICP"
                                             ? icp
-                                            : assetName === "ckUSDT"
+                                            : asset.assetName === "ckUSDT"
                                             ? ckUSDT
                                             : undefined
                                         }
-                                        alt={assetName || "asset"}
+                                        alt={asset.assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />
-                                    );
-                                  }
-                                  return null;
-                                }
-                              )}
+                                    ))}
+                                  </div>
+                                ) : null;
+                              })()}
                           </div>
                         </td>
+
                         {}
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">

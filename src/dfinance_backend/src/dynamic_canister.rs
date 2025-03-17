@@ -1,5 +1,4 @@
 use crate::constants::asset_address::default;
-// use crate::constants::asset_address::DEFAULT;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
@@ -11,7 +10,6 @@ use crate::constants::interest_variables::constants::{
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
 use candid::{CandidType, Encode, Nat, Principal};
-use futures::future::ok;
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
 };
@@ -20,7 +18,6 @@ use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use serde::Deserialize;
 use std::borrow::Cow;
-use std::default;
 
 /*
  * @title Initialization Arguments for Token Canister
@@ -112,7 +109,6 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
  * @param token_symbol Symbol for the token.
  * @returns Principal ID of the created token canister.
  */
-#[update]
 pub async fn create_token_canister(
     token_name: String,
     token_symbol: String,
@@ -223,11 +219,7 @@ pub async fn create_token_canister(
  *
  * @returns The `Principal` ID of the newly created test token canister.
  */
-#[update]
-pub async fn create_testtoken_canister(
-    token_name: String,
-    token_symbol: String,
-) -> Result<Principal, Error> {
+pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
@@ -334,6 +326,20 @@ pub async fn create_testtoken_canister(
     Ok(canister_id)
 }
 
+/*
+ * @title Add Controllers to Canister
+ * @dev This function allows adding a user as a controller to a specific canister. 
+ *      Only the current controller of the canister can invoke this function. 
+ *      The function updates the canister settings to include the new user as a controller,
+ *      alongside the caller.
+ * 
+ * @param canister_id The principal ID of the canister to which the controllers should be added.
+ * @param user The principal ID of the user to be added as a controller.
+ * 
+ * @returns 
+ *      - `Ok("done")`: If the controllers were successfully added.
+ *      - `Ok("principals are not allowed")`: If the caller is not a controller of the canister.
+ */
 #[update]
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {
     if !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {

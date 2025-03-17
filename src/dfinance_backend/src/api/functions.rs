@@ -1,5 +1,5 @@
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::mutate_state;
+use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
@@ -10,12 +10,10 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::api;
+use ic_cdk::api::time;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
-// use ic_cdk::api::management_canister::http_request::{
-//     http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod,
-// };
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 struct Account {
@@ -23,6 +21,12 @@ struct Account {
     subaccount: Option<Vec<u8>>,
 }
 
+// Define a struct to hold request count and last request time
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct RequestTracker {
+    count: u32,
+    last_request_time: u64,
+}
 /*
  * @title Asset Transfer From Function
  * @notice Transfers assets from one principal to another using the ICRC-2 standard.
@@ -46,7 +50,10 @@ pub async fn asset_transfer_from(
 ) -> Result<Nat, String> {
     ic_cdk::println!(
         "Initiating asset transfer from {:?} to {:?} of amount {:?} via ledger_canister_id {:?}",
-        from, to, amount, ledger_canister_id
+        from,
+        to,
+        amount,
+        ledger_canister_id
     );
 
     let args = TransferFromArgs {
@@ -66,25 +73,22 @@ pub async fn asset_transfer_from(
     };
 
     match call(ledger_canister_id, "icrc2_transfer_from", (args,)).await {
-        Ok((result,)) => {
-            match result {
-                TransferFromResult::Ok(balance) => {
-                    ic_cdk::println!("Transfer successful. New balance: {:?}", balance);
-                    Ok(balance)
-                }
-                TransferFromResult::Err(err) => {
-                    ic_cdk::println!("Transfer failed with error: {:?}", err);
-                    Err(format!("{:?}", err))
-                }
+        Ok((result,)) => match result {
+            TransferFromResult::Ok(balance) => {
+                ic_cdk::println!("Transfer successful. New balance: {:?}", balance);
+                Ok(balance)
             }
-        }
+            TransferFromResult::Err(err) => {
+                ic_cdk::println!("Transfer failed with error: {:?}", err);
+                Err(format!("{:?}", err))
+            }
+        },
         Err(e) => {
             ic_cdk::println!("Call to ledger canister failed: {:?}", e.1);
             Err(e.1)
         }
     }
 }
-
 
 /*
  * @title Asset Transfer Function
@@ -262,6 +266,11 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+
     let operation_key = user_principal;
     // Acquire the lock
     {
@@ -309,24 +318,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             ic_cdk::println!("wallet balance is low");
             return Err(Error::LowWalletBalance);
         }
-
-        // if (balance.clone() - amount.clone()) == Nat::from(0u128) {
-        //     ic_cdk::println!("wallet balance is low");
-        //     if let Err(e) = send_admin_notifications("mid", asset.clone()).await {
-        //         ic_cdk::println!("Failed to send admin notification: {:?}", e);
-        //         return Err(e);
-        //     };
-        // }
-
-        // if (balance.clone() - amount.clone())
-        //     <= Nat::from(1000u128).scaled_mul(Nat::from(SCALING_FACTOR))
-        // {
-        //     ic_cdk::println!("wallet balance is low");
-        //     if let Err(e) = send_admin_notifications("final", asset.clone()).await {
-        //         ic_cdk::println!("Failed to send admin notification: {:?}", e);
-        //         return Err(e);
-        //     };
-        // }
 
         let mut rate: Option<Nat> = None;
 
@@ -413,6 +404,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
         ic_cdk::println!("user data before submit = {:?}", user_data);
 
+        // Ask: dont you think that this should be on the last of the code.
         mutate_state(|state| {
             state
                 .user_profile
@@ -511,8 +503,77 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
  * - `Nat` - The current cycle balance of the canister.
  */
 #[query]
-pub async fn cycle_checker() -> Nat {
-    Nat::from(api::canister_balance128())
+pub async fn cycle_checker() -> Result<Nat, Error> {
+    let caller = ic_cdk::caller();
+    if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    Ok(Nat::from(api::canister_balance128()))
+}
+
+const REQUEST_LIMIT: u32 = 2400; // Maximum allowed requests within the defined time window
+const TIME_WINDOW: u64 = 86400; // Time window in seconds (one hour)
+const BLOCK_DURATION: u64 = 3600; // Block duration in seconds (12 hours = 43200 seconds)
+
+pub fn request_limiter() -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+    let current_time_stamp = current_timestamp();
+    ic_cdk::println!("Current time: {}", current_time_stamp);
+
+    // Check if user is blocked
+    if let Some(unblock_time) = mutate_state(|state| state.blocked_users.get(&caller_id)) {
+        ic_cdk::println!("User is blocked until: {}", unblock_time);
+        if unblock_time > current_time_stamp {
+            return Err(Error::TOOMANYREQUESTS);
+        } else {
+            mutate_state(|state| {
+                state.blocked_users.remove(&caller_id); // Unblock user
+            });
+        }
+    }
+
+    let mut entry = mutate_state(|state| {
+        state
+            .requests
+            .get(&caller_id)
+            .map(|candid| candid.0.clone())
+            .unwrap_or(RequestTracker {
+                count: 0,
+                last_request_time: current_time_stamp,
+            })
+    });
+
+    if current_time_stamp - entry.last_request_time > TIME_WINDOW {
+        // Reset request count if outside time window
+        entry.count = 0;
+        entry.last_request_time = current_time_stamp;
+    }
+
+    entry.count += 1;
+
+    if entry.count > REQUEST_LIMIT {
+        // Block user if exceeding request limit
+        mutate_state(|state| {
+            state
+                .blocked_users
+                .insert(caller_id.clone(), current_time_stamp + BLOCK_DURATION);
+        });
+        mutate_state(|state| {
+            state.requests.remove(&caller_id);
+        });
+        return Err(Error::BLOCKEDFORONEHOUR);
+    }
+
+    mutate_state(|state| {
+        state.requests.insert(caller_id.clone(), Candid(entry));
+    });
+
+    Ok(())
+}
+
+fn current_timestamp() -> u64 {
+    time() / 1_000_000_000
 }
 
 // async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Error> {

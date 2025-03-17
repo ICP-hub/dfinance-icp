@@ -1,20 +1,19 @@
 use crate::constants::errors::Error;
-use crate::constants::asset_data::to_check_controller;
 use api::functions::get_balance;
+use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
+use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
-use ic_cdk::api::is_controller;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
-use protocol::libraries::logic::user::calculate_user_account_data;
-
+use protocol::libraries::logic::user::calculate_user_asset_data;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -35,9 +34,8 @@ use crate::declarations::assets::{
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::{UserData, UserReserveData};
+use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
-use std::collections::HashMap;
 use std::time::Duration;
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
@@ -65,7 +63,18 @@ pub async fn init(args: Principal) {
     schedule_midnight_task().await;
 }
 
-
+/*
+ * @title Get Controller Information
+ * @dev Retrieves the controller ID from the state. The function looks for metadata 
+ *      associated with a specific key and returns the `controller_id` from `InitArgs`
+ *      if available. If no controller is found or an error occurs while reading the state, 
+ *      an appropriate error is returned.
+ *
+ * @returns 
+ *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
+ *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
+ *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ */
 pub fn get_controller() -> Result<InitArgs, Error> {
 
     match read_state(|state| {
@@ -595,60 +604,6 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-// Function to store a tester Principal
-#[ic_cdk::update]
-pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
-    let user_principal = ic_cdk::caller();
-    if user_principal == Principal::anonymous()  {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-    if !to_check_controller(){
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
-    mutate_state(|state| {
-        state.tester_list.insert(username, principal)
-    });
-    return Ok(());
-}
-
-// Function to retrieve testers
-pub fn get_testers() -> Result<Vec<Principal>, Error> {
-    let user_principal = ic_cdk::caller();
-
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-    read_state(|state| {
-        let mut testers = Vec::new();
-        let iter = state.tester_list.iter();
-        for (_, value) in iter {
-            testers.push(value.clone());
-        }
-        Ok(testers)
-    })
-}
-
-// Function for checking caller is tester or not
-#[ic_cdk::query]
-pub fn check_is_tester()-> bool {
-
-    let testers = match get_testers(){
-        Ok(data)=>data,
-        Err(error) => {
-            ic_cdk::println!("Invalid Access {:?}", error);
-            return false;
-        }
-    };
-    let user = ic_cdk::caller();
-    if testers.contains(&user){
-        return true;
-    }
-    return false;
-}
-
 
 
 /*
@@ -657,12 +612,14 @@ pub fn check_is_tester()-> bool {
  * @param on_behalf (Optional) The principal requesting the data.
  * @returns A tuple containing user financial data.
  */
-#[update]
+#[query]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
+    dtoken_balance: Option<Vec<AssetData>>,
+    debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     ic_cdk::println!("error in user = {:?}", on_behalf);
-    let result = calculate_user_account_data(on_behalf).await;
+    let result = calculate_user_asset_data(on_behalf,dtoken_balance,debt_token_balance).await;
     result
 }
 

@@ -228,16 +228,38 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       }
     } catch (error) {
       console.error(error.message);
-      toast.error(`Error: ${error.message}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+  
+      // ✅ **Check for "Out of Cycles" Error**
+      if (
+        error.message.includes("out of cycles") ||
+        error.message.includes("Reject text: Canister") // Matches error pattern
+      ) {
+        toast.error(
+          "Canister is out of cycles. Please wait, the admin has been notified.",
+          {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          }
+        );
+  
+      } else {
+        toast.error(`Error: ${error.message}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
     } finally {
       setLoading(false);
     }

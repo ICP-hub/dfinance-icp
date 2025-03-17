@@ -23,19 +23,34 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the Repay component, allowing users to input and execute repayment transactions.
  */
 
-const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const Repay = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-
-  /* ===================================================================================
-   *                                 STATE MANAGEMENT
-   * =================================================================================== */
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -66,10 +81,15 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
    *                                  MEMOIZATION
    * =================================================================================== */
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -90,25 +110,45 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
    */
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
+  
+    // Remove invalid characters (allow only numbers and a single decimal point)
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure there's only one decimal point
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Convert to a number
     let numericAmount = parseFloat(inputAmount);
     if (isNaN(numericAmount)) numericAmount = 0;
+  
+    // Limit decimal places to 8
+    const truncateToEightDecimals = (num) => {
+      const factor = Math.pow(10, 8);
+      return Math.floor(num * factor) / factor;
+    };
+  
     if (numericAmount > assetBorrow) {
       numericAmount = assetBorrow;
-      inputAmount = truncateToSevenDecimals(assetBorrow).toString();
     }
+  
+    numericAmount = truncateToEightDecimals(numericAmount);
+  
+    // Convert back to string to retain decimal formatting
+    inputAmount = numericAmount.toString();
+  
     setAmount(inputAmount);
     setMaxClicked(inputAmount === assetBorrow.toString());
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   /**
    * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
@@ -142,6 +182,13 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
     parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  console.log(truncatedValue); // Debugging: Check if it's correctly formatted
 
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
@@ -356,6 +403,11 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         )
       ) {
         message = "You cannot repay more than you owe.";
+      } else if (
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister")
+      ) {
+        message = "Canister is out of cycles. Admin has been notified.";
       }
 
       toast.error(`Error: ${message}`, {
@@ -520,10 +572,15 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       totalDeptValue = 0;
     }
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    
+
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
   }, [
     asset,
@@ -550,17 +607,17 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-[50%]">
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="flex flex-col items-start w-[40%] gap-8">
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0 || isApproved}
-                    className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-[14px] placeholder:text-[10px] lg:placeholder:text-[12px] focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
-                  <p className="text-xs text-gray-500 px-2  mt-4 mb-1">
+                  <p className="text-[11px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
@@ -569,8 +626,8 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                       : "$0.00 USD"}
                   </p>
                 </div>
-                <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2  mt-1">
+                <div className="flex flex-col items-end gap-3">
+                  <div className="w-auto flex items-center gap-2 lg:mb-5">
                     <img
                       src={image}
                       alt="Item Image"
@@ -578,23 +635,33 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 text-right w-full mt-1">
-                    Wallet Balance:
-                  </p>
-                  <p
-                    className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (assetBorrow > 0 && !isApproved) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {truncateToSevenDecimals(supplyBalance)} Max
-                  </p>
+                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
+                    {/* Wallet Balance label (Always on top in small screens) */}
+                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+                      Wallet Balance:
+                    </p>
+
+                    {/* Value and Max button in same line below on small screens */}
+                    <div className="flex gap-1 items-center">
+                      <p className="text-[10px] text-gray-500">
+                        {truncateToSevenDecimals(supplyBalance)}
+                      </p>
+                      <p
+                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                          assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        }`}
+                        onClick={() => {
+                          if (assetBorrow > 0 && !isApproved) {
+                            handleMaxClick();
+                          }
+                        }}
+                      >
+                        Max
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -623,24 +690,21 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
+                      {console.log("truncatedValue", truncatedValue)}
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {parseFloat(
-                          healthFactorBackend > 100
-                            ? "Infinity"
-                            : parseFloat(healthFactorBackend).toFixed(2)
-                        )}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -769,7 +833,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -782,7 +846,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <center>
-              <p className="mt-2 ">
+              <p className="mt-2 text-center">
                 Your Debt was{" "}
                 <strong>
                   {" "}
@@ -864,3 +928,4 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
 };
 
 export default Repay;
+

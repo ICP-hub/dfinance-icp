@@ -1,5 +1,5 @@
 use crate::api::functions::{get_balance, get_total_supply};
-use crate::api::resource_manager::{get_locked_amount, lock_amount, release_amount};
+use crate::api::resource_manager::{get_locked_amount, lock_amount};
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
@@ -8,7 +8,7 @@ use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{get_asset_debt, get_asset_supply, get_cached_exchange_rate, user_normalized_supply};
+use crate::{get_asset_debt, get_cached_exchange_rate, user_normalized_supply};
 use candid::{Nat, Principal};
 
 pub struct ValidationLogic;

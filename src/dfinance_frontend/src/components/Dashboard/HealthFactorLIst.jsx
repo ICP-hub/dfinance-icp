@@ -8,7 +8,9 @@ import Lottie from "../../components/Common/Lottie";
 import useAssetData from "../customHooks/useAssets";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Error from "../../pages/Error";
-
+import { Principal } from "@dfinity/principal";
+import { idlFactory } from "../../../../declarations/dtoken";
+import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 /**
  * HealthFactorList Component
  *
@@ -20,7 +22,7 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const { backendActor, isAuthenticated } = useAuth();
+  const { backendActor, isAuthenticated , fetchReserveData, createLedgerActor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const [userAccountData, setUserAccountData] = useState({});
@@ -28,11 +30,18 @@ const HealthFactorList = () => {
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
-  const { assets, reserveData, filteredItems, error, loading } = useAssetData(searchQuery);
+  const { assets,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+    loading: filteredDataLoading,} = useAssetData(searchQuery);
   const [showFilter, setShowFilter] = useState(false);
   const [healthFilter, setHealthFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [assetBalances, setAssetBalances] = useState([]);
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const cachedData = useRef({});
   const popupRef = useRef(null);
@@ -79,31 +88,208 @@ const HealthFactorList = () => {
       console.error("Error fetching users:", error);
     }
   };
+  const fetchAssetData = async () => {
+    const balances = {};
 
-  /**
+    await Promise.all(
+      users.map(async ([principal, userData]) => {
+        if (!principal) return; 
+
+        const userBalances = {};
+
+        await Promise.all(
+          assets.map(async (asset) => {
+            const reserveDataForAsset = await fetchReserveData(asset);
+            console.log("reserveDataForAsset", reserveDataForAsset);
+            const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+            const debtTokenId =
+              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+            console.log("dtokenId", dtokenId);
+            const assetBalance = {
+              dtokenBalance: null,
+              debtTokenBalance: null,
+            };
+
+            try {
+              const formattedPrincipal = Principal.fromText(
+                principal.toString()
+              );
+              const account = { owner: formattedPrincipal, subaccount: [] };
+
+             
+              if (dtokenId) {
+                const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+                if (dtokenActor) {
+                  const balance = await dtokenActor.icrc1_balance_of(account);
+                  assetBalance.dtokenBalance = Number(balance);
+                }
+              }
+
+             
+              if (debtTokenId) {
+                const debtTokenActor = createLedgerActor(
+                  debtTokenId,
+                  idlFactory1
+                );
+                if (debtTokenActor) {
+                  const balance = await debtTokenActor.icrc1_balance_of(
+                    account
+                  );
+                  assetBalance.debtTokenBalance = Number(balance);
+                }
+              }
+            } catch (error) {
+              console.error(`Error processing balances for ${asset}:`, error);
+            }
+
+           
+            userBalances[asset] = assetBalance;
+          })
+        );
+
+        
+        balances[principal] = userBalances;
+      })
+    );
+
+    
+    setAssetBalances(balances);
+  };
+ /**
    * This function fetches the user account data for a specific principal. It uses caching to avoid fetching data
    * for the same principal multiple times. The fetched data is stored in the `cachedData` ref.
    *
    * @param {string} principal - The principal of the user whose account data is being fetched.
    */
-  const fetchUserAccountDataWithCache = async (principal) => {
-    setHealthFactorLoading(true);
-    if (!principal || cachedData.current[principal]) return;
+ const fetchUserAccountDataWithCache = async (principal) => {
+  if (backendActor && isAuthenticated) {
+    setHealthFactorLoading(true); // Start loading indicator
+
+    // Convert the principal to a string for usage in the assetBalances object
+    const principalString = principal.toString();
+
+    // Log assetBalances before proceeding to check if data is available for this principal
+    console.log("assetBalances before function:", assetBalances[principalString]);
+
+    const userBalance = assetBalances[principalString];
+    if (!userBalance) {
+      console.error("userBalance is undefined or not available for principal:", principalString);
+      setHealthFactorLoading(false); // Stop loading indicator
+      return; // Exit the function if userBalance is not available
+    }
+    console.log("userBalance before function:", userBalance);
+
+    // Check if the data is already cached for this principal
+    if (cachedData.current[principalString]) {
+      setUserAccountData((prev) => ({
+        ...prev,
+        [principalString]: cachedData.current[principalString],
+      }));
+      setHealthFactorLoading(false); // Stop loading indicator
+      return;
+    }
 
     try {
-      const result = await backendActor.get_user_account_data([principal]);
+      if (!principalString || cachedData.current[principalString]) return;
 
-      if (result) {
-        cachedData.current[principal] = result;
-        setUserAccountData((prev) => ({ ...prev, [principal]: result }));
+      const principalObj = Principal.fromText(principalString);
+
+      // Log the state of assetBalances and userBalance for debugging
+      console.log("assetBalances for principal", principalString, ":", assetBalances);
+      console.log("assetBalances[principal]:", assetBalances[principalString]);
+      console.log("userBalance for principal:", userBalance);
+
+      // Ensure userBalance exists for the given principal
+      if (!userBalance) {
+        console.error("No data found for userBalance for this principal:", principalString);
+        setHealthFactorLoading(false);
+        return; // Exit if userBalance is still not found
+      }
+
+      // Find the user by principal in the users array
+      const user = users.find(
+        ([userPrincipal]) => userPrincipal.toString() === principalString
+      );
+
+      if (user) {
+        const userInfo = user[1]; // The second element of the array (user info)
+        console.log("userInfo", userInfo);
+
+        // Access reserves array
+        const reserves = userInfo?.reserves?.flat() || [];
+        console.log("reserves:", reserves);
+
+        let assetBalancesObj = [];
+        let borrowBalancesObj = [];
+
+        // Loop through each reserve entry to fetch the asset and balance info
+        reserves.forEach(([asset, assetInfo]) => {
+          console.log("assetInfo:", assetInfo);
+
+          // Extract asset balance and borrow balance for each asset in the reserves
+          const assetBalance = BigInt(userBalance?.[asset]?.dtokenBalance || 0);
+          const borrowBalance = BigInt(userBalance?.[asset]?.debtTokenBalance || 0);
+
+          // Log assetBalance and borrowBalance for debugging
+          console.log(`assetBalance for ${asset}:`, assetBalance);
+          console.log(`borrowBalance for ${asset}:`, borrowBalance);
+
+          // Only include non-zero balances for asset and borrow
+          if (assetBalance > 0n) {
+            assetBalancesObj.push({
+              balance: assetBalance,
+              name: asset,
+            });
+          }
+          if (borrowBalance > 0n) {
+            borrowBalancesObj.push({
+              balance: borrowBalance,
+              name: asset,
+            });
+          }
+        });
+
+        console.log("Asset Balances Set:", assetBalancesObj);
+        console.log("Borrow Balances Set:", borrowBalancesObj);
+
+        const assetBalancesParam = assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
+        const borrowBalancesParam = borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
+
+        // Call backend with separate sets for asset and borrow balances
+        const result = await backendActor.get_user_account_data(
+          [], // Pass the principal (empty array for the first parameter)
+          assetBalancesParam, // Pass asset balances wrapped in an array
+          borrowBalancesParam // Pass borrow balances wrapped in an array
+        );
+
+        console.log("Backend result:", result);
+
+        if (result?.Err === "ERROR :: Pending") {
+          console.warn("Pending state detected. Retrying...");
+          setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
+          return;
+        }
+
+        // Store the result in cache and update user account data
+        if (result?.Ok) {
+          cachedData.current[principalString] = result;
+          setUserAccountData((prev) => ({
+            ...prev,
+            [principalString]: result,
+          }));
+        }
+      } else {
+        console.error("User not found for principal:", principalString);
       }
     } catch (error) {
-      console.error(` Error fetching data for principal: ${principal}`, error);
-      setHealthFactorLoading(false);
+      console.error("Error fetching user account data:", error.message);
     } finally {
-      setHealthFactorLoading(false);
+      setHealthFactorLoading(false); // Stop loading indicator
     }
-  };
+  }
+};
+
+
 
   const showSearchBar = () => {
     setShowSearch(!showSearch);
@@ -135,6 +321,7 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
   useEffect(() => {
     checkControllerStatus();
   }, [backendActor]);
@@ -159,18 +346,34 @@ const HealthFactorList = () => {
 
 
   useEffect(() => {
+
     if (!users || users.length === 0) return;
+
+  
+
+    // Fetch user account data for each user concurrently using Promise.all
+
     Promise.all(
+
       users.map(([principal]) => {
-        if (principal) return fetchUserAccountDataWithCache(principal);
+
+        if (principal) return fetchUserAccountDataWithCache(principal); // Call for each user
+
         return null;
+
       })
+
     )
-      .then(() => console.log(" All user account data fetched"))
+
+      .then(() => console.log("All user account data fetched"))
+
       .catch((error) =>
-        console.error(" Error fetching user account data in batch:", error)
+
+        console.error("Error fetching user account data in batch:", error)
+
       );
-  }, [users]);
+
+  }, [users, assetBalances]);
 
   
   useEffect(() => {
@@ -200,7 +403,16 @@ const HealthFactorList = () => {
     };
   }, [closePopup]);
 
+  useEffect(() => {
 
+    if (users.length > 0) {
+
+      fetchAssetData();
+
+    }
+
+  }, [users, assets]);
+  
   useEffect(() => {
     if (selectedUser) {
       document.body.style.overflow = "hidden";

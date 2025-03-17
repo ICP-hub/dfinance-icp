@@ -1,6 +1,5 @@
 use crate::constants::errors::Error;
 use candid::{Nat, Principal};
-use ic_cdk::{query, update};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;

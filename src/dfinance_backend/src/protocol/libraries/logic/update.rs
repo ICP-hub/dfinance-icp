@@ -1,4 +1,4 @@
-use crate::api::functions::get_balance;
+use crate::api::functions::{get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
@@ -207,10 +207,6 @@ impl UpdateLogic {
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         ic_cdk::println!("User reserve: {:?}", user_reserve);
 
-        // let mut user_reserve_data = match user_reserve.as_mut() {
-        //     Some((_, reserve_data)) => reserve_data,
-        //     None => return Err(Error::NoUserReserveDataFound),
-        // };
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.is_borrowed = true;
             reserve_data.is_using_as_collateral_or_borrow = true;
@@ -225,7 +221,7 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                asset_borrow: params.amount.clone(), //remove
+                // asset_borrow: params.amount.clone(), //remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),
@@ -378,11 +374,7 @@ impl UpdateLogic {
                 reserve_data.is_collateral = true;
             }
         }
-        // if dtoken_balance == Nat::from(0u128) && is_borrowed == false {
-        //     if let Some(ref mut reserves) = user_data.reserves {
-        //         reserves.retain(|(name, _)| name != &params.asset);
-        //     }
-        // }
+
         // Save the updated user data back to state
         mutate_state(|state| {
             state
@@ -490,11 +482,6 @@ impl UpdateLogic {
             return Err(Error::NoUserReserveDataFound);
         }
 
-        // if debttoken_balance == Nat::from(0u128) && is_collateral == false {
-        //     if let Some(ref mut reserves) = user_data.reserves {
-        //         reserves.retain(|(name, _)| name != &params.asset);
-        //     }
-        // }
         ic_cdk::println!("Saving updated user data to state");
 
         mutate_state(|state| {
@@ -549,6 +536,11 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter() {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let user_data_result = user_data(user_principal);

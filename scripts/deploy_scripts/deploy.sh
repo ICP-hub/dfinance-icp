@@ -32,9 +32,9 @@ dfx build cketh_ledger
 
 
 # FOR ICP LEDGER
-MINTER_ACCOUNT_ID=$(dfx --identity anonymous ledger account-id)
-DEFAULT_ACCOUNT_ID=$(dfx --identity default ledger account-id)
-backend=$CANISTER_ID_DFINANCE_BACKEND
+# MINTER_ACCOUNT_ID=$(dfx --identity minter ledger account-id)
+# DEFAULT_ACCOUNT_ID=$(dfx --identity default ledger account-id)
+# backend=$CANISTER_ID_DFINANCE_BACKEND
 # CANISTER IDS
 # ASSET_CANISTER_ID=$(dfx canister id ic_asset_handler)
 # DAO_CANISTER_ID=$(dfx canister id dao_canister)
@@ -47,23 +47,16 @@ backend=$CANISTER_ID_DFINANCE_BACKEND
 # chmod 777 ./generate_did.sh
 # ./generate_did.sh
 
-MINTER=$(dfx --identity default identity get-principal)
+MINTER=$(dfx --identity minter identity get-principal)
 DEFAULT=$(dfx --identity default identity get-principal)
 
-
-# dfx identity new newminter  || true
-
-# dfx identity use newminter 
-
-export MINTER=$(dfx identity get-principal)
-echo "Minter Principal: $MINTER"
 
 export TOKEN_NAME="ckBTC"
 echo "Token Name: $TOKEN_NAME"
 
 export TOKEN_SYMBOL="ckBTC"
 
-export PRE_MINTED_TOKENS=10_000_000_000
+export PRE_MINTED_TOKENS=10_000_000_000_000
 export TRANSFER_FEE=0
 
 # dfx identity use default
@@ -108,7 +101,7 @@ echo "Token Name: $TOKEN_NAME"
 
 export TOKEN_SYMBOL="ckETH"
 
-export PRE_MINTED_TOKENS=10_000_000_000
+export PRE_MINTED_TOKENS=10_000_000_000_000
 export TRANSFER_FEE=0
 
 # dfx identity use default
@@ -144,6 +137,132 @@ record {
 
 echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"
 
+
+export TOKEN_NAME="ICP"
+echo "Token Name: $TOKEN_NAME"
+
+export TOKEN_SYMBOL="ICP"
+
+export PRE_MINTED_TOKENS=10_000_000_000_000
+export TRANSFER_FEE=0
+
+# dfx identity use default
+
+export USER=$(dfx identity get-principal)
+echo "User Principal: $USER"
+
+export ARCHIVE_CONTROLLER=$USER
+
+export TRIGGER_THRESHOLD=2000
+export NUM_OF_BLOCK_TO_ARCHIVE=1000
+export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+export FEATURE_FLAGS=true
+
+dfx deploy icp_ledger --argument "(variant {Init =
+record {
+     token_symbol = \"${TOKEN_SYMBOL}\";
+     token_name = \"${TOKEN_NAME}\";
+     minting_account = record { owner = principal \"${MINTER}\" };
+     transfer_fee = ${TRANSFER_FEE};
+     metadata = vec {};
+     feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
+    
+     initial_balances = vec { record { record { owner = principal \"${USER}\"; }; ${PRE_MINTED_TOKENS}; }; };
+     archive_options = record {
+         num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
+         trigger_threshold = ${TRIGGER_THRESHOLD};
+         controller_id = principal \"${ARCHIVE_CONTROLLER}\";
+         cycles_for_archive_creation = opt ${CYCLE_FOR_ARCHIVE_CREATION};
+     };
+ }
+})"
+
+echo "ICP got deployed with a transfer fee of ${TRANSFER_FEE}"
+
+
+export TOKEN_NAME="ckUSDC"
+echo "Token Name: $TOKEN_NAME"
+
+export TOKEN_SYMBOL="ckUSDC"
+
+export PRE_MINTED_TOKENS=10_000_000_000_000
+export TRANSFER_FEE=0
+
+# dfx identity use default
+
+export USER=$(dfx identity get-principal)
+echo "User Principal: $USER"
+
+export ARCHIVE_CONTROLLER=$USER
+
+export TRIGGER_THRESHOLD=2000
+export NUM_OF_BLOCK_TO_ARCHIVE=1000
+export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+export FEATURE_FLAGS=true
+
+dfx deploy ckusdc_ledger --argument "(variant {Init =
+record {
+     token_symbol = \"${TOKEN_SYMBOL}\";
+     token_name = \"${TOKEN_NAME}\";
+     minting_account = record { owner = principal \"${MINTER}\" };
+     transfer_fee = ${TRANSFER_FEE};
+     metadata = vec {};
+     feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
+    
+     initial_balances = vec { record { record { owner = principal \"${USER}\"; }; ${PRE_MINTED_TOKENS}; }; };
+     archive_options = record {
+         num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
+         trigger_threshold = ${TRIGGER_THRESHOLD};
+         controller_id = principal \"${ARCHIVE_CONTROLLER}\";
+         cycles_for_archive_creation = opt ${CYCLE_FOR_ARCHIVE_CREATION};
+     };
+ }
+})"
+
+echo "ckUSDC got deployed with a transfer fee of ${TRANSFER_FEE}"
+
+
+export TOKEN_NAME="ckUSDT"
+echo "Token Name: $TOKEN_NAME"
+
+export TOKEN_SYMBOL="ckUSDT"
+
+export PRE_MINTED_TOKENS=10_000_000_000_000
+export TRANSFER_FEE=0
+
+# dfx identity use default
+
+export USER=$(dfx identity get-principal)
+echo "User Principal: $USER"
+
+export ARCHIVE_CONTROLLER=$USER
+
+export TRIGGER_THRESHOLD=2000
+export NUM_OF_BLOCK_TO_ARCHIVE=1000
+export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+export FEATURE_FLAGS=true
+
+dfx deploy ckusdt_ledger --argument "(variant {Init =
+record {
+     token_symbol = \"${TOKEN_SYMBOL}\";
+     token_name = \"${TOKEN_NAME}\";
+     minting_account = record { owner = principal \"${MINTER}\" };
+     transfer_fee = ${TRANSFER_FEE};
+     metadata = vec {};
+     feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
+    
+     initial_balances = vec { record { record { owner = principal \"${USER}\"; }; ${PRE_MINTED_TOKENS}; }; };
+     archive_options = record {
+         num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
+         trigger_threshold = ${TRIGGER_THRESHOLD};
+         controller_id = principal \"${ARCHIVE_CONTROLLER}\";
+         cycles_for_archive_creation = opt ${CYCLE_FOR_ARCHIVE_CREATION};
+     };
+ }
+})"
+
+echo "ckUSDT got deployed with a transfer fee of ${TRANSFER_FEE}"
+
 export TOKEN_NAME="token_ledger"
 echo "Token Name: $TOKEN_NAME"
 
@@ -174,7 +293,7 @@ export TOKEN_SYMBOL="dtoken"
  dfx deploy dtoken --argument "(variant { Init = record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
-     minting_account = record { owner = principal \"${USER}\" };
+     minting_account = record { owner = principal \"${MINTER}\" };
      transfer_fee = ${TRANSFER_FEE};
      metadata = vec {};
      feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };
@@ -196,7 +315,7 @@ export TOKEN_SYMBOL="debttoken"
  dfx deploy debttoken --argument "(variant { Init = record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
-     minting_account = record { owner = principal \"${USER}\" };
+     minting_account = record { owner = principal \"${MINTER}\" };
      transfer_fee = ${TRANSFER_FEE};
      metadata = vec {};
      feature_flags = opt record { icrc2 = ${FEATURE_FLAGS} };

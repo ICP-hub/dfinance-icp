@@ -22,7 +22,7 @@ use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
  * @return `Ok(())` on success.  
  */
 #[update]
-pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
+pub async fn initialize(token_name: String, mut reserve_data: ReserveData, token_canister_id: Principal) -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
@@ -45,11 +45,6 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
         return Err(e);
     }
 
-    let token_canister_id =
-        match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
-            Ok(principal) => principal,
-            Err(e) => return Err(e),
-        };
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
 

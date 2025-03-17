@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TOKEN_NAME="ckUSDT"
+TOKEN_PRINCIPAL="asrmz-lmaaa-aaaaa-qaaeq-cai"
 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"
@@ -60,4 +61,4 @@ RESERVE_DATA="(
 )"
 
 # Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" && dfx canister call $CANISTER_NAME update_reserves_price
+dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA, principal \"$TOKEN_PRINCIPAL\")" && dfx canister call $CANISTER_NAME update_reserves_price

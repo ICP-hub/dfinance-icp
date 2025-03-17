@@ -205,7 +205,7 @@ service : (principal) -> {
       opt vec AssetData,
     ) -> (Result_2) query;
   get_user_data : (principal) -> (Result_3) query;
-  initialize : (text, ReserveData) -> (Result_1);
+  initialize : (text, ReserveData, principal) -> (Result_1);
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
   reset_reserve_value : (text, text, nat) -> (Result_1);

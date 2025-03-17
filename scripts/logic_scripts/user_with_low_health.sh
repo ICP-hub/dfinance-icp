@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Canister ID and function details
-backend_canister="avqkn-guaaa-aaaaa-qaaea-cai"
 register_method="register_user"
 faucet_method="faucet"
 

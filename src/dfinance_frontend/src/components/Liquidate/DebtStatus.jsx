@@ -133,6 +133,12 @@ const DebtStatus = () => {
     }
   };
 
+  /**
+   * Fetches and caches user account data to avoid redundant API calls.
+   * @param {Object} userData - The user data object.
+   */
+  
+
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -387,6 +393,8 @@ const DebtStatus = () => {
 
     loadUsers();
   }, [totalUsers, liquidateTrigger]);
+
+  
 
   useEffect(() => {
     if (currentItems.length > 0) {

@@ -50,7 +50,7 @@ const Footer = () => {
   }, [backendActor]);
 
   const handleApprove = async () => {
-    const ledgerActor = ledgerActors.ckBTC;
+    const ledgerActor = ledgerActors.ICP;
     try {
       setLoading(true);
       const approval = await ledgerActor.icrc2_approve({
@@ -58,7 +58,7 @@ const Footer = () => {
         memo: [],
         from_subaccount: [],
         created_at_time: [],
-        amount: 450000, // Adjust amount if needed
+        amount: 1000000000, // Adjust amount if needed
         expected_allowance: [],
         expires_at: [],
         spender: {
@@ -85,10 +85,10 @@ const Footer = () => {
     try {
       setLoading(true);
       const response = await backendActor.create_user_reserve_with_low_health(
-        "ckBTC",
-        "ckETH",
-        450000,
-        14000000
+        "ICP",
+        "ICP",
+        1000000000,
+         670000000
       );
       console.log("Reserve created:", response);
     } catch (error) {

@@ -21,18 +21,44 @@ import useAssetData from "../../customHooks/useAssets";
  * @param {Object} props - Component properties.
  */
 
- const Borrow = ({ asset,image, supplyRateAPR,balance,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,totalCollateral,totalDebt,currentCollateralStatus,Ltv,borrowableValue: borrowableValueprop, borrowableAssetValue: borrowableAssetValueprop, total_supply, total_borrow, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-
-
+const Borrow = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue: borrowableValueprop,
+  borrowableAssetValue: borrowableAssetValueprop,
+  total_supply,
+  total_borrow,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, } = useFetchConversionRate();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
   const { filteredItems } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();
 
   /* ===================================================================================
@@ -45,7 +71,8 @@ import useAssetData from "../../customHooks/useAssets";
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
+    useState(false);
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +91,9 @@ import useAssetData from "../../customHooks/useAssets";
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -94,11 +123,19 @@ import useAssetData from "../../customHooks/useAssets";
   };
 
   //   Calculates borrowable values based on conversion rates.
-  const calculateBorrowableValues = (asset, availableBorrow, remainingBorrowable
+  const calculateBorrowableValues = (
+    asset,
+    availableBorrow,
+    remainingBorrowable
   ) => {
     let borrowableValue = null;
     let borrowableAssetValue = null;
-    const assetRates = { ckBTC: ckBTCUsdRate,ckETH: ckETHUsdRate,ckUSDC: ckUSDCUsdRate,ICP: ckICPUsdRate,ckUSDT: ckUSDTUsdRate,
+    const assetRates = {
+      ckBTC: ckBTCUsdRate,
+      ckETH: ckETHUsdRate,
+      ckUSDC: ckUSDCUsdRate,
+      ICP: ckICPUsdRate,
+      ckUSDT: ckUSDTUsdRate,
     };
     const rate = assetRates[asset] / 1e8;
     if (rate) {
@@ -135,9 +172,8 @@ import useAssetData from "../../customHooks/useAssets";
       "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
-
-   // Handles the borrow action by interacting with the backend.
-   const handleBorrowETH = async () => {
+  // Handles the borrow action by interacting with the backend.
+  const handleBorrowETH = async () => {
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -290,6 +326,7 @@ import useAssetData from "../../customHooks/useAssets";
       setIsLoading(false);
     }
   };
+  
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -414,11 +451,9 @@ import useAssetData from "../../customHooks/useAssets";
         );
         setBorrowableValue(updatedValues.borrowableValue);
         setBorrowableAssetValue(updatedValues.borrowableAssetValue);
-      } 
-      catch (error) {
+      } catch (error) {
         console.error("Error fetching data:", error);
-      } 
-      finally {
+      } finally {
         setTimeout(() => {
           setLoading(false);
         }, 1000);
@@ -440,7 +475,8 @@ import useAssetData from "../../customHooks/useAssets";
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      const borrowValue =remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      const borrowValue =
+        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -481,12 +517,13 @@ import useAssetData from "../../customHooks/useAssets";
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
 
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
-     
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    console.log("totalCollateralValue",totalCollateralValue,totalCollateral,amountAdded)
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    
-    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
 
+    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
+     console.log("ltv",ltv)
     setPrevHealthFactor(currentHealthFactor);
 
     const truncateToDecimals = (num, decimals) => {
@@ -501,8 +538,7 @@ import useAssetData from "../../customHooks/useAssets";
 
     if (value < 2 && value > 1) {
       setIsAcknowledgmentRequired(true);
-    }
-     else {
+    } else {
       setIsAcknowledgmentRequired(false);
       setIsAcknowledged(false);
     }

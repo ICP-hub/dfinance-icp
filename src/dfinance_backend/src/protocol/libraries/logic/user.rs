@@ -4,6 +4,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::assets::{ExecuteRepayParams,AssetData};
 use crate::declarations::storable::Candid;
+use crate::guards::check_is_tester;
 use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
@@ -12,7 +13,6 @@ use crate::{
     protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
     user_normalized_debt, user_normalized_supply,
 };
-use crate::guards::check_is_tester;
 use crate::{get_all_users, reserve_ledger_canister_id};
 use candid::{CandidType, Deserialize, Nat, Principal};
 use futures::stream::{FuturesUnordered, StreamExt};
@@ -807,6 +807,7 @@ pub async fn get_user_asset_balance_in_base_currency(
         .clone()
         .scaled_mul(asset_price.clone()))
 }
+
 
 /*
  * @title Get User Debt in Base Currency

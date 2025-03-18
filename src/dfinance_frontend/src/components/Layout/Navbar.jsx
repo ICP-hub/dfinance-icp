@@ -18,7 +18,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
-import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -26,7 +25,7 @@ import {
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import ThemeToggle from "../Common/ThemeToggle";
-import settingsIcon from "../../../public/Helpers/Settings.svg";
+import settingsIcon from "../../../public/Helpers/Settings(1).svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -87,7 +86,9 @@ export default function Navbar({ isHomeNav }) {
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-
+  const handleNavigate = () => {
+    navigate("/pointsystem");
+  };
   const hash = window.location.hash;
 
   const handleSoundToggle = () => {
@@ -342,38 +343,7 @@ export default function Navbar({ isHomeNav }) {
                 }}
               />
 
-              {!isHomeNav && isTestnetMode && (
-                <button
-                  className="bg-[#4659CF]  z-50  hover:bg-blue-700 text-white font-bold rounded-full md:rounded  text-[12px] p-1 md:px-2 md:py-[1px] md:pt-[2px] mt-[1px] ml-3"
-                  onClick={handleButtonClick}
-                >
-                  <div className="flex items-center justify-center">
-                    <p className="hidden md:flex">TESTNET</p>
-                    <Info size={15} className=" ml-0 md:ml-1 -mt-[1px]" />
-                  </div>
-                </button>
-              )}
-
-              {showTestnetPopup && (
-                <TestnetModePopup
-                  onClose={handleClosePopup}
-                  handleTestnetModeToggle={handleTestnetModeToggle}
-                />
-              )}
-              <ToastContainer
-                position="top-center"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                transition:Bounce
-                pauseOnHover
-                theme={isDarkMode ? "dark" : "light"}
-                className="z-60 mt-6 "
-              />
+              
             </div>
             {!isMobile && (
               <>
@@ -417,7 +387,7 @@ export default function Navbar({ isHomeNav }) {
                               )}
                             </React.Fragment>
                           );
-                        } else if (!isTestnetMode && !link.testnet) {
+                        } else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
                           return (
                             <NavLink
                               key={index}
@@ -429,6 +399,7 @@ export default function Navbar({ isHomeNav }) {
                           );
                         }
                         return null;
+                        
                       })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
                         <NavLink
@@ -478,8 +449,7 @@ export default function Navbar({ isHomeNav }) {
                 )}
               </div>
             ) : isAuthenticated ? (
-              <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                {}
+              <div className="hidden lg:flex gap-2 sxs3:flex md:flex select-none items-center h-[60px]">
                 <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                   {!isMobile2 && (
                     <div
@@ -670,7 +640,7 @@ export default function Navbar({ isHomeNav }) {
                               </span>
                               <CustomizedSwitches
                                 checked={isTestnetMode}
-                                // onChange={handleTestnetModeToggle}
+                                onChange={handleTestnetModeToggle}
                               />
                             </div>
                           </div>

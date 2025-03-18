@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Call each script sequentially
-dfx ledger fabricate-cycles --canister dfinance_backend
-dfx ledger fabricate-cycles --canister dfinance_backend
-
+# dfx ledger fabricate-cycles --canister dfinance_backend
+# dfx ledger fabricate-cycles --canister dfinance_backend
+dfx ledger fabricate-cycles --canister dfinance_backend --cycles 11000000000000
 ./ckbtc_token.sh
 if [ $? -ne 0 ]; then
   echo "ckbtc_token.sh failed. Exiting."

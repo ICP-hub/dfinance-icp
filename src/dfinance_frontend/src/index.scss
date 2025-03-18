@@ -288,7 +288,6 @@ body {
   animation: fadeInLeft 0.5s ease forwards;
 }
 
-
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -480,34 +479,34 @@ button:active {
 }
 
 #dashboard-guide {
-  position: relative; 
+  position: relative;
   display: inline-block;
-  margin: 0; 
-  padding: 0; 
+  margin: 0;
+  padding: 0;
   z-index: 10;
 }
 
-.__floater__arrow{
+.__floater__arrow {
   width: 500px !important;
   height: 500px !important;
 }
 
-.react-joyride-portal{
+.react-joyride-portal {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
 .react-joyride__tooltip {
   position: fixed;
-  z-index: 9999;   
+  z-index: 9999;
 }
 
 .animate-fade-left {
-  animation: fadeLeft 0.1s ease-in-out; 
+  animation: fadeLeft 0.1s ease-in-out;
 }
 
 .animate-fade-right {
-  animation: fadeRight 0.1s ease-in-out; 
+  animation: fadeRight 0.1s ease-in-out;
 }
 
 @keyframes fadeLeft {
@@ -534,7 +533,7 @@ button:active {
 
 @media (max-width: 600px) {
   .react-joyride__tooltip {
-    width: 85vw !important; 
+    width: 85vw !important;
   }
 }
 
@@ -561,10 +560,54 @@ button:active {
   }
 }
 
-
-
 .hide-scrollbar::-webkit-scrollbar {
-
   display: none;
+}
 
+@keyframes goldenPulse {
+  0%,
+  100% {
+    text-shadow: 0 0 1vw #ffd700, 0 0 3vw #ffcc00, 0 0 10vw #ff9900;
+    color: #fff6a9;
+  }
+  50% {
+    text-shadow: 0 0 0.5vw #806914, 0 0 1.5vw #ffcc00, 0 0 5vw #ff9900;
+    color: #ffecb3;
+  }
+}
+
+@keyframes silverPulse {
+  0%,
+  100% {
+    text-shadow: 0 0 1vw #c0c0c0, 0 0 3vw #d9d9d9, 0 0 10vw #b0b0b0;
+    color: #f2f2f2;
+  }
+  50% {
+    text-shadow: 0 0 0.5vw #606060, 0 0 1.5vw #d9d9d9, 0 0 5vw #b0b0b0;
+    color: #e6e6e6;
+  }
+}
+
+.fancy-golden-glow {
+  animation: goldenPulse 2s infinite alternate ease-in-out;
+}
+
+.fancy-silver-glow {
+  animation: silverPulse 2s infinite alternate ease-in-out;
+}
+
+@keyframes bronzePulse {
+  0%,
+  100% {
+    text-shadow: 0 0 0.6vw #cd7f32, 0 0 1.2vw #b87333, 0 0 2vw #8b5a2b;
+    color: #ffcc99;
+  }
+  50% {
+    text-shadow: 0 0 0.3vw #5a3825, 0 0 0.8vw #b87333, 0 0 1.5vw #8b5a2b;
+    color: #e6a87d;
+  }
+}
+
+.fancy-bronze-glow {
+  animation: bronzePulse 2s infinite alternate ease-in-out;
 }

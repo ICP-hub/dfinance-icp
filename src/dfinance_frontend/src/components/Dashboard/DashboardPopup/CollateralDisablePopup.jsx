@@ -300,7 +300,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
-
+ 
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */

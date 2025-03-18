@@ -19,6 +19,7 @@ import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
+
 const ITEMS_PER_PAGE = 8;
 
 /**
@@ -277,7 +278,6 @@ const WalletDetails = () => {
       document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
     };
   }, [isFreezePopupVisible]);
-
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */

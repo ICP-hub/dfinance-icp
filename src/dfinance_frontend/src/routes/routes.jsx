@@ -13,11 +13,15 @@ import DebtStatus from "../components/Liquidate/DebtStatus"
 import DashboardCards from "../pages/info/info"
 import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
+import DFinanceGov from "../pages/Governance/DFinanceGov"
+const ADMIN_ROUTE = process.env.DFX_ADMIN ;
+const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE ;
 export default [
   {
     path: "/",
     element: <Home />,
   },
+  
   
   {
     path: "*",
@@ -28,19 +32,19 @@ export default [
     ),
   },
   {
-    path: "/2a45fg",
+    path: ADMIN_ROUTE,  
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Outlet /> {/* ✅ Required for child routes to work */}
+        <Outlet /> 
       </MainDashboard>
     ),
     children: [
       {
-        index: true, // ✅ Loads DashboardCards when visiting /2a45fg
+        index: true, 
         element: <DashboardCards />,
       },
       {
-        path: "health-factor-list", // ✅ This makes it /2a45fg/health-factor-list
+        path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""), 
         element: <HealthFactorList />,
       },
     ],
@@ -99,6 +103,14 @@ export default [
     element: (
       <MainDashboard includeDashboardNav={false}>
         <StakeDetails />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Governance",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        < DFinanceGov/>
       </MainDashboard>
     ),
   },

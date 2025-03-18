@@ -32,7 +32,6 @@ const useUserData = () => {
   const [isFreezePopupVisible, setIsFreezePopupVisible] = useState(false);
   const principalArray = principal ? principal.split("") : [];
   const { assets } = useAssetData();
-
   /**
    * Retrieves user data from the backend.
    * @param {string} user - The identifier for the user.
@@ -44,15 +43,19 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
+      console.log("result", result);
       return result;
     } catch (error) {
       setError(error.message);
       console.error(error.message);
+
+      // Check if the error message is related to a frozen canister
       if (error.message.toLowerCase().includes("freeze canister")) {
         setIsFreezePopupVisible(true);
       }
     }
   };
+
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -105,7 +108,6 @@ const useUserData = () => {
     }
     setAssetBalances(balances);
   };
-
   const fetchUserData = async (user) => {
     if (backendActor) {
       try {
@@ -114,7 +116,6 @@ const useUserData = () => {
       } catch (error) {
         console.error(error.message);
       }
-    } else {
     }
   };
 
@@ -220,7 +221,6 @@ const useUserData = () => {
   useEffect(() => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
-
   return {
     userData,
     healthFactorBackend,

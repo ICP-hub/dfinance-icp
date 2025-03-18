@@ -25,15 +25,34 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the SupplyPopup component.
  */
 
-const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const SupplyPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   /* ===================================================================================
    *                                 STATE MANAGEMENT
@@ -493,7 +512,8 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     );
 
     const amountAdded = collateral ? usdValue || 0 : 0;
-    let totalCollateralValue =parseFloat(totalCollateral) + parseFloat(amountAdded);
+    let totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }

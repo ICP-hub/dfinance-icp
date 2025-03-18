@@ -11,6 +11,8 @@ import StakesConnected from "../../components/Stake/StakesConnected";
 
 import icplogo from "../../../public/wallet/icp.png";
 import WalletModal from "../../components/Dashboard/WalletModal";
+import useUserData from "../../components/customHooks/useUserData";
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 
 const StakeDetails = () => {
   const navigate = useNavigate();
@@ -19,7 +21,12 @@ const StakeDetails = () => {
     (state) => state.utility
   );
   const { isAuthenticated } = useAuth();
-
+  const {
+    userData,
+    userAccountData,
+    isFreezePopupVisible,
+    setIsFreezePopupVisible,
+  } = useUserData();
   const handleWalletConnect = () => {
     dispatch(setWalletModalOpen(!isWalletModalOpen));
   };
@@ -30,6 +37,17 @@ const StakeDetails = () => {
     }
   }, [isWalletCreated]);
 
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
   return (
     <>
       <div className="w-full">
@@ -69,7 +87,13 @@ const StakeDetails = () => {
           ))}
         </div>
       </div>
-
+      {isFreezePopupVisible && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+              <FreezeCanisterPopup
+                onClose={() => setIsFreezePopupVisible(false)}
+              />
+            </div>
+          )}
       {/* isAuthenticated */}
       {isAuthenticated ? (
         <StakesConnected />
@@ -124,8 +148,9 @@ const StakeDetails = () => {
               </div>
             </div>
           </div>
-
+         
           {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+          
         </div>
       )}
     </>

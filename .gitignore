@@ -24,7 +24,5 @@ dist/
 # environment variables
 .env
 
-#governance section
-/src/dfinance_frontend/src/components/Governance
-/src/dfinance_frontend/src/pages/Governance
+
 

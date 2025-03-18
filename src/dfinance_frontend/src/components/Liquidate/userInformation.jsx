@@ -698,7 +698,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       setIsLoading(false);
     }
   };
-
+  
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
   };

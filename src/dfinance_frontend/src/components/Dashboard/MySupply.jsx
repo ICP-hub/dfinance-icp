@@ -35,6 +35,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
+
 /**
  * MySupply Component
  *
@@ -472,6 +473,18 @@ const MySupply = () => {
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
 
   useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
+  
+  useEffect(() => {
     const savedShowZeroBalance = JSON.parse(
       localStorage.getItem("showZeroBalance")
     );
@@ -479,16 +492,6 @@ const MySupply = () => {
       setShowZeroBalance(savedShowZeroBalance);
     }
   }, []);
-  useEffect(() => {
-    if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [isFreezePopupVisible]);
 
   useEffect(() => {
     fetchAssetData();
@@ -2972,7 +2975,6 @@ const MySupply = () => {
                   Borrow power used
                 </span>{" "}
                 {(() => {
-                  console.log("availableBorrowinAssetBorrow", availableBorrow);
                   const ratio =
                     (totalUsdValueBorrow /
                       (availableBorrow + totalUsdValueBorrow)) *
@@ -5063,6 +5065,7 @@ const MySupply = () => {
           </div>
         </div>
       </div>
+
       {renderModalOpen(isModalOpen.type)}
       {isFreezePopupVisible && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">

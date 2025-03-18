@@ -24,6 +24,7 @@ import icplogo from "../../../public/wallet/icp.png";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
+import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 
 const MobileTopNav = ({
   isMobileNav,
@@ -111,6 +112,12 @@ const MobileTopNav = ({
       return newMode;
     });
   };
+
+  const handleTestnetModeToggle = () => {
+      navigate("/dashboard");
+      dispatch(toggleTestnetMode());
+    };
+
 
   const handleClose = () => {
     setIsMobileNav(false);
@@ -365,7 +372,11 @@ const MobileTopNav = ({
                     {link.title === "Faucet" && <>{}</>}
                   </React.Fragment>
                 );
-              } else if (!isTestnetMode && !link.testnet) {
+              } else if (
+                !isTestnetMode &&
+                !link.testnet &&
+                link.title !== "Faq"
+              ) {
                 return (
                   <NavLink
                     key={index}
@@ -430,7 +441,7 @@ const MobileTopNav = ({
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
-                      // onChange={handleTestnetModeToggle}
+                      onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>

@@ -145,10 +145,12 @@ export const useAuthClient = (options = defaultOptions) => {
       setBackendActor(null);
       setAccountId(null);
       localStorage.removeItem("sessionStart");
+      localStorage.removeItem("connectedWallet");
       if (isSwitchingWallet == false) {
         localStorage.removeItem("connectedWallet");
         window.location.reload();
       }
+
     } catch (error) {
       console.error(error.message);
     }

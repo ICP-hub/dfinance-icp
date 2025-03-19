@@ -30,8 +30,11 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
 
   const totalCollateral =parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
   const totalDebt = parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
-  const health_Factor_Value = Number(userAccountData?.Ok?.[4]) / 10000000000 > 100   ? Infinity   : parseFloat((Number(userAccountData?.Ok?.[4]) / 10000000000).toFixed(2));
-  const Ltv_Value = (totalDebt / totalCollateral) * 100;
+  const health_Factor_Value = 
+  Number(userAccountData?.Ok?.[4]) / 1e10 > 100 
+    ? Infinity 
+    : Math.floor((Number(userAccountData?.Ok?.[4]) / 1e10) * 100) / 100;
+ const Ltv_Value = (totalDebt / totalCollateral) * 100;
   const liquidationThreshold_Value =Number(userAccountData?.Ok?.[3]) / 100000000 || 0  ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)  : "0.00";
   const healthFactorMinValue = 1;
   const Max_Ltv = parseFloat(Number(userAccountData?.Ok?.[2]) / 100000000).toFixed(2);

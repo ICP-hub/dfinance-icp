@@ -114,6 +114,7 @@ const MySupply = () => {
     image: "",
     balance: "",
   });
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false)
 
   const handleModalOpen = (
     type,
@@ -465,7 +466,6 @@ const MySupply = () => {
     setAvailableBorrow(updatedAvailableBorrow);
 
     if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
-      console.log("No asset supply > 0. Setting Available Borrow to 0.");
       setAvailableBorrow(0);
     } else {
       setAvailableBorrow(updatedAvailableBorrow);
@@ -3356,7 +3356,7 @@ const MySupply = () => {
                                               Number(userData?.Ok?.ltv) /
                                                 100000000 || 0;
                                             const remainingBorrowable =
-                                              Number(total_supply) -
+                                              Number(total_supply*0.85) -
                                               Number(total_borrow);
                                             let borrowableValue = "0.00000000";
                                             let borrowableAssetValue = "0.0000";
@@ -3474,8 +3474,9 @@ const MySupply = () => {
                                                   : "0.0000";
                                               }
                                             }
+                                            console.log("borrowableValue", borrowableValue)
                                             if (
-                                              borrowableValue <= "0.00000000" ||
+                                              borrowableValue  <= "0.00000000" ||
                                               borrowableValue <= "0.0000"
                                             ) {
                                               toast.info(
@@ -3902,7 +3903,7 @@ const MySupply = () => {
                                           Number(userData?.Ok?.ltv) /
                                             100000000 || 0;
                                         const remainingBorrowable =
-                                          Number(total_supply) -
+                                        Number(total_supply*0.85)  -
                                           Number(total_borrow);
                                         let borrowableValue = "0.00000000";
                                         let borrowableAssetValue = "0.0000";
@@ -4268,7 +4269,8 @@ const MySupply = () => {
                               availableBorrow || 0
                             );
 
-                            const isEligible = total_supply > total_borrow;
+                            const isEligible =
+                            total_supply * 0.85 > total_borrow;
 
                             // Apply opacity if available borrow is 0
                             const itemClass =
@@ -4532,11 +4534,7 @@ const MySupply = () => {
                                         Number(total_supply) -
                                           Number(total_borrow)
                                       );
-                                      console.log(
-                                        "borrowableValue",
-                                        borrowableValue,
-                                        borrowableAssetValue
-                                      );
+
                                       handleModalOpen(
                                         "borrow",
                                         item[0],
@@ -4781,7 +4779,8 @@ const MySupply = () => {
                                 availableBorrow || 0
                               );
 
-                              const isEligible = total_supply > total_borrow;
+                              const isEligible =
+                                total_supply * 0.85 > total_borrow;
 
                               // Apply opacity if available borrow is 0
                               const itemClass =
@@ -4995,11 +4994,7 @@ const MySupply = () => {
                                           Number(total_supply) -
                                             Number(total_borrow)
                                         );
-                                        console.log(
-                                          "borrowableValue",
-                                          borrowableValue,
-                                          borrowableAssetValue
-                                        );
+
                                         handleModalOpen(
                                           "borrow",
                                           item[0],

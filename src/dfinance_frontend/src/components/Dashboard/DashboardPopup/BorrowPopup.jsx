@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
@@ -54,6 +55,7 @@ const Borrow = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
+  const { isBlocked } = useFunctionBlockStatus("execute_borrow");
   const { filteredItems } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
@@ -174,6 +176,20 @@ const Borrow = ({
 
   // Handles the borrow action by interacting with the backend.
   const handleBorrowETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; 
+    }
+  
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -226,13 +242,34 @@ const Borrow = ({
         const errorKey = borrowResult.Err;
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-        console.error("errorKey",errorKey)
-        if (errorMessage.toLowerCase().includes("panic")) {
+  
+        console.error("errorKey", errorKey);
+  
+        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+          console.error("You are temporarily blocked from using this function");
+  
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setLoading(false)
+          setIsLoading(false)
+        } else if (errorMessage.toLowerCase().includes("panic")) {
           setPanicMessage(
             "A critical system error occurred. Please try again later."
           );
           setShowPanicPopup(true);
-        } else if (errorMessage.toLowerCase().includes("out of cycles") || errorMessage.includes("reject text: canister")) {
+        } else if (
+          errorMessage.toLowerCase().includes("out of cycles") ||
+          errorMessage.includes("reject text: canister")
+        ) {
           toast.error("Canister is out of cycles. Controller has been notified.", {
             className: "custom-toast",
             position: "top-center",
@@ -269,6 +306,7 @@ const Borrow = ({
   
         setIsPaymentDone(false);
         setIsVisible(true);
+        setLoading(false)
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
@@ -281,9 +319,7 @@ const Borrow = ({
       const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
   
       if (isPanicError) {
-        setPanicMessage(
-          "A critical system error occurred. Please try again later."
-        );
+        setPanicMessage("A critical system error occurred. Please try again later.");
         setShowPanicPopup(true);
       } else if (isOutOfCyclesError) {
         toast.error("Canister is out of cycles. Controller has been notified.", {
@@ -307,6 +343,8 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
+        setIsLoading(false)
+        handleClosePaymentPopup()
       } else {
         toast.error(`Error: ${message}`, {
           className: "custom-toast",
@@ -319,11 +357,8 @@ const Borrow = ({
           progress: undefined,
         });
       }
-  
       setIsPaymentDone(false);
-      setIsVisible(true);
-    } finally {
-      setIsLoading(false);
+setIsVisible(false);
     }
   };
   
@@ -427,11 +462,12 @@ const Borrow = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
   };
-
+  
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
 
   /* ===================================================================================
@@ -528,13 +564,12 @@ const Borrow = ({
 
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
-      return Math.floor(num * factor) / factor;
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
     };
-    
+
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
-    
 
     if (value < 2 && value > 1) {
       setIsAcknowledgmentRequired(true);
@@ -681,7 +716,7 @@ const Borrow = ({
                         {parseFloat(
                           truncatedValue > 100
                             ? "Infinity"
-                            : parseFloat(truncatedValue).toFixed(2)
+                            : (truncatedValue)
                         )}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>

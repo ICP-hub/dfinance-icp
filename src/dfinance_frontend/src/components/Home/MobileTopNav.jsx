@@ -114,9 +114,16 @@ const MobileTopNav = ({
   };
 
   const handleTestnetModeToggle = () => {
-      navigate("/dashboard");
-      dispatch(toggleTestnetMode());
-    };
+    // dispatch(toggleTestnetMode());
+  
+    // Navigate to dashboard without creating a back entry
+    window.location.replace("https://bn2g3-lqaaa-aaaaj-azykq-cai.icp0.io/dashboard");
+  
+    // Ensure the back button is disabled after navigation
+   
+    // Block the back button functionality
+  
+  }; 
 
 
   const handleClose = () => {

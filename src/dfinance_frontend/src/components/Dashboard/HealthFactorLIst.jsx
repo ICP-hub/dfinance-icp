@@ -23,6 +23,7 @@ import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useLocation } from "react-router-dom";
 import Pagination from "../Common/pagination";
+
 /**
  * HealthFactorList Component
  *
@@ -99,9 +100,13 @@ const HealthFactorList = () => {
     try {
       const allUsers = await backendActor.get_all_users();
 
-      setUsers(allUsers);
+      if (allUsers.length > 0) {
+        setUsers(allUsers);
+        setHealthFactorLoading(false); // ✅ Ensure loading stops when users are set
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
+      setHealthFactorLoading(false);
     }
   };
 
@@ -312,17 +317,17 @@ const HealthFactorList = () => {
   const openPopup = (principal, data) => {
     console.log("principal,", principal, data)
     // if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
-    const extractedData = {
-      principal,
-      totalCollateral: Number(data.collateral) / 1e8,
-      totalDebt: Number(data.debt) / 1e8,
-      liquidationThreshold: Number(data.liquidationThreshold) / 1e8,
-      availableBorrow: Number(data.availableBorrow) / 1e8,
-      healthFactor:
-        Number(data.healthFactor) === 340282366920938463463374607431768211455n
-          ? "∞"
-          : Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100,
-    };
+    const rawHealthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
+
+const extractedData = {
+  principal,
+  totalCollateral: Number(data.collateral) / 1e8,
+  totalDebt: Number(data.debt) / 1e8,
+  liquidationThreshold: Number(data.liquidationThreshold) / 1e8,
+  availableBorrow: Number(data.availableBorrow) / 1e8,
+  healthFactor: rawHealthFactor < 100 ? rawHealthFactor : "Infinity",
+};
+
 
 
     setSelectedUser(extractedData);
@@ -761,14 +766,11 @@ const HealthFactorList = () => {
   }, [closePopup]);
 
   useEffect(() => {
-
     if (users.length > 0) {
-
       fetchAssetData();
-
     }
-
   }, [users, assets]);
+
 
   useEffect(() => {
     if (selectedUser) {
@@ -1005,7 +1007,7 @@ const HealthFactorList = () => {
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : Object.keys(userAccountData).length === 0 &&
+        ) : filteredUsers.length === 0 &&
           !healthFactorLoading ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="mb-7 -ml-3 -mt-5">

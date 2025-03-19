@@ -194,7 +194,10 @@ const DashboardCards = () => {
 
   const handleViewMore = () => {
     navigate(healthFactorRoute, {
-      state: { userAccountData }, // ✅ Pass data to the next page
+      state: { userAccountData }, //   Pass data to the next page
+    });
+    navigate(healthFactorRoute, {
+      state: { userAccountData }, //   Pass data to the next page
     });
   };
 
@@ -265,6 +268,7 @@ const DashboardCards = () => {
       throw new Error("Backend actor not initialized");
     }
 
+
     const response = await backendActor.cycle_checker();
     console.log("Raw response from cycle_checker:", response);
 
@@ -273,8 +277,21 @@ const DashboardCards = () => {
     console.log("Extracted cycle value:", cycles);
 
     return cycles.toString();
+    
   };
+  useEffect(() => {
+    const fetchCycles = async () => {
+      try {
+        const cycleValue = await getCycles();
+        setCycles(cycleValue); //   Set state with retrieved cycles
+      } catch (error) {
+        console.error("Error fetching cycles:", error);
+        setCycles("Error retrieving cycles"); //   Ensure fallback value is set
+      }
+    };
 
+    fetchCycles(); //   Fetch cycles on mount
+  }, []);
   /**
    * Sends email notifications when cycle or token thresholds are breached.
    * @param {string} subject - Email subject.
@@ -438,7 +455,7 @@ const DashboardCards = () => {
   // Simulate cycle updates
   const onCycleUpdate = async () => {
     try {
-      const newCycles = await getCycles(); // Await cycle retrieval
+      const newCycles = await getCycles();
       console.log("Cycle count updated:", newCycles);
 
       handleTokenNotification(newCycles);
@@ -542,8 +559,8 @@ const DashboardCards = () => {
           normalize(healthStats.greaterThanOne),
           normalize(healthStats.infinity),
         ],
-        backgroundColor: ["#E53935", "#43A047", "#FBC02D"],
-        hoverBackgroundColor: ["#E53935", "#43A047", "#FBC02D"],
+        backgroundColor: ["#E53935","#FBC02D","#43A047"],
+        hoverBackgroundColor: ["#E53935", "#FBC02D","#43A047"],
         borderColor: borderColor,
         borderWidth: 2,
         borderRadius: 6,
@@ -551,7 +568,7 @@ const DashboardCards = () => {
         cutout: "60%",
         rotation: -40,
         circumference: 360,
-        hoverOffset: 6,
+        hoverOffset: 4,
       },
     ],
   };
@@ -590,9 +607,10 @@ const DashboardCards = () => {
   const handleTokenBalances = async () => {
     for (const asset of poolAssets) {
       const assetBalance = assetBalances[asset.name];
+      onTokenUpdate(assetBalance);
       if (assetBalance !== undefined) {
         handleTokenNotification(asset.name, assetBalance);
-        onTokenUpdate(assetBalance); // ✅ Call `onTokenUpdate` with `assetBalance`
+        onTokenUpdate(assetBalance); //   Call `onTokenUpdate` with `assetBalance`
       }
     }
   };
@@ -633,8 +651,6 @@ const DashboardCards = () => {
       } catch (err) {
         console.error("Error in fetchData:", err);
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -750,7 +766,7 @@ const DashboardCards = () => {
         setCycles(cycleValue); // ✅ Set state with retrieved cycles
       } catch (error) {
         console.error("Error fetching cycles:", error);
-        setCycles("Error retrieving cycles"); // ✅ Ensure fallback value is set
+        setCycles("Error retrieving cycles"); //   Ensure fallback value is set
       }
     };
 

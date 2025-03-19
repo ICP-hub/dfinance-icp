@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isTestnetMode: JSON.parse(localStorage.getItem("isTestnetMode")) ?? true, // Initialize from localStorage
+  isTestnetMode: JSON.parse(localStorage.getItem("isTestnetMode")) ?? false, // Initialize from localStorage
 };
 
 const testnetSlice = createSlice({
@@ -21,7 +21,7 @@ const testnetSlice = createSlice({
 
     initializeTestnetMode: (state) => {
       const storedValue = JSON.parse(localStorage.getItem("isTestnetMode"));
-      state.isTestnetMode = storedValue ?? true; 
+      state.isTestnetMode = storedValue ?? false; 
     },
   },
 });

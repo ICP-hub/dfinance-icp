@@ -261,28 +261,18 @@ impl ValidationLogic {
         }
 
         if total_debt != Nat::from(0u128) {
-            let mut rate: Option<Nat> = None;
-
-            match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-                Ok(price_cache) => {
-                    // Fetch the specific CachedPrice for the asset from the PriceCache
-                    if let Some(cached_price) =
-                        price_cache.cache.get(&reserve.asset_name.clone().unwrap())
-                    {
-                        let amount = cached_price.price.clone();
-                        rate = Some(amount);
-                    } else {
-                        rate = None;
-                    }
+            let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+                Ok(price) => price,
+                Err(e) => {
+                    ic_cdk::println!("Failed to fetch exchange rate");
+                    return Err(e);
                 }
-                Err(err) => {
-                    rate = None;
-                }
-            }
+            };
+            ic_cdk::println!("asset price = {}",rate);
 
             ic_cdk::println!("rate = {:?}", rate);
 
-            let usd_withdrawl = amount.clone().scaled_mul(rate.unwrap());
+            let usd_withdrawl = amount.clone().scaled_mul(rate);
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
 
             // Calculate Adjusted Collateral
@@ -345,23 +335,23 @@ impl ValidationLogic {
 
         ic_cdk::println!("amount in borrow ={}", amount);
 
-        let current_locked = get_locked_amount(&reserve.asset_name.clone().unwrap());
-        ic_cdk::println!("current locked amouunt = {}", current_locked);
-        ic_cdk::println!("asset supply = {}", reserve.asset_supply);
+        // let current_locked = get_locked_amount(&reserve.asset_name.clone().unwrap());
+        // ic_cdk::println!("current locked amouunt = {}", current_locked);
+        // ic_cdk::println!("asset supply = {}", reserve.asset_supply);
 
-        if amount
-            <= ((reserve.asset_supply.clone() - reserve.asset_borrow.clone()) - current_locked)
-        {
-            if let Err(e) = lock_amount(
-                &reserve.asset_name.clone().unwrap(),
-                &amount,
-                &user_principal,
-            ) {
-                return Err(e);
-            }
-        } else {
-            return Err(Error::AmountTooMuch);
-        }
+        // if amount
+        //     <= ((reserve.asset_supply.clone() - reserve.asset_borrow.clone()) - current_locked)
+        // {
+        //     if let Err(e) = lock_amount(
+        //         &reserve.asset_name.clone().unwrap(),
+        //         &amount,
+        //         &user_principal,
+        //     ) {
+        //         return Err(e);
+        //     }
+        // } else {
+        //     return Err(Error::AmountTooMuch);
+        // }
 
         let balance_result = get_balance(ledger_canister, platform_principal).await;
 
@@ -439,28 +429,18 @@ impl ValidationLogic {
                 return Err(e);
             }
         }
-        let mut rate: Option<Nat> = None;
-
-        match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-            Ok(price_cache) => {
-                // Fetch the specific CachedPrice for the asset from the PriceCache
-                if let Some(cached_price) =
-                    price_cache.cache.get(&reserve.asset_name.clone().unwrap())
-                {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                } else {
-                    rate = None;
-                }
+        let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
             }
-            Err(_) => {
-                rate = None;
-            }
-        }
+        };
+        ic_cdk::println!("asset price = {}",rate);
 
         ic_cdk::println!("rate = {:?}", rate);
 
-        let usd_borrow = amount.clone().scaled_mul(rate.unwrap());
+        let usd_borrow = amount.clone().scaled_mul(rate);
         ic_cdk::println!("usd withdraw amount = {}", usd_borrow);
 
         let adjusted_debt = total_debt + usd_borrow;

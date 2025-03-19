@@ -326,31 +326,21 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             return Err(Error::LowWalletBalance);
         }
 
-        let mut rate: Option<Nat> = None;
-
-        match get_cached_exchange_rate(asset.clone()) {
-            Ok(price_cache) => {
-                if let Some(cached_price) = price_cache.cache.get(&asset) {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                    ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
-                } else {
-                    ic_cdk::println!("No cached price found for {}", asset);
-                    rate = None;
-                }
+        let asset_price = match get_cached_exchange_rate(asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
             }
-            Err(err) => {
-                ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
-                rate = None;
-            }
-        }
+        };
+        ic_cdk::println!("asset price = {}",asset_price);
 
-        let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
+        let usd_amount = ScalingMath::scaled_mul(amount.clone(),asset_price.clone());
 
         ic_cdk::println!(
             "usd amount of the facut = {}, {}",
             usd_amount,
-            rate.unwrap()
+            asset_price
         );
 
         let user_reserve = user_reserve(&mut user_data, &asset);

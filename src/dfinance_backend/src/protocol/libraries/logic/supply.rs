@@ -2,14 +2,17 @@ use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::{user_data, UpdateLogic};
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
-use crate::reserve_ledger_canister_id;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
+use futures::future::ok;
 use ic_cdk::update;
 
 /*
@@ -39,7 +42,7 @@ use ic_cdk::update;
  * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
  */
 #[update]
-pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
+pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
@@ -91,6 +94,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
         let amount_nat = params.amount.clone();
+        ic_cdk::println!("Supply amount: {:?}", amount_nat);
 
         let reserve_data_result = mutate_state(|state| {
             let asset_index = &mut state.asset_index;
@@ -143,6 +147,27 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         ic_cdk::println!("Supply validated successfully");
 
         if let Err(_) = update_token_price(params.asset.clone()).await {}
+
+        let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+
+        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+
+        if params.amount.clone() < transfer_token_fee {
+            ic_cdk::println!("Amount is less than the transfer token fee");
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(Error::FeeExceedsAmount);
+        }
+
+        params.amount = params.amount.clone() - transfer_token_fee.clone();
 
         let liq_added = params.amount.clone();
         let liq_taken = Nat::from(0u128);
@@ -203,7 +228,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
                     asset: params.asset.clone(),
                     is_collateral: params.is_collateral,
                     on_behalf_of: None,
-                    amount: params.amount.clone(),
+                    amount: amount_nat.clone(),
                 };
                 if let Err(e) = UpdateLogic::update_user_data_withdraw(
                     user_principal,
@@ -342,9 +367,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-        let withdraw_amount = Nat::from(params.amount.clone());
-        ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
-
         // Determines the receiver principal
         let transfer_to_principal = if let Some(liquidator) = liquidator_principal {
             ic_cdk::println!("Transferring to liquidator: {:?}", liquidator);
@@ -405,6 +427,33 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             return Err(e);
         }
         ic_cdk::println!("Withdraw validated successfully");
+
+        let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+
+        ic_cdk::println!("asset price = {}",asset_price);
+
+        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+        ic_cdk::println!("amount = {}",params.amount);
+        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+
+        if params.amount.clone() < transfer_token_fee {
+            ic_cdk::println!("Amount is less than the transfer token fee");
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(Error::FeeExceedsAmount);
+        }
+
+        let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
+        // let withdraw_amount = params.amount.clone();
+        ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
+
 
         if let Err(e) = reserve::update_interest_rates(
             &mut reserve_data,

@@ -71,4 +71,7 @@ pub mod constants {
     pub const INITIAL_DEBT_INDEX: u128 = 100000000;
     pub const SCALING_FACTOR: u128 = 100000000;
     pub const MIN_BORROW: u128 = 100;
+
+     // -------------------Token Transfer Fees -------------------
+     pub const TOKEN_TRANSFER_FEE: u128 = 345_00;  
 }

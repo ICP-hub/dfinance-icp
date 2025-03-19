@@ -43,6 +43,7 @@ type Error = variant {
   EmptyAsset;
   TokenAlreadyExist;
   MaxAmount;
+  FeeExceedsAmount;
   ErrorParsingPrincipal;
   ReserveFrozen;
   LessRewardAmount;
@@ -128,9 +129,8 @@ type ReserveData = record {
 };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok; Err : Error };
-type Result_10 = variant { Ok : text; Err : Error };
-type Result_11 = variant { Ok : vec record { text; nat64 }; Err : Error };
-type Result_12 = variant { Ok : vec record { text; nat32 }; Err : Error };
+type Result_10 = variant { Ok : vec record { text; nat64 }; Err : Error };
+type Result_11 = variant { Ok : vec record { text; nat32 }; Err : Error };
 type Result_2 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
@@ -138,10 +138,10 @@ type Result_2 = variant {
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : nat; Err : Error };
 type Result_5 = variant { Ok : principal; Err : Error };
-type Result_6 = variant { Ok : PriceCache; Err : Error };
-type Result_7 = variant { Ok : record { nat; nat64 }; Err : Error };
-type Result_8 = variant { Ok : bool; Err : Error };
-type Result_9 = variant { Ok : ReserveData; Err : Error };
+type Result_6 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_7 = variant { Ok : bool; Err : Error };
+type Result_8 = variant { Ok : ReserveData; Err : Error };
+type Result_9 = variant { Ok : text; Err : Error };
 type UserAccountData = record {
   ltv : nat;
   available_borrow : nat;
@@ -192,13 +192,13 @@ service : (principal) -> {
   get_all_assets : () -> (vec text) query;
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_5) query;
-  get_cached_exchange_rate : (text) -> (Result_6) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_7);
+  get_cached_exchange_rate : (text) -> (Result_4) query;
+  get_exchange_rates : (text, opt text, nat) -> (Result_6);
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     );
-  get_lock : () -> (Result_8) query;
-  get_reserve_data : (text) -> (Result_9) query;
+  get_lock : () -> (Result_7) query;
+  get_reserve_data : (text) -> (Result_8) query;
   get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
   get_user_account_data : (
@@ -208,13 +208,13 @@ service : (principal) -> {
     ) -> (Result_2) query;
   get_user_data : (principal) -> (Result_3) query;
   initialize : (text, ReserveData) -> (Result_1);
-  is_function_blocked : (text) -> (Result_8) query;
+  is_function_blocked : (text) -> (Result_7) query;
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result_10);
+  register_user : () -> (Result_9);
   remove_blocked_function : (principal, text) -> (Result_1);
   reset_reserve_value : (text, text, nat) -> (Result_1);
-  retrieve_blocked_users : (principal) -> (Result_11) query;
-  retrieve_request_info : (principal) -> (Result_12) query;
+  retrieve_blocked_users : (principal) -> (Result_10) query;
+  retrieve_request_info : (principal) -> (Result_11) query;
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

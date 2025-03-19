@@ -142,38 +142,16 @@ pub async fn calculate_user_account_data(
             }
         };
 
-        let mut rate: Option<Nat> = None;
+        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("asset price = {}",rate);
 
-        match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-            Ok(price_cache) => {
-                if let Some(cached_price) =
-                    price_cache.cache.get(&user_reserve_data.reserve.clone())
-                {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                    ic_cdk::println!(
-                        "Fetched exchange rate for {}: {:?}",
-                        user_reserve_data.reserve.clone(),
-                        rate
-                    );
-                } else {
-                    ic_cdk::println!(
-                        "No cached price found for {}",
-                        user_reserve_data.reserve.clone()
-                    );
-                    rate = None;
-                }
-            }
-            Err(err) => {
-                ic_cdk::println!(
-                    "Error fetching exchange rate for {}: {:?}",
-                    user_reserve_data.reserve.clone(),
-                    err
-                );
-                rate = None;
-            }
-        }
-        let asset_price = rate.unwrap();
+        let asset_price = rate;
         if user_reserve_data.is_collateral {
             ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -336,7 +314,7 @@ pub async fn calculate_user_account_data(
  */
 
 #[query]
- pub async fn calculate_user_asset_data(
+pub async fn calculate_user_asset_data(
     on_behalf: Option<Principal>,
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
@@ -439,38 +417,16 @@ pub async fn calculate_user_account_data(
             }
         };
 
-        let mut rate: Option<Nat> = None;
+        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("asset price = {}",rate);
 
-        match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-            Ok(price_cache) => {
-                if let Some(cached_price) =
-                    price_cache.cache.get(&user_reserve_data.reserve.clone())
-                {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                    ic_cdk::println!(
-                        "Fetched exchange rate for {}: {:?}",
-                        user_reserve_data.reserve.clone(),
-                        rate
-                    );
-                } else {
-                    ic_cdk::println!(
-                        "No cached price found for {}",
-                        user_reserve_data.reserve.clone()
-                    );
-                    rate = None;
-                }
-            }
-            Err(err) => {
-                ic_cdk::println!(
-                    "Error fetching exchange rate for {}: {:?}",
-                    user_reserve_data.reserve.clone(),
-                    err
-                );
-                rate = None;
-            }
-        }
-        let asset_price = rate.unwrap();
+        let asset_price = rate;
         if user_reserve_data.is_collateral {
             ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -540,38 +496,16 @@ pub async fn calculate_user_account_data(
         if user_reserve_data.is_borrowed {
             ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
-            let mut rate: Option<Nat> = None;
+            let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+                Ok(price) => price,
+                Err(e) => {
+                    ic_cdk::println!("Failed to fetch exchange rate");
+                    return Err(e);
+                }
+            };
+            ic_cdk::println!("asset price = {}",rate);
 
-            match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-                Ok(price_cache) => {
-                    if let Some(cached_price) =
-                        price_cache.cache.get(&user_reserve_data.reserve.clone())
-                    {
-                        let amount = cached_price.price.clone();
-                        rate = Some(amount);
-                        ic_cdk::println!(
-                            "Fetched exchange rate for {}: {:?}",
-                            user_reserve_data.reserve.clone(),
-                            rate
-                        );
-                    } else {
-                        ic_cdk::println!(
-                            "No cached price found for {}",
-                            user_reserve_data.reserve.clone()
-                        );
-                        rate = None;
-                    }
-                }
-                Err(err) => {
-                    ic_cdk::println!(
-                        "Error fetching exchange rate for {}: {:?}",
-                        user_reserve_data.reserve.clone(),
-                        err
-                    );
-                    rate = None;
-                }
-            }
-            let asset_price = rate.unwrap();
+            let asset_price = rate;
 
             let balance: Nat = debt_token_balance.iter()
                 .find(|asset| asset.name == user_reserve_data.reserve)

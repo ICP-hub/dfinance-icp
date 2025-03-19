@@ -49,17 +49,9 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         assets.map(async (asset) => {
           try {
             const result = await backendActor.get_cached_exchange_rate(asset);
-
-            if (result.Ok && result.Ok.cache && result.Ok.cache.length > 0) {
-              const priceRecord = result.Ok.cache[0];
-              const price = priceRecord[1]?.price;
-
-              if (price) {
-                fetchedRates++;
-                return { asset, rate: price.toString() };
-              } else {
-                throw new Error(`No price found for ${asset}`);
-              }
+            if (result?.Ok !== undefined) {
+              fetchedRates++;
+              return { asset, rate: result.Ok.toString() };
             } else {
               throw new Error(`Invalid response structure for ${asset}`);
             }
@@ -101,15 +93,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       setError(error.message);
       console.error(error.message);
     }
-  }, [
-    backendActor,
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    dashboardRefreshTrigger,
-  ]);
+  }, [backendActor, dashboardRefreshTrigger]);
 
   useEffect(() => {
     intervalIdRef.current = setInterval(() => {

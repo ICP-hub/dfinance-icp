@@ -201,6 +201,7 @@ service : (principal) -> {
   get_reserve_data : (text) -> (Result_8) query;
   get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
+  get_transfer_fee : (text) -> (Result_4) query;
   get_user_account_data : (
       opt principal,
       opt vec AssetData,

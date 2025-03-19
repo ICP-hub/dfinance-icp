@@ -6,8 +6,10 @@ use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
+use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
+use futures::future::ok;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
@@ -221,14 +223,18 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
     };
 
     ic_cdk::println!("base asset = {}", base_asset);
-    ic_cdk::println!("base_asset_symbol {}",base_asset_symbol);
+    ic_cdk::println!("base_asset_symbol {}", base_asset_symbol);
 
     read_state(|state| {
         state
             .price_cache_list
             .get(&base_asset.to_string())
             .map(|price_cache: Candid<PriceCache>| {
-                price_cache.0.cache.get(&base_asset_symbol).map(|p| p.price.clone())
+                price_cache
+                    .0
+                    .cache
+                    .get(&base_asset_symbol)
+                    .map(|p| p.price.clone())
             })
             .flatten()
             .ok_or(Error::NoPriceCache)
@@ -596,7 +602,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-
 /*
  * @title Get Lock Status
  * @dev Checks if the user has an active lock.
@@ -626,8 +631,6 @@ async fn get_lock() -> Result<bool, Error> {
 pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
-
-
 
 /*
  * @title Get User Account Data
@@ -685,7 +688,19 @@ pub async fn post_upgrade() {
     schedule_midnight_task().await;
 }
 
+#[query]
+pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
+    let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
+        Ok(price) => price,
+        Err(e) => {
+            ic_cdk::println!("Failed to fetch exchange rate");
+            return Err(e);
+        }
+    };
+
+    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+    Ok(transfer_token_fee)
+
+}
+
 export_candid!();
-
-
-

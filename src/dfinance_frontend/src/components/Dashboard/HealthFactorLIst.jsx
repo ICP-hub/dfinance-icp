@@ -21,6 +21,7 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useLocation } from "react-router-dom";
+import Pagination from "../Common/pagination";
 /**
  * HealthFactorList Component
  *
@@ -99,9 +100,13 @@ const HealthFactorList = () => {
       const allUsers = await backendActor.get_all_users();
       console.log("Retrieved Users:", allUsers);
 
-      setUsers(allUsers);
+      if (allUsers.length > 0) {
+        setUsers(allUsers);
+        setHealthFactorLoading(false); // ✅ Ensure loading stops when users are set
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
+      setHealthFactorLoading(false);
     }
   };
 
@@ -779,15 +784,11 @@ const HealthFactorList = () => {
   }, [closePopup]);
 
   useEffect(() => {
-
     if (users.length > 0) {
-
       fetchAssetData();
-
     }
-
   }, [users, assets]);
-  
+
   useEffect(() => {
     if (selectedUser) {
       document.body.style.overflow = "hidden";
@@ -1024,7 +1025,7 @@ const HealthFactorList = () => {
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : Object.keys(userAccountData).length === 0 &&
+        ) : filteredUsers.length === 0 &&
           !healthFactorLoading ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="mb-7 -ml-3 -mt-5">
@@ -1119,6 +1120,19 @@ const HealthFactorList = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* ✅ Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="w-full flex justify-center mt-10">
+                <div id="pagination" className="flex gap-2">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

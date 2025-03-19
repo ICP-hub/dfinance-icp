@@ -67,8 +67,13 @@ const Footer = () => {
         },
       });
 
-      setIsApproved(true);
-      console.log("Approval successful!");
+      if (approval?.Ok && approval.Ok > 0n) {
+        setIsApproved(true);
+        console.log("Approval successful!");
+      } else {
+        setIsApproved(false);
+        console.log("Approval failed!");
+      }
     } catch (error) {
       console.error(`Approval failed: ${error.message}`);
     } finally {

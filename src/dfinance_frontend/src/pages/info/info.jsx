@@ -175,7 +175,10 @@ const DashboardCards = () => {
 
   const handleViewMore = () => {
     navigate(healthFactorRoute, {
-      state: { userAccountData }, // ✅ Pass data to the next page
+      state: { userAccountData }, //   Pass data to the next page
+    });
+    navigate(healthFactorRoute, {
+      state: { userAccountData }, //   Pass data to the next page
     });
   };
   const getAllUsers = async () => {
@@ -183,11 +186,19 @@ const DashboardCards = () => {
       console.error("Backend actor not initialized");
       return;
     }
+
     try {
       const allUsers = await backendActor.get_all_users();
       console.log("Retrieved Users:", allUsers);
 
-      setUsers(allUsers);
+      //   Use a Set to Store Unique Users
+      const uniqueUsers = new Map();
+
+      for (const user of allUsers) {
+        uniqueUsers.set(user[0], user); // Use Map to ensure unique values
+      }
+
+      setUsers([...uniqueUsers.values()]); //   Convert Map back to array & update state
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -205,6 +216,7 @@ const DashboardCards = () => {
       throw new Error("Backend actor not initialized");
     }
 
+
     const response = await backendActor.cycle_checker();
     console.log("Raw response from cycle_checker:", response);
 
@@ -213,8 +225,21 @@ const DashboardCards = () => {
     console.log("Extracted cycle value:", cycles);
 
     return cycles.toString();
+    
   };
+  useEffect(() => {
+    const fetchCycles = async () => {
+      try {
+        const cycleValue = await getCycles();
+        setCycles(cycleValue); //   Set state with retrieved cycles
+      } catch (error) {
+        console.error("Error fetching cycles:", error);
+        setCycles("Error retrieving cycles"); //   Ensure fallback value is set
+      }
+    };
 
+    fetchCycles(); //   Fetch cycles on mount
+  }, []);
   /**
    * Sends email notifications when cycle or token thresholds are breached.
    * @param {string} subject - Email subject.
@@ -314,7 +339,7 @@ const DashboardCards = () => {
       for (const [principal, userData] of usersBatch) {
         if (!principal) continue;
 
-        const userBalances = {};
+      const userBalances = {};
 
         await Promise.all(
           assets.map(async (asset) => {
@@ -372,7 +397,7 @@ const DashboardCards = () => {
   // Simulate cycle updates
   const onCycleUpdate = async () => {
     try {
-      const newCycles = await getCycles(); // Await cycle retrieval
+      const newCycles = await getCycles();
       console.log("Cycle count updated:", newCycles);
 
       handleTokenNotification(newCycles);
@@ -524,9 +549,10 @@ const DashboardCards = () => {
   const handleTokenBalances = async () => {
     for (const asset of poolAssets) {
       const assetBalance = assetBalances[asset.name];
+      onTokenUpdate(assetBalance);
       if (assetBalance !== undefined) {
         handleTokenNotification(asset.name, assetBalance);
-        onTokenUpdate(assetBalance); // ✅ Call `onTokenUpdate` with `assetBalance`
+        onTokenUpdate(assetBalance); //   Call `onTokenUpdate` with `assetBalance`
       }
     }
   };
@@ -537,8 +563,12 @@ const DashboardCards = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!users.length) return;
-      setLoading(true);
+      if (!users.length) {
+        setLoading(true); // Set loading only if users are empty
+        return;
+      }
+
+      setLoading(false); //   Immediately stop loading if users exist
 
       try {
         const cycles = await getCycles();
@@ -547,6 +577,7 @@ const DashboardCards = () => {
           { title: "Users", value: usersCount, link: "/users" },
           { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
           { title: "Interest Accured", value: interestAccure, link: "/cycles" },
+
           {
             title: "Reserves",
             value: "5",
@@ -560,13 +591,12 @@ const DashboardCards = () => {
         await onCycleUpdate(Number(cycles));
       } catch (err) {
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchData();
-  }, [users, interestAccure]);
+  }, [ interestAccure]);
+
   const cachedData = useRef({});
 
 
@@ -598,8 +628,10 @@ const DashboardCards = () => {
         return;
       }
 
+
       try {
         if (!principalString || cachedData.current[principalString]) return;
+
 
         const principalObj = Principal.fromText(principalString);
 
@@ -620,13 +652,15 @@ const DashboardCards = () => {
           ([userPrincipal]) => userPrincipal.toString() === principalString
         );
 
+
         if (user) {
-          const userInfo = user[1]; // The second element of the array (user info)
+          const userInfo = user[1];
           console.log("userInfo", userInfo);
 
           // Access reserves array
           const reserves = userInfo?.reserves?.flat() || [];
           console.log("reserves:", reserves);
+
 
           let assetBalancesObj = [];
           let borrowBalancesObj = [];
@@ -671,7 +705,9 @@ const DashboardCards = () => {
             borrowBalancesParam // Pass borrow balances wrapped in an array
           );
 
+
           console.log("Backend result:", result);
+
 
           if (result?.Err === "ERROR :: Pending") {
             console.warn("Pending state detected. Retrying...");
@@ -698,7 +734,6 @@ const DashboardCards = () => {
     }
   };
 
-  //  Fetch all user data in parallel, ensuring cache usage
   useEffect(() => {
     console.log("useEffect triggered");
     console.log("Users:", users);
@@ -881,14 +916,14 @@ const DashboardCards = () => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
-        setCycles(cycleValue); // ✅ Set state with retrieved cycles
+        setCycles(cycleValue); //   Set state with retrieved cycles
       } catch (error) {
         console.error("Error fetching cycles:", error);
-        setCycles("Error retrieving cycles"); // ✅ Ensure fallback value is set
+        setCycles("Error retrieving cycles"); //   Ensure fallback value is set
       }
     };
 
-    fetchCycles(); // ✅ Fetch cycles on mount
+    fetchCycles(); //   Fetch cycles on mount
   }, []);
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -897,7 +932,7 @@ const DashboardCards = () => {
   return (
     <>
       {loading ? (
-        <div className="h-[150px] flex justify-center items-center">
+        <div className="h-[80vh] flex justify-center items-center">
           <MiniLoader isLoading={true} />
         </div>
       ) : like ? (
@@ -1065,7 +1100,11 @@ const DashboardCards = () => {
                       : getCycleColor(card.value)
                     }`}
                 >
-                  {loading ? <MiniLoader isLoading={true} /> : card.value}
+                  {cycles ? (
+                    formatNumber(cycles)
+                  ) : (
+                    <MiniLoader isLoading={true} />
+                  )}
                 </p>
 
                 {/* Threshold for Cycles */}

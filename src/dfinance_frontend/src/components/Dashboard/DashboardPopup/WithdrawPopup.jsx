@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * WithdrawPopup Component
@@ -47,6 +48,7 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("execute_withdraw");
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
@@ -205,6 +207,20 @@ const WithdrawPopup = ({
    */
 
   const handleWithdraw = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -281,7 +297,22 @@ const WithdrawPopup = ({
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
+        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
+          console.error("You are temporarily blocked from using this function");
 
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setIsLoading(false);
+        }
         if (isPanicError) {
           setShowPanicPopup(true);
           setIsVisible(false);
@@ -353,7 +384,6 @@ const WithdrawPopup = ({
       setIsLoading(false);
     }
   };
-
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -445,7 +475,7 @@ const WithdrawPopup = ({
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
   };
-
+  
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
   /* ===================================================================================
    *                                  EFFECTS
@@ -494,17 +524,21 @@ const WithdrawPopup = ({
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
     console.log("liq_thresh", ltv * 100, tempLiq);
-    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
+    if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
+      console.log("Toast Triggered: LTV Exceeded!");
     }
+
     if (
-      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
+      (healthFactor <= 1 || (assetBorrow > 0 && ltv * 100 >= tempLiq)) &&
       currentCollateralStatus
     ) {
       setIsButtonDisabled(true);
+      console.log("Button Disabled: TRUE");
     } else {
       setIsButtonDisabled(false);
+      console.log("Button Disabled: FALSE");
     }
   }, [
     asset,
@@ -674,7 +708,7 @@ const WithdrawPopup = ({
                           : "text-orange-300"
                       }`}
                     >
-                      {parseFloat(
+                      {(
                         truncatedValue > 100
                           ? "Infinity"
                           : (truncatedValue)

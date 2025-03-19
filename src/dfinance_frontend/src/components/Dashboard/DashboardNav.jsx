@@ -89,15 +89,15 @@ const DashboardNav = () => {
   const formatNetApy = (apy) => {
     const num = parseFloat(apy);
 
-    if (isNaN(num) || num === 0) return "-"; // 🔥 Always return "-" if NaN or exactly 0
-    if (num < 0.01) return "<0.01%"; // 🔥 Show "<0.01%" for values < 0.01
+    if (isNaN(num) || num === 0) return "-"; 
+    if (num < 0.01) return "<0.01%"; 
 
     return `${num.toFixed(2)}%`;
   };
 
 
 
-  // 🔥 Update netApy when the dashboard refreshes or data changes
+  // Update netApy when the dashboard refreshes or data changes
   // useEffect(() => {
   //   if (!principal || !reserveData || !userData) return;
 
@@ -110,7 +110,7 @@ const DashboardNav = () => {
   //   setNetApy(formattedApy);
   // }, [dashboardRefreshTrigger, principal, userData, reserveData]);
 
-  // 🔥 Update UI correctly
+  // Update UI correctly
   useEffect(() => {
     setWalletDetailTab((prevTab) =>
       prevTab.map((item) =>
@@ -225,7 +225,7 @@ const DashboardNav = () => {
         if (dtokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
-            await new Promise(resolve => setTimeout(resolve, 300)); // ⏳ Delay before fetching
+            await new Promise(resolve => setTimeout(resolve, 300)); 
             const balance = await dtokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.dtokenBalance = formattedBalance;
@@ -240,7 +240,7 @@ const DashboardNav = () => {
         if (debtTokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
-            await new Promise(resolve => setTimeout(resolve, 300)); // ⏳ Delay before fetching
+            await new Promise(resolve => setTimeout(resolve, 300)); 
             const balance = await debtTokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.debtTokenBalance = formattedBalance;
@@ -252,7 +252,7 @@ const DashboardNav = () => {
 
       balances.push(assetBalance);
 
-      await new Promise(resolve => setTimeout(resolve, 500)); // ⏳ Additional delay before next iteration
+      await new Promise(resolve => setTimeout(resolve, 500)); 
     }
 
     setAssetBalances(balances);
@@ -274,7 +274,7 @@ const DashboardNav = () => {
     }
     return `noBorrow`;
   };
-
+  
   useEffect(() => {
     if (
       typeof totalUsdValueSupply === "number" &&
@@ -283,14 +283,10 @@ const DashboardNav = () => {
     ) {
       const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
 
-      console.log("💰 totalUsdValueSupply:", totalUsdValueSupply);
-      console.log("💸 totalUsdValueBorrow:", totalUsdValueBorrow);
-      console.log("📊 Calculated Net Worth:", calculatedNetWorth);
 
       // Show "-" instead of 0, otherwise format the value
       const newValue = calculatedNetWorth === 0 ? "-" : calculatedNetWorth;
 
-      console.log("🔄 Updating to:", newValue);
 
       // Ensure React updates the state
       setNetWorth((prev) => (prev !== newValue ? newValue : prev));
@@ -375,7 +371,7 @@ const DashboardNav = () => {
 
         const currentLiquidity =
           userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey)
-            ?.[1]?.liquidity_index || 1; // 🔥 Avoid division by zero
+            ?.[1]?.liquidity_index || 1; 
 
         const assetBalance =
           assetBalances?.find((balance) => balance.asset === assetKey)
@@ -387,7 +383,7 @@ const DashboardNav = () => {
         console.log("assetSupply", assetSupply)
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey)
-            ?.[1]?.variable_borrow_index || 1; // 🔥 Avoid division by zero
+            ?.[1]?.variable_borrow_index || 1; // Avoid division by zero
 
         const assetBorrowBalance =
           assetBalances.find((balance) => balance.asset === assetKey)
@@ -503,13 +499,14 @@ const DashboardNav = () => {
           ? "♾️"
           : parseFloat(Number(truncatedValue));
 
+
       setHealthFactor((prev) => {
         const newValue =
           calculatedHealthFactor !== undefined ? calculatedHealthFactor : prev;
         sessionStorage.setItem(
           `healthFactor_${principal}`,
           JSON.stringify(newValue)
-        );
+        ); 
         return newValue;
       });
 
@@ -590,9 +587,9 @@ const DashboardNav = () => {
         console.log("reservesData", reservesData)
         const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
 
-        console.log("Raw Net APY:", calculatedNetApy); // 🔍 Debugging log
+        console.log("Raw Net APY:", calculatedNetApy); 
 
-        // 🚀 Keep showing "-" until we get a valid number
+      
         if (!calculatedNetApy || isNaN(calculatedNetApy)) {
           console.log("Waiting for valid Net APY...");
           setNetApy("-");
@@ -600,17 +597,17 @@ const DashboardNav = () => {
         }
 
         const formattedApy = calculatedNetApy * 100;
-        console.log("Formatted Net APY:", formattedApy); // 🔍 Debugging log
+        console.log("Formatted Net APY:", formattedApy); 
 
         let displayValue;
         if (formattedApy <= 0.01) {
-          displayValue = "<0.01%"; // ✅ Ensure "<" is included
+          displayValue = "<0.01%"; 
         } else {
           displayValue = formattedApy.toFixed(2) + "%";
         }
 
-        console.log("Final Display Net APY:", displayValue); // 🔍 Debugging log
-        setNetApy(displayValue); // ✅ Correctly set state
+        console.log("Final Display Net APY:", displayValue); 
+        setNetApy(displayValue); 
 
         let totalBorrow = 0;
         reservesData.forEach((reserveGroup) => {
@@ -620,7 +617,7 @@ const DashboardNav = () => {
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.liquidity_index;
 
-          console.log("Asset:", asset, "Liquidity Index:", currentLiquidity); // 🔍 Debugging log
+          console.log("Asset:", asset, "Liquidity Index:", currentLiquidity); 
 
           const assetBalance =
             assetBalances?.find((balance) => balance.asset === asset)
@@ -632,7 +629,7 @@ const DashboardNav = () => {
           if (supply) {
             setAssetSupply(supply);
           }
-
+  
           const DebtIndex = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.variable_borrow_index;
@@ -643,18 +640,18 @@ const DashboardNav = () => {
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
             Number(DebtIndex) || 0;
 
-          console.log("Asset Borrow:", asset, "Debt Index:", DebtIndex, "Borrow:", borrow); // 🔍 Debugging log
+          console.log("Asset Borrow:", asset, "Debt Index:", DebtIndex, "Borrow:", borrow); 
 
           if (borrow > 0) {
             totalBorrow += borrow;
           }
         });
 
-        console.log("Total Borrow:", totalBorrow); // 🔍 Debugging log
+        console.log("Total Borrow:", totalBorrow); 
 
         setAssetBorrow(totalBorrow > 0 ? totalBorrow : 0);
       };
-
+  
       updateState();
     }
   }, [

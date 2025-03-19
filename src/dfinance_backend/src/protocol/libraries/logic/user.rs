@@ -1,5 +1,5 @@
 use super::update::user_data;
-use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance};
+use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::assets::{ExecuteRepayParams,AssetData};
@@ -961,7 +961,7 @@ pub struct UserAccountData {
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
-#[query]
+#[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
     page_size: usize,
@@ -1008,7 +1008,7 @@ pub async fn get_liquidation_users_concurrent(
                     };
                     ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
 
-                    if user_account_data.health_factor < Nat::from(100000000u128){
+                    if user_account_data.health_factor < Nat::from(10000000000u128){
                         page_liq_list.push((user_principal, user_account_data, user_data));
                     }
                    
@@ -1043,6 +1043,11 @@ fn register_user() -> Result<String, Error> {
     if user_principal == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
+    }
+
+    if let Err(e) = request_limiter("register_user") {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
     }
 
     let user_data = mutate_state(|state| {

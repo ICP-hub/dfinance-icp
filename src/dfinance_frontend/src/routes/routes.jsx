@@ -9,7 +9,6 @@ import StakeDetails from "../pages/Stake/Stake"
 import Faucet from "../pages/Faucet/faucet"
 import TransactionDetail from "../components/Dashboard/Transaction"
 import Liquidate from "../components/Liquidate/Liquidate"
-import DebtStatus from "../components/Liquidate/DebtStatus"
 import DashboardCards from "../pages/info/info"
 import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
@@ -49,6 +48,7 @@ export default [
       },
     ],
   },
+  
   {
     path: "/dashboard",
     element: (

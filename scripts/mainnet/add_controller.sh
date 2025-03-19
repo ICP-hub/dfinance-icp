@@ -1,11 +1,17 @@
 #!/bin/bash
 
+set -e
+
+# Load environment variables from .env
+source ../../.env
+
+# 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"
 USER_PRINCIPAL=$(dfx identity get-principal --network ic)
 
 # Fetch all asset names
-echo "Fetching assets from $CANISTER_NAME..."
+echo "Fetching assets from $CANISTER_NAME on IC..."
 RAW_OUTPUT=$(dfx canister call $CANISTER_NAME get_all_assets --network ic --output json)
 
 echo "Raw Output:"
@@ -76,21 +82,21 @@ add_controller() {
 }
 
 # Add controllers for all collected principals
-echo "Updating controllers for all assets, D-Tokens, and Debt Tokens..."
+echo "Updating controllers for all assets, D-Tokens, and Debt Tokens on IC..."
 
 for principal in "${PRINCIPALS[@]}"; do
     add_controller "$principal"
-    dfx canister install --wasm "/home/anshikagoel/Quadb/dfinance-icp/target/wasm32-unknown-unknown/release/token_ledger.wasm" $principal --mode upgrade --network ic
+    dfx canister install --wasm "$TOKEN_LEDGER_WASM_PATH" $principal --mode upgrade --network ic
 done
 
 for dtoken in "${D_TOKEN_PRINCIPALS[@]}"; do
     add_controller "$dtoken"
-    dfx canister install --wasm "/home/anshikagoel/Quadb/dfinance-icp/target/wasm32-unknown-unknown/release/dtoken.wasm" $dtoken --mode upgrade --network ic
+    dfx canister install --wasm "$DTOKEN_WASM_PATH" $dtoken --mode upgrade --network ic
 done
 
 for debt_token in "${DEBT_TOKEN_PRINCIPALS[@]}"; do
     add_controller "$debt_token"
-    dfx canister install --wasm "/home/anshikagoel/Quadb/dfinance-icp/target/wasm32-unknown-unknown/release/debttoken.wasm" $debt_token --mode upgrade --network ic
+    dfx canister install --wasm "$DEBT_TOKEN_WASM_PATH" $debt_token --mode upgrade --network ic
 done
 
-echo "All controllers updated successfully."
+echo "All controllers updated successfully on IC."

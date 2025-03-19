@@ -44,7 +44,7 @@ const DebtStatus = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
-  const [liquidationLoading, setLiquidationLoading] = useState(false);
+  const [liquidationLoading, setLiquidationLoading] = useState(true);
   const [error, setError] = useState("");
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
@@ -125,7 +125,7 @@ const DebtStatus = () => {
           userData: userData,
         })
       );
-      
+
       setUserAccountData((prev) => ({
         ...prev,
         ...parsedResult.reduce((acc, { principal, userAccountData }) => {
@@ -133,7 +133,7 @@ const DebtStatus = () => {
           return acc;
         }, {}),
       }));
-    return parsedResult;
+      return parsedResult;
     } catch (error) {
       console.error("Error fetching liquidation users:", error);
       throw error;
@@ -166,12 +166,11 @@ const DebtStatus = () => {
 
   const fetchAssetData = async () => {
     const balances = {};
-
     await Promise.all(
       currentItems.map(async (mappedItem) => {
         const principal = mappedItem.principal?._arr;
         const userBalances = {};
-
+        console.log("principal:", principal);
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
@@ -377,18 +376,26 @@ const DebtStatus = () => {
 
   useEffect(() => {
     const loadUsers = async () => {
-      setLiquidationLoading(true);
-      try {
-        const usersPerPage = 10;
-        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
+      setLiquidationLoading(true)
+      if (liquidationUsers.length === 0) {
+        try {
+          const usersPerPage = 10;
+          const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
 
-        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
-        setLiquidationUsers(data);
-      } catch (err) {
-        console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later.");
-      } finally {
-        setLiquidationLoading(false);
+          const data = await fetchLiquidationUsers(totalPages, usersPerPage);
+          setLiquidationUsers((prev) => [...prev, ...data]);
+        } catch (err) {
+         
+          console.error("Failed to load liquidation users:", err);
+          setError("Failed to fetch users. Please try again later.");
+          setTimeout(() => {
+            setLiquidationLoading(false); // Set loading to false after delay
+          }, 1200);
+        } finally{
+          setTimeout(() => {
+            setLiquidationLoading(false); // Set loading to false after delay
+          }, 1200);
+        }
       }
     };
 
@@ -445,6 +452,12 @@ const DebtStatus = () => {
     }
   }, [showPopup]);
 
+  useEffect(() => {
+    console.log("liquidationUsers:", liquidationUsers);
+    console.log("relevantItems:", relevantItems);
+    console.log("currentItems:", currentItems);
+  }, [liquidationUsers, relevantItems, currentItems]);
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -464,7 +477,9 @@ const DebtStatus = () => {
           <div className="h-[400px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : !liquidationLoading && currentItems && currentItems.length === 0 ? (
+        ) : currentItems === undefined ||
+          currentItems === null ||
+          currentItems.length === 0 ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[13rem] mb-[18rem]">
             <div className="mb-3 -ml-3 -mt-5">
               <Lottie />

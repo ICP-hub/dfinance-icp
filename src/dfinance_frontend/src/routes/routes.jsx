@@ -12,6 +12,7 @@ import Liquidate from "../components/Liquidate/Liquidate"
 import DashboardCards from "../pages/info/info"
 import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
+import DebtStatus from "../components/Liquidate/DebtStatus"
 const ADMIN_ROUTE = process.env.DFX_ADMIN || "/default";
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE || "/default";
 
@@ -117,8 +118,14 @@ export default [
     path: "/Liquidate",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Liquidate/>
+        <Liquidate />
       </MainDashboard>
     ),
+    children: [
+      {
+        path: "debt-users-list",  // This is the child route
+        element: <DebtStatus />  // This is the DebtStatus component that will be rendered
+      }
+    ]
   },
 ];

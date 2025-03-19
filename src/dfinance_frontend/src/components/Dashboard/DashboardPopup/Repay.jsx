@@ -12,6 +12,7 @@ import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRa
 import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * Repay Component
@@ -43,16 +44,14 @@ const Repay = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
-  const fees = useSelector((state) => state.fees.fees);
   const { backendActor, principal } = useAuth();
-  const dispatch = useDispatch();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -72,7 +71,30 @@ const Repay = ({
   const [maxAmount, setMaxAmount] = useState("0");
   const [maxClicked, setMaxClicked] = useState(false);
 
-  const value = 5.23;
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const fees = useSelector((state) => state.fees.fees);
+  const dispatch = useDispatch();
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
@@ -142,34 +164,6 @@ const Repay = ({
     return parts.length > 1 ? parts.join(".") : parts[0];
   };
 
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-
-      const numericAmount = Number(amount.replace(/,/g, ""));
-
-      let convertedValue = numericAmount * adjustedConversionRate;
-
-      const truncatedValue = (
-        Math.floor(convertedValue * Math.pow(10, 8)) / Math.pow(10, 8)
-      ).toFixed(7);
-
-      setUsdValue(truncatedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  useEffect(() => {
-    if (assetBorrow && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
 
   if (!fees) {
@@ -189,6 +183,20 @@ const Repay = ({
    *
    */
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -259,12 +267,6 @@ const Repay = ({
     }
   };
 
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
-
   const errorMessages = {
     NoCanisterIdFound:
       "The requested asset is unavailable. Please try again later.",
@@ -280,6 +282,20 @@ const Repay = ({
    * This function executes the repayment transaction. It calls the backend to perform the repayment for the specified asset.
    */
   const handleRepayETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -341,6 +357,25 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+          console.error("You are temporarily blocked from using this function");
+
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          setIsLoading(false)
+          setIsModalOpen(false);
+          return;
+        }
+
         if (errorMsg?.AmountSubtractionError === null) {
           toast.error("Repay failed: You cannot repay more than you owe.", {
             className: "custom-toast",
@@ -389,6 +424,11 @@ const Repay = ({
         )
       ) {
         message = "You cannot repay more than you owe.";
+      } else if (
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister")
+      ) {
+        message = "Canister is out of cycles. Admin has been notified.";
       }
 
       toast.error(`Error: ${message}`, {
@@ -404,41 +444,6 @@ const Repay = ({
     }
   };
 
-  //   const handlePanicCall = async () => {
-  //     try {
-  //       const result = await backendActor.will_panic();
-  // console.log("result", result);
-  //       // If the function somehow returns a value without panicking
-  //       toast.success(`Backend response: ${result}`, {
-  //         className: "custom-toast",
-  //         position: "top-center",
-  //         autoClose: 3000,
-  //         hideProgressBar: false,
-  //         closeOnClick: true,
-  //         pauseOnHover: true,
-  //         draggable: true,
-  //       });
-  //     } catch (error) {
-  //       console.error("Caught panic error:", error);
-
-  //       // Check if error message contains panic indication
-  //       if (error.message && error.message.toLowerCase().includes("panic")) {
-  //         setShowPanicPopup(true);
-  //         setIsVisible(false);
-  //       } else {
-  //         toast.error(`Error: ${error.message || "Unexpected error occurred"}`, {
-  //           className: "custom-toast",
-  //           position: "top-center",
-  //           autoClose: 3000,
-  //           hideProgressBar: false,
-  //           closeOnClick: true,
-  //           pauseOnHover: true,
-  //           draggable: true,
-  //         });
-  //       }
-  //     }
-  //   };
-
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -449,7 +454,6 @@ const Repay = ({
     try {
       if (isApproved) {
         await handleRepayETH();
-        // await handlePanicCall();
       } else {
         await handleApprove();
       }
@@ -457,56 +461,6 @@ const Repay = ({
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
-
-  // Updates health factor based on repayment amount
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold
-    );
-    const amountAdded = usdValue || 0;
-    let totalCollateralValue = parseFloat(totalCollateral);
-    if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;
-    }
-    let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
-    }
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-  }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-  ]);
 
   const calculateHealthFactor = (
     totalCollateral,
@@ -564,6 +518,112 @@ const Repay = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+
+      const numericAmount = Number(amount.replace(/,/g, ""));
+
+      let convertedValue = numericAmount * adjustedConversionRate;
+
+      const truncatedValue = (
+        Math.floor(convertedValue * Math.pow(10, 8)) / Math.pow(10, 8)
+      ).toFixed(7);
+
+      setUsdValue(truncatedValue);
+    } else {
+      setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (assetBorrow && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    const amountAdded = usdValue || 0;
+    let totalCollateralValue = parseFloat(totalCollateral);
+
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
+
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+
+    setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+  ]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
+
   return (
     <>
       {isVisible && (
@@ -575,17 +635,17 @@ const Repay = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-[50%]">
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="flex flex-col items-start w-[45%] gap-8">
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0 || isApproved}
-                    className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-[14px] placeholder:text-[10px] lg:placeholder:text-[12px] focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
-                  <p className="text-xs text-gray-500 px-2  mt-4 mb-1">
+                  <p className="text-[11px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
@@ -594,8 +654,8 @@ const Repay = ({
                       : "$0.00 USD"}
                   </p>
                 </div>
-                <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2  mt-1">
+                <div className="flex flex-col items-end gap-3">
+                  <div className="w-auto flex items-center gap-2 lg:mb-5">
                     <img
                       src={image}
                       alt="Item Image"
@@ -603,23 +663,33 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 text-right w-full mt-1">
-                    Wallet Balance:
-                  </p>
-                  <p
-                    className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (assetBorrow > 0 && !isApproved) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {truncateToSevenDecimals(supplyBalance)} Max
-                  </p>
+                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
+                    {/* Wallet Balance label (Always on top in small screens) */}
+                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+                      Wallet Balance:
+                    </p>
+
+                    {/* Value and Max button in same line below on small screens */}
+                    <div className="flex gap-1 items-center">
+                      <p className="text-[10px] text-gray-500">
+                        {truncateToSevenDecimals(supplyBalance)}
+                      </p>
+                      <p
+                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                          assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        }`}
+                        onClick={() => {
+                          if (assetBorrow > 0 && !isApproved) {
+                            handleMaxClick();
+                          }
+                        }}
+                      >
+                        Max
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -650,21 +720,21 @@ const Repay = ({
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {parseFloat(
-                          healthFactorBackend > 100
+                        {(
+                          truncatedValue > 100
                             ? "Infinity"
-                            : parseFloat(healthFactorBackend).toFixed(2)
+                            : (truncatedValue)
                         )}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
@@ -794,7 +864,7 @@ const Repay = ({
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -807,7 +877,7 @@ const Repay = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <center>
-              <p className="mt-2 ">
+              <p className="mt-2 text-center">
                 Your Debt was{" "}
                 <strong>
                   {" "}

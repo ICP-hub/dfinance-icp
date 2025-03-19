@@ -5,6 +5,7 @@ use candid::CandidType;
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,
+    RewardIsHigher,
     InvalidCanister,
     InvalidPrincipal,
     AnonymousPrincipal,
@@ -41,6 +42,8 @@ pub enum Error {
     NoPriceCache,
     EmptyAsset,
     LowWalletBalance,
+    AmountExceedsLimit, 
+    ExceedsRemainingLimit,
     AmountTooMuch,
     InvalidAssetLength,
     NoUserReserveDataFound,
@@ -66,7 +69,10 @@ pub enum Error {
     FailedToReleaseLock,
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
-    AmountSubtractionError
+    AmountSubtractionError,
+    TOOMANYREQUESTS,
+    BLOCKEDFORONEHOUR,
+    USERCANNOTBELIQUIDATED
 }
 
 impl Error {
@@ -75,6 +81,7 @@ impl Error {
             Error::MaxAmountPlatform => "Platform is unable to pay right now! Try Again Later",
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
+            Error::RewardIsHigher => "Reward is higher than expected",
             Error::InvalidPrincipal => "Invalid principal id",
             Error::AnonymousPrincipal => "Anonymous principals are not allowed",
             Error::MaxAmount => "Amount must be less than user available balance",
@@ -111,6 +118,8 @@ impl Error {
             Error::ErrorPriceCache => "Error in fetching price cache",
             Error::EmptyAsset => "Asset cannot be an empty string",
             Error::LowWalletBalance => "wallet balance is low",
+            Error::AmountExceedsLimit => "Requested amount exceeds the total faucet limit.",
+            Error::ExceedsRemainingLimit => "Requested amount exceeds the remaining faucet limit.",
             Error::AmountTooMuch => "Amount is too much",
             Error::InvalidAssetLength => "Lenght of the asset is invalid",
             Error::InvalidBurnAmount => "Invalid burn amount",
@@ -135,7 +144,10 @@ impl Error {
             Error::FailedToReleaseLock => "Failed to release lock",
             Error::LockOperationInProgess => "Another operation is already in progress for user",
             Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
-            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract"
+            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
+            Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible",
+            Error::TOOMANYREQUESTS => "You are temporarily blocked",
+            Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
         }
     }
 }

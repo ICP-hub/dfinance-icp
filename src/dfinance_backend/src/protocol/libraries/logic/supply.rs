@@ -1,11 +1,11 @@
-use crate::api::functions::asset_transfer_from;
+use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
-use crate::protocol::libraries::logic::update::UpdateLogic;
+use crate::protocol::libraries::logic::update::{user_data, UpdateLogic};
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::reserve_ledger_canister_id;
@@ -62,6 +62,11 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
+    if let Err(e) = request_limiter("execute_supply") {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+
     let operation_key = user_principal;
     // Acquire the lock
     {
@@ -97,7 +102,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
 
         let mut reserve_data = match reserve_data_result {
             Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset");
+                ic_cdk::println!("Reserve data found for asset = {:?}", data);
                 data
             }
             Err(e) => {
@@ -111,7 +116,13 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates supply using the reserve_data
@@ -303,6 +314,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             (user_principal, None)
         };
 
+    if let Err(e) = request_limiter("execute_withdraw") {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+
     let operation_key = user_principal;
     // Acquire the lock
     {
@@ -364,9 +380,16 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity index
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
-
+        //user balance-> a token balance * nextliqindex
+        //if param.amount == type max, then amount to withdraw = user_balance
         if let Err(e) = ValidationLogic::validate_withdraw(
             &reserve_data,
             params.amount.clone(),
@@ -386,7 +409,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         if let Err(e) = reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
-            params.amount.clone(),
+            params.amount.clone(), //amount to withdraw
             Nat::from(0u128),
         )
         .await

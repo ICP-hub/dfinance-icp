@@ -1,18 +1,19 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
+use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
+use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
-use protocol::libraries::logic::user::calculate_user_account_data;
-
+use protocol::libraries::logic::user::calculate_user_asset_data;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -62,7 +63,18 @@ pub async fn init(args: Principal) {
     schedule_midnight_task().await;
 }
 
-
+/*
+ * @title Get Controller Information
+ * @dev Retrieves the controller ID from the state. The function looks for metadata 
+ *      associated with a specific key and returns the `controller_id` from `InitArgs`
+ *      if available. If no controller is found or an error occurs while reading the state, 
+ *      an appropriate error is returned.
+ *
+ * @returns 
+ *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
+ *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
+ *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ */
 pub fn get_controller() -> Result<InitArgs, Error> {
 
     match read_state(|state| {
@@ -225,7 +237,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
         let price_cache_data = &state.price_cache_list;
         price_cache_data
             .get(&base_asset.to_string())
-            .map(|price_cache| price_cache.0)
+            .map(|price_cache: Candid<PriceCache>| price_cache.0)
             .ok_or_else(|| Error::NoPriceCache)
     });
 
@@ -593,18 +605,21 @@ pub fn get_total_users() -> usize {
 }
 
 
+
 /*
  * @title Get User Account Data
  * @dev Fetches the user’s account data.
  * @param on_behalf (Optional) The principal requesting the data.
  * @returns A tuple containing user financial data.
  */
-#[update]
+#[query]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
+    dtoken_balance: Option<Vec<AssetData>>,
+    debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     ic_cdk::println!("error in user = {:?}", on_behalf);
-    let result = calculate_user_account_data(on_behalf).await;
+    let result = calculate_user_asset_data(on_behalf,dtoken_balance,debt_token_balance).await;
     result
 }
 
@@ -648,5 +663,6 @@ pub async fn post_upgrade() {
 }
 
 export_candid!();
+
 
 

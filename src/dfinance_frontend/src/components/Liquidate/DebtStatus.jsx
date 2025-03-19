@@ -1,8 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import {
-  LIQUIDATION_USERLIST_ROW,
-  LIQUIDATION_USERLIST_COL,
-} from "../../utils/constants";
+import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,9 +13,7 @@ import ckETH from "../../../public/assests-icon/cketh.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
-import useFormatNumber from "../customHooks/useFormatNumber";
 import useAssetData from "../customHooks/useAssets";
-import useUserData from "../customHooks/useUserData";
 import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
@@ -34,23 +29,19 @@ import Lottie from "../Common/Lottie";
  * @returns {JSX.Element} - Returns the DebtStatus component.
  */
 const DebtStatus = () => {
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
+
   const liquidateTrigger = useSelector(
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
   const theme = useSelector((state) => state.theme.theme);
-  const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userAccountData, setUserAccountData] = useState({});
-  const { userData } = useUserData();
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [assetSupply, setAssetSupplied] = useState({});
-  const [assetBorrow, setAssetBorrowed] = useState({});
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(false);
@@ -58,13 +49,17 @@ const DebtStatus = () => {
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
-  const [Users, setusers] = useState([]);
   const [userLoadingStates, setUserLoadingStates] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const cachedData = useRef({});
+  const [userAccountData, setUserAccountData] = useState([]);
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
 
   const {
     assets,
-    reserveData,
     filteredItems,
     asset_supply,
     asset_borrow,
@@ -77,7 +72,6 @@ const DebtStatus = () => {
     getAllUsers,
     user,
     backendActor,
-    principal,
     fetchReserveData,
     createLedgerActor,
   } = useAuth();
@@ -86,6 +80,9 @@ const DebtStatus = () => {
     setShowSearch(!Showsearch);
   };
 
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
   /**
    * Fetches the total number of users from the backend.
    */
@@ -102,34 +99,6 @@ const DebtStatus = () => {
       throw error;
     }
   };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        await getTotalUser();
-      } catch (error) {
-        console.error("Failed to fetch total users:", error.message);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersData = await getAllUsers();
-        setUsers(usersData);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-    fetchUsers();
-  }, [getAllUsers, liquidateTrigger]);
-
-  const stableUserAccountData = useMemo(
-    () => userAccountData,
-    [userAccountData]
-  );
-  const stableUsers = useMemo(() => users, [users]);
 
   /**
    * Fetches a list of users eligible for liquidation.
@@ -156,87 +125,29 @@ const DebtStatus = () => {
           userData: userData,
         })
       );
-
-      return parsedResult;
+      
+      setUserAccountData((prev) => ({
+        ...prev,
+        ...parsedResult.reduce((acc, { principal, userAccountData }) => {
+          acc[principal] = userAccountData;
+          return acc;
+        }, {}),
+      }));
+    return parsedResult;
     } catch (error) {
       console.error("Error fetching liquidation users:", error);
       throw error;
     }
   };
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      setLiquidationLoading(true);
-      try {
-        const usersPerPage = 10;
-        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-
-        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
-        setLiquidationUsers(data);
-      } catch (err) {
-        console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later.");
-      } finally {
-        setLiquidationLoading(false);
-      }
-    };
-
-    loadUsers();
-  }, [totalUsers, liquidateTrigger]);
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
   };
 
-  const handleChevronClick = () => {
-    setShowPopup(true);
-  };
-
   const closePopup = () => {
     setShowPopup(false);
   };
-
-  const dispatch = useDispatch();
-  const ITEMS_PER_PAGE = 8;
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const cachedData = useRef({});
-
-  /**
-   * Fetches and caches user account data to avoid redundant API calls.
-   * @param {Object} userData - The user data object.
-   */
-  const fetchUserAccountDataWithCache = async (userData) => {
-    const principal = userData?.principal;
-    if (!principal || cachedData.current[principal]) return;
-
-    try {
-      const result = await backendActor.get_user_account_data([principal]);
-      if (result) {
-        cachedData.current[principal] = result;
-        setUserAccountData((prev) => ({ ...prev, [principal]: result }));
-      }
-    } catch (error) {
-      console.error(`Error fetching data for principal: ${principal}`, error);
-    }
-  };
-
-  useEffect(() => {
-    cachedData.current = {};
-    if (!users || users.length === 0) return;
-    Promise.all(
-      users.map((userData) => {
-        const principal = userData[0];
-        if (principal)
-          return fetchUserAccountDataWithCache({ ...userData, principal });
-        return null;
-      })
-    )
-      .then(() => console.log("All user account data fetched"))
-      .catch((error) =>
-        console.error("Error fetching user account data in batch:", error)
-      );
-  }, [users, liquidateTrigger]);
 
   const relevantItems = liquidationUsers.filter((item) => {
     console.log("Item:", item.debt);
@@ -247,10 +158,12 @@ const DebtStatus = () => {
     );
   });
 
+  const ITEMS_PER_PAGE = 8;
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
+
   const fetchAssetData = async () => {
     const balances = {};
 
@@ -321,12 +234,6 @@ const DebtStatus = () => {
     setAssetBalances(balances);
   };
 
-  useEffect(() => {
-    if (currentItems.length > 0) {
-      fetchAssetData();
-    }
-  }, [liquidationUsers, assets, users, liquidateTrigger]);
-
   const getBalanceForPrincipalAndAsset = (
     principal,
     assetName,
@@ -336,41 +243,6 @@ const DebtStatus = () => {
     const assetBalance = userBalances[assetName];
     return assetBalance ? assetBalance[balanceType] || 0 : 0;
   };
-
-  useEffect(() => {
-    const fetchSupplyData = async () => {
-      if (assets.length === 0) return;
-      setSupplyDataLoading(true);
-      try {
-        for (const asset of assets) {
-          await fetchAssetSupply(asset);
-        }
-      } catch (error) {
-        setSupplyDataLoading(false);
-        console.error("Error fetching supply data:", error);
-      } finally {
-        setSupplyDataLoading(false);
-      }
-    };
-
-    const fetchBorrowData = async () => {
-      if (assets.length === 0) return;
-      setBorrowDataLoading(true);
-      try {
-        for (const asset of assets) {
-          await fetchAssetBorrow(asset);
-        }
-      } catch (error) {
-        setBorrowDataLoading(false);
-        console.error("Error fetching borrow data:", error);
-      } finally {
-        setBorrowDataLoading(false);
-      }
-    };
-
-    fetchSupplyData();
-    fetchBorrowData();
-  }, [assets, liquidateTrigger]);
 
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
@@ -463,16 +335,6 @@ const DebtStatus = () => {
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
 
-  useEffect(() => {
-    if (showPopup) {
-      document.addEventListener("mousedown", handleOutsideClick);
-      return () => {
-        document.removeEventListener("mousedown", handleOutsideClick);
-      };
-    }
-  }, [showPopup]);
-
-  const formatNumber = useFormatNumber();
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
@@ -486,6 +348,106 @@ const DebtStatus = () => {
       return numericValue.toFixed(7);
     }
   };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await getTotalUser();
+      } catch (error) {
+        console.error("Failed to fetch total users:", error.message);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const usersData = await getAllUsers();
+        setUsers(usersData);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchUsers();
+  }, [getAllUsers, liquidateTrigger]);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      setLiquidationLoading(true);
+      try {
+        const usersPerPage = 10;
+        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
+
+        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
+        setLiquidationUsers(data);
+      } catch (err) {
+        console.error("Failed to load liquidation users:", err);
+        setError("Failed to fetch users. Please try again later.");
+      } finally {
+        setLiquidationLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, [totalUsers, liquidateTrigger]);
+
+  useEffect(() => {
+    if (currentItems.length > 0) {
+      fetchAssetData();
+    }
+  }, [liquidationUsers, assets, users, liquidateTrigger]);
+
+  useEffect(() => {
+    const fetchSupplyData = async () => {
+      if (assets.length === 0) return;
+      setSupplyDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetSupply(asset);
+        }
+      } catch (error) {
+        setSupplyDataLoading(false);
+        console.error("Error fetching supply data:", error);
+      } finally {
+        setSupplyDataLoading(false);
+      }
+    };
+
+    const fetchBorrowData = async () => {
+      if (assets.length === 0) return;
+      setBorrowDataLoading(true);
+      try {
+        for (const asset of assets) {
+          await fetchAssetBorrow(asset);
+        }
+      } catch (error) {
+        setBorrowDataLoading(false);
+        console.error("Error fetching borrow data:", error);
+      } finally {
+        setBorrowDataLoading(false);
+      }
+    };
+
+    fetchSupplyData();
+    fetchBorrowData();
+  }, [assets, liquidateTrigger]);
+
+  useEffect(() => {
+    if (showPopup) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      return () => {
+        document.removeEventListener("mousedown", handleOutsideClick);
+      };
+    }
+  }, [showPopup]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <div className="w-full">

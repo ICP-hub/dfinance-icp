@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Info, Check, Wallet, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
@@ -8,6 +9,7 @@ import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRa
 import useUserData from "../../customHooks/useUserData";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import { useDispatch } from "react-redux";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * ColateralPopup Component
@@ -16,34 +18,26 @@ import { useDispatch } from "react-redux";
  * @param {Object} props - Component props
  * @returns {JSX.Element} - Returns the ColateralPopup component.
  */
-const ColateralPopup = ({
-  asset,
-  image,
-  supplyRateAPR,
-  balance,
-  liquidationThreshold,
-  reserveliquidationThreshold,
-  assetSupply,
-  assetBorrow,
-  totalCollateral,
-  totalDebt,
-  currentCollateralStatus,
-  Ltv,
-  borrowableValue,
-  borrowableAssetValue,
-  isModalOpen,
-  handleModalOpen,
-  setIsModalOpen,
-  onLoadingChange,
-}) => {
-  const dispatch = useDispatch();
+const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
+
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("toggle_collateral");
   const { healthFactorBackend } = useUserData();
   const { backendActor } = useAuth();
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [isCollateral, setIsCollateral] = useState(currentCollateralStatus);
-   const [showPanicPopup, setShowPanicPopup] = useState(false);
+  const [showPanicPopup, setShowPanicPopup] = useState(false);
   const value = currentHealthFactor;
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
@@ -53,14 +47,12 @@ const ColateralPopup = ({
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, SetError] = useState(null);
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
 
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const dispatch = useDispatch();
 
   /**
    *
@@ -71,88 +63,125 @@ const ColateralPopup = ({
    * @param {number} assetSupply - The supply balance of the asset
    * @throws {Error} - Throws error if the backend responds with failure
    */
+
   async function toggleCollateral(asset, assetSupply) {
     try {
-        const addedAmount = currentCollateralStatus
-            ? BigInt(0)
-            : BigInt(Math.round(assetSupply * 100000000));
-        const amount = currentCollateralStatus
-            ? BigInt(Math.round(assetSupply * 100000000))
-            : BigInt(0);
+      if (isBlocked) {
+        toast.error("You are temporarily blocked from using this function", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsModalOpen(false)
+        return; // Prevent function execution
+      }
+      const addedAmount = currentCollateralStatus
+        ? BigInt(0)
+        : BigInt(Math.round(assetSupply * 100000000));
+      const amount = currentCollateralStatus
+        ? BigInt(Math.round(assetSupply * 100000000))
+        : BigInt(0);
 
-        const response = await backendActor.toggle_collateral(
-            asset,
-            Number(amount),
-            addedAmount
-        );
+      const response = await backendActor.toggle_collateral(
+        asset,
+        Number(amount),
+        addedAmount
+      );
 
-        if (response?.Err) {
-            const errorMsg = response.Err;
+      if (response?.Err) {
+        const errorMsg = response.Err;
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+          console.error("You are temporarily blocked from using this function");
+  
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setIsLoading(false)}
+        // Handle panic errors
+        if (
+          typeof errorMsg === "string" &&
+          errorMsg.toLowerCase().includes("panic")
+        ) {
+          setShowPanicPopup(true);
 
-            // Handle panic errors
-            if (typeof errorMsg === "string" && errorMsg.toLowerCase().includes("panic")) {
-                setShowPanicPopup(true);
-                
-                throw new Error("Panic detected: " + errorMsg);
-            }
-
-            if (errorMsg?.ExchangeRateError === null) {
-                toast.error("Price fetch failed", {
-                    className: "custom-toast",
-                    position: "top-center",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-
-                SetError(
-                    "Price fetch failed: Your assets are safe, try again after some time."
-                );
-                throw new Error("ExchangeRateError: Price fetch failed.");
-            }
-            if (errorMsg?.LTVGreaterThanThreshold === null) {
-                const errorText =
-                    "Collateral update failed: LTV exceeds the allowable threshold.";
-                toast.error(errorText, {
-                    className: "custom-toast",
-                    position: "top-center",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-
-                throw new Error("LTVGreaterThanThreshold: " + errorText);
-            }
-
-            throw new Error(JSON.stringify(errorMsg));
+          throw new Error("Panic detected: " + errorMsg);
         }
 
-        setIsCollateral(currentCollateralStatus);
+        if (errorMsg?.ExchangeRateError === null) {
+          toast.error("Price fetch failed", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          SetError(
+            "Price fetch failed: Your assets are safe, try again after some time."
+          );
+          throw new Error("ExchangeRateError: Price fetch failed.");
+        }
+        if (errorMsg?.LTVGreaterThanThreshold === null) {
+          const errorText =
+            "Collateral update failed: LTV exceeds the allowable threshold.";
+          toast.error(errorText, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          throw new Error("LTVGreaterThanThreshold: " + errorText);
+        }
+
+        throw new Error(JSON.stringify(errorMsg));
+      }
+
+      setIsCollateral(currentCollateralStatus);
     } catch (error) {
-        console.error("Error in toggleCollateral:", error);
-        throw error;
+      console.error("Error in toggleCollateral:", error);
+      throw error;
     }
-}
+  }
 
-
-  useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
-      const truncatedValue = Math.trunc(convertedValue * 1e8) / 1e8;
-      setUsdValue(truncatedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   const handleToggleCollateral = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     setIsLoading(true);
     try {
       await toggleCollateral(asset, assetSupply);
@@ -167,6 +196,61 @@ const ColateralPopup = ({
       setIsLoading(false);
     }
   };
+
+  const handleClosePaymentPopup = () => {
+    setIsPaymentDone(false);
+    setIsModalOpen(false);
+  };
+
+  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
+    if (totalCollateralValue === 0) {
+      return 0;
+    }
+    return (totalDeptValue / totalCollateralValue) * 100;
+  };
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleSupplyETH();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const formatValue = (value) => {
+    const numericValue = parseFloat(value);
+
+    if (isNaN(numericValue)) {
+      return "0";
+    }
+
+    if (numericValue === 0) {
+      return "0";
+    } else if (numericValue >= 1) {
+      return numericValue.toFixed(2);
+    } else {
+      return numericValue.toFixed(7);
+    }
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    if (assetSupply && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
+      const truncatedValue = Math.trunc(convertedValue * 1e8) / 1e8;
+      setUsdValue(truncatedValue);
+    } else {
+      setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -187,11 +271,6 @@ const ColateralPopup = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
-  const handleClosePaymentPopup = () => {
-    setIsPaymentDone(false);
-    setIsModalOpen(false);
-  };
-
   useEffect(() => {
     const Collateral = currentCollateralStatus
       ? Math.max(totalCollateral - usdValue, 0)
@@ -204,7 +283,6 @@ const ColateralPopup = ({
       result = Infinity;
     } else {
       let avliq = liquidationThreshold * totalCollateral;
-      console.log("avliq", avliq);
       let tempLiq = currentCollateralStatus
         ? avliq - usdValue * reserveliquidationThreshold
         : avliq + usdValue * reserveliquidationThreshold;
@@ -250,40 +328,16 @@ const ColateralPopup = ({
     totalDebt,
   ]);
 
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
     }
-    return (totalDeptValue / totalCollateralValue) * 100;
-  };
+  }, [isLoading, onLoadingChange]);
 
-  const handleClick = async () => {
-    setIsLoading(true);
-    try {
-      if (isApproved) {
-        await handleSupplyETH();
-      } else {
-        await handleApprove();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const formatValue = (value) => {
-    const numericValue = parseFloat(value);
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
-    if (isNaN(numericValue)) {
-      return "0";
-    }
-
-    if (numericValue === 0) {
-      return "0";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
-  };
   return (
     <>
       {isVisible && (
@@ -372,7 +426,7 @@ const ColateralPopup = ({
             </div>
           </div>
 
-          {}
+          
           {value <= 1 ? (
             <div className="w-full flex flex-col my-3 space-y-2">
               <div className="w-full flex bg-[#BA5858] p-3 rounded-lg">
@@ -403,7 +457,7 @@ const ColateralPopup = ({
               : `Enable ${asset} as collateral`}
           </button>
 
-          {}
+          
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
@@ -419,7 +473,7 @@ const ColateralPopup = ({
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -443,41 +497,44 @@ const ColateralPopup = ({
               Close Now
             </button>
           </div>
-           {showPanicPopup && (
-                  <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                    <div className="w-full flex flex-col items-center p-2 ">
-                      <button
-                        onClick={handleClosePaymentPopup}
-                        className="text-gray-400 focus:outline-none self-end button1"
-                      >
-                        <X size={24} />
-                      </button>
-          
-                      <div
-                        className="dark:bg-gradient 
+          {showPanicPopup && (
+            <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+              <div className="w-full flex flex-col items-center p-2 ">
+                <button
+                  onClick={handleClosePaymentPopup}
+                  className="text-gray-400 focus:outline-none self-end button1"
+                >
+                  <X size={24} />
+                </button>
+
+                <div
+                  className="dark:bg-gradient 
                           dark:from-darkGradientStart 
                           dark:to-darkGradientEnd 
                           dark:text-darkText  "
-                      >
-                        <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
-                        <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                          Thanks for helping us improve DFinance! <br></br> You’ve
-                          uncovered a bug, and our dev team is on it.
-                        </p>
-          
-                        <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                          Your account is temporarily locked while we investigate and fix
-                          the issue. <br />
-                        </p>
-                        <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                          We appreciate your contribution and have logged your ID—testers
-                          like you are key to making DFinance better! <br />
-                          If you have any questions, feel free to reach out.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                >
+                  <h1 className="font-semibold text-xl mb-4 ">
+                    Important Message
+                  </h1>
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Thanks for helping us improve DFinance! <br></br> You’ve
+                    uncovered a bug, and our dev team is on it.
+                  </p>
+
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Your account is temporarily locked while we investigate and
+                    fix the issue. <br />
+                  </p>
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    We appreciate your contribution and have logged your
+                    ID—testers like you are key to making DFinance better!{" "}
+                    <br />
+                    If you have any questions, feel free to reach out.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

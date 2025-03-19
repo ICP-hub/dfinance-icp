@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * WithdrawPopup Component
@@ -36,24 +37,32 @@ const WithdrawPopup = ({
   totalCollateral,
   totalDebt,
   currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
   isModalOpen,
   handleModalOpen,
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("execute_withdraw");
   const { backendActor, principal } = useAuth();
-  const dispatch = useDispatch();
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+  const modalRef = useRef(null);
+  const { userData, healthFactorBackend, refetchUserData } = useUserData();
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-  const fees = useSelector((state) => state.fees.fees);
-
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const [amount, setAmount] = useState("");
   const [maxUsdValue, setMaxUsdValue] = useState(0);
@@ -64,50 +73,63 @@ const WithdrawPopup = ({
   const [isVisible, setIsVisible] = useState(true);
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const dispatch = useDispatch();
+  const fees = useSelector((state) => state.fees.fees);
+  const ledgerActors = useSelector((state) => state.ledger);
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
+  /* ===================================================================================
+   *                                  HELPERS
+   * =================================================================================== */
+
   if (!fees) {
     return <p>Error: Fees data not available.</p>;
   }
-
-  const isCollateral = true;
-
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
 
   const numericBalance = parseFloat(balance);
   const transferFee = fees[normalizedAsset] || fees.default;
   const transferfee = Number(transferFee);
   const supplyBalance = numericBalance - transferfee;
-  const modalRef = useRef(null);
 
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 7);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(7);
   };
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
-    // Allow clearing the input
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
 
-    // Allow only digits and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
 
-    // Ensure only one decimal point exists
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
 
-    // Enforce a maximum of 8 digits including the decimal part
     const parts = inputAmount.split(".");
     if (parts[0].length > 8) {
       parts[0] = parts[0].slice(0, 8);
@@ -117,7 +139,6 @@ const WithdrawPopup = ({
     }
     inputAmount = parts.join(".");
 
-    // Prevent input from exceeding asset supply
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
       inputAmount = truncateToSevenDecimals(assetSupply).toString();
@@ -134,6 +155,7 @@ const WithdrawPopup = ({
    * @param {string} inputAmount - The amount entered by the user.
    * @returns {void}
    */
+
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
 
@@ -155,28 +177,6 @@ const WithdrawPopup = ({
       setError("Amount must be a positive number");
     }
   };
-
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue =
-        Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue);
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-  useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = assetSupply * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  const ledgerActors = useSelector((state) => state.ledger);
 
   const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
@@ -205,7 +205,22 @@ const WithdrawPopup = ({
    *
    * @returns {void}
    */
+
   const handleWithdraw = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -282,7 +297,22 @@ const WithdrawPopup = ({
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
+        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
+          console.error("You are temporarily blocked from using this function");
 
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setIsLoading(false);
+        }
         if (isPanicError) {
           setShowPanicPopup(true);
           setIsVisible(false);
@@ -317,14 +347,29 @@ const WithdrawPopup = ({
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
 
-      const isPanicError =
-        error.message && error.message.toLowerCase().includes("panic");
+      const message = error.message || "Withdraw action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
 
       if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Withdraw action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -340,95 +385,10 @@ const WithdrawPopup = ({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
-
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold,
-      reserveliquidationThreshold
-    );
-
-    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
-
-    const amountAdded = 0;
-    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
-
-    const totalCollateralValue = truncateTo8Decimals(
-      parseFloat(totalCollateral) - parseFloat(amountTaken)
-    );
-
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-    console.log(
-      "collateral & debt",
-      totalCollateral,
-      amountTaken,
-      totalCollateralValue,
-      totalDeptValue
-    );
-    let avliq = liquidationThreshold * totalCollateral;
-    console.log("avliq", avliq);
-    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
-
-    if (totalCollateralValue > 0) {
-      tempLiq = tempLiq / totalCollateralValue;
-
-      // Truncate to 8 decimal places
-      const multiplier = Math.pow(10, 8);
-      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
-    }
-
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    console.log("ltv", ltv);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-    console.log("liq_thresh", ltv * 100, tempLiq);
-    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
-      toast.dismiss();
-      toast.info("LTV Exceeded!");
-    }
-    if (
-      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
-      currentCollateralStatus
-    ) {
-      setIsButtonDisabled(true);
-    } else {
-      setIsButtonDisabled(false);
-    }
-  }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-    liq_thresh,
-  ]);
 
   const calculateHealthFactor = (
     totalCollateral,
@@ -484,8 +444,6 @@ const WithdrawPopup = ({
     return truncatedLTV.toFixed(8);
   };
 
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8);
@@ -513,6 +471,136 @@ const WithdrawPopup = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold,
+      reserveliquidationThreshold
+    );
+
+    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
+
+    const amountAdded = 0;
+    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+
+    const totalCollateralValue = truncateTo8Decimals(
+      parseFloat(totalCollateral) - parseFloat(amountTaken)
+    );
+
+    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
+
+    let avliq = liquidationThreshold * totalCollateral;
+    console.log("avliq", avliq);
+    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
+
+    if (totalCollateralValue > 0) {
+      tempLiq = tempLiq / totalCollateralValue;
+
+      // Truncate to 8 decimal places
+      const multiplier = Math.pow(10, 8);
+      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+    }
+
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+    console.log("ltv", ltv);
+    setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+    console.log("liq_thresh", ltv * 100, tempLiq);
+    if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
+      toast.dismiss();
+      toast.info("LTV Exceeded!");
+      console.log("Toast Triggered: LTV Exceeded!");
+    }
+
+    if (
+      (healthFactor <= 1 || (assetBorrow > 0 && ltv * 100 >= tempLiq)) &&
+      currentCollateralStatus
+    ) {
+      setIsButtonDisabled(true);
+      console.log("Button Disabled: TRUE");
+    } else {
+      setIsButtonDisabled(false);
+      console.log("Button Disabled: FALSE");
+    }
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+    liq_thresh,
+  ]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
+      setUsdValue(convertedValue);
+    } else {
+      setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (assetSupply && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = assetSupply * adjustedConversionRate;
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENTS
+   * =================================================================================== */
   return (
     <>
       {isVisible && (
@@ -610,21 +698,21 @@ const WithdrawPopup = ({
                   <p>
                     <span
                       className={`${
-                        healthFactorBackend > 3
+                        truncatedValue > 3
                           ? "text-green-500"
-                          : healthFactorBackend <= 1
+                          : truncatedValue <= 1
                           ? "text-red-500"
-                          : healthFactorBackend <= 1.5
+                          : truncatedValue <= 1.5
                           ? "text-orange-600"
-                          : healthFactorBackend <= 2
+                          : truncatedValue <= 2
                           ? "text-orange-400"
                           : "text-orange-300"
                       }`}
                     >
-                      {parseFloat(
-                        healthFactorBackend > 100
+                      {(
+                        truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)
+                          : (truncatedValue)
                       )}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>
@@ -703,7 +791,7 @@ const WithdrawPopup = ({
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -716,7 +804,7 @@ const WithdrawPopup = ({
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <center>
-              <p className="mt-2">
+              <p className="mt-2 text-center">
                 Your Supply was{" "}
                 <strong>
                   {truncateToSevenDecimals(assetSupply)} {asset}{" "}

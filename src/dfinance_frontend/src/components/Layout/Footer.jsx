@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import {
   HOME_TOP_NAV_LINK,
@@ -7,10 +7,20 @@ import {
 } from "../../utils/constants";
 import Ellipse from "../Common/Ellipse";
 import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
+import { useAuth } from "../../utils/useAuthClient";
+import { Principal } from "@dfinity/principal";
+import { useSelector } from "react-redux";
 const Footer = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const {
+    isAuthenticated,
+    principal,
+    backendActor,
+    createLedgerActor,
+    agent
+  } = useAuth();
   const handleLogoClick = () => {
     if (location.pathname === "/") {
       window.scrollTo(0, 0);
@@ -21,11 +31,81 @@ const Footer = () => {
       }, 100);
     }
   };
+  const ledgerActors = useSelector((state) => state.ledger);
+  const [loading, setLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isTester, setIsTester] = useState(false);
 
+  useEffect(() => {
+    const checkTesterStatus = async () => {
+      try {
+        const result = await backendActor.check_is_tester();
+        setIsTester(result);
+      } catch (error) {
+        console.error("Error checking tester status:", error);
+      }
+    };
+
+    checkTesterStatus();
+  }, [backendActor]);
+
+  const handleApprove = async () => {
+    const ledgerActor = ledgerActors.ckUSDC;
+    try {
+      setLoading(true);
+      const approval = await ledgerActor.icrc2_approve({
+        fee: [],
+        memo: [],
+        from_subaccount: [],
+        created_at_time: [],
+        amount: 34000000000, // Adjust amount if needed
+        expected_allowance: [],
+        expires_at: [],
+        spender: {
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          subaccount: [],
+        },
+      });
+
+      if (approval?.Ok && approval.Ok > 0n) {
+        setIsApproved(true);
+        console.log("Approval successful!");
+      } else {
+        setIsApproved(false);
+        console.log("Approval failed!");
+      }
+    } catch (error) {
+      console.error(`Approval failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateUserReserve = async () => {
+    if (!isApproved) {
+      console.log("Please approve before creating a reserve!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await backendActor.create_user_reserve_with_low_health(
+        "ckUSDC",
+        "ckUSDC",
+        34000000000,
+        27000000000
+      );
+      console.log("Reserve created:", response);
+    } catch (error) {
+      console.error(`Error creating reserve: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] relative">
-        {}
+        { }
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"bottom-left"}
@@ -72,6 +152,26 @@ const Footer = () => {
                   </NavLink>
                 ))}
             </div>
+            {isTester && (
+              <div>
+                <button
+                  onClick={handleApprove}
+                  className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 transition rounded text-white"
+                  disabled={loading || isApproved}
+                >
+                  {isApproved ? "Approved" : loading ? "Approving..." : "Approve"}
+                </button>
+
+                <button
+                  onClick={handleCreateUserReserve}
+                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 transition rounded text-white"
+                  disabled={loading || !isApproved}
+                >
+                  {loading ? "Processing..." : "Create Reserve"}
+                </button>
+              </div>
+            )}
+
           </div>
           <div className="w-full sxs3:w-6/12 md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-[8px]">
             <h1 className="font-semibold">Community</h1>
@@ -92,7 +192,7 @@ const Footer = () => {
           <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
             <h1 className="font-semibold">Follow us on</h1>
             <div className="flex gap-2 mt-6">
-              {}
+              { }
               <a
                 target="_blank"
                 href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all"
@@ -105,7 +205,7 @@ const Footer = () => {
                   />
                 </span>
               </a>
-              {}
+              { }
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img
@@ -124,3 +224,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

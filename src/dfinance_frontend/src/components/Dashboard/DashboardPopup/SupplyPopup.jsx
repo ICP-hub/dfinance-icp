@@ -13,14 +13,15 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * SupplyPopup Component
  *
  * This component is a popup modal that allows users to supply an asset to a platform, taking into account factors like collateral,
- * debt, liquidation thresholds, and the user's current health factor. 
- * It calculates the USD equivalent of the supplied amount, manages user input for supply amounts, and handles approval 
- * and supply transactions. 
+ * debt, liquidation thresholds, and the user's current health factor.
+ * It calculates the USD equivalent of the supplied amount, manages user input for supply amounts, and handles approval
+ * and supply transactions.
  *
  * @returns {JSX.Element} - Returns the SupplyPopup component.
  */
@@ -45,11 +46,18 @@ const SupplyPopup = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
-  const dispatch = useDispatch();
-  const { backendActor, principal } = useAuth();
-  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const fees = useSelector((state) => state.fees.fees);
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("execute_supply");
   const { healthFactorBackend } = useUserData();
+  const { backendActor, principal } = useAuth();
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
@@ -65,6 +73,28 @@ const SupplyPopup = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const isSoundOn = useSelector((state) => state.sound.isSoundOn);
+  const fees = useSelector((state) => state.fees.fees);
+  const dispatch = useDispatch();
+  const ledgerActors = useSelector((state) => state.ledger);
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
+  /* ===================================================================================
+   *                                  HELPERS
+   * =================================================================================== */
 
   const transactionFee = 0;
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
@@ -94,19 +124,9 @@ const SupplyPopup = ({
   const hasEnoughBalance = balance >= transactionFee;
   const value = currentHealthFactor;
 
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
-
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
-
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
@@ -167,31 +187,21 @@ const SupplyPopup = ({
     }
   };
 
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue =
-        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue.toFixed(8));
-    } else {
-      setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = balance * adjustedConversionRate;
-
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-  const ledgerActors = useSelector((state) => state.ledger);
-
   // Approves the supply transaction
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -254,6 +264,20 @@ const SupplyPopup = ({
 
   // Executes the supply transaction
   const handleSupplyETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     try {
       let ledgerActor;
       if (asset === "ckBTC") {
@@ -275,7 +299,7 @@ const SupplyPopup = ({
       };
 
       const response = await backendActor.execute_supply(supplyParams);
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in response) {
         trackEvent(
@@ -309,35 +333,148 @@ const SupplyPopup = ({
       } else if ("Err" in response) {
         const errorKey = response.Err;
         const errorMsg = errorKey?.toString() || "An unexpected error occurred";
-
+        console.error("Error:", errorKey);
         if (errorMsg.toLowerCase().includes("panic")) {
+          console.error("Panic error detected.");
           setShowPanicPopup(true);
           setIsVisible(false);
-        } else {
-          const userFriendlyMessage =
-            errorMessages[errorKey] || errorMessages.Default;
-          console.error("Error:", errorMsg);
-
-          toast.error(`Supply failed: ${userFriendlyMessage}`, {
+        } else if (
+          errorMsg.toLowerCase().includes("out of cycles") ||
+          errorMsg.includes("Reject text: Canister")
+        ) {
+          console.error("Canister is out of cycles.");
+          toast.error("Canister is out of cycles. Admin has been notified.", {
             className: "custom-toast",
             position: "top-center",
-            autoClose: 3000,
+            autoClose: 5000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
           });
+        } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+          console.error("Supply cap exceeded error.");
+          toast.error("Supply cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else {
+          const errorKey = response.Err;
+          const errorMsg =
+            errorKey?.toString() || "An unexpected error occurred";
+
+          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+            console.error(
+              "You are temporarily blocked from using this function"
+            );
+
+            toast.error(
+              "You are temporarily blocked from using this function",
+              {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+              }
+            );
+            handleClosePaymentPopup()
+            setIsLoading(false)
+          } else if (errorMsg.toLowerCase().includes("panic")) {
+            setShowPanicPopup(true);
+            setIsVisible(false);
+          } else if (
+            errorMsg.toLowerCase().includes("out of cycles") ||
+            errorMsg.includes("Reject text: Canister")
+          ) {
+            toast.error("Canister is out of cycles. Admin has been notified.", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+            toast.error("Supply cap is exceeded.", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          } else {
+            const userFriendlyMessage =
+              errorMessages[errorKey] || errorMessages.Default;
+            console.error("Error:", errorKey);
+
+            toast.error(`Supply failed: ${userFriendlyMessage}`, {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
         }
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Supply action failed!"}`);
 
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+      const message = error.message || "Supply action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
+      const isSupplyCapExceeded = message
+        .toLowerCase()
+        .includes("SupplyCapExceeded");
+
+      if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isSupplyCapExceeded) {
+        toast.error("Supply cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -350,25 +487,6 @@ const SupplyPopup = ({
       }
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -388,40 +506,6 @@ const SupplyPopup = ({
     }
   };
 
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold,
-      reserveliquidationThreshold
-    );
-
-    const amountAdded = collateral ? usdValue || 0 : 0;
-    let totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    if (totalCollateralValue < 0) {
-      totalCollateralValue = 0;
-    }
-    let totalDeptValue = parseFloat(totalDebt);
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
-    }
-
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-  }, [
-    asset,
-    liquidationThreshold,
-    reserveliquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-  ]);
-
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -429,11 +513,6 @@ const SupplyPopup = ({
     reserveliquidationThreshold
   ) => {
     const amountAdded = collateral ? usdValue || 0 : 0;
-    console.log("totalCollateral", totalCollateral);
-    console.log("totalDebt", totalDebt);
-    console.log("liquidationThreshold", liquidationThreshold);
-    console.log("amountAdded", amountAdded);
-    console.log("reserveliquidationThreshold", reserveliquidationThreshold);
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -447,14 +526,11 @@ const SupplyPopup = ({
       return Infinity;
     }
     let avliq = liquidationThreshold * totalCollateral;
-    console.log("avliq", avliq);
     let tempLiq =
       (avliq + amountAdded * reserveliquidationThreshold) /
       totalCollateralValue;
-    console.log("tempLiq", tempLiq);
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8;
-    console.log("result", result);
     return result;
   };
 
@@ -481,6 +557,105 @@ const SupplyPopup = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold,
+      reserveliquidationThreshold
+    );
+
+    const amountAdded = collateral ? usdValue || 0 : 0;
+    let totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+    if (totalCollateralValue < 0) {
+      totalCollateralValue = 0;
+    }
+    let totalDeptValue = parseFloat(totalDebt);
+    if (totalDeptValue < 0) {
+      totalDeptValue = 0;
+    }
+
+    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+    setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+  }, [
+    asset,
+    liquidationThreshold,
+    reserveliquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+  ]);
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
+      setUsdValue(convertedValue.toFixed(8));
+    } else {
+      setUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (balance && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedMaxValue = balance * adjustedConversionRate;
+
+      setMaxUsdValue(convertedMaxValue);
+    } else {
+      setMaxUsdValue(0);
+    }
+  }, [amount, conversionRate]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>
@@ -569,20 +744,20 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {healthFactorBackend > 100
+                        {truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)}
+                          : (truncatedValue)}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -700,7 +875,7 @@ const SupplyPopup = ({
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -712,7 +887,7 @@ const SupplyPopup = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className=" text-sm  lgx:text-lg whitespace-nowrap">
+            <p className=" text-sm  lgx:text-lg text-center">
               You have supplied{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -727,7 +902,7 @@ const SupplyPopup = ({
                 {asset}
               </strong>
             </p>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               <strong>
                 {scaledAmount / 100000000

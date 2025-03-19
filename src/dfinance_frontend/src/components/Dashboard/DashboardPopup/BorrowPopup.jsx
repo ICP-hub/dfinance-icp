@@ -14,12 +14,14 @@ import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
  *
  * @param {Object} props - Component properties.
  */
+
 const Borrow = ({
   asset,
   image,
@@ -42,6 +44,10 @@ const Borrow = ({
   setIsModalOpen,
   onLoadingChange,
 }) => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -49,19 +55,19 @@ const Borrow = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
-  const [availableBorrow, setAvailableBorrow] = useState([]);
-  const dashboardRefreshTrigger = useSelector(
-    (state) => state.dashboardUpdate.refreshDashboardTrigger
-  );
+  const { isBlocked } = useFunctionBlockStatus("execute_borrow");
   const { filteredItems } = useAssetData();
-  const dispatch = useDispatch();
   const { backendActor, principal } = useAuth();
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
   const { userData, userAccountData } = useUserData();
-  const ledgerActors = useSelector((state) => state.ledger);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
+  const { healthFactorBackend } = useUserData();
+
+  /* ===================================================================================
+   *                                 STATE MANAGEMENT
+   * =================================================================================== */
+
+  const [availableBorrow, setAvailableBorrow] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
@@ -83,9 +89,30 @@ const Borrow = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Fetches asset data and updates supply/borrow values.
-   */
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+  const dispatch = useDispatch();
+  const ledgerActors = useSelector((state) => state.ledger);
+
+  /* ===================================================================================
+   *                                  MEMOIZATION
+   * =================================================================================== */
+
+  const principalObj = useMemo(
+    () => Principal.fromText(principal),
+    [principal]
+  );
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  // Fetches asset data and updates supply/borrow values.
   const fetchAssetData = () => {
     const item = filteredItems.find((item) => item[0] === asset);
     if (item && item[1]?.Ok) {
@@ -97,9 +124,7 @@ const Borrow = ({
     }
   };
 
-  /**
-   * Calculates borrowable values based on conversion rates.
-   */
+  //   Calculates borrowable values based on conversion rates.
   const calculateBorrowableValues = (
     asset,
     availableBorrow,
@@ -129,65 +154,7 @@ const Borrow = ({
     return { borrowableValue, borrowableAssetValue };
   };
 
-  useEffect(() => {
-    const updateValues = async () => {
-      setLoading(true);
-      try {
-        await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
-        const updatedValues = calculateBorrowableValues(
-          asset,
-          availableBorrow,
-          remainingBorrowable
-        );
-        setBorrowableValue(updatedValues.borrowableValue);
-        setBorrowableAssetValue(updatedValues.borrowableAssetValue);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-      }
-    };
-    updateValues();
-    // const intervalId = setInterval(updateValues, 1000);
-    // return () => {
-    //   clearInterval(intervalId);
-    // };
-  }, [
-    asset,
-    filteredItems,
-    totalSupply,
-    totalBorrow,
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-  ]);
-
-  useEffect(() => {
-    if (userAccountData?.Ok?.length > 5) {
-      const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      console.log("remainingBorrowable in borrow", remainingBorrowable);
-      const borrowValue =
-        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
-      setAvailableBorrow(borrowValue);
-    } else {
-      setAvailableBorrow(0);
-    }
-  }, [userAccountData, userData, dashboardRefreshTrigger]);
-
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
-
-  useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-  }, [isLoading, onLoadingChange]);
-
+  // Function for check acknowledgement
   const handleAcknowledgeChange = (e) => {
     setIsAcknowledged(e.target.checked);
   };
@@ -207,10 +174,22 @@ const Borrow = ({
       "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
-  /**
-   * Handles the borrow action by interacting with the backend.
-   */
+  // Handles the borrow action by interacting with the backend.
   const handleBorrowETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; 
+    }
+  
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -224,34 +203,28 @@ const Borrow = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
+  
     const borrowParams = {
       asset: asset,
       amount: scaledAmount,
     };
+  
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
-
+  
       if ("Ok" in borrowResult) {
         trackEvent(
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString(),
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`,
           "Assets",
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString()
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`
         );
+  
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
+  
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -262,18 +235,62 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
+  
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-
-        if (errorMessage.toLowerCase().includes("panic")) {
+  
+        console.error("errorKey", errorKey);
+  
+        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+          console.error("You are temporarily blocked from using this function");
+  
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setLoading(false)
+          setIsLoading(false)
+        } else if (errorMessage.toLowerCase().includes("panic")) {
           setPanicMessage(
             "A critical system error occurred. Please try again later."
           );
           setShowPanicPopup(true);
+        } else if (
+          errorMessage.toLowerCase().includes("out of cycles") ||
+          errorMessage.includes("reject text: canister")
+        ) {
+          toast.error("Canister is out of cycles. Controller has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMessage.toLowerCase().includes("BorrowCapExceeded")) {
+          toast.error("Borrow cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           toast.error(errorMessage, {
             className: "custom-toast",
@@ -286,20 +303,50 @@ const Borrow = ({
             progress: undefined,
           });
         }
-
+  
         setIsPaymentDone(false);
         setIsVisible(true);
+        setLoading(false)
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
-
-      if (error.message && error.message.toLowerCase().includes("panic")) {
-        setPanicMessage(
-          "A critical system error occurred. Please try again later."
-        );
+  
+      const message = error.message || "Borrow action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("reject text: canister");
+      const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
+  
+      if (isPanicError) {
+        setPanicMessage("A critical system error occurred. Please try again later.");
         setShowPanicPopup(true);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Controller has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isBorrowCapExceeded) {
+        toast.error("Borrow cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsLoading(false)
+        handleClosePaymentPopup()
       } else {
-        toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -310,13 +357,11 @@ const Borrow = ({
           progress: undefined,
         });
       }
-
       setIsPaymentDone(false);
-      setIsVisible(true);
-    } finally {
-      setIsLoading(false);
+setIsVisible(false);
     }
   };
+  
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -325,77 +370,6 @@ const Borrow = ({
 
   const numericBalance = parseFloat(balance);
   const supplyBalance = numericBalance;
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        !isLoading
-      ) {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isModalOpen, isLoading, setIsModalOpen]);
-
-  useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold
-    );
-    const amountTaken = usdValue || 0;
-    const amountAdded = 0;
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-    setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
-    );
-
-    if (value < 2 && value > 1) {
-      setIsAcknowledgmentRequired(true);
-    } else {
-      setIsAcknowledgmentRequired(false);
-      setIsAcknowledged(false);
-    }
-
-    if (ltv * 100 >= liquidationThreshold) {
-      toast.dismiss();
-      toast.info("LTV Exceeded!");
-    }
-
-    if (
-      healthFactor <= 1 ||
-      ltv * 100 >= liquidationThreshold ||
-      (isAcknowledgmentRequired && !isAcknowledged)
-    ) {
-      setIsButtonDisabled(true);
-    } else {
-      setIsButtonDisabled(false);
-    }
-  }, [
-    asset,
-    reserveliquidationThreshold,
-    liquidationThreshold,
-    assetSupply,
-    assetBorrow,
-    amount,
-    usdValue,
-    isAcknowledged,
-    value,
-    isAcknowledgmentRequired,
-    setIsAcknowledged,
-  ]);
 
   const calculateHealthFactor = (
     totalCollateral,
@@ -422,8 +396,6 @@ const Borrow = ({
     const result = nextTotalDebt / totalCollateral;
     return result;
   };
-
-  const { healthFactorBackend } = useUserData();
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
@@ -474,17 +446,6 @@ const Borrow = ({
     }
   };
 
-  useEffect(() => {
-    if (amount && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue =
-        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
-      setUsdValue(convertedValue.toFixed(7));
-    } else {
-      setUsdValue("");
-    }
-  }, [amount, conversionRate]);
-
   const handleMaxClick = () => {
     const maxAmount = parseFloat(borrowableValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
@@ -501,6 +462,164 @@ const Borrow = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  useEffect(() => {
+    const updateValues = async () => {
+      setLoading(true);
+      try {
+        await fetchAssetData();
+        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const updatedValues = calculateBorrowableValues(
+          asset,
+          availableBorrow,
+          remainingBorrowable
+        );
+        setBorrowableValue(updatedValues.borrowableValue);
+        setBorrowableAssetValue(updatedValues.borrowableAssetValue);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+    };
+    updateValues();
+  }, [
+    asset,
+    filteredItems,
+    totalSupply,
+    totalBorrow,
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  ]);
+
+  useEffect(() => {
+    if (userAccountData?.Ok?.length > 5) {
+      const remainingBorrowable = total_supply * 0.85 - total_borrow;
+      const borrowValue =
+        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      setAvailableBorrow(borrowValue);
+    } else {
+      setAvailableBorrow(0);
+    }
+  }, [userAccountData, userData, dashboardRefreshTrigger]);
+
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+    const amountTaken = usdValue || 0;
+    const amountAdded = 0;
+
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+
+    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
+
+    const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
+
+    setPrevHealthFactor(currentHealthFactor);
+
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+
+    if (value < 2 && value > 1) {
+      setIsAcknowledgmentRequired(true);
+    } else {
+      setIsAcknowledgmentRequired(false);
+      setIsAcknowledged(false);
+    }
+
+    if (ltv * 100 >= liquidationThreshold) {
+      toast.dismiss();
+      toast.info("LTV Exceeded!");
+    }
+
+    if (
+      healthFactor <= 1 ||
+      ltv * 100 >= liquidationThreshold ||
+      (isAcknowledgmentRequired && !isAcknowledged)
+    ) {
+      setIsButtonDisabled(true);
+    } else {
+      setIsButtonDisabled(false);
+    }
+  }, [
+    asset,
+    reserveliquidationThreshold,
+    liquidationThreshold,
+    assetSupply,
+    assetBorrow,
+    amount,
+    usdValue,
+    isAcknowledged,
+    value,
+    isAcknowledgmentRequired,
+    setIsAcknowledged,
+  ]);
+
+  useEffect(() => {
+    if (amount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(amount.replace(/,/g, "")) * adjustedConversionRate;
+      setUsdValue(convertedValue.toFixed(7));
+    } else {
+      setUsdValue("");
+    }
+  }, [amount, conversionRate]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <>
@@ -583,21 +702,21 @@ const Borrow = ({
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
                         {parseFloat(
-                          healthFactorBackend > 100
+                          truncatedValue > 100
                             ? "Infinity"
-                            : parseFloat(healthFactorBackend).toFixed(2)
+                            : (truncatedValue)
                         )}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
@@ -708,7 +827,7 @@ const Borrow = ({
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -720,7 +839,7 @@ const Borrow = ({
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have borrowed{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&
@@ -733,7 +852,7 @@ const Borrow = ({
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&

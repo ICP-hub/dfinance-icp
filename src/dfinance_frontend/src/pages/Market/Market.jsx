@@ -3,34 +3,22 @@ import React, { useEffect, useState } from "react";
 import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
-import { Modal } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
-import icplogo from "../../../public/wallet/icp.png";
-import nfid from "../../../public/wallet/nfid.png";
-import Pagination from "../../components/Common/pagination";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import cekTH from "../../../public/assests-icon/cekTH.png";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssetData from "../../components/customHooks/useAssets";
-import { setUserData } from "../../redux/reducers/userReducer";
-import {
-  setIsWalletConnected,
-  setWalletModalOpen,
-  setConnectedWallet,
-} from "../../redux/reducers/utilityReducer";
-import { Principal } from "@dfinity/principal";
-import useFormatNumber from "../../components/customHooks/useFormatNumber";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import Loading from "../../components/Common/Loading";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
-
+import useUserData from "../../components/customHooks/useUserData";
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 const ITEMS_PER_PAGE = 8;
 
 /**
@@ -41,6 +29,10 @@ const ITEMS_PER_PAGE = 8;
  * @returns {JSX.Element} - Returns the component.
  */
 const WalletDetails = () => {
+  /* ===================================================================================
+   *                                  STATE MANAGEMENT
+   * =================================================================================== */
+
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -49,9 +41,13 @@ const WalletDetails = () => {
   const [selectedAssetData, setSelectedAssetData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-
+  const { filteredItems, loading } = useAssetData(searchQuery);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -59,15 +55,23 @@ const WalletDetails = () => {
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
+
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
+
   const { isAuthenticated, principal } = useAuth();
+  const {
+    userData,
+    userAccountData,
+    isFreezePopupVisible,
+    setIsFreezePopupVisible,
+  } = useUserData();
   const {
     totalMarketSize,
     totalSupplySize,
@@ -75,6 +79,21 @@ const WalletDetails = () => {
     totalReserveFactor,
     interestAccure,
   } = useAssetData();
+
+  /* ===================================================================================
+   *                 Derived State, UI Variables, and Route-Based Flags
+   * =================================================================================== */
+
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const filteredReserveData = Object.fromEntries(filteredItems);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   const convertToNumber = (value) => {
     if (typeof value === "string") {
@@ -89,6 +108,80 @@ const WalletDetails = () => {
     }
     return 0;
   };
+
+  const showSearchBar = () => {
+    setShowSearch(!Showsearch);
+  };
+
+  const handleDetailsClick = (asset, assetData) => {
+    setSelectedAsset(asset);
+    navigate(`/market/asset-details/${asset}`, { state: { assetData } });
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+  const handleSearchInputChange = (event) => {
+    setSearchQuery(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleChevronClick = (assetName) => {
+    const selectedAssetData = currentItems.find(
+      (item) => item[0] === assetName
+    );
+    if (selectedAssetData) {
+      setSelectedAssetData(selectedAssetData);
+    }
+    setShowPopup(true);
+  };
+
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      closePopup();
+    }
+  };
+
+  const formatValue = (num) => {
+    if (num < 1) return num.toFixed(7);
+
+    if (num >= 1e12)
+      return num % 1e12 === 0
+        ? num / 1e12 + "T"
+        : (num / 1e12).toFixed(2) + "T";
+    if (num >= 1e9)
+      return num % 1e9 === 0 ? num / 1e9 + "B" : (num / 1e9).toFixed(2) + "B";
+    if (num >= 1e6)
+      return num % 1e6 === 0 ? num / 1e6 + "M" : (num / 1e6).toFixed(2) + "M";
+    if (num >= 1e3)
+      return num % 1e3 === 0 ? num / 1e3 + "K" : (num / 1e3).toFixed(2) + "K";
+
+    return num.toFixed(2);
+  };
+
+  function getUsdRate(assetType) {
+    switch (assetType) {
+      case "ckBTC":
+        return ckBTCUsdRate / 1e8;
+      case "ckETH":
+        return ckETHUsdRate / 1e8;
+      case "ckUSDC":
+        return ckUSDCUsdRate / 1e8;
+      case "ICP":
+        return ckICPUsdRate / 1e8;
+      case "ckUSDT":
+        return ckUSDTUsdRate / 1e8;
+      default:
+        return 0;
+    }
+  }
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
 
   useEffect(() => {
     const supply = convertToNumber(totalSupplySize);
@@ -141,65 +234,12 @@ const WalletDetails = () => {
     dashboardRefreshTrigger,
   ]);
 
-  const showSearchBar = () => {
-    setShowSearch(!Showsearch);
-  };
-
-  const itemsPerPage = 8;
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const principalObj = Principal.fromText(principal);
-
-  const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
-    navigate(`/market/asset-details/${asset}`, { state: { assetData } });
-  };
-
-  const closePopup = () => {
-    setShowPopup(false);
-  };
-
   useEffect(() => {
     if (isWalletCreated) {
       navigate("/dashboard/wallet-details");
     }
   }, [isWalletCreated]);
 
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1);
-  };
-
-  const { assets, reserveData, filteredItems, error, loading } =
-    useAssetData(searchQuery);
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-
-  const filteredReserveData = Object.fromEntries(filteredItems);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
-  const handleChevronClick = (assetName) => {
-    const selectedAssetData = currentItems.find(
-      (item) => item[0] === assetName
-    );
-    if (selectedAssetData) {
-      setSelectedAssetData(selectedAssetData);
-    }
-    setShowPopup(true);
-  };
-
-  const popupRef = useRef(null);
-
-  const handleOutsideClick = (event) => {
-    if (popupRef.current && !popupRef.current.contains(event.target)) {
-      closePopup();
-    }
-  };
   useEffect(() => {
     if (showPopup) {
       document.addEventListener("mousedown", handleOutsideClick);
@@ -221,47 +261,26 @@ const WalletDetails = () => {
     };
   }, [showPopup]);
 
-  const formatNumber = useFormatNumber();
-
-  const formatValue = (num) => {
-    if (num < 1) return num.toFixed(7);
-
-    if (num >= 1e12)
-      return num % 1e12 === 0
-        ? num / 1e12 + "T"
-        : (num / 1e12).toFixed(2) + "T";
-    if (num >= 1e9)
-      return num % 1e9 === 0 ? num / 1e9 + "B" : (num / 1e9).toFixed(2) + "B";
-    if (num >= 1e6)
-      return num % 1e6 === 0 ? num / 1e6 + "M" : (num / 1e6).toFixed(2) + "M";
-    if (num >= 1e3)
-      return num % 1e3 === 0 ? num / 1e3 + "K" : (num / 1e3).toFixed(2) + "K";
-
-    return num.toFixed(2);
-  };
-  
-
   useEffect(() => {
     if (!loading) {
       setHasLoaded(true);
     }
   }, [loading]);
-  function getUsdRate(assetType) {
-    switch (assetType) {
-      case "ckBTC":
-        return ckBTCUsdRate / 1e8;
-      case "ckETH":
-        return ckETHUsdRate / 1e8;
-      case "ckUSDC":
-        return ckUSDCUsdRate / 1e8;
-      case "ICP":
-        return ckICPUsdRate / 1e8;
-      case "ckUSDT":
-        return ckUSDTUsdRate / 1e8;
-      default:
-        return 0;
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
     }
-  }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
+
+  /* ===================================================================================
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
 
   return (
     <div id="market-page1" className="w-full" key={dashboardRefreshTrigger}>
@@ -552,12 +571,14 @@ const WalletDetails = () => {
 
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
-                          {Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                          {(Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                            100) /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                                (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                                  100) /
                                 100000000
                               ).toFixed(2)}%`}
                         </div>
@@ -649,10 +670,13 @@ const WalletDetails = () => {
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
-                          {Number(item?.[1]?.Ok?.borrow_rate) / 100000000 < 0.01
+                          {(Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                            100000000 <
+                          0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.borrow_rate) / 100000000
+                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                                100000000
                               ).toFixed(2)}%`}
                         </div>
                       </td>
@@ -758,16 +782,19 @@ const WalletDetails = () => {
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {" "}
-                          {Number(
+                          {(Number(
                             selectedAssetData[1].Ok.current_liquidity_rate
-                          ) /
+                          ) *
+                            100) /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(
+                                (Number(
                                   selectedAssetData[1].Ok.current_liquidity_rate
-                                ) / 100000000
+                                ) *
+                                  100) /
+                                100000000
                               ).toFixed(2)}%`}
                         </p>
                       </div>
@@ -799,12 +826,13 @@ const WalletDetails = () => {
                           Borrow APY:
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {Number(selectedAssetData[1].Ok.borrow_rate) /
+                          {(Number(selectedAssetData[1].Ok.borrow_rate) * 100) /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(selectedAssetData[1].Ok.borrow_rate) /
+                                (Number(selectedAssetData[1].Ok.borrow_rate) *
+                                  100) /
                                 100000000
                               ).toFixed(2)}%`}
                         </p>
@@ -827,7 +855,13 @@ const WalletDetails = () => {
                 </div>
               </div>
             )}
-
+            {isFreezePopupVisible && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+                <FreezeCanisterPopup
+                  onClose={() => setIsFreezePopupVisible(false)}
+                />
+              </div>
+            )}
             {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
           </div>
         )}

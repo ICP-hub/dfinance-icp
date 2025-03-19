@@ -232,3 +232,8 @@ pub struct ExecuteLiquidationParams {
     pub reward_amount: Nat,
 }
 
+#[derive(CandidType, Deserialize, Clone, Default,Debug)]
+pub struct AssetData{
+    pub name:String,
+    pub balance:Nat
+}

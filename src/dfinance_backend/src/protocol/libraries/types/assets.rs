@@ -1,6 +1,8 @@
 use candid::Principal;
 use ic_stable_structures::StableBTreeMap;
+use std::collections::BTreeMap;
 
+use crate::api::functions::{BlockedUserDetails, RequestTracker};
 use crate::declarations::assets::InitArgs;
 use crate::declarations::{assets::ReserveData, storable::Candid};
 use crate::protocol::libraries::math::calculate::PriceCache;
@@ -11,7 +13,10 @@ pub type UserProfile = StableBTreeMap<Principal, Candid<UserData>, VMem>;
 pub type ReserveList =  StableBTreeMap<String,Principal, VMem>;
 pub type PriceCacheList =  StableBTreeMap<String,Candid<PriceCache>, VMem>;
 pub type CanisterList =  StableBTreeMap<String,Principal, VMem>;
-
+pub type TesterList =  StableBTreeMap<String,Principal, VMem>;
 pub type MetaData =  StableBTreeMap<u32,Candid<InitArgs>, VMem>;
+
+pub type FunctionRequests = StableBTreeMap<Principal, Candid<BTreeMap<String, RequestTracker>>, VMem>;
+pub type BlockedUsersFunction = StableBTreeMap<Principal, Candid<BTreeMap<String, BlockedUserDetails>>, VMem>;
 
 

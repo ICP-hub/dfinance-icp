@@ -4,7 +4,7 @@ use crate::api::state_handler::*;
 use crate::constants::errors::Error;
 use crate::reserve_ledger_canister_id;
 use crate::declarations::storable::Candid;
-use crate::api::functions::asset_transfer_from;
+use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -74,6 +74,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
+    if let Err(e) = request_limiter("execute_borrow") {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+
     let operation_key = user_principal;
     // Acquire the lock
     {
@@ -131,7 +136,13 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity and borrow index
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
 
         if let Err(e) = ValidationLogic::validate_borrow(
@@ -380,6 +391,11 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     let operation_key = user_principal;
 
+    if let Err(e) = request_limiter("execute_repay") {
+        ic_cdk::println!("Error limiting error: {:?}", e);
+        return Err(e);
+    }
+
     if params.on_behalf_of.is_none() {
         ic_cdk::println!("inside the on behalf");
         // Acquire the lock
@@ -449,7 +465,13 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity and borrow index
-        reserve::update_state(&mut reserve_data, &mut reserve_cache);
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+            ic_cdk::println!("Failed to update reserve state: {:?}", e);
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(e);
+        }
         ic_cdk::println!("Reserve state updated successfully");
 
         // Validates repay using the reserve_data

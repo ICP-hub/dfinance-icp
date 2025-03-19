@@ -143,16 +143,3 @@ pub async fn reset_reserve_value(
     });
     Ok(())
 }
-
-/*  
- * @title Check Controller Permissions  
- * @notice Checks if the caller is a controller of the canister.  
- * @dev This function verifies whether the caller has administrative privileges.  
- *  
- * # Returns  
- * @return `true` if the caller is a controller, otherwise `false`.  
- */
-#[query]
-pub fn to_check_controller() -> bool {
-    ic_cdk::api::is_controller(&ic_cdk::api::caller())
-}

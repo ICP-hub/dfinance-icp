@@ -7,6 +7,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
 import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
+import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 
 /**
  * FaucetPopup Component
@@ -20,9 +21,18 @@ import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
  * @returns {JSX.Element} - Returns the FaucetPopup component.
  */
 const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
-  const dispatch = useDispatch();
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("faucet");
   const { backendActor } = useAuth();
-  const modalRef = useRef(null);
+  const { userData } = useUserData();
+  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate,fetchConversionRate,fetchBalance } = useFetchConversionRate();
+
+  /* ===================================================================================
+   *                                 STATE-MANAGEMENT
+   * =================================================================================== */
+
   const [loading, setLoading] = useState(false);
   const [faucetBTC, setFaucetBTC] = useState(0);
   const [faucetETH, setFaucetETH] = useState(0);
@@ -32,8 +42,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
-  const { userData } = useUserData();
-
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -49,56 +57,318 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     ICP: 0,
     ckUSDT: 0,
   };
-
   const [FaucetUsage, setFaucetUsage] = useState(initialUsages);
   const [FaucetLimit, setFaucetLimit] = useState(initialLimits);
-  const [remainingFaucet, setRemainingFaucet] = useState(0);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+ 
+
+  /* ===================================================================================
+   *                                  REDUX-SELECTER
+   * =================================================================================== */
+
+  const modalRef = useRef(null);
+  const dispatch = useDispatch();
+
+  /* ===================================================================================
+   *                                 FUNCTION
+   * =================================================================================== */
+
+  const getFaucetAmount = () => {
+    switch (asset) {
+      case "ckBTC":
+        return faucetBTC;
+      case "ckETH":
+        return faucetETH;
+      case "ckUSDC":
+        return faucetUSDC;
+      case "ICP":
+        return faucetICP;
+      case "ckUSDT":
+        return faucetUSDT;
+      default:
+        return null;
+    }
+  };
+
+  const handleAmountChange = (e) => {
+    let inputAmount = e.target.value.replace(/,/g, "");
+
+    if (inputAmount === "") {
+      setAmount("");
+      return;
     }
 
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+    if (!/^\d*\.?\d*$/.test(inputAmount)) {
+      return;
+    }
+    const numericAmount = parseFloat(inputAmount);
+    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
+    if (numericAmount > exchangeRate) {
+      return;
+    }
+    let formattedAmount;
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      formattedAmount = `${parseInt(integerPart).toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
+    } else {
+      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+    }
 
-  useEffect(() => {
-    if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
-      const updatedLimits = { ...initialLimits };
-      const updatedUsages = { ...initialUsages };
-      userData.Ok.reserves[0].forEach((reserveGroup) => {
-        const asset = reserveGroup[0];
-        if (!asset) return;
-        const faucetLimit = reserveGroup[1]?.faucet_limit
-          ? Number(reserveGroup[1].faucet_limit)
-          : initialLimits[asset];
-        const faucetUsage = reserveGroup[1]?.faucet_usage
-          ? Number(reserveGroup[1].faucet_usage)
-          : initialUsages[asset];
+    setAmount(formattedAmount);
+  };
 
-        updatedLimits[asset] = faucetLimit;
-        updatedUsages[asset] = faucetUsage;
+  const handleMaxAmountClick = () => {
+    if (exchangeRate) {
+      const formattedAmount = parseFloat(exchangeRate).toFixed(8);
+      const displayAmount = formatWithCommas(formattedAmount);
+      setAmount(displayAmount);
+    }
+  };
+
+  const formatWithCommas = (value) => {
+    const [integerPart, decimalPart] = value.split(".");
+    const formattedInteger = parseInt(integerPart).toLocaleString("en-US");
+    return decimalPart
+      ? `${formattedInteger}.${decimalPart.slice(0, 8)}`
+      : formattedInteger;
+  };
+
+  const errorMessages = {
+    EmptyAsset: "Asset cannot be empty. Please select a valid asset.",
+    InvalidAssetLength:
+      "Asset name is too long. It must be 7 characters or less.",
+    InvalidAmount:
+      "The amount entered is invalid. Please enter a positive value.",
+    InvalidPrincipal:
+      "Anonymous users are not allowed. Please log in to continue.",
+    NoCanisterIdFound:
+      "The asset is not supported. Please select a valid asset.",
+    LowWalletBalance: "Insufficient wallet balance. Please try again later.",
+    AmountTooMuch: "The requested amount exceeds the faucet limit.",
+    AmountExceedsLimit: "Requested amount exceeds the total faucet limit.",
+    ExceedsRemainingLimit: "Requested amount exceeds the remaining faucet limit.",
+    ErrorFaucetTokens:
+      "An error occurred while transferring tokens. Please try again.",
+    Default:
+      "An unexpected error occurred during the faucet process. Please try again later.",
+  };
+
+  /**
+   * handleFaucet function
+   *
+   * This function handles the process of claiming faucet tokens for the selected asset.
+   * It checks the input amount, ensures it's within the faucet limits, and then makes a request to the backend
+   * to transfer the requested amount of tokens. It also displays appropriate success or error messages.
+   *
+   * @param {string} asset - The asset selected by the user to claim.
+   */
+  const handleFaucet = async (asset) => {
+     if (isBlocked) {
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          return; // Prevent function execution
+        }
+
+    setLoading(true);
+    try {
+      if (backendActor) {
+        const numericAmount = parseFloat(amount.replace(/,/g, ""));
+
+        if (isNaN(numericAmount)) {
+          toast.error("Invalid amount entered.");
+          setLoading(false);
+          return;
+        }
+
+        const natAmount = Math.round(numericAmount * Math.pow(10, 8));
+        console.log("natAmount", natAmount);
+        const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
+        if (numericAmount > availableAmount) {
+          toast.error(`Faucet limit exceeded! `, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setLoading(false);
+          dispatch(toggleRefresh());
+          return;
+        }
+        const result = await backendActor.faucet(asset, natAmount);
+        dispatch(toggleRefresh());
+        if (result.Err) {
+          const errorKey = result.Err;
+          console.error(errorKey);
+
+          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+            console.error("You are temporarily blocked from using this function");
+  
+            toast.error("You are temporarily blocked from using this function", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+  
+            setLoading(false);
+            handleClose()
+            return;
+          }
+          const userFriendlyMessage =
+            errorMessages[errorKey] ||
+            "An unexpected error occurred, please try again later.";
+          toast.error(userFriendlyMessage, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setLoading(false);
+          return;
+        }
+
+        setShowFaucetPayment(true);
+        toast.success(`Successfully claimed ${amount} ${asset}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
+    } catch (error) {
+      console.error(error.message);
+  
+      // ✅ **Check for "Out of Cycles" Error**
+      if (
+        error.message.includes("out of cycles") ||
+        error.message.includes("Reject text: Canister") // Matches error pattern
+      ) {
+        toast.error(
+          "Canister is out of cycles. Please wait, the admin has been notified.",
+          {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          }
+        );
+  
+      } else {
+        toast.error(`Error: ${error.message}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClickOutside = (event) => {
+    if (modalRef.current && !modalRef.current.contains(event.target)) {
+      handleClose();
+    }
+  };
+
+  const handleClose = () => {
+    setShowFaucetPayment(false);
+    onClose();
+  };
+
+  const fees = useSelector((state) => state.fees.fees);
+  const normalizedAsset = asset ? asset.toLowerCase() : "default";
+  const transferFee = fees[normalizedAsset] || fees.default;
+
+  /**
+   * handleResetFaucetUsage function
+   *
+   * This function resets the faucet usage data to its initial state for the selected asset.
+   */
+  const handleResetFaucetUsage = async () => {
+    setLoading(true);
+    try {
+      const result = await backendActor.reset_faucet_usage();
+      if (result.Ok === null || result.Ok === undefined) {
+        const updatedLimits = { ...FaucetLimit };
+        updatedLimits[asset] = 50000000000;
+        setFaucetLimit(updatedLimits);
+        toast.success(`Reset faucet succesfull for ${asset}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else {
+        toast.error(`Unexpected response from backend: ${result.Ok}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
+    } catch (error) {
+      toast.success("Failed to reset faucet usage", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
       });
-
-      setFaucetLimit(updatedLimits);
-      setFaucetUsage(updatedUsages);
-    } else {
+    } finally {
+      setLoading(false);
     }
-  }, [userData]);
+  };
 
-  const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
-    fetchConversionRate,
-    fetchBalance,
-  } = useFetchConversionRate();
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -162,184 +432,46 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     }
   }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
 
-  const getFaucetAmount = () => {
-    switch (asset) {
-      case "ckBTC":
-        return faucetBTC;
-      case "ckETH":
-        return faucetETH;
-      case "ckUSDC":
-        return faucetUSDC;
-      case "ICP":
-        return faucetICP;
-      case "ckUSDT":
-        return faucetUSDT;
-      default:
-        return null;
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-  };
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
+      const updatedLimits = { ...initialLimits };
+      const updatedUsages = { ...initialUsages };
+      userData.Ok.reserves[0].forEach((reserveGroup) => {
+        const asset = reserveGroup[0];
+        if (!asset) return;
+        const faucetLimit = reserveGroup[1]?.faucet_limit
+          ? Number(reserveGroup[1].faucet_limit)
+          : initialLimits[asset];
+        const faucetUsage = reserveGroup[1]?.faucet_usage
+          ? Number(reserveGroup[1].faucet_usage)
+          : initialUsages[asset];
+
+        updatedLimits[asset] = faucetLimit;
+        updatedUsages[asset] = faucetUsage;
+      });
+
+      setFaucetLimit(updatedLimits);
+      setFaucetUsage(updatedUsages);
+    } else {
+    }
+  }, [userData]);
+
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
     setExchangeRate(faucetAmount);
   }, [asset, faucetBTC, faucetETH, faucetUSDC, faucetICP, faucetUSDT]);
-
-  const handleAmountChange = (e) => {
-    let inputAmount = e.target.value.replace(/,/g, "");
-
-    if (inputAmount === "") {
-      setAmount("");
-      return;
-    }
-
-    if (!/^\d*\.?\d*$/.test(inputAmount)) {
-      return;
-    }
-    const numericAmount = parseFloat(inputAmount);
-    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
-    if (numericAmount > exchangeRate) {
-      return;
-    }
-    let formattedAmount;
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
-    } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
-    }
-
-    setAmount(formattedAmount);
-  };
-
-  const handleMaxAmountClick = () => {
-    if (exchangeRate) {
-      const formattedAmount = parseFloat(exchangeRate).toFixed(8);
-      const displayAmount = formatWithCommas(formattedAmount);
-      setAmount(displayAmount);
-    }
-  };
-
-  const formatWithCommas = (value) => {
-    const [integerPart, decimalPart] = value.split(".");
-    const formattedInteger = parseInt(integerPart).toLocaleString("en-US");
-    return decimalPart
-      ? `${formattedInteger}.${decimalPart.slice(0, 8)}`
-      : formattedInteger;
-  };
-
-  const errorMessages = {
-    EmptyAsset: "Asset cannot be empty. Please select a valid asset.",
-    InvalidAssetLength:
-      "Asset name is too long. It must be 7 characters or less.",
-    InvalidAmount:
-      "The amount entered is invalid. Please enter a positive value.",
-    InvalidPrincipal:
-      "Anonymous users are not allowed. Please log in to continue.",
-    NoCanisterIdFound:
-      "The asset is not supported. Please select a valid asset.",
-    LowWalletBalance: "Insufficient wallet balance. Please try again later.",
-    AmountTooMuch: "The requested amount exceeds the faucet limit.",
-    ErrorFaucetTokens:
-      "An error occurred while transferring tokens. Please try again.",
-    Default:
-      "An unexpected error occurred during the faucet process. Please try again later.",
-  };
-
-  /**
-   * handleFaucet function
-   *
-   * This function handles the process of claiming faucet tokens for the selected asset.
-   * It checks the input amount, ensures it's within the faucet limits, and then makes a request to the backend
-   * to transfer the requested amount of tokens. It also displays appropriate success or error messages.
-   *
-   * @param {string} asset - The asset selected by the user to claim.
-   */
-  const handleFaucet = async (asset) => {
-    setLoading(true);
-    try {
-      if (backendActor) {
-        const numericAmount = parseFloat(amount.replace(/,/g, ""));
-
-        if (isNaN(numericAmount)) {
-          toast.error("Invalid amount entered.");
-          setLoading(false);
-          return;
-        }
-
-        const natAmount = Math.round(numericAmount * Math.pow(10, 8));
-        console.log("natAmount", natAmount);
-        const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
-        if (numericAmount > availableAmount) {
-          toast.error(`Faucet limit exceeded! `, {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          setLoading(false);
-          return;
-        }
-        const result = await backendActor.faucet(asset, natAmount);
-        dispatch(toggleRefresh());
-        if (result.Err) {
-          const errorKey = result.Err;
-          console.log(errorKey);
-          const userFriendlyMessage =
-            errorMessages[errorKey] ||
-            "An unexpected error occurred, please try again later.";
-          toast.error(userFriendlyMessage, {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          setLoading(false);
-          return;
-        }
-
-        setShowFaucetPayment(true);
-        toast.success(`Successfully claimed ${amount} ${asset}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      }
-    } catch (error) {
-      console.error(error.message);
-      toast.error(`Error: ${error.message}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClickOutside = (event) => {
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      handleClose();
-    }
-  };
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -347,66 +479,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const handleClose = () => {
-    setShowFaucetPayment(false);
-    onClose();
-  };
-
-  const fees = useSelector((state) => state.fees.fees);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-  const transferFee = fees[normalizedAsset] || fees.default;
-
-  /**
-   * handleResetFaucetUsage function
-   *
-   * This function resets the faucet usage data to its initial state for the selected asset.
-   */
-  const handleResetFaucetUsage = async () => {
-    setLoading(true);
-    try {
-      const result = await backendActor.reset_faucet_usage();
-      if (result.Ok === null || result.Ok === undefined) {
-        const updatedLimits = { ...FaucetLimit };
-        updatedLimits[asset] = 50000000000;
-        setFaucetLimit(updatedLimits);
-        toast.success(`Reset faucet succesfull for ${asset}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      } else {
-        toast.error(`Unexpected response from backend: ${result.Ok}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      }
-    } catch (error) {
-      toast.success("Failed to reset faucet usage", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     const resetFaucetLimitsAtMidnight = () => {
@@ -429,7 +501,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     return () => {};
   }, []);
-
+  /* ===================================================================================
+   *                                  RENDER-COMPONENTS
+   * =================================================================================== */
   return (
     <>
       {!showFaucetPayment && (

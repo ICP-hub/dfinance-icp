@@ -656,7 +656,7 @@ const Repay = ({
                 <h1>Amount</h1>
               </div>
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="flex flex-col items-start w-[40%] gap-8">
+                <div className="flex flex-col items-start w-[45%] gap-8">
                   <input
                     type="text"
                     value={amount}

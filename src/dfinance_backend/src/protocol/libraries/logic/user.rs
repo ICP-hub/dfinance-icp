@@ -960,7 +960,7 @@ pub struct UserAccountData {
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
-#[query]
+#[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
     page_size: usize,

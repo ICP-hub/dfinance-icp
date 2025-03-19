@@ -610,10 +610,6 @@ async fn get_user_account_data(
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-    if let Err(e) = request_limiter("get_user_account_data") {
-        ic_cdk::println!("Error limiting error: {:?}", e);
-        return Err(e);
-    }
 
     ic_cdk::println!("error in user = {:?}", on_behalf);
     let result = calculate_user_asset_data(on_behalf,dtoken_balance,debt_token_balance).await;

@@ -111,7 +111,7 @@ pub fn release_lock(key: &Principal) -> Result<(), Error> {
  * # Returns
  * @return `Ok(())` if the amount is locked successfully.
  */
-pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Result<(), Error> {
+pub fn lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     ic_cdk::println!("Attempting to lock amount: {} for asset: {}", amount, asset);
 
     let mut amount_locks = match AMOUNT_LOCKS.lock() {
@@ -122,13 +122,13 @@ pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Res
         }
     };
 
-    let mut to_check_amount = match TO_CHECK_AMOUNT.lock() {
-        Ok(lock) => lock,
-        Err(_) => {
-            ic_cdk::println!("Failed to acquire lock for TO_CHECK_AMOUNT.");
-            return Err(Error::LockAcquisitionFailed);
-        }
-    };
+    // let mut to_check_amount = match TO_CHECK_AMOUNT.lock() {
+    //     Ok(lock) => lock,
+    //     Err(_) => {
+    //         ic_cdk::println!("Failed to acquire lock for TO_CHECK_AMOUNT.");
+    //         return Err(Error::LockAcquisitionFailed);
+    //     }
+    // };
 
     let current_locked = amount_locks
         .get(asset)
@@ -150,8 +150,8 @@ pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Res
         new_locked_amount
     );
 
-    to_check_amount.insert(*user_principal, ());
-    ic_cdk::println!("Stored user principal: {}", user_principal);
+    // to_check_amount.insert(*user_principal, ());
+    // ic_cdk::println!("Stored user principal: {}", user_principal);
 
     Ok(())
 }
@@ -373,16 +373,18 @@ pub fn get_repay_locked_amount(asset: &str) -> Nat {
         .unwrap_or_else(|_| Nat::from(0u128))
 }
 
-
 pub fn lock_transaction_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
-    ic_cdk::println!("Attempting to lock transaction amount: {} for asset: {}", amount, asset);
+    ic_cdk::println!(
+        "Attempting to lock transaction amount: {} for asset: {}",
+        amount,
+        asset
+    );
 
-    let mut locks: std::sync::MutexGuard<'_, HashMap<String, Nat>> = TRANSACTION_AMOUNT_LOCKS
+    let mut locks = TRANSACTION_AMOUNT_LOCKS
         .try_lock()
         .map_err(|_| Error::LockAcquisitionFailed)?;
 
-    if let Some(current_locked) = locks.get_mut(asset){
-        
+    if let Some(current_locked) = locks.get_mut(asset) {
         ic_cdk::println!("Amount to release: {}", amount);
         ic_cdk::println!("Current locked amount: {}", current_locked);
 
@@ -393,8 +395,7 @@ pub fn lock_transaction_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
         *current_locked += amount.clone();
 
         ic_cdk::println!("Updated locked amount for '{}': {}", asset, current_locked);
-    }
-    else{
+    } else {
         locks.insert(asset.to_string(), amount.clone());
         ic_cdk::println!("New locked amount for asset '{}': {}", asset, amount);
     }

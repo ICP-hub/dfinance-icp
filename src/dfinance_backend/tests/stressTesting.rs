@@ -145,7 +145,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         d_token_canister: None,
         debt_token_canister: None,
         borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(1u128),
+        current_liquidity_rate: Nat::from(0u128),
         asset_supply: Nat::from(0u128),
         asset_borrow: Nat::from(0u128),
         liquidity_index: Nat::from(100000000u128),
@@ -1063,7 +1063,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(2_00_00u128), // 450 USDC
+            amount: Nat::from(1_00_000_000u128), // 450 USDC
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,

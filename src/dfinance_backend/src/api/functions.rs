@@ -4,6 +4,7 @@ use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
+use crate::guards::to_check_controller;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
@@ -535,7 +536,7 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
 
 const REQUEST_LIMIT: u32 = 100;// Maximum allowed requests within the defined time window
 const TIME_WINDOW: u64 = 3600; // Time window in seconds (one hour)
-const BLOCK_DURATION: u64 = 4300; // Block duration in seconds (12 hours = 43200 seconds)
+const BLOCK_DURATION: u64 = 43200; // Block duration in seconds (12 hours = 43200 seconds)
 
 pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     let caller_id = ic_cdk::caller();
@@ -673,9 +674,15 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
 
 //TODO: remove it later.
 #[query]
-pub fn retrieve_request_info(caller_id: Principal) -> Vec<(String, u32)> {
+pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>, Error> {
     // let caller_id = ic_cdk::caller();
-    read_state(|state| {
+
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+
+    Ok(read_state(|state| {
         state
             .requests
             .get(&caller_id)
@@ -687,12 +694,18 @@ pub fn retrieve_request_info(caller_id: Principal) -> Vec<(String, u32)> {
                     .collect::<Vec<(String, u32)>>()
             })
             .unwrap_or_default()
-    })
+    }))
 }
 
+//TODO: remove it later.
 #[query]
-pub fn retrieve_blocked_users(caller_id: Principal) -> Vec<(String, u64)> {
-    read_state(|state| {
+pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
+
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    Ok(read_state(|state| {
         state
             .blocked_users
             .get(&caller_id)
@@ -704,8 +717,48 @@ pub fn retrieve_blocked_users(caller_id: Principal) -> Vec<(String, u64)> {
                     .collect::<Vec<(String, u64)>>()
             })
             .unwrap_or_default()
+    }))
+}
+//TODO: remove it later.
+#[update]
+pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> Result<(), Error> {
+
+    if !to_check_controller(){
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
+    
+    mutate_state(|state| {
+        if let Some(mut candid) = state.blocked_users.get(&caller_id) {
+            let blocked_functions = &mut candid.0; // Get the inner BTreeMap
+            
+            if blocked_functions.remove(&function_name).is_some() {
+                ic_cdk::println!(
+                    "[RequestLimiter] Unblocked function '{}' for user {:?}",
+                    function_name,
+                    caller_id
+                );
+
+                // If no functions remain blocked, remove the user from the blocked list
+                if blocked_functions.is_empty() {
+                    state.blocked_users.remove(&caller_id);
+                } else {
+                    state.blocked_users.insert(caller_id, Candid(blocked_functions.clone()));
+                }
+
+                return Ok(());
+            }
+        }
+
+        ic_cdk::println!(
+            "[RequestLimiter] Function '{}' not found in blocked list for user {:?}",
+            function_name,
+            caller_id
+        );
+        Err(Error::ErrorNotController)
     })
 }
+
 
 
 

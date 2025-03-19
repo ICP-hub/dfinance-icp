@@ -1,8 +1,13 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
+use crate::api::resource_manager::get_locked_amount;
+use crate::api::resource_manager::{
+    get_locked_transaction_amount, lock_transaction_amount, release_transaction_lock,
+};
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
+use crate::get_reserve_data;
 use crate::protocol::libraries::logic::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -10,12 +15,8 @@ use crate::protocol::libraries::math::math_utils;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
+use futures::future::ok;
 use ic_cdk::api::time;
-use crate::api::resource_manager::{
-    lock_transaction_amount,
-    release_transaction_lock,
-    get_locked_transaction_amount,
-};
 
 /*
  * @title Accrual Treasury Variables
@@ -386,7 +387,7 @@ pub async fn burn_scaled(
             );
 
             // if user_state.debt_token_blance < Nat::from(1000u128) {
-                // user_state.debt_token_blance = Nat::from(0u128);
+            // user_state.debt_token_blance = Nat::from(0u128);
             // }
         }
 
@@ -446,7 +447,7 @@ pub async fn burn_scaled(
             return Err(Error::AmountSubtractionError);
         }
         ic_cdk::println!("Burning tokens, amount: {}", amount);
-        let  amount_to_burn = amount - balance_increase;
+        let amount_to_burn = amount - balance_increase;
         ic_cdk::println!("Burning tokens, initial amount: {}", amount_to_burn);
 
         // if balance.clone() > amount_to_burn.clone()
@@ -519,14 +520,24 @@ pub async fn mint_scaled(
     ic_cdk::println!("Amount value: {}", amount);
     ic_cdk::println!("current index value = {}", index);
 
-    let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
+    ic_cdk::println!("Original amount: {}", amount.clone());
+    ic_cdk::println!("Index: {}", index.clone());
+    ic_cdk::println!("Amount % Index: {}", amount.clone() % index.clone());
+    ic_cdk::println!("Amount < 10: {}", amount.clone() < Nat::from(10u128));
+
+    let  adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
         && amount.clone() < Nat::from(10u128)
     {
-        amount.clone().scaled_div(index.clone()) + Nat::from(1u128) // Round up if there's a remainder
+        let scaled = amount.clone().scaled_div(index.clone());
+        ic_cdk::println!("Scaled amount before rounding up: {}", scaled);
+        scaled + Nat::from(1u128) // Round up if there's a remainder
     } else {
-        amount.clone().scaled_div(index.clone())
+        let scaled = amount.clone().scaled_div(index.clone());
+        ic_cdk::println!("Scaled amount without rounding: {}", scaled);
+        scaled
     };
-    ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
+
+    ic_cdk::println!("Final Adjusted amount: {}", adjusted_amount.clone());
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     //acuire transaction lock
@@ -534,22 +545,25 @@ pub async fn mint_scaled(
         ic_cdk::println!("Error: Invalid mint amount");
         return Err(Error::InvalidMintAmount);
     }
-    
-    if let Err(e) = lock_transaction_amount(
-        &reserve.asset_name.clone().unwrap(),
-        &adjusted_amount,
-    ) {
-        return Err(e);
-    }
-    ic_cdk::println!("Fetching user balance... {:?}",get_locked_transaction_amount(&reserve.asset_name.clone().unwrap()));
+
+    // if let Err(e) = lock_transaction_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+    // {
+    //     return Err(e);
+    // }
+    // ic_cdk::println!(
+    //     "Fetching user balance... {:?}",
+    //     get_locked_transaction_amount(&reserve.asset_name.clone().unwrap())
+    // );
 
     let balance_result = get_balance(token_canister_principal, user_principal).await;
     let balance = match balance_result {
         Ok(bal) => bal,
         Err(err) => {
-            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
-                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
-            }
+            // if let Err(e) =
+                // release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+            // {
+            //     ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            // }
             ic_cdk::println!("Error converting balance to u128: {:?}", err);
             return Err(Error::ErrorGetBalance);
         }
@@ -567,15 +581,17 @@ pub async fn mint_scaled(
             .scaled_mul(user_state.liquidity_index.clone());
 
         if balance_indexed < balance_user_indexed {
-            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
-                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
-            }
+            // if let Err(e) =
+            //     release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+            // {
+            //     ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            // }
             return Err(Error::AmountSubtractionError);
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        println!("balance incr dtoken{}", balance_increase);
+        ic_cdk::println!("balance incr dtoken{}", balance_increase);
         if user_state.liquidity_index == Nat::from(0u128) {
             user_state.d_token_balance = amount.clone();
         } else {
@@ -587,9 +603,8 @@ pub async fn mint_scaled(
         ic_cdk::println!("locked amount = {:?}", get_locked_transaction_amount(&reserve.asset_name.clone().unwrap()));
         reserve.asset_supply += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
         ic_cdk::println!("updated asset supply {}", reserve.asset_supply);
-        println!("user new dtoken balance {}", user_state.d_token_balance);
         user_state.liquidity_index = index;
-        println!("user new liq index {}", user_state.liquidity_index);
+
     } else {
         ic_cdk::println!("minting debttoken");
 
@@ -599,7 +614,9 @@ pub async fn mint_scaled(
             .scaled_mul(user_state.variable_borrow_index.clone());
 
         if balance_indexed < balance_user_indexed {
-            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
+            if let Err(e) =
+                release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+            {
                 ic_cdk::println!("Failed to release transaction lock: {:?}", e);
             }
             return Err(Error::AmountSubtractionError);
@@ -633,16 +650,20 @@ pub async fn mint_scaled(
     .await
     {
         Ok(_) => {
-            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
-                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
-            }
+            // if let Err(e) =
+            //     release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+            // {
+            //     ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            // }
             ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
             Ok(())
         }
         Err(err) => {
-            if let Err(e) = release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount) {
-                ic_cdk::println!("Failed to release transaction lock: {:?}", e);
-            }
+            // if let Err(e) =
+            //     release_transaction_lock(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
+            // {
+            //     ic_cdk::println!("Failed to release transaction lock: {:?}", e);
+            // }
             ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
             Err(Error::ErrorMintTokens)
         }

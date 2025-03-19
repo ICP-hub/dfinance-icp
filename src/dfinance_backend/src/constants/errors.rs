@@ -60,6 +60,7 @@ pub enum Error {
     ErrorRawResponse,
     ErrorDecoding,
     LockAcquisitionFailed,
+    AmountLockAcquisitionFailed,
     InsufficientLiquidity,
     ErrorRollBack,
     EmailError,
@@ -148,6 +149,7 @@ impl Error {
             Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible",
             Error::TOOMANYREQUESTS => "You are temporarily blocked",
             Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
+            Error::AmountLockAcquisitionFailed => "amount lock acquisition failed"
         }
     }
 }

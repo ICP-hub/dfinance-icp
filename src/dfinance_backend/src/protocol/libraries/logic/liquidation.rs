@@ -1,23 +1,23 @@
-use ic_cdk::{api, update};
-use candid::{Nat, Principal};
-use crate::constants::errors::Error;
 use crate::api::functions::{get_balance, request_limiter};
+use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::read_state;
+use crate::constants::errors::Error;
+use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow::execute_repay;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::logic::update::{user_data, user_reserve};
-use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use crate::protocol::libraries::logic::reserve::{self, burn_scaled, mint_scaled};
-use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
+use crate::protocol::libraries::logic::update::{user_data, user_reserve};
+use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::{
     api::state_handler::mutate_state,
     declarations::assets::ExecuteSupplyParams,
     protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
 };
+use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
+use candid::{Nat, Principal};
+use ic_cdk::{api, update};
 
 /*
 -------------------------------------
@@ -27,15 +27,15 @@ use crate::{
 
 /**
  * @title Execute Liquidation Function
- * 
- * @notice This function enables the liquidation of a user's collateral when they have an under-collateralized position 
- *         or overdue debt. It performs checks, updates user and collateral data, and transfers the collateral to the 
+ *
+ * @notice This function enables the liquidation of a user's collateral when they have an under-collateralized position
+ *         or overdue debt. It performs checks, updates user and collateral data, and transfers the collateral to the
  *         platform’s reserve. The function ensures all resources are released if any step fails, reverting the operation.
- * 
+ *
  * @dev The function follows this structured workflow:
- *      1. **Input validation**: Verifies the asset name, checks that the amount is greater than zero, 
+ *      1. **Input validation**: Verifies the asset name, checks that the amount is greater than zero,
  *         and ensures the caller has permission to execute the liquidation.
- *      2. **Collateral eligibility check**: Ensures the user’s collateral is eligible for liquidation 
+ *      2. **Collateral eligibility check**: Ensures the user’s collateral is eligible for liquidation
  *         (e.g., under-collateralized position or overdue debt).
  *      3. **Lock acquisition**: Acquires a lock to ensure that only one liquidation operation can proceed at a time for a user.
  *      4. **State mutation**: Updates collateral, user profile, and reserve data to reflect the liquidation event.
@@ -43,12 +43,12 @@ use crate::{
  *      6. **Rollback mechanism**: In case of failure, the system reverts all changes and restores collateral data.
  *      7. **Debt update**: Updates the user’s debt balance in accordance with the liquidated assets.
  *      8. **Collateral release**: Releases any locks or resources tied to the collateral, ensuring the system remains in a consistent state.
- * 
+ *
  * @param params The parameters needed for the liquidation operation, including the asset name and the amount to be liquidated:
  *               - `asset`: The name of the collateral asset to be liquidated.
  *               - `amount`: The amount of collateral to be liquidated.
  *               - `userPrincipal`: The principal ID of the user whose collateral is being liquidated.
- * 
+ *
  * @return Result<Nat, Error> Returns the updated collateral balance after liquidation or an error code if any operation fails.
  */
 #[update]
@@ -92,7 +92,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
-    
+
     let user_key = params.on_behalf_of;
     // Acquire lock for the target user
     if let Err(e) = acquire_lock(&user_key) {
@@ -209,9 +209,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             return Err(Error::RewardIsHigher);
         }
 
-        // panic!("something went wrong"); 
+        // panic!("something went wrong");
         // ic_cdk::println!("reward_amount: {:?}", earned_rewards);
-
 
         let liquidator_data_result = user_data(liquidator_principal);
         let mut liquidator_data = match liquidator_data_result {
@@ -276,7 +275,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         };
 
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
-        if let Err(e) = reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache) {
+        if let Err(e) =
+            reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache)
+        {
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&user_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
@@ -514,32 +515,32 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
 /**
  * @title Get Reward Amount Function
- * 
- * @notice This function calculates the reward amount for a user based on their collateral and debt assets. 
- *         It performs necessary validations and computations to derive the final reward, considering the collateral balance, 
- *         asset exchange rates, liquidation bonuses, and collateral limits. The function returns the calculated reward amount 
+ *
+ * @notice This function calculates the reward amount for a user based on their collateral and debt assets.
+ *         It performs necessary validations and computations to derive the final reward, considering the collateral balance,
+ *         asset exchange rates, liquidation bonuses, and collateral limits. The function returns the calculated reward amount
  *         or an error if any of the steps fail.
- * 
+ *
  * @dev The function follows this structured workflow:
  *      1. **Parse Inputs**: Parses and validates the input parameters, such as the asset names and amount.
  *      2. **Fetch Balance**: Retrieves the user's collateral balance from the collateral asset's canister.
  *      3. **Normalize Collateral**: Normalizes the user's collateral based on the liquidity index and normalized supply.
- *      4. **Fetch Exchange Rates**: Retrieves the exchange rates for both collateral and debt assets in USD 
+ *      4. **Fetch Exchange Rates**: Retrieves the exchange rates for both collateral and debt assets in USD
  *         to compute their relative values.
- *      5. **Calculate Collateral**: Computes the final collateral amount based on the provided amount, exchange rates, 
+ *      5. **Calculate Collateral**: Computes the final collateral amount based on the provided amount, exchange rates,
  *         and liquidation bonus.
- *      6. **Determine Max Collateral**: Compares the calculated collateral with the available collateral balance and 
+ *      6. **Determine Max Collateral**: Compares the calculated collateral with the available collateral balance and
  *         sets the final maximum collateral.
  *      7. **Return Result**: Returns the final calculated collateral amount or an error in case of failure.
- * 
+ *
  * @param amount The amount of debt to be considered for the reward calculation.
  * @param collateral_asset The name of the collateral asset.
  * @param debt_asset The name of the debt asset.
  * @param collateral_reserve_data The reserve data associated with the collateral asset, including liquidation bonuses.
  * @param user_principal The user's principal ID for identifying the user.
  * @param user_reserve_data The user's reserve data, including liquidity index.
- * 
- * @return Result<Nat, Error> Returns the maximum collateral amount available to the user after applying the liquidation bonus, 
+ *
+ * @return Result<Nat, Error> Returns the maximum collateral amount available to the user after applying the liquidation bonus,
  *         or an error if any part of the process fails.
  */
 pub async fn to_get_reward_amount(
@@ -576,8 +577,11 @@ pub async fn to_get_reward_amount(
         }
     };
 
-    ic_cdk::println!("user normalized = {}",user_normalized_supply(collateral_reserve_data.clone()).unwrap());
-    ic_cdk::println!("liquidity index = {:?}",user_reserve_data);
+    ic_cdk::println!(
+        "user normalized = {}",
+        user_normalized_supply(collateral_reserve_data.clone()).unwrap()
+    );
+    ic_cdk::println!("liquidity index = {:?}", user_reserve_data);
 
     collateral_balance = (collateral_balance
         .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))

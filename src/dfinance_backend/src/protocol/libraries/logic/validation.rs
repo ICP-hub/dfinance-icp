@@ -357,7 +357,7 @@ impl ValidationLogic {
             if let Err(e) = lock_amount(
                 &reserve.asset_name.clone().unwrap(),
                 &amount,
-                &user_principal,
+                // &user_principal,
             ) {
                 return Err(e);
             }

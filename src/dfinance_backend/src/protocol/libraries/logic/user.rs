@@ -15,8 +15,8 @@ use crate::{
 use crate::guards::check_is_tester;
 use crate::{get_all_users, reserve_ledger_canister_id};
 use candid::{CandidType, Deserialize, Nat, Principal};
-use futures::stream::{FuturesUnordered, StreamExt};
-use ic_cdk::{query, update};
+use futures::stream::{self, FuturesUnordered, StreamExt};
+use ic_cdk::{api, query, update};
 
 
 fn get_max_value() -> Nat {
@@ -894,6 +894,73 @@ pub struct UserAccountData {
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
+// #[update]
+// pub async fn get_liquidation_users_concurrent(
+//     total_pages: usize,
+//     page_size: usize,
+// ) -> Vec<(Principal, UserAccountData, UserData)> {
+//     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+//     let total_users = vector_user_data.len();
+
+//     let mut liq_list = Vec::new();
+
+//     let page_futures = (0..total_pages).map(|page| {
+//         let users_to_process = vector_user_data
+//             .iter()
+//             .skip(page * page_size)
+//             .take(page_size)
+//             .cloned()
+//             .collect::<Vec<_>>();
+
+//         async move {
+//             let mut page_liq_list = Vec::new();
+
+//             let mut tasks = users_to_process
+//                 .into_iter()
+//                 .map(|(user_principal, user_data)| async move {
+//                     if let Ok(user_account_data) =
+//                         calculate_user_account_data(Some(user_principal)).await
+//                     {
+//                         Some((user_principal, user_account_data, user_data))
+//                     } else {
+//                         None
+//                     }
+//                 })
+//                 .collect::<FuturesUnordered<_>>();
+
+//             while let Some(result) = tasks.next().await {
+//                 if let Some((user_principal, user_account_data_tuple, user_data)) = result {
+//                     let user_account_data = UserAccountData {
+//                         collateral: user_account_data_tuple.0,
+//                         debt: user_account_data_tuple.1,
+//                         ltv: user_account_data_tuple.2,
+//                         liquidation_threshold: user_account_data_tuple.3,
+//                         health_factor: user_account_data_tuple.4,
+//                         available_borrow: user_account_data_tuple.5,
+//                         has_zero_ltv_collateral: user_account_data_tuple.6,
+//                     };
+//                     ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
+
+//                     if user_account_data.health_factor < Nat::from(10000000000u128){
+//                         page_liq_list.push((user_principal, user_account_data, user_data));
+//                     }
+                   
+//                 }
+//             }
+//             page_liq_list
+//         }
+//     });
+
+//     let results = futures::future::join_all(page_futures).await;
+
+//     for result in results {
+//         liq_list.extend(result);
+//     }
+
+//     liq_list
+// }
+
+
 #[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
@@ -901,10 +968,13 @@ pub async fn get_liquidation_users_concurrent(
 ) -> Vec<(Principal, UserAccountData, UserData)> {
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
     let total_users = vector_user_data.len();
+    ic_cdk::println!("Total users: {}", total_users);
 
     let mut liq_list = Vec::new();
+    let cycles_start = Nat::from(api::canister_balance128());
+    ic_cdk::println!("cycles start = {:?}", cycles_start);
 
-    let page_futures = (0..total_pages).map(|page| {
+    for page in 0..total_pages {
         let users_to_process = vector_user_data
             .iter()
             .skip(page * page_size)
@@ -912,53 +982,59 @@ pub async fn get_liquidation_users_concurrent(
             .cloned()
             .collect::<Vec<_>>();
 
-        async move {
-            let mut page_liq_list = Vec::new();
+        ic_cdk::println!("Processing page: {}", page + 1);
 
-            let mut tasks = users_to_process
-                .into_iter()
-                .map(|(user_principal, user_data)| async move {
-                    if let Ok(user_account_data) =
-                        calculate_user_account_data(Some(user_principal)).await
-                    {
-                        Some((user_principal, user_account_data, user_data))
-                    } else {
+        let page_liq_list = stream::iter(users_to_process)
+            .map(|(user_principal, user_data)| async move {
+                ic_cdk::println!("Processing user: {:?}", user_principal);
+                match calculate_user_account_data(Some(user_principal)).await {
+                    Ok(user_account_data_tuple) => {
+                        ic_cdk::println!(
+                            "User {:?} data: {:?}",
+                            user_principal, user_account_data_tuple
+                        );
+                        let user_account_data = UserAccountData {
+                            collateral: user_account_data_tuple.0,
+                            debt: user_account_data_tuple.1,
+                            ltv: user_account_data_tuple.2,
+                            liquidation_threshold: user_account_data_tuple.3,
+                            health_factor: user_account_data_tuple.4,
+                            available_borrow: user_account_data_tuple.5,
+                            has_zero_ltv_collateral: user_account_data_tuple.6,
+                        };
+
+                        if user_account_data.health_factor < Nat::from(10_000_000_000u128) {
+                            ic_cdk::println!(
+                                "Low health factor user: {:?}, Health Factor: {:?}",
+                                user_principal, user_account_data.health_factor
+                            );
+                            Some((user_principal, user_account_data, user_data))
+                        } else {
+                            None
+                        }
+                    }
+                    Err(err) => {
+                        ic_cdk::println!("Failed to fetch data for {:?}: {:?}", user_principal, err);
                         None
                     }
-                })
-                .collect::<FuturesUnordered<_>>();
-
-            while let Some(result) = tasks.next().await {
-                if let Some((user_principal, user_account_data_tuple, user_data)) = result {
-                    let user_account_data = UserAccountData {
-                        collateral: user_account_data_tuple.0,
-                        debt: user_account_data_tuple.1,
-                        ltv: user_account_data_tuple.2,
-                        liquidation_threshold: user_account_data_tuple.3,
-                        health_factor: user_account_data_tuple.4,
-                        available_borrow: user_account_data_tuple.5,
-                        has_zero_ltv_collateral: user_account_data_tuple.6,
-                    };
-                    ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
-
-                    if user_account_data.health_factor < Nat::from(10000000000u128){
-                        page_liq_list.push((user_principal, user_account_data, user_data));
-                    }
-                   
                 }
-            }
-            page_liq_list
-        }
-    });
+            })
+            .buffered(100) // Process 50 users concurrently to prevent overload
+            .collect::<Vec<_>>()
+            .await;
 
-    let results = futures::future::join_all(page_futures).await;
-
-    for result in results {
-        liq_list.extend(result);
+        liq_list.extend(page_liq_list.into_iter().flatten());
+        // ic_cdk::api::call::msg_cycles_available(); // Check available cycles to prevent cycle exhaustion
+        let cycles_end = Nat::from(api::canister_balance128());
+        ic_cdk::println!("cycles middle = {:?}", cycles_end);
     }
+
+    let cycles_end = Nat::from(api::canister_balance128());
+    ic_cdk::println!("cycles end = {:?}", cycles_end);
 
     liq_list
 }
+
 
 
 /*

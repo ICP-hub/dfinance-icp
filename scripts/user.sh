@@ -11,7 +11,7 @@ borrow_method="execute_borrow"
 NUM_USERS=1000
 
 # Loop to register users
-for ((i=1; i<=NUM_USERS; i++))
+for ((i=601; i<=NUM_USERS; i++))
 do
   IDENTITY="user$i"
 
@@ -35,36 +35,10 @@ do
     echo "User registered successfully!"
 
     # Call the faucet function
-    faucet_result=$(dfx canister call $backend_canister $faucet_method "(\"ICP\", 1000000000)")
+    faucet_result=$(dfx canister call $backend_canister $faucet_method "(\"ICP\", 100000000)")
     echo "Faucet result: $faucet_result"
 
-    # if [ $? -eq 0 ]; then
-    #   echo "Faucet successful!"
-
-    #   # Call the execute_supply function
-    #   supply_result=$(dfx canister call $backend_canister $supply_method "(record { asset = \"ICP\"; amount = 1000000000; is_collateral = true; })")
-    #   echo "Supply result: $supply_result"
-
-    #   if [ $? -eq 0 ]; then
-    #     echo "Supply successful!"
-
-    #     # Call the execute_borrow function
-    #     borrow_result=$(dfx canister call $backend_canister $borrow_method "(record { asset = \"ICP\"; amount = 500000000; })")
-    #     echo "Borrow result: $borrow_result"
-
-    #     if [ $? -eq 0 ]; then
-    #       echo "Borrow successful!"
-    #     else
-    #       echo "Failed to borrow the user. Please check for errors."
-    #     fi
-    #   else
-    #     echo "Failed to supply the user. Please check for errors."
-    #   fi
-#     else
-#       echo "Failed to faucet the user. Please check for errors."
-#     fi
-#   else
-#     echo "Failed to register the user. Please check for errors."
+   
   fi
 done
 

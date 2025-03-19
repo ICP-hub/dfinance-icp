@@ -150,6 +150,7 @@ export const useAuthClient = (options = defaultOptions) => {
         localStorage.removeItem("connectedWallet");
         window.location.reload();
       }
+      localStorage.removeItem("connectedWallet");
     } catch (error) {
       console.error(error.message);
     }

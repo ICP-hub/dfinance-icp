@@ -53,7 +53,7 @@ const DebtStatus = () => {
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const cachedData = useRef({});
-
+  const [userAccountData, setUserAccountData] = useState([]);
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -125,20 +125,21 @@ const DebtStatus = () => {
           userData: userData,
         })
       );
-
-      return parsedResult;
+      
+      setUserAccountData((prev) => ({
+        ...prev,
+        ...parsedResult.reduce((acc, { principal, userAccountData }) => {
+          acc[principal] = userAccountData;
+          return acc;
+        }, {}),
+      }));
+    return parsedResult;
     } catch (error) {
       console.error("Error fetching liquidation users:", error);
       throw error;
     }
   };
-
-  /**
-   * Fetches and caches user account data to avoid redundant API calls.
-   * @param {Object} userData - The user data object.
-   */
-  
-
+console.log("userAccount",userAccountData)
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
@@ -393,8 +394,6 @@ const DebtStatus = () => {
 
     loadUsers();
   }, [totalUsers, liquidateTrigger]);
-
-  
 
   useEffect(() => {
     if (currentItems.length > 0) {

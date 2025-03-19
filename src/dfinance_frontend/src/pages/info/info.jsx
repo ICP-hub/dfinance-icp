@@ -80,15 +80,18 @@ const DashboardCards = () => {
   const [users, setUsers] = useState([]);
   const [lastEmailDate, setLastEmailDate] = useState(null);
   const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
- const [cycles ,setCycles]= useState("");
+  const [cycles, setCycles] = useState("");
   const radioRefs = {};
   const [filteredData, setFilteredData] = useState(null);
   const [userAccountData, setUserAccountData] = useState({});
   const [userData, setUserData] = useState({});
   const [assetBalance, setAssetBalances] = useState([]);
   const [healthFactors, setHealthFactors] = useState({});
+  const [totalUsers, setTotalUsers] = useState(null);
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   /* ===================================================================================
    *                                  EFFECTS & FUNCTIONS
@@ -144,7 +147,21 @@ const DashboardCards = () => {
     checkControllerStatus();
   }, [backendActor]);
   const { filteredItems, interestAccure, assets } = useAssetData(searchQuery);
- 
+  const getTotalUser = async () => {
+    if (!backendActor) {
+      console.error("Error: Backend actor is not initialized.");
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const totalUser = await backendActor.get_total_users();
+      console.log("gettotaluser", totalUser)
+      setTotalUsers(totalUser);
+    } catch (error) {
+      console.error("Error fetching total users:", error);
+      throw error;
+    }
+  };
+  console.log("totalUsers in app", totalUsers)
 
 
   const poolAssets = [
@@ -155,10 +172,12 @@ const DashboardCards = () => {
     { name: "ICP", imageUrl: icp },
   ];
   console.log("interestAccure", interestAccure);
+  console.log("totalUsers in app2", totalUsers)
   const [cardData, setCardData] = useState([
+
     {
       title: "Users",
-      value: users?.length > 0 ? users.length : "",
+      value: totalUsers,
       link: "/users",
     },
 
@@ -178,24 +197,65 @@ const DashboardCards = () => {
       state: { userAccountData }, // ✅ Pass data to the next page
     });
   };
-  const getAllUsers = async () => {
-    if (!backendActor) {
-      console.error("Backend actor not initialized");
-      return;
-    }
-    try {
-      const allUsers = await backendActor.get_all_users();
-      console.log("Retrieved Users:", allUsers);
 
-      setUsers(allUsers);
+
+  const fetchAllUsers = async (totalPages, pageSize) => {
+    try {
+      const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      console.log("result:", result);
+
+      // Ensure `result.Ok` exists and is an array
+      if (!result.Ok || !Array.isArray(result.Ok)) {
+        throw new Error("Unexpected response format");
+      }
+
+      // Parse result
+      const parsedResult = result.Ok.map(([principal, userAccountData, userData]) => ({
+        principal: principal ? principal.toText() : "Unknown_Principal", // Correct principal conversion
+        collateral: userAccountData.collateral,
+        debt: userAccountData.debt,
+        ltv: userAccountData.ltv,
+        liquidationThreshold: userAccountData.liquidation_threshold,
+        healthFactor: userAccountData.health_factor,
+        availableBorrow: userAccountData.available_borrow,
+        hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
+        userData: userData,
+      }));
+
+      console.log("parsedResult", parsedResult);
+
+      // Structure userAccountData for setUserAccountData
+      const structuredData = parsedResult.reduce((acc, user) => {
+        if (user.principal && user.principal !== "Unknown_Principal") {
+          acc[user.principal] = {
+            collateral: user.collateral,
+            debt: user.debt,
+            ltv: user.ltv,
+            liquidationThreshold: user.liquidationThreshold,
+            healthFactor: user.healthFactor,
+            availableBorrow: user.availableBorrow,
+            hasZeroLtvCollateral: user.hasZeroLtvCollateral,
+          };
+        }
+        return acc;
+      }, {});
+
+      // Store user account data correctly
+      setUserAccountData((prev) => ({
+        ...prev,
+        ...structuredData,
+      }));
+
+      return parsedResult;
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching all users:", error);
+      throw error;
     }
   };
 
-  useEffect(() => {
-    getAllUsers();
-  }, []);
+
+
+  console.log("userAccountData", userAccountData)
 
   /**
    * Fetches the current cycle count from the backend.
@@ -306,69 +366,75 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
-  const fetchAssetData = async () => {
-    const balances = {};
-    const batchSize = 5; // Adjust this based on your system's capacity
+  // const fetchAssetData = async () => {
+  //   const balances = {};
 
-    const processUsersInBatches = async (usersBatch) => {
-      for (const [principal, userData] of usersBatch) {
-        if (!principal) continue;
+  //   await Promise.all(
+  //     currentItems.map(async (mappedItem) => {
+  //       const principal = mappedItem.principal?._arr;
+  //       const userBalances = {};
 
-        const userBalances = {};
+  //       await Promise.all(
+  //         assets.map(async (asset) => {
+  //           const reserveDataForAsset = await fetchReserveData(asset);
+  //           const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+  //           const debtTokenId =
+  //             reserveDataForAsset?.Ok?.debt_token_canister?.[0];
 
-        await Promise.all(
-          assets.map(async (asset) => {
-            const reserveDataForAsset = await fetchReserveData(asset);
-            console.log("reserveDataForAsset", reserveDataForAsset);
-            const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-            const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-            console.log("dtokenId", dtokenId);
+  //           const assetBalance = {
+  //             dtokenBalance: null,
+  //             debtTokenBalance: null,
+  //           };
 
-            const assetBalance = {
-              dtokenBalance: null,
-              debtTokenBalance: null,
-            };
+  //           const account = { owner: principal, subaccount: [] };
 
-            try {
-              const formattedPrincipal = Principal.fromText(principal.toString());
-              const account = { owner: formattedPrincipal, subaccount: [] };
+  //           if (dtokenId) {
+  //             const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+  //             if (dtokenActor) {
+  //               try {
+  //                 const balance = await dtokenActor.icrc1_balance_of(account);
+  //                 const formattedBalance = Number(balance);
+  //                 assetBalance.dtokenBalance = formattedBalance;
+  //               } catch (error) {
+  //                 console.error(
+  //                   `Error fetching dtoken balance for ${asset}:`,
+  //                   error
+  //                 );
+  //               }
+  //             }
+  //           }
 
-              if (dtokenId) {
-                const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-                if (dtokenActor) {
-                  const balance = await dtokenActor.icrc1_balance_of(account);
-                  assetBalance.dtokenBalance = Number(balance);
-                }
-              }
+  //           if (debtTokenId) {
+  //             const debtTokenActor = createLedgerActor(
+  //               debtTokenId,
+  //               idlFactory1
+  //             );
+  //             if (debtTokenActor) {
+  //               try {
+  //                 const balance = await debtTokenActor.icrc1_balance_of(
+  //                   account
+  //                 );
+  //                 const formattedBalance = Number(balance);
+  //                 assetBalance.debtTokenBalance = formattedBalance;
+  //               } catch (error) {
+  //                 console.error(
+  //                   `Error fetching debt token balance for ${asset}:`,
+  //                   error
+  //                 );
+  //               }
+  //             }
+  //           }
 
-              if (debtTokenId) {
-                const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-                if (debtTokenActor) {
-                  const balance = await debtTokenActor.icrc1_balance_of(account);
-                  assetBalance.debtTokenBalance = Number(balance);
-                }
-              }
-            } catch (error) {
-              console.error(`Error processing balances for ${asset}:`, error);
-            }
+  //           userBalances[asset] = assetBalance;
+  //         })
+  //       );
 
-            userBalances[asset] = assetBalance;
-          })
-        );
+  //       balances[principal] = userBalances;
+  //     })
+  //   );
 
-        balances[principal] = userBalances;
-
-        // Update state progressively to avoid UI freeze
-        setAssetBalances((prevBalances) => ({ ...prevBalances, [principal]: userBalances }));
-      }
-    };
-
-    // Process users in batches
-    for (let i = 0; i < users.length; i += batchSize) {
-      const batch = users.slice(i, i + batchSize);
-      await processUsersInBatches(batch);
-    }
-  };
+  //   setAssetBalances(balances);
+  // };
   // Simulate cycle updates
   const onCycleUpdate = async () => {
     try {
@@ -536,29 +602,36 @@ const DashboardCards = () => {
   }, [assetBalances, tokenThreshold]);
 
   useEffect(() => {
+    console.log("Checking dependencies: totalUsers =", totalUsers, "interestAccure =", interestAccure);
+
+    if (totalUsers === null || interestAccure === null) {
+      console.log("Values not available yet, skipping fetch.");
+      return;
+    }
+
     const fetchData = async () => {
-      if (!users.length) return;
+      console.log("Fetching data...");
+
       setLoading(true);
 
       try {
         const cycles = await getCycles();
-        const usersCount = users.length;
+        console.log("totalUsers:", totalUsers);
+        console.log("Cycles:", cycles);
+        console.log("interestAccure:", interestAccure);
+
         const formattedData = [
-          { title: "Users", value: usersCount, link: "/users" },
+          { title: "Users", value: totalUsers, link: "/users" },
           { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
           { title: "Interest Accured", value: interestAccure, link: "/cycles" },
-          {
-            title: "Reserves",
-            value: "5",
-            link: "/pools",
-            assets: poolAssets,
-          },
+          { title: "Reserves", value: "5", link: "/pools", assets: poolAssets },
         ];
 
         setCardData(formattedData);
         await handleNotification(Number(cycles));
         await onCycleUpdate(Number(cycles));
       } catch (err) {
+        console.error("Error in fetchData:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -566,224 +639,20 @@ const DashboardCards = () => {
     };
 
     fetchData();
-  }, [users, interestAccure]);
+  }, [totalUsers, interestAccure]); // Dependency array remains the same
+
   const cachedData = useRef({});
 
 
-  const fetchUserAccountDataWithCache = async (principal) => {
-    if (backendActor && isAuthenticated) {
-      // Start loading indicator
 
-      // Convert the principal to a string for usage in the assetBalances object
-      const principalString = principal.toString();
-
-      // Log assetBalances before proceeding to check if data is available for this principal
-      console.log("assetBalances before function:", assetBalance[principalString]);
-
-      const userBalance = assetBalance[principalString];
-      if (!userBalance) {
-        console.error("userBalance is undefined or not available for principal:", principalString);
-        // Stop loading indicator
-        return; // Exit the function if userBalance is not available
-      }
-      console.log("userBalance before function:", userBalance);
-
-      // Check if the data is already cached for this principal
-      if (cachedData.current[principalString]) {
-        setUserAccountData((prev) => ({
-          ...prev,
-          [principalString]: cachedData.current[principalString],
-        }));
-        // Stop loading indicator
-        return;
-      }
-
-      try {
-        if (!principalString || cachedData.current[principalString]) return;
-
-        const principalObj = Principal.fromText(principalString);
-
-        // Log the state of assetBalances and userBalance for debugging
-        console.log("assetBalances for principal", principalString, ":", assetBalance);
-        console.log("assetBalances[principal]:", assetBalance[principalString]);
-        console.log("userBalance for principal:", userBalance);
-
-        // Ensure userBalance exists for the given principal
-        if (!userBalance) {
-          console.error("No data found for userBalance for this principal:", principalString);
-
-          return; // Exit if userBalance is still not found
-        }
-
-        // Find the user by principal in the users array
-        const user = users.find(
-          ([userPrincipal]) => userPrincipal.toString() === principalString
-        );
-
-        if (user) {
-          const userInfo = user[1]; // The second element of the array (user info)
-          console.log("userInfo", userInfo);
-
-          // Access reserves array
-          const reserves = userInfo?.reserves?.flat() || [];
-          console.log("reserves:", reserves);
-
-          let assetBalancesObj = [];
-          let borrowBalancesObj = [];
-
-          // Loop through each reserve entry to fetch the asset and balance info
-          reserves.forEach(([asset, assetInfo]) => {
-            console.log("assetInfo:", assetInfo);
-
-            // Extract asset balance and borrow balance for each asset in the reserves
-            const assetBalances = BigInt(userBalance?.[asset]?.dtokenBalance || 0);
-            const borrowBalances = BigInt(userBalance?.[asset]?.debtTokenBalance || 0);
-
-            // Log assetBalance and borrowBalance for debugging
-            console.log(`assetBalance for ${asset}:`, assetBalances);
-            console.log(`borrowBalance for ${asset}:`, borrowBalances);
-
-            // Only include non-zero balances for asset and borrow
-            if (assetBalances > 0n) {
-              assetBalancesObj.push({
-                balance: assetBalances,
-                name: asset,
-              });
-            }
-            if (borrowBalances > 0n) {
-              borrowBalancesObj.push({
-                balance: borrowBalances,
-                name: asset,
-              });
-            }
-          });
-
-          console.log("Asset Balances Set:", assetBalancesObj);
-          console.log("Borrow Balances Set:", borrowBalancesObj);
-
-          const assetBalancesParam = assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
-          const borrowBalancesParam = borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
-
-          // Call backend with separate sets for asset and borrow balances
-          const result = await backendActor.get_user_account_data(
-            [principalObj], // Pass the principal (empty array for the first parameter)
-            assetBalancesParam, // Pass asset balances wrapped in an array
-            borrowBalancesParam // Pass borrow balances wrapped in an array
-          );
-
-          console.log("Backend result:", result);
-
-          if (result?.Err === "ERROR :: Pending") {
-            console.warn("Pending state detected. Retrying...");
-            setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
-            return;
-          }
-
-          // Store the result in cache and update user account data
-          if (result?.Ok) {
-            cachedData.current[principalString] = result;
-            setUserAccountData((prev) => ({
-              ...prev,
-              [principalString]: result,
-            }));
-          }
-        } else {
-          console.error("User not found for principal:", principalString);
-        }
-      } catch (error) {
-        console.error("Error fetching user account data:", error.message);
-      } finally {
-        // Stop loading indicator
-      }
-    }
-  };
-
-  //  Fetch all user data in parallel, ensuring cache usage
-  useEffect(() => {
-    console.log("useEffect triggered");
-    console.log("Users:", users);
-    console.log("Total users:", users?.length);
-    console.log("Asset balance:", assetBalance);
-
-    if (!users || users.length === 0) {
-      console.log("No users found, exiting useEffect.");
-      return;
-    }
-
-    // Dynamically determine batch size based on user count
-    const totalUsers = users.length;
-    let batchSize;
-
-    if (totalUsers >= 10000) {
-      batchSize = 1000;
-    } else if (totalUsers >= 5000) {
-      batchSize = 500;
-    } else if (totalUsers >= 2000) {
-      batchSize = 100;
-    } else {
-      batchSize = 100; // If fewer users, process all at once
-    }
-
-    console.log(`Batch size determined: ${batchSize}`);
-
-    const userChunks = [];
-    for (let i = 0; i < totalUsers; i += batchSize) {
-      userChunks.push(users.slice(i, i + batchSize));
-    }
-
-    console.log(`Total batches created: ${userChunks.length}`);
-
-    // Limit concurrency per batch (process all batches together, but queue inside each batch)
-    const processBatchesInParallelWithQueue = async () => {
-      try {
-        await Promise.all(
-          userChunks.map(async (batch, batchIndex) => {
-            console.log(
-              `Starting Batch ${batchIndex + 1} (size: ${batch.length})`
-            );
-
-            // Each batch gets its own `p-limit(1)` to process requests **one by one** inside the batch
-            const batchQueue = pLimit(1);
-
-            await Promise.all(
-              batch.map(([principal]) =>
-                batchQueue(async () => {
-                  if (principal) {
-                    console.log(
-                      `Requesting data for: ${principal} in Batch ${batchIndex + 1
-                      }`
-                    );
-                    await fetchUserAccountDataWithCache(principal);
-                    console.log(
-                      `Completed request for: ${principal} in Batch ${batchIndex + 1
-                      }`
-                    );
-                  }
-                })
-              )
-            );
-
-            console.log(`Completed Batch ${batchIndex + 1}`);
-          })
-        );
-
-        console.log(" All batches completed!");
-      } catch (error) {
-        console.error(" Error in processing batches:", error);
-      }
-    };
-
-    processBatchesInParallelWithQueue();
-  }, [users, assetBalance]);
-  console.log("userAccountData", userAccountData)
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
 
     const updatedHealthFactors = {};
 
     Object.entries(userAccountData).forEach(([principal, data]) => {
-      if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
-        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
+      if (data?.healthFactor) {
+        updatedHealthFactors[principal] = Number(data.healthFactor) / 10000000000;
       } else {
         updatedHealthFactors[principal] = null;
       }
@@ -791,12 +660,8 @@ const DashboardCards = () => {
 
     setHealthFactors(updatedHealthFactors);
   }, [userAccountData]);
-  useEffect(() => {
-    if (users.length > 0) {
-      fetchAssetData();
-    }
-  }, [users, assets]);
-  //  Extract and update Health Factor statistics
+
+
   useEffect(() => {
     if (!healthFactors || Object.keys(healthFactors).length === 0) return;
     let lessThanOne = 0,
@@ -881,6 +746,7 @@ const DashboardCards = () => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
+        console.log("cycleValue", cycleValue)
         setCycles(cycleValue); // ✅ Set state with retrieved cycles
       } catch (error) {
         console.error("Error fetching cycles:", error);
@@ -890,13 +756,43 @@ const DashboardCards = () => {
 
     fetchCycles(); // ✅ Fetch cycles on mount
   }, []);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const usersPerPage = 10;
+        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
+
+        const data = await fetchAllUsers(totalPages, usersPerPage);
+        setAllUsers(data);
+      } catch (err) {
+        console.error("Failed to load liquidation users:", err);
+        setError("Failed to fetch users. Please try again later.");
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, [totalUsers]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await getTotalUser();
+      } catch (error) {
+        console.error("Failed to fetch total users:", error.message);
+      }
+    })();
+  }, []);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
 
   return (
     <>
-      {loading ? (
+      {usersLoading ? (
         <div className="h-[150px] flex justify-center items-center">
           <MiniLoader isLoading={true} />
         </div>
@@ -914,7 +810,7 @@ const DashboardCards = () => {
                   {card.title}
                 </h3>
                 <p className="text-4xl font-bold px-6 py-1 mt-6  text-[#233D63] dark:text-darkText">
-                  {card.value}
+                  {card.value.toString()}
                 </p>
                 <a
                   href="https://analytics.google.com"
@@ -937,14 +833,17 @@ const DashboardCards = () => {
             ))}
 
           {/*  Health Factor Card */}
-          <div className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-[40px] shadow-lg p-5 flex flex-col relative w-100 h-120 hover:shadow-2xl transition-shadow duration-300">
+          <div className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
+          text-[#233D63] dark:text-darkTextSecondary1 rounded-[40px] shadow-lg p-5 flex flex-col relative 
+          w-100 h-120 hover:shadow-2xl transition-shadow duration-300">
+
             <div className="flex items-center justify-between px-3">
               <h3 className="lg:text-lg text-sm text-nowrap font-normal px-3 lg:px-6 py-2 mt-3">
                 Health Factor
               </h3>
               <button
                 onClick={handleViewMore}
-                className="flex items-center  text-sm px-4 py-2 mt-3"
+                className="flex items-center text-sm px-4 py-2 mt-3"
               >
                 More
                 {theme === "dark" ? (
@@ -955,26 +854,34 @@ const DashboardCards = () => {
               </button>
             </div>
 
-            <div className="flex items-center justify-between w-full px-6 py-2 mt-6">
-              <div className="lg:w-32 lg:h-32 w-20 h-20 lg:ml-6">
-                <Doughnut data={pieData} options={pieOptions} />
+            {/* Show MiniLoader until pieData is available */}
+            {!pieData ? (
+              <div className="flex flex-1 items-center justify-center h-full">
+                <MiniLoader />
               </div>
-              <div className="flex flex-col space-y-5 pl-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                  <span className="text-sm dark:text-darkText">&gt;1</span>
+            ) : (
+              <div className="flex items-center justify-between w-full px-6 py-2 mt-6">
+                <div className="lg:w-32 lg:h-32 w-20 h-20 lg:ml-6">
+                  <Doughnut data={pieData} options={pieOptions} />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                  <span className="text-sm dark:text-darkText">&lt;1</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm dark:text-darkText">Infinity</span>
+                <div className="flex flex-col space-y-5 pl-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                    <span className="text-sm dark:text-darkText">&gt;1</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                    <span className="text-sm dark:text-darkText">&lt;1</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                    <span className="text-sm dark:text-darkText">Infinity</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
+
 
           {/*  Reserves Card */}
           {cardData
@@ -995,7 +902,7 @@ const DashboardCards = () => {
                 </p>
 
                 {/* Assets Row (Clickable Images) */}
-                {!loading && (
+                {!usersLoading && (
                   <div className="mt-3 flex flex-wrap justify-start gap-3 px-3">
                     {card.assets.map((asset, idx) => (
                       <button
@@ -1060,16 +967,16 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${loading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
                     }`}
                 >
-                  {loading ? <MiniLoader isLoading={true} /> : card.value}
+                  {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
 
                 {/* Threshold for Cycles */}
-                {!loading && (
+                {!usersLoading && (
                   <p className="text-sm mt-1 px-3 py-2 text-[#233D63] dark:text-darkTextSecondary1">
                     Threshold Value: <span className="font-bold">{formatNumber(threshold)}</span>
                   </p>

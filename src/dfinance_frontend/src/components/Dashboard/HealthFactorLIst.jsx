@@ -10,7 +10,8 @@ import useAssetData from "../customHooks/useAssets";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Error from "../../pages/Error";
 import { Infinity, Download } from "lucide-react";
-import * as XLSX from "xlsx"; 
+
+import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Principal } from "@dfinity/principal";
 import { idlFactory } from "../../../../declarations/dtoken";
@@ -21,6 +22,7 @@ import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useLocation } from "react-router-dom";
+import Pagination from "../Common/pagination";
 /**
  * HealthFactorList Component
  *
@@ -59,9 +61,9 @@ const HealthFactorList = () => {
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const cachedData = useRef({});
   const popupRef = useRef(null);
-  const location =useLocation();
+  const location = useLocation();
   const userAccountData = location.state?.userAccountData || {};
-  console.log("userAccountData",userAccountData)
+  console.log("userAccountData", userAccountData)
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
@@ -77,7 +79,6 @@ const HealthFactorList = () => {
     }
     try {
       const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result);
       setLike(result);
     } catch (err) {
       console.error("Error fetching controller status:", err);
@@ -97,7 +98,6 @@ const HealthFactorList = () => {
 
     try {
       const allUsers = await backendActor.get_all_users();
-      console.log("Retrieved Users:", allUsers);
 
       setUsers(allUsers);
     } catch (error) {
@@ -118,11 +118,9 @@ const HealthFactorList = () => {
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
-            console.log("reserveDataForAsset", reserveDataForAsset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
             const debtTokenId =
               reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-            console.log("dtokenId", dtokenId);
 
             const assetBalance = {
               dtokenBalance: null,
@@ -189,21 +187,19 @@ const HealthFactorList = () => {
   const fetchUserAccountDataWithCache = async (principal) => {
     if (backendActor && isAuthenticated) {
       setHealthFactorLoading(true); // Start loading indicator
-  
+
       // Convert the principal to a string for usage in the assetBalances object
       const principalString = principal.toString();
-  
+
       // Log assetBalances before proceeding to check if data is available for this principal
-      console.log("assetBalances before function:", assetBalances[principalString]);
-  
+
       const userBalance = assetBalances[principalString];
       if (!userBalance) {
         console.error("userBalance is undefined or not available for principal:", principalString);
         setHealthFactorLoading(false); // Stop loading indicator
         return; // Exit the function if userBalance is not available
       }
-      console.log("userBalance before function:", userBalance);
-  
+
       // Check if the data is already cached for this principal
       if (cachedData.current[principalString]) {
         setUserAccountData((prev) => ({
@@ -213,52 +209,47 @@ const HealthFactorList = () => {
         setHealthFactorLoading(false); // Stop loading indicator
         return;
       }
-  
+
       try {
         if (!principalString || cachedData.current[principalString]) return;
-  
+
         const principalObj = Principal.fromText(principalString);
-  
+
         // Log the state of assetBalances and userBalance for debugging
-        console.log("assetBalances for principal", principalString, ":", assetBalances);
-        console.log("assetBalances[principal]:", assetBalances[principalString]);
-        console.log("userBalance for principal:", userBalance);
-  
+
+
         // Ensure userBalance exists for the given principal
         if (!userBalance) {
           console.error("No data found for userBalance for this principal:", principalString);
           setHealthFactorLoading(false);
           return; // Exit if userBalance is still not found
         }
-  
+
         // Find the user by principal in the users array
         const user = users.find(
           ([userPrincipal]) => userPrincipal.toString() === principalString
         );
-  
+
         if (user) {
           const userInfo = user[1]; // The second element of the array (user info)
-          console.log("userInfo", userInfo);
-  
+
           // Access reserves array
           const reserves = userInfo?.reserves?.flat() || [];
-          console.log("reserves:", reserves);
-  
+
           let assetBalancesObj = [];
           let borrowBalancesObj = [];
-  
+
           // Loop through each reserve entry to fetch the asset and balance info
           reserves.forEach(([asset, assetInfo]) => {
-            console.log("assetInfo:", assetInfo);
-  
+
+
             // Extract asset balance and borrow balance for each asset in the reserves
             const assetBalance = BigInt(userBalance?.[asset]?.dtokenBalance || 0);
             const borrowBalance = BigInt(userBalance?.[asset]?.debtTokenBalance || 0);
-  
+
             // Log assetBalance and borrowBalance for debugging
-            console.log(`assetBalance for ${asset}:`, assetBalance);
-            console.log(`borrowBalance for ${asset}:`, borrowBalance);
-  
+
+
             // Only include non-zero balances for asset and borrow
             if (assetBalance > 0n) {
               assetBalancesObj.push({
@@ -273,28 +264,26 @@ const HealthFactorList = () => {
               });
             }
           });
-  
-          console.log("Asset Balances Set:", assetBalancesObj);
-          console.log("Borrow Balances Set:", borrowBalancesObj);
-  
+
+
+
           const assetBalancesParam = assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
           const borrowBalancesParam = borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
-  
+
           // Call backend with separate sets for asset and borrow balances
           const result = await backendActor.get_user_account_data(
             [], // Pass the principal (empty array for the first parameter)
             assetBalancesParam, // Pass asset balances wrapped in an array
             borrowBalancesParam // Pass borrow balances wrapped in an array
           );
-  
-          console.log("Backend result:", result);
-  
+
+
           if (result?.Err === "ERROR :: Pending") {
             console.warn("Pending state detected. Retrying...");
             setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
             return;
           }
-  
+
           // Store the result in cache and update user account data
           if (result?.Ok) {
             cachedData.current[principalString] = result;
@@ -313,39 +302,28 @@ const HealthFactorList = () => {
       }
     }
   };
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   const showSearchBar = () => {
     setShowSearch(!showSearch);
   };
 
-  console.log("users", users);
 
- 
-
-  console.log("assetBalances", assetBalances);
 
   const openPopup = (principal, data) => {
-    if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
+    console.log("principal,", principal, data)
+    // if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
     const extractedData = {
       principal,
-      totalCollateral: Number(data.Ok[0]) / 1e8,
-      totalDebt: Number(data.Ok[1]) / 1e8,
-      liquidationThreshold: Number(data.Ok[2]) / 1e8,
-      availableBorrow: Number(data.Ok[5]) / 1e8,
+      totalCollateral: Number(data.collateral) / 1e8,
+      totalDebt: Number(data.debt) / 1e8,
+      liquidationThreshold: Number(data.liquidationThreshold) / 1e8,
+      availableBorrow: Number(data.availableBorrow) / 1e8,
       healthFactor:
-        Number(data.Ok[4]) === 340282366920938463463374607431768211455n
+        Number(data.healthFactor) === 340282366920938463463374607431768211455n
           ? "∞"
-          : Math.trunc((Number(data.Ok[4]) / 10000000000)*100)/100,
-      
+          : Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100,
     };
+
 
     setSelectedUser(extractedData);
   };
@@ -373,10 +351,9 @@ const HealthFactorList = () => {
   // ✅ Get filtered users first (before pagination)
   const filteredUsers = Object.entries(userAccountData).filter(
     ([principal, data]) => {
-      if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7)
-        return false;
+      if (!data || !data.healthFactor) return false;
 
-      const healthFactor = Math.trunc((Number(data.Ok[4]) / 1e10)*100)/100;
+      const healthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
       const principalStr = principal.toLowerCase();
 
       const matchesSearch =
@@ -393,6 +370,10 @@ const HealthFactorList = () => {
       return matchesSearch && matchesFilter;
     }
   );
+  console.log("filteredUsers", filteredUsers)
+  // Set filtered users accordingly
+
+
 
   // ✅ Ensure currentPage doesn't exceed total pages when filtering
   useEffect(() => {
@@ -422,65 +403,68 @@ const HealthFactorList = () => {
       return;
     }
 
-    
+
     const data = Object.entries(userAccountData).map(([principal, user]) => ({
       Principal: principal,
-      "Total Collateral": user.Ok
-        ? (Number(user.Ok[0]) / 1e8).toFixed(2)
-        : "N/A",
-      "Total Debt": user.Ok ? (Number(user.Ok[1]) / 1e8).toFixed(2) : "N/A",
-      "Available Borrow": user.Ok
-        ? (Number(user.Ok[5]) / 1e8).toFixed(2)
-        : "N/A",
-      "Liquidation Threshold": user.Ok
-        ? (Number(user.Ok[2]) / 1e8).toFixed(2)
-        : "N/A",
+      "Total Collateral": user.collateral
+        ? (Number(user.collateral) / 1e8).toFixed(2)
+        : "0",
+      "Total Debt": user.debt
+        ? (Number(user.debt) / 1e8).toFixed(2)
+        : "0",
+      "Available Borrow": user.availableBorrow
+        ? (Number(user.availableBorrow) / 1e8).toFixed(2)
+        : "0",
+      "Liquidation Threshold": user.liquidationThreshold
+        ? (Number(user.liquidationThreshold) / 1e8).toFixed(2)
+        : "0",
       "Health Factor":
-        user.Ok && Number(user.Ok[4]) >= 3.4028236692093848e28
+        user.healthFactor && Number(user.healthFactor) >= 3.4028236692093848e28
           ? "Infinity"
-          : user.Ok
-          ? Math.trunc((Number(user.Ok[4]) / 1e10)*100)/100
-          : "N/A",
-
+          : user.healthFactor
+            ? Math.trunc((Number(user.healthFactor) / 1e10) * 100) / 100
+            : "0",
     }));
 
-    
+
+
+
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Users Data");
 
-    
+
     worksheet["!cols"] = [
-      { wch: 60 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
-      { wch: 25 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
+      { wch: 60 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 20 },
     ];
 
-    
+
     worksheet["!freeze"] = { xSplit: 0, ySplit: 1 };
 
-   
+
     worksheet["!autofilter"] = { ref: "A1:G1" };
 
-    
+
     const range = XLSX.utils.decode_range(worksheet["!ref"]);
     for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell_address = XLSX.utils.encode_cell({ r: 0, c: C }); 
+      const cell_address = XLSX.utils.encode_cell({ r: 0, c: C });
       if (!worksheet[cell_address]) continue;
 
-     
+
       worksheet[cell_address].s = {
-        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } }, 
-        fill: { fgColor: { rgb: "4F81BD" } }, 
+        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "4F81BD" } },
         alignment: { horizontal: "center", vertical: "center" },
       };
     }
 
-   
+
     const fileName = `User_Health_Factors_${new Date()
       .toISOString()
       .replace(/[:.]/g, "-")}.xlsx`;
@@ -488,7 +472,7 @@ const HealthFactorList = () => {
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
-      cellStyles: true, 
+      cellStyles: true,
     });
 
     const dataBlob = new Blob([excelBuffer], {
@@ -516,7 +500,7 @@ const HealthFactorList = () => {
 
     const data = reserves.flat().map(([asset, assetInfo]) => {
       const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n) / 1e8;
-  const currentDebtIndex = Number(assetInfo?.variable_borrow_index ?? 0n) / 1e8;
+      const currentDebtIndex = Number(assetInfo?.variable_borrow_index ?? 0n) / 1e8;
 
       const userAssetBalance = assetBalances[selectedUser.principal]?.[
         asset
@@ -525,8 +509,8 @@ const HealthFactorList = () => {
         debtTokenBalance: 0,
       };
 
-      const assetBalance = Number(userAssetBalance.dtokenBalance)/1e8 || 0;
-      const debtBalance = Number(userAssetBalance.debtTokenBalance)/1e8 || 0;
+      const assetBalance = Number(userAssetBalance.dtokenBalance) / 1e8 || 0;
+      const debtBalance = Number(userAssetBalance.debtTokenBalance) / 1e8 || 0;
 
       const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
       const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
@@ -551,7 +535,7 @@ const HealthFactorList = () => {
       };
     });
 
-    
+
     const overviewData = [
       {
         Principal: selectedUser.principal,
@@ -563,64 +547,64 @@ const HealthFactorList = () => {
       },
     ];
 
-   
+
     const workbook = XLSX.utils.book_new();
 
-   
+
     const overviewSheet = XLSX.utils.json_to_sheet(overviewData);
     XLSX.utils.book_append_sheet(workbook, overviewSheet, "Overview");
 
-    
+
     const reservesSheet = XLSX.utils.json_to_sheet(data);
     XLSX.utils.book_append_sheet(workbook, reservesSheet, "User Reserves");
 
-  
+
     const overviewColumnWidths = [
-      { wch: 60 }, 
-      { wch: 20 }, 
+      { wch: 60 },
       { wch: 20 },
-      { wch: 20 }, 
-      { wch: 25 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 25 },
+      { wch: 20 },
+      { wch: 20 },
     ];
 
     const reservesColumnWidths = [
-      { wch: 60 }, 
-      { wch: 20 }, 
-      { wch: 18 }, 
-      { wch: 22 }, 
-      { wch: 20 }, 
-      { wch: 20 }, 
+      { wch: 60 },
+      { wch: 20 },
+      { wch: 18 },
+      { wch: 22 },
+      { wch: 20 },
+      { wch: 20 },
     ];
 
     overviewSheet["!cols"] = overviewColumnWidths;
     reservesSheet["!cols"] = reservesColumnWidths;
-    
+
     Object.keys(overviewSheet).forEach((cell) => {
       if (cell.match(/^[A-Z]1$/)) {
-        
+
         overviewSheet[cell].s = { font: { bold: true } };
       }
     });
 
-    
+
     Object.keys(reservesSheet).forEach((cell) => {
       if (cell.match(/^[A-Z]1$/)) {
-       
+
         reservesSheet[cell].s = { font: { bold: true } };
       }
     });
 
-   
-    overviewSheet["!autofilter"] = { ref: "A1:G1" }; 
-    overviewSheet["!freeze"] = { xSplit: 0, ySplit: 1 }; 
 
-   
+    overviewSheet["!autofilter"] = { ref: "A1:G1" };
+    overviewSheet["!freeze"] = { xSplit: 0, ySplit: 1 };
+
+
     reservesSheet["!autofilter"] = { ref: "A1:F1" };
     reservesSheet["!freeze"] = { xSplit: 0, ySplit: 1 };
 
-    
+
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
@@ -723,14 +707,12 @@ const HealthFactorList = () => {
                 batchQueue(async () => {
                   if (principal) {
                     console.log(
-                      `Requesting data for: ${principal} in Batch ${
-                        batchIndex + 1
+                      `Requesting data for: ${principal} in Batch ${batchIndex + 1
                       }`
                     );
                     await fetchUserAccountDataWithCache(principal);
                     console.log(
-                      `Completed request for: ${principal} in Batch ${
-                        batchIndex + 1
+                      `Completed request for: ${principal} in Batch ${batchIndex + 1
                       }`
                     );
                   }
@@ -751,13 +733,13 @@ const HealthFactorList = () => {
     processBatchesInParallelWithQueue();
   }, [users, assetBalances]);
 
-  
+
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
     const updatedHealthFactors = {};
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
-        updatedHealthFactors[principal] = Math.trunc((Number(data.Ok[4]) / 1e10)*100)/100;
+        updatedHealthFactors[principal] = Math.trunc((Number(data.Ok[4]) / 1e10) * 100) / 100;
       } else {
         updatedHealthFactors[principal] = null;
       }
@@ -787,7 +769,7 @@ const HealthFactorList = () => {
     }
 
   }, [users, assets]);
-  
+
   useEffect(() => {
     if (selectedUser) {
       document.body.style.overflow = "hidden";
@@ -799,7 +781,7 @@ const HealthFactorList = () => {
         if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7)
           return false;
 
-        const healthFactor =Math.trunc((Number(data.Ok[4]) / 1e10)*100)/100;
+        const healthFactor = Math.trunc((Number(data.Ok[4]) / 1e10) * 100) / 100;
         const principalStr = principal.toLowerCase();
 
         const matchesSearch =
@@ -940,11 +922,10 @@ const HealthFactorList = () => {
                 name="search"
                 id="search"
                 placeholder="Search assets"
-                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${
-                  showSearch
-                    ? "animate-fade-left flex"
-                    : "animate-fade-right hidden"
-                }`}
+                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${showSearch
+                  ? "animate-fade-left flex"
+                  : "animate-fade-right hidden"
+                  }`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -1059,19 +1040,19 @@ const HealthFactorList = () => {
                 </thead>
                 <tbody>
                   {paginatedUsers.map(([principal, data], index) => {
-                    const totalCollateral = Number(data.Ok[0]) / 1e8;
-                    const totalDebt = Number(data.Ok[1]) / 1e8;
-                    const healthFactor = Math.trunc((Number(data.Ok[4]) / 1e10)*100)/100;
-                   console.log("healthFactor",Math.trunc((Number(data.Ok[4]) / 1e10)*100)/100)
+                    if (!data) return null; // Ensure data exists
+
+                    const totalCollateral = Number(data.collateral) / 1e8;
+                    const totalDebt = Number(data.debt) / 1e8;
+                    const healthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
+
                     return (
                       <tr
                         key={index}
                         className="w-full font-bold hover:bg-[#ddf5ff8f] border-b border-gray-300"
                       >
                         <td className="px-1 py-6 text-left">
-                          {principal.length > 20
-                            ? `${principal.substring(0, 20)}...`
-                            : principal}
+                          {principal.length > 20 ? `${principal.substring(0, 20)}...` : principal}
                         </td>
                         <td className="px-3 py-6 hidden sm:table-cell text-center">
                           ${totalCollateral.toFixed(2)}
@@ -1081,33 +1062,35 @@ const HealthFactorList = () => {
                         </td>
                         <td className="px-3 py-6 text-center">
                           <span
-                            className={` ${
-                              healthFactor > 100
+                            className={`flex items-center justify-center gap-1 ${healthFactor > 100
                                 ? "text-yellow-500"
                                 : healthFactor === 0
-                                ? "text-red-500"
-                                : healthFactor > 3
-                                ? "text-green-500"
-                                : healthFactor <= 1
-                                ? "text-red-500"
-                                : healthFactor <= 1.5
-                                ? "text-orange-600"
-                                : healthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                            }`}
+                                  ? "text-red-500"
+                                  : healthFactor > 3
+                                    ? "text-green-500"
+                                    : healthFactor <= 1
+                                      ? "text-red-500"
+                                      : healthFactor <= 1.5
+                                        ? "text-orange-600"
+                                        : healthFactor <= 2
+                                          ? "text-orange-400"
+                                          : "text-orange-300"
+                              }`}
                           >
-                            {healthFactor > 100
-                              ? "♾️"
-                              : healthFactor.toFixed(2)}
+                            {healthFactor > 100 ? (
+                              <>
+                                <Infinity className="w-4 h-4 dark:text-darkText text-[#2A1F9D]" />
+
+                              </>
+                            ) : (
+                              healthFactor.toFixed(2)
+                            )}
                           </span>
                         </td>
 
                         <td className="px-3 py-6 text-end">
                           <button
-                            onClick={() =>
-                              openPopup(principal, data, healthFactor)
-                            }
+                            onClick={() => openPopup(principal, data, healthFactor)}
                             className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white px-5 py-1 text-xs rounded-md hover:bg-opacity-80 transition"
                           >
                             More
@@ -1117,7 +1100,17 @@ const HealthFactorList = () => {
                     );
                   })}
                 </tbody>
+
               </table>
+            </div>
+            <div className="w-full flex justify-center mt-10">
+              <div id="pagination" className="flex gap-2">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -1191,7 +1184,7 @@ const HealthFactorList = () => {
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /
-                          (currentLiquidity * 1e8)
+                        (currentLiquidity * 1e8)
                         : 0;
 
                     const assetBorrow =
@@ -1207,14 +1200,14 @@ const HealthFactorList = () => {
                             asset === "ckBTC"
                               ? ckBTC
                               : asset === "ckETH"
-                              ? ckETH
-                              : asset === "ckUSDC"
-                              ? ckUSDC
-                              : asset === "ICP"
-                              ? icp
-                              : asset === "ckUSDT"
-                              ? ckUSDT
-                              : undefined
+                                ? ckETH
+                                : asset === "ckUSDC"
+                                  ? ckUSDC
+                                  : asset === "ICP"
+                                    ? icp
+                                    : asset === "ckUSDT"
+                                      ? ckUSDT
+                                      : undefined
                           }
                           alt={asset}
                           className="w-8 h-8 rounded-full"

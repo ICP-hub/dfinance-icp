@@ -67,7 +67,6 @@ const HealthFactorList = () => {
     }
     try {
       const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result);
       setLike(result);
     } catch (err) {
       console.error("Error fetching controller status:", err);
@@ -87,7 +86,6 @@ const HealthFactorList = () => {
 
     try {
       const allUsers = await backendActor.get_all_users();
-      console.log("Retrieved Users:", allUsers);
 
       if (allUsers.length > 0) {
         setUsers(allUsers);
@@ -112,11 +110,9 @@ const HealthFactorList = () => {
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
-            console.log("reserveDataForAsset", reserveDataForAsset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
             const debtTokenId =
               reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-            console.log("dtokenId", dtokenId);
 
             const assetBalance = {
               dtokenBalance: null,
@@ -173,6 +169,7 @@ const HealthFactorList = () => {
       await processUsersInBatches(batch);
     }
   };
+
   /**
    * This function fetches the user account data for a specific principal. It uses caching to avoid fetching data
    * for the same principal multiple times. The fetched data is stored in the `cachedData` ref.
@@ -185,19 +182,19 @@ const HealthFactorList = () => {
   };
 
   const openPopup = (principal, data) => {
-    if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
-    const extractedData = {
-      principal,
-      totalCollateral: Number(data.Ok[0]) / 1e8,
-      totalDebt: Number(data.Ok[1]) / 1e8,
-      liquidationThreshold: Number(data.Ok[2]) / 1e8,
+    console.log("principal", principal);
+    console.log("data", data);
+    const rawHealthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
 
-      healthFactor:
-        Number(data.Ok[4]) === 340282366920938463463374607431768211455n
-          ? "∞"
-          : (Number(data.Ok[4]) / 100000000000).toFixed(2),
-      availableBorrow: Number(data.Ok[5]) / 1e8,
-    };
+const extractedData = {
+  principal,
+  totalCollateral: Number(data.collateral) / 1e8,
+  totalDebt: Number(data.debt) / 1e8,
+  liquidationThreshold: Number(data.liquidationThreshold) / 1e8,
+  availableBorrow: Number(data.availableBorrow) / 1e8,
+  healthFactor: rawHealthFactor < 100 ? rawHealthFactor : "Infinity",
+};
+
 
     setSelectedUser(extractedData);
   };
@@ -211,10 +208,9 @@ const HealthFactorList = () => {
   // ✅ Get filtered users first (before pagination)
   const filteredUsers = Object.entries(userAccountData).filter(
     ([principal, data]) => {
-      if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7)
-        return false;
+      if (!data || !data.healthFactor) return false;
 
-      const healthFactor = Number(data.Ok[4]) / 1e10;
+      const healthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
       const principalStr = principal.toLowerCase();
 
       const matchesSearch =
@@ -252,7 +248,6 @@ const HealthFactorList = () => {
       setCurrentPage(newPage);
     }
   };
-  console.log("paginatedUsers", paginatedUsers);
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -508,9 +503,9 @@ const HealthFactorList = () => {
                 </thead>
                 <tbody>
                   {paginatedUsers.map(([principal, data], index) => {
-                    const totalCollateral = Number(data.Ok[0]) / 1e8;
-                    const totalDebt = Number(data.Ok[1]) / 1e8;
-                    const healthFactor = Number(data.Ok[4]) / 1e10;
+                    const totalCollateral = Number(data.collateral) / 1e8;
+                    const totalDebt = Number(data.debt) / 1e8;
+                    const healthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
 
                     return (
                       <tr

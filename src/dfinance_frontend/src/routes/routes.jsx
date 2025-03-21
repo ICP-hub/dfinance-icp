@@ -13,8 +13,8 @@ import DashboardCards from "../pages/info/info"
 import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
 import DebtStatus from "../components/Liquidate/DebtStatus"
-const ADMIN_ROUTE = process.env.DFX_ADMIN || "/default";
-const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE || "/default";
+const ADMIN_ROUTE = process.env.DFX_ADMIN ;
+const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE ;
 
 export default [
   {

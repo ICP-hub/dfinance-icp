@@ -12,7 +12,7 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{get_cached_exchange_rate, reserve_ledger_canister_id};
+use crate::{get_cached_exchange_rate, reserve_ledger_canister_id, get_asset_debt};
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -551,6 +551,27 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         ic_cdk::println!("token fee = {}", transfer_token_fee);
         params.amount = params.amount - transfer_token_fee.clone();
         ic_cdk::println!("amount = {}", params.amount);
+
+
+        // let user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
+        let user_current_debt =
+            match get_asset_debt(params.asset.clone(), Some(user_principal)).await {
+                Ok(debt) => debt,
+                Err(e) => {
+                    // Log the error or perform a fallback action
+                    ic_cdk::println!("Error getting asset debt: {:?}", e);
+                    return Err(e.into()); // Or handle the error accordingly
+                }
+            };
+        ic_cdk::println!("User current debt: {:?}", user_current_debt);
+        if user_current_debt == Nat::from(0u128) {
+            return Err(Error::NoDebtToRepay);
+        }
+        
+
+        if params.amount.clone() > user_current_debt {
+            return Err(Error::RepayMoreThanDebt);
+        }
 
         // let adjusted_amount = if params.amount.clone() % reserve_cache.next_debt_index.clone()
         //     != Nat::from(0u128)

@@ -511,11 +511,11 @@ const Repay = ({
     let selectedBalance;
     // If wallet funds (supplyBalance) exceed the assetBorrow,
     // then ensure you subtract the fee from assetBorrow.
-    if (supplyBalance >= assetBorrow) {
-      selectedBalance = Number(assetBorrow) - fee;
+    if (supplyBalance >= (assetBorrow + fee)) {
+      selectedBalance = Number(assetBorrow);
     } else {
       // Otherwise, supplyBalance already factors in the fee
-      selectedBalance = supplyBalance;
+      selectedBalance = supplyBalance - fee;
     }
     // Clamp to 0 if the subtraction produces a negative value
     if (selectedBalance < 0) selectedBalance = 0;
@@ -729,8 +729,8 @@ const Repay = ({
                         {(
                           assetBorrow - (amount?.replace(/,/g, "") || "")
                         ).toLocaleString(undefined, {
-                          minimumFractionDigits: 7,
-                          maximumFractionDigits: 7,
+                          minimumFractionDigits: 8,
+                          maximumFractionDigits: 8,
                         })}{" "}
                         Max
                       </p>
@@ -791,7 +791,7 @@ const Repay = ({
                     <p>Final amount</p>
                     <div className="flex items-center gap-2">
                       <p>
-                        {amount ? (+amount || 0) + (+transferFee || 0) : 0}{" "}
+                        {(amount ? (+amount || 0) + (+transferFee || 0) : 0).toFixed(8)}{" "}
                       </p>
                       <img
                         src={image}

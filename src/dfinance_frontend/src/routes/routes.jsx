@@ -9,12 +9,9 @@ import StakeDetails from "../pages/Stake/Stake"
 import Faucet from "../pages/Faucet/faucet"
 import TransactionDetail from "../components/Dashboard/Transaction"
 import Liquidate from "../components/Liquidate/Liquidate"
-import DashboardCards from "../pages/info/info"
-import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
 import { Outlet } from "react-router-dom";
 import DebtStatus from "../components/Liquidate/DebtStatus"
-const ADMIN_ROUTE = process.env.DFX_ADMIN || "/default";
-const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE || "/default";
+
 
 export default [
   {
@@ -30,25 +27,6 @@ export default [
       </MainDashboard>
     ),
   },
-  {
-    path: ADMIN_ROUTE,  
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        <Outlet /> 
-      </MainDashboard>
-    ),
-    children: [
-      {
-        index: true, 
-        element: <DashboardCards />,
-      },
-      {
-        path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""), 
-        element: <HealthFactorList />,
-      },
-    ],
-  },
-  
   {
     path: "/dashboard",
     element: (

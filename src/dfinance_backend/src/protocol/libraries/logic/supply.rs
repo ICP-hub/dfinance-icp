@@ -428,29 +428,29 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("Withdraw validated successfully");
 
-        let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
+        // let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+        //     Ok(price) => price,
+        //     Err(e) => {
+        //         ic_cdk::println!("Failed to fetch exchange rate");
+        //         return Err(e);
+        //     }
+        // };
 
-        ic_cdk::println!("asset price = {}",asset_price);
+        // ic_cdk::println!("asset price = {}",asset_price);
 
-        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-        ic_cdk::println!("amount = {}",params.amount);
-        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+        // let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+        // ic_cdk::println!("amount = {}",params.amount);
+        // ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
 
-        if params.amount.clone() < transfer_token_fee {
-            ic_cdk::println!("Amount is less than the transfer token fee");
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(Error::FeeExceedsAmount);
-        }
+        // if params.amount.clone() < transfer_token_fee {
+        //     ic_cdk::println!("Amount is less than the transfer token fee");
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(Error::FeeExceedsAmount);
+        // }
 
-        let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
+        let withdraw_amount = params.amount.clone();
         // let withdraw_amount = params.amount.clone();
         ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
 

@@ -86,7 +86,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         }
     }
 
-    let mut index: Nat = Nat::from(0u128);
+    // let mut index: Nat = Nat::from(0u128);
 
     let result = async {
         let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
@@ -197,33 +197,33 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("Interest rates updated successfully");
 
-        index = reserve_cache.next_liquidity_index.clone();
-        ic_cdk::println!("reserve cache index {}", index);
-        let amount = params.amount.clone();
+        // index = reserve_cache.next_liquidity_index.clone();
+        // ic_cdk::println!("reserve cache index {}", index);
+        // let amount = params.amount.clone();
 
-        let adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
-            && amount.clone() < Nat::from(10u128)
-        {
-            let scaled = amount.clone().scaled_div(index.clone());
-            ic_cdk::println!("Scaled amount before rounding up: {}", scaled);
-            scaled + Nat::from(1u128) // Round up if there's a remainder
-        } else {
-            let scaled = amount.clone().scaled_div(index.clone());
-            ic_cdk::println!("Scaled amount without rounding: {}", scaled);
-            scaled
-        };
+        // let adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
+        //     && amount.clone() < Nat::from(10u128)
+        // {
+        //     let scaled = amount.clone().scaled_div(index.clone());
+        //     ic_cdk::println!("Scaled amount before rounding up: {}", scaled);
+        //     scaled + Nat::from(1u128) // Round up if there's a remainder
+        // } else {
+        //     let scaled = amount.clone().scaled_div(index.clone());
+        //     ic_cdk::println!("Scaled amount without rounding: {}", scaled);
+        //     scaled
+        // };
 
         // if let Err(e) = lock_amount(&params.asset, &adjusted_amount) {
         //     ic_cdk::println!("Lock acquisition failed: {:?}", e);
         //     return Err(Error::AmountLockAcquisitionFailed);
         // }
 
-        if let Err(e) = lock_transaction_amount(&params.asset, &adjusted_amount) {
-            ic_cdk::println!("Lock acquisition failed: {:?}", e);
-            return Err(Error::AmountLockAcquisitionFailed);
-        }
+        // if let Err(e) = lock_transaction_amount(&params.asset, &adjusted_amount) {
+        //     ic_cdk::println!("Lock acquisition failed: {:?}", e);
+        //     return Err(Error::AmountLockAcquisitionFailed);
+        // }
 
-        ic_cdk::println!("amount locked");
+        // ic_cdk::println!("amount locked");
 
         if let Err(e) = UpdateLogic::update_user_data_supply(
             user_principal,
@@ -301,21 +301,21 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     //     "to check updated user reserve data = {:?}",
     //     user_reserve_data
     // );
-    let amount = params.amount.clone();
+    // let amount = params.amount.clone();
 
-    ic_cdk::println!("at the end index value = {}", index);
+    // ic_cdk::println!("at the end index value = {}", index);
 
-    let adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
-        && amount.clone() < Nat::from(10u128)
-    {
-        let scaled = amount.clone().scaled_div(index.clone());
-        ic_cdk::println!("Scaled amount before rounding up: {}", scaled);
-        scaled + Nat::from(1u128) // Round up if there's a remainder
-    } else {
-        let scaled = amount.clone().scaled_div(index.clone());
-        ic_cdk::println!("Scaled amount without rounding: {}", scaled);
-        scaled
-    };
+    // let adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
+    //     && amount.clone() < Nat::from(10u128)
+    // {
+    //     let scaled = amount.clone().scaled_div(index.clone());
+    //     ic_cdk::println!("Scaled amount before rounding up: {}", scaled);
+    //     scaled + Nat::from(1u128) // Round up if there's a remainder
+    // } else {
+    //     let scaled = amount.clone().scaled_div(index.clone());
+    //     ic_cdk::println!("Scaled amount without rounding: {}", scaled);
+    //     scaled
+    // };
 
     // Release the lock
     if let Err(e) = release_lock(&operation_key) {
@@ -323,10 +323,10 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         return Err(e);
     }
 
-    if let Err(e) = release_transaction_lock(&params.asset, &adjusted_amount) {
-        ic_cdk::println!("Lock acquisition failed: {:?}", e);
-        return Err(Error::AmountLockAcquisitionFailed);
-    }
+    // if let Err(e) = release_transaction_lock(&params.asset, &adjusted_amount) {
+    //     ic_cdk::println!("Lock acquisition failed: {:?}", e);
+    //     return Err(Error::AmountLockAcquisitionFailed);
+    // }
 
     // if let Err(e) = release_amount(&params.asset, &params.amount) {
     //     ic_cdk::println!("Lock acquisition failed: {:?}", e);
@@ -512,29 +512,29 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("Withdraw validated successfully");
 
-        let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
+        // let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+        //     Ok(price) => price,
+        //     Err(e) => {
+        //         ic_cdk::println!("Failed to fetch exchange rate");
+        //         return Err(e);
+        //     }
+        // };
 
-        ic_cdk::println!("asset price = {}",asset_price);
+        // ic_cdk::println!("asset price = {}",asset_price);
 
-        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-        ic_cdk::println!("amount = {}",params.amount);
-        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+        // let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+        // ic_cdk::println!("amount = {}",params.amount);
+        // ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
 
-        if params.amount.clone() < transfer_token_fee {
-            ic_cdk::println!("Amount is less than the transfer token fee");
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(Error::FeeExceedsAmount);
-        }
+        // if params.amount.clone() < transfer_token_fee {
+        //     ic_cdk::println!("Amount is less than the transfer token fee");
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(Error::FeeExceedsAmount);
+        // }
 
-        let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
+        let withdraw_amount = params.amount.clone();
         // let withdraw_amount = params.amount.clone();
         ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
 

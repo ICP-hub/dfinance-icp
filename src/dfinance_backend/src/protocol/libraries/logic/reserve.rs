@@ -598,10 +598,10 @@ pub async fn mint_scaled(
             user_state.d_token_balance += adjusted_amount.clone();
         }
         ic_cdk::println!("new dtoken balance {}", user_state.d_token_balance);
-        // reserve.asset_supply += adjusted_amount;
         ic_cdk::println!("before updating asset supply = {:?}", reserve.asset_supply);
-        ic_cdk::println!("locked amount = {:?}", get_locked_transaction_amount(&reserve.asset_name.clone().unwrap()));
-        reserve.asset_supply += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
+        reserve.asset_supply += adjusted_amount;
+        // ic_cdk::println!("locked amount = {:?}", get_locked_transaction_amount(&reserve.asset_name.clone().unwrap()));
+        // reserve.asset_supply += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
         ic_cdk::println!("updated asset supply {}", reserve.asset_supply);
         user_state.liquidity_index = index;
 
@@ -631,8 +631,8 @@ pub async fn mint_scaled(
         }
 
         println!("new debt balance {}", user_state.debt_token_blance);
-        // reserve.asset_borrow +=adjusted_amount;
-        reserve.asset_borrow += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
+        reserve.asset_borrow +=adjusted_amount;
+        // reserve.asset_borrow += get_locked_transaction_amount(&reserve.asset_name.clone().unwrap());
         user_state.variable_borrow_index = index;
         println!("new debt index {}", user_state.variable_borrow_index);
     }

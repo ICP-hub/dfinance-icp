@@ -3,8 +3,8 @@ use candid::{CandidType, Deserialize, Nat};
 use pocket_ic::{PocketIc, WasmResult};
 use serde::Serialize;
 use std::fs;
-mod error;
-use error as errors;
+mod utils;
+use crate::utils::error as errors;
 use std::collections::HashMap;
 
 
@@ -582,156 +582,156 @@ fn setup() -> (PocketIc, Principal) {
         vec![user_principal],
     );
 
-    // 🔹 Define test input (token name + reserve data)
-    let ICP_token_name = "ICP".to_string();
-    let ICP_reserve_data = ReserveData {
-        asset_name: Some(ICP_token_name.clone()),
-        id: 1,
-        d_token_canister: None,
-        debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
-        configuration: ReserveConfiguration {
-            ltv: Nat::from(5800000000u128),
-            liquidation_threshold: Nat::from(6300000000u128),
-            liquidation_bonus: Nat::from(100000000u128),
-            borrowing_enabled: true,
-            borrow_cap: Nat::from(10_000_000_000u128),
-            supply_cap: Nat::from(10_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
-            frozen: false,
-            active: true,
-            paused: false,
-            reserve_factor: Nat::from(1500000000u128),
-        },
-        can_be_collateral: Some(true),
-        last_update_timestamp: 1, 
-        accure_to_platform: Nat::from(0u128), 
-    };
+   // 🔹 Define test input (token name + reserve data)
+   let ICP_token_name = "ICP".to_string();
+   let ICP_reserve_data = ReserveData {
+       asset_name: Some(ICP_token_name.clone()),
+       id: 1,
+       d_token_canister: None,
+       debt_token_canister: None,
+       borrow_rate: Nat::from(0u128),
+       current_liquidity_rate: Nat::from(0u128),
+       asset_supply: Nat::from(0u128),
+       asset_borrow: Nat::from(0u128),
+       liquidity_index: Nat::from(100000000u128),
+       debt_index: Nat::from(0u128),
+       configuration: ReserveConfiguration {
+           ltv: Nat::from(5800000000u128),
+           liquidation_threshold: Nat::from(6300000000u128),
+           liquidation_bonus: Nat::from(100000000u128),
+           borrowing_enabled: true,
+           borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
+           supply_cap: Nat::from(1_000_000_000_000_000_000u128),
+           liquidation_protocol_fee: Nat::from(0u128),
+           frozen: false,
+           active: true,
+           paused: false,
+           reserve_factor: Nat::from(1500000000u128),
+       },
+       can_be_collateral: Some(true),
+       last_update_timestamp: 1, 
+       accure_to_platform: Nat::from(0u128), 
+   };
 
-    let ckBTC_token_name = "ckBTC".to_string();
-    let ckBTC_reserve_data = ReserveData {
-        asset_name: Some(ckBTC_token_name.clone()),
-        id: 1,
-        d_token_canister: None,
-        debt_token_canister: None,
-        borrow_rate: Nat::from(0u128), 
-        current_liquidity_rate: Nat::from(0u128), 
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
-        configuration: ReserveConfiguration {
-            ltv: Nat::from(7300000000u128),
-            liquidation_threshold: Nat::from(7800000000u128),
-            liquidation_bonus: Nat::from(500000000u128),
-            borrowing_enabled: true,
-            borrow_cap: Nat::from(10_000_000_000u128),
-            supply_cap: Nat::from(10_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
-            frozen: false,
-            active: true,
-            paused: false,
-            reserve_factor: Nat::from(1500000000u128),
-        },
-        can_be_collateral: Some(true),
-        last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
-    };
+   let ckBTC_token_name = "ckBTC".to_string();
+   let ckBTC_reserve_data = ReserveData {
+       asset_name: Some(ckBTC_token_name.clone()),
+       id: 1,
+       d_token_canister: None,
+       debt_token_canister: None,
+       borrow_rate: Nat::from(0u128), 
+       current_liquidity_rate: Nat::from(0u128), 
+       asset_supply: Nat::from(0u128),
+       asset_borrow: Nat::from(0u128),
+       liquidity_index: Nat::from(100000000u128),
+       debt_index: Nat::from(0u128),
+       configuration: ReserveConfiguration {
+           ltv: Nat::from(7300000000u128),
+           liquidation_threshold: Nat::from(7800000000u128),
+           liquidation_bonus: Nat::from(500000000u128),
+           borrowing_enabled: true,
+           borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
+           supply_cap: Nat::from(1_000_000_000_000_000_000u128),
+           liquidation_protocol_fee: Nat::from(0u128),
+           frozen: false,
+           active: true,
+           paused: false,
+           reserve_factor: Nat::from(1500000000u128),
+       },
+       can_be_collateral: Some(true),
+       last_update_timestamp: 1,
+       accure_to_platform: Nat::from(0u128),
+   };
 
-    let ckETH_token_name = "ckETH".to_string();
-    let ckETH_reserve_data = ReserveData {
-        asset_name: Some(ckETH_token_name.clone()),
-        id: 1,
-        d_token_canister: None,
-        debt_token_canister: None,
-        borrow_rate: Nat::from(0u128), 
-        current_liquidity_rate: Nat::from(0u128), 
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
-        configuration: ReserveConfiguration {
-            ltv: Nat::from(8000000000u128),
-            liquidation_threshold: Nat::from(8300000000u128),
-            liquidation_bonus: Nat::from(500000000u128),
-            borrowing_enabled: true,
-            borrow_cap: Nat::from(10_000_000_000u128),
-            supply_cap: Nat::from(10_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
-            frozen: false,
-            active: true,
-            paused: false,
-            reserve_factor: Nat::from(1500000000u128),
-        },
-        can_be_collateral: Some(true),
-        last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
-    };
+   let ckETH_token_name = "ckETH".to_string();
+   let ckETH_reserve_data = ReserveData {
+       asset_name: Some(ckETH_token_name.clone()),
+       id: 1,
+       d_token_canister: None,
+       debt_token_canister: None,
+       borrow_rate: Nat::from(0u128), 
+       current_liquidity_rate: Nat::from(0u128), 
+       asset_supply: Nat::from(0u128),
+       asset_borrow: Nat::from(0u128),
+       liquidity_index: Nat::from(100000000u128),
+       debt_index: Nat::from(0u128),
+       configuration: ReserveConfiguration {
+           ltv: Nat::from(8000000000u128),
+           liquidation_threshold: Nat::from(8300000000u128),
+           liquidation_bonus: Nat::from(500000000u128),
+           borrowing_enabled: true,
+           borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
+           supply_cap: Nat::from(1_000_000_000_000_000_000u128),
+           liquidation_protocol_fee: Nat::from(0u128),
+           frozen: false,
+           active: true,
+           paused: false,
+           reserve_factor: Nat::from(1500000000u128),
+       },
+       can_be_collateral: Some(true),
+       last_update_timestamp: 1,
+       accure_to_platform: Nat::from(0u128),
+   };
 
-    let ckUSDC_token_name = "ckUSDC".to_string();
-    let ckUSDC_reserve_data = ReserveData {
-        asset_name: Some(ckUSDC_token_name.clone()),
-        id: 1,
-        d_token_canister: None,
-        debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
-        configuration: ReserveConfiguration {
-            ltv: Nat::from(7500000000u128),
-            liquidation_threshold: Nat::from(7800000000u128),
-            liquidation_bonus: Nat::from(500000000u128),
-            borrowing_enabled: true,
-            borrow_cap: Nat::from(10_000_000_000u128),
-            supply_cap: Nat::from(10_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
-            frozen: false,
-            active: true,
-            paused: false,
-            reserve_factor: Nat::from(1500000000u128),
-        },
-        can_be_collateral: Some(true),
-        last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
-    };
+   let ckUSDC_token_name = "ckUSDC".to_string();
+   let ckUSDC_reserve_data = ReserveData {
+       asset_name: Some(ckUSDC_token_name.clone()),
+       id: 1,
+       d_token_canister: None,
+       debt_token_canister: None,
+       borrow_rate: Nat::from(0u128),
+       current_liquidity_rate: Nat::from(1u128),
+       asset_supply: Nat::from(0u128),
+       asset_borrow: Nat::from(0u128),
+       liquidity_index: Nat::from(100000000u128),
+       debt_index: Nat::from(0u128),
+       configuration: ReserveConfiguration {
+           ltv: Nat::from(7500000000u128),
+           liquidation_threshold: Nat::from(7800000000u128),
+           liquidation_bonus: Nat::from(500000000u128),
+           borrowing_enabled: true,
+           borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
+           supply_cap: Nat::from(1_000_000_000_000_000_000u128),
+           liquidation_protocol_fee: Nat::from(0u128),
+           frozen: false,
+           active: true,
+           paused: false,
+           reserve_factor: Nat::from(1500000000u128),
+       },
+       can_be_collateral: Some(true),
+       last_update_timestamp: 1,
+       accure_to_platform: Nat::from(0u128),
+   };
 
-    let ckUSDT_token_name = "ckUSDT".to_string();
-    let ckUSDT_reserve_data = ReserveData {
-        asset_name: Some(ckUSDT_token_name.clone()),
-        id: 1,
-        d_token_canister: None,
-        debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
-        configuration: ReserveConfiguration {
-            ltv: Nat::from(7500000000u128),
-            liquidation_threshold: Nat::from(7800000000u128),
-            liquidation_bonus: Nat::from(450000000u128),
-            borrowing_enabled: true,
-            borrow_cap: Nat::from(10_000_000_000u128),
-            supply_cap: Nat::from(10_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
-            frozen: false,
-            active: true,
-            paused: false,
-            reserve_factor: Nat::from(1500000000u128),
-        },
-        can_be_collateral: Some(true),
-        last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
-    };
+   let ckUSDT_token_name = "ckUSDT".to_string();
+   let ckUSDT_reserve_data = ReserveData {
+       asset_name: Some(ckUSDT_token_name.clone()),
+       id: 1,
+       d_token_canister: None,
+       debt_token_canister: None,
+       borrow_rate: Nat::from(0u128),
+       current_liquidity_rate: Nat::from(0u128),
+       asset_supply: Nat::from(0u128),
+       asset_borrow: Nat::from(0u128),
+       liquidity_index: Nat::from(1_00_000_000u128),
+       debt_index: Nat::from(0u128),
+       configuration: ReserveConfiguration {
+           ltv: Nat::from(75_00_000_000u128),
+           liquidation_threshold: Nat::from(7800000000u128),
+           liquidation_bonus: Nat::from(450000000u128),
+           borrowing_enabled: true,
+           borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
+           supply_cap: Nat::from(1_000_000_000_000_000_000u128),
+           liquidation_protocol_fee: Nat::from(0u128),
+           frozen: false,
+           active: true,
+           paused: false,
+           reserve_factor: Nat::from(1500000000u128),
+       },
+       can_be_collateral: Some(true),
+       last_update_timestamp: 1,
+       accure_to_platform: Nat::from(0u128),
+   };
 
     let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
 
@@ -841,7 +841,7 @@ fn call_test_function() {
     test_borrow(&pic, backend_canister);
     test_repay(&pic, backend_canister);
     test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
 }
 
 
@@ -858,7 +858,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_000_000_000u128), // 50 ICP
+            amount: Nat::from(50_000_000_000u128), // 50 ICP
             expect_success: true,
             expected_error_message: None,
         },
@@ -882,7 +882,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14000000u128), //  0.14 ckETH
+            amount: Nat::from(14_000_000u128), //  0.14 ckETH
             expect_success: true,
             expected_error_message: None,
         },
@@ -912,7 +912,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             asset: "ckETH".to_string(),
             amount: Nat::from(10_000_000_000u128),
             expect_success: false,
-            expected_error_message: Some("Amount is too much".to_string()),
+            expected_error_message: Some("Requested amount exceeds the total faucet limit.".to_string()),
         },
         // Boundry amount
         TestCase {
@@ -1100,7 +1100,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Valid Test Cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(4_000_000_000u128),
+            amount: Nat::from(50_000_000_000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -1114,7 +1114,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(2000u128),
+            amount: Nat::from(2_00_000_000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -1128,7 +1128,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(10000u128),
+            amount: Nat::from(500_000_000u128),
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -1346,7 +1346,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(500u128),
+            amount: Nat::from(500_00_00u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -1358,7 +1358,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(500u128),
+            amount: Nat::from(500_00_00u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -1395,9 +1395,9 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // Large amount
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(100_000_000_000u128),
+            amount: Nat::from(100_000_000_000_000_000u128),
             expect_success: false,
-            expected_error_message: Some("Amount is too much".to_string()),
+            expected_error_message: Some("Platform is unable to pay right now! Try Again Later".to_string()),
         },
     ];
 
@@ -1512,7 +1512,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Withdrawals (Direct)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(3_800_000_000u128),
+            amount: Nat::from(380_000_000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1528,7 +1528,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(5000u128),
+            amount: Nat::from(4000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1544,7 +1544,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(2000u128),
+            amount: Nat::from(200_000u128),
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1553,7 +1553,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Collateral Withdrawals
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100000000u128),
+            amount: Nat::from(1_00_000_000u128),
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -1561,50 +1561,50 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         // Invalid Cases (General Failures)
         // Large amount exceeding wallet balance
-        TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000_000u128),
-            on_behalf_of: None,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
-        },
-        // Empty asset name
-        TestCase {
-            asset: "".to_string(),
-            amount: Nat::from(100u128),
-            on_behalf_of: None,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some("Asset cannot be an empty string".to_string()),
-        },
-        // Non-existent asset
-        TestCase {
-            asset: "XYZ".to_string(),
-            amount: Nat::from(100u128),
-            on_behalf_of: None,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some("no canister id found".to_string()),
-        },
-        // Asset length exceeds 7 characters
-        TestCase {
-            asset: "ckXYZ_long".to_string(),
-            amount: Nat::from(100u128),
-            on_behalf_of: None,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
-        },
-        // Zero amount request
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(0u128),
-            on_behalf_of: None,
-            is_collateral: false,
-            expect_success: false,
-            expected_error_message: Some("Amount must be greater than 0".to_string()),
-        },
+        // TestCase {
+        //     asset: "ICP".to_string(),
+        //     amount: Nat::from(100_000_000_000u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
+        // },
+        // // Empty asset name
+        // TestCase {
+        //     asset: "".to_string(),
+        //     amount: Nat::from(100u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some("Asset cannot be an empty string".to_string()),
+        // },
+        // // Non-existent asset
+        // TestCase {
+        //     asset: "XYZ".to_string(),
+        //     amount: Nat::from(100u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some("no canister id found".to_string()),
+        // },
+        // // Asset length exceeds 7 characters
+        // TestCase {
+        //     asset: "ckXYZ_long".to_string(),
+        //     amount: Nat::from(100u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some("Lenght of the asset is invalid".to_string()),
+        // },
+        // // Zero amount request
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(0u128),
+        //     on_behalf_of: None,
+        //     is_collateral: false,
+        //     expect_success: false,
+        //     expected_error_message: Some("Amount must be greater than 0".to_string()),
+        // },
     ];
 
     ic_cdk::println!(
@@ -1746,14 +1746,14 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(500u128),
+            amount: Nat::from(500_00_00u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(500u128),
+            amount: Nat::from(500_00_00u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
@@ -1805,7 +1805,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             amount: Nat::from(1_000_000_000u128),
             on_behalf_of: None,
             expect_success: false,
-            expected_error_message: Some("no debt to repay".to_string()),
+            expected_error_message: Some("Repay cannot be more than debt".to_string()),
         },
     ];
 

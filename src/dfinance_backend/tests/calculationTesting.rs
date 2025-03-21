@@ -1,8 +1,8 @@
 use candid::{CandidType, Deserialize, Nat};
 use serde::Serialize;
 use std::ops::Mul;
-mod error;
-use error as errors;
+mod utils;
+use crate::utils::error as errors;
 
 
 #[derive(Debug, CandidType, Deserialize, Clone)]
@@ -239,7 +239,7 @@ pub async fn calculate_interest_rates(
     reserve: ReserveData,
     reserve_factor: Nat,
     asset: String,
-) -> Result<(Nat, Nat), error::Error> {
+) -> Result<(Nat, Nat), errors::Error> {
     ic_cdk::println!("--- Calculating Interest Rates ---");
     ic_cdk::println!("Asset: {:?}", asset);
     ic_cdk::println!("Total Debt: {:?}", total_debt);

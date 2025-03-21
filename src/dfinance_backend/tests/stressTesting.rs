@@ -887,7 +887,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(4_000u128),
+            amount: Nat::from(4_00_000u128),
             expect_success: true,
             expected_error_message: None,
         },
@@ -1063,7 +1063,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(1_00_000_000u128), // 450 USDC
+            amount: Nat::from(1_00_000_00u128), // 450 USDC
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -1270,7 +1270,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pri
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(4_000u128),
+            amount: Nat::from(4_00_000u128),
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

@@ -371,7 +371,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             // if let Err(e) = release_lock(&operation_key) {
             //     ic_cdk::println!("Failed to release lock: {:?}", e);
             // }
-            return Err(Error::AmountSubtractionError);
+            return Err(Error::FeeExceedsAmount);
         }
 
         let reward_after_fee  = params.reward_amount.clone() - transfer_token_fee.clone();

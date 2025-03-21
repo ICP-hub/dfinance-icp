@@ -718,7 +718,7 @@ pub fn get_caller_session() -> Result<SessionStorageData, Error> {
                 session_start: Nat::from(0u128),
             })
     }))
-}_
+}
 
 #[update]
 pub fn store_user_guide() -> Result<(), Error> {

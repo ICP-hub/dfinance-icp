@@ -11,6 +11,8 @@ import Error from "../../pages/Error";
 import { Principal } from "@dfinity/principal";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
+import { useLocation } from "react-router-dom";
+import Pagination from "../Common/pagination";
 /**
  * HealthFactorList Component
  *
@@ -26,12 +28,20 @@ const HealthFactorList = () => {
     useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
-  const [userAccountData, setUserAccountData] = useState({});
+  const [userAccountDataa, setUserAccountData] = useState({});
   const [healthFactors, setHealthFactors] = useState({});
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
-  const { assets } = useAssetData(searchQuery);
+  const {
+    assets,
+    filteredItems,
+    asset_supply,
+    asset_borrow,
+    fetchAssetSupply,
+    fetchAssetBorrow,
+    loading: filteredDataLoading,
+  } = useAssetData(searchQuery);
   const [showFilter, setShowFilter] = useState(false);
   const [healthFilter, setHealthFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -40,7 +50,8 @@ const HealthFactorList = () => {
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const cachedData = useRef({});
   const popupRef = useRef(null);
-
+  const location = useLocation();
+  const userAccountData = location.state?.userAccountData || {};
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
@@ -56,7 +67,6 @@ const HealthFactorList = () => {
     }
     try {
       const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result);
       setLike(result);
     } catch (err) {
       console.error("Error fetching controller status:", err);
@@ -76,30 +86,34 @@ const HealthFactorList = () => {
 
     try {
       const allUsers = await backendActor.get_all_users();
-      console.log("Retrieved Users:", allUsers);
 
-      setUsers(allUsers);
+      if (allUsers.length > 0) {
+        setUsers(allUsers);
+        setHealthFactorLoading(false); // ✅ Ensure loading stops when users are set
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
+      setHealthFactorLoading(false);
     }
   };
+
   const fetchAssetData = async () => {
     const balances = {};
+    const batchSize = 5; // Adjust this based on your system's capacity
 
-    await Promise.all(
-      users.map(async ([principal, userData]) => {
-        if (!principal) return;
+    const processUsersInBatches = async (usersBatch) => {
+      for (const [principal, userData] of usersBatch) {
+        if (!principal) continue;
 
         const userBalances = {};
 
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
-            console.log("reserveDataForAsset", reserveDataForAsset);
             const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
             const debtTokenId =
               reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-            console.log("dtokenId", dtokenId);
+
             const assetBalance = {
               dtokenBalance: null,
               debtTokenBalance: null,
@@ -140,168 +154,47 @@ const HealthFactorList = () => {
         );
 
         balances[principal] = userBalances;
-      })
-    );
 
-    setAssetBalances(balances);
+        // ✅ Update state progressively to avoid UI freeze
+        setAssetBalances((prevBalances) => ({
+          ...prevBalances,
+          [principal]: userBalances,
+        }));
+      }
+    };
+
+    // ✅ Process users in batches
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      await processUsersInBatches(batch);
+    }
   };
+
   /**
    * This function fetches the user account data for a specific principal. It uses caching to avoid fetching data
    * for the same principal multiple times. The fetched data is stored in the `cachedData` ref.
    *
    * @param {string} principal - The principal of the user whose account data is being fetched.
    */
-  const fetchUserAccountDataWithCache = async (principal) => {
-    if (backendActor && isAuthenticated) {
-      setHealthFactorLoading(true); // Start loading indicator
-
-      const principalString = principal.toString();
-      console.log(
-        "assetBalances before function:",
-        assetBalances[principalString]
-      );
-
-      const userBalance = assetBalances[principalString];
-      if (!userBalance) {
-        console.error(
-          "userBalance is undefined or not available for principal:",
-          principalString
-        );
-        setHealthFactorLoading(false);
-        return;
-      }
-      console.log("userBalance before function:", userBalance);
-
-      if (cachedData.current[principalString]) {
-        setUserAccountData((prev) => ({
-          ...prev,
-          [principalString]: cachedData.current[principalString],
-        }));
-        setHealthFactorLoading(false);
-        return;
-      }
-
-      try {
-        if (!principalString || cachedData.current[principalString]) return;
-        console.log(
-          "assetBalances for principal",
-          principalString,
-          ":",
-          assetBalances
-        );
-        console.log(
-          "assetBalances[principal]:",
-          assetBalances[principalString]
-        );
-        console.log("userBalance for principal:", userBalance);
-
-        if (!userBalance) {
-          console.error(
-            "No data found for userBalance for this principal:",
-            principalString
-          );
-          setHealthFactorLoading(false);
-          return;
-        }
-
-        const user = users.find(
-          ([userPrincipal]) => userPrincipal.toString() === principalString
-        );
-
-        if (user) {
-          const userInfo = user[1];
-          console.log("userInfo", userInfo);
-          const reserves = userInfo?.reserves?.flat() || [];
-          console.log("reserves:", reserves);
-          let assetBalancesObj = [];
-          let borrowBalancesObj = [];
-
-          reserves.forEach(([asset, assetInfo]) => {
-            console.log("assetInfo:", assetInfo);
-
-            const assetBalance = BigInt(
-              userBalance?.[asset]?.dtokenBalance || 0
-            );
-            const borrowBalance = BigInt(
-              userBalance?.[asset]?.debtTokenBalance || 0
-            );
-
-            console.log(`assetBalance for ${asset}:`, assetBalance);
-            console.log(`borrowBalance for ${asset}:`, borrowBalance);
-
-            if (assetBalance > 0n) {
-              assetBalancesObj.push({
-                balance: assetBalance,
-                name: asset,
-              });
-            }
-            if (borrowBalance > 0n) {
-              borrowBalancesObj.push({
-                balance: borrowBalance,
-                name: asset,
-              });
-            }
-          });
-
-          console.log("Asset Balances Set:", assetBalancesObj);
-          console.log("Borrow Balances Set:", borrowBalancesObj);
-
-          const assetBalancesParam =
-            assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
-          const borrowBalancesParam =
-            borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
-
-          const result = await backendActor.get_user_account_data(
-            [],
-            assetBalancesParam,
-            borrowBalancesParam
-          );
-
-          console.log("Backend result:", result);
-
-          if (result?.Err === "ERROR :: Pending") {
-            console.warn("Pending state detected. Retrying...");
-            setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
-            return;
-          }
-
-          if (result?.Ok) {
-            cachedData.current[principalString] = result;
-            setUserAccountData((prev) => ({
-              ...prev,
-              [principalString]: result,
-            }));
-          }
-        } else {
-          console.error("User not found for principal:", principalString);
-        }
-      } catch (error) {
-        console.error("Error fetching user account data:", error.message);
-      } finally {
-        setHealthFactorLoading(false); // Stop loading indicator
-      }
-    }
-  };
-
+  
   const showSearchBar = () => {
     setShowSearch(!showSearch);
   };
 
   const openPopup = (principal, data) => {
-    if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7) return;
-    const extractedData = {
-      principal,
-      totalCollateral: Number(data.Ok[0]) / 1e8,
-      totalBorrowed: Number(data.Ok[1]) / 1e8,
-      availableBorrow: Number(data.Ok[2]) / 1e8,
-      liquidationThreshold: Number(data.Ok[3]) / 1e8,
-      healthFactor:
-        Number(data.Ok[4]) === 340282366920938463463374607431768211455n
-          ? "∞"
-          : (Number(data.Ok[4]) / 100000000000).toFixed(2),
-      totalDebt: Number(data.Ok[5]) / 1e8,
-      isHealthy: data.Ok[6] ? "Yes" : "No",
-    };
+    console.log("principal", principal);
+    console.log("data", data);
+    const rawHealthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
+
+const extractedData = {
+  principal,
+  totalCollateral: Number(data.collateral) / 1e8,
+  totalDebt: Number(data.debt) / 1e8,
+  liquidationThreshold: Number(data.liquidationThreshold) / 1e8,
+  availableBorrow: Number(data.availableBorrow) / 1e8,
+  healthFactor: rawHealthFactor < 100 ? rawHealthFactor : "Infinity",
+};
+
 
     setSelectedUser(extractedData);
   };
@@ -309,7 +202,52 @@ const HealthFactorList = () => {
   const closePopup = () => {
     setSelectedUser(null);
   };
+  const usersPerPage = 10; // ✅ Number of users per page
+  const [currentPage, setCurrentPage] = useState(1);
 
+  // ✅ Get filtered users first (before pagination)
+  const filteredUsers = Object.entries(userAccountData).filter(
+    ([principal, data]) => {
+      if (!data || !data.healthFactor) return false;
+
+      const healthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
+      const principalStr = principal.toLowerCase();
+
+      const matchesSearch =
+        !searchQuery ||
+        principalStr.includes(searchQuery.toLowerCase()) ||
+        healthFactor.toString().includes(searchQuery);
+
+      const matchesFilter =
+        !healthFilter ||
+        (healthFilter === "<1" && healthFactor < 1) ||
+        (healthFilter === ">1" && healthFactor > 1) ||
+        (healthFilter === "∞" && healthFactor > 100);
+
+      return matchesSearch && matchesFilter;
+    }
+  );
+
+  // ✅ Ensure currentPage doesn't exceed total pages when filtering
+  useEffect(() => {
+    setCurrentPage((prevPage) =>
+      Math.min(prevPage, Math.ceil(filteredUsers.length / usersPerPage) || 1)
+    );
+  }, [filteredUsers]);
+
+  // ✅ Calculate total pages
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  // ✅ Slice users for the current page
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * usersPerPage,
+    currentPage * usersPerPage
+  );
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -334,24 +272,7 @@ const HealthFactorList = () => {
     getAllUsers();
   }, []);
 
-  useEffect(() => {
-    if (!users || users.length === 0) return;
-
-    Promise.all(
-      users.map(([principal]) => {
-        if (principal) return fetchUserAccountDataWithCache(principal); 
-
-        return null;
-      })
-    )
-
-      .then(() => console.log("All user account data fetched"))
-
-      .catch((error) =>
-        console.error("Error fetching user account data in batch:", error)
-      );
-  }, [users, assetBalances]);
-
+  
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
     const updatedHealthFactors = {};
@@ -422,7 +343,7 @@ const HealthFactorList = () => {
    *                                  RENDER COMPONENT
    * =================================================================================== */
   return like ? (
-    <div id="health-page" className="w-full">
+    <div id="health-page" className="w-full mt-6">
       <div className="w-full md:h-[40px] flex items-center px-3 mt-4 md:-mt-8 lg:mt-8 relative">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText -ml-3">
           Users List
@@ -553,7 +474,7 @@ const HealthFactorList = () => {
           <div className="w-full mt-[200px] mb-[300px] flex justify-center items-center">
             <MiniLoader isLoading={true} />
           </div>
-        ) : Object.keys(userAccountData).length === 0 &&
+        ) : filteredUsers.length === 0 &&
           !healthFactorLoading ? (
           <div className="flex flex-col justify-center align-center place-items-center my-[10rem] mb-[14rem]">
             <div className="mb-7 -ml-3 -mt-5">
@@ -581,92 +502,80 @@ const HealthFactorList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(userAccountData)
-                    .filter(([principal, data]) => {
-                      if (
-                        !data?.Ok ||
-                        !Array.isArray(data.Ok) ||
-                        data.Ok.length < 7
-                      )
-                        return false;
+                  {paginatedUsers.map(([principal, data], index) => {
+                    const totalCollateral = Number(data.collateral) / 1e8;
+                    const totalDebt = Number(data.debt) / 1e8;
+                    const healthFactor = Math.trunc((Number(data.healthFactor) / 1e10) * 100) / 100;
 
-                      const healthFactor = Number(data.Ok[4]) / 1e10;
-                      const principalStr = principal.toLowerCase();
+                    return (
+                      <tr
+                        key={index}
+                        className="w-full font-bold hover:bg-[#ddf5ff8f] border-b border-gray-300"
+                      >
+                        <td className="px-1 py-6 text-left">
+                          {principal.length > 20
+                            ? `${principal.substring(0, 20)}...`
+                            : principal}
+                        </td>
+                        <td className="px-3 py-6 hidden sm:table-cell text-center">
+                          ${totalCollateral.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-6 hidden sm:table-cell text-center">
+                          ${totalDebt.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-6 text-center">
+                          <span
+                            className={` ${
+                              healthFactor > 100
+                                ? "text-yellow-500"
+                                : healthFactor === 0
+                                ? "text-red-500"
+                                : healthFactor > 3
+                                ? "text-green-500"
+                                : healthFactor <= 1
+                                ? "text-red-500"
+                                : healthFactor <= 1.5
+                                ? "text-orange-600"
+                                : healthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                            }`}
+                          >
+                            {healthFactor > 100
+                              ? "♾️"
+                              : healthFactor.toFixed(2)}
+                          </span>
+                        </td>
 
-                      const matchesSearch =
-                        !searchQuery ||
-                        principalStr.includes(searchQuery.toLowerCase()) ||
-                        healthFactor.toString().includes(searchQuery);
-
-                      const matchesFilter =
-                        !healthFilter ||
-                        (healthFilter === "<1" && healthFactor < 1) ||
-                        (healthFilter === ">1" && healthFactor > 1) ||
-                        (healthFilter === "∞" && healthFactor > 100);
-
-                      return matchesSearch && matchesFilter;
-                    })
-                    .map(([principal, data], index) => {
-                      const totalCollateral = Number(data.Ok[0]) / 1e8;
-                      const totalBorrowed = Number(data.Ok[1]) / 1e8;
-                      const healthFactor = Number(data.Ok[4]) / 1e10;
-
-                      return (
-                        <tr
-                          key={index}
-                          className="w-full font-bold hover:bg-[#ddf5ff8f] border-b border-gray-300"
-                        >
-                          <td className="px-1 py-6 text-left">
-                            {principal.length > 20
-                              ? `${principal.substring(0, 20)}...`
-                              : principal}
-                          </td>
-                          <td className="px-3 py-6 hidden sm:table-cell text-center">
-                            ${totalCollateral.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-6 hidden sm:table-cell text-center">
-                            ${totalBorrowed.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-6 text-center">
-                            <span
-                              className={` ${
-                                healthFactor > 100
-                                  ? "text-yellow-500"
-                                  : healthFactor === 0
-                                  ? "text-red-500"
-                                  : healthFactor > 3
-                                  ? "text-green-500"
-                                  : healthFactor <= 1
-                                  ? "text-red-500"
-                                  : healthFactor <= 1.5
-                                  ? "text-orange-600"
-                                  : healthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                              }`}
-                            >
-                              {healthFactor > 100
-                                ? "♾️"
-                                : healthFactor.toFixed(2)}
-                            </span>
-                          </td>
-
-                          <td className="px-3 py-6 text-end">
-                            <button
-                              onClick={() =>
-                                openPopup(principal, data, healthFactor)
-                              }
-                              className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white px-5 py-1 text-xs rounded-md hover:bg-opacity-80 transition"
-                            >
-                              More
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                        <td className="px-3 py-6 text-end">
+                          <button
+                            onClick={() =>
+                              openPopup(principal, data, healthFactor)
+                            }
+                            className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white px-5 py-1 text-xs rounded-md hover:bg-opacity-80 transition"
+                          >
+                            More
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
+
+            {/* ✅ Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="w-full flex justify-center mt-10">
+                <div id="pagination" className="flex gap-2">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -724,14 +633,6 @@ const HealthFactorList = () => {
                 </span>
                 <span className="text-[#2A1F9D] dark:text-darkText ">
                   ${selectedUser.totalCollateral.toFixed(2)}
-                </span>
-              </p>
-              <p className="text-sm sm:hidden">
-                <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
-                  Total Borrowed:
-                </span>
-                <span className="text-[#2A1F9D] dark:text-darkText ">
-                  ${selectedUser.totalBorrowed.toFixed(2)}
                 </span>
               </p>
 

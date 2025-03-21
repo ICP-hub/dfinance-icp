@@ -11,6 +11,7 @@ import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * WithdrawPopup Component
@@ -21,13 +22,32 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the WithdrawPopup component.
  */
 
-const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const WithdrawPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-    const withdrawButtonRef = useRef(null);
-    const closeButtonRef = useRef(null);
+  const { isBlocked } = useFunctionBlockStatus("execute_withdraw");
+  const withdrawButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
@@ -186,6 +206,20 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
    */
 
   const handleWithdraw = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -262,7 +296,22 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
+        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
+          console.error("You are temporarily blocked from using this function");
 
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setIsLoading(false);
+        }
         if (isPanicError) {
           setShowPanicPopup(true);
           setIsVisible(false);
@@ -334,7 +383,6 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
       setIsLoading(false);
     }
   };
-
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -423,6 +471,12 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
       .replace(/\.?0+$/, "");
   };
 
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -483,21 +537,30 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("ltv", ltv);
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
     console.log("liq_thresh", ltv * 100, tempLiq);
-    if (ltv * 100 >= tempLiq && currentCollateralStatus) {
+    if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
       toast.dismiss();
       toast.info("LTV Exceeded!");
+      console.log("Toast Triggered: LTV Exceeded!");
     }
+
     if (
-      (healthFactor <= 1 || ltv * 100 >= tempLiq) &&
+      (healthFactor <= 1 || (assetBorrow > 0 && ltv * 100 >= tempLiq)) &&
       currentCollateralStatus
     ) {
       setIsButtonDisabled(true);
+      console.log("Button Disabled: TRUE");
     } else {
       setIsButtonDisabled(false);
+      console.log("Button Disabled: FALSE");
     }
   }, [
     asset,
@@ -532,7 +595,8 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedValue = Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
+      const convertedValue =
+        Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -655,21 +719,21 @@ const WithdrawPopup = ({ asset, image, supplyRateAPR, balance, liquidationThresh
                   <p>
                     <span
                       className={`${
-                        healthFactorBackend > 3
+                        truncatedValue > 3
                           ? "text-green-500"
-                          : healthFactorBackend <= 1
+                          : truncatedValue <= 1
                           ? "text-red-500"
-                          : healthFactorBackend <= 1.5
+                          : truncatedValue <= 1.5
                           ? "text-orange-600"
-                          : healthFactorBackend <= 2
+                          : truncatedValue <= 2
                           ? "text-orange-400"
                           : "text-orange-300"
                       }`}
                     >
-                      {parseFloat(
-                        healthFactorBackend > 100
+                      {(
+                        truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)
+                          : (truncatedValue)
                       )}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>

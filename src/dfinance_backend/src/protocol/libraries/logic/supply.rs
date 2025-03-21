@@ -62,7 +62,7 @@ pub async fn execute_supply(params: ExecuteSupplyParams) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("execute_supply") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
@@ -314,7 +314,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             (user_principal, None)
         };
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("execute_withdraw") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

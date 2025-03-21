@@ -12,6 +12,7 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * SupplyPopup Component
@@ -47,6 +48,7 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
+  const { isBlocked } = useFunctionBlockStatus("execute_supply");
   const approveButtonRef = useRef(null);
   const supplyButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -189,6 +191,19 @@ const SupplyPopup = ({
 
   // Approves the supply transaction
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -251,6 +266,20 @@ const SupplyPopup = ({
 
   // Executes the supply transaction
   const handleSupplyETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     try {
       let ledgerActor;
       if (asset === "ckBTC") {
@@ -306,14 +335,16 @@ const SupplyPopup = ({
       } else if ("Err" in response) {
         const errorKey = response.Err;
         const errorMsg = errorKey?.toString() || "An unexpected error occurred";
-
+        console.error("Error:", errorKey);
         if (errorMsg.toLowerCase().includes("panic")) {
+          console.error("Panic error detected.");
           setShowPanicPopup(true);
           setIsVisible(false);
         } else if (
           errorMsg.toLowerCase().includes("out of cycles") ||
           errorMsg.includes("Reject text: Canister")
         ) {
+          console.error("Canister is out of cycles.");
           toast.error("Canister is out of cycles. Admin has been notified.", {
             className: "custom-toast",
             position: "top-center",
@@ -325,6 +356,7 @@ const SupplyPopup = ({
             progress: undefined,
           });
         } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+          console.error("Supply cap exceeded error.");
           toast.error("Supply cap is exceeded.", {
             className: "custom-toast",
             position: "top-center",
@@ -336,20 +368,74 @@ const SupplyPopup = ({
             progress: undefined,
           });
         } else {
-          const userFriendlyMessage =
-            errorMessages[errorKey] || errorMessages.Default;
-          console.error("Error:", errorMsg);
+          const errorKey = response.Err;
+          const errorMsg =
+            errorKey?.toString() || "An unexpected error occurred";
 
-          toast.error(`Supply failed: ${userFriendlyMessage}`, {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+            console.error(
+              "You are temporarily blocked from using this function"
+            );
+
+            toast.error(
+              "You are temporarily blocked from using this function",
+              {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+              }
+            );
+            handleClosePaymentPopup()
+            setIsLoading(false)
+          } else if (errorMsg.toLowerCase().includes("panic")) {
+            setShowPanicPopup(true);
+            setIsVisible(false);
+          } else if (
+            errorMsg.toLowerCase().includes("out of cycles") ||
+            errorMsg.includes("Reject text: Canister")
+          ) {
+            toast.error("Canister is out of cycles. Admin has been notified.", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+            toast.error("Supply cap is exceeded.", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          } else {
+            const userFriendlyMessage =
+              errorMessages[errorKey] || errorMessages.Default;
+            console.error("Error:", errorKey);
+
+            toast.error(`Supply failed: ${userFriendlyMessage}`, {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
         }
       }
     } catch (error) {
@@ -473,7 +559,12 @@ const SupplyPopup = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
-
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+  
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -542,8 +633,13 @@ const SupplyPopup = ({
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
   }, [
     asset,
@@ -554,9 +650,7 @@ const SupplyPopup = ({
     amount,
     usdValue,
   ]);
-  /* ===================================================================================
-   *                                 EFFECT
-   * =================================================================================== */
+
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -676,20 +770,20 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {healthFactorBackend > 100
+                        {truncatedValue > 100
                           ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)}
+                          : (truncatedValue)}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span

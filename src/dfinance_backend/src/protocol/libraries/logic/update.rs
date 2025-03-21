@@ -538,7 +538,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         return Err(Error::AnonymousPrincipal);
     }
 
-    if let Err(e) = request_limiter() {
+    if let Err(e) = request_limiter("toggle_collateral") {
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }

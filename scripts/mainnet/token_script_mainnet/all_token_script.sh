@@ -33,3 +33,4 @@ if [ $? -ne 0 ]; then
   echo "ckusdt_token.sh failed. Exiting."
   exit 1
 fi
+ dfx canister call dfinance_backend update_reserves_price

@@ -13,6 +13,8 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
+import { Fuel } from "lucide-react";
 
 /**
  * Repay Component
@@ -52,6 +54,8 @@ const Repay = ({
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -171,9 +175,7 @@ const Repay = ({
   }
 
   const numericBalance = balance;
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
+  const supplyBalance = numericBalance - transferFee;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
@@ -212,7 +214,10 @@ const Repay = ({
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-    const totalAmount = scaledAmount + transferfee;
+    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+    const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -313,11 +318,15 @@ const Repay = ({
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      const scaledAmount = amountAsNat64;
       const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+      const scaledAmount = amountAsNat64;
+      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+      const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
       const repayParams = {
         asset: asset,
-        amount: scaledAmount,
+        amount: totalAmount,
         on_behalf_of: [],
       };
 
@@ -328,14 +337,14 @@ const Repay = ({
           "Repay," +
             asset +
             "," +
-            scaledAmount / 100000000 +
+            totalAmount / 100000000 +
             "," +
             principalObj.toString(),
           "Assets",
           "Repay," +
             asset +
             "," +
-            scaledAmount / 100000000 +
+            totalAmount / 100000000 +
             ", " +
             principalObj.toString()
         );
@@ -371,7 +380,7 @@ const Repay = ({
             progress: undefined,
           });
 
-          setIsLoading(false)
+          setIsLoading(false);
           setIsModalOpen(false);
           return;
         }
@@ -497,19 +506,32 @@ const Repay = ({
       return truncated.toFixed(8);
     };
 
-    let selectedBalance =
-      supplyBalance > assetBorrow ? assetBorrow : supplyBalance;
-    let displayBalance = selectedBalance
+    const fee = transferFee ? Number(transferFee) : 0;
+
+    let selectedBalance;
+    // If wallet funds (supplyBalance) exceed the assetBorrow,
+    // then ensure you subtract the fee from assetBorrow.
+    if (supplyBalance >= assetBorrow) {
+      selectedBalance = Number(assetBorrow) - fee;
+    } else {
+      // Otherwise, supplyBalance already factors in the fee
+      selectedBalance = supplyBalance;
+    }
+    // Clamp to 0 if the subtraction produces a negative value
+    if (selectedBalance < 0) selectedBalance = 0;
+
+    // Format the display balance accordingly.
+    const displayBalance = selectedBalance
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
         ? Number(selectedBalance).toFixed(7)
         : truncateToSevenDecimals(selectedBalance)
       : "0";
-    const maxAmount = displayBalance.toString();
-    setMaxAmount(maxAmount);
+
+    setMaxAmount(displayBalance.toString());
     setMaxClicked(true);
-    updateAmountAndUsdValue(maxAmount);
+    updateAmountAndUsdValue(displayBalance.toString());
   };
 
   const formatValue = (value) => {
@@ -523,7 +545,7 @@ const Repay = ({
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
   };
-  
+
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
 
   /* ===================================================================================
@@ -731,11 +753,7 @@ const Repay = ({
                             : "text-orange-300"
                         }`}
                       >
-                        {(
-                          truncatedValue > 100
-                            ? "Infinity"
-                            : (truncatedValue)
-                        )}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -755,7 +773,33 @@ const Repay = ({
                       </span>
                     </p>
                   </div>
-
+                  <div className="w-full flex justify-between items-center my-1">
+                    <div className="flex items-center gap-1">
+                      <p>Transaction Fees</p>
+                      <Fuel className="dark:text-blue-300" size={13} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p>{transferFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {amount ? (+amount || 0) + (+transferFee || 0) : 0}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
                   <div className="w-full flex justify-end items-center mt-1">
                     <p className="text-[#909094]">liquidation at &lt;1</p>
                   </div>

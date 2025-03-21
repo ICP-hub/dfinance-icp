@@ -1,7 +1,7 @@
 use crate::constants::errors::Error;
-use api::functions::get_balance;
-use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
+use api::functions::{get_balance, SessionStorageData};
+use api::functions::{request_limiter, BlockedUserDetails, RequestTracker};
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
@@ -34,11 +34,17 @@ use crate::declarations::assets::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
     ExecuteWithdrawParams,
 };
+
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::user::UserAccountData;
 use crate::protocol::libraries::types::datatypes::UserData;
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
+
+// Include the benchmarks module
+#[cfg(feature = "canbench-rs")]
+mod canbench_tests;
+
 
 const ONE_DAY: Duration = Duration::from_secs(86400);
 
@@ -108,7 +114,7 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
  * @returns The user data if found.
  */
 #[query]
-fn get_user_data(user: Principal) -> Result<UserData, Error> {
+pub fn get_user_data(user: Principal) -> Result<UserData, Error> {
     if user == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
@@ -644,6 +650,7 @@ async fn get_user_account_data(
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
+
     ic_cdk::println!("error in user = {:?}", on_behalf);
     let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await;
     result
@@ -686,6 +693,102 @@ fn time_until_midnight() -> Duration {
 #[ic_cdk::post_upgrade]
 pub async fn post_upgrade() {
     schedule_midnight_task().await;
+}
+
+#[update]
+// Function to store session data
+pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    if connected_wallet.len() > 15 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if session_start <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    let session_data = SessionStorageData {
+        connected_wallet,
+        session_start,
+    };
+
+    // Save the updated request history
+    mutate_state(|state| {
+        state
+            .session_details
+            .insert(caller_id, Candid(session_data));
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_caller_session() -> Result<SessionStorageData, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state
+            .session_details
+            .get(&caller_id)
+            .map(|data| data.0.clone()) // Extract value
+            .unwrap_or_else(|| SessionStorageData {
+                // Default value
+                connected_wallet: "".to_string(),
+                session_start: Nat::from(0u128),
+            })
+    }))
+}
+
+#[update]
+pub fn store_user_guide() -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    mutate_state(|state| {
+        state.user_guide_data.insert(caller_id, true);
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_user_guide() -> Result<bool, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state.user_guide_data.get(&caller_id).unwrap_or(false)
+    }))
+}
+
+// TODO: cycles update
+#[query]
+pub fn cycle_threshold_crossed() -> bool {
+    let available_cycles = ic_cdk::api::canister_balance128();
+    let threshold = 7_592_000;
+
+    available_cycles < threshold
 }
 
 #[query]

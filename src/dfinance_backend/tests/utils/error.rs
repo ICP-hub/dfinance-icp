@@ -1,6 +1,8 @@
 use candid::CandidType;
+use serde::Deserialize;
 
-#[derive(Debug ,CandidType)]
+
+#[derive(Debug ,CandidType, Deserialize)]
 #[derive(Clone)]
 pub enum Error {
     MaxAmountPlatform,
@@ -60,7 +62,6 @@ pub enum Error {
     ErrorRawResponse,
     ErrorDecoding,
     LockAcquisitionFailed,
-    AmountLockAcquisitionFailed,
     InsufficientLiquidity,
     ErrorRollBack,
     EmailError,
@@ -71,10 +72,7 @@ pub enum Error {
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
     AmountSubtractionError,
-    TOOMANYREQUESTS,
-    BLOCKEDFORONEHOUR,
-    USERCANNOTBELIQUIDATED,
-    FeeExceedsAmount ,
+    USERCANNOTBELIQUIDATED
 }
 
 impl Error {
@@ -147,11 +145,7 @@ impl Error {
             Error::LockOperationInProgess => "Another operation is already in progress for user",
             Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
             Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
-            Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible",
-            Error::TOOMANYREQUESTS => "You are temporarily blocked",
-            Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
-            Error::AmountLockAcquisitionFailed => "amount lock acquisition failed",
-            Error::FeeExceedsAmount => "Fee exceeds the amount",
+            Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible"
         }
     }
 }

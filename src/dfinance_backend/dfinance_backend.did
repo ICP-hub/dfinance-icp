@@ -20,6 +20,7 @@ type Error = variant {
   ExchangeRateError;
   ErrorMintDTokens;
   ErrorFaucetTokens;
+  AmountLockAcquisitionFailed;
   InvalidAssetLength;
   InvalidCanister;
   LTVGreaterThanThreshold;
@@ -138,10 +139,14 @@ type Result_2 = variant {
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : nat; Err : Error };
 type Result_5 = variant { Ok : principal; Err : Error };
-type Result_6 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_6 = variant { Ok : SessionStorageData; Err : Error };
 type Result_7 = variant { Ok : bool; Err : Error };
 type Result_8 = variant { Ok : ReserveData; Err : Error };
 type Result_9 = variant { Ok : text; Err : Error };
+type SessionStorageData = record {
+  session_start : nat;
+  connected_wallet : text;
+};
 type UserAccountData = record {
   ltv : nat;
   available_borrow : nat;
@@ -183,6 +188,7 @@ service : (principal) -> {
   check_is_tester : () -> (bool) query;
   create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_3);
   cycle_checker : () -> (Result_4) query;
+  cycle_threshold_crossed : () -> (bool) query;
   execute_borrow : (ExecuteBorrowParams) -> (Result_4);
   execute_liquidation : (ExecuteLiquidationParams) -> (Result_4);
   execute_repay : (ExecuteRepayParams) -> (Result_4);
@@ -193,7 +199,7 @@ service : (principal) -> {
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_5) query;
   get_cached_exchange_rate : (text) -> (Result_4) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_6);
+  get_caller_session : () -> (Result_6) query;
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     );
@@ -208,6 +214,7 @@ service : (principal) -> {
       opt vec AssetData,
     ) -> (Result_2) query;
   get_user_data : (principal) -> (Result_3) query;
+  get_user_guide : () -> (Result_7) query;
   initialize : (text, ReserveData) -> (Result_1);
   is_function_blocked : (text) -> (Result_7) query;
   queary_reserve_price : () -> (vec PriceCache) query;
@@ -216,6 +223,8 @@ service : (principal) -> {
   reset_reserve_value : (text, text, nat) -> (Result_1);
   retrieve_blocked_users : (principal) -> (Result_10) query;
   retrieve_request_info : (principal) -> (Result_11) query;
+  store_session_data : (text, nat) -> (Result_1);
+  store_user_guide : () -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

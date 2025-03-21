@@ -1,0 +1,56 @@
+benches:
+  cycle_checker_bench:
+    total:
+      instructions: 33035
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  execute_borrow_bench:
+    total:
+      instructions: 415014
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  execute_repay_bench:
+    total:
+      instructions: 364951
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  execute_supply_bench:
+    total:
+      instructions: 337478
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  execute_withdraw_bench:
+    total:
+      instructions: 346536
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  faucet_bench:
+    total:
+      instructions: 312679
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  initialize_bench:
+    total:
+      instructions: 24664
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+  process_numbers_bench:
+    total:
+      instructions: 429003
+      heap_increase: 2
+      stable_memory_increase: 0
+    scopes: {}
+  register_user_bench:
+    total:
+      instructions: 337757
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+version: 0.1.9

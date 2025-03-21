@@ -1,9 +1,9 @@
 
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 
-use crate::constants::memory::{BLOCKED_USERS_Function, FunctionREQUESTS, ASSET_INDEX_MEMORY_ID, BLOCKED_USERS, CANISTER_MEMORY_ID, META_DATA, PRICE_CACHE_MEMORY_ID, REQUESTS, RESERVES_MEMORY_ID, TESTER_LIST, USER_PROFILE_MEMORY_ID};
+use crate::constants::memory::{BLOCKED_USERS_Function, FunctionREQUESTS, ASSET_INDEX_MEMORY_ID, BLOCKED_USERS, CANISTER_MEMORY_ID, META_DATA, PRICE_CACHE_MEMORY_ID, REQUESTS, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST, USER_GUIDE_DATA, USER_PROFILE_MEMORY_ID};
 use crate::declarations::state::State;
-use crate::protocol::libraries::types::assets::{AssetIndex,  BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList, ReserveList, TesterList, UserProfile};
+use crate::protocol::libraries::types::assets::{AssetIndex, BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList, ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile};
 
 /* 
  * @title State 
@@ -23,6 +23,8 @@ impl State {
             tester_list: TesterList::init(memory_manager.get(TESTER_LIST)),
             userrequests: FunctionRequests::init(memory_manager.get(FunctionREQUESTS)),
             restrict_users: BlockedUsersFunction::init(memory_manager.get(BLOCKED_USERS_Function)),
+            session_details: SessionDetails::init(memory_manager.get(SESSION_DETAILS)),
+            user_guide_data: UserGuideData::init(memory_manager.get(USER_GUIDE_DATA)),
         }
     }
 }

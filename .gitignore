@@ -23,6 +23,8 @@ dist/
 
 # environment variables
 .env
+# canbench files
+.canbench/
 
 #governance section
 /src/dfinance_frontend/src/components/Governance

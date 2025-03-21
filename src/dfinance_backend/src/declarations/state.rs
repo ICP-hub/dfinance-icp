@@ -10,4 +10,6 @@ pub struct State {
     pub tester_list:TesterList,
     pub userrequests: FunctionRequests,
     pub restrict_users:BlockedUsersFunction,
+    pub session_details:SessionDetails,
+    pub user_guide_data:UserGuideData,
 }

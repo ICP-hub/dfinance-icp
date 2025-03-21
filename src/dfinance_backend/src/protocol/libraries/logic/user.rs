@@ -1043,9 +1043,13 @@ pub async fn get_liquidation_users_concurrent(
  * @returns A string message indicating success.
  */
 #[update]
-fn register_user() -> Result<String, Error> {
+pub fn register_user() -> Result<String, Error> {
     ic_cdk::println!("function is register running");
 
+    #[cfg(feature = "canbench-rs")]
+    let user_principal = Principal::from_text("lona2-5tsnx-yhmi2-nidyd-foxvu-4fpvi-gfqn2-ufwlm-7rrqy-ulxua-2ae").unwrap();
+
+    #[cfg(not(feature = "canbench-rs"))]
     let user_principal: Principal = ic_cdk::api::caller();
     ic_cdk::println!("user principal register = {} ", user_principal);
 

@@ -1377,3 +1377,79 @@ pub async fn create_user_reserve_with_low_health(
 
     Ok(user_data)
 }
+
+#[update]
+pub async fn get_all_user_list(
+    total_pages: usize,
+    page_size: usize,
+) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
+
+    let user_principal = ic_cdk::caller();
+    
+    if user_principal == Principal::anonymous()
+        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::ErrorNotController);
+    }
+
+    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    let total_users = vector_user_data.len();
+    ic_cdk::println!("Total users: {}", total_users);
+
+    let mut liq_list = Vec::new();
+    let cycles_start = Nat::from(api::canister_balance128());
+    ic_cdk::println!("cycles start = {:?}", cycles_start);
+
+    for page in 0..total_pages {
+        let users_to_process = vector_user_data
+            .iter()
+            .skip(page * page_size)
+            .take(page_size)
+            .cloned()
+            .collect::<Vec<_>>();
+
+        ic_cdk::println!("Processing page: {}", page + 1);
+
+        let page_liq_list = stream::iter(users_to_process)
+            .map(|(user_principal, user_data)| async move {
+                ic_cdk::println!("Processing user: {:?}", user_principal);
+                match calculate_user_account_data(Some(user_principal)).await {
+                    Ok(user_account_data_tuple) => {
+                        ic_cdk::println!(
+                            "User {:?} data: {:?}",
+                            user_principal, user_account_data_tuple
+                        );
+                        let user_account_data = UserAccountData {
+                            collateral: user_account_data_tuple.0,
+                            debt: user_account_data_tuple.1,
+                            ltv: user_account_data_tuple.2,
+                            liquidation_threshold: user_account_data_tuple.3,
+                            health_factor: user_account_data_tuple.4,
+                            available_borrow: user_account_data_tuple.5,
+                            has_zero_ltv_collateral: user_account_data_tuple.6,
+                        };
+
+                        Some((user_principal, user_account_data, user_data))
+                    }
+                    Err(err) => {
+                        ic_cdk::println!("Failed to fetch data for {:?}: {:?}", user_principal, err);
+                        None
+                    }
+                }
+            })
+            .buffered(100)
+            .collect::<Vec<_>>()
+            .await;
+
+        liq_list.extend(page_liq_list.into_iter().flatten());
+
+        let cycles_end = Nat::from(api::canister_balance128());
+        ic_cdk::println!("cycles middle = {:?}", cycles_end);
+    }
+
+    let cycles_end = Nat::from(api::canister_balance128());
+    ic_cdk::println!("cycles end = {:?}", cycles_end);
+
+    Ok(liq_list)
+}

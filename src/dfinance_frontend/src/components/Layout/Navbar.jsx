@@ -336,7 +336,7 @@ export default function Navbar({ isHomeNav }) {
                 onClick={handleLogoClick}
                 className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
               />
-              <h1 className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem]">DFinance</h1>
+              <h1 className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer" onClick={handleLogoClick}>DFinance</h1>
               </div>
              
 

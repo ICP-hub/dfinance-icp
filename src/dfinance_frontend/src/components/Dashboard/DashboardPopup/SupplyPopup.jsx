@@ -811,7 +811,7 @@ const SupplyPopup = ({
                     <p>Final amount</p>
                     <div className="flex items-center gap-2">
                       <p>
-                        {amount ? (+amount || 0) + (+transferFee || 0) : 0}{" "}
+                        {(amount ? (+amount || 0) + (+transferFee || 0) : 0).toFixed(8)}{" "}
                       </p>
                       <img
                         src={image}

@@ -73,5 +73,5 @@ pub mod constants {
     pub const MIN_BORROW: u128 = 100;
 
      // -------------------Token Transfer Fees -------------------
-     pub const TOKEN_TRANSFER_FEE: u128 = 345_00;  
+     pub const TOKEN_TRANSFER_FEE: u128 = 345_000; 
 }

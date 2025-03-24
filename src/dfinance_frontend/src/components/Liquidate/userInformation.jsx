@@ -878,8 +878,12 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
         ? calculatedData?.maxCollateral / 1e8
         : rewardAmount;
     const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : null;
+    const DebtusdRate = assetRates[assetBorrow] ?assetRates[assetBorrow] /1e8 : 0;
+    const DebtAmount = selectedAsset == selectedDebtAsset 
+                            ? calculatedData?.maxDebtToLiq
+                            : ((calculatedData?.maxDebtToLiq *DebtusdRate)/usdRate);
     const bonusValue =
-      ((calculatedData?.maxCollateral / 1e8) * liquidation_bonus) / 100;
+      ((DebtAmount / 1e8) * liquidation_bonus) / 100;
 
     return (
       <div className="mt-4">

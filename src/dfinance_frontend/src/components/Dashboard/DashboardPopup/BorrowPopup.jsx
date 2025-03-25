@@ -368,7 +368,7 @@ import useAssetData from "../../customHooks/useAssets";
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const remainingBorrowable = totalSupply * 0.85 - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -402,7 +402,7 @@ import useAssetData from "../../customHooks/useAssets";
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      const borrowValue =remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      const borrowValue =Number(userAccountData.Ok[5]) / 100000000;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);

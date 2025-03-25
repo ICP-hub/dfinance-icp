@@ -1671,9 +1671,9 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                             ? assetRates[selectedDebtAsset] / 1e8
                             : null;
 
-                          const adjustedAmountToRepay =
-                            amountToRepay !== calculatedData?.maxDebtToLiq / 1e8
-                              ? calculatedData?.maxDebtToLiq / 1e8
+                            const adjustedAmountToRepay =
+                            calculatedData?.maxDebtToLiq > 0
+                              ? calculatedData.maxDebtToLiq / 1e8
                               : amountToRepay;
 
                           const repayInUSD = usdRate

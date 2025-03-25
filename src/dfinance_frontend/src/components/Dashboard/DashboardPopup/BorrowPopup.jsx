@@ -487,7 +487,7 @@ const Borrow = ({
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const remainingBorrowable = totalSupply* 0.85 - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -498,11 +498,11 @@ const Borrow = ({
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+        
       }
-    };
+    };setTimeout(() => {
+          setLoading(false);
+        }, 400);
     updateValues();
   }, [
     asset,
@@ -520,7 +520,7 @@ const Borrow = ({
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
       const borrowValue =
-        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+         Number(userAccountData.Ok[5]) / 100000000 ;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);

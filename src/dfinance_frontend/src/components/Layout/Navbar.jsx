@@ -82,7 +82,9 @@ export default function Navbar({ isHomeNav }) {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
-
+  
+  
+  
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
@@ -185,24 +187,20 @@ export default function Navbar({ isHomeNav }) {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-
+  
   const handleTestnetModeToggle = () => {
+    const url = `https://bn2g3-lqaaa-aaaaj-azykq-cai.icp0.io/dashboard?openWallet=true`;
     // dispatch(toggleTestnetMode());
-  
-    // Navigate to dashboard without creating a back entry
-    window.location.replace("https://bn2g3-lqaaa-aaaaj-azykq-cai.icp0.io/dashboard");
-  
-    // Ensure the back button is disabled after navigation
-   
-    // Block the back button functionality
-  
-  }; 
-  
-  
-  
-  
-  
-  
+    
+    window.location.replace(url); 
+};
+
+
+
+
+
+
+
 
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -334,7 +332,7 @@ export default function Navbar({ isHomeNav }) {
       setIsDarkMode(false);
     }
   }, [theme, isDarkMode]);
-
+  
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -356,74 +354,74 @@ export default function Navbar({ isHomeNav }) {
                 }}
               />
 
-              
+
             </div>
             {!isMobile && (
               <>
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                        if (link.alwaysPresent) {
-                          return (
+                      if (link.alwaysPresent) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      } else if (isTestnetMode && link.testnet) {
+                        return (
+                          <React.Fragment key={index}>
                             <NavLink
-                              key={index}
-                              to={link.route}
-                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                            >
-                              {link.title}
-                            </NavLink>
-                          );
-                        } else if (isTestnetMode && link.testnet) {
-                          return (
-                            <React.Fragment key={index}>
-                              <NavLink
-                                to={link.route}
-                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                              >
-                                {link.title}
-                              </NavLink>
-                              {link.title === "Faucet" && (
-                                <>
-                                  <span
-                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                    onClick={handlePopupToggle}
-                                  >
-                                    •••
-                                  </span>
-                                  {isPopupVisible && (
-                                    <Popup
-                                      position={popupPosition}
-                                      onClose={() => setIsPopupVisible(false)}
-                                    />
-                                  )}
-                                </>
-                              )}
-                            </React.Fragment>
-                          );
-                        } else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
-                          return (
-                            <NavLink
-                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                          );
-                        }
-                        return null;
-                        
-                      })
+                            {link.title === "Faucet" && (
+                              <>
+                                <span
+                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
+                                  onClick={handlePopupToggle}
+                                >
+                                  •••
+                                </span>
+                                {isPopupVisible && (
+                                  <Popup
+                                    position={popupPosition}
+                                    onClose={() => setIsPopupVisible(false)}
+                                  />
+                                )}
+                              </>
+                            )}
+                          </React.Fragment>
+                        );
+                      } else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      }
+                      return null;
+
+                    })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                        <NavLink
-                          key={index}
-                          target={link.target}
-                          to={link.route}
-                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      ))}
+                      <NavLink
+                        key={index}
+                        target={link.target}
+                        to={link.route}
+                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                      >
+                        {link.title}
+                      </NavLink>
+                    ))}
                 </div>
               </>
             )}
@@ -456,7 +454,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                     </div>
                   </div>
                 )}
@@ -514,7 +512,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                            {}
+                            { }
                             <div className="hidden lg1:flex justify-center">
                               <div
                                 className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -560,7 +558,7 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-                            {}
+                            { }
                             <div className=" w-full flex justify-center">
                               <div
                                 className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -616,7 +614,7 @@ export default function Navbar({ isHomeNav }) {
                             Settings
                           </h2>
 
-                          {}
+                          { }
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around">
                               <label
@@ -637,7 +635,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
 
-                          {}
+                          { }
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                               <label
@@ -654,11 +652,13 @@ export default function Navbar({ isHomeNav }) {
                               <CustomizedSwitches
                                 checked={isTestnetMode}
                                 onChange={handleTestnetModeToggle}
+
                               />
+
                             </div>
                           </div>
 
-                          {}
+                          { }
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around relative group">
                               <label
@@ -672,7 +672,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </label>
 
-                              {}
+                              { }
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                 Enabling this will allow the user to hear sound
                                 when supply, borrow, repay, or withdraw actions
@@ -712,7 +712,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                     </div>
                   </div>
                 )}
@@ -745,7 +745,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                         </div>
                       </div>
                     )}
@@ -755,7 +755,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        {}
+                        { }
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -776,7 +776,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        {}
+                        { }
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label
@@ -793,7 +793,9 @@ export default function Navbar({ isHomeNav }) {
                             <CustomizedSwitches
                               checked={isTestnetMode}
                               onChange={handleTestnetModeToggle}
+
                             />
+
                           </div>
                         </div>
                       </div>

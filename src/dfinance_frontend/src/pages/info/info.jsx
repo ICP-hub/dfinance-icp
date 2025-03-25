@@ -194,11 +194,9 @@ const DashboardCards = () => {
 
   const handleViewMore = () => {
     navigate(healthFactorRoute, {
-      state: { userAccountData }, //   Pass data to the next page
+      state: { userAccountData }, 
     });
-    navigate(healthFactorRoute, {
-      state: { userAccountData }, //   Pass data to the next page
-    });
+
   };
 
 
@@ -207,12 +205,10 @@ const DashboardCards = () => {
       const result = await backendActor.get_all_user_list(totalPages, pageSize);
       console.log("result:", result);
 
-      // Ensure `result.Ok` exists and is an array
       if (!result.Ok || !Array.isArray(result.Ok)) {
         throw new Error("Unexpected response format");
       }
 
-      // Parse result
       const parsedResult = result.Ok.map(([principal, userAccountData, userData]) => ({
         principal: principal ? principal.toText() : "Unknown_Principal", // Correct principal conversion
         collateral: userAccountData.collateral,
@@ -227,7 +223,6 @@ const DashboardCards = () => {
 
       console.log("parsedResult", parsedResult);
 
-      // Structure userAccountData for setUserAccountData
       const structuredData = parsedResult.reduce((acc, user) => {
         if (user.principal && user.principal !== "Unknown_Principal") {
           acc[user.principal] = {
@@ -243,7 +238,6 @@ const DashboardCards = () => {
         return acc;
       }, {});
 
-      // Store user account data correctly
       setUserAccountData((prev) => ({
         ...prev,
         ...structuredData,
@@ -272,7 +266,6 @@ const DashboardCards = () => {
     const response = await backendActor.cycle_checker();
     console.log("Raw response from cycle_checker:", response);
 
-    // Extract value from response
     const cycles = response.Ok ?? "Error retrieving cycles";
     console.log("Extracted cycle value:", cycles);
 
@@ -283,14 +276,14 @@ const DashboardCards = () => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
-        setCycles(cycleValue); //   Set state with retrieved cycles
+        setCycles(cycleValue); 
       } catch (error) {
         console.error("Error fetching cycles:", error);
-        setCycles("Error retrieving cycles"); //   Ensure fallback value is set
+        setCycles("Error retrieving cycles"); 
       }
     };
 
-    fetchCycles(); //   Fetch cycles on mount
+    fetchCycles(); 
   }, []);
   /**
    * Sends email notifications when cycle or token thresholds are breached.
@@ -383,76 +376,7 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
-  // const fetchAssetData = async () => {
-  //   const balances = {};
-
-  //   await Promise.all(
-  //     currentItems.map(async (mappedItem) => {
-  //       const principal = mappedItem.principal?._arr;
-  //       const userBalances = {};
-
-  //       await Promise.all(
-  //         assets.map(async (asset) => {
-  //           const reserveDataForAsset = await fetchReserveData(asset);
-  //           const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-  //           const debtTokenId =
-  //             reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-
-  //           const assetBalance = {
-  //             dtokenBalance: null,
-  //             debtTokenBalance: null,
-  //           };
-
-  //           const account = { owner: principal, subaccount: [] };
-
-  //           if (dtokenId) {
-  //             const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-  //             if (dtokenActor) {
-  //               try {
-  //                 const balance = await dtokenActor.icrc1_balance_of(account);
-  //                 const formattedBalance = Number(balance);
-  //                 assetBalance.dtokenBalance = formattedBalance;
-  //               } catch (error) {
-  //                 console.error(
-  //                   `Error fetching dtoken balance for ${asset}:`,
-  //                   error
-  //                 );
-  //               }
-  //             }
-  //           }
-
-  //           if (debtTokenId) {
-  //             const debtTokenActor = createLedgerActor(
-  //               debtTokenId,
-  //               idlFactory1
-  //             );
-  //             if (debtTokenActor) {
-  //               try {
-  //                 const balance = await debtTokenActor.icrc1_balance_of(
-  //                   account
-  //                 );
-  //                 const formattedBalance = Number(balance);
-  //                 assetBalance.debtTokenBalance = formattedBalance;
-  //               } catch (error) {
-  //                 console.error(
-  //                   `Error fetching debt token balance for ${asset}:`,
-  //                   error
-  //                 );
-  //               }
-  //             }
-  //           }
-
-  //           userBalances[asset] = assetBalance;
-  //         })
-  //       );
-
-  //       balances[principal] = userBalances;
-  //     })
-  //   );
-
-  //   setAssetBalances(balances);
-  // };
-  // Simulate cycle updates
+  
   const onCycleUpdate = async () => {
     try {
       const newCycles = await getCycles();
@@ -598,7 +522,6 @@ const DashboardCards = () => {
     },
   };
 
-  // Function to handle token balances
   const onTokenUpdate = (newBalance) => {
     console.log("Balance count updated:", newBalance);
     handleTokenNotification(newBalance);
@@ -610,7 +533,7 @@ const DashboardCards = () => {
       onTokenUpdate(assetBalance);
       if (assetBalance !== undefined) {
         handleTokenNotification(asset.name, assetBalance);
-        onTokenUpdate(assetBalance); //   Call `onTokenUpdate` with `assetBalance`
+        onTokenUpdate(assetBalance);
       }
     }
   };
@@ -655,7 +578,7 @@ const DashboardCards = () => {
     };
 
     fetchData();
-  }, [totalUsers, interestAccure]); // Dependency array remains the same
+  }, [totalUsers, interestAccure]);
 
   const cachedData = useRef({});
 
@@ -755,7 +678,7 @@ const DashboardCards = () => {
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto"; 
     };
   }, [isFreezePopupVisible]);
   useEffect(() => {
@@ -763,14 +686,14 @@ const DashboardCards = () => {
       try {
         const cycleValue = await getCycles();
         console.log("cycleValue", cycleValue)
-        setCycles(cycleValue); // ✅ Set state with retrieved cycles
+        setCycles(cycleValue);
       } catch (error) {
         console.error("Error fetching cycles:", error);
-        setCycles("Error retrieving cycles"); //   Ensure fallback value is set
+        setCycles("Error retrieving cycles");
       }
     };
 
-    fetchCycles(); // ✅ Fetch cycles on mount
+    fetchCycles(); 
   }, []);
 
   useEffect(() => {

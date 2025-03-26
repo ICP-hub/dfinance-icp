@@ -113,7 +113,7 @@ const MySupply = () => {
     image: "",
     balance: "",
   });
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false)
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   const handleModalOpen = (
     type,
@@ -490,16 +490,15 @@ const MySupply = () => {
     };
   }, [isFreezePopupVisible]);
 
- 
   useEffect(() => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
-  
+
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
       setSupplyDataLoading(true);
-  
+
       try {
         for (const asset of assets) {
           await fetchAssetSupply(asset);
@@ -511,11 +510,11 @@ const MySupply = () => {
         setTimeout(() => setSupplyDataLoading(false), 1500); // Adjust time as needed
       }
     };
-  
+
     const fetchBorrowData = async () => {
       if (assets.length === 0) return;
       setBorrowDataLoading(true);
-  
+
       try {
         for (const asset of assets) {
           await fetchAssetBorrow(asset);
@@ -526,11 +525,10 @@ const MySupply = () => {
         setTimeout(() => setBorrowDataLoading(false), 1500); // Adjust time as needed
       }
     };
-  
+
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, dashboardRefreshTrigger]);
-  
 
   useEffect(() => {
     if (!filteredDataLoading) {
@@ -973,7 +971,7 @@ const MySupply = () => {
                       const assetBalance = assetBalances.find(
                         (balance) => balance.asset === asset
                       )?.dtokenBalance;
-                      console.log("assetBalance",assetBalance)
+                      console.log("assetBalance", assetBalance);
                       return (
                         (assetBalance > 0 || assetBalance === undefined) &&
                         getAssetSupplyValue(reserveGroup[0]) >= 0n
@@ -3475,10 +3473,13 @@ const MySupply = () => {
                                                   : "0.0000";
                                               }
                                             }
-                                            console.log("borrowableValue", borrowableValue)
+                                            console.log(
+                                              "borrowableValue",
+                                              borrowableValue
+                                            );
                                             if (
-                                              borrowableValue  <= "0.00000000" ||
-                                              borrowableValue <= "0.0000"
+                                              (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
+                                              (Number(borrowableValue)).toFixed(8) <= "0.0000"
                                             ) {
                                               toast.info(
                                                 "Insufficeint asset supply to allow borrow request"
@@ -3904,7 +3905,7 @@ const MySupply = () => {
                                           Number(userData?.Ok?.ltv) /
                                             100000000 || 0;
                                         const remainingBorrowable =
-                                        Number(total_supply*0.85)  -
+                                          Number(total_supply * 0.85) -
                                           Number(total_borrow);
                                         let borrowableValue = "0.00000000";
                                         let borrowableAssetValue = "0.0000";
@@ -4023,8 +4024,8 @@ const MySupply = () => {
                                           }
                                         }
                                         if (
-                                          borrowableValue <= "0.00000000" ||
-                                          borrowableValue <= "0.0000"
+                                          (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
+                                          (Number(borrowableValue)).toFixed(8) <= "0.0000"
                                         ) {
                                           // Show toast notification
                                           toast.info(
@@ -4245,9 +4246,9 @@ const MySupply = () => {
                                 100000000;
 
                               const isEligibleA =
-                                total_supply_A *0.85 > total_borrow_A;
+                                total_supply_A * 0.85 > total_borrow_A;
                               const isEligibleB =
-                                total_supply_B *0.85> total_borrow_B;
+                                total_supply_B * 0.85 > total_borrow_B;
 
                               if (isEligibleA && !isEligibleB) return -1;
                               if (!isEligibleA && isEligibleB) return 1;
@@ -4271,7 +4272,7 @@ const MySupply = () => {
                             );
 
                             const isEligible =
-                            total_supply * 0.85 > total_borrow;
+                            ((total_supply * 0.85).toFixed(8) > total_borrow);
 
                             // Apply opacity if available borrow is 0
                             const itemClass =
@@ -4379,8 +4380,8 @@ const MySupply = () => {
                                       if (!assetData) return null;
 
                                       const usdRate = assetData.rate / 1e8;
-                                      const maxBorrow =
-                                        Number(total_supply) <
+                                      const formattedMaxBorrow =
+                                        Number(total_supply) * 0.85 <
                                         Number(total_borrow)
                                           ? 0
                                           : Math.min(
@@ -4388,7 +4389,8 @@ const MySupply = () => {
                                                 Number(total_borrow),
                                               Number(availableBorrow) / usdRate
                                             );
-
+                                            const maxBorrow =
+                                            formattedMaxBorrow.toFixed(8);
                                       const usdValue = maxBorrow * usdRate;
 
                                       // Determine how to display the borrowable asset amount
@@ -4523,7 +4525,7 @@ const MySupply = () => {
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
                                       const remainingBorrowable =
-                                        Number(total_supply)*0.85 -
+                                        Number(total_supply) * 0.85 -
                                         Number(total_borrow);
 
                                       const {
@@ -4779,11 +4781,10 @@ const MySupply = () => {
                               const availableBorrowNumber = Number(
                                 availableBorrow || 0
                               );
-
                               const isEligible =
-                                total_supply * 0.85 > total_borrow;
+                                ((total_supply * 0.85).toFixed(8) > total_borrow);
 
-                              // Apply opacity if available borrow is 0
+
                               const itemClass =
                                 (showAllAssets && !isEligible) ||
                                 availableBorrowNumber === 0
@@ -4853,8 +4854,8 @@ const MySupply = () => {
                                       if (!assetData) return null;
 
                                       const usdRate = assetData.rate / 1e8;
-                                      const maxBorrow =
-                                        Number(total_supply) <
+                                      const formattedMaxBorrow =
+                                        Number(total_supply) * 0.85 <
                                         Number(total_borrow)
                                           ? 0
                                           : Math.min(
@@ -4862,9 +4863,9 @@ const MySupply = () => {
                                                 Number(total_borrow),
                                               Number(availableBorrow) / usdRate
                                             );
-
+                                      const maxBorrow =
+                                      formattedMaxBorrow.toFixed(8);
                                       const usdValue = maxBorrow * usdRate;
-
                                       let displayedAsset;
                                       if (
                                         !isFinite(usdValue) ||

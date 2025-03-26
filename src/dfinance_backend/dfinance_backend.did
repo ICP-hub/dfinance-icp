@@ -212,8 +212,11 @@ service : (principal) -> {
   is_function_blocked : (text) -> (Result_7) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result_10);
+  register_user : () -> (Result_10);
   remove_blocked_function : (principal, text) -> (Result_1);
   reset_reserve_value : (text, text, nat) -> (Result_1);
+  retrieve_blocked_users : (principal) -> (Result_11) query;
+  retrieve_request_info : (principal) -> (Result_12) query;
   retrieve_blocked_users : (principal) -> (Result_11) query;
   retrieve_request_info : (principal) -> (Result_12) query;
   to_check_controller : () -> (bool) query;

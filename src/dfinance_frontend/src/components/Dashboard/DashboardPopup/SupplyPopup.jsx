@@ -122,6 +122,7 @@ const SupplyPopup = ({
 
   const numericBalance = parseFloat(balance);
   const supplyBalance = numericBalance - transferFee;
+  console.log(numericBalance, "numericBalance")
   const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
 
@@ -283,14 +284,16 @@ const SupplyPopup = ({
     ? scaledAmount + transferFeeBigInt
     : scaledAmount;
 
-    console.log(
-      "transacyionFee",
-      transferFee,
-      "transferFeeBigInt",
-      transferFeeBigInt,
-      "scaledAmount",
-      scaledAmount, "totalAmount", totalAmount
-    );
+  console.log(
+    "transacyionFee",
+    transferFee,
+    "transferFeeBigInt",
+    transferFeeBigInt,
+    "scaledAmount",
+    scaledAmount,
+    "totalAmount",
+    totalAmount
+  );
 
   // Executes the supply transaction
   const handleSupplyETH = async () => {
@@ -684,6 +687,13 @@ const SupplyPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
+  useEffect(() => {
+    if (supplyBalance === 0) {
+        toast.dismiss();
+      toast.warning("You do not have enough transaction fees to supply.");
+    }
+  }, [supplyBalance]);
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -824,7 +834,10 @@ const SupplyPopup = ({
                     <p>Final amount</p>
                     <div className="flex items-center gap-2">
                       <p>
-                        {(amount ? (+amount || 0) + (+transferFee || 0) : 0).toFixed(8)}{" "}
+                        {(amount
+                          ? (+amount || 0) + (+transferFee || 0)
+                          : 0
+                        ).toFixed(8)}{" "}
                       </p>
                       <img
                         src={image}
@@ -847,6 +860,13 @@ const SupplyPopup = ({
                 You do not have enough {asset} in your account to pay for
                 transaction fees on the Ethereum Sepolia network. Please deposit{" "}
                 {asset} from another account.
+              </p>
+            </div>
+          )}
+          {supplyBalance === 0 && (
+            <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
+              <p className="text-yellow-700 dark:text-yellow-500">
+                You do not have enough transaction fees to supply.
               </p>
             </div>
           )}
@@ -974,40 +994,44 @@ const SupplyPopup = ({
         </div>
       )}
       {showPanicPopup && (
-             <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-               <div className="w-full flex flex-col items-center ">
-                 <div className="w-full flex items-center justify-between  ">
-                   <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
-                   <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
-                     <X size={22} />
-                   </button>
-                 </div>
-     
-                 <div
-                   className="dark:bg-gradient 
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                Important Message
+              </h1>
+              <button
+                onClick={handleClosePaymentPopup}
+                className="text-gray-400 focus:outline-none mt-3 mr-4"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div
+              className="dark:bg-gradient 
                      dark:from-darkGradientStart 
                      dark:to-darkGradientEnd 
                      dark:text-darkText p-2 "
-                 >
-     
-                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                     Thanks for helping us improve DFinance! <br></br> You’ve
-                     uncovered a bug, and our dev team is on it.
-                   </p>
-     
-                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                     Your account is temporarily locked while we investigate and fix
-                     the issue. <br />
-                   </p>
-                   <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                     We appreciate your contribution and have logged your ID—testers
-                     like you are key to making DFinance better! <br />
-                     If you have any questions, feel free to reach out.
-                   </p>
-                 </div>
-               </div>
-             </div>
-           )}
+            >
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Thanks for helping us improve DFinance! <br></br> You’ve
+                uncovered a bug, and our dev team is on it.
+              </p>
+
+              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                Your account is temporarily locked while we investigate and fix
+                the issue. <br />
+              </p>
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                We appreciate your contribution and have logged your ID—testers
+                like you are key to making DFinance better! <br />
+                If you have any questions, feel free to reach out.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

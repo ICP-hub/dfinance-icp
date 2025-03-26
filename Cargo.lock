@@ -583,15 +583,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
-name = "buy_burn"
-version = "0.1.0"
-dependencies = [
- "candid 0.10.9",
- "candid-extractor",
- "ic-cdk 0.13.2",
-]
-
-[[package]]
 name = "byte-unit"
 version = "4.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5638,15 +5629,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbfc0d229f1f42d790440136d941afd806bc9e949e2bcb8faa813b0f00d1267e"
 dependencies = [
  "logos-codegen",
-]
-
-[[package]]
-name = "lp_pool"
-version = "0.1.0"
-dependencies = [
- "candid 0.10.9",
- "candid-extractor",
- "ic-cdk 0.13.2",
 ]
 
 [[package]]

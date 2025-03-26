@@ -132,39 +132,53 @@ const SupplyPopup = ({
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Allow empty input (don't format until user types something)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
+      setError("");
       return;
     }
+  
+    // Allow user to type "." or "0." without breaking
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
+      setError("");
+      return;
+    }
+  
+    // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > supplyBalance) {
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
       setError(
-        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
-          "en-US"
-        )}`
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString("en-US")}`
       );
       return;
     } else {
       setError("");
     }
+  
+    // Format number properly without breaking
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
+  
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   // Updates the USD equivalent of the supply amount
   const updateAmountAndUsdValue = (inputAmount) => {
@@ -961,40 +975,40 @@ const SupplyPopup = ({
         </div>
       )}
       {showPanicPopup && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
-
-            <div
-              className="dark:bg-gradient 
-                dark:from-darkGradientStart 
-                dark:to-darkGradientEnd 
-                dark:text-darkText  "
-            >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                Thanks for helping us improve DFinance! <br></br> You’ve
-                uncovered a bug, and our dev team is on it.
-              </p>
-
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                Your account is temporarily locked while we investigate and fix
-                the issue. <br />
-              </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                We appreciate your contribution and have logged your ID—testers
-                like you are key to making DFinance better! <br />
-                If you have any questions, feel free to reach out.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+             <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+               <div className="w-full flex flex-col items-center ">
+                 <div className="w-full flex items-center justify-between  ">
+                   <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
+                   <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                     <X size={22} />
+                   </button>
+                 </div>
+     
+                 <div
+                   className="dark:bg-gradient 
+                     dark:from-darkGradientStart 
+                     dark:to-darkGradientEnd 
+                     dark:text-darkText p-2 "
+                 >
+     
+                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     Thanks for helping us improve DFinance! <br></br> You’ve
+                     uncovered a bug, and our dev team is on it.
+                   </p>
+     
+                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     Your account is temporarily locked while we investigate and fix
+                     the issue. <br />
+                   </p>
+                   <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     We appreciate your contribution and have logged your ID—testers
+                     like you are key to making DFinance better! <br />
+                     If you have any questions, feel free to reach out.
+                   </p>
+                 </div>
+               </div>
+             </div>
+           )}
     </>
   );
 };

@@ -3357,7 +3357,7 @@ const MySupply = () => {
                                               Number(userData?.Ok?.ltv) /
                                                 100000000 || 0;
                                             const remainingBorrowable =
-                                              Number(total_supply*0.85) -
+                                              Number(total_supply * 0.85) -
                                               Number(total_borrow);
                                             let borrowableValue = "0.00000000";
                                             let borrowableAssetValue = "0.0000";
@@ -4245,9 +4245,9 @@ const MySupply = () => {
                                 100000000;
 
                               const isEligibleA =
-                                total_supply_A > total_borrow_A;
+                                total_supply_A *0.85 > total_borrow_A;
                               const isEligibleB =
-                                total_supply_B > total_borrow_B;
+                                total_supply_B *0.85> total_borrow_B;
 
                               if (isEligibleA && !isEligibleB) return -1;
                               if (!isEligibleA && isEligibleB) return 1;
@@ -4523,7 +4523,7 @@ const MySupply = () => {
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
                                       const remainingBorrowable =
-                                        Number(total_supply) -
+                                        Number(total_supply)*0.85 -
                                         Number(total_borrow);
 
                                       const {

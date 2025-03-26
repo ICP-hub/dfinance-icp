@@ -412,7 +412,7 @@ const DashboardNav = () => {
       if (denominator === 0) return NaN; // 🚀 Return NaN instead of 0 to ensure "-" is displayed
 
       const netApy = numerator / denominator;
-      return netApy < 0.0001 ? 0.0001 : netApy; // ✅ Never return 0, instead set a minimum threshold
+      return netApy < 0.0001 ? 0.0001 : netApy; //  Never return 0, instead set a minimum threshold
     },
     [reserveData, assetBalances]
   );

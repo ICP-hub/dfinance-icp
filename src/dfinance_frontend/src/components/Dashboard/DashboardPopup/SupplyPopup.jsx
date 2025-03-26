@@ -807,12 +807,11 @@ const SupplyPopup = ({
                       </span>
                     </p>
                   </div>
-                  <div className="w-full flex justify-between items-center my-1">
+                  <div className="w-full flex justify-between items-center my-1 mt-2">
                     <div className="flex items-center gap-1">
-                      <p>Transaction Fees</p>
-                      <Fuel className="dark:text-blue-300" size={13} />
+                      <p>Transaction Fee</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-1">
                       <p>{transferFee}</p>
                       <img
                         src={image}

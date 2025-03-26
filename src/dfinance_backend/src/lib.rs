@@ -36,8 +36,7 @@ use crate::declarations::assets::{
     ExecuteWithdrawParams,
 };
 use crate::declarations::storable::Candid;
-use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserData, UserAccountData};
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
 

@@ -145,3 +145,21 @@ pub struct CalculateInterestRatesParams {
     pub reserve: String,
     pub d_token: Option<String>,
 }
+
+
+/*
+ * @title User Account Data Structure
+ * @notice Stores financial data such as collateral, debt, and risk factors.
+ *
+ * @dev Tracks users' financial health and determines potential liquidation status.
+ */
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct UserAccountData {
+    pub collateral: Nat,
+    pub debt: Nat,
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub health_factor: Nat,
+    pub available_borrow: Nat,
+    pub has_zero_ltv_collateral: bool,
+}

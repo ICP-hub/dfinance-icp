@@ -182,11 +182,31 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 }
             }
         };
+        let debt_asset_price = match get_cached_exchange_rate(params.debt_asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("asset price = {}",debt_asset_price);
+        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(debt_asset_price);
+        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+
+        if params.amount.clone() < transfer_token_fee {
+            ic_cdk::println!("Amount is less than the transfer token fee");
+            // if let Err(e) = release_lock(&operation_key) {
+            //     ic_cdk::println!("Failed to release lock: {:?}", e);
+            // }
+            return Err(Error::AmountSubtractionError);
+        }
 
         //let (mut reward_amount, mut reward_collateral) = (Nat::from(0u128), Nat::from(0u128));
         let mut earned_rewards = Nat::from(0u128);
-        let reward_result: Result<Nat, Error> = to_get_reward_amount(
-            params.amount.clone(),
+        let mut liquidation_bonus_amount = Nat::from(0u128);
+
+        let reward_result: Result<(Nat,Nat), Error> = to_get_reward_amount(
+            params.amount.clone() - transfer_token_fee.clone(),
             params.collateral_asset.clone(),
             params.debt_asset.clone(),
             collateral_reserve_data.clone(),
@@ -196,8 +216,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         .await;
 
         match reward_result {
-            Ok(amount) => {
+            Ok((amount,liquidity_bonus)) => {
                 earned_rewards = amount;
+                liquidation_bonus_amount = liquidity_bonus;
             }
             Err(err) => {
                 println!("Error occurred: {:?}", err);
@@ -241,40 +262,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
 
-        let mut collateral_amount = params.amount.clone();
-        if params.collateral_asset != params.debt_asset {
-            let debt_in_usd = get_exchange_rates(
-                params.debt_asset.clone(),
-                Some(params.collateral_asset.clone()),
-                params.amount.clone(),
-            )
-            .await;
-            match debt_in_usd {
-                Ok((amount_in_usd, _timestamp)) => {
-                    // Extracted the amount in USD
-                    collateral_amount = amount_in_usd.clone();
-                    ic_cdk::println!("debt amount in USD: {:?}", amount_in_usd);
-                }
-                Err(e) => {
-                    // Release the lock
-                    if let Err(e) = release_lock(&user_key) {
-                        ic_cdk::println!("Failed to release lock: {:?}", e);
-                    }
-                    ic_cdk::println!("Error getting exchange rate: {:?}", e);
-                    return Err(e);
-                }
-            }
-        }
-        ic_cdk::println!("Collateral amount : {}", collateral_amount);
 
         let reward_amount: Nat = params.reward_amount.clone();
         ic_cdk::println!("reward_amount: {}", reward_amount);
-
-        let supply_param = ExecuteSupplyParams {
-            asset: params.collateral_asset.to_string(),
-            amount: reward_amount.clone(),
-            is_collateral: true,
-        };
 
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
         if let Err(e) =
@@ -310,7 +300,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
         if let Err(e) = ValidationLogic::validate_liquidation(
             params.debt_asset.clone(),
-            params.amount.clone(),
+            params.amount.clone() - transfer_token_fee.clone(),
             reward_amount.clone(),
             liquidator_principal,
             user_principal,
@@ -354,33 +344,19 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             }
         };
 
-        let asset_price = match get_cached_exchange_rate(params.collateral_asset.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
-        ic_cdk::println!("asset price = {}",asset_price);
-
-        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
-
-        if params.reward_amount.clone() < transfer_token_fee {
-            ic_cdk::println!("Amount is less than the transfer token fee");
-            // if let Err(e) = release_lock(&operation_key) {
-            //     ic_cdk::println!("Failed to release lock: {:?}", e);
-            // }
-            return Err(Error::AmountSubtractionError);
+        let liquidation_fee_percentage = collateral_reserve_data.configuration.liquidation_protocol_fee.clone();
+         ic_cdk::println!("liquidation protocol fee percentage : {:?}",liquidation_fee_percentage.clone());
+        ic_cdk::println!("liquidation bonus amount : {:?}",liquidation_bonus_amount);
+        let protocol_fee_amount = liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage / Nat::from(100u128));
+        ic_cdk::println!("liquidation protocol fee amount :{:?}",protocol_fee_amount.clone());
+        if reward_amount.clone() < protocol_fee_amount.clone() {
+            ic_cdk::println!("protocol fee amount is greater than reward amount");
+            return Err(Error::LiquidationProtocolfeeIsHigher);
         }
-
-        let reward_after_fee  = params.reward_amount.clone() - transfer_token_fee.clone();
-        ic_cdk::println!("Withdraw amount: {:?}", reward_after_fee );
-
 
         let supply_param = ExecuteSupplyParams {
             asset: params.collateral_asset.to_string(),
-            amount: reward_after_fee.clone(),
+            amount: reward_amount.clone() - protocol_fee_amount.clone(),
             is_collateral: true,
         };
         
@@ -500,7 +476,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 let rollback_dtoken_from_liquidator = burn_scaled(
                     &mut collateral_reserve_data,
                     &mut liquidator_reserve_data,
-                    reward_after_fee.clone(),
+                    reward_amount.clone(),
                     collateral_reserve_cache.next_liquidity_index.clone(),
                     liquidator_principal,
                     collateral_dtoken_principal,
@@ -523,7 +499,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 let rollback_dtoken_to_user = mint_scaled(
                     &mut collateral_reserve_data,
                     &mut user_reserve_data,
-                    reward_amount,
+                    reward_amount.clone()  - protocol_fee_amount.clone(),
                     collateral_reserve_cache.next_liquidity_index,
                     user_principal,
                     collateral_dtoken_principal,
@@ -605,7 +581,7 @@ pub async fn to_get_reward_amount(
     collateral_reserve_data: ReserveData,
     user_principal: Principal,
     user_reserve_data: UserReserveData,
-) -> Result<Nat, Error> {
+) -> Result<(Nat,Nat), Error> {
     ic_cdk::println!("Starting to_get_reward_amount function");
     ic_cdk::println!("Received parameters: amount = {:?}, collateral_asset = {:?}, debt_asset = {:?}, user_principal = {:?}", amount, collateral_asset, debt_asset, user_principal);
 
@@ -694,14 +670,15 @@ pub async fn to_get_reward_amount(
         collateral_reserve_data.configuration.liquidation_bonus
     );
 
-    let final_collateral_amount = collateral_amount.clone()
-        + collateral_amount.clone().scaled_mul(
-            collateral_reserve_data
-                .configuration
-                .liquidation_bonus
-                .clone()
-                / Nat::from(100u128),
-        );
+    let liquidation_bonus_amount = collateral_amount.clone().scaled_mul(
+        collateral_reserve_data
+            .configuration
+            .liquidation_bonus
+            .clone()
+            / Nat::from(100u128),
+    );
+ 
+    let final_collateral_amount = collateral_amount.clone() + liquidation_bonus_amount.clone();
 
     ic_cdk::println!("Calculated final collateral: {:?}", final_collateral_amount);
 
@@ -718,5 +695,5 @@ pub async fn to_get_reward_amount(
         );
     }
 
-    Ok(max_collateral)
+    Ok((max_collateral,liquidation_bonus_amount))
 }

@@ -376,32 +376,27 @@ const DebtStatus = () => {
 
   useEffect(() => {
     const loadUsers = async () => {
-      setLiquidationLoading(true)
-      if (liquidationUsers.length === 0) {
-        try {
-          const usersPerPage = 10;
-          const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-
-          const data = await fetchLiquidationUsers(totalPages, usersPerPage);
-          setLiquidationUsers((prev) => [...prev, ...data]);
-        } catch (err) {
-         
-          console.error("Failed to load liquidation users:", err);
-          setError("Failed to fetch users. Please try again later.");
-          setTimeout(() => {
-            setLiquidationLoading(false); // Set loading to false after delay
-          }, 1200);
-        } finally{
-          setTimeout(() => {
-            setLiquidationLoading(false); // Set loading to false after delay
-          }, 1200);
-        }
+      setLiquidationLoading(true);
+  
+      try {
+        const usersPerPage = 10;
+        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
+  
+        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
+        setLiquidationUsers(data); 
+      } catch (err) {
+        console.error("Failed to load liquidation users:", err);
+        setError("Failed to fetch users. Please try again later.");
+      } finally {
+        setTimeout(() => {
+          setLiquidationLoading(false);
+        }, 1200);
       }
     };
-
+  
     loadUsers();
   }, [totalUsers, liquidateTrigger]);
-
+  
   useEffect(() => {
     if (currentItems.length > 0) {
       fetchAssetData();
@@ -456,7 +451,7 @@ const DebtStatus = () => {
     console.log("liquidationUsers:", liquidationUsers);
     console.log("relevantItems:", relevantItems);
     console.log("currentItems:", currentItems);
-  }, [liquidationUsers, relevantItems, currentItems]);
+  }, [liquidationUsers, relevantItems, currentItems,liquidateTrigger]);
 
   /* ===================================================================================
    *                                  RENDER COMPONENT

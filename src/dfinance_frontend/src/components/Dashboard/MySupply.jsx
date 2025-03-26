@@ -490,44 +490,47 @@ const MySupply = () => {
     };
   }, [isFreezePopupVisible]);
 
+ 
   useEffect(() => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
-
+  
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
       setSupplyDataLoading(true);
+  
       try {
         for (const asset of assets) {
           await fetchAssetSupply(asset);
         }
       } catch (error) {
-        setSupplyDataLoading(false);
         console.error("Error fetching supply data:", error);
       } finally {
-        setSupplyDataLoading(false);
+        // ⏳ Add a delay before setting loading to false
+        setTimeout(() => setSupplyDataLoading(false), 1500); // Adjust time as needed
       }
     };
-
+  
     const fetchBorrowData = async () => {
       if (assets.length === 0) return;
       setBorrowDataLoading(true);
+  
       try {
         for (const asset of assets) {
           await fetchAssetBorrow(asset);
         }
       } catch (error) {
-        setBorrowDataLoading(false);
         console.error("Error fetching borrow data:", error);
       } finally {
-        setBorrowDataLoading(false);
+        setTimeout(() => setBorrowDataLoading(false), 1500); // Adjust time as needed
       }
     };
-
+  
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, dashboardRefreshTrigger]);
+  
 
   useEffect(() => {
     if (!filteredDataLoading) {
@@ -970,9 +973,10 @@ const MySupply = () => {
                       const assetBalance = assetBalances.find(
                         (balance) => balance.asset === asset
                       )?.dtokenBalance;
+                      console.log("assetBalance",assetBalance)
                       return (
                         (assetBalance > 0 || assetBalance === undefined) &&
-                        getAssetSupplyValue(reserveGroup[0]) > 0n
+                        getAssetSupplyValue(reserveGroup[0]) >= 0n
                       ); // Check both conditions
                     }).length === 0 ? (
                     noSupplyMessage
@@ -3353,7 +3357,7 @@ const MySupply = () => {
                                               Number(userData?.Ok?.ltv) /
                                                 100000000 || 0;
                                             const remainingBorrowable =
-                                              Number(total_supply*0.85) -
+                                              Number(total_supply * 0.85) -
                                               Number(total_borrow);
                                             let borrowableValue = "0.00000000";
                                             let borrowableAssetValue = "0.0000";
@@ -4241,9 +4245,9 @@ const MySupply = () => {
                                 100000000;
 
                               const isEligibleA =
-                                total_supply_A > total_borrow_A;
+                                total_supply_A *0.85 > total_borrow_A;
                               const isEligibleB =
-                                total_supply_B > total_borrow_B;
+                                total_supply_B *0.85> total_borrow_B;
 
                               if (isEligibleA && !isEligibleB) return -1;
                               if (!isEligibleA && isEligibleB) return 1;
@@ -4519,7 +4523,7 @@ const MySupply = () => {
                                         Number(userData?.Ok?.ltv) / 100000000 ||
                                         0;
                                       const remainingBorrowable =
-                                        Number(total_supply) -
+                                        Number(total_supply)*0.85 -
                                         Number(total_borrow);
 
                                       const {

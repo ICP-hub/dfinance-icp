@@ -1,0 +1,4 @@
+service : () -> {
+  buy_and_burn : (nat64) -> (text);
+  get_status : () -> (text) query;
+}

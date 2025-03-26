@@ -312,8 +312,6 @@ pub async fn calculate_user_account_data(
  *   - Available borrow
  *   - Has zero-LTV collateral (bool)
  */
-
-#[query]
 pub async fn calculate_user_asset_data(
     on_behalf: Option<Principal>,
     dtoken_balance: Option<Vec<AssetData>>,
@@ -730,7 +728,6 @@ pub async fn get_user_asset_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    // Ask : get normailse incone function does not exist.
     ic_cdk::println!(
         "last of the base currency  = {}",
         user_scaled_balanced_normalized
@@ -791,7 +788,6 @@ pub async fn get_user_debt_in_base_currency(
             return Err(e);
         }
     };
-    // let mut user_variable_debt = reserve.debt_token_blance.clone();
     let user_normailzed_debt_result = user_normalized_debt(asset_reserve);
     let user_normailzed_debt = match user_normailzed_debt_result {
         Ok(data) => {
@@ -894,73 +890,6 @@ pub struct UserAccountData {
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
-// #[update]
-// pub async fn get_liquidation_users_concurrent(
-//     total_pages: usize,
-//     page_size: usize,
-// ) -> Vec<(Principal, UserAccountData, UserData)> {
-//     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
-//     let total_users = vector_user_data.len();
-
-//     let mut liq_list = Vec::new();
-
-//     let page_futures = (0..total_pages).map(|page| {
-//         let users_to_process = vector_user_data
-//             .iter()
-//             .skip(page * page_size)
-//             .take(page_size)
-//             .cloned()
-//             .collect::<Vec<_>>();
-
-//         async move {
-//             let mut page_liq_list = Vec::new();
-
-//             let mut tasks = users_to_process
-//                 .into_iter()
-//                 .map(|(user_principal, user_data)| async move {
-//                     if let Ok(user_account_data) =
-//                         calculate_user_account_data(Some(user_principal)).await
-//                     {
-//                         Some((user_principal, user_account_data, user_data))
-//                     } else {
-//                         None
-//                     }
-//                 })
-//                 .collect::<FuturesUnordered<_>>();
-
-//             while let Some(result) = tasks.next().await {
-//                 if let Some((user_principal, user_account_data_tuple, user_data)) = result {
-//                     let user_account_data = UserAccountData {
-//                         collateral: user_account_data_tuple.0,
-//                         debt: user_account_data_tuple.1,
-//                         ltv: user_account_data_tuple.2,
-//                         liquidation_threshold: user_account_data_tuple.3,
-//                         health_factor: user_account_data_tuple.4,
-//                         available_borrow: user_account_data_tuple.5,
-//                         has_zero_ltv_collateral: user_account_data_tuple.6,
-//                     };
-//                     ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
-
-//                     if user_account_data.health_factor < Nat::from(10000000000u128){
-//                         page_liq_list.push((user_principal, user_account_data, user_data));
-//                     }
-                   
-//                 }
-//             }
-//             page_liq_list
-//         }
-//     });
-
-//     let results = futures::future::join_all(page_futures).await;
-
-//     for result in results {
-//         liq_list.extend(result);
-//     }
-
-//     liq_list
-// }
-
-
 #[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
@@ -1019,12 +948,11 @@ pub async fn get_liquidation_users_concurrent(
                     }
                 }
             })
-            .buffered(100) // Process 50 users concurrently to prevent overload
+            .buffered(100) // Process 100 users concurrently to prevent overload
             .collect::<Vec<_>>()
             .await;
 
         liq_list.extend(page_liq_list.into_iter().flatten());
-        // ic_cdk::api::call::msg_cycles_available(); // Check available cycles to prevent cycle exhaustion
         let cycles_end = Nat::from(api::canister_balance128());
         ic_cdk::println!("cycles middle = {:?}", cycles_end);
     }

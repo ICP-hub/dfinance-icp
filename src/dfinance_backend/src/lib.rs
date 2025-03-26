@@ -10,6 +10,7 @@ use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
 use futures::future::ok;
+use guards::to_check_controller;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
@@ -241,50 +242,6 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
     })
 }
 
-// #[query]
-// pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache, Error> {
-//     if base_asset_symbol.trim().is_empty() {
-//         ic_cdk::println!("Asset cannot be an empty string");
-//         return Err(Error::EmptyAsset);
-//     }
-
-//     if base_asset_symbol.len() > 7 {
-//         ic_cdk::println!("Asset must have a maximum length of 7 characters");
-//         return Err(Error::InvalidAssetLength);
-//     }
-//     let base_asset = match base_asset_symbol.as_str() {
-//         "ckBTC" => "btc",
-//         "ckETH" => "eth",
-//         "ckUSDC" => "usdc",
-//         "ckUSDT" => "usdt",
-//         _ => base_asset_symbol.as_str(),
-//     };
-
-//     ic_cdk::println!("base asset = {}", base_asset);
-
-//     ic_cdk::println!("base asset symbol =  {}", base_asset_symbol);
-//     // Fetching price-cache data
-//     let price_cache_result = read_state(|state| {
-//         let price_cache_data = &state.price_cache_list;
-//         price_cache_data
-//             .get(&base_asset.to_string())
-//             .map(|price_cache: Candid<PriceCache>| price_cache.0)
-//             .ok_or_else(|| Error::NoPriceCache)
-//     });
-
-//     // Handling price-cache data result
-//     match price_cache_result {
-//         Ok(data) => {
-//             ic_cdk::println!("price cache found: {:?}", data);
-//             Ok(data)
-//         }
-//         Err(e) => {
-//             ic_cdk::println!("price cache not found = {:?}", e);
-//             return Err(e);
-//         }
-//     }
-// }
-
 /*
  * @title Get Asset Supply
  * @dev Fetches the total asset supply for a given asset.
@@ -292,7 +249,6 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
  * @param on_behalf (Optional) The principal requesting the asset supply.
  * @returns The total asset supply as `Nat`.
  */
-
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -555,7 +511,6 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
             "previoys liquidity index: {} for reserve",
             reserve_data.liquidity_index
         );
-        //  user_reserve_data.liquidity_index =
         return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
 }
@@ -611,6 +566,11 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
 async fn get_lock() -> Result<bool, Error> {
     let user_principal = ic_cdk::api::caller();
     ic_cdk::println!("user principal = {} ", user_principal);
+
+    if !to_check_controller() {
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
 
     let result = LOCKS
         .lock()
@@ -690,6 +650,14 @@ pub async fn post_upgrade() {
 
 #[query]
 pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
+
+    let caller_id = ic_cdk::caller(); 
+      
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
     let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
         Ok(price) => price,
         Err(e) => {

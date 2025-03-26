@@ -12,7 +12,7 @@ use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::{get_cached_exchange_rate, reserve_ledger_canister_id, get_asset_debt};
+use crate::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -163,34 +163,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("Borrow validated successfully");
 
-        // let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-        //     Ok(price) => price,
-        //     Err(e) => {
-        //         ic_cdk::println!("Failed to fetch exchange rate");
-        //         return Err(e);
-        //     }
-        // };
-
-        // ic_cdk::println!("asset price = {}", asset_price);
-
-        // let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-        // ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
-
-        // if params.amount.clone() < transfer_token_fee {
-        //     ic_cdk::println!("Amount is less than the transfer token fee");
-        //     if let Err(e) = release_lock(&operation_key) {
-        //         ic_cdk::println!("Failed to release lock: {:?}", e);
-        //     }
-        //     return Err(Error::AmountSubtractionError);
-        // }
-        // // params.amount = params.amount - transfer_token_fee;
-        // ic_cdk::println!(
-        //     "Amount after fee deduction: {:?}",
-        //     params.amount.clone() - transfer_token_fee.clone()
-        // );
-
-        // params.amount = params.amount.clone() - transfer_token_fee.clone();
-
         // ----------- Update logic here -------------
         if let Err(e) = UpdateLogic::update_user_data_borrow(
             user_principal,
@@ -201,17 +173,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
         .await
         {
             ic_cdk::println!("Failed to update user data: {:?}", e);
-            // if let Err(e) = release_amount(&params.asset, &amount_requested) {
-            //     ic_cdk::println!(
-            //         "Failed to release amount for asset {}: {:?}",
-            //         params.asset,
-            //         e
-            //     );
-            //     if let Err(e) = release_lock(&operation_key) {
-            //         ic_cdk::println!("Failed to release lock: {:?}", e);
-            //     }
-            //     return Err(e);
-            // }
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
             }
@@ -231,17 +192,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
         .await
         {
             ic_cdk::println!("Failed to update interest rates: {:?}", e);
-            // if let Err(e) = release_amount(&params.asset, &amount_requested) {
-            //     ic_cdk::println!(
-            //         "Failed to release amount for asset {}: {:?}",
-            //         params.asset,
-            //         e
-            //     );
-            //     if let Err(e) = release_lock(&operation_key) {
-            //         ic_cdk::println!("Failed to release lock: {:?}", e);
-            //     }
-            //     return Err(e);
-            // }
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
             }
@@ -285,17 +235,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
                 .await
                 {
                     ic_cdk::println!("Failed to rollback user state: {:?}", e);
-                    // if let Err(e) = release_amount(&params.asset, &amount_requested) {
-                    //     ic_cdk::println!(
-                    //         "Failed to release amount for asset {}: {:?}",
-                    //         params.asset,
-                    //         e
-                    //     );
-                    //     if let Err(e) = release_lock(&operation_key) {
-                    //         ic_cdk::println!("Failed to release lock: {:?}", e);
-                    //     }
-                    //     return Err(e);
-                    // }
                     if let Err(e) = release_lock(&operation_key) {
                         ic_cdk::println!("Failed to release lock: {:?}", e);
                     }
@@ -306,17 +245,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
                     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
                 });
                 ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
-                // if let Err(e) = release_amount(&params.asset, &amount_requested) {
-                //     ic_cdk::println!(
-                //         "Failed to release amount for asset {}: {:?}",
-                //         params.asset,
-                //         e
-                //     );
-                //     if let Err(e) = release_lock(&operation_key) {
-                //         ic_cdk::println!("Failed to release lock: {:?}", e);
-                //     }
-                //     return Err(e);
-                // }
                 if let Err(e) = release_lock(&operation_key) {
                     ic_cdk::println!("Failed to release lock: {:?}", e);
                 }
@@ -326,19 +254,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
     }
     .await;
 
-    if is_amount_locked(&user_principal) {
-        // if let Err(e) = release_amount(&params.asset, &amount_requested) {
-        //     ic_cdk::println!(
-        //         "Failed to release amount for asset {}: {:?}",
-        //         params.asset,
-        //         e
-        //     );
-        //     if let Err(e) = release_lock(&operation_key) {
-        //         ic_cdk::println!("Failed to release lock: {:?}", e);
-        //     }
-        //     return Err(e);
-        // }
-    }
     if let Err(e) = release_lock(&operation_key) {
         ic_cdk::println!("Failed to release lock: {:?}", e);
         return Err(e);
@@ -536,9 +451,9 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             }
         };
 
-        ic_cdk::println!("asset price = {}",asset_price);
+        ic_cdk::println!("asset price = {}", asset_price);
 
-       let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
         ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
 
         if params.amount.clone() < transfer_token_fee {
@@ -546,50 +461,28 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
             }
-            return Err(Error::AmountSubtractionError);
+            return Err(Error::FeeExceedsAmount);
         }
         ic_cdk::println!("token fee = {}", transfer_token_fee);
         params.amount = params.amount - transfer_token_fee.clone();
         ic_cdk::println!("amount = {}", params.amount);
 
-
-        // let user_current_debt = get_asset_debt(reserve.asset_name.clone().unwrap(), Some(user)).await?;
         let user_current_debt =
             match get_asset_debt(params.asset.clone(), Some(user_principal)).await {
                 Ok(debt) => debt,
                 Err(e) => {
-                    // Log the error or perform a fallback action
                     ic_cdk::println!("Error getting asset debt: {:?}", e);
-                    return Err(e.into()); // Or handle the error accordingly
+                    return Err(e);
                 }
             };
         ic_cdk::println!("User current debt: {:?}", user_current_debt);
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
         }
-        
 
         if params.amount.clone() > user_current_debt {
             return Err(Error::RepayMoreThanDebt);
         }
-
-        // let adjusted_amount = if params.amount.clone() % reserve_cache.next_debt_index.clone()
-        //     != Nat::from(0u128)
-        //     && params.amount.clone() < Nat::from(10u128)
-        // {
-        //     ic_cdk::println!("Rounding up due to remainder and amount < 10");
-        //     params
-        //         .amount
-        //         .clone()
-        //         .scaled_div(reserve_cache.next_debt_index.clone())
-        //         + Nat::from(1u128)
-        // } else {
-        //     ic_cdk::println!("No rounding required");
-        //     params
-        //         .amount
-        //         .clone()
-        //         .scaled_div(reserve_cache.next_debt_index.clone())
-        // };
 
         // ----------- Update logic here -------------
         if let Err(e) = UpdateLogic::update_user_data_repay(
@@ -604,9 +497,6 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
             }
-            // if let Err(e) = repay_release_amount(&params.asset, &adjusted_amount) {
-            //     ic_cdk::println!("Failed to release amount lock: {:?}", e);
-            // }
             return Err(e);
         }
         ic_cdk::println!("User data updated successfully");
@@ -626,10 +516,6 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             }
             return Err(e);
         }
-
-        // if let Err(e) = repay_release_amount(&params.asset, &adjusted_amount) {
-        //     ic_cdk::println!("Failed to release amount lock: {:?}", e);
-        // }
 
         mutate_state(|state| {
             let asset_index = &mut state.asset_index;

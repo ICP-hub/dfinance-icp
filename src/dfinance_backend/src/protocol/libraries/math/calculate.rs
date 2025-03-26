@@ -223,7 +223,6 @@ pub async fn get_exchange_rates(
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
             Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-            //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
             1_000_000_000,
@@ -237,7 +236,6 @@ pub async fn get_exchange_rates(
                 let pow = 10usize.pow(v.metadata.decimals);
                 ic_cdk::println!("quote = {}", quote);
                 ic_cdk::println!("pow = {}", pow);
-                // Ask : should i handle the error here or not.
                 let exchange_rate = (Nat::from(quote) * Nat::from(SCALING_FACTOR))
                     / (Nat::from(pow) - Nat::from(SCALING_FACTOR));
                 ic_cdk::println!("exchange rate = {}", exchange_rate);

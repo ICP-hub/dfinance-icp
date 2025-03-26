@@ -12,7 +12,6 @@ use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
-use futures::future::ok;
 use ic_cdk::update;
 
 /*
@@ -410,8 +409,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             return Err(e);
         }
         ic_cdk::println!("Reserve state updated successfully");
-        //user balance-> a token balance * nextliqindex
-        //if param.amount == type max, then amount to withdraw = user_balance
         if let Err(e) = ValidationLogic::validate_withdraw(
             &reserve_data,
             params.amount.clone(),
@@ -428,30 +425,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("Withdraw validated successfully");
 
-        // let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-        //     Ok(price) => price,
-        //     Err(e) => {
-        //         ic_cdk::println!("Failed to fetch exchange rate");
-        //         return Err(e);
-        //     }
-        // };
-
-        // ic_cdk::println!("asset price = {}",asset_price);
-
-        // let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-        // ic_cdk::println!("amount = {}",params.amount);
-        // ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
-
-        // if params.amount.clone() < transfer_token_fee {
-        //     ic_cdk::println!("Amount is less than the transfer token fee");
-        //     if let Err(e) = release_lock(&operation_key) {
-        //         ic_cdk::println!("Failed to release lock: {:?}", e);
-        //     }
-        //     return Err(Error::FeeExceedsAmount);
-        // }
-
         let withdraw_amount = params.amount.clone();
-        // let withdraw_amount = params.amount.clone();
         ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
 
 

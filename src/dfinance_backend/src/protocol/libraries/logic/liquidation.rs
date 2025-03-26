@@ -63,7 +63,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-    //TODO check if debt amount(reward) is zero or not
     if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
@@ -101,8 +100,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(Error::LockAcquisitionFailed);
     };
 
-    // Ensure lock is released after the operation
-    //let release_user_lock = || release_lock(&user_key);
     let result = async {
         ic_cdk::println!(
             "params debt_asset and collateral_asset {:?} {:?}",
@@ -197,13 +194,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
         if params.amount.clone() < transfer_token_fee {
             ic_cdk::println!("Amount is less than the transfer token fee");
-            // if let Err(e) = release_lock(&operation_key) {
-            //     ic_cdk::println!("Failed to release lock: {:?}", e);
-            // }
-            return Err(Error::AmountSubtractionError);
+            return Err(Error::FeeExceedsAmount);
         }
 
-        //let (mut reward_amount, mut reward_collateral) = (Nat::from(0u128), Nat::from(0u128));
         let mut earned_rewards = Nat::from(0u128);
         let reward_result: Result<Nat, Error> = to_get_reward_amount(
             params.amount.clone() - transfer_token_fee.clone(),

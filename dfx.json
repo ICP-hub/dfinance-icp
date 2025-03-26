@@ -66,16 +66,6 @@
     "internet_identity": {
       "type": "pull",
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-    },
-    "buy_burn": {
-      "candid": "src/buy_burn/buy_burn.did",
-      "package": "buy_burn",
-      "type": "rust"
-    },
-    "lp_pool": {
-      "candid": "src/lp_pool/lp_pool.did",
-      "package": "lp_pool",
-      "type": "rust"
     }
   },
   "defaults": {

@@ -215,13 +215,6 @@ dfx build xrc
 dfx deploy xrc
 dfx identity use default
 
-dfx canister create buy_burn
-dfx build buy_burn
-dfx deploy buy_burn
-
-dfx canister create lp_pool
-dfx build lp_pool
-dfx deploy lp_pool
 
 # Get the admin principal and export it
 export admin_principal=$(dfx identity get-principal)

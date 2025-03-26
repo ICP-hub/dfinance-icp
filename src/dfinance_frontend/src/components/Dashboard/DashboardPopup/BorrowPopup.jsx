@@ -441,6 +441,7 @@ const Borrow = ({
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
@@ -500,7 +501,7 @@ const Borrow = ({
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = totalSupply* 0.85 - totalBorrow;
+        const remainingBorrowable = totalSupply * 0.85 - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,

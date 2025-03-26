@@ -131,39 +131,53 @@ const SupplyPopup = ({
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Allow empty input (don't format until user types something)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
+      setError("");
       return;
     }
+  
+    // Allow user to type "." or "0." without breaking
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
+      setError("");
+      return;
+    }
+  
+    // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > supplyBalance) {
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
       setError(
-        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
-          "en-US"
-        )}`
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString("en-US")}`
       );
       return;
     } else {
       setError("");
     }
+  
+    // Format number properly without breaking
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
+  
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   // Updates the USD equivalent of the supply amount
   const updateAmountAndUsdValue = (inputAmount) => {

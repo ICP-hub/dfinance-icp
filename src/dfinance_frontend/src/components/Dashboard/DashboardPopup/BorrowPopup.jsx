@@ -402,29 +402,42 @@ const Borrow = ({
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Allow empty input
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-    const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > parseFloat(borrowableValue)) {
+  
+    // Prevent NaN when deleting numbers (keep user input as is)
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
       return;
     }
+  
+    // Convert to float but only if it's a valid number
+    const numericAmount = parseFloat(inputAmount);
+    if (!isNaN(numericAmount) && numericAmount > parseFloat(borrowableValue)) {
+      return;
+    }
+  
+    // Format number with thousands separator
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
-
+  
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };

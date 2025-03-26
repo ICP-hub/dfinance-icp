@@ -12,6 +12,9 @@ import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRa
 import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
+import { Fuel } from "lucide-react";
 
 /**
  * Repay Component
@@ -23,19 +26,36 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the Repay component, allowing users to input and execute repayment transactions.
  */
 
-const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const Repay = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-
-  /* ===================================================================================
-   *                                 STATE MANAGEMENT
-   * =================================================================================== */
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -66,10 +86,15 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
    *                                  MEMOIZATION
    * =================================================================================== */
 
-  const principalObj = useMemo(
-    () => Principal.fromText(principal),
-    [principal]
-  );
+  const principalObj = useMemo(() => {
+    if (!principal) return null; // ✅ Prevent null values
+    try {
+      return Principal.fromText(principal);
+    } catch (error) {
+      console.error("Invalid principal:", principal);
+      return null;
+    }
+  }, [principal]);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -150,9 +175,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
   }
 
   const numericBalance = balance;
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
+  const supplyBalance = numericBalance - transferFee;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
@@ -162,6 +185,20 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
    *
    */
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -177,7 +214,10 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-    const totalAmount = scaledAmount + transferfee;
+    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+    const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -247,6 +287,20 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
    * This function executes the repayment transaction. It calls the backend to perform the repayment for the specified asset.
    */
   const handleRepayETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -264,11 +318,15 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      const scaledAmount = amountAsNat64;
       const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+      const scaledAmount = amountAsNat64;
+      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+      const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
       const repayParams = {
         asset: asset,
-        amount: scaledAmount,
+        amount: totalAmount,
         on_behalf_of: [],
       };
 
@@ -279,14 +337,14 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
           "Repay," +
             asset +
             "," +
-            scaledAmount / 100000000 +
+            totalAmount / 100000000 +
             "," +
             principalObj.toString(),
           "Assets",
           "Repay," +
             asset +
             "," +
-            scaledAmount / 100000000 +
+            totalAmount / 100000000 +
             ", " +
             principalObj.toString()
         );
@@ -308,6 +366,25 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+          console.error("You are temporarily blocked from using this function");
+
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          setIsLoading(false);
+          setIsModalOpen(false);
+          return;
+        }
+
         if (errorMsg?.AmountSubtractionError === null) {
           toast.error("Repay failed: You cannot repay more than you owe.", {
             className: "custom-toast",
@@ -356,6 +433,11 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         )
       ) {
         message = "You cannot repay more than you owe.";
+      } else if (
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister")
+      ) {
+        message = "Canister is out of cycles. Admin has been notified.";
       }
 
       toast.error(`Error: ${message}`, {
@@ -424,19 +506,32 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       return truncated.toFixed(8);
     };
 
-    let selectedBalance =
-      supplyBalance > assetBorrow ? assetBorrow : supplyBalance;
-    let displayBalance = selectedBalance
+    const fee = transferFee ? Number(transferFee) : 0;
+
+    let selectedBalance;
+    // If wallet funds (supplyBalance) exceed the assetBorrow,
+    // then ensure you subtract the fee from assetBorrow.
+    if (supplyBalance >= (assetBorrow + fee)) {
+      selectedBalance = Number(assetBorrow);
+    } else {
+      // Otherwise, supplyBalance already factors in the fee
+      selectedBalance = supplyBalance - fee;
+    }
+    // Clamp to 0 if the subtraction produces a negative value
+    if (selectedBalance < 0) selectedBalance = 0;
+
+    // Format the display balance accordingly.
+    const displayBalance = selectedBalance
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
         ? Number(selectedBalance).toFixed(7)
         : truncateToSevenDecimals(selectedBalance)
       : "0";
-    const maxAmount = displayBalance.toString();
-    setMaxAmount(maxAmount);
+
+    setMaxAmount(displayBalance.toString());
     setMaxClicked(true);
-    updateAmountAndUsdValue(maxAmount);
+    updateAmountAndUsdValue(displayBalance.toString());
   };
 
   const formatValue = (value) => {
@@ -445,6 +540,13 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -520,10 +622,15 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
       totalDeptValue = 0;
     }
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    
+
     setPrevHealthFactor(currentHealthFactor);
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
     setCurrentHealthFactor(
-      healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2)
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
   }, [
     asset,
@@ -550,17 +657,17 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-[50%]">
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="flex flex-col items-start w-[45%] gap-8">
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0 || isApproved}
-                    className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-[14px] placeholder:text-[10px] lg:placeholder:text-[12px] focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
-                  <p className="text-xs text-gray-500 px-2  mt-4 mb-1">
+                  <p className="text-[11px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
@@ -569,8 +676,8 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                       : "$0.00 USD"}
                   </p>
                 </div>
-                <div className="flex flex-col items-end">
-                  <div className="w-auto flex items-center gap-2  mt-1">
+                <div className="flex flex-col items-end gap-3">
+                  <div className="w-auto flex items-center gap-2 lg:mb-5">
                     <img
                       src={image}
                       alt="Item Image"
@@ -578,23 +685,33 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 text-right w-full mt-1">
-                    Wallet Balance:
-                  </p>
-                  <p
-                    className={`text-xs mt-1 p-2 py-1 rounded-md button1 ${
-                      assetBorrow === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
-                    onClick={() => {
-                      if (assetBorrow > 0 && !isApproved) {
-                        handleMaxClick();
-                      }
-                    }}
-                  >
-                    {truncateToSevenDecimals(supplyBalance)} Max
-                  </p>
+                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
+                    {/* Wallet Balance label (Always on top in small screens) */}
+                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+                      Wallet Balance:
+                    </p>
+
+                    {/* Value and Max button in same line below on small screens */}
+                    <div className="flex gap-1 items-center">
+                      <p className="text-[10px] text-gray-500">
+                        {truncateToSevenDecimals(supplyBalance)}
+                      </p>
+                      <p
+                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                          assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        }`}
+                        onClick={() => {
+                          if (assetBorrow > 0 && !isApproved) {
+                            handleMaxClick();
+                          }
+                        }}
+                      >
+                        Max
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -612,8 +729,8 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                         {(
                           assetBorrow - (amount?.replace(/,/g, "") || "")
                         ).toLocaleString(undefined, {
-                          minimumFractionDigits: 7,
-                          maximumFractionDigits: 7,
+                          minimumFractionDigits: 8,
+                          maximumFractionDigits: 8,
                         })}{" "}
                         Max
                       </p>
@@ -625,22 +742,18 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {parseFloat(
-                          healthFactorBackend > 100
-                            ? "Infinity"
-                            : parseFloat(healthFactorBackend).toFixed(2)
-                        )}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -660,7 +773,33 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
                       </span>
                     </p>
                   </div>
-
+                  <div className="w-full flex justify-between items-center my-1 mt-2">
+                    <div className="flex items-center gap-1">
+                      <p>Transaction Fee</p>
+                     
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p>{transferFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {(amount ? (+amount || 0) + (+transferFee || 0) : 0).toFixed(8)}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
                   <div className="w-full flex justify-end items-center mt-1">
                     <p className="text-[#909094]">liquidation at &lt;1</p>
                   </div>
@@ -769,7 +908,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -782,7 +921,7 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
             <center>
-              <p className="mt-2 ">
+              <p className="mt-2 text-center">
                 Your Debt was{" "}
                 <strong>
                   {" "}
@@ -823,42 +962,40 @@ const Repay = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, res
         </div>
       )}
       {showPanicPopup && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
-
-            <div
-              className="dark:bg-gradient 
-                dark:from-darkGradientStart 
-                dark:to-darkGradientEnd 
-                dark:text-darkText  "
-            >
-              <h1 className="font-semibold text-xl mb-4 text-orange-600 ">
-                Important Message
-              </h1>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                Thanks for helping us improve DFinance! <br></br> You’ve
-                uncovered a bug, and our dev team is on it.
-              </p>
-
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                Your account is temporarily locked while we investigate and fix
-                the issue. <br />
-              </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                We appreciate your contribution and have logged your ID—testers
-                like you are key to making DFinance better! <br />
-                If you have any questions, feel free to reach out.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+             <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+               <div className="w-full flex flex-col items-center ">
+                 <div className="w-full flex items-center justify-between  ">
+                   <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
+                   <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                     <X size={22} />
+                   </button>
+                 </div>
+     
+                 <div
+                   className="dark:bg-gradient 
+                     dark:from-darkGradientStart 
+                     dark:to-darkGradientEnd 
+                     dark:text-darkText p-2 "
+                 >
+     
+                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     Thanks for helping us improve DFinance! <br></br> You’ve
+                     uncovered a bug, and our dev team is on it.
+                   </p>
+     
+                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     Your account is temporarily locked while we investigate and fix
+                     the issue. <br />
+                   </p>
+                   <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     We appreciate your contribution and have logged your ID—testers
+                     like you are key to making DFinance better! <br />
+                     If you have any questions, feel free to reach out.
+                   </p>
+                 </div>
+               </div>
+             </div>
+           )}
     </>
   );
 };

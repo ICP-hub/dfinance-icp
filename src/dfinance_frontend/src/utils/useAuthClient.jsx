@@ -144,7 +144,9 @@ export const useAuthClient = (options = defaultOptions) => {
       setPrincipal(null);
       setBackendActor(null);
       setAccountId(null);
+      localStorage.removeItem("connectedWallet");
       localStorage.removeItem("sessionStart");
+      sessionStorage.removeItem("hasCheckedUser");
       if (isSwitchingWallet == false) {
         localStorage.removeItem("connectedWallet");
         window.location.reload();
@@ -160,6 +162,7 @@ export const useAuthClient = (options = defaultOptions) => {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
+        
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }
@@ -241,6 +244,7 @@ export const useAuthClient = (options = defaultOptions) => {
       const identity = authClient.getIdentity();
       if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
         const result = await backendActor.register_user();
+        console.log("result in check user", result);
         if (result.Ok) {
           if (result.Ok === "User available") {
           } else if (result.Ok === "User added") {
@@ -260,9 +264,27 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
-  if (backendActor && isAuthenticated) {
-    checkUser();
-  }
+  useEffect(() => {
+    const runCheckUser = async () => {
+      try {
+        if (backendActor && isAuthenticated) {
+          await checkUser();
+          sessionStorage.setItem("hasCheckedUser", "true"); // Persist flag
+        }
+      } catch (error) {
+        console.error("Error in checkUser:", error);
+      }
+    };
+  
+    if (isAuthenticated) {
+      const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
+      if (!hasCheckedUser) {
+        runCheckUser();
+      }
+    }
+  }, [backendActor, isAuthenticated]);
+  
+  
 
   // Fetches reserve data for a specific asset
   const fetchReserveData = async (asset) => {

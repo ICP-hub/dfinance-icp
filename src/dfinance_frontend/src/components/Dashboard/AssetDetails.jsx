@@ -598,7 +598,7 @@ const AssetDetails = () => {
             formatNumber={formatNumber}
             supplyCap={supplyCap}
             totalSupplied={totalSupply}
-            supplyRateAPR={supply_rate}
+            supplyRateAPR={supply_rate * 100}
             ltv={maxLtv}
             canBeCollateral={canBeCollateral}
             liquidationBonus={liquidation_bonus}
@@ -611,7 +611,7 @@ const AssetDetails = () => {
             formatNumber={formatNumber}
             borrowCap={borrowCap}
             totalBorrowed={totalBorrow}
-            borrowRateAPR={borrow_rate}
+            borrowRateAPR={borrow_rate * 100}
             reserveFactor={reserveFactor}
           />
         );

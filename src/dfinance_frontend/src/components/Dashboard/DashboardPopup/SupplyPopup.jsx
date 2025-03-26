@@ -13,6 +13,8 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
 
 /**
  * SupplyPopup Component
@@ -25,15 +27,36 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
  * @returns {JSX.Element} - Returns the SupplyPopup component.
  */
 
-const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-  
+const SupplyPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_supply");
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
 
   /* ===================================================================================
    *                                 STATE MANAGEMENT
@@ -98,10 +121,9 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
   }
 
   const numericBalance = parseFloat(balance);
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
-  const hasEnoughBalance = balance >= transactionFee;
+  const supplyBalance = numericBalance - transferFee;
+  console.log(numericBalance, "numericBalance")
+  const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
 
   /* ===================================================================================
@@ -111,39 +133,53 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Allow empty input (don't format until user types something)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
+      setError("");
       return;
     }
+  
+    // Allow user to type "." or "0." without breaking
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
+      setError("");
+      return;
+    }
+  
+    // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > supplyBalance) {
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
       setError(
-        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
-          "en-US"
-        )}`
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString("en-US")}`
       );
       return;
     } else {
       setError("");
     }
+  
+    // Format number properly without breaking
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
+  
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   // Updates the USD equivalent of the supply amount
   const updateAmountAndUsdValue = (inputAmount) => {
@@ -169,6 +205,19 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
 
   // Approves the supply transaction
   const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -184,7 +233,8 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-    const totalAmount = scaledAmount + transferfee;
+    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+    const totalAmount = scaledAmount + transferFeeBigInt;
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -227,10 +277,40 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
   const isCollateral = true;
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;
+
+  const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
+
+  console.log(
+    "transacyionFee",
+    transferFee,
+    "transferFeeBigInt",
+    transferFeeBigInt,
+    "scaledAmount",
+    scaledAmount,
+    "totalAmount",
+    totalAmount
+  );
 
   // Executes the supply transaction
   const handleSupplyETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
     try {
       let ledgerActor;
       if (asset === "ckBTC") {
@@ -248,7 +328,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       const supplyParams = {
         asset: asset,
         is_collateral: currentCollateralStatus,
-        amount: scaledAmount,
+        amount: totalAmount,
       };
 
       const response = await backendActor.execute_supply(supplyParams);
@@ -286,35 +366,148 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       } else if ("Err" in response) {
         const errorKey = response.Err;
         const errorMsg = errorKey?.toString() || "An unexpected error occurred";
-
+        console.error("Error:", errorKey);
         if (errorMsg.toLowerCase().includes("panic")) {
+          console.error("Panic error detected.");
           setShowPanicPopup(true);
           setIsVisible(false);
-        } else {
-          const userFriendlyMessage =
-            errorMessages[errorKey] || errorMessages.Default;
-          console.error("Error:", errorMsg);
-
-          toast.error(`Supply failed: ${userFriendlyMessage}`, {
+        } else if (
+          errorMsg.toLowerCase().includes("out of cycles") ||
+          errorMsg.includes("Reject text: Canister")
+        ) {
+          console.error("Canister is out of cycles.");
+          toast.error("Canister is out of cycles. Admin has been notified.", {
             className: "custom-toast",
             position: "top-center",
-            autoClose: 3000,
+            autoClose: 5000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
           });
+        } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+          console.error("Supply cap exceeded error.");
+          toast.error("Supply cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else {
+          const errorKey = response.Err;
+          const errorMsg =
+            errorKey?.toString() || "An unexpected error occurred";
+
+          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+            console.error(
+              "You are temporarily blocked from using this function"
+            );
+
+            toast.error(
+              "You are temporarily blocked from using this function",
+              {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+              }
+            );
+            handleClosePaymentPopup();
+            setIsLoading(false);
+          } else if (errorMsg.toLowerCase().includes("panic")) {
+            setShowPanicPopup(true);
+            setIsVisible(false);
+          } else if (
+            errorMsg.toLowerCase().includes("out of cycles") ||
+            errorMsg.includes("Reject text: Canister")
+          ) {
+            toast.error("Canister is out of cycles. Admin has been notified.", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+            toast.error("Supply cap is exceeded.", {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          } else {
+            const userFriendlyMessage =
+              errorMessages[errorKey] || errorMessages.Default;
+            console.error("Error:", errorKey);
+
+            toast.error(`Supply failed: ${userFriendlyMessage}`, {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
         }
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Supply action failed!"}`);
 
-      if (error.message && error.message.toLowerCase().includes("panic")) {
+      const message = error.message || "Supply action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("Reject text: Canister");
+      const isSupplyCapExceeded = message
+        .toLowerCase()
+        .includes("SupplyCapExceeded");
+
+      if (isPanicError) {
         setShowPanicPopup(true);
         setIsVisible(false);
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Admin has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isSupplyCapExceeded) {
+        toast.error("Supply cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
       } else {
-        toast.error(`Error: ${error.message || "Supply action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -382,7 +575,8 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
   };
 
   const handleMaxClick = () => {
-    const maxAmount = supplyBalance.toFixed(8);
+    const maxAmount = formatValue(supplyBalance);
+    console.log("type pf maxAmount", typeof maxAmount);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -397,7 +591,12 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
 
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -430,7 +629,8 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     );
 
     const amountAdded = collateral ? usdValue || 0 : 0;
-    let totalCollateralValue =parseFloat(totalCollateral) + parseFloat(amountAdded);
+    let totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
     }
@@ -441,7 +641,14 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     setPrevHealthFactor(currentHealthFactor);
-    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2));
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
   }, [
     asset,
     liquidationThreshold,
@@ -451,9 +658,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
     amount,
     usdValue,
   ]);
-  /* ===================================================================================
-   *                                 EFFECT
-   * =================================================================================== */
+
   useEffect(() => {
     if (amount && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -481,6 +686,13 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       onLoadingChange(isLoading);
     }
   }, [isLoading, onLoadingChange]);
+
+  useEffect(() => {
+    if (supplyBalance === 0) {
+        toast.dismiss();
+      toast.warning("You do not have enough transaction fees to supply.");
+    }
+  }, [supplyBalance]);
 
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -537,7 +749,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                       }
                     }}
                   >
-                    {formatValue(balance)} Max
+                    {formatValue(supplyBalance)} Max
                   </p>
                 </div>
               </div>
@@ -567,26 +779,25 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
                 </div>
+
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
                       <span
                         className={`${
-                          healthFactorBackend > 3
+                          truncatedValue > 3
                             ? "text-green-500"
-                            : healthFactorBackend <= 1
+                            : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
+                            : truncatedValue <= 1.5
                             ? "text-orange-600"
-                            : healthFactorBackend <= 2
+                            : truncatedValue <= 2
                             ? "text-orange-400"
                             : "text-orange-300"
                         }`}
                       >
-                        {healthFactorBackend > 100
-                          ? "Infinity"
-                          : parseFloat(healthFactorBackend).toFixed(2)}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -606,6 +817,35 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                       </span>
                     </p>
                   </div>
+                  <div className="w-full flex justify-between items-center my-1 mt-2">
+                    <div className="flex items-center gap-1">
+                      <p>Transaction Fee</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p>{transferFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {(amount
+                          ? (+amount || 0) + (+transferFee || 0)
+                          : 0
+                        ).toFixed(8)}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
                   <div className="w-full flex justify-end items-center mt-1">
                     <p className="text-gray-500">liquidation at &lt;1</p>
                   </div>
@@ -623,18 +863,15 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
               </p>
             </div>
           )}
+          {supplyBalance === 0 && (
+            <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
+              <p className="text-yellow-700 dark:text-yellow-500">
+                You do not have enough transaction fees to supply.
+              </p>
+            </div>
+          )}
 
           <div className="w-full flex justify-between items-center mt-3">
-            <div className="flex items-center justify-start">
-              {}
-              <div className="relative group">
-                {}
-
-                {}
-                {}
-              </div>
-            </div>
-
             <div className="flex items-center">
               <p
                 className={`text-xs whitespace-nowrap ${
@@ -704,7 +941,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -716,7 +953,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className=" text-sm  lgx:text-lg whitespace-nowrap">
+            <p className=" text-sm  lgx:text-lg text-center">
               You have supplied{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -731,7 +968,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                 {asset}
               </strong>
             </p>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               <strong>
                 {scaledAmount / 100000000
@@ -758,21 +995,25 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
       )}
       {showPanicPopup && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                Important Message
+              </h1>
+              <button
+                onClick={handleClosePaymentPopup}
+                className="text-gray-400 focus:outline-none mt-3 mr-4"
+              >
+                <X size={22} />
+              </button>
+            </div>
 
             <div
               className="dark:bg-gradient 
-                dark:from-darkGradientStart 
-                dark:to-darkGradientEnd 
-                dark:text-darkText  "
+                     dark:from-darkGradientStart 
+                     dark:to-darkGradientEnd 
+                     dark:text-darkText p-2 "
             >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
                 uncovered a bug, and our dev team is on it.
@@ -782,7 +1023,7 @@ const SupplyPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshol
                 Your account is temporarily locked while we investigate and fix
                 the issue. <br />
               </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 We appreciate your contribution and have logged your ID—testers
                 like you are key to making DFinance better! <br />
                 If you have any questions, feel free to reach out.

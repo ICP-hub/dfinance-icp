@@ -134,6 +134,7 @@ pub async fn reset_reserve_value(
         "borrow_cap" => reserve_data.configuration.borrow_cap = reset_value,
         "supply_cap" => reserve_data.configuration.supply_cap = reset_value,
         "reserve_factor" => reserve_data.configuration.reserve_factor = reset_value,
+        "liquidation_protocol_fee" => reserve_data.configuration.liquidation_protocol_fee = reset_value,
         _ => return Err(Error::InvalidVariableName),
     }
 
@@ -142,17 +143,4 @@ pub async fn reset_reserve_value(
         asset_index.insert(asset_name, Candid(reserve_data));
     });
     Ok(())
-}
-
-/*  
- * @title Check Controller Permissions  
- * @notice Checks if the caller is a controller of the canister.  
- * @dev This function verifies whether the caller has administrative privileges.  
- *  
- * # Returns  
- * @return `true` if the caller is a controller, otherwise `false`.  
- */
-#[query]
-pub fn to_check_controller() -> bool {
-    ic_cdk::api::is_controller(&ic_cdk::api::caller())
 }

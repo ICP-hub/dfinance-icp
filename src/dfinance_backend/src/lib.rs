@@ -1,18 +1,22 @@
 use crate::constants::errors::Error;
-use crate::constants::asset_data::to_check_controller;
 use api::functions::get_balance;
+use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
+use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
+use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
+use futures::future::ok;
+use guards::to_check_controller;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
 use ic_cdk_macros::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
-use protocol::libraries::logic::user::calculate_user_account_data;
+use protocol::libraries::logic::user::calculate_user_asset_data;
 use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
@@ -32,8 +36,7 @@ use crate::declarations::assets::{
     ExecuteWithdrawParams,
 };
 use crate::declarations::storable::Candid;
-use crate::protocol::libraries::logic::user::UserAccountData;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserData, UserAccountData};
 use ic_cdk_timers::set_timer_interval;
 use std::time::Duration;
 
@@ -64,28 +67,20 @@ pub async fn init(args: Principal) {
 
 /*
  * @title Get Controller Information
- * @dev Retrieves the controller ID from the state. The function looks for metadata 
+ * @dev Retrieves the controller ID from the state. The function looks for metadata
  *      associated with a specific key and returns the `controller_id` from `InitArgs`
- *      if available. If no controller is found or an error occurs while reading the state, 
+ *      if available. If no controller is found or an error occurs while reading the state,
  *      an appropriate error is returned.
  *
- * @returns 
+ * @returns
  *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
  *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
  *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
  */
 pub fn get_controller() -> Result<InitArgs, Error> {
-
-    match read_state(|state| {
-        state
-            .meta_data
-            .get(&0)
-            .ok_or_else(|| Error::UserNotFound)
-    }) {
-        Ok(va) => {
-            Ok(va.0)
-        },
-        Err(_) => return Err(Error::ErrorNotController)
+    match read_state(|state| state.meta_data.get(&0).ok_or_else(|| Error::UserNotFound)) {
+        Ok(va) => Ok(va.0),
+        Err(_) => return Err(Error::ErrorNotController),
     }
 }
 
@@ -202,7 +197,6 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     })
 }
 
-
 /*
  * @title Get Cached Exchange Rate
  * @dev Retrieves the cached exchange rate for a given asset.
@@ -210,16 +204,16 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
  * @returns The cached exchange rate as `PriceCache`.
  */
 #[query]
-pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache, Error> {
-    if base_asset_symbol.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
+pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
+    let trimmed_symbol = base_asset_symbol.trim();
+
+    if trimmed_symbol.is_empty() {
         return Err(Error::EmptyAsset);
     }
-
-    if base_asset_symbol.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    if trimmed_symbol.len() > 7 {
         return Err(Error::InvalidAssetLength);
     }
+
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc",
         "ckETH" => "eth",
@@ -229,30 +223,23 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
     };
 
     ic_cdk::println!("base asset = {}", base_asset);
+    ic_cdk::println!("base_asset_symbol {}", base_asset_symbol);
 
-    ic_cdk::println!("base asset symbol =  {}", base_asset_symbol);
-    // Fetching price-cache data
-    let price_cache_result = read_state(|state| {
-        let price_cache_data = &state.price_cache_list;
-        price_cache_data
+    read_state(|state| {
+        state
+            .price_cache_list
             .get(&base_asset.to_string())
-            .map(|price_cache: Candid<PriceCache>| price_cache.0)
-            .ok_or_else(|| Error::NoPriceCache)
-    });
-
-    // Handling price-cache data result
-    match price_cache_result {
-        Ok(data) => {
-            ic_cdk::println!("price cache found: {:?}", data);
-            Ok(data)
-        }
-        Err(e) => {
-            ic_cdk::println!("price cache not found = {:?}", e);
-            return Err(e);
-        }
-    }
+            .map(|price_cache: Candid<PriceCache>| {
+                price_cache
+                    .0
+                    .cache
+                    .get(&base_asset_symbol)
+                    .map(|p| p.price.clone())
+            })
+            .flatten()
+            .ok_or(Error::NoPriceCache)
+    })
 }
-
 
 /*
  * @title Get Asset Supply
@@ -261,7 +248,6 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<PriceCache,
  * @param on_behalf (Optional) The principal requesting the asset supply.
  * @returns The total asset supply as `Nat`.
  */
-
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -524,7 +510,6 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
             "previoys liquidity index: {} for reserve",
             reserve_data.liquidity_index
         );
-        //  user_reserve_data.liquidity_index =
         return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
 }
@@ -550,8 +535,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     if reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
         return Ok(reserve_data.debt_index);
-    }
-    else {
+    } else {
         ic_cdk::println!(
             "Previous borrow index & rate: {:?} {:?}",
             reserve_data.debt_index,
@@ -572,7 +556,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-
 /*
  * @title Get Lock Status
  * @dev Checks if the user has an active lock.
@@ -582,6 +565,11 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
 async fn get_lock() -> Result<bool, Error> {
     let user_principal = ic_cdk::api::caller();
     ic_cdk::println!("user principal = {} ", user_principal);
+
+    if !to_check_controller() {
+        ic_cdk::println!("Only controller allowed");
+        return Err(Error::ErrorNotController);
+    }
 
     let result = LOCKS
         .lock()
@@ -604,107 +592,19 @@ pub fn get_total_users() -> usize {
 }
 
 /*
- * @title Add Tester (For Testing Purpose - Pocket IC)
- * @dev This function allows the current controller to add a new tester by associating 
- *      a username with a principal ID. It ensures that only controllers can add testers.
- *      The function checks if the caller is a valid user (not anonymous) and whether the 
- *      caller is a controller. If these conditions are met, the tester is added to the 
- *      `tester_list` in the state.
- * 
- * @param username The username of the tester to be added.
- * @param principal The principal ID of the tester to be added.
- * 
- * @returns 
- *      - `Ok(())`: If the tester was successfully added.
- *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
- *      - `Err(Error::ErrorNotController)`: If the caller is not a controller.
- */
-#[ic_cdk::update]
-pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
-    let user_principal = ic_cdk::caller();
-    if user_principal == Principal::anonymous()  {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-    if !to_check_controller(){
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
-    mutate_state(|state| {
-        state.tester_list.insert(username, principal)
-    });
-    return Ok(());
-}
-
-/*
- * @title Get Testers (For Testing Purpose - Pocket IC)
- * @dev This function retrieves the list of testers associated with the canister. It checks if the caller 
- *      is a valid user (not anonymous) and then fetches the list of testers from the state. The function 
- *      returns a vector of principal IDs representing the testers.
- * 
- * @returns 
- *      - `Ok(Vec<Principal>)`: A list of principal IDs for all testers.
- *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
- */
-pub fn get_testers() -> Result<Vec<Principal>, Error> {
-    let user_principal = ic_cdk::caller();
-
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
-    read_state(|state| {
-        let mut testers = Vec::new();
-        let iter = state.tester_list.iter();
-        for (_, value) in iter {
-            testers.push(value.clone());
-        }
-        Ok(testers)
-    })
-}
-
-/*
- * @title Check if Caller is a Tester (For Testing Purpose - Pocket IC)
- * @dev This function checks if the caller is a registered tester. It retrieves the list of testers from 
- *      the state and compares the caller’s principal ID with the list. The function returns `true` if the 
- *      caller is a tester, and `false` otherwise. If there's an error fetching the testers list, the function 
- *      logs the error and returns `false`.
- * 
- * @returns 
- *      - `true`: If the caller is found in the list of testers.
- *      - `false`: If the caller is not a tester or if there is an error retrieving the tester list.
- */
-#[ic_cdk::query]
-pub fn check_is_tester()-> bool {
-
-    let testers = match get_testers(){
-        Ok(data)=>data,
-        Err(error) => {
-            ic_cdk::println!("Invalid Access {:?}", error);
-            return false;
-        }
-    };
-    let user = ic_cdk::caller();
-    if testers.contains(&user){
-        return true;
-    }
-    return false;
-}
-
-
-
-/*
  * @title Get User Account Data
  * @dev Fetches the user’s account data.
  * @param on_behalf (Optional) The principal requesting the data.
  * @returns A tuple containing user financial data.
  */
-#[update]
+#[query]
 async fn get_user_account_data(
     on_behalf: Option<Principal>,
+    dtoken_balance: Option<Vec<AssetData>>,
+    debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     ic_cdk::println!("error in user = {:?}", on_behalf);
-    let result = calculate_user_account_data(on_behalf).await;
+    let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await;
     result
 }
 
@@ -747,7 +647,27 @@ pub async fn post_upgrade() {
     schedule_midnight_task().await;
 }
 
+#[query]
+pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
+
+    let caller_id = ic_cdk::caller(); 
+      
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
+        Ok(price) => price,
+        Err(e) => {
+            ic_cdk::println!("Failed to fetch exchange rate");
+            return Err(e);
+        }
+    };
+
+    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+    Ok(transfer_token_fee)
+
+}
+
 export_candid!();
-
-
-

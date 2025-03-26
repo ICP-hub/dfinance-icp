@@ -17,7 +17,8 @@ import useFetchConversionRate from "../../components/customHooks/useFetchConvers
 import WalletModal from "../../components/Dashboard/WalletModal";
 import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
-
+import useUserData from "../../components/customHooks/useUserData";
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 const ITEMS_PER_PAGE = 8;
 
 /**
@@ -65,7 +66,12 @@ const WalletDetails = () => {
   );
 
   const { isAuthenticated, principal } = useAuth();
-
+  const {
+    userData,
+    userAccountData,
+    isFreezePopupVisible,
+    setIsFreezePopupVisible,
+  } = useUserData();
   const {
     totalMarketSize,
     totalSupplySize,
@@ -260,6 +266,17 @@ const WalletDetails = () => {
       setHasLoaded(true);
     }
   }, [loading]);
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
 
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -554,12 +571,14 @@ const WalletDetails = () => {
 
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
-                          {Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                          {(Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                            100) /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.current_liquidity_rate) /
+                                (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                                  100) /
                                 100000000
                               ).toFixed(2)}%`}
                         </div>
@@ -651,10 +670,13 @@ const WalletDetails = () => {
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
-                          {Number(item?.[1]?.Ok?.borrow_rate) / 100000000 < 0.01
+                          {(Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                            100000000 <
+                          0.01
                             ? "<0.01%"
                             : `${(
-                                Number(item?.[1]?.Ok?.borrow_rate) / 100000000
+                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                                100000000
                               ).toFixed(2)}%`}
                         </div>
                       </td>
@@ -760,16 +782,19 @@ const WalletDetails = () => {
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {" "}
-                          {Number(
+                          {(Number(
                             selectedAssetData[1].Ok.current_liquidity_rate
-                          ) /
+                          ) *
+                            100) /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(
+                                (Number(
                                   selectedAssetData[1].Ok.current_liquidity_rate
-                                ) / 100000000
+                                ) *
+                                  100) /
+                                100000000
                               ).toFixed(2)}%`}
                         </p>
                       </div>
@@ -801,12 +826,13 @@ const WalletDetails = () => {
                           Borrow APY:
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {Number(selectedAssetData[1].Ok.borrow_rate) /
+                          {(Number(selectedAssetData[1].Ok.borrow_rate) * 100) /
                             100000000 <
                           0.01
                             ? "<0.01%"
                             : `${(
-                                Number(selectedAssetData[1].Ok.borrow_rate) /
+                                (Number(selectedAssetData[1].Ok.borrow_rate) *
+                                  100) /
                                 100000000
                               ).toFixed(2)}%`}
                         </p>
@@ -829,7 +855,13 @@ const WalletDetails = () => {
                 </div>
               </div>
             )}
-
+            {isFreezePopupVisible && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+                <FreezeCanisterPopup
+                  onClose={() => setIsFreezePopupVisible(false)}
+                />
+              </div>
+            )}
             {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
           </div>
         )}

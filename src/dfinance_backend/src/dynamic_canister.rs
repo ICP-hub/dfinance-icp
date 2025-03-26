@@ -109,7 +109,6 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
  * @param token_symbol Symbol for the token.
  * @returns Principal ID of the created token canister.
  */
-#[update]
 pub async fn create_token_canister(
     token_name: String,
     token_symbol: String,
@@ -220,11 +219,7 @@ pub async fn create_token_canister(
  *
  * @returns The `Principal` ID of the newly created test token canister.
  */
-#[update]
-pub async fn create_testtoken_canister(
-    token_name: String,
-    token_symbol: String,
-) -> Result<Principal, Error> {
+pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,

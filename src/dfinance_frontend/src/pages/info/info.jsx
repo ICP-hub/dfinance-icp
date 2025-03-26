@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import pLimit from "p-limit";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
@@ -16,6 +17,13 @@ import useFetchBalanceBackend from "../../components/customHooks/useFetchBalance
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut, Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
+import { idlFactory } from "../../../../declarations/debttoken";
+import { idlFactory as idlFactory1 } from "../../../../declarations/dtoken";
+import { useSelector } from "react-redux";
+import { Principal } from "@dfinity/principal";
+import WalletModal from "../../components/Dashboard/WalletModal";
+import useUserData from "../../components/customHooks/useUserData";
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 ChartJS.register(ArcElement, Tooltip);
 
 /**
@@ -28,8 +36,10 @@ const DashboardCards = () => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
+  const { backendActor, isAuthenticated, fetchReserveData, createLedgerActor } =
+    useAuth();
+  const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const navigate = useNavigate();
-  const { backendActor } = useAuth();
   const formatNumber = useFormatNumber();
 
   const {
@@ -63,13 +73,19 @@ const DashboardCards = () => {
   const [users, setUsers] = useState([]);
   const [lastEmailDate, setLastEmailDate] = useState(null);
   const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [assetBalance, setAssetBalances] = useState([]);
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
   const radioRefs = {};
   const [filteredData, setFilteredData] = useState(null);
   const [userAccountData, setUserAccountData] = useState({});
   const [healthFactors, setHealthFactors] = useState({});
-
+  const [totalUsers, setTotalUsers] = useState(null);
+  const [cycles, setCycles] = useState("");
+  const { filteredItems, interestAccure, assets } = useAssetData(searchQuery);
   /* ===================================================================================
    *                                  EFFECTS & FUNCTIONS
    * =================================================================================== */
@@ -85,7 +101,7 @@ const DashboardCards = () => {
     ckETH: ckETHUsdRate,
     ckBTC: ckBTCUsdRate,
     ckUSDC: ckUSDCUsdRate,
-    ICP: ckICPBalance,
+    ICP: ckICPUsdRate,
     ckUSDT: ckUSDTUsdRate,
   };
 
@@ -93,7 +109,7 @@ const DashboardCards = () => {
     ckETH: ckETHBalance,
     ckBTC: ckBTCBalance,
     ckUSDC: ckUSDCBalance,
-    ICP: ckICPUsdRate,
+    ICP: ckICPBalance,
     ckUSDT: ckUSDTBalance,
   };
 
@@ -124,15 +140,20 @@ const DashboardCards = () => {
     checkControllerStatus();
   }, [backendActor]);
 
-  const [cardData, setCardData] = useState([
-    { title: "Users", value: "Loading...", link: "/users" },
-    { title: "Cycles", value: "5678", link: "/cycles" },
-    { title: "Interest Accured", value: "5678", link: "/interest accured" },
-    { title: "Reserves", value: "5", link: "/pools", assets: [] },
-  ]);
-
-  const { filteredItems, interestAccure } = useAssetData(searchQuery);
-
+  const getTotalUser = async () => {
+    if (!backendActor) {
+      console.error("Error: Backend actor is not initialized.");
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const totalUser = await backendActor.get_total_users();
+      console.log("gettotaluser", totalUser)
+      setTotalUsers(totalUser);
+    } catch (error) {
+      console.error("Error fetching total users:", error);
+      throw error;
+    }
+  };
   const poolAssets = [
     { name: "ckBTC", imageUrl: ckBTC },
     { name: "ckETH", imageUrl: ckETH },
@@ -140,29 +161,88 @@ const DashboardCards = () => {
     { name: "ckUSDT", imageUrl: ckUSDT },
     { name: "ICP", imageUrl: icp },
   ];
-  console.log("interestAccure", interestAccure);
+  const [cardData, setCardData] = useState([
+
+    {
+      title: "Users",
+      value: totalUsers,
+      link: "/users",
+    },
+
+    { title: "Cycles", value: cycles, link: "/cycles" },
+    {
+      title: "Interest Accured",
+      value: interestAccure,
+      link: "/interest accured",
+    },
+    { title: "Reserves", value: "5", link: "/pools", assets: poolAssets },
+  ]);
+
+  console.log("interestAccure", interestAccure, cycles);
+  const healthFactorRoute = process.env.DFX_ADMIN_ROUTE;
 
   const handleViewMore = () => {
-    navigate("/2a45fg/health-factor-list");
+    navigate(healthFactorRoute, {
+      state: { userAccountData }, // ✅ Pass data to the next page
+    });
   };
-  const getAllUsers = async () => {
-    if (!backendActor) {
-      console.error("Backend actor not initialized");
-      return;
-    }
+  const fetchAllUsers = async (totalPages, pageSize) => {
     try {
-      const allUsers = await backendActor.get_all_users();
-      console.log("Retrieved Users:", allUsers);
+      const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      console.log("result:", result);
 
-      setUsers(allUsers);
+      // Ensure `result.Ok` exists and is an array
+      if (!result.Ok || !Array.isArray(result.Ok)) {
+        throw new Error("Unexpected response format");
+      }
+
+      // Parse result
+      const parsedResult = result.Ok.map(([principal, userAccountData, userData]) => ({
+        principal: principal ? principal.toText() : "Unknown_Principal", // Correct principal conversion
+        collateral: userAccountData.collateral,
+        debt: userAccountData.debt,
+        ltv: userAccountData.ltv,
+        liquidationThreshold: userAccountData.liquidation_threshold,
+        healthFactor: userAccountData.health_factor,
+        availableBorrow: userAccountData.available_borrow,
+        hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
+        userData: userData,
+      }));
+
+      console.log("parsedResult", parsedResult);
+
+      // Structure userAccountData for setUserAccountData
+      const structuredData = parsedResult.reduce((acc, user) => {
+        if (user.principal && user.principal !== "Unknown_Principal") {
+          acc[user.principal] = {
+            collateral: user.collateral,
+            debt: user.debt,
+            ltv: user.ltv,
+            liquidationThreshold: user.liquidationThreshold,
+            healthFactor: user.healthFactor,
+            availableBorrow: user.availableBorrow,
+            hasZeroLtvCollateral: user.hasZeroLtvCollateral,
+          };
+        }
+        return acc;
+      }, {});
+
+      // Store user account data correctly
+      setUserAccountData((prev) => ({
+        ...prev,
+        ...structuredData,
+      }));
+
+      return parsedResult;
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching all users:", error);
+      throw error;
     }
   };
 
-  useEffect(() => {
-    getAllUsers();
-  }, []);
+
+
+  console.log("userAccountData", userAccountData)
 
   /**
    * Fetches the current cycle count from the backend.
@@ -171,11 +251,29 @@ const DashboardCards = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-    const response = await backendActor.cycle_checker();
-    console.log("response cycle checker", response);
-    return response.toString();
-  };
 
+    const response = await backendActor.cycle_checker();
+    console.log("Raw response from cycle_checker:", response);
+
+    // Extract value from response
+    const cycles = response.Ok ?? "Error retrieving cycles";
+    console.log("Extracted cycle value:", cycles);
+
+    return cycles.toString();
+  };
+  useEffect(() => {
+    const fetchCycles = async () => {
+      try {
+        const cycleValue = await getCycles();
+        setCycles(cycleValue); // ✅ Set state with retrieved cycles
+      } catch (error) {
+        console.error("Error fetching cycles:", error);
+        setCycles("Error retrieving cycles"); // ✅ Ensure fallback value is set
+      }
+    };
+
+    fetchCycles(); // ✅ Fetch cycles on mount
+  }, []);
   /**
    * Sends email notifications when cycle or token thresholds are breached.
    * @param {string} subject - Email subject.
@@ -267,12 +365,125 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
+  //  const fetchAssetData = async () => {
+  //   const balances = {};
+  //   const batchSize = 5; // Adjust this based on your system's capacity
 
-  // Simulate cycle updates
-  const onCycleUpdate = (newCycles) => {
-    console.log("Cycle count updated:", newCycles);
-    handleNotification(newCycles);
+  //   const processUsersInBatches = async (usersBatch) => {
+  //     for (const [principal, userData] of usersBatch) {
+  //       if (!principal) continue;
+
+  //       const userBalances = {};
+
+  //       await Promise.all(
+  //         assets.map(async (asset) => {
+  //           const reserveDataForAsset = await fetchReserveData(asset);
+  //           console.log("reserveDataForAsset", reserveDataForAsset);
+  //           const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+  //           const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+  //           console.log("dtokenId", dtokenId);
+
+  //           const assetBalance = {
+  //             dtokenBalance: null,
+  //             debtTokenBalance: null,
+  //           };
+
+  //           try {
+  //             const formattedPrincipal = Principal.fromText(principal.toString());
+  //             const account = { owner: formattedPrincipal, subaccount: [] };
+
+  //             if (dtokenId) {
+  //               const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+  //               if (dtokenActor) {
+  //                 const balance = await dtokenActor.icrc1_balance_of(account);
+  //                 assetBalance.dtokenBalance = Number(balance);
+  //               }
+  //             }
+
+  //             if (debtTokenId) {
+  //               const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+  //               if (debtTokenActor) {
+  //                 const balance = await debtTokenActor.icrc1_balance_of(account);
+  //                 assetBalance.debtTokenBalance = Number(balance);
+  //               }
+  //             }
+  //           } catch (error) {
+  //             console.error(`Error processing balances for ${asset}:`, error);
+  //           }
+
+  //           userBalances[asset] = assetBalance;
+  //         })
+  //       );
+
+  //       balances[principal] = userBalances;
+
+  //       // ✅ Update state progressively to avoid UI freeze
+  //       setAssetBalances((prevBalances) => ({ ...prevBalances, [principal]: userBalances }));
+  //     }
+  //   };
+
+  //   // ✅ Process users in batches
+  //   for (let i = 0; i < users.length; i += batchSize) {
+  //     const batch = users.slice(i, i + batchSize);
+  //     await processUsersInBatches(batch);
+  //   }
+  // };
+
+  useEffect(() => {
+    console.log("Checking dependencies: totalUsers =", totalUsers, "interestAccure =", interestAccure);
+
+    if (totalUsers === null || interestAccure === null) {
+      console.log("Values not available yet, skipping fetch.");
+      return;
+    }
+
+    const fetchData = async () => {
+      console.log("Fetching data...");
+
+      setLoading(true);
+
+      try {
+        const cycles = await getCycles();
+        console.log("totalUsers:", totalUsers);
+        console.log("Cycles:", cycles);
+        console.log("interestAccure:", interestAccure);
+
+        const formattedData = [
+          { title: "Users", value: totalUsers, link: "/users" },
+          { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
+          { title: "Interest Accured", value: interestAccure, link: "/cycles" },
+          { title: "Reserves", value: "5", link: "/pools", assets: poolAssets },
+        ];
+
+        setCardData(formattedData);
+        await handleNotification(Number(cycles));
+        await onCycleUpdate(Number(cycles));
+      } catch (err) {
+        console.error("Error in fetchData:", err);
+        setError(err.message);
+      }
+    };
+
+    fetchData();
+  }, [totalUsers, interestAccure]);
+
+  const onCycleUpdate = async () => {
+    try {
+      const newCycles = await getCycles();
+      console.log("Cycle count updated:", newCycles);
+
+      handleNotification(newCycles);
+    } catch (error) {
+      console.error("Error fetching cycles:", error);
+    }
   };
+
+  useEffect(() => {
+    if (users.length > 0) {
+      fetchAssetData();
+    }
+  }, [users, assets]);
+
   let lastTokenExhaustedEmailTimestamp = 0;
   let lastTokenWarningEmailTimestamp = 0;
   let emailinterval = null;
@@ -342,7 +553,7 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
-
+  console.log("healthStats", healthStats)
   const pieData = {
     datasets: [
       {
@@ -351,8 +562,8 @@ const DashboardCards = () => {
           healthStats.greaterThanOne,
           healthStats.infinity,
         ],
-        backgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
-        hoverBackgroundColor: ["#EF4444", "#22C55E", "#EAB308"],
+        backgroundColor: ["#EF4444", "#EAB308","#22C55E"],
+        hoverBackgroundColor: ["#EF4444", "#EAB308","#22C55E"],
 
         borderColor: "#ffffff",
         borderWidth: 3,
@@ -366,6 +577,7 @@ const DashboardCards = () => {
   const handleTokenBalances = () => {
     poolAssets.forEach((asset) => {
       const assetBalance = assetBalances[asset.name];
+      onTokenUpdate(assetBalance);
       if (assetBalance !== undefined) {
         handleTokenNotification(asset.name, assetBalance);
       }
@@ -378,73 +590,193 @@ const DashboardCards = () => {
 
   const onTokenUpdate = (newBalance) => {
     console.log("Cycle count updated:", newBalance);
-    handleNotification(newBalance);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!users.length) return;
-      setLoading(true);
 
-      try {
-        const cycles = await getCycles();
-        const usersCount = users.length;
-        const formattedData = [
-          { title: "Users", value: usersCount, link: "/users" },
-          { title: "Cycles", value: formatNumber(cycles), link: "/cycles" },
-          { title: "Interest Accured", value: interestAccure, link: "/cycles" },
-          {
-            title: "Reserves",
-            value: "5",
-            link: "/pools",
-            assets: poolAssets,
-          },
-        ];
 
-        setCardData(formattedData);
-        await handleNotification(Number(cycles));
-        await onCycleUpdate(Number(cycles));
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [users, interestAccure]);
   const cachedData = useRef({});
 
-  //  Fetch and cache user account data
   const fetchUserAccountDataWithCache = async (principal) => {
-    if (!principal || cachedData.current[principal]) return;
+    if (backendActor && isAuthenticated) {
+      const principalString = principal.toString();
 
-    try {
-      const result = await backendActor.get_user_account_data([principal]);
-      if (result) {
-        cachedData.current[principal] = result;
-        setUserAccountData((prev) => ({ ...prev, [principal]: result }));
+      const userBalance = assetBalance[principalString];
+      if (!userBalance) {
+        return;
       }
-    } catch (error) {
-      console.error(` Error fetching data for principal: ${principal}`, error);
+      console.log("userBalance before function:", userBalance);
+
+      if (cachedData.current[principalString]) {
+        setUserAccountData((prev) => ({
+          ...prev,
+          [principalString]: cachedData.current[principalString],
+        }));
+        return;
+      }
+
+      try {
+        if (!principalString || cachedData.current[principalString]) return;
+
+        const principalObj = Principal.fromText(principalString);
+
+        if (!userBalance) {
+          console.error(
+            "No data found for userBalance for this principal:",
+            principalString
+          );
+
+          return;
+        }
+        const user = users.find(
+          ([userPrincipal]) => userPrincipal.toString() === principalString
+        );
+
+        if (user) {
+          const userInfo = user[1];
+          console.log("userInfo", userInfo);
+
+          const reserves = userInfo?.reserves?.flat() || [];
+          console.log("reserves:", reserves);
+
+          let assetBalancesObj = [];
+          let borrowBalancesObj = [];
+
+          reserves.forEach(([asset, assetInfo]) => {
+            console.log("assetInfo:", assetInfo);
+
+            const assetBalances = BigInt(
+              userBalance?.[asset]?.dtokenBalance || 0
+            );
+            const borrowBalances = BigInt(
+              userBalance?.[asset]?.debtTokenBalance || 0
+            );
+
+            if (assetBalances > 0n) {
+              assetBalancesObj.push({
+                balance: assetBalances,
+                name: asset,
+              });
+            }
+            if (borrowBalances > 0n) {
+              borrowBalancesObj.push({
+                balance: borrowBalances,
+                name: asset,
+              });
+            }
+          });
+
+          const assetBalancesParam =
+            assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
+          const borrowBalancesParam =
+            borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
+
+          const result = await backendActor.get_user_account_data(
+            [principalObj],
+            assetBalancesParam,
+            borrowBalancesParam
+          );
+
+          console.log("Backend result:", result);
+
+          if (result?.Err === "ERROR :: Pending") {
+            console.warn("Pending state detected. Retrying...");
+            setTimeout(() => fetchUserAccountDataWithCache(principal), 1000);
+            return;
+          }
+
+          if (result?.Ok) {
+            cachedData.current[principalString] = result;
+            setUserAccountData((prev) => ({
+              ...prev,
+              [principalString]: result,
+            }));
+          }
+        } else {
+          console.error("User not found for principal:", principalString);
+        }
+      } catch (error) {
+        console.error("Error fetching user account data:", error.message);
+      } finally {
+      }
     }
   };
 
-  //  Fetch all user data in parallel, ensuring cache usage
   useEffect(() => {
-    if (!users || users.length === 0) return;
+    console.log("useEffect triggered");
+    console.log("Users:", users);
+    console.log("Total users:", users?.length);
+    console.log("Asset balance:", assetBalance);
 
-    Promise.all(
-      users.map(([principal]) => {
-        if (principal) return fetchUserAccountDataWithCache(principal);
-        return null;
-      })
-    )
-      .then(() => console.log(" All user account data fetched"))
-      .catch((error) =>
-        console.error(" Error fetching user account data in batch:", error)
-      );
-  }, [users]);
+    if (!users || users.length === 0) {
+      console.log("No users found, exiting useEffect.");
+      return;
+    }
+
+    // Dynamically determine batch size based on user count
+    const totalUsers = users.length;
+    let batchSize;
+
+    if (totalUsers >= 10000) {
+      batchSize = 1000;
+    } else if (totalUsers >= 5000) {
+      batchSize = 500;
+    } else if (totalUsers >= 2000) {
+      batchSize = 100;
+    } else {
+      batchSize = 100; // If fewer users, process all at once
+    }
+
+    console.log(`Batch size determined: ${batchSize}`);
+
+    const userChunks = [];
+    for (let i = 0; i < totalUsers; i += batchSize) {
+      userChunks.push(users.slice(i, i + batchSize));
+    }
+
+    console.log(`Total batches created: ${userChunks.length}`);
+
+    // ✅ Limit concurrency per batch (process all batches together, but queue inside each batch)
+    const processBatchesInParallelWithQueue = async () => {
+      try {
+        await Promise.all(
+          userChunks.map(async (batch, batchIndex) => {
+            console.log(
+              `🚀 Starting Batch ${batchIndex + 1} (size: ${batch.length})`
+            );
+
+            // Each batch gets its own `p-limit(1)` to process requests **one by one** inside the batch
+            const batchQueue = pLimit(1);
+
+            await Promise.all(
+              batch.map(([principal]) =>
+                batchQueue(async () => {
+                  if (principal) {
+                    console.log(
+                      `Requesting data for: ${principal} in Batch ${batchIndex + 1
+                      }`
+                    );
+                    await fetchUserAccountDataWithCache(principal);
+                    console.log(
+                      `✅ Completed request for: ${principal} in Batch ${batchIndex + 1
+                      }`
+                    );
+                  }
+                })
+              )
+            );
+
+            console.log(`✅ Completed Batch ${batchIndex + 1}`);
+          })
+        );
+
+        console.log("🎉 All batches completed!");
+      } catch (error) {
+        console.error("❌ Error in processing batches:", error);
+      }
+    };
+
+    processBatchesInParallelWithQueue();
+  }, [users, assetBalance]);
 
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
@@ -452,21 +784,17 @@ const DashboardCards = () => {
     const updatedHealthFactors = {};
 
     Object.entries(userAccountData).forEach(([principal, data]) => {
-      if (data?.Ok && Array.isArray(data.Ok) && data.Ok.length > 4) {
-        updatedHealthFactors[principal] = Number(data.Ok[4]) / 10000000000;
+      if (data?.healthFactor) {
+        updatedHealthFactors[principal] = Number(data.healthFactor) / 10000000000;
       } else {
         updatedHealthFactors[principal] = null;
       }
     });
 
-    console.log(
-      " Updated Health Factors (Divided by 1e8):",
-      updatedHealthFactors
-    );
     setHealthFactors(updatedHealthFactors);
   }, [userAccountData]);
 
-  //  Extract and update Health Factor statistics
+
   useEffect(() => {
     if (!healthFactors || Object.keys(healthFactors).length === 0) return;
     let lessThanOne = 0,
@@ -538,34 +866,79 @@ const DashboardCards = () => {
       }
     });
   };
+  useEffect(() => {
+    if (isFreezePopupVisible) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+    }
 
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+    };
+  }, [isFreezePopupVisible]);
+
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const usersPerPage = 10;
+        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
+
+        const data = await fetchAllUsers(totalPages, usersPerPage);
+        setAllUsers(data);
+      } catch (err) {
+        console.error("Failed to load liquidation users:", err);
+        setError("Failed to fetch users. Please try again later.");
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, [totalUsers]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await getTotalUser();
+      } catch (error) {
+        console.error("Failed to fetch total users:", error.message);
+      }
+    })();
+  }, []);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
 
   return (
     <>
-      {loading ? (
-        <div className="h-[150px] flex justify-center items-center">
+      {usersLoading ? (
+        <div className="h-[80vh] flex justify-center items-center">
           <MiniLoader isLoading={true} />
         </div>
       ) : like ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-14 px-5 mt-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lgx:grid-cols-3 gap-4 p-14 px-5 mt-16">
           {/*  Users Card */}
           {cardData
             .filter((card) => card.title === "Users")
             .map((card, index) => (
               <div
                 key={index}
-                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
+               text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center 
+                 hover:shadow-2xl transition-shadow duration-300 min-h-[150px]" // ✅ Added min-h to keep consistent height
               >
-                <h3 className="text-xl font-semibold mt-2 ">{card.title}</h3>
-                <p className="text-4xl font-bold mb-3.5 mt-2 text-[#233D63] dark:text-darkText">
-                  {card.value}
+                <h3 className="text-xl font-semibold mt-2">{card.title}</h3>
+
+                {/* ✅ Show MiniLoader until `card.value` is available */}
+                <p className="text-4xl font-bold mb-3.5 mt-2 text-[#233D63] dark:text-darkText flex items-center justify-center min-h-[50px]">
+                  {card.value ? card.value.toString() : <MiniLoader isLoading={true} />}
                 </p>
 
-                {/*  Users Card: View Analytics Button */}
-                {!loading && (
+                {/* ✅ Users Card: View Analytics Button */}
+                {!usersLoading && (
                   <a
                     href="https://analytics.google.com/analytics/web/#/analysis/p472242742/edit/5FJVJVVVSzm_gOhVztd31w"
                     target="_blank"
@@ -585,18 +958,25 @@ const DashboardCards = () => {
             ))}
 
           {/*  Health Factor Card */}
-          <div className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 relative">
+          <div
+            className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
+          text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center 
+          hover:shadow-2xl transition-shadow duration-300 relative min-h-[180px]"
+          >
+            {/* More Button */}
             <button
               onClick={handleViewMore}
-              className="absolute top-2 right-2  text-white rounded-md px-2 py-0.5 text-xs  hover:bg-opacity-80 transition"
+              className="absolute top-2 right-2 text-white rounded-md px-2 py-0.5 text-xs hover:bg-opacity-80 transition"
             >
               More
             </button>
 
+            {/* Title */}
             <h3 className="text-xl font-semibold text-center mb-3 mt-5">
               Health Factor
             </h3>
 
+            {/* Health Factor Ranges */}
             <div className="flex justify-between items-center w-full">
               <div className="flex flex-col space-y-1 pl-4">
                 <div className="flex items-center">
@@ -604,29 +984,33 @@ const DashboardCards = () => {
                   <span className="ml-2 text-sm text-gray-100">&lt; 1</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-10 h-4 bg-green-500 border border-white rounded-md"></div>
+                  <div className="w-10 h-4 bg-yellow-500  border border-white rounded-md"></div>
                   <span className="ml-2 text-sm text-gray-100">&gt; 1</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-10 h-4 bg-yellow-500 border border-white rounded-md"></div>
+                  <div className="w-10 h-4 bg-green-500 border border-white rounded-md"></div>
                   <span className="ml-2 text-sm text-gray-100">Infinity</span>
                 </div>
               </div>
 
-              {/*  Right Side - Pie Chart */}
-              <div className="w-40 h-26 pr-2">
-                <Doughnut
-                  data={pieData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: "70%",
-                    plugins: {
-                      legend: { display: false },
-                      tooltip: { enabled: true },
-                    },
-                  }}
-                />
+              {/* ✅ Pie Chart OR MiniLoader (Checks If Data is `[0,0,0]`) */}
+              <div className="w-40 h-22  flex items-center justify-center">
+                {pieData?.datasets?.[0]?.data.every((value) => value === 0) ? (
+                  <MiniLoader isLoading={true} /> // ✅ Show MiniLoader if all values are 0
+                ) : (
+                  <Doughnut
+                    data={pieData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      cutout: "70%",
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true },
+                      },
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -645,7 +1029,7 @@ const DashboardCards = () => {
                 </p>
 
                 {/*  Asset Selection */}
-                {!loading && (
+                {!usersLoading && (
                   <div className="mt-2.5 mb-14 flex flex-wrap justify-center gap-6">
                     {card.assets.map((asset, idx) => (
                       <label
@@ -677,12 +1061,22 @@ const DashboardCards = () => {
             .map((card, index) => (
               <div
                 key={index}
-                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
+              text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center 
+                hover:shadow-2xl transition-shadow duration-300 min-h-[150px]" // ✅ Added min-h to ensure proper height
               >
-                <h3 className="text-xl font-semibold mt-1.5 ">{card.title}</h3>
-                <p className="text-4xl font-bold mb-5 mt-2 text-[#233D63] dark:text-darkText">
-                  <span className="font-normal">$</span>
-                  {card.value}
+                <h3 className="text-xl font-semibold mt-1.5">{card.title}</h3>
+
+                {/* ✅ Centers MiniLoader or Value */}
+                <p className="text-4xl font-bold my-4 flex items-center justify-center min-h-[50px] text-[#233D63] dark:text-darkText">
+                  {interestAccure === null || interestAccure === undefined ? (
+                    <MiniLoader isLoading={true} />
+                  ) : (
+                    <>
+                      <span className="font-normal">$</span>
+                      {interestAccure}
+                    </>
+                  )}
                 </p>
               </div>
             ))}
@@ -693,27 +1087,35 @@ const DashboardCards = () => {
             .map((card, index) => (
               <div
                 key={index}
-                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300"
+                className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
+              text-[#233D63] dark:text-darkTextSecondary1 rounded-xl shadow-lg px-4 py-3 flex flex-col items-center justify-center 
+               hover:shadow-2xl transition-shadow duration-300 min-h-[150px]" // ✅ Added min-h to ensure a fixed height for centering
               >
                 <h3 className="text-xl font-semibold mt-5">{card.title}</h3>
+
+                {/* ✅ Ensures MiniLoader is perfectly centered */}
                 <p
-                  className={`text-4xl font-bold mt-2 ${
-                    loading
+                  className={`text-4xl font-bold mt-2 flex items-center justify-center min-h-[50px] ${usersLoading
                       ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
-                  }`}
+                      : getCycleColor(formatNumber(cycles))
+                    }`}
                 >
-                  {loading ? <MiniLoader isLoading={true} /> : card.value}
+                  {cycles ? (
+                    formatNumber(cycles)
+                  ) : (
+                    <MiniLoader isLoading={true} />
+                  )}
                 </p>
 
-                {/*  Threshold for Cycles */}
-                {!loading && (
+                {/* ✅ Threshold Text (Only Shows When Not Loading) */}
+                {!usersLoading && (
                   <p className="text-sm mt-3 text-[#233D63] dark:text-darkTextSecondary">
                     Threshold Value: {formatNumber(threshold)}
                   </p>
                 )}
               </div>
             ))}
+          {console.log("filteredData:", showPopup)}
           {showPopup && selectedAsset && (
             <div
               key={selectedAsset.name}
@@ -806,6 +1208,14 @@ const DashboardCards = () => {
               </div>
             </div>
           )}
+          {isFreezePopupVisible && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+              <FreezeCanisterPopup
+                onClose={() => setIsFreezePopupVisible(false)}
+              />
+            </div>
+          )}
+          {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
         </div>
       ) : (
         <Error />

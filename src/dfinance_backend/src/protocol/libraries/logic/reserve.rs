@@ -391,12 +391,6 @@ pub async fn burn_scaled(
         );
         ic_cdk::println!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
-        // if let Err(err) = repay_lock_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
-        // {
-        //     ic_cdk::println!("Error in repay_lock_amount: {:?}", err);
-        //     return Err(err);
-        // }
-
         if reserve.asset_borrow == adjusted_amount {
             ic_cdk::println!("Setting asset borrow to zero");
             reserve.asset_borrow = Nat::from(0u128);
@@ -404,8 +398,6 @@ pub async fn burn_scaled(
             return Err(Error::AmountSubtractionError);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from asset borrow");
-            // let repay_amount = get_repay_locked_amount(&reserve.asset_name.clone().unwrap());
-            // ic_cdk::println!("repay amount = {}", repay_amount);
             reserve.asset_borrow -= adjusted_amount;
         }
 
@@ -426,7 +418,7 @@ pub async fn burn_scaled(
         .await
         {
             Ok(_) => {
-                ic_cdk::println!("Minting successful");
+                ic_cdk::println!("Burning successful");
                 Ok(())
             }
             Err(err) => {
@@ -521,6 +513,7 @@ pub async fn mint_scaled(
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
+    //acuire transaction lock
     if adjusted_amount == Nat::from(0u128) {
         ic_cdk::println!("Error: Invalid mint amount");
         return Err(Error::InvalidMintAmount);
@@ -559,7 +552,7 @@ pub async fn mint_scaled(
             user_state.d_token_balance += adjusted_amount.clone();
         }
         ic_cdk::println!("new dtoken balance {}", user_state.d_token_balance);
-        reserve.asset_supply += adjusted_amount;
+        reserve.asset_supply += adjusted_amount; //get_trans_amount
         println!("updated asset supply{}", reserve.asset_supply);
         println!("user new dtoken balance {}", user_state.d_token_balance);
         user_state.liquidity_index = index;

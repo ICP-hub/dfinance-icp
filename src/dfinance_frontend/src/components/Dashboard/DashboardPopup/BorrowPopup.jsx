@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
@@ -21,18 +22,45 @@ import useAssetData from "../../customHooks/useAssets";
  * @param {Object} props - Component properties.
  */
 
- const Borrow = ({ asset,image, supplyRateAPR,balance,liquidationThreshold,reserveliquidationThreshold,assetSupply,assetBorrow,totalCollateral,totalDebt,currentCollateralStatus,Ltv,borrowableValue: borrowableValueprop, borrowableAssetValue: borrowableAssetValueprop, total_supply, total_borrow, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange,}) => {
-
-
+const Borrow = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue: borrowableValueprop,
+  borrowableAssetValue: borrowableAssetValueprop,
+  total_supply,
+  total_borrow,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, } = useFetchConversionRate();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
+  const { isBlocked } = useFunctionBlockStatus("execute_borrow");
   const { filteredItems } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
-  const { conversionRate, error: conversionError } = useRealTimeConversionRate(asset);
+  const { conversionRate, error: conversionError } =
+    useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();
 
   /* ===================================================================================
@@ -45,7 +73,8 @@ import useAssetData from "../../customHooks/useAssets";
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
+    useState(false);
   const [error, setError] = useState("");
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +93,9 @@ import useAssetData from "../../customHooks/useAssets";
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -94,11 +125,19 @@ import useAssetData from "../../customHooks/useAssets";
   };
 
   //   Calculates borrowable values based on conversion rates.
-  const calculateBorrowableValues = (asset, availableBorrow, remainingBorrowable
+  const calculateBorrowableValues = (
+    asset,
+    availableBorrow,
+    remainingBorrowable
   ) => {
     let borrowableValue = null;
     let borrowableAssetValue = null;
-    const assetRates = { ckBTC: ckBTCUsdRate,ckETH: ckETHUsdRate,ckUSDC: ckUSDCUsdRate,ICP: ckICPUsdRate,ckUSDT: ckUSDTUsdRate,
+    const assetRates = {
+      ckBTC: ckBTCUsdRate,
+      ckETH: ckETHUsdRate,
+      ckUSDC: ckUSDCUsdRate,
+      ICP: ckICPUsdRate,
+      ckUSDT: ckUSDTUsdRate,
     };
     const rate = assetRates[asset] / 1e8;
     if (rate) {
@@ -135,9 +174,22 @@ import useAssetData from "../../customHooks/useAssets";
       "An unexpected error occurred during the borrow process. Please try again later.",
   };
 
-
-   // Handles the borrow action by interacting with the backend.
+  // Handles the borrow action by interacting with the backend.
   const handleBorrowETH = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return;
+    }
+
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -151,34 +203,28 @@ import useAssetData from "../../customHooks/useAssets";
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
+
     const borrowParams = {
       asset: asset,
       amount: scaledAmount,
     };
+
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString(),
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`,
           "Assets",
-          "Borrow," +
-            asset +
-            "," +
-            scaledAmount / 100000000 +
-            ", " +
-            principalObj.toString()
+          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`
         );
+
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
+
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -189,6 +235,7 @@ import useAssetData from "../../customHooks/useAssets";
           draggable: true,
           progress: undefined,
         });
+       
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
@@ -196,11 +243,54 @@ import useAssetData from "../../customHooks/useAssets";
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
 
-        if (errorMessage.toLowerCase().includes("panic")) {
+        console.error("errorKey", errorKey);
+
+        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+          console.error("You are temporarily blocked from using this function");
+
+          toast.error("You are temporarily blocked from using this function", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          setIsModalOpen(false);
+          setLoading(false)
+          setIsLoading(false)
+        } else if (errorMessage.toLowerCase().includes("panic")) {
           setPanicMessage(
             "A critical system error occurred. Please try again later."
           );
           setShowPanicPopup(true);
+        } else if (
+          errorMessage.toLowerCase().includes("out of cycles") ||
+          errorMessage.includes("reject text: canister")
+        ) {
+          toast.error("Canister is out of cycles. Controller has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMessage.toLowerCase().includes("BorrowCapExceeded")) {
+          toast.error("Borrow cap is exceeded.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
         } else {
           toast.error(errorMessage, {
             className: "custom-toast",
@@ -216,17 +306,50 @@ import useAssetData from "../../customHooks/useAssets";
 
         setIsPaymentDone(false);
         setIsVisible(true);
+        setLoading(false)
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
 
-      if (error.message && error.message.toLowerCase().includes("panic")) {
-        setPanicMessage(
-          "A critical system error occurred. Please try again later."
-        );
+      const message = error.message || "Borrow action failed!";
+      const isPanicError = message.toLowerCase().includes("panic");
+      const isOutOfCyclesError =
+        message.toLowerCase().includes("out of cycles") ||
+        message.includes("reject text: canister");
+      const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
+
+      if (isPanicError) {
+        setPanicMessage("A critical system error occurred. Please try again later.");
+
         setShowPanicPopup(true);
+        setIsVisible(false);
+
+      } else if (isOutOfCyclesError) {
+        toast.error("Canister is out of cycles. Controller has been notified.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (isBorrowCapExceeded) {
+        toast.error("Borrow cap is exceeded.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        setIsLoading(false)
+        handleClosePaymentPopup()
       } else {
-        toast.error(`Error: ${error.message || "Borrow action failed!"}`, {
+        toast.error(`Error: ${message}`, {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -237,13 +360,11 @@ import useAssetData from "../../customHooks/useAssets";
           progress: undefined,
         });
       }
-
       setIsPaymentDone(false);
-      setIsVisible(true);
-    } finally {
-      setIsLoading(false);
+      setIsVisible(false);
     }
   };
+
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -281,29 +402,42 @@ import useAssetData from "../../customHooks/useAssets";
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Allow empty input
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-    const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > parseFloat(borrowableValue)) {
+  
+    // Prevent NaN when deleting numbers (keep user input as is)
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
       return;
     }
+  
+    // Convert to float but only if it's a valid number
+    const numericAmount = parseFloat(inputAmount);
+    if (!isNaN(numericAmount) && numericAmount > parseFloat(borrowableValue)) {
+      return;
+    }
+  
+    // Format number with thousands separator
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
-
+  
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
@@ -345,16 +479,28 @@ import useAssetData from "../../customHooks/useAssets";
       .replace(/\.?0+$/, "");
   };
 
+  const truncateToDecimals = (num, decimals) => {
+    const factor = Math.pow(10, decimals);
+    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+  };
+
+  const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    if (showPanicPopup) {
+      setIsVisible(false);
+    }
+  }, [showPanicPopup]);
 
   useEffect(() => {
     const updateValues = async () => {
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const remainingBorrowable = totalSupply* 0.85 - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -362,16 +508,14 @@ import useAssetData from "../../customHooks/useAssets";
         );
         setBorrowableValue(updatedValues.borrowableValue);
         setBorrowableAssetValue(updatedValues.borrowableAssetValue);
-      } 
-      catch (error) {
+      } catch (error) {
         console.error("Error fetching data:", error);
-      } 
-      finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+      } finally {
+        
       }
-    };
+    };setTimeout(() => {
+          setLoading(false);
+        }, 400);
     updateValues();
   }, [
     asset,
@@ -388,7 +532,8 @@ import useAssetData from "../../customHooks/useAssets";
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      const borrowValue =remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      const borrowValue =
+         Number(userAccountData.Ok[5]) / 100000000 ;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -429,20 +574,27 @@ import useAssetData from "../../customHooks/useAssets";
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
 
-    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
-     
+    const totalCollateralValue =
+      parseFloat(totalCollateral) + parseFloat(amountAdded);
+
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-    
+
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
 
     setPrevHealthFactor(currentHealthFactor);
 
-    setCurrentHealthFactor( healthFactor > 100 ? "Infinity" : healthFactor.toFixed(2) );
-    
+    const truncateToDecimals = (num, decimals) => {
+      const factor = Math.pow(10, decimals);
+      return (Math.floor(num * factor) / factor).toFixed(decimals);
+    };
+
+    setCurrentHealthFactor(
+      healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
+    );
+
     if (value < 2 && value > 1) {
       setIsAcknowledgmentRequired(true);
-    }
-     else {
+    } else {
       setIsAcknowledgmentRequired(false);
       setIsAcknowledged(false);
     }
@@ -512,9 +664,9 @@ import useAssetData from "../../customHooks/useAssets";
                   <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -528,11 +680,10 @@ import useAssetData from "../../customHooks/useAssets";
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      }`}
                     onClick={() => {
                       if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();
@@ -540,7 +691,7 @@ import useAssetData from "../../customHooks/useAssets";
                     }}
                   >
                     {loading &&
-                    (borrowableValue == null || borrowableValue === "0") ? (
+                      (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
                     ) : parseFloat(borrowableValue) === 0 ? (
                       "0 Max"
@@ -570,37 +721,35 @@ import useAssetData from "../../customHooks/useAssets";
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          healthFactorBackend > 3
-                            ? "text-green-500"
-                            : healthFactorBackend <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
-                            : healthFactorBackend <= 1.5
-                            ? "text-orange-600"
-                            : healthFactorBackend <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
-                          healthFactorBackend > 100
+                          truncatedValue > 100
                             ? "Infinity"
-                            : parseFloat(healthFactorBackend).toFixed(2)
+                            : (truncatedValue)
                         )}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -671,11 +820,10 @@ import useAssetData from "../../customHooks/useAssets";
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -696,7 +844,7 @@ import useAssetData from "../../customHooks/useAssets";
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -708,7 +856,7 @@ import useAssetData from "../../customHooks/useAssets";
               <Check />
             </div>
             <h1 className="font-semibold text-xl">All done!</h1>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have borrowed{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&
@@ -716,12 +864,12 @@ import useAssetData from "../../customHooks/useAssets";
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
-            <p className="text-sm  lgx:text-lg whitespace-nowrap">
+            <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               {scaledAmount / 100000000
                 ? scaledAmount / 100000000 >= 1e-8 &&
@@ -729,8 +877,8 @@ import useAssetData from "../../customHooks/useAssets";
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>
@@ -745,21 +893,21 @@ import useAssetData from "../../customHooks/useAssets";
       )}
       {showPanicPopup && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
+              <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                <X size={22} />
+              </button>
+            </div>
 
             <div
               className="dark:bg-gradient 
                 dark:from-darkGradientStart 
                 dark:to-darkGradientEnd 
-                dark:text-darkText  "
+                dark:text-darkText p-2 "
             >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
                 uncovered a bug, and our dev team is on it.
@@ -769,7 +917,7 @@ import useAssetData from "../../customHooks/useAssets";
                 Your account is temporarily locked while we investigate and fix
                 the issue. <br />
               </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 We appreciate your contribution and have logged your ID—testers
                 like you are key to making DFinance better! <br />
                 If you have any questions, feel free to reach out.

@@ -25,7 +25,12 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 
-const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleLogout}) => {
+const MobileTopNav = ({
+  isMobileNav,
+  setIsMobileNav,
+  isHomeNav,
+  handleLogout,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -112,11 +117,7 @@ const MobileTopNav = ({ isMobileNav, setIsMobileNav, isHomeNav, handleLogout}) =
   };
 
   const handleSwitchWallet = () => {
-    if (switchWalletDrop) {
-      logout();
-    } else {
-      setSwitchWalletDrop(!switchWalletDrop);
-    }
+    setSwitchWalletDrop(!switchWalletDrop);
   };
 
   // if (isLargeScreen) {

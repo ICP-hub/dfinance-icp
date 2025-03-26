@@ -1,5 +1,10 @@
 #!/bin/bash
 
+set -e
+
+# Load environment variables from .env
+source ../../.env
+
 # Set the canister name
 CANISTER_NAME="dfinance_backend"
 USER_PRINCIPAL=$(dfx identity get-principal)
@@ -80,17 +85,18 @@ echo "Updating controllers for all assets, D-Tokens, and Debt Tokens..."
 
 for principal in "${PRINCIPALS[@]}"; do
     add_controller "$principal"
-    dfx canister install --wasm "/home/jyotirmay1789/dfinance-icp/target/wasm32-unknown-unknown/release/token_ledger.wasm" $principal --mode upgrade
+    dfx canister install --wasm "$TOKEN_LEDGER_WASM_PATH" $principal --mode upgrade
 done
 
 for dtoken in "${D_TOKEN_PRINCIPALS[@]}"; do
     add_controller "$dtoken"
-    dfx canister install --wasm "/home/jyotirmay1789/dfinance-icp/target/wasm32-unknown-unknown/release/dtoken.wasm" $dtoken --mode upgrade
+    dfx canister install --wasm "$DTOKEN_WASM_PATH" $dtoken --mode upgrade
 done
 
 for debt_token in "${DEBT_TOKEN_PRINCIPALS[@]}"; do
     add_controller "$debt_token"
-    dfx canister install --wasm "/home/jyotirmay1789/dfinance-icp/target/wasm32-unknown-unknown/release/debttoken.wasm" $debt_token --mode upgrade
+    dfx canister install --wasm "$DEBT_TOKEN_WASM_PATH" $debt_token --mode upgrade
 done
 
 echo "All controllers updated successfully."
+echo

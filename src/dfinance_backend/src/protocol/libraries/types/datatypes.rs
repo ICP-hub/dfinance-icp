@@ -28,7 +28,6 @@ pub struct Candid<T>(pub T);
  * @dev Stores user-specific financial information.
  * @notice This structure holds the user's reserves, collateral, and debt data.
  */
-//FIXME remove this user data , can store reserves list directly to user profile
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,

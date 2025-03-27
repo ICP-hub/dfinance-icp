@@ -4,21 +4,11 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
 use crate::guards::check_is_tester;
-use candid::{CandidType, Deserialize, Nat, Principal};
+use crate::protocol::libraries::types::datatypes::{CachedPrice, PriceCache};
+use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
-use serde::Serialize;
 use std::collections::HashMap;
-
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct CachedPrice {
-    pub price: Nat,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
-pub struct PriceCache {
-    pub cache: HashMap<String, CachedPrice>,
-}
 
 /*
  * @title Price Cache Management

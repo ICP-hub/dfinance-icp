@@ -5,7 +5,7 @@ use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::assets::{ExecuteRepayParams,AssetData};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserAccountData, UserData};
 use crate::{
     api::state_handler::mutate_state,
     get_cached_exchange_rate, get_reserve_data,
@@ -23,11 +23,11 @@ fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
 }
 
-#[derive(CandidType, Deserialize, Clone, Default)]
-pub struct UserConfig {
-    pub collateral: bool,
-    pub borrowing: bool,
-}
+// #[derive(CandidType, Deserialize, Clone, Default)]
+// pub struct UserConfig {
+//     pub collateral: bool,
+//     pub borrowing: bool,
+// }
 /*
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -860,23 +860,6 @@ pub async fn get_user_asset_debt_in_base_currency(
     let result = user_variable_debt.scaled_mul(asset_price);
     ic_cdk::println!("Final user debt in base currency: {}", result);
     Ok(result)
-}
-
-/*
- * @title User Account Data Structure
- * @notice Stores financial data such as collateral, debt, and risk factors.
- *
- * @dev Tracks users' financial health and determines potential liquidation status.
- */
-#[derive(Debug, Clone, CandidType, Deserialize)]
-pub struct UserAccountData {
-    pub collateral: Nat,
-    pub debt: Nat,
-    pub ltv: Nat,
-    pub liquidation_threshold: Nat,
-    pub health_factor: Nat,
-    pub available_borrow: Nat,
-    pub has_zero_ltv_collateral: bool,
 }
 
 /*

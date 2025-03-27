@@ -1,1 +1,0 @@
-service : () -> { get_status : () -> (text) query; lp_pool : (nat64) -> (text) }

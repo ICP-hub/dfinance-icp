@@ -14,7 +14,7 @@ use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::{
     api::state_handler::mutate_state,
     declarations::assets::ExecuteSupplyParams,
-    protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
+    protocol::libraries::logic::update::UpdateLogic,
 };
 use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};

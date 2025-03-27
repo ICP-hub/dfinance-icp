@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 
@@ -162,4 +163,32 @@ pub struct UserAccountData {
     pub health_factor: Nat,
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
+}
+
+// Define a struct to hold request count and last request time
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct RequestTracker {
+    pub count: u32,
+    pub last_request_time: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct BlockedUserDetails {
+    pub blocked_time: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct SessionStorageData {
+    pub connected_wallet: String,
+    pub session_start: Nat,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct CachedPrice {
+    pub price: Nat,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
+pub struct PriceCache {
+    pub cache: HashMap<String, CachedPrice>,
 }

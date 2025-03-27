@@ -2,11 +2,11 @@ use candid::Principal;
 use ic_stable_structures::StableBTreeMap;
 use std::collections::BTreeMap;
 
-use crate::api::functions::{BlockedUserDetails, RequestTracker, SessionStorageData};
 use crate::declarations::assets::InitArgs;
 use crate::declarations::{assets::ReserveData, storable::Candid};
-use crate::protocol::libraries::math::calculate::PriceCache;
 use crate::protocol::libraries::types::{datatypes::UserData, memory::VMem};
+
+use super::datatypes::{BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData};
 
 pub type AssetIndex = StableBTreeMap<String, Candid<ReserveData>, VMem>;
 pub type UserProfile = StableBTreeMap<Principal, Candid<UserData>, VMem>;

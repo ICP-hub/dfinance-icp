@@ -6,12 +6,11 @@ use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
 use crate::guards::to_check_controller;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
+use crate::protocol::libraries::types::datatypes::{RequestTracker,BlockedUserDetails, UserReserveData};
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
 use ic_cdk::api;
-use ic_cdk::api::time;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
@@ -20,25 +19,6 @@ use serde::Serialize;
 struct Account {
     owner: Principal,
     subaccount: Option<Vec<u8>>,
-}
-
-// Define a struct to hold request count and last request time
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct RequestTracker {
-    count: u32,
-    last_request_time: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct BlockedUserDetails {
-    blocked_time: u64,
-}
-
-
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct SessionStorageData {
-    pub connected_wallet: String,
-    pub session_start: Nat,
 }
 
 /*
@@ -813,8 +793,4 @@ pub fn inspect_message() {
 
     ic_cdk::println!("[InspectMessage] Execution allowed for {}", method_name);
     ic_cdk::api::call::accept_message(); // Explicitly allow the request
-}
-
-fn current_timestamp() -> u64 {
-    time() / 1_000_000_000
 }

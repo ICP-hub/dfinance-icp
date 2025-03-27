@@ -333,31 +333,21 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             return Err(Error::LowWalletBalance);
         }
 
-        let mut rate: Option<Nat> = None;
-
-        match get_cached_exchange_rate(asset.clone()) {
-            Ok(price_cache) => {
-                if let Some(cached_price) = price_cache.cache.get(&asset) {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                    ic_cdk::println!("Fetched exchange rate for {}: {:?}", asset, rate);
-                } else {
-                    ic_cdk::println!("No cached price found for {}", asset);
-                    rate = None;
-                }
+        let asset_price = match get_cached_exchange_rate(asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
             }
-            Err(err) => {
-                ic_cdk::println!("Error fetching exchange rate for {}: {:?}", asset, err);
-                rate = None;
-            }
-        }
+        };
+        ic_cdk::println!("asset price = {}",asset_price);
 
-        let usd_amount = ScalingMath::scaled_mul(amount.clone(), rate.clone().unwrap());
+        let usd_amount = ScalingMath::scaled_mul(amount.clone(),asset_price.clone());
 
         ic_cdk::println!(
             "usd amount of the facut = {}, {}",
             usd_amount,
-            rate.unwrap()
+            asset_price
         );
 
         let user_reserve = user_reserve(&mut user_data, &asset);
@@ -418,7 +408,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
         ic_cdk::println!("user data before submit = {:?}", user_data);
 
-        // Ask: dont you think that this should be on the last of the code.
         mutate_state(|state| {
             state
                 .user_profile
@@ -538,13 +527,6 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     //     ic_cdk::println!("principals are not allowed");
     //     return Err(Error::InvalidPrincipal);
     // }
-
-    ic_cdk::println!(
-        "[RequestLimiter] Caller: {:?}, Function: {}, Timestamp: {}",
-        caller_id,
-        function_name,
-        current_time_stamp
-    );
 
     // Check if user is blocked for this specific function
     let is_blocked = mutate_state(|state| {
@@ -669,7 +651,7 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     Ok(())
 }
 
-//TODO: remove it later.
+
 #[query]
 pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>, Error> {
     // let caller_id = ic_cdk::caller();
@@ -699,7 +681,7 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
     }))
 }
 
-//TODO: remove it later.
+
 #[query]
 pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
 
@@ -726,7 +708,7 @@ pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>
             .unwrap_or_default()
     }))
 }
-//TODO: remove it later.
+
 #[update]
 pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> Result<(), Error> {
 
@@ -836,85 +818,3 @@ pub fn inspect_message() {
 fn current_timestamp() -> u64 {
     time() / 1_000_000_000
 }
-
-// async fn send_admin_notifications(stage: &str, asset: String) -> Result<(), Error> {
-//     let message = match stage {
-//         "initial" => format!("Dear Admin,\n\nThe platform's faucet balance for {} is low. Immediate action is required to mint more tokens.\n\nBest regards,\nYour Platform Team", asset),
-//         "mid" => format!("Dear Admin,\n\nUrgent: The platform's faucet balance for {} is 0. Please ensure tokens are minted soon to avoid user disruption.\n\nBest regards,\nYour Platform Team", asset),
-//         "final" => format!("Dear Admin,\n\nReminder: The platform's faucet balance for {} is nearly depleted. Immediate minting of tokens is necessary to prevent users from being unable to claim tokens.\n\nBest regards,\nYour Platform Team", asset),
-//         _ => "".to_string(),
-//     };
-
-//     let subject = "Faucet Amount Low - Mint More Tokens".to_string();
-//     if let Err(e) = send_email_via_sendgrid(subject, message).await {
-//         ic_cdk::println!("Failed to send email: {:?}", e);
-//         return Err(e);
-//     }
-//     Ok(())
-// }
-
-// pub async fn send_email_via_sendgrid(subject: String, message: String) -> Result<String, Error> {
-//     let url = "https://api.sendgrid.com/v3/mail/send";
-//     let api_key = "";
-
-//     let request_headers = vec![
-//         HttpHeader {
-//             name: "Authorization".to_string(),
-//             value: format!("Bearer {}", api_key),
-//         },
-//         HttpHeader {
-//             name: "Content-Type".to_string(),
-//             value: "application/json".to_string(),
-//         },
-//     ];
-
-//     ic_cdk::println!("Headers prepared: {:?}", request_headers);
-
-//     let email_data = json!( {
-//         "personalizations": [
-//             {
-//                 "to": [{"email": "sativikverma@gmail.com"}],
-//                 "subject": subject
-//             }
-//         ],
-//         "from": { "email": "jyotirmay2000gupta@gmail.com" },
-//         "content": [
-//             {
-//                 "type": "text/plain",
-//                 "value": message,
-//             }
-//         ]
-//     });
-
-//     ic_cdk::println!("Email data prepared: {}", email_data);
-
-//     let request_body: Option<Vec<u8>> = Some(email_data.to_string().as_bytes().to_vec());
-
-//     let request = CanisterHttpRequestArgument {
-//         url: url.to_string(),
-//         method: HttpMethod::POST,
-//         body: request_body,
-//         max_response_bytes: None,
-//         transform: None,
-//         headers: request_headers,
-//     };
-
-//     ic_cdk::println!("Request prepared: {:?}", request);
-
-//     // Send the HTTP request to SendGrid
-//     let timeout = 120_000_000_000;
-//     ic_cdk::println!("Sending HTTP request with timeout: {}", timeout);
-
-//     match http_request(request, timeout).await {
-//         Ok((response,)) => {
-//             let response_body =
-//                 String::from_utf8(response.body).expect("Response body is not UTF-8 encoded.");
-//             ic_cdk::println!("Email sent successfully. Response body: {}", response_body);
-//             Ok("Email sent successfully".to_string())
-//         }
-//         Err((r, m)) => {
-//             ic_cdk::println!("Error sending email. RejectionCode: {:?}, Error: {}", r, m);
-//             Err(Error::EmailError)
-//         }
-//     }
-// }

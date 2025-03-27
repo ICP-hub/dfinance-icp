@@ -114,7 +114,7 @@ const Footer = () => {
         "ckUSDC",
         "ckUSDC",
         34000000000,
-        27000000000
+        29000000000
       );
       console.log("Reserve created:", response);
     } catch (error) {

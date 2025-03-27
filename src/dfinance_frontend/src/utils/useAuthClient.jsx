@@ -144,13 +144,13 @@ export const useAuthClient = (options = defaultOptions) => {
       setPrincipal(null);
       setBackendActor(null);
       setAccountId(null);
+      localStorage.removeItem("connectedWallet");
       localStorage.removeItem("sessionStart");
       sessionStorage.removeItem("hasCheckedUser");
       if (isSwitchingWallet == false) {
         localStorage.removeItem("connectedWallet");
         window.location.reload();
       }
-      localStorage.removeItem("connectedWallet");
     } catch (error) {
       console.error(error.message);
     }
@@ -162,6 +162,7 @@ export const useAuthClient = (options = defaultOptions) => {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
+        
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }

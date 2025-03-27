@@ -5,7 +5,7 @@ use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::assets::{ExecuteRepayParams,AssetData};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
-use crate::protocol::libraries::types::datatypes::UserData;
+use crate::protocol::libraries::types::datatypes::{UserAccountData, UserData};
 use crate::{
     api::state_handler::mutate_state,
     get_cached_exchange_rate, get_reserve_data,
@@ -23,11 +23,11 @@ fn get_max_value() -> Nat {
     Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
 }
 
-#[derive(CandidType, Deserialize, Clone, Default)]
-pub struct UserConfig {
-    pub collateral: bool,
-    pub borrowing: bool,
-}
+// #[derive(CandidType, Deserialize, Clone, Default)]
+// pub struct UserConfig {
+//     pub collateral: bool,
+//     pub borrowing: bool,
+// }
 /*
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -142,38 +142,16 @@ pub async fn calculate_user_account_data(
             }
         };
 
-        let mut rate: Option<Nat> = None;
+        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("asset price = {}",rate);
 
-        match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-            Ok(price_cache) => {
-                if let Some(cached_price) =
-                    price_cache.cache.get(&user_reserve_data.reserve.clone())
-                {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                    ic_cdk::println!(
-                        "Fetched exchange rate for {}: {:?}",
-                        user_reserve_data.reserve.clone(),
-                        rate
-                    );
-                } else {
-                    ic_cdk::println!(
-                        "No cached price found for {}",
-                        user_reserve_data.reserve.clone()
-                    );
-                    rate = None;
-                }
-            }
-            Err(err) => {
-                ic_cdk::println!(
-                    "Error fetching exchange rate for {}: {:?}",
-                    user_reserve_data.reserve.clone(),
-                    err
-                );
-                rate = None;
-            }
-        }
-        let asset_price = rate.unwrap();
+        let asset_price = rate;
         if user_reserve_data.is_collateral {
             ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -334,9 +312,7 @@ pub async fn calculate_user_account_data(
  *   - Available borrow
  *   - Has zero-LTV collateral (bool)
  */
-
-#[query]
- pub async fn calculate_user_asset_data(
+pub async fn calculate_user_asset_data(
     on_behalf: Option<Principal>,
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
@@ -439,38 +415,16 @@ pub async fn calculate_user_account_data(
             }
         };
 
-        let mut rate: Option<Nat> = None;
+        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("asset price = {}",rate);
 
-        match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-            Ok(price_cache) => {
-                if let Some(cached_price) =
-                    price_cache.cache.get(&user_reserve_data.reserve.clone())
-                {
-                    let amount = cached_price.price.clone();
-                    rate = Some(amount);
-                    ic_cdk::println!(
-                        "Fetched exchange rate for {}: {:?}",
-                        user_reserve_data.reserve.clone(),
-                        rate
-                    );
-                } else {
-                    ic_cdk::println!(
-                        "No cached price found for {}",
-                        user_reserve_data.reserve.clone()
-                    );
-                    rate = None;
-                }
-            }
-            Err(err) => {
-                ic_cdk::println!(
-                    "Error fetching exchange rate for {}: {:?}",
-                    user_reserve_data.reserve.clone(),
-                    err
-                );
-                rate = None;
-            }
-        }
-        let asset_price = rate.unwrap();
+        let asset_price = rate;
         if user_reserve_data.is_collateral {
             ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -540,38 +494,16 @@ pub async fn calculate_user_account_data(
         if user_reserve_data.is_borrowed {
             ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
-            let mut rate: Option<Nat> = None;
+            let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+                Ok(price) => price,
+                Err(e) => {
+                    ic_cdk::println!("Failed to fetch exchange rate");
+                    return Err(e);
+                }
+            };
+            ic_cdk::println!("asset price = {}",rate);
 
-            match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-                Ok(price_cache) => {
-                    if let Some(cached_price) =
-                        price_cache.cache.get(&user_reserve_data.reserve.clone())
-                    {
-                        let amount = cached_price.price.clone();
-                        rate = Some(amount);
-                        ic_cdk::println!(
-                            "Fetched exchange rate for {}: {:?}",
-                            user_reserve_data.reserve.clone(),
-                            rate
-                        );
-                    } else {
-                        ic_cdk::println!(
-                            "No cached price found for {}",
-                            user_reserve_data.reserve.clone()
-                        );
-                        rate = None;
-                    }
-                }
-                Err(err) => {
-                    ic_cdk::println!(
-                        "Error fetching exchange rate for {}: {:?}",
-                        user_reserve_data.reserve.clone(),
-                        err
-                    );
-                    rate = None;
-                }
-            }
-            let asset_price = rate.unwrap();
+            let asset_price = rate;
 
             let balance: Nat = debt_token_balance.iter()
                 .find(|asset| asset.name == user_reserve_data.reserve)
@@ -796,7 +728,6 @@ pub async fn get_user_asset_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    // Ask : get normailse incone function does not exist.
     ic_cdk::println!(
         "last of the base currency  = {}",
         user_scaled_balanced_normalized
@@ -857,7 +788,6 @@ pub async fn get_user_debt_in_base_currency(
             return Err(e);
         }
     };
-    // let mut user_variable_debt = reserve.debt_token_blance.clone();
     let user_normailzed_debt_result = user_normalized_debt(asset_reserve);
     let user_normailzed_debt = match user_normailzed_debt_result {
         Ok(data) => {
@@ -933,23 +863,6 @@ pub async fn get_user_asset_debt_in_base_currency(
 }
 
 /*
- * @title User Account Data Structure
- * @notice Stores financial data such as collateral, debt, and risk factors.
- *
- * @dev Tracks users' financial health and determines potential liquidation status.
- */
-#[derive(Debug, Clone, CandidType, Deserialize)]
-pub struct UserAccountData {
-    pub collateral: Nat,
-    pub debt: Nat,
-    pub ltv: Nat,
-    pub liquidation_threshold: Nat,
-    pub health_factor: Nat,
-    pub available_borrow: Nat,
-    pub has_zero_ltv_collateral: bool,
-}
-
-/*
  * @title Get Users Eligible for Liquidation
  * @notice Identifies users with a health factor below the liquidation threshold.
  *
@@ -960,73 +873,6 @@ pub struct UserAccountData {
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
  */
-// #[update]
-// pub async fn get_liquidation_users_concurrent(
-//     total_pages: usize,
-//     page_size: usize,
-// ) -> Vec<(Principal, UserAccountData, UserData)> {
-//     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
-//     let total_users = vector_user_data.len();
-
-//     let mut liq_list = Vec::new();
-
-//     let page_futures = (0..total_pages).map(|page| {
-//         let users_to_process = vector_user_data
-//             .iter()
-//             .skip(page * page_size)
-//             .take(page_size)
-//             .cloned()
-//             .collect::<Vec<_>>();
-
-//         async move {
-//             let mut page_liq_list = Vec::new();
-
-//             let mut tasks = users_to_process
-//                 .into_iter()
-//                 .map(|(user_principal, user_data)| async move {
-//                     if let Ok(user_account_data) =
-//                         calculate_user_account_data(Some(user_principal)).await
-//                     {
-//                         Some((user_principal, user_account_data, user_data))
-//                     } else {
-//                         None
-//                     }
-//                 })
-//                 .collect::<FuturesUnordered<_>>();
-
-//             while let Some(result) = tasks.next().await {
-//                 if let Some((user_principal, user_account_data_tuple, user_data)) = result {
-//                     let user_account_data = UserAccountData {
-//                         collateral: user_account_data_tuple.0,
-//                         debt: user_account_data_tuple.1,
-//                         ltv: user_account_data_tuple.2,
-//                         liquidation_threshold: user_account_data_tuple.3,
-//                         health_factor: user_account_data_tuple.4,
-//                         available_borrow: user_account_data_tuple.5,
-//                         has_zero_ltv_collateral: user_account_data_tuple.6,
-//                     };
-//                     ic_cdk::println!("User: {:?}, Health Factor: {:?}", user_principal, user_account_data.health_factor);
-
-//                     if user_account_data.health_factor < Nat::from(10000000000u128){
-//                         page_liq_list.push((user_principal, user_account_data, user_data));
-//                     }
-                   
-//                 }
-//             }
-//             page_liq_list
-//         }
-//     });
-
-//     let results = futures::future::join_all(page_futures).await;
-
-//     for result in results {
-//         liq_list.extend(result);
-//     }
-
-//     liq_list
-// }
-
-
 #[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
@@ -1085,12 +931,11 @@ pub async fn get_liquidation_users_concurrent(
                     }
                 }
             })
-            .buffered(100) // Process 50 users concurrently to prevent overload
+            .buffered(100) // Process 100 users concurrently to prevent overload
             .collect::<Vec<_>>()
             .await;
 
         liq_list.extend(page_liq_list.into_iter().flatten());
-        // ic_cdk::api::call::msg_cycles_available(); // Check available cycles to prevent cycle exhaustion
         let cycles_end = Nat::from(api::canister_balance128());
         ic_cdk::println!("cycles middle = {:?}", cycles_end);
     }

@@ -147,6 +147,7 @@ export default function Navbar({ isHomeNav }) {
       navigator.clipboard
         .writeText(principal)
         .then(() => {
+          toast.dismiss();
           toast.success(`Principal copied to clipboard`, {
             className: "custom-toast",
             position: "top-center",

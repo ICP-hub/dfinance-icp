@@ -13,6 +13,8 @@ import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
+import { Fuel } from "lucide-react";
 
 /**
  * Repay Component
@@ -55,6 +57,8 @@ const Repay = ({
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
 
   const [amount, setAmount] = useState(null);
   const modalRef = useRef(null);
@@ -98,6 +102,24 @@ const Repay = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+  const paymentModalRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (paymentModalRef.current && !paymentModalRef.current.contains(event.target)) {
+        setIsPaymentDone(false);
+        setIsVisible(false)
+        setIsModalOpen(false)
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
 
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
@@ -114,25 +136,50 @@ const Repay = ({
    */
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure "." remains if it's the first character
+    if (inputAmount === ".") {
+      setAmount("0.");
+      updateAmountAndUsdValue("0.");
+      return;
+    }
+  
+    // Prevent multiple decimals
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Convert to a number
     let numericAmount = parseFloat(inputAmount);
     if (isNaN(numericAmount)) numericAmount = 0;
+  
+    // Restrict input to assetBorrow
     if (numericAmount > assetBorrow) {
       numericAmount = assetBorrow;
-      inputAmount = truncateToSevenDecimals(assetBorrow).toString();
     }
-    setAmount(inputAmount);
-    setMaxClicked(inputAmount === assetBorrow.toString());
-    updateAmountAndUsdValue(inputAmount);
+  
+    // **Fix floating-point issue by using toFixed(8)**
+    let formattedAmount = numericAmount.toFixed(8).replace(/\.?0+$/, ""); // Removes trailing zeros
+  
+    // Keep decimal when user is still typing
+    if (inputAmount.endsWith(".")) {
+      formattedAmount += ".";
+    }
+  
+    setAmount(formattedAmount);
+    setMaxClicked(formattedAmount === assetBorrow.toString());
+    updateAmountAndUsdValue(formattedAmount);
   };
+  
 
   /**
    * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
@@ -174,9 +221,7 @@ const Repay = ({
   }
 
   const numericBalance = balance;
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
+const supplyBalance = Math.max(numericBalance - transferFee, 0);
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
@@ -215,7 +260,10 @@ const Repay = ({
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-    const totalAmount = scaledAmount + transferfee;
+    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+    const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -316,11 +364,15 @@ const Repay = ({
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      const scaledAmount = amountAsNat64;
       const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+      const scaledAmount = amountAsNat64;
+      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+      const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
       const repayParams = {
         asset: asset,
-        amount: scaledAmount,
+        amount: totalAmount,
         on_behalf_of: [],
       };
 
@@ -331,14 +383,14 @@ const Repay = ({
           "Repay," +
             asset +
             "," +
-            scaledAmount / 100000000 +
+            totalAmount / 100000000 +
             "," +
             principalObj.toString(),
           "Assets",
           "Repay," +
             asset +
             "," +
-            scaledAmount / 100000000 +
+            totalAmount / 100000000 +
             ", " +
             principalObj.toString()
         );
@@ -374,7 +426,7 @@ const Repay = ({
             progress: undefined,
           });
 
-          setIsLoading(false)
+          setIsLoading(false);
           setIsModalOpen(false);
           return;
         }
@@ -500,19 +552,32 @@ const Repay = ({
       return truncated.toFixed(8);
     };
 
-    let selectedBalance =
-      supplyBalance > assetBorrow ? assetBorrow : supplyBalance;
-    let displayBalance = selectedBalance
+    const fee = transferFee ? Number(transferFee) : 0;
+
+    let selectedBalance;
+    // If wallet funds (supplyBalance) exceed the assetBorrow,
+    // then ensure you subtract the fee from assetBorrow.
+    if (supplyBalance >= (assetBorrow + fee)) {
+      selectedBalance = Number(assetBorrow);
+    } else {
+      // Otherwise, supplyBalance already factors in the fee
+      selectedBalance = supplyBalance - fee;
+    }
+    // Clamp to 0 if the subtraction produces a negative value
+    if (selectedBalance < 0) selectedBalance = 0;
+
+    // Format the display balance accordingly.
+    const displayBalance = selectedBalance
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
         ? Number(selectedBalance).toFixed(7)
         : truncateToSevenDecimals(selectedBalance)
       : "0";
-    const maxAmount = displayBalance.toString();
-    setMaxAmount(maxAmount);
+
+    setMaxAmount(displayBalance.toString());
     setMaxClicked(true);
-    updateAmountAndUsdValue(maxAmount);
+    updateAmountAndUsdValue(displayBalance.toString());
   };
 
   const formatValue = (value) => {
@@ -526,7 +591,7 @@ const Repay = ({
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
   };
-  
+
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
 
   /* ===================================================================================
@@ -733,8 +798,8 @@ const Repay = ({
                         {(
                           assetBorrow - (amount?.replace(/,/g, "") || "")
                         ).toLocaleString(undefined, {
-                          minimumFractionDigits: 7,
-                          maximumFractionDigits: 7,
+                          minimumFractionDigits: 8,
+                          maximumFractionDigits: 8,
                         })}{" "}
                         Max
                       </p>
@@ -744,6 +809,7 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
+                      {console.log("truncatedValue", truncatedValue)}
                       <span
                         className={`${
                           truncatedValue > 3
@@ -757,11 +823,7 @@ const Repay = ({
                             : "text-orange-300"
                         }`}
                       >
-                        {(
-                          truncatedValue > 100
-                            ? "Infinity"
-                            : (truncatedValue)
-                        )}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -781,7 +843,33 @@ const Repay = ({
                       </span>
                     </p>
                   </div>
-
+                  <div className="w-full flex justify-between items-center my-1 mt-2">
+                    <div className="flex items-center gap-1">
+                      <p>Transaction Fee</p>
+                     
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p>{transferFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {(amount ? (+amount || 0) + (+transferFee || 0) : 0).toFixed(8)}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
                   <div className="w-full flex justify-end items-center mt-1">
                     <p className="text-[#909094]">liquidation at &lt;1</p>
                   </div>
@@ -892,7 +980,7 @@ const Repay = ({
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div ref={paymentModalRef} className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
           <div className="w-full flex flex-col items-center">
             <button
               ref={closeButtonRef}
@@ -947,43 +1035,41 @@ const Repay = ({
         </div>
       )}
       {showPanicPopup && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
+             <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+               <div className="w-full flex flex-col items-center ">
+                 <div className="w-full flex items-center justify-between  ">
+                   <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
               ref={closeButtonRef}
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
-
-            <div
-              className="dark:bg-gradient 
-                dark:from-darkGradientStart 
-                dark:to-darkGradientEnd 
-                dark:text-darkText  "
-            >
-              <h1 className="font-semibold text-xl mb-4 text-orange-600 ">
-                Important Message
-              </h1>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                Thanks for helping us improve DFinance! <br></br> You’ve
-                uncovered a bug, and our dev team is on it.
-              </p>
-
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                Your account is temporarily locked while we investigate and fix
-                the issue. <br />
-              </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                We appreciate your contribution and have logged your ID—testers
-                like you are key to making DFinance better! <br />
-                If you have any questions, feel free to reach out.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+                   <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                     <X size={22} />
+                   </button>
+                 </div>
+     
+                 <div
+                   className="dark:bg-gradient 
+                     dark:from-darkGradientStart 
+                     dark:to-darkGradientEnd 
+                     dark:text-darkText p-2 "
+                 >
+     
+                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     Thanks for helping us improve DFinance! <br></br> You’ve
+                     uncovered a bug, and our dev team is on it.
+                   </p>
+     
+                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     Your account is temporarily locked while we investigate and fix
+                     the issue. <br />
+                   </p>
+                   <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                     We appreciate your contribution and have logged your ID—testers
+                     like you are key to making DFinance better! <br />
+                     If you have any questions, feel free to reach out.
+                   </p>
+                 </div>
+               </div>
+             </div>
+           )}
     </>
   );
 };

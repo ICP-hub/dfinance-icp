@@ -1,7 +1,7 @@
 
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 
-use crate::constants::memory::{BLOCKED_USERS_FUNCTION, FUNCTION_REQUESTS, ASSET_INDEX_MEMORY_ID, BLOCKED_USERS, CANISTER_MEMORY_ID, META_DATA, PRICE_CACHE_MEMORY_ID, REQUESTS, RESERVES_MEMORY_ID, TESTER_LIST, USER_PROFILE_MEMORY_ID};
+use crate::constants::memory::{BLOCKED_USERS_FUNCTION, FUNCTION_REQUESTS, ASSET_INDEX_MEMORY_ID, CANISTER_MEMORY_ID, META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, TESTER_LIST, USER_PROFILE_MEMORY_ID};
 use crate::declarations::state::State;
 use crate::protocol::libraries::types::assets::{AssetIndex,  BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList, ReserveList, TesterList, UserProfile};
 

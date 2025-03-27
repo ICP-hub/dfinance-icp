@@ -1,5 +1,5 @@
 use ic_cdk::api::time;
-use ic_cdk::{query, update};
+use ic_cdk::update;
 use candid::{Nat, Principal};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;

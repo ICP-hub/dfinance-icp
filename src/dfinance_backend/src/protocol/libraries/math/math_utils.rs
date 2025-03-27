@@ -1,6 +1,7 @@
 use std::ops::Mul;
 use candid::Nat;
-use crate::constants::interest_variables::constants::SCALING_FACTOR;
+use ic_cdk::api::time;
+use crate::constants::interest_variables::constants::{CURRENT_TIMESTAMP, MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR};
 
 /* 
  * @title Get Scaling Value
@@ -10,9 +11,6 @@ use crate::constants::interest_variables::constants::SCALING_FACTOR;
 fn get_scaling_value() -> Nat {
     Nat::from(SCALING_FACTOR)
 }
-
-const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
-//leap year calculation left 
 
 /* 
  * @title Calculate Linear Interest
@@ -112,4 +110,24 @@ impl ScalingMath for Nat {
     fn to_scaled(self) -> Nat {
         self.mul(get_scaling_value())
     }
+}
+
+/*
+ * @title Maximum Value Helper
+ * @dev Returns the maximum possible value that can be stored in a `Nat` type.
+ *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
+ * @returns `Nat` - The maximum possible `Nat` value.
+ */
+pub fn get_max_value() -> Nat {
+    Nat::from(MAX_VALUE)
+}
+
+/*
+ * @title Timestamp Utility
+ * @notice Returns the current timestamp in seconds.
+ * @dev Converts nanoseconds from `time()` API to seconds.
+ * @return `u64` The current timestamp.
+ */
+pub fn current_timestamp() -> u64 {
+    time() / CURRENT_TIMESTAMP
 }

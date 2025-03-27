@@ -19,15 +19,7 @@ pub struct CachedPrice {
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
-/*
- * @title Maximum Value Helper
- * @dev Returns the maximum possible value that can be stored in a `Nat` type.
- *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
- * @returns `Nat` - The maximum possible `Nat` value.
- */
-fn get_max_value() -> Nat {
-    Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
-}
+
 /*
  * @title Price Cache Management
  * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.

@@ -3,27 +3,16 @@ use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
+use crate::declarations::assets::AccrueToTreasuryLocalVars;
 use crate::protocol::libraries::logic::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
 use crate::protocol::libraries::math::math_utils;
+use crate::protocol::libraries::math::math_utils::current_timestamp;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
-use ic_cdk::api::time;
 
-/*
- * @title Accrual Treasury Variables
- * @notice Stores temporary values used during the treasury accrual process.
- * @dev Holds previous debt values and calculated accrual amounts.
- */
-struct AccrueToTreasuryLocalVars {
-    //
-    prev_total_variable_debt: Nat,
-    curr_total_variable_debt: Nat,
-    total_debt_accrued: Nat,
-    amount_to_mint: Nat,
-}
 
 impl Default for AccrueToTreasuryLocalVars {
     fn default() -> Self {
@@ -34,16 +23,6 @@ impl Default for AccrueToTreasuryLocalVars {
             amount_to_mint: Nat::from(0u128),
         }
     }
-}
-
-/*
- * @title Timestamp Utility
- * @notice Returns the current timestamp in seconds.
- * @dev Converts nanoseconds from `time()` API to seconds.
- * @return `u64` The current timestamp.
- */
-fn current_timestamp() -> u64 {
-    time() / 1_000_000_000
 }
 
 /*

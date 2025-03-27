@@ -7,7 +7,6 @@ const MySupplyModal = ({
   setIsModalOpen,
   children,
 }) => {
-
   const handleCloseModal = (event, reason) => {
     if (!isLoading && reason !== "backdropClick") {
       setIsModalOpen(false);
@@ -17,8 +16,8 @@ const MySupplyModal = ({
   return (
     <Modal
       open={isModalOpen}
-      onClose={handleCloseModal} 
-      disableEscapeKeyDown={false} 
+      onClose={handleCloseModal}
+      disableEscapeKeyDown={false}
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
       className="flex items-center justify-center"

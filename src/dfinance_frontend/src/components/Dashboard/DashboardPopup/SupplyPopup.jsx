@@ -136,10 +136,13 @@ const SupplyPopup = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (paymentModalRef.current && !paymentModalRef.current.contains(event.target)) {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
         setIsPaymentDone(false);
-        setIsVisible(false)
-        setIsModalOpen(false)
+        setIsVisible(false);
+        setIsModalOpen(false);
       }
     };
 
@@ -150,17 +153,16 @@ const SupplyPopup = ({
       };
     }
   }, [isPaymentDone]);
+
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
-    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
 
-    // Allow empty input (don't format until user types something)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
@@ -168,7 +170,6 @@ const SupplyPopup = ({
       return;
     }
 
-    // Allow user to type "." or "0." without breaking
     if (inputAmount === "." || inputAmount === "0.") {
       setAmount(inputAmount);
       updateAmountAndUsdValue(inputAmount);
@@ -189,7 +190,6 @@ const SupplyPopup = ({
       setError("");
     }
 
-    // Format number properly without breaking
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
@@ -239,7 +239,7 @@ const SupplyPopup = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -992,7 +992,10 @@ const SupplyPopup = ({
       )}
 
       {isPaymentDone && (
-        <div ref={paymentModalRef} className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div
+          ref={paymentModalRef}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
           <div className="w-full flex flex-col items-center">
             <button
               ref={closeButtonRef}

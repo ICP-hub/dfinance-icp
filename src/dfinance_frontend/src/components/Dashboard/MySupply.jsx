@@ -3477,8 +3477,12 @@ const MySupply = () => {
                                               borrowableValue
                                             );
                                             if (
-                                              (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
-                                              (Number(borrowableValue)).toFixed(8) <= "0.0000"
+                                              Number(borrowableValue).toFixed(
+                                                8
+                                              ) <= "0.00000000" ||
+                                              Number(borrowableValue).toFixed(
+                                                8
+                                              ) <= "0.0000"
                                             ) {
                                               toast.dismiss();
                                               toast.info(
@@ -3537,7 +3541,7 @@ const MySupply = () => {
                                                   userAccountData?.Ok?.[1]
                                                 ) / 100000000
                                               ) || 0;
-                                              console.log("ckBalance", ckBalance);
+                                            console.log("ckBalance", ckBalance);
                                             if (ckBalance === 0) {
                                               toast.dismiss();
                                               toast.info(
@@ -4026,8 +4030,10 @@ const MySupply = () => {
                                           }
                                         }
                                         if (
-                                          (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
-                                          (Number(borrowableValue)).toFixed(8) <= "0.0000"
+                                          Number(borrowableValue).toFixed(8) <=
+                                            "0.00000000" ||
+                                          Number(borrowableValue).toFixed(8) <=
+                                            "0.0000"
                                         ) {
                                           // Show toast notification
                                           toast.dismiss();
@@ -4225,7 +4231,8 @@ const MySupply = () => {
                             // Only filter assets that should be shown based on showAllAssets and borrow availability
                             if (!showAllAssets) {
                               return (
-                                total_supply*0.85 > total_borrow && isBorrowAvailable
+                                total_supply * 0.85 > total_borrow &&
+                                isBorrowAvailable
                               );
                             }
 
@@ -4276,7 +4283,7 @@ const MySupply = () => {
                             );
 
                             const isEligible =
-                            ((total_supply * 0.85).toFixed(8) > total_borrow);
+                              (total_supply * 0.85).toFixed(8) > total_borrow;
 
                             // Apply opacity if available borrow is 0
                             const itemClass =
@@ -4393,8 +4400,8 @@ const MySupply = () => {
                                                 Number(total_borrow),
                                               Number(availableBorrow) / usdRate
                                             );
-                                            const maxBorrow =
-                                            formattedMaxBorrow.toFixed(8);
+                                      const maxBorrow =
+                                        formattedMaxBorrow.toFixed(8);
                                       const usdValue = maxBorrow * usdRate;
 
                                       // Determine how to display the borrowable asset amount
@@ -4732,7 +4739,7 @@ const MySupply = () => {
                               // Only filter assets that should be shown based on showAllAssets and borrow availability
                               if (!showAllAssets) {
                                 return (
-                                  total_supply *0.85 > total_borrow &&
+                                  total_supply * 0.85 > total_borrow &&
                                   isBorrowAvailable
                                 );
                               }
@@ -4757,11 +4764,10 @@ const MySupply = () => {
                                   Number(assetDataB.asset_borrow || 0) /
                                   100000000;
 
-                                 const isEligibleA =
-                                total_supply_A * 0.85 > total_borrow_A;
-                              const isEligibleB =
-                                total_supply_B * 0.85 > total_borrow_B;
-
+                                const isEligibleA =
+                                  total_supply_A * 0.85 > total_borrow_A;
+                                const isEligibleB =
+                                  total_supply_B * 0.85 > total_borrow_B;
 
                                 if (isEligibleA && !isEligibleB) return -1;
                                 if (!isEligibleA && isEligibleB) return 1;
@@ -4787,8 +4793,7 @@ const MySupply = () => {
                                 availableBorrow || 0
                               );
                               const isEligible =
-                                ((total_supply * 0.85).toFixed(8) > total_borrow);
-
+                                (total_supply * 0.85).toFixed(8) > total_borrow;
 
                               const itemClass =
                                 (showAllAssets && !isEligible) ||
@@ -4869,7 +4874,7 @@ const MySupply = () => {
                                               Number(availableBorrow) / usdRate
                                             );
                                       const maxBorrow =
-                                      formattedMaxBorrow.toFixed(8);
+                                        formattedMaxBorrow.toFixed(8);
                                       const usdValue = maxBorrow * usdRate;
                                       let displayedAsset;
                                       if (

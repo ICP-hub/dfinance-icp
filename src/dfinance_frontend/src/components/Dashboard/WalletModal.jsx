@@ -138,16 +138,16 @@ const WalletModal = () => {
           </h1>
         )}
         <h1 className="text-xs text-gray-500 dark:text-darkTextSecondary mt-3 italic">
-        {connectedWallet && walletDisplayName(connectedWallet) ? (
-          <>
-            <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold">
-              {walletDisplayName(connectedWallet)}
-            </span>
-            <span> is connected</span>
-          </>
-        ) : (
-          <span></span> // Show this if no wallet is connected
-        )}
+          {connectedWallet && walletDisplayName(connectedWallet) ? (
+            <>
+              <span className="text-[#2A1F9D] dark:text-blue-400 font-semibold">
+                {walletDisplayName(connectedWallet)}
+              </span>
+              <span> is connected</span>
+            </>
+          ) : (
+            <span></span> // Show this if no wallet is connected
+          )}
         </h1>
         <div className="flex flex-col gap-2 mt-3 text-sm">
           {connectedWallet !== "ii" && (

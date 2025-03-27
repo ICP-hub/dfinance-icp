@@ -212,7 +212,6 @@ const Borrow = ({
       });
       return;
     }
-
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -340,7 +339,6 @@ const Borrow = ({
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
-
       const message = error.message || "Borrow action failed!";
       const isPanicError = message.toLowerCase().includes("panic");
       const isOutOfCyclesError =
@@ -439,13 +437,13 @@ const Borrow = ({
 
   const handleAmountChange = (e) => {
     const maxBorrow = parseFloat(borrowableValue);
+
     if (isNaN(maxBorrow) || maxBorrow < 0) {
       setAmount("");
       return;
     }
 
     let inputAmount = e.target.value;
-
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
 
     const parts = inputAmount.split(".");
@@ -470,11 +468,11 @@ const Borrow = ({
     }
 
     let numericAmount = parseFloat(inputAmount);
+
     if (numericAmount > maxBorrow) {
       return;
     }
 
-    // Allow valid input
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
@@ -518,7 +516,7 @@ const Borrow = ({
 
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+    return (Math.floor(num * factor) / factor).toFixed(decimals);
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
@@ -634,11 +632,8 @@ const Borrow = ({
 
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
-
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-
     setPrevHealthFactor(currentHealthFactor);
 
     const truncateToDecimals = (num, decimals) => {

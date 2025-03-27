@@ -33,16 +33,9 @@ const DashboardCards = () => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
-
   const navigate = useNavigate();
-  const { backendActor, isAuthenticated, fetchReserveData,
-    createLedgerActor, } = useAuth();
-  const {
-
-    isFreezePopupVisible,
-    setIsFreezePopupVisible,
-  } = useUserData();
+  const { backendActor, isAuthenticated } = useAuth();
+  const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const formatNumber = useFormatNumber();
 
   const {
@@ -140,7 +133,9 @@ const DashboardCards = () => {
   useEffect(() => {
     checkControllerStatus();
   }, [backendActor]);
+
   const { filteredItems, interestAccure, assets } = useAssetData(searchQuery);
+
   const getTotalUser = async () => {
     if (!backendActor) {
       console.error("Error: Backend actor is not initialized.");
@@ -148,15 +143,13 @@ const DashboardCards = () => {
     }
     try {
       const totalUser = await backendActor.get_total_users();
-      console.log("gettotaluser", totalUser)
+      console.log("gettotaluser", totalUser);
       setTotalUsers(totalUser);
     } catch (error) {
       console.error("Error fetching total users:", error);
       throw error;
     }
   };
-  console.log("totalUsers in app", totalUsers)
-
 
   const poolAssets = [
     { name: "ckBTC", imageUrl: ckBTC },
@@ -165,10 +158,8 @@ const DashboardCards = () => {
     { name: "ckUSDT", imageUrl: ckUSDT },
     { name: "ICP", imageUrl: icp },
   ];
-  console.log("interestAccure", interestAccure);
-  console.log("totalUsers in app2", totalUsers)
-  const [cardData, setCardData] = useState([
 
+  const [cardData, setCardData] = useState([
     {
       title: "Users",
       value: totalUsers,
@@ -188,11 +179,9 @@ const DashboardCards = () => {
 
   const handleViewMore = () => {
     navigate(healthFactorRoute, {
-      state: { userAccountData }, 
+      state: { userAccountData },
     });
-
   };
-
 
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
@@ -203,17 +192,19 @@ const DashboardCards = () => {
         throw new Error("Unexpected response format");
       }
 
-      const parsedResult = result.Ok.map(([principal, userAccountData, userData]) => ({
-        principal: principal ? principal.toText() : "Unknown_Principal",
-        collateral: userAccountData.collateral,
-        debt: userAccountData.debt,
-        ltv: userAccountData.ltv,
-        liquidationThreshold: userAccountData.liquidation_threshold,
-        healthFactor: userAccountData.health_factor,
-        availableBorrow: userAccountData.available_borrow,
-        hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
-        userData: userData,
-      }));
+      const parsedResult = result.Ok.map(
+        ([principal, userAccountData, userData]) => ({
+          principal: principal ? principal.toText() : "Unknown_Principal",
+          collateral: userAccountData.collateral,
+          debt: userAccountData.debt,
+          ltv: userAccountData.ltv,
+          liquidationThreshold: userAccountData.liquidation_threshold,
+          healthFactor: userAccountData.health_factor,
+          availableBorrow: userAccountData.available_borrow,
+          hasZeroLtvCollateral: userAccountData.has_zero_ltv_collateral,
+          userData: userData,
+        })
+      );
 
       console.log("parsedResult", parsedResult);
 
@@ -244,10 +235,6 @@ const DashboardCards = () => {
     }
   };
 
-
-
-  console.log("userAccountData", userAccountData)
-
   /**
    * Fetches the current cycle count from the backend.
    */
@@ -256,7 +243,6 @@ const DashboardCards = () => {
       throw new Error("Backend actor not initialized");
     }
 
-
     const response = await backendActor.cycle_checker();
     console.log("Raw response from cycle_checker:", response);
 
@@ -264,21 +250,22 @@ const DashboardCards = () => {
     console.log("Extracted cycle value:", cycles);
 
     return cycles.toString();
-    
   };
+
   useEffect(() => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
-        setCycles(cycleValue); 
+        setCycles(cycleValue);
       } catch (error) {
         console.error("Error fetching cycles:", error);
-        setCycles("Error retrieving cycles"); 
+        setCycles("Error retrieving cycles");
       }
     };
 
-    fetchCycles(); 
+    fetchCycles();
   }, []);
+
   /**
    * Sends email notifications when cycle or token thresholds are breached.
    * @param {string} subject - Email subject.
@@ -370,7 +357,7 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
-  
+
   const onCycleUpdate = async () => {
     try {
       const newCycles = await getCycles();
@@ -477,8 +464,8 @@ const DashboardCards = () => {
           normalize(healthStats.greaterThanOne),
           normalize(healthStats.infinity),
         ],
-        backgroundColor: ["#E53935","#FBC02D","#43A047"],
-        hoverBackgroundColor: ["#E53935", "#FBC02D","#43A047"],
+        backgroundColor: ["#E53935", "#FBC02D", "#43A047"],
+        hoverBackgroundColor: ["#E53935", "#FBC02D", "#43A047"],
         borderColor: borderColor,
         borderWidth: 2,
         borderRadius: 6,
@@ -537,7 +524,12 @@ const DashboardCards = () => {
   }, [assetBalances, tokenThreshold]);
 
   useEffect(() => {
-    console.log("Checking dependencies: totalUsers =", totalUsers, "interestAccure =", interestAccure);
+    console.log(
+      "Checking dependencies: totalUsers =",
+      totalUsers,
+      "interestAccure =",
+      interestAccure
+    );
 
     if (totalUsers === null || interestAccure === null) {
       console.log("Values not available yet, skipping fetch.");
@@ -576,8 +568,6 @@ const DashboardCards = () => {
 
   const cachedData = useRef({});
 
-
-
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
 
@@ -585,7 +575,8 @@ const DashboardCards = () => {
 
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.healthFactor) {
-        updatedHealthFactors[principal] = Number(data.healthFactor) / 10000000000;
+        updatedHealthFactors[principal] =
+          Number(data.healthFactor) / 10000000000;
       } else {
         updatedHealthFactors[principal] = null;
       }
@@ -593,7 +584,6 @@ const DashboardCards = () => {
 
     setHealthFactors(updatedHealthFactors);
   }, [userAccountData]);
-
 
   useEffect(() => {
     if (!healthFactors || Object.keys(healthFactors).length === 0) return;
@@ -672,14 +662,14 @@ const DashboardCards = () => {
     }
 
     return () => {
-      document.body.style.overflow = "auto"; 
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
   useEffect(() => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
-        console.log("cycleValue", cycleValue)
+        console.log("cycleValue", cycleValue);
         setCycles(cycleValue);
       } catch (error) {
         console.error("Error fetching cycles:", error);
@@ -687,7 +677,7 @@ const DashboardCards = () => {
       }
     };
 
-    fetchCycles(); 
+    fetchCycles();
   }, []);
 
   useEffect(() => {
@@ -719,6 +709,7 @@ const DashboardCards = () => {
       }
     })();
   }, []);
+  
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -766,10 +757,11 @@ const DashboardCards = () => {
             ))}
 
           {/*  Health Factor Card */}
-          <div className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
+          <div
+            className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
           text-[#233D63] dark:text-darkTextSecondary1 rounded-[40px] shadow-lg p-5 flex flex-col relative 
-          w-100 h-120 hover:shadow-2xl transition-shadow duration-300">
-
+          w-100 h-120 hover:shadow-2xl transition-shadow duration-300"
+          >
             <div className="flex items-center justify-between px-3">
               <h3 className="lg:text-lg text-sm text-nowrap font-normal px-3 lg:px-6 py-2 mt-3">
                 Health Factor
@@ -780,7 +772,11 @@ const DashboardCards = () => {
               >
                 More
                 {theme === "dark" ? (
-                  <img src={Analytics} className="ml-2 w-4 h-4" alt="External Link" />
+                  <img
+                    src={Analytics}
+                    className="ml-2 w-4 h-4"
+                    alt="External Link"
+                  />
                 ) : (
                   <ExternalLink className="ml-2" size={16} color="#4169E1" />
                 )}
@@ -814,7 +810,6 @@ const DashboardCards = () => {
               </div>
             )}
           </div>
-
 
           {/*  Reserves Card */}
           {cardData
@@ -900,10 +895,11 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
-                    ? "text-[#233D63] dark:text-darkText"
-                    : getCycleColor(card.value)
-                    }`}
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
+                    usersLoading
+                      ? "text-[#233D63] dark:text-darkText"
+                      : getCycleColor(card.value)
+                  }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -911,7 +907,8 @@ const DashboardCards = () => {
                 {/* Threshold for Cycles */}
                 {!usersLoading && (
                   <p className="text-sm mt-1 px-3 py-2 text-[#233D63] dark:text-darkTextSecondary1">
-                    Threshold Value: <span className="font-bold">{formatNumber(threshold)}</span>
+                    Threshold Value:{" "}
+                    <span className="font-bold">{formatNumber(threshold)}</span>
                   </p>
                 )}
               </div>
@@ -994,7 +991,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -1010,7 +1007,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

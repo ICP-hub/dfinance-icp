@@ -9,12 +9,18 @@ import MiniLoader from "../components/Common/MiniLoader";
 
 const Error = lazy(() => import("../pages/Error"));
 const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
-const TransactionHistoryBox = lazy(() => import("../components/Dashboard/TransactionHistory"));
+const TransactionHistoryBox = lazy(() =>
+  import("../components/Dashboard/TransactionHistory")
+);
 const StakeDetails = lazy(() => import("../pages/Stake/Stake"));
-const TransactionDetail = lazy(() => import("../components/Dashboard/Transaction"));
+const TransactionDetail = lazy(() =>
+  import("../components/Dashboard/Transaction")
+);
 const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
 const DashboardCards = lazy(() => import("../pages/info/info"));
-const HealthFactorList = lazy(() => import("../components/Dashboard/HealthFactorLIst"));
+const HealthFactorList = lazy(() =>
+  import("../components/Dashboard/HealthFactorLIst")
+);
 const DebtStatus = lazy(() => import("../components/Liquidate/DebtStatus"));
 
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
@@ -29,7 +35,13 @@ export default [
     path: "*",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <Error />
         </Suspense>
       </MainDashboard>
@@ -46,7 +58,13 @@ export default [
       {
         index: true,
         element: (
-          <Suspense fallback={<MiniLoader height="50vh" />}>
+          <Suspense
+            fallback={
+              <div className="h-[60vh]">
+                <MiniLoader />
+              </div>
+            }
+          >
             <DashboardCards />
           </Suspense>
         ),
@@ -54,7 +72,13 @@ export default [
       {
         path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""),
         element: (
-          <Suspense fallback={<MiniLoader height="50vh" />}>
+          <Suspense
+            fallback={
+              <div className="h-[60vh]">
+                <MiniLoader />
+              </div>
+            }
+          >
             <HealthFactorList />
           </Suspense>
         ),
@@ -73,7 +97,13 @@ export default [
     path: "/market/asset-details/:id?",
     element: (
       <MainDashboard>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <AssetDetails />
         </Suspense>
       </MainDashboard>
@@ -83,7 +113,13 @@ export default [
     path: "/dashboard/asset-details/:id?",
     element: (
       <MainDashboard>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <AssetDetails />
         </Suspense>
       </MainDashboard>
@@ -93,7 +129,13 @@ export default [
     path: "/dashboard/transaction-history",
     element: (
       <MainDashboard>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <TransactionHistoryBox />
         </Suspense>
       </MainDashboard>
@@ -103,7 +145,13 @@ export default [
     path: "/dashboard/transaction/:id",
     element: (
       <MainDashboard>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <TransactionDetail />
         </Suspense>
       </MainDashboard>
@@ -121,7 +169,13 @@ export default [
     path: "/stake",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <StakeDetails />
         </Suspense>
       </MainDashboard>
@@ -139,7 +193,13 @@ export default [
     path: "/Liquidate",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Suspense fallback={<MiniLoader height="50vh" />}>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
           <Liquidate />
         </Suspense>
       </MainDashboard>
@@ -148,7 +208,13 @@ export default [
       {
         path: "debt-users-list",
         element: (
-          <Suspense fallback={<MiniLoader height="50vh" />}>
+          <Suspense
+            fallback={
+              <div className="h-[60vh]">
+                <MiniLoader />
+              </div>
+            }
+          >
             <DebtStatus />
           </Suspense>
         ),

@@ -174,19 +174,19 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
    * @param {string} asset - The asset selected by the user to claim.
    */
   const handleFaucet = async (asset) => {
-     if (isBlocked) {
-          toast.error("You are temporarily blocked from using this function", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          return; // Prevent function execution
-        }
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
 
     setLoading(true);
     try {
@@ -224,21 +224,26 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           console.error(errorKey);
 
           if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
-            console.error("You are temporarily blocked from using this function");
-  
-            toast.error("You are temporarily blocked from using this function", {
-              className: "custom-toast",
-              position: "top-center",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-            });
-  
+            console.error(
+              "You are temporarily blocked from using this function"
+            );
+
+            toast.error(
+              "You are temporarily blocked from using this function",
+              {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+              }
+            );
+
             setLoading(false);
-            handleClose()
+            handleClose();
             return;
           }
           const userFriendlyMessage =

@@ -37,7 +37,19 @@ const FaucetDetails = () => {
 
   const { filteredItems, loading } = useAssetData();
   const { isAuthenticated, backendActor } = useAuth();
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
   } = useFetchConversionRate();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
 

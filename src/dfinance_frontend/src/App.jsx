@@ -110,43 +110,6 @@ export default function App() {
   }, [principal, backendActor]);
 
   /**
-   * Fetches the principal ID of a given asset from the backend.
-   * @param {string} asset - The asset symbol (e.g., "ckBTC").
-   * @returns {string} - The asset principal ID as a string.
-   */
-  // const getAssetPrinciple = async (asset) => {
-  //   if (!backendActor) {
-  //     throw new Error("Backend actor not initialized");
-  //   }
-  //   try {
-  //     let result;
-  //     switch (asset) {
-  //       case "ckBTC":
-  //         result = await backendActor.get_asset_principal("ckBTC");
-  //         break;
-  //       case "ckETH":
-  //         result = await backendActor.get_asset_principal("ckETH");
-  //         break;
-  //       case "ckUSDC":
-  //         result = await backendActor.get_asset_principal("ckUSDC");
-  //         break;
-  //       case "ICP":
-  //         result = await backendActor.get_asset_principal("ICP");
-  //         break;
-  //       case "ckUSDT":
-  //         result = await backendActor.get_asset_principal("ckUSDT");
-  //         break;
-
-  //       default:
-  //         throw new Error(`Unknown asset: ${asset}`);
-  //     }
-  //     return result.Ok.toText();
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // };
-
-  /**
    * Creates ledger actors for all fetched asset principals.
    */
   useEffect(() => {

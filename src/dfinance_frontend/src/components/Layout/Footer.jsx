@@ -14,7 +14,6 @@ const Footer = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
 
   useEffect(() => {
-    // Load zoom level from localStorage
     const savedZoom = localStorage.getItem("zoomLevel");
     if (savedZoom) {
       setZoomLevel(parseInt(savedZoom));
@@ -25,7 +24,7 @@ const Footer = () => {
   const updateZoom = (newZoom) => {
     document.documentElement.style.fontSize = `${newZoom}%`;
     setZoomLevel(newZoom);
-    localStorage.setItem("zoomLevel", newZoom); // Save to localStorage
+    localStorage.setItem("zoomLevel", newZoom);
   };
 
   const handleZoomIn = () => {

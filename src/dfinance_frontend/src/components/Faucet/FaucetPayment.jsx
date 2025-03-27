@@ -2,8 +2,8 @@ import { Check, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 const FaucetPayment = ({ asset, amount, onClose }) => {
-   const faucetButtonRef = useRef(null);
-    const closeButtonRef = useRef(null);
+  const faucetButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   /* ===================================================================================
    *                                  STATE-MANAGEMENT
    * =================================================================================== */
@@ -70,7 +70,7 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
     >
       <div className="w-full flex flex-col items-center">
         <button
-         ref={closeButtonRef}
+          ref={closeButtonRef}
           onClick={handleClose}
           className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
         >

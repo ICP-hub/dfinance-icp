@@ -2,9 +2,10 @@ use super::update::user_data;
 use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
-use crate::declarations::assets::{ExecuteRepayParams,AssetData};
+use crate::declarations::assets::AssetData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
+use crate::protocol::libraries::math::math_utils::get_max_value;
 use crate::protocol::libraries::types::datatypes::{UserAccountData, UserData};
 use crate::{
     api::state_handler::mutate_state,
@@ -14,20 +15,11 @@ use crate::{
 };
 use crate::guards::check_is_tester;
 use crate::{get_all_users, reserve_ledger_canister_id};
-use candid::{CandidType, Deserialize, Nat, Principal};
-use futures::stream::{self, FuturesUnordered, StreamExt};
-use ic_cdk::{api, query, update};
+use candid::{Nat, Principal};
+use futures::stream::{self, StreamExt};
+use ic_cdk::{api, update};
 
 
-fn get_max_value() -> Nat {
-    Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
-}
-
-// #[derive(CandidType, Deserialize, Clone, Default)]
-// pub struct UserConfig {
-//     pub collateral: bool,
-//     pub borrowing: bool,
-// }
 /*
  * @title User Account Data Calculation
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.

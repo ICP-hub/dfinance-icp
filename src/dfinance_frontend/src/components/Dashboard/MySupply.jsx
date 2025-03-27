@@ -161,7 +161,6 @@ const MySupply = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
-  const [toggled, set] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [calculatedReserves, setCalculatedReserves] = useState([]);
   const [totalAssetSupply, setTotalAssetSupply] = useState(0);
@@ -180,7 +179,6 @@ const MySupply = () => {
    *                 Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
-
   const visibleItems = filteredItems.filter((item) => {
     const balance =
       item[0] === "ckBTC"
@@ -2156,6 +2154,7 @@ const MySupply = () => {
                                 : 0;
 
                             const isZeroBalance = Number(balance) === 0;
+                            console.log("isZeroBalance", isZeroBalance);
                             return { item, isZeroBalance, balance };
                           })
                           .sort((a, b) => {
@@ -3478,9 +3477,14 @@ const MySupply = () => {
                                               borrowableValue
                                             );
                                             if (
-                                              (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
-                                              (Number(borrowableValue)).toFixed(8) <= "0.0000"
+                                              Number(borrowableValue).toFixed(
+                                                8
+                                              ) <= "0.00000000" ||
+                                              Number(borrowableValue).toFixed(
+                                                8
+                                              ) <= "0.0000"
                                             ) {
+                                              toast.dismiss();
                                               toast.info(
                                                 "Insufficeint asset supply to allow borrow request"
                                               );
@@ -3537,7 +3541,9 @@ const MySupply = () => {
                                                   userAccountData?.Ok?.[1]
                                                 ) / 100000000
                                               ) || 0;
+                                            console.log("ckBalance", ckBalance);
                                             if (ckBalance === 0) {
+                                              toast.dismiss();
                                               toast.info(
                                                 "Insufficeint wallet balance to allow repay request."
                                               );
@@ -4024,10 +4030,13 @@ const MySupply = () => {
                                           }
                                         }
                                         if (
-                                          (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
-                                          (Number(borrowableValue)).toFixed(8) <= "0.0000"
+                                          Number(borrowableValue).toFixed(8) <=
+                                            "0.00000000" ||
+                                          Number(borrowableValue).toFixed(8) <=
+                                            "0.0000"
                                         ) {
                                           // Show toast notification
+                                          toast.dismiss();
                                           toast.info(
                                             "Insufficeint asset supply to allow borrow request"
                                           );
@@ -4082,6 +4091,7 @@ const MySupply = () => {
                                               100000000
                                           ) || 0;
                                         if (ckBalance === 0) {
+                                          toast.dismiss();
                                           toast.info(
                                             "Insufficeint wallet balance to allow repay request."
                                           );
@@ -4221,7 +4231,8 @@ const MySupply = () => {
                             // Only filter assets that should be shown based on showAllAssets and borrow availability
                             if (!showAllAssets) {
                               return (
-                                total_supply > total_borrow && isBorrowAvailable
+                                total_supply * 0.85 > total_borrow &&
+                                isBorrowAvailable
                               );
                             }
 
@@ -4272,7 +4283,7 @@ const MySupply = () => {
                             );
 
                             const isEligible =
-                            ((total_supply * 0.85).toFixed(8) > total_borrow);
+                              (total_supply * 0.85).toFixed(8) > total_borrow;
 
                             // Apply opacity if available borrow is 0
                             const itemClass =
@@ -4389,8 +4400,8 @@ const MySupply = () => {
                                                 Number(total_borrow),
                                               Number(availableBorrow) / usdRate
                                             );
-                                            const maxBorrow =
-                                            formattedMaxBorrow.toFixed(8);
+                                      const maxBorrow =
+                                        formattedMaxBorrow.toFixed(8);
                                       const usdValue = maxBorrow * usdRate;
 
                                       // Determine how to display the borrowable asset amount
@@ -4728,7 +4739,7 @@ const MySupply = () => {
                               // Only filter assets that should be shown based on showAllAssets and borrow availability
                               if (!showAllAssets) {
                                 return (
-                                  total_supply > total_borrow &&
+                                  total_supply * 0.85 > total_borrow &&
                                   isBorrowAvailable
                                 );
                               }
@@ -4754,9 +4765,9 @@ const MySupply = () => {
                                   100000000;
 
                                 const isEligibleA =
-                                  total_supply_A > total_borrow_A;
+                                  total_supply_A * 0.85 > total_borrow_A;
                                 const isEligibleB =
-                                  total_supply_B > total_borrow_B;
+                                  total_supply_B * 0.85 > total_borrow_B;
 
                                 if (isEligibleA && !isEligibleB) return -1;
                                 if (!isEligibleA && isEligibleB) return 1;
@@ -4782,8 +4793,7 @@ const MySupply = () => {
                                 availableBorrow || 0
                               );
                               const isEligible =
-                                ((total_supply * 0.85).toFixed(8) > total_borrow);
-
+                                (total_supply * 0.85).toFixed(8) > total_borrow;
 
                               const itemClass =
                                 (showAllAssets && !isEligible) ||
@@ -4864,7 +4874,7 @@ const MySupply = () => {
                                               Number(availableBorrow) / usdRate
                                             );
                                       const maxBorrow =
-                                      formattedMaxBorrow.toFixed(8);
+                                        formattedMaxBorrow.toFixed(8);
                                       const usdValue = maxBorrow * usdRate;
                                       let displayedAsset;
                                       if (

@@ -6,7 +6,7 @@ use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
-use crate::protocol::libraries::logic::update::{user_data, UpdateLogic};
+use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;

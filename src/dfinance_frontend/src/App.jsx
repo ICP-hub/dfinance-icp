@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate, useRoutes } from "react-router-dom";
 import { useAuth } from "./utils/useAuthClient";
 import routesList from "./routes/routes";
@@ -7,12 +7,14 @@ import { usePageLoading } from "./components/customHooks/useLoading";
 import { useDispatch } from "react-redux";
 import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
-import { Principal } from "@dfinity/principal";
 import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "../src/components/Common/joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
+import { Suspense, lazy } from "react";
+import MiniLoader from "./components/Common/MiniLoader";
 
+const RoutesComponent = lazy(() => import("./routes/routes"));
 export default function App() {
   /* ===================================================================================
    *                                  HOOKS
@@ -84,97 +86,49 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    const fetchAssetPrinciple = async () => {
-      if (backendActor) {
-        try {
-          const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
-          for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
-            setAssetPrincipal((prev) => ({
-              ...prev,
-              [asset]: result,
-            }));
-          }
-        } catch (error) {}
-      } else {
+    const fetchAssetPrincipals = async () => {
+      if (!backendActor) return;
+
+      try {
+        const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
+        const results = await Promise.all(
+          assets.map((asset) => backendActor.get_asset_principal(asset))
+        );
+
+        setAssetPrincipal(
+          assets.reduce((acc, asset, index) => {
+            acc[asset] = results[index]?.Ok?.toText() || null;
+            return acc;
+          }, {})
+        );
+      } catch (error) {
+        console.error("Error fetching asset principals:", error);
       }
     };
 
-    fetchAssetPrinciple();
+    fetchAssetPrincipals();
   }, [principal, backendActor]);
-
-  /**
-   * Fetches the principal ID of a given asset from the backend.
-   * @param {string} asset - The asset symbol (e.g., "ckBTC").
-   * @returns {string} - The asset principal ID as a string.
-   */
-  const getAssetPrinciple = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      let result;
-      switch (asset) {
-        case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
-        case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
-        case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
-        case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
-        case "ckUSDT":
-          result = await backendActor.get_asset_principal("ckUSDT");
-          break;
-
-        default:
-          throw new Error(`Unknown asset: ${asset}`);
-      }
-      return result.Ok.toText();
-    } catch (error) {
-      throw error;
-    }
-  };
 
   /**
    * Creates ledger actors for all fetched asset principals.
    */
   useEffect(() => {
-    if (assetPrincipal.ckBTC) {
-      const actor = createLedgerActor(assetPrincipal.ckBTC, ledgerIdlFactory);
-      dispatch(setLedgerActor({ asset: "ckBTC", actor }));
-    }
-    if (assetPrincipal.ckETH) {
-      const actor = createLedgerActor(assetPrincipal.ckETH, ledgerIdlFactory);
-      dispatch(setLedgerActor({ asset: "ckETH", actor }));
-    }
-    if (assetPrincipal.ckUSDC) {
-      const actor = createLedgerActor(assetPrincipal.ckUSDC, ledgerIdlFactory);
-      dispatch(setLedgerActor({ asset: "ckUSDC", actor }));
-    }
-    if (assetPrincipal.ICP) {
-      const actor = createLedgerActor(assetPrincipal.ICP, ledgerIdlFactory);
-      dispatch(setLedgerActor({ asset: "ICP", actor }));
-    }
-    if (assetPrincipal.ckUSDT) {
-      const actor = createLedgerActor(assetPrincipal.ckUSDT, ledgerIdlFactory);
-      dispatch(setLedgerActor({ asset: "ckUSDT", actor }));
-    }
+    Object.entries(assetPrincipal).forEach(([asset, principal]) => {
+      if (principal) {
+        const actor = createLedgerActor(principal, ledgerIdlFactory);
+        dispatch(setLedgerActor({ asset, actor }));
+      }
+    });
   }, [assetPrincipal, dispatch]);
 
   useEffect(() => {
     reloadLogin();
   }, []);
 
-  useEffect(() => {
-    if (localStorage.getItem("theme") === "dark") {
-      document.documentElement.classList.add("dark");
-      document.body.style.backgroundColor = "#070a18";
-    }
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.body.style.backgroundColor =
+      theme === "dark" ? "#070a18" : "#ffffff";
   }, [theme]);
 
   const [isLoadingPage, setIsLoadingPage] = useState(
@@ -293,9 +247,7 @@ export default function App() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (isLoadingPage) {
-        setIsLoadingPage(false);
-      }
+      if (isLoadingPage) setIsLoadingPage(false);
     }, 1000);
 
     return () => clearTimeout(timeout);
@@ -307,26 +259,28 @@ export default function App() {
 
   return (
     <>
-      {isAuthenticated && !isLoadingPage && (
-        <Joyride
-          steps={joyrideState.steps}
-          run={joyrideState.run || isTourVisible}
-          continuous={true}
-          showSkipButton={true}
-          styles={joyrideState.styles}
-          locale={{
-            back: "Previous",
-            close: "Close",
-            last: "Finish",
-            next: "Next",
-            skip: "Skip",
-          }}
-          callback={handleJoyrideCallback}
-          disableOverlayClose={true}
-        />
-      )}
+      <Suspense fallback={<MiniLoader minHeight="50vh" />}>
+        {isAuthenticated && !isLoadingPage && (
+          <Joyride
+            steps={joyrideState.steps}
+            run={joyrideState.run || isTourVisible}
+            continuous={true}
+            showSkipButton={true}
+            styles={joyrideState.styles}
+            locale={{
+              back: "Previous",
+              close: "Close",
+              last: "Finish",
+              next: "Next",
+              skip: "Skip",
+            }}
+            callback={handleJoyrideCallback}
+            disableOverlayClose={true}
+          />
+        )}
 
-      {routes}
+        {routes}
+      </Suspense>
     </>
   );
 }

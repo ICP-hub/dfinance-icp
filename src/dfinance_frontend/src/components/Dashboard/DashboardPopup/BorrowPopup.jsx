@@ -187,9 +187,9 @@ const Borrow = ({
         draggable: true,
         progress: undefined,
       });
-      return; 
+      return;
     }
-  
+
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -203,28 +203,28 @@ const Borrow = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-  
+
     const borrowParams = {
       asset: asset,
       amount: scaledAmount,
     };
-  
+
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
-  
+
       if ("Ok" in borrowResult) {
         trackEvent(
           `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`,
           "Assets",
           `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`
         );
-  
+
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
-  
+
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -235,19 +235,19 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-  
+       
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-  
+
         console.error("errorKey", errorKey);
-  
+
         if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
           console.error("You are temporarily blocked from using this function");
-  
+
           toast.error("You are temporarily blocked from using this function", {
             className: "custom-toast",
             position: "top-center",
@@ -303,24 +303,27 @@ const Borrow = ({
             progress: undefined,
           });
         }
-  
+
         setIsPaymentDone(false);
         setIsVisible(true);
         setLoading(false)
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
-  
+
       const message = error.message || "Borrow action failed!";
       const isPanicError = message.toLowerCase().includes("panic");
       const isOutOfCyclesError =
         message.toLowerCase().includes("out of cycles") ||
         message.includes("reject text: canister");
       const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
-  
+
       if (isPanicError) {
         setPanicMessage("A critical system error occurred. Please try again later.");
+
         setShowPanicPopup(true);
+        setIsVisible(false);
+
       } else if (isOutOfCyclesError) {
         toast.error("Canister is out of cycles. Controller has been notified.", {
           className: "custom-toast",
@@ -358,10 +361,10 @@ const Borrow = ({
         });
       }
       setIsPaymentDone(false);
-setIsVisible(false);
+      setIsVisible(false);
     }
   };
-  
+
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -398,34 +401,67 @@ setIsVisible(false);
   };
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    // Ensure borrowableValue is a valid number and ≥ 0
+    const maxBorrow = parseFloat(borrowableValue);
+    if (isNaN(maxBorrow) || maxBorrow < 0) {
+      setAmount(""); // Clear input if borrowableValue is invalid
+      return;
     }
+  
+    let inputAmount = e.target.value;
+  
+    // Remove non-numeric characters except a single decimal point
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure there's only one decimal point
+    const parts = inputAmount.split(".");
+    if (parts.length > 2) {
+      inputAmount = parts[0] + "." + parts.slice(1).join("");
+    }
+  
+    // Allow empty input (for clearing)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-    const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > parseFloat(borrowableValue)) {
+  
+    // Allow typing just "."
+    if (inputAmount === ".") {
+      setAmount(".");
+      updateAmountAndUsdValue(".");
       return;
     }
-    let formattedAmount;
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
-    } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+  
+    // Allow "0." without forcing conversion
+    if (inputAmount === "0.") {
+      setAmount("0.");
+      updateAmountAndUsdValue("0.");
+      return;
     }
-
-    setAmount(formattedAmount);
+  
+    // Prevent more than 8 total digits (before + after decimal)
+    if (inputAmount.replace(".", "").length > 8) {
+      return;
+    }
+  
+    // Convert to a number while keeping user input intact
+    let numericAmount = parseFloat(inputAmount);
+    if (isNaN(numericAmount)) numericAmount = 0;
+  
+    // Prevent exceeding borrowableValue
+    if (numericAmount > maxBorrow) {
+      return;
+    }
+  
+    // Allow natural typing of decimals without modifying input format
+    setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
+  
+  
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
     if (inputAmount === "") {
@@ -467,19 +503,24 @@ setIsVisible(false);
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
   };
-  
+
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
 
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    if (showPanicPopup) {
+      setIsVisible(false);
+    }
+  }, [showPanicPopup]);
 
   useEffect(() => {
     const updateValues = async () => {
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const remainingBorrowable = totalSupply* 0.85 - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -490,11 +531,11 @@ setIsVisible(false);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+        
       }
-    };
+    };setTimeout(() => {
+          setLoading(false);
+        }, 400);
     updateValues();
   }, [
     asset,
@@ -512,7 +553,7 @@ setIsVisible(false);
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
       const borrowValue =
-        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+         Number(userAccountData.Ok[5]) / 100000000 ;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -643,9 +684,9 @@ setIsVisible(false);
                   <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -659,11 +700,10 @@ setIsVisible(false);
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      }`}
                     onClick={() => {
                       if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();
@@ -671,7 +711,7 @@ setIsVisible(false);
                     }}
                   >
                     {loading &&
-                    (borrowableValue == null || borrowableValue === "0") ? (
+                      (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
                     ) : parseFloat(borrowableValue) === 0 ? (
                       "0 Max"
@@ -701,17 +741,16 @@ setIsVisible(false);
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
                           truncatedValue > 100
@@ -721,17 +760,16 @@ setIsVisible(false);
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -802,11 +840,10 @@ setIsVisible(false);
 
               <button
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -847,8 +884,8 @@ setIsVisible(false);
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -860,8 +897,8 @@ setIsVisible(false);
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>
@@ -876,21 +913,21 @@ setIsVisible(false);
       )}
       {showPanicPopup && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
+              <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                <X size={22} />
+              </button>
+            </div>
 
             <div
               className="dark:bg-gradient 
                 dark:from-darkGradientStart 
                 dark:to-darkGradientEnd 
-                dark:text-darkText  "
+                dark:text-darkText p-2 "
             >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
+
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
                 uncovered a bug, and our dev team is on it.
@@ -900,7 +937,7 @@ setIsVisible(false);
                 Your account is temporarily locked while we investigate and fix
                 the issue. <br />
               </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 We appreciate your contribution and have logged your ID—testers
                 like you are key to making DFinance better! <br />
                 If you have any questions, feel free to reach out.

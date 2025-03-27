@@ -14,6 +14,7 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
 
 /**
  * SupplyPopup Component
@@ -50,6 +51,8 @@ const SupplyPopup = ({
    *                                  HOOKS
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("execute_supply");
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
@@ -118,10 +121,9 @@ const SupplyPopup = ({
   }
 
   const numericBalance = parseFloat(balance);
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-  const supplyBalance = numericBalance - transferfee;
-  const hasEnoughBalance = balance >= transactionFee;
+  const supplyBalance = numericBalance - transferFee;
+  console.log(numericBalance, "numericBalance")
+  const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
 
   /* ===================================================================================
@@ -131,39 +133,53 @@ const SupplyPopup = ({
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Allow empty input (don't format until user types something)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
+      setError("");
       return;
     }
+  
+    // Allow user to type "." or "0." without breaking
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
+      setError("");
+      return;
+    }
+  
+    // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > supplyBalance) {
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
       setError(
-        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
-          "en-US"
-        )}`
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString("en-US")}`
       );
       return;
     } else {
       setError("");
     }
+  
+    // Format number properly without breaking
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
     } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
+  
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   // Updates the USD equivalent of the supply amount
   const updateAmountAndUsdValue = (inputAmount) => {
@@ -217,7 +233,8 @@ const SupplyPopup = ({
     const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
-    const totalAmount = scaledAmount + transferfee;
+    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+    const totalAmount = scaledAmount + transferFeeBigInt;
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -260,7 +277,23 @@ const SupplyPopup = ({
   const isCollateral = true;
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;
+
+  const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
+
+  console.log(
+    "transacyionFee",
+    transferFee,
+    "transferFeeBigInt",
+    transferFeeBigInt,
+    "scaledAmount",
+    scaledAmount,
+    "totalAmount",
+    totalAmount
+  );
 
   // Executes the supply transaction
   const handleSupplyETH = async () => {
@@ -295,7 +328,7 @@ const SupplyPopup = ({
       const supplyParams = {
         asset: asset,
         is_collateral: currentCollateralStatus,
-        amount: scaledAmount,
+        amount: totalAmount,
       };
 
       const response = await backendActor.execute_supply(supplyParams);
@@ -388,8 +421,8 @@ const SupplyPopup = ({
                 progress: undefined,
               }
             );
-            handleClosePaymentPopup()
-            setIsLoading(false)
+            handleClosePaymentPopup();
+            setIsLoading(false);
           } else if (errorMsg.toLowerCase().includes("panic")) {
             setShowPanicPopup(true);
             setIsVisible(false);
@@ -542,7 +575,8 @@ const SupplyPopup = ({
   };
 
   const handleMaxClick = () => {
-    const maxAmount = supplyBalance.toFixed(8);
+    const maxAmount = formatValue(supplyBalance);
+    console.log("type pf maxAmount", typeof maxAmount);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -561,7 +595,7 @@ const SupplyPopup = ({
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
   };
-  
+
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
   /* ===================================================================================
    *                                  EFFECTS
@@ -653,6 +687,13 @@ const SupplyPopup = ({
     }
   }, [isLoading, onLoadingChange]);
 
+  useEffect(() => {
+    if (supplyBalance === 0) {
+        toast.dismiss();
+      toast.warning("You do not have enough transaction fees to supply.");
+    }
+  }, [supplyBalance]);
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -708,7 +749,7 @@ const SupplyPopup = ({
                       }
                     }}
                   >
-                    {formatValue(balance)} Max
+                    {formatValue(supplyBalance)} Max
                   </p>
                 </div>
               </div>
@@ -738,6 +779,7 @@ const SupplyPopup = ({
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
                 </div>
+
                 <div className="w-full flex flex-col my-1">
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
@@ -755,9 +797,7 @@ const SupplyPopup = ({
                             : "text-orange-300"
                         }`}
                       >
-                        {truncatedValue > 100
-                          ? "Infinity"
-                          : (truncatedValue)}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -777,6 +817,35 @@ const SupplyPopup = ({
                       </span>
                     </p>
                   </div>
+                  <div className="w-full flex justify-between items-center my-1 mt-2">
+                    <div className="flex items-center gap-1">
+                      <p>Transaction Fee</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p>{transferFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {(amount
+                          ? (+amount || 0) + (+transferFee || 0)
+                          : 0
+                        ).toFixed(8)}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
                   <div className="w-full flex justify-end items-center mt-1">
                     <p className="text-gray-500">liquidation at &lt;1</p>
                   </div>
@@ -794,18 +863,15 @@ const SupplyPopup = ({
               </p>
             </div>
           )}
+          {supplyBalance === 0 && (
+            <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
+              <p className="text-yellow-700 dark:text-yellow-500">
+                You do not have enough transaction fees to supply.
+              </p>
+            </div>
+          )}
 
           <div className="w-full flex justify-between items-center mt-3">
-            <div className="flex items-center justify-start">
-              {}
-              <div className="relative group">
-                {}
-
-                {}
-                {}
-              </div>
-            </div>
-
             <div className="flex items-center">
               <p
                 className={`text-xs whitespace-nowrap ${
@@ -929,21 +995,25 @@ const SupplyPopup = ({
       )}
       {showPanicPopup && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                Important Message
+              </h1>
+              <button
+                onClick={handleClosePaymentPopup}
+                className="text-gray-400 focus:outline-none mt-3 mr-4"
+              >
+                <X size={22} />
+              </button>
+            </div>
 
             <div
               className="dark:bg-gradient 
-                dark:from-darkGradientStart 
-                dark:to-darkGradientEnd 
-                dark:text-darkText  "
+                     dark:from-darkGradientStart 
+                     dark:to-darkGradientEnd 
+                     dark:text-darkText p-2 "
             >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
                 uncovered a bug, and our dev team is on it.
@@ -953,7 +1023,7 @@ const SupplyPopup = ({
                 Your account is temporarily locked while we investigate and fix
                 the issue. <br />
               </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 We appreciate your contribution and have logged your ID—testers
                 like you are key to making DFinance better! <br />
                 If you have any questions, feel free to reach out.

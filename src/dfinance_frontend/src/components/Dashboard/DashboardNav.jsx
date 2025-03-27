@@ -81,104 +81,43 @@ const DashboardNav = () => {
   const [assetBorrow, setAssetBorrow] = useState(0);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
 
-  const getStoredValue = (key, principal, defaultValue) => {
-    if (!principal) return defaultValue;
-    const storedData = sessionStorage.getItem(`${key}_${principal}`);
-    
-    if (storedData === null) return defaultValue;
-  
-    // If it's a valid number, return it as a number; otherwise, return as a string
-    return isNaN(storedData) ? storedData : Number(storedData);
-  };
-  
-  const [netWorth, setNetWorth] = useState(() =>
-    getStoredValue("netWorth", principal, null)
-  );
+  const [healthFactor, setHealthFactor] = useState(null);
+  const [netWorth, setNetWorth] = useState(null);
 
-  const [netApy, setNetApy] = useState(() => {
-    if (!principal) return "-"; // Default to "-" if no principal
-  
-    const storageKey = `netApy_${principal}`;
-    const storedValue = sessionStorage.getItem(storageKey);
-  
-    return storedValue && storedValue !== "-" ? `${parseFloat(storedValue).toFixed(4)}%` : "-";
-  });
-  
-  const prevNetApy = useRef("-"); // Store last valid APY
-  
+  const [netApy, setNetApy] = useState("-"); // Default state
+
   const formatNetApy = (apy) => {
     const num = parseFloat(apy);
-  
-    if (isNaN(num)) return "-"; // 🔥 Always return "-" if NaN
-    if (num === 0) return "-"; // 🔥 Never show 0.00%, always "-"
-    if (num <= 0.01) return "<0.01%"; //  Show "<0.01%" for very small APY
-  
-    return `${num.toFixed(4)}%`;
+
+    if (isNaN(num) || num === 0) return "-"; // 🔥 Always return "-" if NaN or exactly 0
+    if (num < 0.01) return "<0.01%"; // 🔥 Show "<0.01%" for values < 0.01
+
+    return `${num.toFixed(2)}%`;
   };
-  
-  //  Retrieve stored APY if available
+
+
+
+  // 🔥 Update netApy when the dashboard refreshes or data changes
+  // useEffect(() => {
+  //   if (!principal || !reserveData || !userData) return;
+
+  //   const reservesData = userData?.Ok?.reserves?.[0];
+  //   const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
+
+  //   console.log("Raw Net APY:", calculatedNetApy); // Debugging log
+
+  //   const formattedApy = formatNetApy(calculatedNetApy);
+  //   setNetApy(formattedApy);
+  // }, [dashboardRefreshTrigger, principal, userData, reserveData]);
+
+  // 🔥 Update UI correctly
   useEffect(() => {
-    if (principal) {
-      const storageKey = `netApy_${principal}`;
-      const storedValue = sessionStorage.getItem(storageKey);
-  
-      if (storedValue && !isNaN(parseFloat(storedValue))) {
-        const formattedStoredValue = formatNetApy(storedValue);
-        setNetApy(formattedStoredValue);
-        prevNetApy.current = formattedStoredValue; //  Store last valid APY
-      } else if (storedValue === "-") {
-        setNetApy("-"); //  Ensure "-" is used if stored
-      }
-    }
-  }, [principal]);
-  
-  //  Keep sessionStorage updated, ensuring "-" is stored and displayed when applicable
-  useEffect(() => {
-    if (principal) {
-      const storageKey = `netApy_${principal}`;
-      const numericNetApy = parseFloat(netApy);
-  
-      let newValue;
-  
-      //  If netApy is exactly "-", store and display "-"
-      if (netApy === "-") {
-        console.log("Net APY is '-', storing '-' in sessionStorage.");
-        sessionStorage.setItem(storageKey, "-");
-        newValue = "-";
-      }
-      //  If netApy is exactly 0, also store and display "-"
-      else if (numericNetApy === 0) {
-        console.log("Net APY is 0, showing '-' instead.");
-        sessionStorage.setItem(storageKey, "-");
-        newValue = "-";
-      }
-      //  Otherwise, store and display the valid APY
-      else {
-        console.log("Updating session storage:", numericNetApy);
-        sessionStorage.setItem(storageKey, numericNetApy.toString());
-        newValue = formatNetApy(numericNetApy);
-        prevNetApy.current = newValue; //  Save last valid APY
-      }
-  
-      //  Update UI correctly
-      setWalletDetailTab((prevTab) =>
-        prevTab.map((item) =>
-          item.id === 1 ? { ...item, count: newValue } : item
-        )
-      );
-    }
-  }, [dashboardRefreshTrigger, principal, netApy]);
-  
-
-
-
-
-  
-  
-
-  const [healthFactor, setHealthFactor] = useState(() =>
-    getStoredValue("healthFactor", principal, null)
-  );
+    setWalletDetailTab((prevTab) =>
+      prevTab.map((item) =>
+        item.id === 1 ? { ...item, count: netApy } : item
+      )
+    );
+  }, [netApy]);
 
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -202,8 +141,8 @@ const DashboardNav = () => {
           ? netApy === "<0.01%" // Check with percentage symbol
             ? "<0.01%"
             : !isNaN(parseFloat(netApy)) // Ensure valid number before formatting
-            ? `${formatNetApy(netApy)}`
-            : "-"
+              ? `${formatNetApy(netApy)}`
+              : "-"
           : "-",
     },
     {
@@ -212,7 +151,7 @@ const DashboardNav = () => {
       count: healthFactor ? healthFactor : "-",
     },
   ]);
-  
+
 
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 },
@@ -269,20 +208,24 @@ const DashboardNav = () => {
    * =================================================================================== */
   const fetchAssetData = async () => {
     const balances = [];
+
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+
       const assetBalance = {
         asset,
         dtokenBalance: null,
         debtTokenBalance: null,
       };
+
       if (dtokenId) {
         const dtokenActor = createLedgerActor(dtokenId, idlFactory);
         if (dtokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
+            await new Promise(resolve => setTimeout(resolve, 300)); // ⏳ Delay before fetching
             const balance = await dtokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.dtokenBalance = formattedBalance;
@@ -291,27 +234,30 @@ const DashboardNav = () => {
           }
         }
       }
+
       if (debtTokenId) {
         const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
         if (debtTokenActor) {
           try {
             const account = { owner: principalObj, subaccount: [] };
+            await new Promise(resolve => setTimeout(resolve, 300)); // ⏳ Delay before fetching
             const balance = await debtTokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
             assetBalance.debtTokenBalance = formattedBalance;
           } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+            console.error(`Error fetching debt token balance for ${asset}:`, error);
           }
         }
       }
+
       balances.push(assetBalance);
+
+      await new Promise(resolve => setTimeout(resolve, 500)); // ⏳ Additional delay before next iteration
     }
+
     setAssetBalances(balances);
   };
+
 
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
@@ -328,66 +274,47 @@ const DashboardNav = () => {
     }
     return `noBorrow`;
   };
-  
+
   useEffect(() => {
     if (
-        typeof totalUsdValueSupply === "number" &&
-        typeof totalUsdValueBorrow === "number" &&
-        principal
+      typeof totalUsdValueSupply === "number" &&
+      typeof totalUsdValueBorrow === "number" &&
+      principal
     ) {
-        const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
-        console.log("💰 totalUsdValueSupply:", totalUsdValueSupply);
-        console.log("💸 totalUsdValueBorrow:", totalUsdValueBorrow);
-        console.log("📊 Calculated Net Worth:", calculatedNetWorth);
+      const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
 
-        // Retrieve stored net worth from sessionStorage
-        const storageKey = `netWorth_${principal}`;
-        const storedNetWorth = sessionStorage.getItem(storageKey);
-        const parsedStoredNetWorth = storedNetWorth ? JSON.parse(storedNetWorth) : null;
+      console.log("💰 totalUsdValueSupply:", totalUsdValueSupply);
+      console.log("💸 totalUsdValueBorrow:", totalUsdValueBorrow);
+      console.log("📊 Calculated Net Worth:", calculatedNetWorth);
 
-        let newValue = calculatedNetWorth; //  Always prefer new calculated value
+      // Show "-" instead of 0, otherwise format the value
+      const newValue = calculatedNetWorth === 0 ? "-" : calculatedNetWorth;
 
-        //  If **calculatedNetWorth is exactly 0**, store **0.00**
-        if (calculatedNetWorth === 0) {
-            newValue = 0.00;
-        }
-        //  Otherwise, ensure we don’t keep an incorrect stored value
-        else if (parsedStoredNetWorth !== null && !isNaN(parsedStoredNetWorth) && calculatedNetWorth === null) {
-            newValue = parsedStoredNetWorth;
-        }
+      console.log("🔄 Updating to:", newValue);
 
-        console.log("📌 Stored Net Worth:", parsedStoredNetWorth);
-        console.log("🔄 Updating to:", newValue);
+      // Ensure React updates the state
+      setNetWorth((prev) => (prev !== newValue ? newValue : prev));
 
-        //  Update sessionStorage **only if the new value is different**
-        if (newValue !== parsedStoredNetWorth) {
-            sessionStorage.setItem(storageKey, JSON.stringify(newValue));
-        }
-
-        //  Ensure React updates the state
-        setNetWorth((prev) => {
-            if (prev !== newValue) return newValue;
-            return prev; // Prevent redundant re-renders
-        });
-
-        //  Update wallet details UI
-        setWalletDetailTab((prevTab) =>
-            prevTab.map((item) =>
-                item.id === 0
-                    ? {
-                        ...item,
-                        count: (
-                            <>
-                                <span style={{ fontWeight: "lighter" }}>$</span>
-                                {formatNumber(newValue, 2)}
-                            </>
-                        ),
-                    }
-                    : item
-            )
-        );
+      // Update wallet details UI
+      setWalletDetailTab((prevTab) =>
+        prevTab.map((item) =>
+          item.id === 0
+            ? {
+              ...item,
+              count: newValue === "-" ? (
+                newValue
+              ) : (
+                <>
+                  <span style={{ fontWeight: "lighter" }}>$</span>
+                  {formatNumber(newValue, 2)}
+                </>
+              ),
+            }
+            : item
+        )
+      );
     }
-}, [totalUsdValueSupply, totalUsdValueBorrow, dashboardRefreshTrigger, principal]);
+  }, [totalUsdValueSupply, totalUsdValueBorrow, dashboardRefreshTrigger, principal]);
 
 
 
@@ -395,11 +322,12 @@ const DashboardNav = () => {
 
 
 
-  
-  
-  
 
- 
+
+
+
+
+
 
   const getConversionRate = (asset) => {
     switch (asset) {
@@ -430,64 +358,65 @@ const DashboardNav = () => {
       let weightedDebtApySum = 0;
       let numerator = 0;
       let denominator = 0;
-  
-      reserves.forEach((reserve) => {
+
+      reserves?.forEach((reserve) => {
         const assetKey = reserve[0];
-  
+
         if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok)
           return;
-  
+
         const conversionRate = getConversionRate(assetKey) || 0;
         const supplyApy =
           (Number(reserveData[assetKey].Ok.current_liquidity_rate) || 0) /
           100000000;
+        console.log("supplyApy", supplyApy)
         const debtApy =
           (Number(reserveData[assetKey].Ok.borrow_rate) || 0) / 100000000;
-  
+
         const currentLiquidity =
           userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey)
             ?.[1]?.liquidity_index || 1; // 🔥 Avoid division by zero
-  
+
         const assetBalance =
           assetBalances?.find((balance) => balance.asset === assetKey)
             ?.dtokenBalance || 0;
-  
+        console.log("assetBalance")
         const assetSupply =
           (Number(assetBalance) * Number(getAssetSupplyValue(assetKey) || 0)) /
           Number(currentLiquidity) || 0;
-  
+        console.log("assetSupply", assetSupply)
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === assetKey)
             ?.[1]?.variable_borrow_index || 1; // 🔥 Avoid division by zero
-  
+
         const assetBorrowBalance =
           assetBalances.find((balance) => balance.asset === assetKey)
             ?.debtTokenBalance || 0;
-  
+
         const assetBorrowed =
           (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetKey) || 0)) /
           Number(DebtIndex) || 0;
-  
+
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD += assetBorrowedInUSD;
         weightedDebtApySum += assetBorrowedInUSD * debtApy;
-  
+
         const assetSupplyInUSD = assetSupply * conversionRate;
         totalSuppliedInUSD += assetSupplyInUSD;
         weightedApySum += assetSupplyInUSD * supplyApy;
-  
+
         numerator += weightedApySum - weightedDebtApySum;
         denominator += totalSuppliedInUSD;
       });
-  
+
       if (denominator === 0) return NaN; // 🚀 Return NaN instead of 0 to ensure "-" is displayed
-  
+
       const netApy = numerator / denominator;
       return netApy < 0.0001 ? 0.0001 : netApy; //  Never return 0, instead set a minimum threshold
     },
     [reserveData, assetBalances]
   );
-  
+
 
   const handleOpenPopup = () => {
     setIsPopupOpen(true);
@@ -507,7 +436,7 @@ const DashboardNav = () => {
   };
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); 
+    return (Math.floor(num * factor) / factor).toFixed(decimals);
   };
 
   const toggleMenu = () => {
@@ -537,18 +466,18 @@ const DashboardNav = () => {
   //   if (principal && netApy !== "-" && netApy !== null && !isNaN(parseFloat(netApy))) {
   //     // Get stored value (always a string)
   //     const storedValue = sessionStorage.getItem(`netApy_${principal}`);
-  
+
   //     // Format the current netApy properly
   //     let formattedNetApy = parseFloat(netApy) < 0.01 ? "<0.01%" : `${parseFloat(netApy).toFixed(4)}%`;
-  
+
   //     console.log("Stored Value:", storedValue, "Formatted Net Apy:", formattedNetApy); // Debugging
-  
+
   //     // Only update if the formatted value is different from the stored value
   //     if (storedValue !== formattedNetApy) {
   //       console.log("Updating session storage:", formattedNetApy);
   //       sessionStorage.setItem(`netApy_${principal}`, formattedNetApy);
   //     }
-  
+
   //     // Update wallet details only if necessary
   //     setWalletDetailTab((prevTab) =>
   //       prevTab.map((item) =>
@@ -559,13 +488,13 @@ const DashboardNav = () => {
   //     );
   //   }
   // }, [ dashboardRefreshTrigger, principal]);
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
   useEffect(() => {
     if (userAccountData?.Ok?.[4] !== undefined && principal) {
       const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
@@ -580,7 +509,7 @@ const DashboardNav = () => {
         sessionStorage.setItem(
           `healthFactor_${principal}`,
           JSON.stringify(newValue)
-        ); 
+        );
         return newValue;
       });
 
@@ -588,35 +517,35 @@ const DashboardNav = () => {
         prevTab.map((item) =>
           item.id === 2
             ? {
-                ...item,
-                count: calculatedHealthFactor,
-              }
+              ...item,
+              count: calculatedHealthFactor,
+            }
             : item
         )
       );
     }
-  }, [userAccountData,dashboardRefreshTrigger, principal]);
+  }, [userAccountData, dashboardRefreshTrigger, principal]);
 
- 
+
   // useEffect(() => {
   //   if (principal) {
   //     const storedNetWorth = sessionStorage.getItem(`netWorth_${principal}`);
   //     setNetWorth(storedNetWorth ? JSON.parse(storedNetWorth) : "-");
-  
+
   //     const storedNetApy = sessionStorage.getItem(`netApy_${principal}`);
   //     setWalletDetailTab((prevTab) =>
   //       prevTab.map((item) =>
   //         item.id === 1 ? { ...item, count: storedNetApy ? JSON.parse(storedNetApy) : "-" } : item
   //       )
   //     );
-  
+
   //     const storedHealthFactor = sessionStorage.getItem(`healthFactor_${principal}`);
   //     setHealthFactor(storedHealthFactor ? JSON.parse(storedHealthFactor) : "-");
   //   }
   // }, [principal]);
-  
 
-  
+
+
   // useEffect(() => {
   //   const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
   //   setNetWorth(calculatedNetWorth);
@@ -657,23 +586,32 @@ const DashboardNav = () => {
     if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
       const updateState = async () => {
         const reservesData = userData.Ok.reserves[0];
+        console.log("reserveData", reserveData)
+        console.log("reservesData", reservesData)
         const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
-  
+
         console.log("Raw Net APY:", calculatedNetApy); // 🔍 Debugging log
-  
+
         // 🚀 Keep showing "-" until we get a valid number
         if (!calculatedNetApy || isNaN(calculatedNetApy)) {
-          console.log("calculatedNetApy",calculatedNetApy)
           console.log("Waiting for valid Net APY...");
-          setNetApy("-"); 
+          setNetApy("-");
           return;
         }
-  
+
         const formattedApy = calculatedNetApy * 100;
         console.log("Formatted Net APY:", formattedApy); // 🔍 Debugging log
-  
-        setNetApy(formattedApy < 0.01 ? "<0.01%" : formattedApy.toFixed(4) + "%"); 
-  
+
+        let displayValue;
+        if (formattedApy <= 0.01) {
+          displayValue = "<0.01%"; // ✅ Ensure "<" is included
+        } else {
+          displayValue = formattedApy.toFixed(2) + "%";
+        }
+
+        console.log("Final Display Net APY:", displayValue); // 🔍 Debugging log
+        setNetApy(displayValue); // ✅ Correctly set state
+
         let totalBorrow = 0;
         reservesData.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
@@ -681,20 +619,20 @@ const DashboardNav = () => {
           const currentLiquidity = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.liquidity_index;
-  
+
           console.log("Asset:", asset, "Liquidity Index:", currentLiquidity); // 🔍 Debugging log
-  
+
           const assetBalance =
             assetBalances?.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0;
           const supply =
             (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-              Number(currentLiquidity) || 0;
-  
+            Number(currentLiquidity) || 0;
+
           if (supply) {
             setAssetSupply(supply);
           }
-  
+
           const DebtIndex = userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.variable_borrow_index;
@@ -703,20 +641,20 @@ const DashboardNav = () => {
               ?.debtTokenBalance || 0;
           const borrow =
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-              Number(DebtIndex) || 0;
-  
+            Number(DebtIndex) || 0;
+
           console.log("Asset Borrow:", asset, "Debt Index:", DebtIndex, "Borrow:", borrow); // 🔍 Debugging log
-  
+
           if (borrow > 0) {
             totalBorrow += borrow;
           }
         });
-  
+
         console.log("Total Borrow:", totalBorrow); // 🔍 Debugging log
-  
+
         setAssetBorrow(totalBorrow > 0 ? totalBorrow : 0);
       };
-  
+
       updateState();
     }
   }, [
@@ -726,9 +664,11 @@ const DashboardNav = () => {
     assetBalances,
     dashboardRefreshTrigger,
   ]);
-  console.log("netApy",netApy)
-  
-  
+
+  console.log("netApy", netApy);
+
+
+
 
   useEffect(() => {
     if (userData && userData.Ok && userData.Ok.total_debt) {
@@ -880,9 +820,8 @@ const DashboardNav = () => {
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${
-            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-          }`}
+          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+            }`}
         >
           {(isMarketRoute || (isDashboardRoute && isAuthenticated)) && (
             <button onClick={toggleMenu} className="rounded-md button1 z-10">
@@ -896,9 +835,8 @@ const DashboardNav = () => {
         <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -963,23 +901,22 @@ const DashboardNav = () => {
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                             <span
-                              className={`font-bold text-[20px] ${
-                                data.title === "Health Factor"
+                              className={`font-bold text-[20px] ${data.title === "Health Factor"
                                   ? data.count === 0
                                     ? "text-red-500"
                                     : data.count > 3
-                                    ? "text-green-500"
-                                    : data.count <= 1
-                                    ? "text-red-500"
-                                    : data.count <= 1.5
-                                    ? "text-orange-600"
-                                    : data.count <= 2
-                                    ? "text-orange-400"
-                                    : "text-orange-300"
+                                      ? "text-green-500"
+                                      : data.count <= 1
+                                        ? "text-red-500"
+                                        : data.count <= 1.5
+                                          ? "text-orange-600"
+                                          : data.count <= 2
+                                            ? "text-orange-400"
+                                            : "text-orange-300"
                                   : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue"
-                                  : "text-[#2A1F9D] dark:text-darkBlue"
-                              }`}
+                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                    : "text-[#2A1F9D] dark:text-darkBlue"
+                                }`}
                             >
                               {data.count !== null ? data.count : "\u00A0"}
                             </span>
@@ -1057,21 +994,20 @@ const DashboardNav = () => {
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                     <span
-                      className={`font-bold text-[20px] ${
-                        data.title === "Health Factor"
+                      className={`font-bold text-[20px] ${data.title === "Health Factor"
                           ? data.count === 0 && assetSupply === 0
                             ? "text-[#2A1F9D] dark:text-darkBlue"
                             : data.count > 3
-                            ? "text-green-500"
-                            : data.count <= 1
-                            ? "text-red-500"
-                            : data.count <= 1.5
-                            ? "text-orange-600"
-                            : data.count <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
+                              ? "text-green-500"
+                              : data.count <= 1
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                  ? "text-orange-600"
+                                  : data.count <= 2
+                                    ? "text-orange-400"
+                                    : "text-orange-300"
                           : "text-[#2A1F9D] dark:text-darkBlue"
-                      }`}
+                        }`}
                     >
                       {data.count !== null ? data.count : "\u00A0"}
                     </span>

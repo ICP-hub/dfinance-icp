@@ -24,19 +24,15 @@ const useRealTimeConversionRate = (asset) => {
           throw new Error("Backend actor is not available");
         }
         const result = await backendActor.get_cached_exchange_rate(asset);
-        if (result.Ok && result.Ok.cache && result.Ok.cache.length > 0) {
-          const rate = result.Ok.cache[0]?.[1]?.price;
-
-          if (rate) {
-            setConversionRate(rate);
-          } else {
-            setError("No price found for asset");
-          }
+        console.log("result of exchange rate: ", result);
+        
+        if (result?.Ok !== undefined) {
+          setConversionRate(result.Ok);
         } else {
           setError("Invalid response from backend actor");
         }
       } catch (error) {
-        setError(error);
+        setError(error.message || "An error occurred");
       }
     };
 

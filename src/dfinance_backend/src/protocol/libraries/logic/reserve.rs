@@ -391,12 +391,6 @@ pub async fn burn_scaled(
         );
         ic_cdk::println!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
-        // if let Err(err) = repay_lock_amount(&reserve.asset_name.clone().unwrap(), &adjusted_amount)
-        // {
-        //     ic_cdk::println!("Error in repay_lock_amount: {:?}", err);
-        //     return Err(err);
-        // }
-
         if reserve.asset_borrow == adjusted_amount {
             ic_cdk::println!("Setting asset borrow to zero");
             reserve.asset_borrow = Nat::from(0u128);
@@ -404,8 +398,6 @@ pub async fn burn_scaled(
             return Err(Error::AmountSubtractionError);
         } else {
             ic_cdk::println!("Subtracting adjusted amount from asset borrow");
-            // let repay_amount = get_repay_locked_amount(&reserve.asset_name.clone().unwrap());
-            // ic_cdk::println!("repay amount = {}", repay_amount);
             reserve.asset_borrow -= adjusted_amount;
         }
 

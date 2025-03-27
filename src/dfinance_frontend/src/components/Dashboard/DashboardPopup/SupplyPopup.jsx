@@ -121,7 +121,8 @@ const SupplyPopup = ({
   }
 
   const numericBalance = parseFloat(balance);
-  const supplyBalance = numericBalance - transferFee;
+  const supplyBalance = Math.max(numericBalance - transferFee, 0);
+
   console.log(numericBalance, "numericBalance")
   const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
@@ -858,7 +859,7 @@ const SupplyPopup = ({
             <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
               <p className="text-yellow-700 dark:text-yellow-500">
                 You do not have enough {asset} in your account to pay for
-                transaction fees on the Ethereum Sepolia network. Please deposit{" "}
+                transaction fees . Please deposit{" "}
                 {asset} from another account.
               </p>
             </div>

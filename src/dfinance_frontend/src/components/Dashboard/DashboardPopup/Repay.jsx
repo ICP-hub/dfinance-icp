@@ -115,25 +115,50 @@ const Repay = ({
    */
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
+  
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
+  
+    // Allow only numbers and a single decimal point
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure "." remains if it's the first character
+    if (inputAmount === ".") {
+      setAmount("0.");
+      updateAmountAndUsdValue("0.");
+      return;
+    }
+  
+    // Prevent multiple decimals
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
+  
+    // Convert to a number
     let numericAmount = parseFloat(inputAmount);
     if (isNaN(numericAmount)) numericAmount = 0;
+  
+    // Restrict input to assetBorrow
     if (numericAmount > assetBorrow) {
       numericAmount = assetBorrow;
-      inputAmount = truncateToSevenDecimals(assetBorrow).toString();
     }
-    setAmount(inputAmount);
-    setMaxClicked(inputAmount === assetBorrow.toString());
-    updateAmountAndUsdValue(inputAmount);
+  
+    // **Fix floating-point issue by using toFixed(8)**
+    let formattedAmount = numericAmount.toFixed(8).replace(/\.?0+$/, ""); // Removes trailing zeros
+  
+    // Keep decimal when user is still typing
+    if (inputAmount.endsWith(".")) {
+      formattedAmount += ".";
+    }
+  
+    setAmount(formattedAmount);
+    setMaxClicked(formattedAmount === assetBorrow.toString());
+    updateAmountAndUsdValue(formattedAmount);
   };
+  
 
   /**
    * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
@@ -740,6 +765,7 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
+                      {console.log("truncatedValue", truncatedValue)}
                       <span
                         className={`${
                           truncatedValue > 3

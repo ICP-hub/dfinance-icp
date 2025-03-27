@@ -2156,6 +2156,7 @@ const MySupply = () => {
                                 : 0;
 
                             const isZeroBalance = Number(balance) === 0;
+                            console.log("isZeroBalance", isZeroBalance);
                             return { item, isZeroBalance, balance };
                           })
                           .sort((a, b) => {
@@ -3481,6 +3482,7 @@ const MySupply = () => {
                                               (Number(borrowableValue)).toFixed(8) <= "0.00000000" ||
                                               (Number(borrowableValue)).toFixed(8) <= "0.0000"
                                             ) {
+                                              toast.dismiss();
                                               toast.info(
                                                 "Insufficeint asset supply to allow borrow request"
                                               );
@@ -3537,7 +3539,9 @@ const MySupply = () => {
                                                   userAccountData?.Ok?.[1]
                                                 ) / 100000000
                                               ) || 0;
+                                              console.log("ckBalance", ckBalance);
                                             if (ckBalance === 0) {
+                                              toast.dismiss();
                                               toast.info(
                                                 "Insufficeint wallet balance to allow repay request."
                                               );
@@ -4028,6 +4032,7 @@ const MySupply = () => {
                                           (Number(borrowableValue)).toFixed(8) <= "0.0000"
                                         ) {
                                           // Show toast notification
+                                          toast.dismiss();
                                           toast.info(
                                             "Insufficeint asset supply to allow borrow request"
                                           );
@@ -4082,6 +4087,7 @@ const MySupply = () => {
                                               100000000
                                           ) || 0;
                                         if (ckBalance === 0) {
+                                          toast.dismiss();
                                           toast.info(
                                             "Insufficeint wallet balance to allow repay request."
                                           );
@@ -4221,7 +4227,7 @@ const MySupply = () => {
                             // Only filter assets that should be shown based on showAllAssets and borrow availability
                             if (!showAllAssets) {
                               return (
-                                total_supply > total_borrow && isBorrowAvailable
+                                total_supply*0.85 > total_borrow && isBorrowAvailable
                               );
                             }
 
@@ -4728,7 +4734,7 @@ const MySupply = () => {
                               // Only filter assets that should be shown based on showAllAssets and borrow availability
                               if (!showAllAssets) {
                                 return (
-                                  total_supply > total_borrow &&
+                                  total_supply *0.85 > total_borrow &&
                                   isBorrowAvailable
                                 );
                               }
@@ -4753,10 +4759,11 @@ const MySupply = () => {
                                   Number(assetDataB.asset_borrow || 0) /
                                   100000000;
 
-                                const isEligibleA =
-                                  total_supply_A > total_borrow_A;
-                                const isEligibleB =
-                                  total_supply_B > total_borrow_B;
+                                 const isEligibleA =
+                                total_supply_A * 0.85 > total_borrow_A;
+                              const isEligibleB =
+                                total_supply_B * 0.85 > total_borrow_B;
+
 
                                 if (isEligibleA && !isEligibleB) return -1;
                                 if (!isEligibleA && isEligibleB) return 1;

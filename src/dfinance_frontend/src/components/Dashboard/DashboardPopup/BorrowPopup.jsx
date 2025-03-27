@@ -401,47 +401,67 @@ const Borrow = ({
   };
 
   const handleAmountChange = (e) => {
-    let inputAmount = e.target.value;
-  
-    // Allow only numbers and a single decimal point
-    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    // Ensure borrowableValue is a valid number and ≥ 0
+    const maxBorrow = parseFloat(borrowableValue);
+    if (isNaN(maxBorrow) || maxBorrow < 0) {
+      setAmount(""); // Clear input if borrowableValue is invalid
+      return;
     }
   
-    // Allow empty input
+    let inputAmount = e.target.value;
+  
+    // Remove non-numeric characters except a single decimal point
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+  
+    // Ensure there's only one decimal point
+    const parts = inputAmount.split(".");
+    if (parts.length > 2) {
+      inputAmount = parts[0] + "." + parts.slice(1).join("");
+    }
+  
+    // Allow empty input (for clearing)
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
   
-    // Prevent NaN when deleting numbers (keep user input as is)
-    if (inputAmount === "." || inputAmount === "0.") {
-      setAmount(inputAmount);
-      updateAmountAndUsdValue(inputAmount);
+    // Allow typing just "."
+    if (inputAmount === ".") {
+      setAmount(".");
+      updateAmountAndUsdValue(".");
       return;
     }
   
-    // Convert to float but only if it's a valid number
-    const numericAmount = parseFloat(inputAmount);
-    if (!isNaN(numericAmount) && numericAmount > parseFloat(borrowableValue)) {
+    // Allow "0." without forcing conversion
+    if (inputAmount === "0.") {
+      setAmount("0.");
+      updateAmountAndUsdValue("0.");
       return;
     }
   
-    // Format number with thousands separator
-    let formattedAmount;
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
-    } else {
-      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
+    // Prevent more than 8 total digits (before + after decimal)
+    if (inputAmount.replace(".", "").length > 8) {
+      return;
     }
   
-    setAmount(formattedAmount);
+    // Convert to a number while keeping user input intact
+    let numericAmount = parseFloat(inputAmount);
+    if (isNaN(numericAmount)) numericAmount = 0;
+  
+    // Prevent exceeding borrowableValue
+    if (numericAmount > maxBorrow) {
+      return;
+    }
+  
+    // Allow natural typing of decimals without modifying input format
+    setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
+  
+  
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
     if (inputAmount === "") {

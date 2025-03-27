@@ -178,6 +178,12 @@ pub struct BlockedUserDetails {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
+pub struct SessionStorageData {
+    pub connected_wallet: String,
+    pub session_start: Nat,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct CachedPrice {
     pub price: Nat,
 }

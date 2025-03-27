@@ -32,8 +32,7 @@ import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";
-import DFinanceDark from "../../../public/logo/DFinance-Dark.svg";
-import DFinanceLight from "../../../public/logo/DFinance-Light.svg";
+import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
 /**
@@ -64,7 +63,6 @@ export default function Navbar({ isHomeNav }) {
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.user);
   const { isWalletModalOpen } = useSelector((state) => state.utility);
 
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
@@ -149,6 +147,7 @@ export default function Navbar({ isHomeNav }) {
       navigator.clipboard
         .writeText(principal)
         .then(() => {
+          toast.dismiss();
           toast.success(`Principal copied to clipboard`, {
             className: "custom-toast",
             position: "top-center",
@@ -331,16 +330,16 @@ export default function Navbar({ isHomeNav }) {
         <div className="w-full">
           <nav className="w-full py-4 md:py-5 dxl:py-9 flex items-center justify-between">
             <div className="flex justify-center items-center ">
+              <div className="flex items-center gap-3 justify-center">
               <img
-                src={theme === "dark" ? DFinanceDark : DFinanceLight}
+                src={DFinance}
                 alt="DFinance"
                 onClick={handleLogoClick}
-                className="w-[100px] md:w-[150px] lg:w-auto sxs3:w-[130px] md:mb-1 sxs3:mb-0 cursor-pointer"
-                style={{
-                  imageRendering: "-webkit-optimize-contrast",
-                  imageRendering: "crisp-edges",
-                }}
+                className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
               />
+              <h1 className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer" onClick={handleLogoClick}>DFinance</h1>
+              </div>
+             
 
               {!isHomeNav && isTestnetMode && (
                 <button

@@ -1,4 +1,4 @@
-import { Modal, Box, Fade, Backdrop, Slide, Grow, Zoom } from "@mui/material";
+import { Modal, Fade, Grow } from "@mui/material";
 import React from "react";
 
 const MySupplyModal = ({
@@ -7,20 +7,17 @@ const MySupplyModal = ({
   setIsModalOpen,
   children,
 }) => {
-  const handleModalOpen = () => {
-    setIsModalOpen(!isModalOpen);
-  };
-
-  const handleCloseModal = (event) => {
-    if (!isLoading) {
+  const handleCloseModal = (event, reason) => {
+    if (!isLoading && reason !== "backdropClick") {
       setIsModalOpen(false);
     }
   };
+
   return (
     <Modal
       open={isModalOpen}
-      onClose={isLoading ? null : handleCloseModal}
-      disableScrollLock={isLoading}
+      onClose={handleCloseModal}
+      disableEscapeKeyDown={false}
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
       className="flex items-center justify-center"

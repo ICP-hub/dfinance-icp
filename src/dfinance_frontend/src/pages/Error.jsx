@@ -1,15 +1,15 @@
-import React from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import Element from "../../public/element/Elements.svg";
 import { useDispatch, useSelector } from "react-redux";
 import Astro from "../../public/Error/astro.png";
 import Globe from "../../public/Error/globe.png";
 import { useAuth } from "../utils/useAuthClient";
-import WalletModal from "../components/Dashboard/WalletModal";
+import MiniLoader from "../components/Common/MiniLoader";
+const WalletModal = lazy(() => import("../components/Dashboard/WalletModal"));
 
 const Error = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const { isAuthenticated } = useAuth();
 
@@ -71,7 +71,9 @@ const Error = () => {
         </button>
       </div>
 
-      {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+      <Suspense fallback={<MiniLoader minHeight="30vh" />}>
+        {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+      </Suspense>
     </div>
   );
 };

@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
-import { Info, Check, Wallet, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
-import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
@@ -53,6 +52,9 @@ const SupplyPopup = ({
   const { isBlocked } = useFunctionBlockStatus("execute_supply");
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
+  const approveButtonRef = useRef(null);
+  const supplyButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
@@ -123,64 +125,84 @@ const SupplyPopup = ({
   const numericBalance = parseFloat(balance);
   const supplyBalance = Math.max(numericBalance - transferFee, 0);
 
-  console.log(numericBalance, "numericBalance")
+  console.log(numericBalance, "numericBalance");
   const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
 
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+  const paymentModalRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
 
   // Handles user input for supply amount
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
-  
-    // Allow only numbers and a single decimal point
+
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
     if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
       inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
     }
-  
-    // Allow empty input (don't format until user types something)
+
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       setError("");
       return;
     }
-  
-    // Allow user to type "." or "0." without breaking
+
     if (inputAmount === "." || inputAmount === "0.") {
       setAmount(inputAmount);
       updateAmountAndUsdValue(inputAmount);
       setError("");
       return;
     }
-  
+
     // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
       setError(
-        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString("en-US")}`
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
+          "en-US"
+        )}`
       );
       return;
     } else {
       setError("");
     }
-  
-    // Format number properly without breaking
+
     let formattedAmount;
     if (inputAmount.includes(".")) {
       const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart || "0").toLocaleString("en-US")}.${decimalPart.slice(0, 8)}`;
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
     } else {
       formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
     }
-  
+
     setAmount(formattedAmount);
     updateAmountAndUsdValue(inputAmount);
   };
-  
 
   // Updates the USD equivalent of the supply amount
   const updateAmountAndUsdValue = (inputAmount) => {
@@ -217,7 +239,7 @@ const SupplyPopup = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -603,6 +625,33 @@ const SupplyPopup = ({
    * =================================================================================== */
 
   useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          approveButtonRef.current &&
+          !approveButtonRef.current.disabled
+        ) {
+          approveButtonRef.current.click();
+        } else if (
+          supplyButtonRef.current &&
+          !supplyButtonRef.current.disabled
+        ) {
+          supplyButtonRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         modalRef.current &&
@@ -690,7 +739,7 @@ const SupplyPopup = ({
 
   useEffect(() => {
     if (supplyBalance === 0) {
-        toast.dismiss();
+      toast.dismiss();
       toast.warning("You do not have enough transaction fees to supply.");
     }
   }, [supplyBalance]);
@@ -859,8 +908,7 @@ const SupplyPopup = ({
             <div className="w-full flex items-center text-xs mt-3 bg-yellow-100 p-2 rounded-md dark:bg-darkBackground/30">
               <p className="text-yellow-700 dark:text-yellow-500">
                 You do not have enough {asset} in your account to pay for
-                transaction fees . Please deposit{" "}
-                {asset} from another account.
+                transaction fees . Please deposit {asset} from another account.
               </p>
             </div>
           )}
@@ -889,6 +937,7 @@ const SupplyPopup = ({
           <div className="flex flex-col gap-4 mt-4">
             {/* Approve Button */}
             <button
+              ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                 isApproved ||
@@ -908,6 +957,7 @@ const SupplyPopup = ({
 
             {/* Supply Button */}
             <button
+              ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                 !isApproved ||
@@ -942,9 +992,13 @@ const SupplyPopup = ({
       )}
 
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div
+          ref={paymentModalRef}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
           <div className="w-full flex flex-col items-center">
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 focus:outline-none self-end button1"
             >
@@ -986,6 +1040,7 @@ const SupplyPopup = ({
             </p>
 
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5"
             >
@@ -1002,6 +1057,7 @@ const SupplyPopup = ({
                 Important Message
               </h1>
               <button
+                ref={closeButtonRef}
                 onClick={handleClosePaymentPopup}
                 className="text-gray-400 focus:outline-none mt-3 mr-4"
               >

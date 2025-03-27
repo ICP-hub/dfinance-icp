@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-import {  useSelector } from "react-redux";
+import { idlFactory } from "../../../../declarations/dtoken";
+import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
+import { useDispatch, useSelector } from "react-redux";
 
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
@@ -11,11 +13,17 @@ import {  useSelector } from "react-redux";
  * @returns {Object} - Returns asset data and utility functions.
  */
 const useAssetData = (searchQuery = "") => {
+  const dispatch = useDispatch();
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const { principal, fetchReserveData, backendActor, isAuthenticated } =
-    useAuth();
+  const {
+    principal,
+    fetchReserveData,
+    backendActor,
+    isAuthenticated,
+    createLedgerActor,
+  } = useAuth();
 
   const [assets, setAssets] = useState([]);
   const [reserveData, setReserveData] = useState(null);
@@ -24,11 +32,10 @@ const useAssetData = (searchQuery = "") => {
   const [totalBorrowSize, setTotalBorrowSize] = useState(0);
   const [totalReserveFactor, setTotalReserveFactor] = useState(0);
   const [interestAccure, setInterestAccure] = useState(0);
+  const [error, setError] = useState(null);
+  const [asset_supply, setAssetSupply] = useState({});
+  const [asset_borrow, setAssetBorrow] = useState({});
   const [loading, setLoading] = useState(true);
-
-  const assetSupplyRef = useRef({});
-  const assetBorrowRef = useRef({});
-
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -46,80 +53,65 @@ const useAssetData = (searchQuery = "") => {
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
-  
+
       try {
         const assetNames = await backendActor.get_all_assets();
-        setAssets((prevAssets) =>
-          JSON.stringify(prevAssets) !== JSON.stringify(assetNames) ? assetNames : prevAssets
-        );
+        setAssets(assetNames);
       } catch (error) {
-        console.error(error.message);
+        setError(error.message);
       }
     };
-  
+
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
-  
 
-  /**
+ /**
    * Fetches the total supply of a specific asset.
    * @param {string} asset - The asset.
    */
-  const fetchAssetSupply = useCallback(
-    async (asset) => {
-      if (backendActor && isAuthenticated) {
-        try {
-          const reserveDataForAsset = await fetchReserveData(asset);
-          if (reserveDataForAsset.Ok?.id) {
-            const result = await backendActor.user_normalized_supply(
-              reserveDataForAsset.Ok
-            );
-            assetSupplyRef.current = {
-              ...assetSupplyRef.current,
-              [asset]: result.Ok,
-            };
-          } else {
-            console.error("Missing id in reserveDataForAsset.");
-          }
-        } catch (error) {
-          console.error("Error fetching asset supply:", error.message);
+  const fetchAssetSupply = async (asset) => {
+    if (backendActor && isAuthenticated) {
+      try {
+        const reserveDataForAsset = await fetchReserveData(asset);
+        if (reserveDataForAsset.Ok?.id) {
+          const result = await backendActor.user_normalized_supply(
+            reserveDataForAsset.Ok
+          );
+          setAssetSupply((prev) => ({ ...prev, [asset]: result.Ok }));
+        } else {
+          console.error("Missing id in reserveDataForAsset.");
         }
-      } else {
-        console.warn("Backend actor or authentication missing.");
+      } catch (error) {
+        console.error("Error fetching asset supply:", error.message);
       }
-    },
-    [backendActor, isAuthenticated, fetchReserveData, dashboardRefreshTrigger]
-  );
+    } else {
+      console.warn("Backend actor or authentication missing.");
+    }
+  };
 
   /**
    * Fetches the total borrowed amount of a specific asset.
    * @param {string} asset - The asset.
    */
-  const fetchAssetBorrow = useCallback(
-    async (asset) => {
-      if (backendActor && isAuthenticated) {
-        try {
-          const reserveDataForAsset = await fetchReserveData(asset);
-          if (reserveDataForAsset.Ok?.id) {
-            const result = await backendActor.user_normalized_debt(
-              reserveDataForAsset.Ok
-            );
-            assetBorrowRef.current = {
-              ...assetBorrowRef.current,
-              [asset]: result.Ok,
-            };
-          } else {
-            console.error("Missing id in reserveDataForAsset.");
-          }
-        } catch (error) {
-          console.error("Error fetching asset borrow:", error.message);
+  const fetchAssetBorrow = async (asset) => {
+    if (backendActor && isAuthenticated) {
+      try {
+        const reserveDataForAsset = await fetchReserveData(asset);
+        if (reserveDataForAsset.Ok?.id) {
+          const result = await backendActor.user_normalized_debt(
+            reserveDataForAsset.Ok
+          );
+          setAssetBorrow((prev) => ({ ...prev, [asset]: result.Ok }));
+        } else {
+          console.error("Missing id in reserveDataForAsset.");
         }
-      } else {
-        console.warn("Backend actor or authentication missing.");
+      } catch (error) {
+        console.error("Error fetching asset borrow:", error.message);
       }
-    },
-    [backendActor, isAuthenticated, fetchReserveData, dashboardRefreshTrigger]
-  );
+    } else {
+      console.warn("Backend actor or authentication missing.");
+    }
+  };
 
   /**
    * Fetches asset details and calculates supply, borrow, and reserve factors.
@@ -219,6 +211,7 @@ const useAssetData = (searchQuery = "") => {
         console.log("Data successfully fetched and state updated.");
       } catch (err) {
         console.error("Error during fetch:", err.message);
+        setError(err.message);
       } finally {
         console.log("Fetch completed.");
         setLoading(false);
@@ -234,28 +227,26 @@ const useAssetData = (searchQuery = "") => {
     ckUSDCUsdRate,
     ckETHUsdRate,
     ckBTCUsdRate,
-    dashboardRefreshTrigger
   ]);
 
   // Filter assets based on search query
-  const filteredItems = useMemo(() => {
-    if (!reserveData || Object.keys(reserveData).length === 0) return [];
-    return Object.entries(reserveData).filter(
-      ([asset, data]) =>
-        asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (data.asset_supply &&
-          data.asset_supply.toString().includes(searchQuery)) ||
-        (data.borrow_rate &&
-          data.borrow_rate.some((rate) =>
-            rate.toString().includes(searchQuery)
-          ))
-    );
-  }, [reserveData, searchQuery]);
+  const filteredItems =
+    reserveData && Object.keys(reserveData).length > 0
+      ? Object.entries(reserveData).filter(
+          ([asset, data]) =>
+            asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (data.asset_supply &&
+              data.asset_supply.toString().includes(searchQuery)) ||
+            (data.borrow_rate &&
+              data.borrow_rate.some((rate) =>
+                rate.toString().includes(searchQuery)
+              ))
+        )
+      : [];
 
   const formatNumber = useFormatNumber();
 
   return {
-    assets,
     assets,
     reserveData,
     filteredItems,
@@ -264,8 +255,8 @@ const useAssetData = (searchQuery = "") => {
     totalBorrowSize,
     totalReserveFactor,
     interestAccure,
-    asset_supply: assetSupplyRef.current,
-    asset_borrow: assetBorrowRef.current,
+    asset_supply,
+    asset_borrow,
     loading,
     setLoading,
     fetchAssetBorrow,

@@ -194,6 +194,7 @@ service : (principal) -> {
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_5) query;
   get_cached_exchange_rate : (text) -> (Result_3) query;
+  get_canister_id_by_name : (text) -> (Result_5) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_6);
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
@@ -217,6 +218,7 @@ service : (principal) -> {
   reset_reserve_value : (text, text, nat) -> (Result_1);
   retrieve_blocked_users : (principal) -> (Result_11) query;
   retrieve_request_info : (principal) -> (Result_12) query;
+  set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

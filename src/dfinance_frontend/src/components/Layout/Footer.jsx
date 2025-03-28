@@ -124,7 +124,7 @@ const Footer = () => {
   };
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
-      <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] relative">
+      <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">
         {}
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
@@ -134,11 +134,13 @@ const Footer = () => {
         </div>
         <div className="w-full flex flex-wrap p-4">
           <div className="w-full md:w-3/12 text-white mb-10 md:mb-0 lg:mb-0">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={handleLogoClick}
+            >
               <img
                 src={DFinance}
                 alt="DFinance"
-                onClick={handleLogoClick}
                 className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
               />
               <h1 className="font-semibold text-[1.4rem] md:text-[2rem]">
@@ -244,25 +246,25 @@ const Footer = () => {
         </div>
 
         {/* Accessibility Zoom Controls */}
-        <div className="absolute top-4 right-4 flex items-center gap-3 bg-[#608BC1] p-2 rounded-lg text-white">
+        <div className="absolute bottom-12 dxl:left-[6.8rem] left-6 flex items-center gap-2 bg-[#233D63]/50 p-2 rounded-lg text-white border border-gray-100/10">
           <button
             onClick={handleZoomOut}
             className="bg-[#2E5077] p-1 rounded-md hover:bg-gray-600"
           >
-            <Minus size={16} />
+            <Minus size={13} />
           </button>
-          <span className="text-sm font-semibold">{zoomLevel}%</span>
+          <span className="text-[12px] font-semibold">{zoomLevel}%</span>
           <button
             onClick={handleZoomIn}
             className="bg-[#2E5077] p-1 rounded-md hover:bg-gray-600"
           >
-            <Plus size={16} />
+            <Plus size={13} />
           </button>
           <button
             onClick={handleReset}
             className="bg-[#2E5077] p-1 rounded-md hover:bg-gray-600"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={13} />
           </button>
         </div>
       </footer>

@@ -132,21 +132,7 @@ export const DASHBOARD_TOP_NAV_LINK = [
     route: "/Faucet",
     icon: "",
     testnet: true,
-  },
-  // {
-  //   id: 5,
-  //   title: "Stake",
-  //   route: "/stake",
-  //   icon: "",
-  //   testnet: false,
-  // },
-  // {
-  //   id: 6,
-  //   title: "Gov",
-  //   route: "/Governance",
-  //   icon: "",
-  //   testnet: false,
-  // },
+  }
 ];
 export const error = [
   {

@@ -12,7 +12,6 @@ const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
 const TransactionHistoryBox = lazy(() =>
   import("../components/Dashboard/TransactionHistory")
 );
-const StakeDetails = lazy(() => import("../pages/Stake/Stake"));
 const TransactionDetail = lazy(() =>
   import("../components/Dashboard/Transaction")
 );
@@ -162,22 +161,6 @@ export default [
     element: (
       <MainDashboard>
         <Market />
-      </MainDashboard>
-    ),
-  },
-  {
-    path: "/stake",
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <StakeDetails />
-        </Suspense>
       </MainDashboard>
     ),
   },

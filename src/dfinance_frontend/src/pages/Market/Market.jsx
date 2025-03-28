@@ -68,8 +68,6 @@ const WalletDetails = () => {
 
   const { isAuthenticated, principal } = useAuth();
   const {
-    userData,
-    userAccountData,
     isFreezePopupVisible,
     setIsFreezePopupVisible,
   } = useUserData();

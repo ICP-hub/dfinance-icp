@@ -40,7 +40,7 @@ const MobileTopNav = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isAuthenticated, logout, principal } = useAuth();
+  const { isAuthenticated, principal } = useAuth();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -58,7 +58,6 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                 Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
-  const isLargeScreen = useMediaQuery("(min-width: 1134px)");
   const isMobile2 = window.innerWidth <= 640;
 
   const copyToClipboard = () => {
@@ -133,10 +132,6 @@ const MobileTopNav = ({
   const handleSwitchWallet = () => {
     setSwitchWalletDrop(!switchWalletDrop);
   };
-
-  // if (isLargeScreen) {
-  //   return <></>;
-  // }
 
   const switchWallet = () => {
     dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));

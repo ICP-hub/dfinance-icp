@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import Button from "../../Common/Button";
-import { Info } from "lucide-react";
-import { Fuel } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { Check, Wallet, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -49,6 +46,8 @@ const WithdrawPopup = ({
    *                                  HOOKS
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("execute_withdraw");
+  const withdrawButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
     useRealTimeConversionRate(asset);
@@ -114,6 +113,27 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+  const paymentModalRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
@@ -155,7 +175,6 @@ const WithdrawPopup = ({
    * @param {string} inputAmount - The amount entered by the user.
    * @returns {void}
    */
-
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
 
@@ -180,7 +199,6 @@ const WithdrawPopup = ({
 
   const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
-
   const scaledAmount = amountAsNat64;
 
   const ERROR_MESSAGES = {
@@ -205,7 +223,6 @@ const WithdrawPopup = ({
    *
    * @returns {void}
    */
-
   const handleWithdraw = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -218,7 +235,7 @@ const WithdrawPopup = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     setIsLoading(true);
@@ -346,10 +363,8 @@ const WithdrawPopup = ({
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Withdraw action failed!"}`);
-
       const message = error.message || "Withdraw action failed!";
       const isPanicError = message.toLowerCase().includes("panic");
-
       const isOutOfCyclesError =
         message.toLowerCase().includes("out of cycles") ||
         message.includes("Reject text: Canister");
@@ -413,7 +428,6 @@ const WithdrawPopup = ({
     }
 
     let avliq = liquidationThreshold * totalCollateral;
-    console.log("avliq", avliq);
     let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
 
     if (totalCollateralValue > 0) {
@@ -473,13 +487,36 @@ const WithdrawPopup = ({
   };
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+    return (Math.floor(num * factor) / factor).toFixed(decimals);
   };
-  
+
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          withdrawButtonRef.current &&
+          !withdrawButtonRef.current.disabled
+        ) {
+          withdrawButtonRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
@@ -490,24 +527,19 @@ const WithdrawPopup = ({
     );
 
     const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
-
     const amountAdded = 0;
     const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
-
     const totalCollateralValue = truncateTo8Decimals(
       parseFloat(totalCollateral) - parseFloat(amountTaken)
     );
 
     const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-
     let avliq = liquidationThreshold * totalCollateral;
     console.log("avliq", avliq);
     let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
 
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
-
-      // Truncate to 8 decimal places
       const multiplier = Math.pow(10, 8);
       tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
     }
@@ -515,6 +547,7 @@ const WithdrawPopup = ({
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     console.log("ltv", ltv);
     setPrevHealthFactor(currentHealthFactor);
+
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -708,11 +741,7 @@ const WithdrawPopup = ({
                           : "text-orange-300"
                       }`}
                     >
-                      {(
-                        truncatedValue > 100
-                          ? "Infinity"
-                          : (truncatedValue)
-                      )}
+                      {truncatedValue > 100 ? "Infinity" : truncatedValue}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
@@ -762,8 +791,9 @@ const WithdrawPopup = ({
             </div>
           </div>
           <div>
-            <Button
-              onClickHandler={
+            <button
+              ref={withdrawButtonRef}
+              onClick={
                 isLoading || amount <= 0 || isButtonDisabled
                   ? null
                   : handleWithdraw
@@ -773,8 +803,9 @@ const WithdrawPopup = ({
                   ? "opacity-50 cursor-not-allowed"
                   : ""
               }`}
-              title="Withdraw"
-            />
+            >
+              Withdraw
+            </button>
           </div>
           {isLoading && (
             <div
@@ -790,9 +821,13 @@ const WithdrawPopup = ({
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div
+          ref={paymentModalRef}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
           <div className="w-full flex flex-col items-center">
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
             >
@@ -838,21 +873,26 @@ const WithdrawPopup = ({
       )}
       {showPanicPopup && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                Important Message
+              </h1>
+              ref={closeButtonRef}
+              <button
+                onClick={handleClosePaymentPopup}
+                className="text-gray-400 focus:outline-none mt-3 mr-4"
+              >
+                <X size={22} />
+              </button>
+            </div>
 
             <div
               className="dark:bg-gradient 
                       dark:from-darkGradientStart 
                       dark:to-darkGradientEnd 
-                      dark:text-darkText  "
+                      dark:text-darkText p-2 "
             >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
                 uncovered a bug, and our dev team is on it.
@@ -862,7 +902,7 @@ const WithdrawPopup = ({
                 Your account is temporarily locked while we investigate and fix
                 the issue. <br />
               </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 We appreciate your contribution and have logged your ID—testers
                 like you are key to making DFinance better! <br />
                 If you have any questions, feel free to reach out.

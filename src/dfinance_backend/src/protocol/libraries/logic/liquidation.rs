@@ -1,23 +1,24 @@
-use ic_cdk::{api, update};
-use candid::{Nat, Principal};
-use crate::constants::errors::Error;
 use crate::api::functions::{get_balance, request_limiter};
+use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::read_state;
+use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
+use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow::execute_repay;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::protocol::libraries::types::datatypes::UserReserveData;
-use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::logic::update::{user_data, user_reserve};
-use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use crate::protocol::libraries::logic::reserve::{self, burn_scaled, mint_scaled};
-use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
+use crate::protocol::libraries::logic::update::{user_data, user_reserve};
+use crate::protocol::libraries::logic::validation::ValidationLogic;
+use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::{
     api::state_handler::mutate_state,
     declarations::assets::ExecuteSupplyParams,
-    protocol::libraries::{logic::update::UpdateLogic, math::calculate::get_exchange_rates},
+    protocol::libraries::logic::update::UpdateLogic,
 };
+use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
+use candid::{Nat, Principal};
+use ic_cdk::{api, update};
 
 /*
 -------------------------------------
@@ -27,15 +28,15 @@ use crate::{
 
 /**
  * @title Execute Liquidation Function
- * 
- * @notice This function enables the liquidation of a user's collateral when they have an under-collateralized position 
- *         or overdue debt. It performs checks, updates user and collateral data, and transfers the collateral to the 
+ *
+ * @notice This function enables the liquidation of a user's collateral when they have an under-collateralized position
+ *         or overdue debt. It performs checks, updates user and collateral data, and transfers the collateral to the
  *         platform’s reserve. The function ensures all resources are released if any step fails, reverting the operation.
- * 
+ *
  * @dev The function follows this structured workflow:
- *      1. **Input validation**: Verifies the asset name, checks that the amount is greater than zero, 
+ *      1. **Input validation**: Verifies the asset name, checks that the amount is greater than zero,
  *         and ensures the caller has permission to execute the liquidation.
- *      2. **Collateral eligibility check**: Ensures the user’s collateral is eligible for liquidation 
+ *      2. **Collateral eligibility check**: Ensures the user’s collateral is eligible for liquidation
  *         (e.g., under-collateralized position or overdue debt).
  *      3. **Lock acquisition**: Acquires a lock to ensure that only one liquidation operation can proceed at a time for a user.
  *      4. **State mutation**: Updates collateral, user profile, and reserve data to reflect the liquidation event.
@@ -43,12 +44,12 @@ use crate::{
  *      6. **Rollback mechanism**: In case of failure, the system reverts all changes and restores collateral data.
  *      7. **Debt update**: Updates the user’s debt balance in accordance with the liquidated assets.
  *      8. **Collateral release**: Releases any locks or resources tied to the collateral, ensuring the system remains in a consistent state.
- * 
+ *
  * @param params The parameters needed for the liquidation operation, including the asset name and the amount to be liquidated:
  *               - `asset`: The name of the collateral asset to be liquidated.
  *               - `amount`: The amount of collateral to be liquidated.
  *               - `userPrincipal`: The principal ID of the user whose collateral is being liquidated.
- * 
+ *
  * @return Result<Nat, Error> Returns the updated collateral balance after liquidation or an error code if any operation fails.
  */
 #[update]
@@ -62,7 +63,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-    //TODO check if debt amount(reward) is zero or not
     if params.amount <= Nat::from(0u128) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
@@ -92,7 +92,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Error limiting error: {:?}", e);
         return Err(e);
     }
-    
+
     let user_key = params.on_behalf_of;
     // Acquire lock for the target user
     if let Err(e) = acquire_lock(&user_key) {
@@ -100,8 +100,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(Error::LockAcquisitionFailed);
     };
 
-    // Ensure lock is released after the operation
-    //let release_user_lock = || release_lock(&user_key);
     let result = async {
         ic_cdk::println!(
             "params debt_asset and collateral_asset {:?} {:?}",
@@ -166,7 +164,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             }
         };
 
-
         // Check if the user has a reserve for the asset
         let mut user_reserve_data = {
             let mut user_reserve_result =
@@ -182,11 +179,27 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 }
             }
         };
+        let debt_asset_price = match get_cached_exchange_rate(params.debt_asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+        ic_cdk::println!("asset price = {}",debt_asset_price);
+        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(debt_asset_price);
+        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
 
-        //let (mut reward_amount, mut reward_collateral) = (Nat::from(0u128), Nat::from(0u128));
+        if params.amount.clone() < transfer_token_fee {
+            ic_cdk::println!("Amount is less than the transfer token fee");
+            return Err(Error::FeeExceedsAmount);
+        }
+
         let mut earned_rewards = Nat::from(0u128);
-        let reward_result: Result<Nat, Error> = to_get_reward_amount(
-            params.amount.clone(),
+        let mut liquidation_bonus_amount = Nat::from(0u128);
+
+        let reward_result: Result<(Nat,Nat), Error> = to_get_reward_amount(
+            params.amount.clone() - transfer_token_fee.clone(),
             params.collateral_asset.clone(),
             params.debt_asset.clone(),
             collateral_reserve_data.clone(),
@@ -196,8 +209,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         .await;
 
         match reward_result {
-            Ok(amount) => {
+            Ok((amount,liquidity_bonus)) => {
                 earned_rewards = amount;
+                liquidation_bonus_amount = liquidity_bonus;
             }
             Err(err) => {
                 println!("Error occurred: {:?}", err);
@@ -207,7 +221,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("reward amount: {:?}", params.reward_amount);
         ic_cdk::println!("earned_rewards: {:?}", earned_rewards);
 
-        if params.reward_amount > earned_rewards && (params.reward_amount.clone() % earned_rewards) != Nat::from(1u32) {
+        if params.reward_amount > earned_rewards
+            && (params.reward_amount.clone() % earned_rewards) != Nat::from(1u32)
+        {
             ic_cdk::println!("Reward amount is greater than earned rewards");
             return Err(Error::RewardIsHigher);
         }
@@ -239,43 +255,14 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
 
-        let mut collateral_amount = params.amount.clone();
-        if params.collateral_asset != params.debt_asset {
-            let debt_in_usd = get_exchange_rates(
-                params.debt_asset.clone(),
-                Some(params.collateral_asset.clone()),
-                params.amount.clone(),
-            )
-            .await;
-            match debt_in_usd {
-                Ok((amount_in_usd, _timestamp)) => {
-                    // Extracted the amount in USD
-                    collateral_amount = amount_in_usd.clone();
-                    ic_cdk::println!("debt amount in USD: {:?}", amount_in_usd);
-                }
-                Err(e) => {
-                    // Release the lock
-                    if let Err(e) = release_lock(&user_key) {
-                        ic_cdk::println!("Failed to release lock: {:?}", e);
-                    }
-                    ic_cdk::println!("Error getting exchange rate: {:?}", e);
-                    return Err(e);
-                }
-            }
-        }
-        ic_cdk::println!("Collateral amount : {}", collateral_amount);
 
         let reward_amount: Nat = params.reward_amount.clone();
         ic_cdk::println!("reward_amount: {}", reward_amount);
 
-        let supply_param = ExecuteSupplyParams {
-            asset: params.collateral_asset.to_string(),
-            amount: reward_amount.clone(),
-            is_collateral: true,
-        };
-
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
-        if let Err(e) = reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache) {
+        if let Err(e) =
+            reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache)
+        {
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&user_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
@@ -306,7 +293,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
         if let Err(e) = ValidationLogic::validate_liquidation(
             params.debt_asset.clone(),
-            params.amount.clone(),
+            params.amount.clone() - transfer_token_fee.clone(),
             reward_amount.clone(),
             liquidator_principal,
             user_principal,
@@ -349,6 +336,23 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 return Err(e);
             }
         };
+
+        let liquidation_fee_percentage = collateral_reserve_data.configuration.liquidation_protocol_fee.clone();
+         ic_cdk::println!("liquidation protocol fee percentage : {:?}",liquidation_fee_percentage.clone());
+        ic_cdk::println!("liquidation bonus amount : {:?}",liquidation_bonus_amount);
+        let protocol_fee_amount = liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage / Nat::from(100u128));
+        ic_cdk::println!("liquidation protocol fee amount :{:?}",protocol_fee_amount.clone());
+        if reward_amount.clone() < protocol_fee_amount.clone() {
+            ic_cdk::println!("protocol fee amount is greater than reward amount");
+            return Err(Error::LiquidationProtocolfeeIsHigher);
+        }
+
+        let supply_param = ExecuteSupplyParams {
+            asset: params.collateral_asset.to_string(),
+            amount: reward_amount.clone() - protocol_fee_amount.clone(),
+            is_collateral: true,
+        };
+        
         let liquidator_mint_result = UpdateLogic::update_user_data_supply(
             liquidator_principal,
             &collateral_reserve_cache,
@@ -401,17 +405,25 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         });
 
         if let Some(ref mut reserves) = user_account_data.reserves {
-            if let Some(reserve) = reserves.iter_mut().find(|(asset, _)| asset == &params.collateral_asset) {
-            reserve.1 = user_reserve_data.clone();
+            if let Some(reserve) = reserves
+                .iter_mut()
+                .find(|(asset, _)| asset == &params.collateral_asset)
+            {
+                reserve.1 = user_reserve_data.clone();
             } else {
-            reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
+                reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
             }
         } else {
-            user_account_data.reserves = Some(vec![(params.collateral_asset.clone(), user_reserve_data.clone())]);
+            user_account_data.reserves = Some(vec![(
+                params.collateral_asset.clone(),
+                user_reserve_data.clone(),
+            )]);
         }
 
         mutate_state(|state| {
-            state.user_profile.insert(user_principal, Candid(user_account_data.clone()));
+            state
+                .user_profile
+                .insert(user_principal, Candid(user_account_data.clone()));
         });
 
         let params_repay = ExecuteRepayParams {
@@ -480,7 +492,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 let rollback_dtoken_to_user = mint_scaled(
                     &mut collateral_reserve_data,
                     &mut user_reserve_data,
-                    reward_amount,
+                    reward_amount.clone()  - protocol_fee_amount.clone(),
                     collateral_reserve_cache.next_liquidity_index,
                     user_principal,
                     collateral_dtoken_principal,
@@ -527,32 +539,32 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
 /**
  * @title Get Reward Amount Function
- * 
- * @notice This function calculates the reward amount for a user based on their collateral and debt assets. 
- *         It performs necessary validations and computations to derive the final reward, considering the collateral balance, 
- *         asset exchange rates, liquidation bonuses, and collateral limits. The function returns the calculated reward amount 
+ *
+ * @notice This function calculates the reward amount for a user based on their collateral and debt assets.
+ *         It performs necessary validations and computations to derive the final reward, considering the collateral balance,
+ *         asset exchange rates, liquidation bonuses, and collateral limits. The function returns the calculated reward amount
  *         or an error if any of the steps fail.
- * 
+ *
  * @dev The function follows this structured workflow:
  *      1. **Parse Inputs**: Parses and validates the input parameters, such as the asset names and amount.
  *      2. **Fetch Balance**: Retrieves the user's collateral balance from the collateral asset's canister.
  *      3. **Normalize Collateral**: Normalizes the user's collateral based on the liquidity index and normalized supply.
- *      4. **Fetch Exchange Rates**: Retrieves the exchange rates for both collateral and debt assets in USD 
+ *      4. **Fetch Exchange Rates**: Retrieves the exchange rates for both collateral and debt assets in USD
  *         to compute their relative values.
- *      5. **Calculate Collateral**: Computes the final collateral amount based on the provided amount, exchange rates, 
+ *      5. **Calculate Collateral**: Computes the final collateral amount based on the provided amount, exchange rates,
  *         and liquidation bonus.
- *      6. **Determine Max Collateral**: Compares the calculated collateral with the available collateral balance and 
+ *      6. **Determine Max Collateral**: Compares the calculated collateral with the available collateral balance and
  *         sets the final maximum collateral.
  *      7. **Return Result**: Returns the final calculated collateral amount or an error in case of failure.
- * 
+ *
  * @param amount The amount of debt to be considered for the reward calculation.
  * @param collateral_asset The name of the collateral asset.
  * @param debt_asset The name of the debt asset.
  * @param collateral_reserve_data The reserve data associated with the collateral asset, including liquidation bonuses.
  * @param user_principal The user's principal ID for identifying the user.
  * @param user_reserve_data The user's reserve data, including liquidity index.
- * 
- * @return Result<Nat, Error> Returns the maximum collateral amount available to the user after applying the liquidation bonus, 
+ *
+ * @return Result<Nat, Error> Returns the maximum collateral amount available to the user after applying the liquidation bonus,
  *         or an error if any part of the process fails.
  */
 pub async fn to_get_reward_amount(
@@ -562,7 +574,7 @@ pub async fn to_get_reward_amount(
     collateral_reserve_data: ReserveData,
     user_principal: Principal,
     user_reserve_data: UserReserveData,
-) -> Result<Nat, Error> {
+) -> Result<(Nat,Nat), Error> {
     ic_cdk::println!("Starting to_get_reward_amount function");
     ic_cdk::println!("Received parameters: amount = {:?}, collateral_asset = {:?}, debt_asset = {:?}, user_principal = {:?}", amount, collateral_asset, debt_asset, user_principal);
 
@@ -588,9 +600,12 @@ pub async fn to_get_reward_amount(
             return Err(e);
         }
     };
-    ic_cdk::println!("collateral_reserve = {:?}",collateral_reserve_data.clone());
-    ic_cdk::println!("user normalized = {}",user_normalized_supply(collateral_reserve_data.clone()).unwrap());
-    ic_cdk::println!("liquidity index = {:?}",user_reserve_data);
+    ic_cdk::println!("collateral_reserve = {:?}", collateral_reserve_data.clone());
+    ic_cdk::println!(
+        "user normalized = {}",
+        user_normalized_supply(collateral_reserve_data.clone()).unwrap()
+    );
+    ic_cdk::println!("liquidity index = {:?}", user_reserve_data);
 
     collateral_balance = (collateral_balance
         .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))
@@ -599,51 +614,24 @@ pub async fn to_get_reward_amount(
     ic_cdk::println!("Collateral balance normalized: {:?}", collateral_balance);
 
     ic_cdk::println!("Fetching cached exchange rates for debt and collateral assets");
+
     let debt_price = match get_cached_exchange_rate(debt_asset.clone()) {
-        Ok(price_cache) => {
-            if let Some(cached_price) = price_cache.cache.get(&debt_asset) {
-                ic_cdk::println!("Fetched debt asset exchange rate: {:?}", cached_price.price);
-                Some(cached_price.price.clone())
-            } else {
-                ic_cdk::println!("No cached price found for debt asset: {:?}", debt_asset);
-                None
-            }
-        }
-        Err(err) => {
-            ic_cdk::println!(
-                "Error fetching exchange rate for debt asset {:?}: {:?}",
-                debt_asset,
-                err
-            );
-            None
+        Ok(price) => price,
+        Err(e) => {
+            ic_cdk::println!("Failed to fetch exchange rate");
+            return Err(e);
         }
     };
+    ic_cdk::println!("asset price = {}", debt_price);
 
     let collateral_price = match get_cached_exchange_rate(collateral_asset.clone()) {
-        Ok(price_cache) => {
-            if let Some(cached_price) = price_cache.cache.get(&collateral_asset) {
-                ic_cdk::println!(
-                    "Fetched collateral asset exchange rate: {:?}",
-                    cached_price.price
-                );
-                Some(cached_price.price.clone())
-            } else {
-                ic_cdk::println!(
-                    "No cached price found for collateral asset: {:?}",
-                    collateral_asset
-                );
-                None
-            }
-        }
-        Err(err) => {
-            ic_cdk::println!(
-                "Error fetching exchange rate for collateral asset {:?}: {:?}",
-                collateral_asset,
-                err
-            );
-            None
+        Ok(price) => price,
+        Err(e) => {
+            ic_cdk::println!("Failed to fetch exchange rate");
+            return Err(e);
         }
     };
+    ic_cdk::println!("asset price = {}", collateral_price);
 
     let mut collateral_amount = amount.clone();
     ic_cdk::println!("Initial collateral amount: {:?}", collateral_amount);
@@ -651,8 +639,8 @@ pub async fn to_get_reward_amount(
     if collateral_asset != debt_asset {
         ic_cdk::println!("Collateral and debt assets are different, fetching exchange rates");
 
-        if collateral_price.is_none() || debt_price.is_none() {
-            ic_cdk::println!("Exchange rate not found for either collateral_asset or debt asset");
+        if debt_price == Nat::from(0u128) || collateral_price == Nat::from(0u128) {
+            ic_cdk::println!("Invalid exchange rate for either collateral_asset or debt asset");
             return Err(Error::ErrorPriceCache);
         }
 
@@ -661,13 +649,13 @@ pub async fn to_get_reward_amount(
         ic_cdk::println!("amount = {}", amount.clone());
         ic_cdk::println!(
             "amount_in_usd: {:?}",
-            amount.clone() * debt_price.clone().unwrap()
+            amount.clone() * debt_price.clone()
         );
         ic_cdk::println!(
             "collateral_in_usd: {:?}",
-            (amount.clone() * debt_price.clone().unwrap()) / collateral_price.clone().unwrap()
+            (amount.clone() * debt_price.clone()) / collateral_price.clone()
         );
-        collateral_amount = (amount * debt_price.unwrap()) / collateral_price.unwrap()
+        collateral_amount = (amount * debt_price) / collateral_price
     }
     ic_cdk::println!("Final collateral amount: {:?}", collateral_amount);
     ic_cdk::println!(
@@ -675,14 +663,15 @@ pub async fn to_get_reward_amount(
         collateral_reserve_data.configuration.liquidation_bonus
     );
 
-    let final_collateral_amount = collateral_amount.clone()
-        + collateral_amount.clone().scaled_mul(
-            collateral_reserve_data
-                .configuration
-                .liquidation_bonus
-                .clone()
-                / Nat::from(100u128),
-        );
+    let liquidation_bonus_amount = collateral_amount.clone().scaled_mul(
+        collateral_reserve_data
+            .configuration
+            .liquidation_bonus
+            .clone()
+            / Nat::from(100u128),
+    );
+ 
+    let final_collateral_amount = collateral_amount.clone() + liquidation_bonus_amount.clone();
 
     ic_cdk::println!("Calculated final collateral: {:?}", final_collateral_amount);
 
@@ -691,7 +680,6 @@ pub async fn to_get_reward_amount(
     if final_collateral_amount > collateral_balance {
         max_collateral = collateral_balance;
         ic_cdk::println!("Max collateral set to balance: {:?}", max_collateral);
-
     } else {
         max_collateral = final_collateral_amount;
         ic_cdk::println!(
@@ -700,5 +688,5 @@ pub async fn to_get_reward_amount(
         );
     }
 
-    Ok(max_collateral)
+    Ok((max_collateral,liquidation_bonus_amount))
 }

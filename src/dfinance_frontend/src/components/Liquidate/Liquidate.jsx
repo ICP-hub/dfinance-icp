@@ -4,12 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
-import { ChevronLeft } from "lucide-react";
-import { useLocation } from "react-router-dom";
 import DebtStatus from "./DebtStatus";
 import WalletModal from "../Dashboard/WalletModal";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";
+import { useLocation } from "react-router-dom";
 
 
 /**
@@ -28,6 +27,7 @@ const Liquidate = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
@@ -59,11 +59,12 @@ const Liquidate = () => {
   }, [isWalletCreated, isAuthenticated]);
 
   const handleLiquidateClick = () => {
-    if (!isAuthenticated) {
-      setShowWarning(true);
-    } else {
-      setShowDebtStatus(true);
-    }
+    // if (!isAuthenticated) {
+    //   setShowWarning(true);
+    // } else {
+    //   setShowDebtStatus(true);
+    // }
+    navigate("/Liquidate/debt-users-list"); 
   };
 
   const handleBackClick = () => {
@@ -81,6 +82,8 @@ const Liquidate = () => {
     };
   }, [isFreezePopupVisible]);
 
+  const isDebtStatusRoute = location.pathname === "/Liquidate/debt-users-list";
+
   return (
     <>
       <div className="full">
@@ -93,7 +96,7 @@ const Liquidate = () => {
           </h1>
         </div>
 
-        {!showDebtStatus ? (
+        {!isDebtStatusRoute ? (
           <div
             id="liquidation2"
             className="relative w-full md:w-11/12 mx-auto my-6 min-h-[450px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart"

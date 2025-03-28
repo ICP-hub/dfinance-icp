@@ -56,6 +56,8 @@ const Borrow = ({
     ckUSDTUsdRate,
   } = useFetchConversionRate();
   const { isBlocked } = useFunctionBlockStatus("execute_borrow");
+  const borrowButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { filteredItems } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
@@ -111,6 +113,27 @@ const Borrow = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+  const paymentModalRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
 
   // Fetches asset data and updates supply/borrow values.
   const fetchAssetData = () => {
@@ -187,9 +210,8 @@ const Borrow = ({
         draggable: true,
         progress: undefined,
       });
-      return; 
+      return;
     }
-  
     setIsLoading(true);
     let ledgerActor;
     if (asset === "ckBTC") {
@@ -203,28 +225,32 @@ const Borrow = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-  
+
     const borrowParams = {
       asset: asset,
       amount: scaledAmount,
     };
-  
+
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
-  
+
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`,
+          `Borrow,${asset},${
+            scaledAmount / 100000000
+          }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${scaledAmount / 100000000}, ${principalObj.toString()}`
+          `Borrow,${asset},${
+            scaledAmount / 100000000
+          }, ${principalObj.toString()}`
         );
-  
+
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
         }
-  
+
         toast.success(`Borrow successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -235,19 +261,19 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-  
+
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
         const errorKey = borrowResult.Err;
         const errorMessage =
           borrowErrorMessages[errorKey] || borrowErrorMessages.Default;
-  
+
         console.error("errorKey", errorKey);
-  
+
         if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
           console.error("You are temporarily blocked from using this function");
-  
+
           toast.error("You are temporarily blocked from using this function", {
             className: "custom-toast",
             position: "top-center",
@@ -259,8 +285,8 @@ const Borrow = ({
             progress: undefined,
           });
           setIsModalOpen(false);
-          setLoading(false)
-          setIsLoading(false)
+          setLoading(false);
+          setIsLoading(false);
         } else if (errorMessage.toLowerCase().includes("panic")) {
           setPanicMessage(
             "A critical system error occurred. Please try again later."
@@ -270,16 +296,19 @@ const Borrow = ({
           errorMessage.toLowerCase().includes("out of cycles") ||
           errorMessage.includes("reject text: canister")
         ) {
-          toast.error("Canister is out of cycles. Controller has been notified.", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+          toast.error(
+            "Canister is out of cycles. Controller has been notified.",
+            {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            }
+          );
         } else if (errorMessage.toLowerCase().includes("BorrowCapExceeded")) {
           toast.error("Borrow cap is exceeded.", {
             className: "custom-toast",
@@ -303,35 +332,43 @@ const Borrow = ({
             progress: undefined,
           });
         }
-  
+
         setIsPaymentDone(false);
         setIsVisible(true);
-        setLoading(false)
+        setLoading(false);
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Borrow action failed!"}`);
-  
       const message = error.message || "Borrow action failed!";
       const isPanicError = message.toLowerCase().includes("panic");
       const isOutOfCyclesError =
         message.toLowerCase().includes("out of cycles") ||
         message.includes("reject text: canister");
-      const isBorrowCapExceeded = message.toLowerCase().includes("BorrowCapExceeded");
-  
+      const isBorrowCapExceeded = message
+        .toLowerCase()
+        .includes("BorrowCapExceeded");
+
       if (isPanicError) {
-        setPanicMessage("A critical system error occurred. Please try again later.");
+        setPanicMessage(
+          "A critical system error occurred. Please try again later."
+        );
+
         setShowPanicPopup(true);
+        setIsVisible(false);
       } else if (isOutOfCyclesError) {
-        toast.error("Canister is out of cycles. Controller has been notified.", {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        toast.error(
+          "Canister is out of cycles. Controller has been notified.",
+          {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          }
+        );
       } else if (isBorrowCapExceeded) {
         toast.error("Borrow cap is exceeded.", {
           className: "custom-toast",
@@ -343,8 +380,8 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-        setIsLoading(false)
-        handleClosePaymentPopup()
+        setIsLoading(false);
+        handleClosePaymentPopup();
       } else {
         toast.error(`Error: ${message}`, {
           className: "custom-toast",
@@ -358,10 +395,11 @@ const Borrow = ({
         });
       }
       setIsPaymentDone(false);
-setIsVisible(false);
+      setIsVisible(false);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
@@ -398,31 +436,44 @@ setIsVisible(false);
   };
 
   const handleAmountChange = (e) => {
+    const maxBorrow = parseFloat(borrowableValue);
+
+    if (isNaN(maxBorrow) || maxBorrow < 0) {
+      setAmount("");
+      return;
+    }
+
     let inputAmount = e.target.value;
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
-    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+
+    const parts = inputAmount.split(".");
+    if (parts.length > 2) {
+      inputAmount = parts[0] + "." + parts.slice(1).join("");
     }
+
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
       return;
     }
-    const numericAmount = parseFloat(inputAmount);
-    if (numericAmount > parseFloat(borrowableValue)) {
+
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue(inputAmount);
       return;
     }
-    let formattedAmount;
-    if (inputAmount.includes(".")) {
-      const [integerPart, decimalPart] = inputAmount.split(".");
-      formattedAmount = `${parseInt(integerPart).toLocaleString(
-        "en-US"
-      )}.${decimalPart.slice(0, 8)}`;
-    } else {
-      formattedAmount = parseInt(inputAmount).toLocaleString("en-US");
+
+    if (parts.length === 2 && parts[1].length > 8) {
+      return;
     }
 
-    setAmount(formattedAmount);
+    let numericAmount = parseFloat(inputAmount);
+
+    if (numericAmount > maxBorrow) {
+      return;
+    }
+
+    setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
 
@@ -465,21 +516,48 @@ setIsVisible(false);
 
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+    return (Math.floor(num * factor) / factor).toFixed(decimals);
   };
-  
+
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
 
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    if (showPanicPopup) {
+      setIsVisible(false);
+    }
+  }, [showPanicPopup]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          borrowButtonRef.current &&
+          !borrowButtonRef.current.disabled
+        ) {
+          borrowButtonRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     const updateValues = async () => {
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = total_supply * 0.85 - total_borrow;
+        const remainingBorrowable = totalSupply * 0.85 - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -490,11 +568,11 @@ setIsVisible(false);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
       }
     };
+    setTimeout(() => {
+      setLoading(false);
+    }, 400);
     updateValues();
   }, [
     asset,
@@ -511,8 +589,7 @@ setIsVisible(false);
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
       const remainingBorrowable = total_supply * 0.85 - total_borrow;
-      const borrowValue =
-        remainingBorrowable > 0 ? Number(userAccountData.Ok[5]) / 100000000 : 0;
+      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -555,11 +632,8 @@ setIsVisible(false);
 
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
-    console.log("totalCollateralValue",totalCollateralValue,totalCollateral,amountAdded)
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
-
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-     console.log("ltv",ltv)
     setPrevHealthFactor(currentHealthFactor);
 
     const truncateToDecimals = (num, decimals) => {
@@ -714,9 +788,7 @@ setIsVisible(false);
                         }`}
                       >
                         {parseFloat(
-                          truncatedValue > 100
-                            ? "Infinity"
-                            : (truncatedValue)
+                          truncatedValue > 100 ? "Infinity" : truncatedValue
                         )}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
@@ -801,6 +873,7 @@ setIsVisible(false);
               </div>
 
               <button
+                ref={borrowButtonRef}
                 onClick={handleBorrowETH}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
                   isLoading || amount <= 0 || isButtonDisabled
@@ -827,9 +900,13 @@ setIsVisible(false);
         </div>
       )}
       {isPaymentDone && (
-        <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div
+          ref={paymentModalRef}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
           <div className="w-full flex flex-col items-center">
             <button
+              ref={closeButtonRef}
               onClick={handleClosePaymentPopup}
               className="text-gray-400 hover:text-gray-600 focus:outline-none self-end"
             >
@@ -876,21 +953,25 @@ setIsVisible(false);
       )}
       {showPanicPopup && (
         <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-          <div className="w-full flex flex-col items-center p-2 ">
-            <button
-              onClick={handleClosePaymentPopup}
-              className="text-gray-400 focus:outline-none self-end button1"
-            >
-              <X size={24} />
-            </button>
+          <div className="w-full flex flex-col items-center ">
+            <div className="w-full flex items-center justify-between  ">
+              <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                Important Message
+              </h1>
+              <button
+                onClick={handleClosePaymentPopup}
+                className="text-gray-400 focus:outline-none mt-3 mr-4"
+              >
+                <X size={22} />
+              </button>
+            </div>
 
             <div
               className="dark:bg-gradient 
                 dark:from-darkGradientStart 
                 dark:to-darkGradientEnd 
-                dark:text-darkText  "
+                dark:text-darkText p-2 "
             >
-              <h1 className="font-semibold text-xl mb-4 ">Important Message</h1>
               <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 Thanks for helping us improve DFinance! <br></br> You’ve
                 uncovered a bug, and our dev team is on it.
@@ -900,7 +981,7 @@ setIsVisible(false);
                 Your account is temporarily locked while we investigate and fix
                 the issue. <br />
               </p>
-              <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+              <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                 We appreciate your contribution and have logged your ID—testers
                 like you are key to making DFinance better! <br />
                 If you have any questions, feel free to reach out.

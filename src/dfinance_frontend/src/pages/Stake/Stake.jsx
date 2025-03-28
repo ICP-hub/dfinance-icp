@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import Button from "../../components/Common/Button";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { STACK_DETAILS_TABS } from "../../utils/constants";
-
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
-import StakesConnected from "../../components/Stake/StakesConnected";
-
 import icplogo from "../../../public/wallet/icp.png";
-import WalletModal from "../../components/Dashboard/WalletModal";
+import MiniLoader from "../../components/Common/MiniLoader";
+
+const StakesConnected = lazy(() =>
+  import("../../components/Stake/StakesConnected")
+);
+const WalletModal = lazy(() =>
+  import("../../components/Dashboard/WalletModal")
+);
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 
@@ -96,7 +100,9 @@ const StakeDetails = () => {
           )}
       {/* isAuthenticated */}
       {isAuthenticated ? (
-        <StakesConnected />
+        <Suspense fallback={<MiniLoader minHeight="50vh" />}>
+          <StakesConnected />
+        </Suspense>
       ) : (
         <div className="relative w-full md:w-10/12 mx-auto my-6 min-h-[300px] md:min-h-[500px] xl3:min-h-[600px] xl4:min-h-[850px] flex flex-col items-center justify-center mt-16 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl p-6 dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientStart">
           <div className="absolute right-0 top-0 h-full w-full md:w-1/2 pointer-events-none">
@@ -148,9 +154,10 @@ const StakeDetails = () => {
               </div>
             </div>
           </div>
-         
-          {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
-          
+
+          <Suspense fallback={<MiniLoader minHeight="30vh" />}>
+            {(isSwitchingWallet || !isAuthenticated) && <WalletModal />}
+          </Suspense>
         </div>
       )}
     </>

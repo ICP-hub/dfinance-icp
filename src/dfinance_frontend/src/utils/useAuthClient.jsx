@@ -144,6 +144,7 @@ export const useAuthClient = (options = defaultOptions) => {
       setPrincipal(null);
       setBackendActor(null);
       setAccountId(null);
+      localStorage.removeItem("connectedWallet");
       localStorage.removeItem("sessionStart");
       localStorage.removeItem("connectedWallet");
       sessionStorage.removeItem("hasCheckedUser");
@@ -163,6 +164,7 @@ export const useAuthClient = (options = defaultOptions) => {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
+        
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }

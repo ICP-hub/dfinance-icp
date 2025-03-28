@@ -5,7 +5,7 @@ use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::get_exchange_rates;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
@@ -18,11 +18,8 @@ use crate::{
     protocol::libraries::types::datatypes::UserReserveData,
 };
 use candid::{Nat, Principal};
-use ic_cdk::api::time;
 use ic_cdk::update;
-fn current_timestamp() -> u64 {
-    time() / 1_000_000_000
-}
+
 pub struct UpdateLogic;
 
 impl UpdateLogic {
@@ -221,7 +218,6 @@ impl UpdateLogic {
             // Create a new reserve if it does not exist
             let new_reserve = UserReserveData {
                 reserve: params.asset.clone(),
-                // asset_borrow: params.amount.clone(), //remove
                 is_borrowed: true,
                 is_using_as_collateral_or_borrow: true,
                 last_update_timestamp: current_timestamp(),

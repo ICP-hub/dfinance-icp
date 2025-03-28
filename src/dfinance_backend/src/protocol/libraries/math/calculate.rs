@@ -4,30 +4,12 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
 use crate::guards::check_is_tester;
-use candid::{CandidType, Deserialize, Nat, Principal};
+use crate::protocol::libraries::types::datatypes::{CachedPrice, PriceCache};
+use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
-use serde::Serialize;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct CachedPrice {
-    pub price: Nat,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
-pub struct PriceCache {
-    pub cache: HashMap<String, CachedPrice>,
-}
-/*
- * @title Maximum Value Helper
- * @dev Returns the maximum possible value that can be stored in a `Nat` type.
- *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
- * @returns `Nat` - The maximum possible `Nat` value.
- */
-fn get_max_value() -> Nat {
-    Nat::from(340_282_366_920_938_463_463_374_607_431_768_211_455u128)
-}
 /*
  * @title Price Cache Management
  * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.
@@ -222,7 +204,7 @@ pub async fn get_exchange_rates(
     };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("a3shf-5eaaa-aaaaa-qaafa-cai").unwrap(),
+            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
         //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
             "get_exchange_rate",
             (args,),
@@ -237,7 +219,6 @@ pub async fn get_exchange_rates(
                 let pow = 10usize.pow(v.metadata.decimals);
                 ic_cdk::println!("quote = {}", quote);
                 ic_cdk::println!("pow = {}", pow);
-                // Ask : should i handle the error here or not.
                 let exchange_rate = (Nat::from(quote) * Nat::from(SCALING_FACTOR))
                     / (Nat::from(pow) - Nat::from(SCALING_FACTOR));
                 ic_cdk::println!("exchange rate = {}", exchange_rate);

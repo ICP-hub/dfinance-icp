@@ -1,7 +1,7 @@
 #!/bin/bash
-
+source ../../.env
 TOKEN_NAME="ICP"
-TOKEN_PRINCIPAL="by6od-j4aaa-aaaaa-qaadq-cai"
+TOKEN_PRINCIPAL=$CANISTER_ID_ICP_LEDGER
 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"

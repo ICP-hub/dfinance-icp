@@ -1,14 +1,15 @@
 #!/bin/bash
-
+source ../.env
 # Configuration
 TOKEN_CANISTER_IDS=(
-    "br5f7-7uaaa-aaaaa-qaaca-cai"
-    "bw4dl-smaaa-aaaaa-qaacq-cai"
-    "avqkn-guaaa-aaaaa-qaaea-cai"
-    "asrmz-lmaaa-aaaaa-qaaeq-cai"
-    "by6od-j4aaa-aaaaa-qaadq-cai"
+    $CANISTER_ID_CKUSDT_LEDGER
+    $CANISTER_ID_CKUSDC_LEDGER
+    $CANISTER_ID_CKETH_LEDGER
+    $CANISTER_ID_CKBTC_LEDGER
+    $CANISTER_ID_ICP_LEDGER
+   
 )
-BACKEND_CANISTER_ID="a4tbr-q4aaa-aaaaa-qaafq-cai"
+BACKEND_CANISTER_ID=$CANISTER_ID_DFINANCE_BACKEND
 SPENDER_PRINCIPAL=$(dfx --identity default identity get-principal)
 SPENDER_ACCOUNT="(record { owner = principal \"$SPENDER_PRINCIPAL\"; subaccount = null })"
 AMOUNT=10000000000000

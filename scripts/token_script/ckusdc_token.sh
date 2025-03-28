@@ -1,7 +1,7 @@
 #!/bin/bash
-
+source ../../.env
 TOKEN_NAME="ckUSDC"
-TOKEN_PRINCIPAL="avqkn-guaaa-aaaaa-qaaea-cai"
+TOKEN_PRINCIPAL=$CANISTER_ID_CKUSDC_LEDGER
 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"

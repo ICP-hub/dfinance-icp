@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
 import Ellipse from "../../components/Common/Ellipse";
-
 import DashboardNav from "../../components/Dashboard/DashboardNav";
 import Loading from "../../components/Common/Loading";
 import { usePageLoading } from "../../components/customHooks/useLoading";

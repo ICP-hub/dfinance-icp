@@ -3,7 +3,6 @@ import loader from "../../../public/Helpers/loader.svg"
 import { useSelector } from "react-redux";
 
 const MiniLoader = ({ isLoading }) => {
-    const theme = useSelector((state) => state.theme.theme);
     useEffect(() => {
         if (isLoading) {
             document.body.classList.add('no-scroll');

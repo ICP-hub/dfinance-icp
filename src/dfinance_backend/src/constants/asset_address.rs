@@ -1,6 +1,5 @@
 use crate::constants::errors::Error;
 use candid::Principal;
-
 use crate::get_controller;
 
 pub fn default() -> Result<Principal, Error> {

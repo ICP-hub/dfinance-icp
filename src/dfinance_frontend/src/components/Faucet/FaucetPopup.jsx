@@ -25,9 +25,19 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
    *                                  HOOKS
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("faucet");
+  const faucetButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { backendActor } = useAuth();
   const { userData } = useUserData();
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate,fetchConversionRate,fetchBalance } = useFetchConversionRate();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    fetchBalance,
+  } = useFetchConversionRate();
 
   /* ===================================================================================
    *                                 STATE-MANAGEMENT
@@ -59,8 +69,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   };
   const [FaucetUsage, setFaucetUsage] = useState(initialUsages);
   const [FaucetLimit, setFaucetLimit] = useState(initialLimits);
-
- 
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -148,7 +156,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     LowWalletBalance: "Insufficient wallet balance. Please try again later.",
     AmountTooMuch: "The requested amount exceeds the faucet limit.",
     AmountExceedsLimit: "Requested amount exceeds the total faucet limit.",
-    ExceedsRemainingLimit: "Requested amount exceeds the remaining faucet limit.",
+    ExceedsRemainingLimit:
+      "Requested amount exceeds the remaining faucet limit.",
     ErrorFaucetTokens:
       "An error occurred while transferring tokens. Please try again.",
     Default:
@@ -165,19 +174,19 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
    * @param {string} asset - The asset selected by the user to claim.
    */
   const handleFaucet = async (asset) => {
-     if (isBlocked) {
-          toast.error("You are temporarily blocked from using this function", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-          return; // Prevent function execution
-        }
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
 
     setLoading(true);
     try {
@@ -215,21 +224,26 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           console.error(errorKey);
 
           if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
-            console.error("You are temporarily blocked from using this function");
-  
-            toast.error("You are temporarily blocked from using this function", {
-              className: "custom-toast",
-              position: "top-center",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-            });
-  
+            console.error(
+              "You are temporarily blocked from using this function"
+            );
+
+            toast.error(
+              "You are temporarily blocked from using this function",
+              {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+              }
+            );
+
             setLoading(false);
-            handleClose()
+            handleClose();
             return;
           }
           const userFriendlyMessage =
@@ -263,7 +277,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       }
     } catch (error) {
       console.error(error.message);
-  
+
       // ✅ **Check for "Out of Cycles" Error**
       if (
         error.message.includes("out of cycles") ||
@@ -282,7 +296,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             progress: undefined,
           }
         );
-  
       } else {
         toast.error(`Error: ${error.message}`, {
           className: "custom-toast",
@@ -369,6 +382,27 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          faucetButtonRef.current &&
+          !faucetButtonRef.current.disabled
+        ) {
+          faucetButtonRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -501,6 +535,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     return () => {};
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        onClose(); // Call the function to close the modal
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]); // Dependency to ensure correct reference
+
   /* ===================================================================================
    *                                  RENDER-COMPONENTS
    * =================================================================================== */
@@ -588,6 +636,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               )}
 
               <button
+                ref={faucetButtonRef}
                 onClick={() => handleFaucet(asset)}
                 disabled={
                   amount.replace(/,/g, "") <= 0 ||

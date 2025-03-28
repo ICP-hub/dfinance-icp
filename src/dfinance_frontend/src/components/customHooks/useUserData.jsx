@@ -30,7 +30,6 @@ const useUserData = () => {
   const [error, setError] = useState(null);
   const [assetBalances, setAssetBalances] = useState([]);
   const [isFreezePopupVisible, setIsFreezePopupVisible] = useState(false);
-  const principalArray = principal ? principal.split("") : [];
   const { assets } = useAssetData();
 
   /**
@@ -53,10 +52,12 @@ const useUserData = () => {
       }
     }
   };
+
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
   );
+  
   const fetchAssetData = async () => {
     const balances = [];
 

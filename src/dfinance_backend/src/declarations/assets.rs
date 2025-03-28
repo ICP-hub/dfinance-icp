@@ -128,36 +128,6 @@ pub struct ExecuteSupplyParams {
 }
 
 /* 
- * @title Interest Rate Calculation Parameters
- * @notice Defines the parameters required to calculate interest rates.
- * @dev These parameters are used in the interest rate model to determine the borrow and supply rates.
- *
- * @param unbacked The amount of unbacked liquidity.
- * @param liquidity_added The amount of liquidity added to the reserve.
- * @param liquidity_taken The amount of liquidity removed from the reserve.
- * @param total_stable_debt The total stable debt in the reserve.
- * @param total_variable_debt The total variable debt in the reserve.
- * @param average_stable_borrow_rate The average borrow rate for stable debt.
- * @param reserve_factor The reserve factor that determines the portion of interest retained by the protocol.
- * @param reserve The asset name for which interest rates are being calculated.
- * @param d_token The address of the dToken associated with the reserve.
- */
-#[derive(CandidType, Deserialize, Clone)]
-pub struct CalculateInterestRatesParams {
-    pub unbacked: Nat,
-    pub liquidity_added: Nat,
-    pub liquidity_taken: Nat,
-    pub total_stable_debt: Nat,
-    pub total_variable_debt: Nat,
-    pub average_stable_borrow_rate: Nat,
-    pub reserve_factor: Nat,
-    pub reserve: String,
-    pub d_token: String,
-}
-
-
-
-/* 
  * @title Execute Borrow Parameters
  * @notice Defines the parameters required to execute a borrow transaction.
  *
@@ -236,4 +206,17 @@ pub struct ExecuteLiquidationParams {
 pub struct AssetData{
     pub name:String,
     pub balance:Nat
+}
+
+/*
+ * @title Accrual Treasury Variables
+ * @notice Stores temporary values used during the treasury accrual process.
+ * @dev Holds previous debt values and calculated accrual amounts.
+ */
+pub struct AccrueToTreasuryLocalVars {
+    //
+    pub prev_total_variable_debt: Nat,
+    pub curr_total_variable_debt: Nat,
+    pub total_debt_accrued: Nat,
+    pub amount_to_mint: Nat,
 }

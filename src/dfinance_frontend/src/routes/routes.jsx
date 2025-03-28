@@ -1,54 +1,90 @@
-import CreateWallet from "../components/Dashboard/CreateWallet"
-import Market from "../pages/Market/Market"
-import MainDashboard from "../pages/Dashboard/MainDashboard"
-import Home from "../pages/Home/Home"
-import Error from "../pages/Error"
-import AssetDetails from "../components/Dashboard/AssetDetails"
-import TransactionHistoryBox from "../components/Dashboard/TransactionHistory"
-import StakeDetails from "../pages/Stake/Stake"
-import Faucet from "../pages/Faucet/faucet"
-import TransactionDetail from "../components/Dashboard/Transaction"
-import Liquidate from "../components/Liquidate/Liquidate"
-import DashboardCards from "../pages/info/info"
-import HealthFactorList from "../components/Dashboard/HealthFactorLIst"
+import { lazy, Suspense } from "react";
+import CreateWallet from "../components/Dashboard/CreateWallet";
+import Market from "../pages/Market/Market";
+import MainDashboard from "../pages/Dashboard/MainDashboard";
+import Home from "../pages/Home/Home";
+import Faucet from "../pages/Faucet/faucet";
 import { Outlet } from "react-router-dom";
-import DebtStatus from "../components/Liquidate/DebtStatus"
-const ADMIN_ROUTE = process.env.DFX_ADMIN ;
-const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE ;
+import MiniLoader from "../components/Common/MiniLoader";
+
+const Error = lazy(() => import("../pages/Error"));
+const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
+const TransactionHistoryBox = lazy(() =>
+  import("../components/Dashboard/TransactionHistory")
+);
+const StakeDetails = lazy(() => import("../pages/Stake/Stake"));
+const TransactionDetail = lazy(() =>
+  import("../components/Dashboard/Transaction")
+);
+const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
+const DashboardCards = lazy(() => import("../pages/info/info"));
+const HealthFactorList = lazy(() =>
+  import("../components/Dashboard/HealthFactorLIst")
+);
+const DebtStatus = lazy(() => import("../components/Liquidate/DebtStatus"));
+
+const ADMIN_ROUTE = process.env.DFX_ADMIN;
+const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;
 
 export default [
   {
     path: "/",
     element: <Home />,
   },
-  
   {
     path: "*",
-      element: (
+    element: (
       <MainDashboard includeDashboardNav={false}>
-        <Error></Error> 
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <Error />
+        </Suspense>
       </MainDashboard>
     ),
   },
   {
-    path: ADMIN_ROUTE,  
+    path: ADMIN_ROUTE,
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Outlet /> 
+        <Outlet />
       </MainDashboard>
     ),
     children: [
       {
-        index: true, 
-        element: <DashboardCards />,
+        index: true,
+        element: (
+          <Suspense
+            fallback={
+              <div className="h-[60vh]">
+                <MiniLoader />
+              </div>
+            }
+          >
+            <DashboardCards />
+          </Suspense>
+        ),
       },
       {
-        path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""), 
-        element: <HealthFactorList />,
+        path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""),
+        element: (
+          <Suspense
+            fallback={
+              <div className="h-[60vh]">
+                <MiniLoader />
+              </div>
+            }
+          >
+            <HealthFactorList />
+          </Suspense>
+        ),
       },
     ],
   },
-  
   {
     path: "/dashboard",
     element: (
@@ -61,7 +97,15 @@ export default [
     path: "/market/asset-details/:id?",
     element: (
       <MainDashboard>
-        <AssetDetails />
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <AssetDetails />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -69,23 +113,47 @@ export default [
     path: "/dashboard/asset-details/:id?",
     element: (
       <MainDashboard>
-        <AssetDetails />
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <AssetDetails />
+        </Suspense>
       </MainDashboard>
     ),
   },
   {
     path: "/dashboard/transaction-history",
     element: (
-      <MainDashboard >
-        <TransactionHistoryBox />
+      <MainDashboard>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <TransactionHistoryBox />
+        </Suspense>
       </MainDashboard>
     ),
   },
   {
     path: "/dashboard/transaction/:id",
     element: (
-      <MainDashboard >
-        <TransactionDetail />
+      <MainDashboard>
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <TransactionDetail />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -93,16 +161,23 @@ export default [
     path: "/market",
     element: (
       <MainDashboard>
-        <Market/>
+        <Market />
       </MainDashboard>
     ),
   },
- 
   {
     path: "/stake",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <StakeDetails />
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <StakeDetails />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -110,7 +185,7 @@ export default [
     path: "/Faucet",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Faucet/>
+        <Faucet />
       </MainDashboard>
     ),
   },
@@ -118,14 +193,32 @@ export default [
     path: "/Liquidate",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Liquidate />
+        <Suspense
+          fallback={
+            <div className="h-[60vh]">
+              <MiniLoader />
+            </div>
+          }
+        >
+          <Liquidate />
+        </Suspense>
       </MainDashboard>
     ),
     children: [
       {
-        path: "debt-users-list",  // This is the child route
-        element: <DebtStatus />  // This is the DebtStatus component that will be rendered
-      }
-    ]
+        path: "debt-users-list",
+        element: (
+          <Suspense
+            fallback={
+              <div className="h-[60vh]">
+                <MiniLoader />
+              </div>
+            }
+          >
+            <DebtStatus />
+          </Suspense>
+        ),
+      },
+    ],
   },
 ];

@@ -1,6 +1,5 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
-use api::functions::request_limiter;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
@@ -9,17 +8,18 @@ use candid::Principal;
 use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
-use futures::future::ok;
 use guards::to_check_controller;
+use ic_cdk::update;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
-use ic_cdk_macros::update;
+use protocol::libraries::logic::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_asset_data;
-use protocol::libraries::math::calculate::PriceCache;
 use protocol::libraries::math::math_utils;
 use protocol::libraries::math::math_utils::ScalingMath;
+use protocol::libraries::types::datatypes::PriceCache;
+use protocol::libraries::types::datatypes::SessionStorageData;
 mod api;
 mod constants;
 pub mod declarations;
@@ -696,6 +696,93 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
             .get(&canister_name)
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
     })
+}
+
+#[update]
+// Function to store session data
+pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    if connected_wallet.len() > 15 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::InvalidAssetLength);
+    }
+
+    if session_start <= Nat::from(0u128) {
+        ic_cdk::println!("Amount cannot be zero");
+        return Err(Error::InvalidAmount);
+    }
+
+    let session_data = SessionStorageData {
+        connected_wallet,
+        session_start,
+    };
+
+    // Save the updated request history
+    mutate_state(|state| {
+        state
+            .session_details
+            .insert(caller_id, Candid(session_data));
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_caller_session() -> Result<SessionStorageData, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state
+            .session_details
+            .get(&caller_id)
+            .map(|data| data.0.clone()) // Extract value
+            .unwrap_or_else(|| SessionStorageData {
+                // Default value
+                connected_wallet: "".to_string(),
+                session_start: Nat::from(0u128),
+            })
+    }))
+}
+
+#[update]
+pub fn store_user_guide() -> Result<(), Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    mutate_state(|state| {
+        state.user_guide_data.insert(caller_id, true);
+    });
+
+    Ok(())
+}
+
+#[query]
+pub fn get_user_guide() -> Result<bool, Error> {
+    let caller_id = ic_cdk::caller();
+
+    if caller_id == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    Ok(read_state(|state| {
+        state.user_guide_data.get(&caller_id).unwrap_or(false)
+    }))
 }
 
 export_candid!();

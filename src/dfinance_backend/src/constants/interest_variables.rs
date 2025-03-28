@@ -17,7 +17,7 @@ pub mod constants {
     pub const ICP_MAX_EXCESS_USAGE_RATIO: u128 = 55;
     pub const ICP_BASE_VARIABLE_BORROW_RATE: u128 = 0;
     pub const ICP_VARIABLE_RATE_SLOPE1: u128 = 7;
-    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 30; 
+    pub const ICP_VARIABLE_RATE_SLOPE2: u128 = 30;
 
     pub const CKUSDC_OPTIMAL_USAGE_RATIO: u128 = 90;
     pub const CKUSDC_MAX_EXCESS_USAGE_RATIO: u128 = 10;
@@ -72,6 +72,16 @@ pub mod constants {
     pub const SCALING_FACTOR: u128 = 100000000;
     pub const MIN_BORROW: u128 = 100;
 
-     // -------------------Token Transfer Fees -------------------
-     pub const TOKEN_TRANSFER_FEE: u128 = 345_000; 
+    // -------------------Token Transfer Fees -------------------
+    pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
+
+    // -------------------Timestamp Constants -------------------
+    pub const CURRENT_TIMESTAMP: u64 = 1_000_000_000;
+
+    // -------------------Max Value Constants -------------------
+    pub const MAX_VALUE: u128 = 340_282_366_920_938_463_463_374_607_431_768_211_455u128;
+
+    // -------------------Seconds Per Year Constants -------------------
+    pub const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
+                                                          //leap year calculation left
 }

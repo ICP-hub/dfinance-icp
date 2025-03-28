@@ -181,14 +181,7 @@ export default [
       </MainDashboard>
     ),
   },
-  {
-    path: "/Governance",
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        < DFinanceGov/>
-      </MainDashboard>
-    ),
-  },
+
   {
     path: "/Faucet",
     element: (

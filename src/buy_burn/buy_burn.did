@@ -1,4 +1,5 @@
+type TransferFromResult = variant { Ok : nat; Err : text };
 service : () -> {
-  buy_and_burn : (nat64) -> (text);
-  get_status : () -> (text) query;
+  add_balance : (principal, nat) -> (TransferFromResult);
+  get_balance : (principal) -> (nat) query;
 }

@@ -34,4 +34,16 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+BUY_BURN_CANISTER_ID=$(dfx canister id buy_burn)
+echo "Buy Burn canister ID: $BUY_BURN_CANISTER_ID"
+
+dfx canister call dfinance_backend set_canister_id "(\"buy_burn\", principal \"$BUY_BURN_CANISTER_ID\")"
+
+LP_POOL_CANISTER_ID=$(dfx canister id lp_pool)
+echo "Lp pool canister ID: $LP_POOL_CANISTER_ID"
+
+dfx canister call dfinance_backend set_canister_id "(\"buy_burn\", principal \"$BUY_BURN_CANISTER_ID\")"
+dfx canister call dfinance_backend set_canister_id "(\"lp_pool\", principal \"$LP_POOL_CANISTER_ID\")"
+
+
 dfx canister call dfinance_backend update_reserves_price

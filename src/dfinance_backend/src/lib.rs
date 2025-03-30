@@ -156,6 +156,17 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
     })
 }
 
+#[query] //TODO:vicky- ask ansika to add acess controllers or remove queary function.
+pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
+    read_state(|state| {
+        state
+            .canister_list
+            .get(&canister_name)
+            .ok_or(Error::NoCanisterIdFound) // Return error if not found
+    })
+}
+
+
 /*
  * @title Get Asset Principal
  * @dev Retrieves the principal ID associated with an asset.

@@ -1,11 +1,11 @@
+use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::errors::Error;
+use crate::declarations::assets::ReserveData;
+use crate::declarations::storable::Candid;
+use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
+use candid::{Nat, Principal};
 use ic_cdk::api::time;
 use ic_cdk::{query, update};
-use candid::{Nat, Principal};
-use crate::constants::errors::Error;
-use crate::declarations::storable::Candid;
-use crate::declarations::assets::ReserveData;
-use crate::api::state_handler::{mutate_state, read_state};
-use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 
 /*  
  * @title Reserve Initialization 
@@ -134,7 +134,9 @@ pub async fn reset_reserve_value(
         "borrow_cap" => reserve_data.configuration.borrow_cap = reset_value,
         "supply_cap" => reserve_data.configuration.supply_cap = reset_value,
         "reserve_factor" => reserve_data.configuration.reserve_factor = reset_value,
-        "liquidation_protocol_fee" => reserve_data.configuration.liquidation_protocol_fee = reset_value,
+        "liquidation_protocol_fee" => {
+            reserve_data.configuration.liquidation_protocol_fee = reset_value
+        }
         _ => return Err(Error::InvalidVariableName),
     }
 
@@ -142,5 +144,23 @@ pub async fn reset_reserve_value(
         let asset_index = &mut state.asset_index;
         asset_index.insert(asset_name, Candid(reserve_data));
     });
+    Ok(())
+}
+
+#[update]
+pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous()
+        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    mutate_state(|state| {
+        state.canister_list.insert(canister_name, canister_id);
+    });
+
     Ok(())
 }

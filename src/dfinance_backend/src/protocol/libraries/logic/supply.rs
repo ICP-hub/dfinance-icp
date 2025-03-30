@@ -120,7 +120,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
-        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache).await{
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
@@ -402,7 +402,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity index
-        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache).await {
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);

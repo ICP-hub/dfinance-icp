@@ -3,7 +3,7 @@ use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
-use crate::get_cached_exchange_rate;
+use crate::{get_cached_exchange_rate, get_canister_id_by_name};
 use crate::guards::to_check_controller;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::ScalingMath;
@@ -142,6 +142,36 @@ pub async fn asset_transfer(
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
     }
 }
+
+//TODO: vicky add similar transfer function for lp pool as well just change the canister id.
+#[update]
+pub async fn burn_token_transfer(
+    asset_principal: Principal,
+    amount: Nat,
+) -> Result<Nat, String> {
+    //TODO: store it into the constant file.
+    let burn_canister_id = match get_canister_id_by_name("buy_burn".to_string()) {
+        Ok(id) => id,
+        Err(err) => {
+            ic_cdk::println!("Error getting burn canister id: {:?}", err);
+            return Err(format!("{:?}", err));
+        }
+    };
+
+    let (new_result,): (TransferFromResult,) =
+        call(burn_canister_id, "add_balance", (asset_principal, amount.clone()))
+            .await
+            .map_err(|e| e.1)?;
+    ic_cdk::println!(
+        "asset_transfer executed successfully and the call result : {:?}",
+        new_result
+    );
+    match new_result {
+        TransferFromResult::Ok(balance) => Ok(balance),
+        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    }
+}
+
 
 /*
  * @title Get Account Balance

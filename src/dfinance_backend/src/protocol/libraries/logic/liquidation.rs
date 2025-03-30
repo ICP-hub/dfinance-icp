@@ -268,7 +268,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
         if let Err(e) =
-            reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache)
+            reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache).await
         {
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&user_key) {

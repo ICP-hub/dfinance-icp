@@ -138,7 +138,7 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity and borrow index
-        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache).await {
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);
@@ -495,7 +495,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity and borrow index
-        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache).await {
             ic_cdk::println!("Failed to update reserve state: {:?}", e);
             if let Err(e) = release_lock(&operation_key) {
                 ic_cdk::println!("Failed to release lock: {:?}", e);

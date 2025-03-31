@@ -9,6 +9,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
+use crate::get_canister_id_by_name;
 
 /*
  * @title Price Cache Management
@@ -202,10 +203,16 @@ pub async fn get_exchange_rates(
             symbol: base_asset.clone(),
         },
     };
+    let xrc_canister_id = match get_canister_id_by_name("xrc".to_string()){
+        Ok(id) => id,
+        Err(e) => {
+            ic_cdk::println!("Error fetching xrc canister ID : {:?}", e);
+            return Err(Error::NoCanisterIdFound);
+        }
+    };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("a3shf-5eaaa-aaaaa-qaafa-cai").unwrap(),
-        //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+            xrc_canister_id,
             "get_exchange_rate",
             (args,),
             1_000_000_000,

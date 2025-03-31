@@ -343,4 +343,7 @@ dfx deploy dfinance_backend --argument "(
     principal \"$admin_principal\"
 )"
 
+XRC_CANISTER_ID=$(dfx canister id xrc)
+dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
+
 dfx deploy

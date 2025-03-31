@@ -1,5 +1,5 @@
 use crate::api::functions::asset_transfer;
-use crate::api::functions::burn_token_transfer;
+use crate::api::functions::{burn_token_transfer, lp_token_transfer};
 use crate::api::functions::get_balance;
 use crate::constants::errors::Error;
 // use crate::constants::interest_variables::constants::LENDER;
@@ -778,8 +778,19 @@ pub async fn accrue_to_treasury(
         //TODO:  vicky to transfer this value to lender canister take refence from the above inter cainister call (for reference - burn_token_transfer).
         lp_provider_share += total_lp_rewards_with_interest
             .clone()
-            .scaled_mul(Nat::from(100_000_000u128) - (LP_PROVIDERS / Nat::from(100u128)));
+            .scaled_mul((LP_PROVIDERS / Nat::from(100u128)));
         ic_cdk::println!("lp_provider_share in accure: {:?}", lp_provider_share);
+        
+        match lp_token_transfer(asset_canister_id, lp_provider_share).await {
+            Ok(_) => {
+                ic_cdk::println!("lp provider amount added to lp_pool canister successfully");
+                // Ok(())
+            }
+            Err(err) => {
+                ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+                return Err(Error::ErrorMintTokens);
+            }
+        }
     }
 
     Ok(())

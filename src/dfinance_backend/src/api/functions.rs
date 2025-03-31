@@ -171,6 +171,33 @@ pub async fn burn_token_transfer(
         TransferFromResult::Err(err) => Err(format!("{:?}", err)),
     }
 }
+#[update]
+pub async fn lp_token_transfer(
+    asset_principal: Principal,
+    amount: Nat,
+) -> Result<Nat, String> {
+    //TODO: store it into the constant file.
+    let lp_pool_canister_id = match get_canister_id_by_name("lp_pool".to_string()) {
+        Ok(id) => id,
+        Err(err) => {
+            ic_cdk::println!("Error getting lp_pool canister id: {:?}", err);
+            return Err(format!("{:?}", err));
+        }
+    };
+
+    let (new_result,): (TransferFromResult,) =
+        call(lp_pool_canister_id, "add_balance", (asset_principal, amount.clone()))
+            .await
+            .map_err(|e| e.1)?;
+    ic_cdk::println!(
+        "asset_transfer executed successfully and the call result : {:?}",
+        new_result
+    );
+    match new_result {
+        TransferFromResult::Ok(balance) => Ok(balance),
+        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+    }
+}
 
 
 /*

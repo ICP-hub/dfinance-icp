@@ -15,6 +15,7 @@ use ic_cdk::api::time;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
+use crate::constants::interest_variables::constants_variables::{LP_POOL_CANISTER, BUY_BURN_CANISTER};
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 struct Account {
@@ -143,14 +144,14 @@ pub async fn asset_transfer(
     }
 }
 
-//TODO: vicky add similar transfer function for lp pool as well just change the canister id.
+
 #[update]
 pub async fn burn_token_transfer(
     asset_principal: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
-    //TODO: store it into the constant file.
-    let burn_canister_id = match get_canister_id_by_name("buy_burn".to_string()) {
+    
+    let burn_canister_id = match get_canister_id_by_name(BUY_BURN_CANISTER.to_string()) {
         Ok(id) => id,
         Err(err) => {
             ic_cdk::println!("Error getting burn canister id: {:?}", err);
@@ -176,8 +177,7 @@ pub async fn lp_token_transfer(
     asset_principal: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
-    //TODO: store it into the constant file.
-    let lp_pool_canister_id = match get_canister_id_by_name("lp_pool".to_string()) {
+    let lp_pool_canister_id = match get_canister_id_by_name(LP_POOL_CANISTER.to_string()) {
         Ok(id) => id,
         Err(err) => {
             ic_cdk::println!("Error getting lp_pool canister id: {:?}", err);

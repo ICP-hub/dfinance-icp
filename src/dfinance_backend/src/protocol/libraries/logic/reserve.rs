@@ -775,7 +775,6 @@ pub async fn accrue_to_treasury(
         //     .scaled_mul(Nat::from(100_000_000u128) - (LENDER / Nat::from(100u128)));
 
         // ic_cdk::println!("lender_share in accure: {:?}", lender_share);
-        //TODO:  vicky to transfer this value to lender canister take refence from the above inter cainister call (for reference - burn_token_transfer).
         lp_provider_share += total_lp_rewards_with_interest
             .clone()
             .scaled_mul((LP_PROVIDERS / Nat::from(100u128)));

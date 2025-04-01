@@ -82,3 +82,8 @@ pub mod constants {
     pub const LP_PROVIDERS: u128 = 7_000_000_000;
 
 }
+// ------------------- Canister variables -------------------
+pub mod constants_variables{
+    pub const LP_POOL_CANISTER: &str = "lp_pool";
+    pub const BUY_BURN_CANISTER: &str = "buy_burn";
+}

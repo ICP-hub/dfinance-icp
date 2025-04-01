@@ -640,9 +640,8 @@ pub async fn accrue_to_treasury(
     reserve_cache: &ReserveCache,
 ) -> Result<(), Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
+    ic_cdk::println!("reserve chache : {:?}",reserve_cache.clone());
 
-    let mut total_burn_with_interest = Nat::from(0u128);
-    let mut total_lp_rewards_with_interest = Nat::from(0u128);
     let subtracted_reserve_factor = Nat::from(5_00_000_000u128); //Ask: just for now some other solution.
                                                                  // Calculate lender and LP provider shares
     // let mut lender_share = Nat::from(0u128);
@@ -708,11 +707,11 @@ pub async fn accrue_to_treasury(
     ); //percent
 
     let buy_and_burn_percentage_amount =
-        ScalingMath::scaled_mul(vars.total_debt_accrued.clone(), Nat::from(BUY_AND_BURN)); //percent
+        ScalingMath::scaled_mul(vars.total_debt_accrued.clone(), (Nat::from(BUY_AND_BURN) / Nat::from(100u128)) ); //percent
 
     let lender_and_lp_providers_percentage_amount = ScalingMath::scaled_mul(
         vars.total_debt_accrued.clone(),
-        Nat::from(LENDER_AND_LP_PROVIDERS),
+        (Nat::from(LENDER_AND_LP_PROVIDERS) / Nat::from(100u128)),
     ); //percent
 
     ic_cdk::println!(
@@ -740,16 +739,8 @@ pub async fn accrue_to_treasury(
     }
 
     if buy_and_burn_percentage_amount.clone() != Nat::from(0u128) {
-        total_burn_with_interest += (ScalingMath::scaled_mul(
-            buy_and_burn_percentage_amount,
-            reserve_cache.next_liquidity_index.clone(),
-        )) / 100 as u128;
-        ic_cdk::println!(
-            "total_burn_with_interest in accure: {:?}",
-            total_burn_with_interest
-        );
 
-        match burn_token_transfer(asset_canister_id, total_burn_with_interest).await {
+        match burn_token_transfer(asset_canister_id, buy_and_burn_percentage_amount).await {
             Ok(_) => {
                 ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
                 // Ok(())
@@ -762,20 +753,8 @@ pub async fn accrue_to_treasury(
     }
 
     if lender_and_lp_providers_percentage_amount != Nat::from(0u128) {
-        total_lp_rewards_with_interest += (ScalingMath::scaled_mul(
-            lender_and_lp_providers_percentage_amount,
-            reserve_cache.next_liquidity_index.clone(),
-        )) / 100 as u128;
-        ic_cdk::println!(
-            "total_lp_rewards_with_interest in accure: {:?}",
-            total_lp_rewards_with_interest
-        );
-        // lender_share += total_lp_rewards_with_interest
-        //     .clone()
-        //     .scaled_mul(Nat::from(100_000_000u128) - (LENDER / Nat::from(100u128)));
-
-        // ic_cdk::println!("lender_share in accure: {:?}", lender_share);
-        lp_provider_share += total_lp_rewards_with_interest
+        
+        lp_provider_share += lender_and_lp_providers_percentage_amount
             .clone()
             .scaled_mul((LP_PROVIDERS / Nat::from(100u128)));
         ic_cdk::println!("lp_provider_share in accure: {:?}", lp_provider_share);

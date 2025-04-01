@@ -2734,12 +2734,12 @@ const MySupply = () => {
                                               balance.asset === item[0]
                                           )?.dtokenBalance || 0;
 
-                                        const assetSupply =
+                                          const assetSupply =
                                           (Number(assetBalance) *
                                             Number(
                                               getAssetSupplyValue(item[0])
                                             )) /
-                                          Number(currentLiquidity);
+                                          (Number(currentLiquidity) * 1e8);
 
                                         const DebtIndex =
                                           userData?.Ok?.reserves[0]?.find(
@@ -3094,7 +3094,7 @@ const MySupply = () => {
                                     (item) => item[0] === asset
                                   );
 
-                                  const assetData = item[1].Ok;
+                                  const assetData = item[1]?.Ok;
 
                                   const total_supply =
                                     Number(assetData?.asset_supply || 0) /

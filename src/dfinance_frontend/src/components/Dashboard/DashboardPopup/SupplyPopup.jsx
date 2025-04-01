@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Check, X } from "lucide-react";
+import { Check, Info, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,7 +14,8 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-
+import dfin from "../../../../public/Helpers/Dfinance Coin 2D.svg"
+import Button from "../../Common/Button";
 /**
  * SupplyPopup Component
  *
@@ -54,7 +55,10 @@ const SupplyPopup = ({
   const transferFee = transferFeRetrive?.transferFee;
   const approveButtonRef = useRef(null);
   const supplyButtonRef = useRef(null);
+  const currentLiquidityRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const showPopupref = useRef(null);
+  const tokenLockref = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
   const { conversionRate, error: conversionError } =
@@ -70,14 +74,35 @@ const SupplyPopup = ({
   const [collateral, setCollateral] = useState(currentCollateralStatus);
   const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
+  const [minAmountUsdValue, setMinAmountUsdValue] = useState(0);
+  const [lpUsdValue, setLpUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
+  const [minAmount, setMinAmount] = useState(null);
+  const [maxAmount, setMaxAmount] = useState(null);
+  const [lpBalance, setLpBalance] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
+  const [issLiquidityDone, setIsLiquidityDone] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [Loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [isTokenLocked, setIsTokenLocked] = useState(false);
+  const [liquidityMessage, setLiquidityMessage] = useState("");
+  const [shouldFetchLpBalance, setShouldFetchLpBalance] = useState(false);
+  const [isLPPopupOpen, setIsLPPopupOpen] = useState(false);
+  const [selectedLock, setSelectedLock] = useState("1X"); // Default selected
+  const lockOptions = [
+    { label: "25X", duration: "12 months" },
+    { label: "10X", duration: "6 months" },
+    { label: "4X", duration: "3 months" },
+    { label: "1X", duration: "1 month" },
+  ];
+  const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -133,14 +158,16 @@ const SupplyPopup = ({
    *                                  FUNCTIONS
    * =================================================================================== */
   const paymentModalRef = useRef(null);
-
+  const openModalRef = useRef(null);
+  const lpModalRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        paymentModalRef.current &&
-        !paymentModalRef.current.contains(event.target)
+        openModalRef.current &&
+        !openModalRef.current.contains(event.target)
       ) {
         setIsPaymentDone(false);
+        setIsOpen(false);
         setIsVisible(false);
         setIsModalOpen(false);
       }
@@ -154,7 +181,93 @@ const SupplyPopup = ({
     }
   }, [isPaymentDone]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        openModalRef.current &&
+        !openModalRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        lpModalRef.current &&
+        !lpModalRef.current.contains(event.target)
+      ) {
+        setIsVisible(false);
+        setIsModalOpen(false);
+        setIsLPPopupOpen(false);
+      }
+    };
+
+    if (isLPPopupOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isLPPopupOpen]);
   // Handles user input for supply amount
+  const handleCheckboxChange = (e) => {
+    setIsCheckboxChecked(e.target.checked);
+  };
+  const handleLockLiquidity = async () => {
+    if (!isCheckboxChecked) {
+      toast.error("Please confirm to lock LP tokens.");
+      return;
+    }
+
+    setLoading(true);
+    setLiquidityMessage("Please wait while we add liquidity in the pool. This might take a while, please do not close the tab.");
+
+    try {
+      const response = await handleLock();
+
+      if (response?.Ok) {
+        setLiquidityMessage("Liquidity added . Now let's lock LP token.");
+        setIsTokenLocked(true);
+        setShowPopup(false);
+        setIsVisible(false);
+
+        setTimeout(() => {
+          setShouldFetchLpBalance(true);
+        }, 2000);
+
+        toast.success("LP tokens locked successfully!"); //  Show success message
+
+      } else {
+        setLiquidityMessage("Liquidity creation failed. Please try again.");
+        toast.error("Liquidity creation failed.");
+      }
+    } catch (error) {
+      setLiquidityMessage("An error occurred while adding liquidity.");
+      toast.error("An error occurred while adding liquidity.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  //  Track state updates
+  useEffect(() => {
+    console.log("Updated isTokenLocked:", isTokenLocked);
+  }, [isTokenLocked]);
+
+
+
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
@@ -359,12 +472,10 @@ const SupplyPopup = ({
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${
-            scaledAmount / 100000000
+          `Supply,${asset},${scaledAmount / 100000000
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${
-            scaledAmount / 100000000
+          `Supply,${asset},${scaledAmount / 100000000
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
@@ -544,9 +655,193 @@ const SupplyPopup = ({
     }
   };
 
+  const handleCreateLiquidity = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return;
+    }
+
+    try {
+      // TODO: Replace this with actual backend API call
+      const response = await new Promise((resolve) =>
+        setTimeout(() => resolve({ Ok: true }), 2000) // Simulated delay
+      );
+
+      if (response?.Ok) {
+        console.log("Liquidity added . Now let's lock LP token.");
+        toast.success("Liquidity added successfully!", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+
+        return { Ok: true }; // Ensure function returns success response
+      } else if (response?.Err) {
+        const errorMsg = response.Err?.toString() || "An unexpected error occurred";
+        console.error("Error:", errorMsg);
+
+        if (errorMsg.toLowerCase().includes("panic")) {
+          console.error("Panic error detected.");
+          setShowPanicPopup(true);
+        } else if (
+          errorMsg.toLowerCase().includes("out of cycles") ||
+          errorMsg.includes("Reject text: Canister")
+        ) {
+          console.error("Canister is out of cycles.");
+          toast.error("Canister is out of cycles. Admin has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else {
+          toast.error(`Liquidity creation failed: ${errorMsg}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+
+        return { Err: errorMsg }; // Ensure function returns error response
+      }
+    } catch (error) {
+      console.error(`Error: ${error.message || "Liquidity creation failed!"}`);
+      toast.error(`Error: ${error.message || "Liquidity creation failed!"}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+
+      return { Err: error.message || "Liquidity creation failed!" };
+    }
+  };
+  const handleLock = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return;
+    }
+
+    try {
+      // TODO: Replace this with actual backend API call
+      const response = await new Promise((resolve) =>
+        setTimeout(() => resolve({ Ok: true }), 2000) // Simulated delay
+      );
+
+      if (response?.Ok) {
+        console.log("Liquidity added . Now let's lock LP token.");
+        toast.success("Liquidity added successfully!", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+
+        return { Ok: true }; // Ensure function returns success response
+      } else if (response?.Err) {
+        const errorMsg = response.Err?.toString() || "An unexpected error occurred";
+        console.error("Error:", errorMsg);
+
+        if (errorMsg.toLowerCase().includes("panic")) {
+          console.error("Panic error detected.");
+          setShowPanicPopup(true);
+        } else if (
+          errorMsg.toLowerCase().includes("out of cycles") ||
+          errorMsg.includes("Reject text: Canister")
+        ) {
+          console.error("Canister is out of cycles.");
+          toast.error("Canister is out of cycles. Admin has been notified.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else {
+          toast.error(`Liquidity creation failed: ${errorMsg}`, {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+
+        return { Err: errorMsg }; // Ensure function returns error response
+      }
+    } catch (error) {
+      console.error(`Error: ${error.message || "Liquidity creation failed!"}`);
+      toast.error(`Error: ${error.message || "Liquidity creation failed!"}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+
+      return { Err: error.message || "Liquidity creation failed!" };
+    }
+  };
+  const selectedLockOption = lockOptions.find(option => option.label === selectedLock);
+  const selectedLockDuration = selectedLockOption ? selectedLockOption.duration : "N/A"; // Default if not found
+
+
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
+  };
+  const handleClose = () => {
+    setIsLiquidityDone(false)
+    setIsLPPopupOpen(true)
   };
 
   const handleClick = async () => {
@@ -561,6 +856,81 @@ const SupplyPopup = ({
       setIsLoading(false);
     }
   };
+
+  const handleLpclick = () => {
+    setShowPopup(true); // Open confirmation popup
+
+  };
+  useEffect(() => {
+    if (showPopup) {
+      setIsLPPopupOpen(false);
+    }
+  }, [showPopup]);
+
+  const confirmLock = () => {
+    setShowPopup(false);
+    // Call your function to lock liquidity here
+    console.log(`Locking ${lpBalance} LP tokens for ${selectedLock}`);
+  };
+  const handleCreateLiquidityClick = async () => {
+    setIsLoading(true);
+    setLiquidityMessage(
+      "Please wait while we add liquidity in the pool. This might take a while, please do not close the tab."
+    );
+
+    try {
+      const response = await handleCreateLiquidity();
+
+      if (response?.Ok) {
+        //  Keep "Please wait..." message visible for 4 seconds
+        setTimeout(() => {
+          setLiquidityMessage("Liquidity added . Now let's lock LP token.");
+          setIsLiquidityDone(true);
+          setIsOpen(false);
+          setIsVisible(false);
+
+          //  Keep "Liquidity added..." message visible for 5 seconds
+          setTimeout(() => {
+            setShouldFetchLpBalance(true);
+          }, 6000);
+
+        }, 4000); // Adjusted to 4 seconds for the first message
+      } else {
+        setLiquidityMessage("Liquidity creation failed. Please try again.");
+      }
+    } catch (error) {
+      setLiquidityMessage("An error occurred while adding liquidity.");
+    } finally {
+      // Keep the loader visible for max 4 seconds and then hide it
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 4000); // Loader will disappear after 4 seconds
+    }
+  };
+
+
+  // Effect to fetch LP balance when `shouldFetchLpBalance` becomes true
+  useEffect(() => {
+    if (shouldFetchLpBalance) {
+      console.log("Fetching LP token balance from backend...");
+
+      setIsLiquidityDone(false);
+
+      // Show a loading indicator to prevent flickering
+
+      setTimeout(() => {
+        console.log("LP Balance fetched:", 100);
+        setLpBalance(100);
+        setIsLPPopupOpen(true);
+      }, 10);
+    }
+  }, [shouldFetchLpBalance]);
+
+
+
+
+
+
 
   const calculateHealthFactor = (
     totalCollateral,
@@ -620,6 +990,7 @@ const SupplyPopup = ({
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -652,6 +1023,27 @@ const SupplyPopup = ({
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          currentLiquidityRef.current &&
+          !currentLiquidityRef.current.disabled
+        ) {
+          currentLiquidityRef.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         modalRef.current &&
@@ -669,7 +1061,69 @@ const SupplyPopup = ({
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        tokenLockref.current &&
+        !tokenLockref.current.contains(event.target) &&
+        !isLoading
+      ) {
+        setIsTokenLocked(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
 
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isModalOpen, isLoading, setIsModalOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          showPopupref.current &&
+          !showPopupref.current.disabled
+        ) {
+          showPopupref.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevent accidental double triggering
+
+        if (closeButtonRef.current && !closeButtonRef.current.disabled) {
+          closeButtonRef.current.click();
+        } else if (
+          tokenLockref.current &&
+          !tokenLockref.current.disabled
+        ) {
+          tokenLockref.current.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
@@ -719,7 +1173,31 @@ const SupplyPopup = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
+  useEffect(() => {
+    if (minAmount && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(minAmount.replace(/,/g, "")) * adjustedConversionRate;
 
+      // Truncate instead of rounding
+      const truncatedValue = Math.floor(convertedValue * 100) / 100;
+
+      setMinAmountUsdValue(truncatedValue.toFixed(2));
+    } else {
+      setMinAmountUsdValue("0.00");
+    }
+  }, [minAmount, conversionRate]);
+
+  useEffect(() => {
+    if (lpBalance && conversionRate) {
+      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      const convertedValue =
+        Number(lpBalance) * adjustedConversionRate;
+      setLpUsdValue(convertedValue ? convertedValue.toFixed(8) : 0);
+    } else {
+      setLpUsdValue(0);
+    }
+  }, [lpBalance, conversionRate]);
   useEffect(() => {
     if (balance && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -744,6 +1222,13 @@ const SupplyPopup = ({
     }
   }, [supplyBalance]);
 
+  console.log(assetSupply, "assetSupply");
+  useEffect(() => {
+    setMinAmount(assetSupply ? ((assetSupply) * 0.05).toFixed(8) : 0);
+  }, [assetSupply]);
+  useEffect(() => {
+    setMaxAmount(assetSupply ? ((assetSupply) * 0.75).toFixed(8) : 0);
+  }, [assetSupply]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -772,9 +1257,9 @@ const SupplyPopup = ({
                   <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -788,11 +1273,10 @@ const SupplyPopup = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      supplyBalance === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
                         handleMaxClick();
@@ -804,7 +1288,19 @@ const SupplyPopup = ({
                 </div>
               </div>
             </div>
-            <div className="w-full">
+            <div className="flex justify-end mt-2">
+              <button
+                title={"Earn rewards"}
+                className="z-20 px-[14px] text-white py-1.5 focus:outline-none box bg-transparent shadow-xl  text-xs"
+                onClick={() => {
+                  setIsOpen(true);
+                  setIsVisible(false);
+                }}
+              >
+                Earn rewards
+              </button>
+            </div>
+            <div className="w-full -mt-8">
               <div className="w-full flex justify-between my-2">
                 <h1>Transaction overview</h1>
               </div>
@@ -820,11 +1316,10 @@ const SupplyPopup = ({
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${
-                      currentCollateralStatus
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
+                    className={`font-semibold ${currentCollateralStatus
+                      ? "text-green-500"
+                      : "text-red-500"
+                      }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
@@ -835,33 +1330,31 @@ const SupplyPopup = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          value > 3
-                            ? "text-green-500"
-                            : value <= 1
+                        className={`${value > 3
+                          ? "text-green-500"
+                          : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                            ? "text-orange-600"
-                            : value <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -902,6 +1395,7 @@ const SupplyPopup = ({
                 </div>
               </div>
             </div>
+
           </div>
 
           {!hasEnoughBalance && (
@@ -923,9 +1417,8 @@ const SupplyPopup = ({
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${
-                  isApproved ? "text-green-500" : "text-red-500"
-                }`}
+                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -939,15 +1432,13 @@ const SupplyPopup = ({
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                isApproved ||
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                 isLoading ||
                 !hasEnoughBalance ||
-                amount <= 0 ||
-                isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+                amount <= 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
               disabled={
                 isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -959,15 +1450,13 @@ const SupplyPopup = ({
             <button
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                !isApproved ||
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
                 isLoading ||
                 amount <= 0 ||
-                !hasEnoughBalance ||
-                isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+                !hasEnoughBalance
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -976,7 +1465,7 @@ const SupplyPopup = ({
             </button>
           </div>
 
-          {}
+          { }
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
@@ -990,7 +1479,158 @@ const SupplyPopup = ({
           )}
         </div>
       )}
+      {isOpen && (
+        <div className="supply-popup" ref={openModalRef}>
+          <div className="flex items-center space-x-2">
+            <h1 className="font-semibold text-xl">Create liquidity</h1>
+            <span className="relative cursor-pointer flex items-center">
+              <span className="group inline-flex items-center">
+                <Info
+                  size={16}
+                  className="text-[#233D63] dark:text-darkText dark:opacity-50 mt-1 -ml-1"
+                />
+                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                  The supply rate APY may vary based on utilization levels and incentive structures.
+                </div>
+              </span>
+            </span>
+          </div>
 
+          <div className="flex flex-col gap-2 mt-5 text-sm">
+            <div className="w-full">
+              <div className="w-full flex justify-between my-2 dark:text-darkText">
+                <h1>Amount</h1>
+              </div>
+              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
+                <div className="w-[50%]">
+                  <input
+                    type="text"
+                    value={minAmount}
+                    disabled
+                    className="lg:text-lg   mb-2  focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
+
+                  />
+
+                  <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
+                    {minAmountUsdValue
+                      ? `$${minAmountUsdValue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
+                      : "$0.00 USD"}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="w-auto flex items-center gap-2 mt-1">
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-6 h-6 rounded-full"
+                    />
+                    <span className="text-lg">{asset}</span>
+                  </div>
+                  <p
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      }`}
+
+                  >
+                    {formatValue(maxAmount)} Max
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-4">
+              <span className="ml-1 text-[16px]">Pool:</span>
+              <img src={dfin} alt="pool_icon" className="w-6 h-6 rounded-full z-10" />
+              <img src={image} alt="pool_icon" className="w-6 h-6 rounded-full -ml-3" />
+              <span className="text-lg ">DFIN/{asset}</span>
+            </div>
+            <div className="w-full">
+              <div className="w-full flex justify-between my-2">
+                <h1>Transaction overview</h1>
+              </div>
+              <div className="w-full bg-gray-100 cursor-pointer p-1 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-full flex justify-between items-center my-1 ">
+                  <div className="flex items-center gap-1 ml-1">
+                    <p>Transaction Fee</p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.45 mr-1">
+                    <p>{transferFee}</p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
+                <div className="w-full flex justify-between items-center my-1">
+                  <div className="flex items-center gap-1 ml-1">
+                    <p>Final Amount</p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 mr-1">
+                    <p>
+                      {(minAmount
+                        ? (+minAmount || 0) + (+transferFee || 0)
+                        : 0
+                      ).toFixed(8)}{" "}
+                    </p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+
+          </div>
+          <div className="flex flex-col gap-4 mt-4">
+            <button
+              ref={currentLiquidityRef}
+              onClick={() => handleCreateLiquidityClick()}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isLoading ||
+                minAmount <= 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
+              disabled={
+                isLoading || minAmount <= 0
+              }
+            >
+              Create Liquidity
+            </button>
+          </div>
+
+          { }
+          {isLoading && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+
+
+              <div className="flex flex-col items-center gap-4">
+                <div className="loader"></div>
+                <p
+                  className={`text-sm lg:text-md break-words whitespace-normal  `}
+                  style={{ maxWidth: "100%", wordBreak: "break-word" }}
+                >
+                  {liquidityMessage}
+                </p>
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
       {isPaymentDone && (
         <div
           ref={paymentModalRef}
@@ -1017,8 +1657,8 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                      ? Number(scaledAmount / 100000000).toFixed(7)
+                      : scaledAmount / 100000000
                   : "0"}{" "}
                 {asset}
               </strong>
@@ -1032,8 +1672,8 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                      ? Number(scaledAmount / 100000000).toFixed(7)
+                      : scaledAmount / 100000000
                   : "0"}{" "}
                 d{asset}
               </strong>
@@ -1047,6 +1687,314 @@ const SupplyPopup = ({
               Close Now
             </button>
           </div>
+        </div>
+      )}
+      {isLPPopupOpen && (
+        <div className="lp-popup" ref={lpModalRef}>
+          <div className="flex items-center space-x-2">
+            <h1 className="font-semibold text-xl">Lock LP token</h1>
+            <span className="relative cursor-pointer flex items-center">
+              <span className="group inline-flex items-center">
+                <Info
+                  size={18}
+                  className="text-[#233D63] dark:text-darkText dark:opacity-50"
+                />
+                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                  The supply rate APY may vary based on utilization levels and incentive structures.
+                </div>
+              </span>
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2 mt-5 text-sm">
+            <div className="w-full">
+              <div className="w-full flex justify-between my-2">
+                <h1>Transaction overview</h1>
+              </div>
+              <div className="w-full bg-gray-100 cursor-pointer p-1.5 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-full flex justify-between items-center my-1 ">
+                  <div className="flex items-center gap-1 ml-1">
+                    <p>Amount to be locked </p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.45">
+                    <p>{lpBalance}</p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
+                <div className="w-full flex justify-between items-center my-1">
+                  <div className="flex items-center gap-1 ml-1">
+
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                    <p>
+                      ${lpUsdValue}
+                    </p>
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+
+            <div className="w-full mt-4">
+              <h2 className="font-semibold text-gray-700 dark:text-white">Locking period:</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                Lock longer – earn more.
+              </p>
+
+              {/* Selection Buttons */}
+              <div className="flex items-center justify-between bg-gray-100 dark:bg-[#1D1B40] p-1 -ml-3 -mr-3 rounded-lg mt-3">
+                {lockOptions.map((option) => (
+                  <button
+                    key={option.label}
+                    className={`px-4 py-1 rounded-full transition-all border-2 ${selectedLock === option.label
+                      ? "border-black dark:border-white font-semibold text-black dark:text-white"
+                      : "border-transparent text-gray-400"
+                      }`}
+                    onClick={() => setSelectedLock(option.label)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Duration Labels */}
+              <div className="flex items-center justify-between mt-3 text-sm text-gray-500 dark:text-gray-400">
+                {lockOptions.map((option) => (
+                  <span
+                    key={option.duration}
+                    className={
+                      selectedLock === option.label ? "font-semibold text-black dark:text-white" : ""
+                    }
+                  >
+                    {option.duration}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="w-full mt-2">
+              <div className="w-full flex justify-between my-2">
+                <h1>Transaction overview</h1>
+              </div>
+              <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
+
+                <div className="w-full flex justify-between items-center my-1">
+                  <p>Supply APY</p>
+                  <p>
+                    {supplyRateAPR < 0.1
+                      ? "<0.01%"
+                      : `${supplyRateAPR.toFixed(2)}%`}
+                  </p>
+                </div>
+
+                <div className="w-full flex justify-between items-center my-1">
+
+                  <div className="flex items-center gap-1">
+                    <p>Transaction Fee</p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p>{transferFee}</p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
+                <div className="w-full flex justify-between items-center">
+                  <p>Final amount</p>
+                  <div className="flex items-center gap-2">
+                    <p>
+                      {(lpBalance
+                        ? (+lpBalance || 0) + (+transferFee || 0)
+                        : 0
+                      ).toFixed(8)}{" "}
+                    </p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+
+          </div>
+          <div className="flex flex-col gap-4 mt-4">
+            {/* Approve Button */}
+
+
+            {/* Supply Button */}
+            <button
+              ref={lpModalRef}
+              onClick={() => handleLpclick()}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isLoading ||
+                lpBalance <= 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
+              disabled={
+                isLoading || lpBalance <= 0
+              }
+            >
+              Confirm and lock
+            </button>
+          </div>
+
+          { }
+          {isLoading && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{
+                background: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(1px)",
+              }}
+            >
+              <div className="loader"></div>
+            </div>
+          )}
+        </div>
+      )}
+      {issLiquidityDone && (
+        <div
+
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
+          <div className="w-full flex flex-col items-center mb-5 ">
+            <button
+              ref={closeButtonRef}
+              onClick={handleClose}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+            <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
+              <Check />
+            </div>
+            <p className=" text-sm  text-wrap lgx:text-lg text-center mt-2 mb-8">
+              {liquidityMessage}
+
+            </p>
+
+
+
+          </div>
+        </div>
+      )}
+      {isTokenLocked && (
+        <div
+          ref={tokenLockref}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
+          <div className="w-full flex flex-col items-center mb-6">
+            <button
+              ref={closeButtonRef}
+              onClick={handleClosePaymentPopup}
+              className="text-gray-400 focus:outline-none self-end button1"
+            >
+              <X size={24} />
+            </button>
+            <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
+              <Check />
+            </div>
+            <p className=" text-sm  lgx:text-lg text-center mt-2">
+              You have successfully locked your LP tokens for{" "}
+              {selectedLockDuration}.
+
+            </p>
+          </div>
+        </div>
+      )}
+      {showPopup && (
+        <div
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl rounded-xl 
+          top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] 
+          dark:bg-[#252347] dark:text-darkText z-50"
+        >
+          <div className="w-full flex flex-col items-center">
+            <button
+              onClick={() => setShowPopup(false)}
+              className="text-gray-400 focus:outline-none self-end"
+            >
+              <X size={24} />
+            </button>
+
+            <h2 className="text-xl font-bold text-center text-[#2A1F9D] dark:text-indigo-300">
+              Warning
+            </h2>
+            <p className="text-md text-[#989898] text-center dark:text-darkText mt-4 font-light">
+              Are you sure you want to lock <strong className="font-bold ">{lpBalance ?? "0.00"} LP</strong> tokens for{" "}
+              <strong className="font-bold ">{selectedLockDuration}</strong>?
+            </p>
+
+            {/* Confirmation Checkbox */}
+            <div className="mt-4 flex justify-center">
+              <label className="flex items-center text-[#989898]">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    className="mr-2 h-4 w-4 appearance-none border-2 border-gray-300 rounded
+                   bg-white checked:bg-blue-400 checked:border-blue-400 focus:outline-none"
+                    checked={isCheckboxChecked}
+                    onChange={handleCheckboxChange}
+                  />
+
+                  {/* Custom SVG for the checkmark */}
+                  {isCheckboxChecked && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="absolute left-1/3 top-1/2 transform -translate-x-1/2 -translate-y-1/2 stroke-white"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  )}
+                </div>
+
+                <p className="font-semibold ml-2">Yes, lock my LP tokens</p>
+              </label>
+            </div>
+
+            <button
+              onClick={handleLockLiquidity}
+              disabled={Loading}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-max text-white rounded-md 
+              p-2 px-6 shadow-md font-semibold text-sm mt-4 mb-5 ${Loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+            >
+              Lock lp tokens
+            </button>
+
+          </div>
+
+        </div>
+
+      )}
+      {Loading && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(2px)",
+          }}
+        >
+          <div className="loader"></div>
+
+
         </div>
       )}
       {showPanicPopup && (

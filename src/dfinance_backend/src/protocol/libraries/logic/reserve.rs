@@ -1,10 +1,15 @@
 use crate::api::functions::asset_transfer;
+use crate::api::functions::{burn_token_transfer, lp_token_transfer};
 use crate::api::functions::get_balance;
 use crate::api::functions::get_total_supply;
 use crate::constants::errors::Error;
+// use crate::constants::interest_variables::constants::LENDER;
+use crate::constants::interest_variables::constants::LP_PROVIDERS;
+use crate::constants::interest_variables::constants::{BUY_AND_BURN, LENDER_AND_LP_PROVIDERS};
 use crate::declarations::assets::ReserveCache;
 use crate::declarations::assets::ReserveData;
-use crate::declarations::assets::AccrueToTreasuryLocalVars;
+use crate::get_asset_principal;
+use crate::get_canister_id_by_name;
 use crate::protocol::libraries::logic::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -13,7 +18,22 @@ use crate::protocol::libraries::math::math_utils::current_timestamp;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
+use futures::future::ok;
+use ic_cdk::api::time;
+use ic_cdk::update;
 
+/*
+ * @title Accrual Treasury Variables
+ * @notice Stores temporary values used during the treasury accrual process.
+ * @dev Holds previous debt values and calculated accrual amounts.
+ */
+struct AccrueToTreasuryLocalVars {
+    //
+    prev_total_variable_debt: Nat,
+    curr_total_variable_debt: Nat,
+    total_debt_accrued: Nat,
+    amount_to_mint: Nat,
+}
 
 impl Default for AccrueToTreasuryLocalVars {
     fn default() -> Self {
@@ -72,7 +92,7 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
  *
 * @return Result<(), Error> Returns a success message if updated successfully or an error if failed.
  */
-pub fn update_state(
+pub async fn update_state(
     reserve_data: &mut ReserveData,
     reserve_cache: &mut ReserveCache,
 ) -> Result<(), Error> {
@@ -84,7 +104,7 @@ pub fn update_state(
     }
 
     update_indexes(reserve_data, reserve_cache);
-    if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
+    if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache).await {
         ic_cdk::println!("Error accruing to treasury: {:?}", e);
         return Err(e);
     }
@@ -558,7 +578,7 @@ pub async fn mint_scaled(
     match asset_transfer(
         user_principal,
         token_canister_principal,
-        platform_principal,
+        platform_principal, // no need. just for now
         newmint,
     )
     .await
@@ -594,11 +614,40 @@ pub async fn mint_scaled(
  * @return None. This function modifies `reserve_data`, updating the treasury accumulation.
  *
  */
-pub fn accrue_to_treasury(
+pub async fn accrue_to_treasury(
     reserve_data: &mut ReserveData,
     reserve_cache: &ReserveCache,
 ) -> Result<(), Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
+    ic_cdk::println!("reserve chache : {:?}",reserve_cache.clone());
+
+    let subtracted_reserve_factor = Nat::from(5_00_000_000u128); //Ask: just for now some other solution.
+                                                                 // Calculate lender and LP provider shares
+    // let mut lender_share = Nat::from(0u128);
+    let mut lp_provider_share = Nat::from(0u128);
+
+    // let burn_canister_id = match get_canister_id_by_name("buy_burn".to_string()) {
+    //     Ok(id) => id,
+    //     Err(err) => {
+    //         ic_cdk::println!("Error getting burn canister id: {:?}", err);
+    //         return Err(err);
+    //     }
+    // };
+
+    let asset_canister_id = match get_asset_principal(
+        reserve_data
+            .asset_name
+            .clone()
+            .unwrap_or_else(|| "default_asset_name".to_string()),
+    ) {
+        Ok(id) => id,
+        Err(err) => {
+            ic_cdk::println!("Error getting asset canister id: {:?}", err);
+            return Err(err);
+        }
+    };
+
+    // ic_cdk::println!("burn canister id = {}",burn_canister_id.to_text());
 
     if reserve_cache.reserve_factor == Nat::from(0u128) {
         return Ok(());
@@ -633,9 +682,30 @@ pub fn accrue_to_treasury(
     );
     vars.amount_to_mint = ScalingMath::scaled_mul(
         vars.total_debt_accrued.clone(),
-        reserve_cache.reserve_factor.clone(),
+        reserve_cache.reserve_factor.clone() - subtracted_reserve_factor,
     ); //percent
+
+    let buy_and_burn_percentage_amount =
+        ScalingMath::scaled_mul(vars.total_debt_accrued.clone(), (Nat::from(BUY_AND_BURN) / Nat::from(100u128)) ); //percent
+
+    let lender_and_lp_providers_percentage_amount = ScalingMath::scaled_mul(
+        vars.total_debt_accrued.clone(),
+        (Nat::from(LENDER_AND_LP_PROVIDERS) / Nat::from(100u128)),
+    ); //percent
+
+    ic_cdk::println!(
+        "reserve factor in accure: {:?}",
+        reserve_cache.reserve_factor
+    );
     ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
+    ic_cdk::println!(
+        "buy_and_burn_percentage_amount in accure: {:?}",
+        buy_and_burn_percentage_amount
+    );
+    ic_cdk::println!(
+        "lender_and_lp_providers_percentage_amount in accure: {:?}",
+        lender_and_lp_providers_percentage_amount
+    );
     if vars.amount_to_mint != Nat::from(0u128) {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
@@ -646,5 +716,39 @@ pub fn accrue_to_treasury(
             reserve_data.accure_to_platform
         );
     }
+
+    if buy_and_burn_percentage_amount.clone() != Nat::from(0u128) {
+
+        match burn_token_transfer(asset_canister_id, buy_and_burn_percentage_amount).await {
+            Ok(_) => {
+                ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+                // Ok(())
+            }
+            Err(err) => {
+                ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+                return Err(Error::ErrorMintTokens);
+            }
+        }
+    }
+
+    if lender_and_lp_providers_percentage_amount != Nat::from(0u128) {
+        
+        lp_provider_share += lender_and_lp_providers_percentage_amount
+            .clone()
+            .scaled_mul((LP_PROVIDERS / Nat::from(100u128)));
+        ic_cdk::println!("lp_provider_share in accure: {:?}", lp_provider_share);
+        
+        match lp_token_transfer(asset_canister_id, lp_provider_share).await {
+            Ok(_) => {
+                ic_cdk::println!("lp provider amount added to lp_pool canister successfully");
+                // Ok(())
+            }
+            Err(err) => {
+                ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+                return Err(Error::ErrorMintTokens);
+            }
+        }
+    }
+
     Ok(())
 }

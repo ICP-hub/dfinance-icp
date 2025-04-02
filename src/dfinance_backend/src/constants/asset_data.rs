@@ -1,11 +1,11 @@
-use ic_cdk::api::time;
-use ic_cdk::update;
-use candid::{Nat, Principal};
-use crate::constants::errors::Error;
-use crate::declarations::storable::Candid;
-use crate::declarations::assets::ReserveData;
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::errors::Error;
+use crate::declarations::assets::ReserveData;
+use crate::declarations::storable::Candid;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
+use candid::{Nat, Principal};
+use ic_cdk::api::time;
+use ic_cdk::{query, update};
 
 /*  
  * @title Reserve Initialization 
@@ -134,7 +134,9 @@ pub async fn reset_reserve_value(
         "borrow_cap" => reserve_data.configuration.borrow_cap = reset_value,
         "supply_cap" => reserve_data.configuration.supply_cap = reset_value,
         "reserve_factor" => reserve_data.configuration.reserve_factor = reset_value,
-        "liquidation_protocol_fee" => reserve_data.configuration.liquidation_protocol_fee = reset_value,
+        "liquidation_protocol_fee" => {
+            reserve_data.configuration.liquidation_protocol_fee = reset_value
+        }
         _ => return Err(Error::InvalidVariableName),
     }
 

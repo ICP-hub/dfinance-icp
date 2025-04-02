@@ -75,7 +75,7 @@ pub mod constants {
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
 
-    // -------------------Timestamp Constants -------------------
+        // -------------------Timestamp Constants -------------------
     pub const CURRENT_TIMESTAMP: u64 = 1_000_000_000;
 
     // -------------------Max Value Constants -------------------
@@ -84,4 +84,16 @@ pub mod constants {
     // -------------------Seconds Per Year Constants -------------------
     pub const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
                                                           //leap year calculation left
+
+    /// ------------------- Borrowing Fees Distribution Constants -------------------
+    pub const BUY_AND_BURN: u128 = 500_000_000; // 5% scaled by 100000000
+    pub const LENDER_AND_LP_PROVIDERS: u128 = 8500_000_000; // 85% scaled by 100000000
+    // pub const LENDER: u128 = 3_000_000_000;
+    pub const LP_PROVIDERS: u128 = 7_000_000_000;
+
+}
+// ------------------- Canister variables -------------------
+pub mod constants_variables{
+    pub const LP_POOL_CANISTER: &str = "lp_pool";
+    pub const BUY_BURN_CANISTER: &str = "buy_burn";
 }

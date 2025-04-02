@@ -1,0 +1,5 @@
+type TransferFromResult = variant { Ok : nat; Err : text };
+service : () -> {
+  add_balance : (principal, nat) -> (TransferFromResult);
+  get_balance : (principal) -> (nat) query;
+}

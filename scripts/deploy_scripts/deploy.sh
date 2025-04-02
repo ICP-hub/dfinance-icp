@@ -215,6 +215,13 @@ dfx build xrc
 dfx deploy xrc
 dfx identity use default
 
+dfx canister create buy_burn
+dfx build buy_burn
+dfx deploy buy_burn
+
+dfx canister create lp_pool
+dfx build lp_pool
+dfx deploy lp_pool
 
 # Get the admin principal and export it
 export admin_principal=$(dfx identity get-principal)
@@ -227,5 +234,13 @@ dfx deploy dfinance_backend --argument "(
 
 XRC_CANISTER_ID=$(dfx canister id xrc)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
+
+BUY_BURN_CANISTER_ID=$(dfx canister id buy_burn)
+echo "Buy Burn canister ID: $BUY_BURN_CANISTER_ID"
+dfx canister call dfinance_backend set_canister_id "(\"buy_burn\", principal \"$BUY_BURN_CANISTER_ID\")"
+
+LP_POOL_CANISTER_ID=$(dfx canister id lp_pool)
+echo "Lp pool canister ID: $LP_POOL_CANISTER_ID"
+dfx canister call dfinance_backend set_canister_id "(\"lp_pool\", principal \"$LP_POOL_CANISTER_ID\")"
 
 dfx deploy

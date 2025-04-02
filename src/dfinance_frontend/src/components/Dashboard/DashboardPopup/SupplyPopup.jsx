@@ -1290,8 +1290,8 @@ const SupplyPopup = ({
             </div>
             <div className="flex justify-end mt-2">
               <button
-                title={"Earn rewards"}
-                className="z-20 px-[14px] text-[#2a1f9d] dark:text-darkText py-1.5 focus:outline-none box bg-transparent shadow-xl  text-xs"
+
+                className="z-20 px-[14px] text-[#2a1f9d] dark:text-darkText py-1.5  box bg-transparent shadow-xl  text-xs"
                 onClick={() => {
                   setIsOpen(true);
                   setIsVisible(false);
@@ -1542,7 +1542,7 @@ const SupplyPopup = ({
               </div>
             </div>
             <div className="flex items-center gap-2 mt-4">
-              <span className="ml-1 text-[16px]">Pool:</span>
+              <span className=" text-[16px]">Pool:</span>
               <img src={dfin} alt="pool_icon" className="w-6 h-6 rounded-full z-10" />
               <img src={image} alt="pool_icon" className="w-6 h-6 rounded-full -ml-3" />
               <span className="text-lg ">DFIN/{asset}</span>
@@ -1738,13 +1738,14 @@ const SupplyPopup = ({
               </p>
 
               {/* Selection Buttons */}
-              <div className="flex items-center justify-between bg-gray-100 dark:bg-[#1D1B40] p-1 -ml-3 -mr-3 rounded-lg mt-3">
+              <div className="flex items-center justify-between bg-gray-100 dark:bg-[#1D1B40] p-1 rounded-full mt-3">
                 {lockOptions.map((option) => (
                   <button
                     key={option.label}
-                    className={`px-4 py-1 rounded-full transition-all border-2 ${selectedLock === option.label
-                      ? "border-black dark:border-white font-semibold text-black dark:text-white"
-                      : "border-transparent text-gray-400"
+                    className={`px-6 py-1 rounded-full transition-all 
+                    ${selectedLock === option.label
+                        ? "bg-white dark:bg-[#373658] font-semibold text-black dark:text-white shadow-sm"
+                        : "bg-transparent text-gray-400"
                       }`}
                     onClick={() => setSelectedLock(option.label)}
                   >
@@ -1753,8 +1754,10 @@ const SupplyPopup = ({
                 ))}
               </div>
 
+
+
               {/* Duration Labels */}
-              <div className="flex items-center justify-between mt-3 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-between mt-3 text-xs ml-2 mr-2 text-gray-500 dark:text-gray-400">
                 {lockOptions.map((option) => (
                   <span
                     key={option.duration}
@@ -1775,7 +1778,7 @@ const SupplyPopup = ({
               <div className="w-full bg-gray-100 cursor-pointer p-3 rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
 
                 <div className="w-full flex justify-between items-center my-1">
-                  <p>Supply APY</p>
+                  <p>APR</p>
                   <p>
                     {supplyRateAPR < 0.1
                       ? "<0.01%"

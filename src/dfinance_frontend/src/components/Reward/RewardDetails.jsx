@@ -6,6 +6,7 @@ import dfinLogo from "../../../public/assests-icon/Dfinance Coin 2D.png";
 import icpLogo from "../../../public/assests-icon/ICP.svg";
 import ckUSDTLogo from "../../../public/assests-icon/ckUSDT.svg";
 import { ExternalLink } from "lucide-react";
+import coinSound from "../../../public/sound/caching_duck_habbo.mp3";
 
 const RewardDetails = () => {
   const userHasLockedTokens = true;
@@ -36,7 +37,7 @@ const RewardDetails = () => {
       lockedAPR: "18.7%",
       dfinReward: "0.92",
       lockedDate: "2025-01-01",
-      unlockDate: "2025-01-01",
+      unlockDate: "2025-01-1",
       daysRemaining: 0,
     },
   ];
@@ -115,7 +116,6 @@ const RewardDetails = () => {
   // Handle the redeem action from the first modal
   const handleRedeemAction = () => {
     setIsRedeemModalOpen(false);
-
     // Check if it's safe period or fully unlocked
     const safePeriodRemaining = calculateSafeUnstakeDaysRemaining(
       selectedPool.unlockDate
@@ -136,6 +136,8 @@ const RewardDetails = () => {
     setIsRedeemModalOpen(false);
     setIsEarlyRedeemModalOpen(false);
     setIsConfirmRedeemModalOpen(false);
+    const audio = new Audio(coinSound);
+      audio.play();
 
     // Determine the redeemed amount
     const redeemedAmount = isEarlyRedeemModalOpen
@@ -144,7 +146,7 @@ const RewardDetails = () => {
           calculateSafeUnstakeDaysRemaining(selectedPool.unlockDate)
         )
       : selectedPool.dfinReward;
-
+      
     // Show toast notification
     setToastMessage(`Successfully redeemed ${redeemedAmount} DFIN!`);
     toast.dismiss();
@@ -176,8 +178,11 @@ const RewardDetails = () => {
     const assetName = poolParts[1]; // Gets the second part (ICP or ckUSDT)
 
     // Simulate API call with timeout
+
     setTimeout(() => {
       setIsLoading(false);
+      const audio = new Audio(coinSound);
+      audio.play();
       toast.success(`30 ${assetName} has been added to your wallet`, {
         className: "custom-toast",
         position: "top-center",
@@ -368,19 +373,17 @@ const RewardDetails = () => {
                       <tr key={pool.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex space-x-0">
-                              <div className=" flex items-center">
-                                <img
-                                  src={pool.logos[0]}
-                                  alt="pool_icon"
-                                  className="w-8 h-8 rounded-full z-10"
-                                />
-                                <img
-                                  src={pool.logos[1]}
-                                  alt="pool_icon"
-                                  className="w-8 h-8 rounded-full -ml-1"
-                                />
-                              </div>
+                            <div className="relative flex-shrink-0 h-8 w-14">
+                              <img
+                                src={pool.logos[0]}
+                                alt="pool_icon"
+                                className="absolute left-0 w-8 h-8 rounded-full z-10 border border-gray-300 dark:border-gray-700"
+                              />
+                              <img
+                                src={pool.logos[1]}
+                                alt="pool_icon"
+                                className="absolute left-6 w-8 h-8 rounded-full border border-gray-300 dark:border-gray-700"
+                              />
                             </div>
                             <div className="ml-3">
                               <div className="text-sm font-medium text-[#2A1F9D] dark:text-gray-50">
@@ -416,9 +419,10 @@ const RewardDetails = () => {
                             {statusInfo.status === "Unlocked" && (
                               <button
                                 onClick={() => handleClaimAsset(pool)}
-                                className="text-blue-500 hover:text-blue-700 text-xs mt-1 italic"
+                                className="text-blue-600 dark:text-blue-400  text-[11px] mt-1 underline flex"
                               >
                                 Claim your {assetName}
+                                <ExternalLink className="ml-1 mt-[2.6px]" size={12} color="#5FA5F9"/>
                               </button>
                             )}
                           </div>
@@ -461,12 +465,12 @@ const RewardDetails = () => {
                             <img
                               src={pool.logos[0]}
                               alt="pool_icon"
-                              className="w-8 h-8 rounded-full z-10"
+                              className="w-8 h-8 rounded-full z-10 border border-gray-300 dark:border-gray-700"
                             />
                             <img
                               src={pool.logos[1]}
                               alt="pool_icon"
-                              className="w-8 h-8 rounded-full -ml-1"
+                              className="w-8 h-8 rounded-full -ml-1 border border-gray-300 dark:border-gray-700"
                             />
                           </div>
                           <div className="ml-4">
@@ -537,9 +541,10 @@ const RewardDetails = () => {
                                 {statusInfo.status === "Unlocked" && (
                                   <button
                                     onClick={() => handleClaimAsset(pool)}
-                                    className="text-blue-500 hover:text-blue-700 text-xs mt-1 italic"
+                                    className="text-blue-600 dark:text-blue-400  text-xs mt-1 underline flex"
                                   >
                                     Claim your {assetName}
+                                    <ExternalLink className="ml-1 mt-[1px]" size={14} color="#5FA5F9"/>
                                   </button>
                                 )}
                               </span>

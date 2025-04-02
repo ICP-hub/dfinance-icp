@@ -206,7 +206,7 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
         // Transfers borrow amount from the pool to the user
         match asset_transfer_from(
             ledger_canister_id,
-            platform_principal,
+            ledger_canister_id,
             user_principal,
             params.amount.clone(),
         )
@@ -526,7 +526,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         match asset_transfer_from(
             ledger_canister_id,
             transfer_from_principal,
-            platform_principal,
+            ledger_canister_id,
             repay_amount.clone(),
         )
         .await

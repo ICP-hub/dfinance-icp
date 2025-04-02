@@ -379,7 +379,7 @@ export default function Navbar({ isHomeNav }) {
                             >
                               {link.title}
                             </NavLink>
-                            {link.title === "Faucet" && (
+                            {link.title === "Reward" && (
                               <>
                                 <span
                                   className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"

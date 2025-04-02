@@ -6,6 +6,7 @@ import Home from "../pages/Home/Home";
 import Faucet from "../pages/Faucet/faucet";
 import { Outlet } from "react-router-dom";
 import MiniLoader from "../components/Common/MiniLoader";
+import Reward from "../pages/Reward/Reward";
 
 const Error = lazy(() => import("../pages/Error"));
 const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
@@ -170,6 +171,14 @@ export default [
     element: (
       <MainDashboard includeDashboardNav={false}>
         <Faucet />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/Reward",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+        <Reward />
       </MainDashboard>
     ),
   },

@@ -36,7 +36,7 @@ const RewardDetails = () => {
       lockedAPR: "18.7%",
       dfinReward: "0.92",
       lockedDate: "2025-01-01",
-      unlockDate: "2025-01-10",
+      unlockDate: "2025-01-01",
       daysRemaining: 0,
     },
   ];

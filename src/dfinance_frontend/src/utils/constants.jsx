@@ -138,7 +138,7 @@ export const DASHBOARD_TOP_NAV_LINK = [
     title: "Reward",
     route: "/Reward",
     icon: "",
-    testnet: true,
+    alwaysPresent: true,
   },
 ];
 export const error = [

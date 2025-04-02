@@ -194,13 +194,6 @@ export default function Navbar({ isHomeNav }) {
     window.location.replace(url); 
 };
 
-
-
-
-
-
-
-
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
     setSwitchTokenDrop(false);
@@ -370,34 +363,8 @@ export default function Navbar({ isHomeNav }) {
                             {link.title}
                           </NavLink>
                         );
-                      } else if (isTestnetMode && link.testnet) {
-                        return (
-                          <React.Fragment key={index}>
-                            <NavLink
-                              to={link.route}
-                              className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                            >
-                              {link.title}
-                            </NavLink>
-                            {link.title === "Reward" && (
-                              <>
-                                <span
-                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                  onClick={handlePopupToggle}
-                                >
-                                  •••
-                                </span>
-                                {isPopupVisible && (
-                                  <Popup
-                                    position={popupPosition}
-                                    onClose={() => setIsPopupVisible(false)}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </React.Fragment>
-                        );
-                      } else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
+                      } 
+                      else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
                         return (
                           <NavLink
                             key={index}

@@ -1291,7 +1291,7 @@ const SupplyPopup = ({
             <div className="flex justify-end mt-2">
               <button
                 title={"Earn rewards"}
-                className="z-20 px-[14px] text-white py-1.5 focus:outline-none box bg-transparent shadow-xl  text-xs"
+                className="z-20 px-[14px] text-[#2a1f9d] dark:text-darkText py-1.5 focus:outline-none box bg-transparent shadow-xl  text-xs"
                 onClick={() => {
                   setIsOpen(true);
                   setIsVisible(false);
@@ -1608,26 +1608,17 @@ const SupplyPopup = ({
 
           { }
           {isLoading && (
-            <div
-              className="fixed inset-0 flex items-center justify-center z-50"
-              style={{
-                background: "rgba(0, 0, 0, 0.4)",
-                backdropFilter: "blur(2px)",
-              }}
-            >
+            <div className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-black bg-opacity-40 backdrop-blur-sm">
+              <div className="loader mb-4"></div> {/* Loader outside the content box */}
 
-
-              <div className="flex flex-col items-center gap-4">
-                <div className="loader"></div>
-                <p
-                  className={`text-sm lg:text-md break-words whitespace-normal  `}
-                  style={{ maxWidth: "100%", wordBreak: "break-word" }}
-                >
+              <div className="flex flex-col items-center gap-4 p-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg w-[390px]">
+                <p className="text-sm lg:text-md text-black dark:text-white break-words whitespace-normal text-center leading-tight line-clamp-2">
                   {liquidityMessage}
                 </p>
               </div>
             </div>
           )}
+
 
         </div>
       )}
@@ -1868,7 +1859,7 @@ const SupplyPopup = ({
 
           className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
         >
-          <div className="w-full flex flex-col items-center mb-5 ">
+          <div className="w-full flex flex-col items-center mb-4 ">
             <button
               ref={closeButtonRef}
               onClick={handleClose}
@@ -1879,7 +1870,7 @@ const SupplyPopup = ({
             <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
               <Check />
             </div>
-            <p className=" text-sm  text-wrap lgx:text-lg text-center mt-2 mb-8">
+            <p className=" text-sm  text-wrap lgx:text-lg text-center mt-2 mb-6">
               {liquidityMessage}
 
             </p>

@@ -425,7 +425,28 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("Withdraw validated successfully");
 
-        let withdraw_amount = params.amount.clone();
+        if let Err(_) = update_token_price(params.asset.clone()).await {}
+
+        let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+            Ok(price) => price,
+            Err(e) => {
+                ic_cdk::println!("Failed to fetch exchange rate");
+                return Err(e);
+            }
+        };
+
+        let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+
+        if params.amount.clone() < transfer_token_fee {
+            ic_cdk::println!("Amount is less than the transfer token fee");
+            if let Err(e) = release_lock(&operation_key) {
+                ic_cdk::println!("Failed to release lock: {:?}", e);
+            }
+            return Err(Error::FeeExceedsAmount);
+        }
+
+        let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
         ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
 
 
@@ -464,7 +485,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             let asset_index = &mut state.asset_index;
             asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
         });
-        // Transfers the asset from the user to our backend cansiter
+        // Transfers the asset from the user to our token cansiter
         match asset_transfer_from(
             ledger_canister_id,
             ledger_canister_id,

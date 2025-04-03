@@ -215,7 +215,7 @@ const Repay = ({
   }
 
   const numericBalance = balance;
-  const supplyBalance = Math.max(numericBalance - transferFee, 0);
+  const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 

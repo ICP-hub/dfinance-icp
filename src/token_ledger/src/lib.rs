@@ -486,18 +486,14 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
         });
     }
 
-    let spender_account = if platform_principal == arg.from.owner {
-        None
-    } else {
-        Some(Account {
-            owner: ic_cdk::api::caller(),
-            subaccount: arg.spender_subaccount,
-        })
+    let spender_account = Account {
+        owner: ic_cdk::api::caller(),
+        subaccount: arg.spender_subaccount,
     };
     execute_transfer(
         arg.from,
         arg.to,
-        spender_account,
+        Some(spender_account),
         arg.fee,
         arg.amount,
         arg.memo,

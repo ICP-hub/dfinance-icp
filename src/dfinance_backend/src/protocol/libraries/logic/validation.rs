@@ -185,17 +185,17 @@ impl ValidationLogic {
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-        let balance_result = get_balance(ledger_canister, ledger_canister).await;
+        let balance_result = get_balance(ledger_canister, platform_principal).await;
 
-        let ledger_canister_balance = match balance_result {
+        let platform_balance = match balance_result {
             Ok(bal) => bal,
             Err(e) => {
                 return Err(e);
             }
         };
-        ic_cdk::println!("ledger_canister balance: {:?}", ledger_canister_balance);
+        ic_cdk::println!("ledger_canister balance: {:?}", platform_balance);
 
-        if amount > ledger_canister_balance {
+        if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
 
@@ -334,17 +334,17 @@ impl ValidationLogic {
 
         ic_cdk::println!("amount in borrow ={}", amount);
 
-        let balance_result = get_balance(ledger_canister, ledger_canister).await;
+        let balance_result = get_balance(ledger_canister, platform_principal).await;
 
-        let ledger_canister_balance = match balance_result {
+        let platform_balance = match balance_result {
             Ok(bal) => bal,
             Err(e) => {
                 return Err(e);
             }
         };
-        ic_cdk::println!("ledger_canister balance: {:?}", ledger_canister_balance);
+        ic_cdk::println!("ledger_canister balance: {:?}", platform_balance);
 
-        if amount > ledger_canister_balance {
+        if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
         // validating reserve states

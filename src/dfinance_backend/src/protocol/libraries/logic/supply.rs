@@ -212,7 +212,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         match asset_transfer_from(
             ledger_canister_id,
             user_principal,
-            ledger_canister_id,
+            platform_principal,
             amount_nat.clone(),
         )
         .await
@@ -488,7 +488,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         // Transfers the asset from the user to our token cansiter
         match asset_transfer_from(
             ledger_canister_id,
-            ledger_canister_id,
+            platform_principal,
             transfer_to_principal,
             withdraw_amount.clone(),
         )

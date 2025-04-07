@@ -180,7 +180,7 @@ pub async fn calculate_interest_rates(
         }
 
         current_liquidity_rate = curr_borrow_rate.clone().scaled_mul(utilization_ratio.clone())
-            .scaled_mul(Nat::from(100000000u128) - (reserve_factor/Nat::from(100u128)));
+            .scaled_mul(Nat::from(100000000u128) - (reserve_factor/Nat::from(100u128))).scaled_mul(Nat::from(30000000u128));
 
         ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
         ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);

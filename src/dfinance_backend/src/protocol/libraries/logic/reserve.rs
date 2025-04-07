@@ -621,7 +621,7 @@ pub async fn accrue_to_treasury(
     let mut vars = AccrueToTreasuryLocalVars::default();
     ic_cdk::println!("reserve chache : {:?}",reserve_cache.clone());
 
-    let subtracted_reserve_factor = Nat::from(5_00_000_000u128); //Ask: just for now some other solution.
+    // let subtracted_reserve_factor = Nat::from(5_00_000_000u128); //Ask: just for now some other solution.
                                                                  // Calculate lender and LP provider shares
     // let mut lender_share = Nat::from(0u128);
     let mut lp_provider_share = Nat::from(0u128);
@@ -682,7 +682,7 @@ pub async fn accrue_to_treasury(
     );
     vars.amount_to_mint = ScalingMath::scaled_mul(
         vars.total_debt_accrued.clone(),
-        reserve_cache.reserve_factor.clone() - subtracted_reserve_factor,
+        reserve_cache.reserve_factor.clone() - Nat::from(BUY_AND_BURN) ,
     ); //percent
 
     let buy_and_burn_percentage_amount =

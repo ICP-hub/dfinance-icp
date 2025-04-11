@@ -87,13 +87,10 @@ export default function Navbar({ isHomeNav }) {
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
 
-
-
-
   const [showPopup, setShowPopup] = useState(false);
   const [confirmPopup, setShowConfirmPopup] = useState(false);
   const [successPopup, setSuccesPopup] = useState(false);
-  const [selectedDuration, setSelectedDuration] = useState('6 months');
+  const [selectedDuration, setSelectedDuration] = useState("6 months");
 
   const {
     ckBTCUsdRate,
@@ -145,7 +142,6 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
-
   };
 
   const handleSwitchWallet = () => {
@@ -159,8 +155,6 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setDropdownVisible(false);
   };
-
-
 
   const copyToClipboard = () => {
     if (principal) {
@@ -263,7 +257,11 @@ export default function Navbar({ isHomeNav }) {
   const [usdValue1, setUsdValue1] = useState(0);
   const [usdValue2, setUsdValue2] = useState(0);
   const [showDropdown1, setShowDropdown1] = useState(false);
-  const [selected1, setSelected1] = useState({ name: "USDT", icon: ckUSDT, price: 3000 });
+  const [selected1, setSelected1] = useState({
+    name: "USDT",
+    icon: ckUSDT,
+    price: 3000,
+  });
   const [rdntToken] = useState({ name: "DFIN", icon: dfin });
   const [secondSectionActive, setSecondSectionActive] = useState(false);
   const [availableDFIN, setAvailableDFIN] = useState(100); // replace 100 with actual data from props, API, etc.
@@ -273,16 +271,18 @@ export default function Navbar({ isHomeNav }) {
   const totalDeposit = 1000000; // your constant deposit value (example)
   const activeValue = secondSectionActive ? usdValue1 + usdValue2 : usdValue1;
   const percentage = ((activeValue / totalDeposit) * 100).toFixed(2);
-  const clampedPercentage = Math.min((activeValue / totalDeposit) * 100, 100).toFixed(2);
-  console.log("clampedPercentage", clampedPercentage)
+  const clampedPercentage = Math.min(
+    (activeValue / totalDeposit) * 100,
+    100
+  ).toFixed(2);
+  console.log("clampedPercentage", clampedPercentage);
   const tokenOptions = [
     { name: "USDT", icon: ckUSDT },
     { name: "ICP", icon: icp },
-
   ];
 
   const handleTokenChange = (tokenName) => {
-    const token = tokenOptions.find(t => t.name === tokenName);
+    const token = tokenOptions.find((t) => t.name === tokenName);
     setSelected1(token);
     setShowDropdown1(false);
 
@@ -358,14 +358,16 @@ export default function Navbar({ isHomeNav }) {
       setUsdValue1(0);
     }
   };
+
   const [isLoading, setIsLoading] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+
   const handleApprove = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsApproved(true);
       setIsLoading(false);
-      toast.dismiss()
+      toast.dismiss();
       toast.success("Approval successfull!", {
         className: "custom-toast",
         position: "top-center",
@@ -378,16 +380,18 @@ export default function Navbar({ isHomeNav }) {
       });
     }, 1500);
   };
+  
   useEffect(() => {
     if (isApproved) {
       setIsApproved(false);
     }
   }, [amount1, amount2, selected1]);
+
   const handleAddLiquidity = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      toast.dismiss()
+      toast.dismiss();
       toast.success("Liquidity added successfully!", {
         className: "custom-toast",
         position: "top-center",
@@ -410,7 +414,6 @@ export default function Navbar({ isHomeNav }) {
   };
   const handleConfirmPopup = () => {
     setShowConfirmPopup(false);
-   
   };
   const handleLockPopup = () => {
     setSuccesPopup(false);
@@ -419,37 +422,40 @@ export default function Navbar({ isHomeNav }) {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      
+
       setShowPopup(false);
       setShowConfirmPopup(true);
     }, 1500);
   };
   const handleLock = () => {
-  setIsLoading(true);
-  setTimeout(() => {
-    setIsLoading(false);
-    toast.success(
-      `Locked for ${selectedDuration} with ${
-        selectedDuration === '6 months' ? '36.52%' : 
-        selectedDuration === '12 months' ? '91.3%' : 
-        selectedDuration === '3 months' ? '14.61%' : 
-        '3.65%'
-      } APR`,
-      {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        type: 'success'  // If you need to specify the type, include it in the options object
-      }
-    );
-    setShowConfirmPopup(false);
-    setSuccesPopup(true);
-  }, 1500);
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success(
+        `Locked for ${selectedDuration} with ${
+          selectedDuration === "6 months"
+            ? "36.52%"
+            : selectedDuration === "12 months"
+            ? "91.3%"
+            : selectedDuration === "3 months"
+            ? "14.61%"
+            : "3.65%"
+        } APR`,
+        {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          type: "success", // If you need to specify the type, include it in the options object
+        }
+      );
+      setShowConfirmPopup(false);
+      setSuccesPopup(true);
+    }, 1500);
   };
 
   const handleMaxClick2 = () => {
@@ -571,52 +577,56 @@ export default function Navbar({ isHomeNav }) {
                   onClick={handleLogoClick}
                   className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
                 />
-                <h1 className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer" onClick={handleLogoClick}>DFinance</h1>
+                <h1
+                  className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer"
+                  onClick={handleLogoClick}
+                >
+                  DFinance
+                </h1>
               </div>
-
-
-
             </div>
             {!isMobile && (
               <>
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                      if (link.alwaysPresent) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      else if (!isTestnetMode && !link.testnet && link.title !== "Faq") {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      return null;
-
-                    })
+                        if (link.alwaysPresent) {
+                          return (
+                            <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (
+                          !isTestnetMode &&
+                          !link.testnet &&
+                          link.title !== "Faq"
+                        ) {
+                          return (
+                            <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        }
+                        return null;
+                      })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                      <NavLink
-                        key={index}
-                        target={link.target}
-                        to={link.route}
-                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                      >
-                        {link.title}
-                      </NavLink>
-                    ))}
+                        <NavLink
+                          key={index}
+                          target={link.target}
+                          to={link.route}
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                 </div>
               </>
             )}
@@ -649,7 +659,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -707,7 +717,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                            { }
+                            {}
                             <div className="hidden lg1:flex justify-center">
                               <div
                                 className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -753,7 +763,7 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-                            { }
+                            {}
                             <div className=" w-full flex justify-center">
                               <div
                                 className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -809,7 +819,7 @@ export default function Navbar({ isHomeNav }) {
                             Settings
                           </h2>
 
-                          { }
+                          {}
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around">
                               <label
@@ -830,7 +840,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
 
-                          { }
+                          {}
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                               <label
@@ -847,13 +857,11 @@ export default function Navbar({ isHomeNav }) {
                               <CustomizedSwitches
                                 checked={isTestnetMode}
                                 onChange={handleTestnetModeToggle}
-
                               />
-
                             </div>
                           </div>
 
-                          { }
+                          {}
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around relative group">
                               <label
@@ -867,7 +875,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </label>
 
-                              { }
+                              {}
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                 Enabling this will allow the user to hear sound
                                 when supply, borrow, repay, or withdraw actions
@@ -907,7 +915,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -940,7 +948,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}
@@ -950,7 +958,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        { }
+                        {}
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -971,7 +979,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        { }
+                        {}
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label
@@ -988,9 +996,7 @@ export default function Navbar({ isHomeNav }) {
                             <CustomizedSwitches
                               checked={isTestnetMode}
                               onChange={handleTestnetModeToggle}
-
                             />
-
                           </div>
                         </div>
                       </div>
@@ -1001,16 +1007,15 @@ export default function Navbar({ isHomeNav }) {
             )}
           </nav>
         </div>
-
       </ClickAwayListener>
       {console.log("isDashboardRoute", isDashboardRoute)}
       {!isDashboardRoute && (
-        <div className="relative w-full rounded-3xl p-4 md:p-5 lg:p-6 mb-4 shadow-lg
+        <div
+          className="relative w-full rounded-3xl px-6 py-4 mb-4 shadow-lg
         bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-slate-800
         dark:bg-gradient-to-r dark:from-blue-950/80 dark:via-blue-900/30 dark:to-teal-900/20 dark:text-white
-        border-2 border-[#4659CF]/60 dark:border-teal-800 ring-1 overflow-hidden">
-
-
+        border-2 border-[#4659CF]/60 dark:border-teal-800 ring-1 overflow-hidden"
+        >
           {/* Top border - left to right */}
           <div className="absolute top-0 left-0 h-0.5 w-1/6 bg-gradient-to-r from-transparent via-purple-600 to-transparent dark:bg-gradient-to-r from-transparent via-blue-600 to-transparent animate-slide-right" />
 
@@ -1025,7 +1030,7 @@ export default function Navbar({ isHomeNav }) {
 
           {/* Top row with title and APR info - flex column on mobile, row on larger screens */}
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-0.5">
-            <h2 className="text-[13px]  text-[#12315c] dark:text-darkText md:text-lg lg:text-xl font-medium max-w-xl mb-1 lg:mb-0">
+            <h2 className="text-[15px]  text-[#12315c] dark:text-darkText md:text-lg lg:text-xl font-medium max-w-xl mb-1 lg:mb-0">
               Unleash the full power of Dfinance with locked LP
             </h2>
           </div>
@@ -1037,23 +1042,37 @@ export default function Navbar({ isHomeNav }) {
             </p>
 
             {isAuthenticated ? (
-              <div className="flex flex-wrap items-center gap-0.5 mt-2 md:space-x-2 -mb-1">
+              <div className="flex flex-wrap items-center gap-3 mt-2 mb-1">
                 <button
                   onClick={openModal}
                   className="flex items-center bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90%
-     text-white rounded-lg px-3 py-1.5 shadow-[#00000040]
-      font-semibold text-xs">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" className="mr-1.5">
-                    <path d="M13 10V3L4 14H11V21L20 10H13Z"
-                      fill="currentColor" stroke="currentColor" strokeWidth="2"
-                      strokeLinecap="round" strokeLinejoin="round" />
+                text-white rounded-lg px-3 py-2 shadow-[#00000040]
+                  font-medium text-xs"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="mr-1.5"
+                  >
+                    <path
+                      d="M13 10V3L4 14H11V21L20 10H13Z"
+                      fill="currentColor"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                   Add Liquidity
                 </button>
-                <button className="flex items-center bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90%
-    text-white rounded-lg px-3 py-1.5 shadow-[#00000040]
-     font-semibold text-xs">
+                <button
+                  className="flex items-center bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90%
+    text-white rounded-lg px-3 py-2 shadow-[#00000040]
+     font-medium text-xs"
+                >
                   <span>Learn more</span>
                   <ArrowRight className="ml-1 h-3 w-3 md:h-3.5 md:w-3.5" />
                 </button>
@@ -1077,38 +1096,54 @@ export default function Navbar({ isHomeNav }) {
 
           {/* Custom animation styles */}
           <style jsx>{`
-        @keyframes slide-right {
-          0% { left: -25%; }
-          100% { left: 100%; }
-        }
-        .animate-slide-right {
-          animation: slide-right 6s ease-in-out infinite;
-        }
-        
-        @keyframes slide-left {
-          0% { right: -25%; }
-          100% { right: 100%; }
-        }
-        .animate-slide-left {
-          animation: slide-left 6s ease-in-out infinite;
-        }
-        
-        @keyframes slide-down {
-          0% { top: -25%; }
-          100% { top: 100%; }
-        }
-        .animate-slide-down {
-          animation: slide-down 6s ease-in-out infinite;
-        }
-        
-        @keyframes slide-up-left {
-          0% { bottom: -25%; }
-          100% { bottom: 100%; }
-        }
-        .animate-slide-up-left {
-          animation: slide-up-left 6s ease-in-out infinite;
-        }
-      `}</style>
+            @keyframes slide-right {
+              0% {
+                left: -25%;
+              }
+              100% {
+                left: 100%;
+              }
+            }
+            .animate-slide-right {
+              animation: slide-right 6s ease-in-out infinite;
+            }
+
+            @keyframes slide-left {
+              0% {
+                right: -25%;
+              }
+              100% {
+                right: 100%;
+              }
+            }
+            .animate-slide-left {
+              animation: slide-left 6s ease-in-out infinite;
+            }
+
+            @keyframes slide-down {
+              0% {
+                top: -25%;
+              }
+              100% {
+                top: 100%;
+              }
+            }
+            .animate-slide-down {
+              animation: slide-down 6s ease-in-out infinite;
+            }
+
+            @keyframes slide-up-left {
+              0% {
+                bottom: -25%;
+              }
+              100% {
+                bottom: 100%;
+              }
+            }
+            .animate-slide-up-left {
+              animation: slide-up-left 6s ease-in-out infinite;
+            }
+          `}</style>
         </div>
       )}
       {isModalOpen && (
@@ -1122,23 +1157,39 @@ export default function Navbar({ isHomeNav }) {
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-4 border-gray-200 dark:border-gray-800 pb-1 mt-0.5">
-              <div className="w-8">
-                {/* Empty div for spacing/balance */}
-              </div>
-              <h2 className="text-lg font-semibold text-center flex-grow">Add Liquidity</h2>
-              <button className="text-gray-400 hover:text-gray-600 w-8" onClick={closeModal}>
+              <div className="w-8">{/* Empty div for spacing/balance */}</div>
+              <h2 className="text-lg font-semibold text-center flex-grow">
+                Add Liquidity
+              </h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 w-8"
+                onClick={closeModal}
+              >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
             </div>
 
             {/* RDNT Emissions Info */}
-            <div className="p-3 b bg-gradient-to-r from-sky-200/40 via-blue-200/80 to-indigo-200/50 text-slate-800
+            <div
+              className="p-3 b bg-gradient-to-r from-sky-200/40 via-blue-200/80 to-indigo-200/50 text-slate-800
                    dark:bg-gradient-to-r dark:from-blue-950 dark:via-blue-900/60 dark:to-teal-900/70 dark:text-white border-2 
-                  border-blue-300 mb-4 rounded-xl">
-              <h3 className="font-medium text-xs dark:text-darkText/90 text-[14px]  mb-1">Want to activate Dfinance emissions?</h3>
-              <p className="text-xs  dark:text-darkText/90 ">When your locked LP value is greater than 5% of your total deposit value you become emissions eligible.</p>
+                  border-blue-300 mb-4 rounded-xl"
+            >
+              <h3 className="font-medium text-xs dark:text-darkText/90 text-[14px]  mb-1">
+                Want to activate Dfinance emissions?
+              </h3>
+              <p className="text-xs  dark:text-darkText/90 ">
+                When your locked LP value is greater than 5% of your total
+                deposit value you become emissions eligible.
+              </p>
               <div className="flex items-center mt-3">
                 <div className="w-4 h-4 rounded-full mr-1 flex items-center justify-center">
                   <img
@@ -1148,12 +1199,13 @@ export default function Navbar({ isHomeNav }) {
                   />
                 </div>
                 <span className="text-xs  dark:text-darkText/90">
-                  ${activeValue.toLocaleString(undefined, {
+                  $
+                  {activeValue.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
-                  })} ({clampedPercentage}%) out of ${totalDeposit.toLocaleString()}
+                  })}{" "}
+                  ({clampedPercentage}%) out of ${totalDeposit.toLocaleString()}
                 </span>
-
               </div>
               <div className="w-full h-2 bg-transparent rounded-full mt-2 flex overflow-hidden relative">
                 {/* The dynamic gradient progress bar */}
@@ -1163,23 +1215,26 @@ export default function Navbar({ isHomeNav }) {
                 ></div>
 
                 {/* The background bar */}
-                <div
-                  className="h-full bg-gray-400 opacity-50 rounded-r-full flex-1"
-                ></div>
+                <div className="h-full bg-gray-400 opacity-50 rounded-r-full flex-1"></div>
 
                 {/* Fixed separator at 5% position */}
                 <div
                   className="absolute h-full w-[4px] bg-[#e1f3fe] dark:bg-[#1b2552] mr-2 "
-                  style={{ left: '5%' }}
+                  style={{ left: "5%" }}
                 ></div>
               </div>
-
             </div>
 
             {/* Input Section */}
             <div className="flex flex-col gap-4">
               {/* First Section */}
-              <div className={`relative border ${secondSectionActive ? 'border-gray-300 dark:bg-[#1D1B40] dark:border-gray-800 bg-gray-200 ' : 'border-gray-300 dark:border-gray-600'} p-4 rounded-xl text-[#233D63] dark:text-gray-200 flex items-center justify-between`}>
+              <div
+                className={`relative border ${
+                  secondSectionActive
+                    ? "border-gray-300 dark:bg-[#1D1B40] dark:border-gray-800 bg-gray-200 "
+                    : "border-gray-300 dark:border-gray-600"
+                } p-4 rounded-xl text-[#233D63] dark:text-gray-200 flex items-center justify-between`}
+              >
                 {/* Input Section */}
                 <div className="w-[80%] relative -mt-6">
                   <input
@@ -1191,7 +1246,8 @@ export default function Navbar({ isHomeNav }) {
                     disabled={secondSectionActive}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.2 mb-1">
-                    ${usdValue1.toLocaleString(undefined, {
+                    $
+                    {usdValue1.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -1203,7 +1259,9 @@ export default function Navbar({ isHomeNav }) {
                   <div className="relative border border-gray-300 dark:border-gray-600 rounded-full">
                     <div
                       className="flex items-center rounded-lg px-2 py-1 text-gray-900 dark:text-gray-200 cursor-pointer ml-1"
-                      onClick={() => !secondSectionActive && setShowDropdown1(!showDropdown1)}
+                      onClick={() =>
+                        !secondSectionActive && setShowDropdown1(!showDropdown1)
+                      }
                     >
                       <img
                         src={selected1.icon}
@@ -1213,13 +1271,19 @@ export default function Navbar({ isHomeNav }) {
                       <span className="text-xs">{selected1.name}</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className={`ml-2 w-8 h-8 text-[#233D63] dark:text-gray-200 transition-transform duration-200 ${showDropdown1 ? "rotate-180" : ""}`}
+                        className={`ml-2 w-8 h-8 text-[#233D63] dark:text-gray-200 transition-transform duration-200 ${
+                          showDropdown1 ? "rotate-180" : ""
+                        }`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                         strokeWidth={2}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 9l6 6 6-6"
+                        />
                       </svg>
                     </div>
 
@@ -1251,10 +1315,8 @@ export default function Navbar({ isHomeNav }) {
                   >
                     Max
                   </button>
-
                 </div>
               </div>
-
 
               {/* Second Section - Either as Optional Button or Active Input */}
               {!secondSectionActive ? (
@@ -1265,10 +1327,18 @@ export default function Navbar({ isHomeNav }) {
                 >
                   <div className="w-8 h-8 rounded-full  flex items-center justify-center mb-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M12 5V19M5 12H19"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
-                  <span className="text-[13px] ">Add DFIN to Liquidity (optional)</span>
+                  <span className="text-[13px] ">
+                    Add DFIN to Liquidity (optional)
+                  </span>
                 </div>
               ) : (
                 // Active RDNT Input Section
@@ -1279,7 +1349,13 @@ export default function Navbar({ isHomeNav }) {
                     onClick={toggleSecondSection}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M18 6L6 18M6 6L18 18"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
 
@@ -1293,7 +1369,8 @@ export default function Navbar({ isHomeNav }) {
                       className="w-full text-gray-900 dark:text-gray-200 text-xl font-medium bg-transparent focus:outline-none pr-24"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 darkmt-0.2 mb-1">
-                      ${usdValue2.toLocaleString(undefined, {
+                      $
+                      {usdValue2.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -1309,7 +1386,9 @@ export default function Navbar({ isHomeNav }) {
                           alt={rdntToken.name}
                           className="w-5 h-5 rounded-full mr-2 object-contain"
                         />
-                        <span className="text-xs text-[#233D63] dark:text-gray-200">{rdntToken.name}</span>
+                        <span className="text-xs text-[#233D63] dark:text-gray-200">
+                          {rdntToken.name}
+                        </span>
                       </div>
                     </div>
 
@@ -1322,12 +1401,10 @@ export default function Navbar({ isHomeNav }) {
                     </button>
                   </div>
                 </div>
-
               )}
             </div>
 
             {/* Slippage */}
-
 
             {/* Continue Button */}
             <div className="flex flex-col">
@@ -1335,8 +1412,11 @@ export default function Navbar({ isHomeNav }) {
                 <button
                   onClick={handleApprove}
                   disabled={clampedPercentage < 5 || isLoading || isApproved}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${clampedPercentage < 5 || isApproved ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${
+                    clampedPercentage < 5 || isApproved
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 >
                   {isApproved ? "Approved" : "Approve"}
                 </button>
@@ -1344,8 +1424,11 @@ export default function Navbar({ isHomeNav }) {
                 <button
                   onClick={handleAddLiquidity}
                   disabled={clampedPercentage < 5 || isLoading || !isApproved}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${clampedPercentage < 5 ||!isApproved ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${
+                    clampedPercentage < 5 || !isApproved
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                 >
                   Add Liquidity
                 </button>
@@ -1355,49 +1438,68 @@ export default function Navbar({ isHomeNav }) {
               <div className="mt-4 border-b border-gray-300 dark:border-gray-700"></div>
             </div>
 
-
             {/* Footer Info */}
             <div className="pt-4 text-xs text-[#233D63] dark:text-gray-200 space-y-1">
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Total value of deposited assets</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  Total value of deposited assets
+                </span>
                 <span>${totalDeposit}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Required locked LP value for emissions</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  Required locked LP value for emissions
+                </span>
                 <span>${0.05 * totalDeposit}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Currently locked</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  Currently locked
+                </span>
                 <span>${activeValue}</span>
               </div>
             </div>
           </div>
         </div>
       )}
-      
 
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
           <div className="relative w-[325px] lg1:w-[420px] max-h-[80vh] overflow-y-auto bg-white dark:bg-darkOverlayBackground text-[#2A1F9D] dark:text-darkText shadow-xl rounded-2xl p-4 font-poppins scrollbar-none">
             <div className="flex items-center justify-between mb-4 border-gray-200 dark:border-gray-800 pb-1 mt-0.5">
-              <div className="w-8">
-                {/* Empty div for spacing/balance */}
-              </div>
-              <h2 className="text-[14px] font-semibold text-center flex-grow">Select Lock Duration</h2>
-              <button className="text-gray-400 hover:text-gray-600 w-8" onClick={handleClosePopup}>
+              <div className="w-8">{/* Empty div for spacing/balance */}</div>
+              <h2 className="text-[14px] font-semibold text-center flex-grow">
+                Select Lock Duration
+              </h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 w-8"
+                onClick={handleClosePopup}
+              >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
             </div>
 
             <div className="p-3">
               <div className="mb-3 flex flex-row items-center justify-between border-b border-gray-300 dark:border-gray-600 pb-5">
-                <p className="text-gray-600 dark:text-gray-200 text-[12px]">LP Token Value</p>
-                <p className="text-[12px] font-semibold text-gray-800 dark:text-gray-100">$701</p>
+                <p className="text-gray-600 dark:text-gray-200 text-[12px]">
+                  LP Token Value
+                </p>
+                <p className="text-[12px] font-semibold text-gray-800 dark:text-gray-100">
+                  $701
+                </p>
               </div>
 
-              <p className="text-[#233D63] dark:text-gray-200 text-gray-600 mb-5 text-[12px] mt-5">Please choose your locking duration</p>
+              <p className="text-[#233D63] dark:text-gray-200 text-gray-600 mb-5 text-[12px] mt-5">
+                Please choose your locking duration
+              </p>
 
               <div className="mb-4 rounded-2xl shadow-md overflow-hidden ">
                 <div className="bg-[#5a55b1]  text-white p-4 font-semibold text-center text-[13px]">
@@ -1405,64 +1507,145 @@ export default function Navbar({ isHomeNav }) {
                 </div>
 
                 <div className="border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
-                  <div className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === '12 months' ? 'bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800' : 'bg-white dark:bg-[#1D1B40] '}`}
-                    onClick={() => setSelectedDuration('12 months')}>
+                  <div
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
+                      selectedDuration === "12 months"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
+                        : "bg-white dark:bg-[#1D1B40] "
+                    }`}
+                    onClick={() => setSelectedDuration("12 months")}
+                  >
                     <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full border ${selectedDuration === '12 months' ? 'border-purple-600 bg-[#4659CF] dark:bg-blue-300 ' : 'border-gray-300 dark:border-gray-500'} flex items-center justify-center mr-2`}>
-                        {selectedDuration === '12 months' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                      <div
+                        className={`w-4 h-4 rounded-full border ${
+                          selectedDuration === "12 months"
+                            ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300 "
+                            : "border-gray-300 dark:border-gray-500"
+                        } flex items-center justify-center mr-2`}
+                      >
+                        {selectedDuration === "12 months" && (
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        )}
                       </div>
-                      <span className="font-medium text-[12px] dark:text-gray-200">12 months</span>
+                      <span className="font-medium text-[12px] dark:text-gray-200">
+                        12 months
+                      </span>
                     </div>
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">91.3% APR</span>
+                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">
+                      91.3% APR
+                    </span>
                   </div>
 
-                  <div className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === '6 months' ? 'bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800' : 'bg-white dark:bg-[#1D1B40] '}`}
-                    onClick={() => setSelectedDuration('6 months')}>
+                  <div
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
+                      selectedDuration === "6 months"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
+                        : "bg-white dark:bg-[#1D1B40] "
+                    }`}
+                    onClick={() => setSelectedDuration("6 months")}
+                  >
                     <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full border ${selectedDuration === '6 months' ? 'border-purple-600 bg-[#4659CF] dark:bg-blue-300  ' : 'border-gray-300 dark:border-gray-500'} flex items-center justify-center mr-2`}>
-                        {selectedDuration === '6 months' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                      <div
+                        className={`w-4 h-4 rounded-full border ${
+                          selectedDuration === "6 months"
+                            ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300  "
+                            : "border-gray-300 dark:border-gray-500"
+                        } flex items-center justify-center mr-2`}
+                      >
+                        {selectedDuration === "6 months" && (
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        )}
                       </div>
-                      <span className="font-medium text-[12px] dark:text-gray-200">6 months</span>
+                      <span className="font-medium text-[12px] dark:text-gray-200">
+                        6 months
+                      </span>
                     </div>
-                    <span className="ml-auto text-[#4659CF] dark:text-blue-300 font-semibold text-[12px]">36.52% APR</span>
+                    <span className="ml-auto text-[#4659CF] dark:text-blue-300 font-semibold text-[12px]">
+                      36.52% APR
+                    </span>
                   </div>
 
-                  <div className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === '3 months' ? 'bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800' : 'bg-white dark:bg-[#1D1B40] '}`}
-                    onClick={() => setSelectedDuration('3 months')}>
+                  <div
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
+                      selectedDuration === "3 months"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
+                        : "bg-white dark:bg-[#1D1B40] "
+                    }`}
+                    onClick={() => setSelectedDuration("3 months")}
+                  >
                     <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full border ${selectedDuration === '3 months' ? 'border-purple-600 bg-[#4659CF] dark:bg-blue-300  ' : 'border-gray-300 dark:border-gray-500'} flex items-center justify-center mr-2`}>
-                        {selectedDuration === '3 months' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                      <div
+                        className={`w-4 h-4 rounded-full border ${
+                          selectedDuration === "3 months"
+                            ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300  "
+                            : "border-gray-300 dark:border-gray-500"
+                        } flex items-center justify-center mr-2`}
+                      >
+                        {selectedDuration === "3 months" && (
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        )}
                       </div>
-                      <span className="font-medium text-[12px] dark:text-gray-200">3 months</span>
+                      <span className="font-medium text-[12px] dark:text-gray-200">
+                        3 months
+                      </span>
                     </div>
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">14.61% APR</span>
+                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">
+                      14.61% APR
+                    </span>
                   </div>
 
-                  <div className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === '1 month' ? 'bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800' : 'bg-white dark:bg-[#1D1B40] '}`}
-                    onClick={() => setSelectedDuration('1 month')}>
+                  <div
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
+                      selectedDuration === "1 month"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
+                        : "bg-white dark:bg-[#1D1B40] "
+                    }`}
+                    onClick={() => setSelectedDuration("1 month")}
+                  >
                     <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full border ${selectedDuration === '1 month' ? 'border-purple-600 bg-[#4659CF] dark:bg-blue-300  ' : 'border-gray-300 dark:border-gray-500'} flex items-center justify-center mr-2`}>
-                        {selectedDuration === '1 month' && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                      <div
+                        className={`w-4 h-4 rounded-full border ${
+                          selectedDuration === "1 month"
+                            ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300  "
+                            : "border-gray-300 dark:border-gray-500"
+                        } flex items-center justify-center mr-2`}
+                      >
+                        {selectedDuration === "1 month" && (
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        )}
                       </div>
-                      <span className="font-medium text-[12px] dark:text-gray-200">1 month</span>
+                      <span className="font-medium text-[12px] dark:text-gray-200">
+                        1 month
+                      </span>
                     </div>
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">3.65% APR</span>
+                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">
+                      3.65% APR
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="border-[0.2px] my-6 mt-7 dark:border-gray-700 "></div>
               <div className="flex justify-between mb-3">
-                <span className="text-gray-600 dark:text-gray-400 text-[12px]">APR after lock</span>
-                <span className="font-medium dark:text-gray-200 text-[12px]">36.52%</span>
+                <span className="text-gray-600 dark:text-gray-400 text-[12px]">
+                  APR after lock
+                </span>
+                <span className="font-medium dark:text-gray-200 text-[12px]">
+                  36.52%
+                </span>
               </div>
 
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-600 dark:text-gray-400 text-[12px]">Your new annual rewards</span>
-                <span className="bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500 to-orange-300 bg-clip-text text-transparent text-xl font-bold -mt-2">$1.75</span>
+                <span className="text-gray-600 dark:text-gray-400 text-[12px]">
+                  Your new annual rewards
+                </span>
+                <span className="bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500 to-orange-300 bg-clip-text text-transparent text-xl font-bold -mt-2">
+                  $1.75
+                </span>
               </div>
               <button
                 onClick={handleContinue}
-                className="w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center transition-opacity " >
+                className="w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center transition-opacity "
+              >
                 Continue
               </button>
             </div>
@@ -1473,61 +1656,99 @@ export default function Navbar({ isHomeNav }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="w-[325px] lg1:w-[420px] max-h-[80vh] overflow-y-auto bg-white dark:bg-darkOverlayBackground text-[#2A1F9D] dark:text-darkText shadow-xl rounded-2xl p-4 font-poppins scrollbar-none">
             <div className="flex items-center justify-between mb-4 border-gray-200 dark:border-gray-800 pb-1 mt-0.5">
-              <div className="w-8">
-                {/* Empty div for spacing/balance */}
-              </div>
-              <h2 className="text-[14px] font-semibold text-center flex-grow">Confirm Your Lock</h2>
-              <button className="text-gray-400 hover:text-gray-600 w-8" onClick={handleConfirmPopup}>
+              <div className="w-8">{/* Empty div for spacing/balance */}</div>
+              <h2 className="text-[14px] font-semibold text-center flex-grow">
+                Confirm Your Lock
+              </h2>
+              <button
+                className="text-gray-400 hover:text-gray-600 w-8"
+                onClick={handleConfirmPopup}
+              >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M18 6L6 18M6 6L18 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
             </div>
 
             <div className="flex flex-col items-center py-6">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500 to-orange-300 bg-clip-text text-transparent">$1.75</h1>
-              <p className="text-gray-800 dark:text-gray-200 font-medium mt-1 text-[13px]">Your new annual rewards</p>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500 to-orange-300 bg-clip-text text-transparent">
+                $1.75
+              </h1>
+              <p className="text-gray-800 dark:text-gray-200 font-medium mt-1 text-[13px]">
+                Your new annual rewards
+              </p>
 
               <div className="mt-2 px-3 py-1 bg-green-100 rounded-full flex items-center">
                 <div className="w-4 h-4 bg-green-400 rounded-full flex items-center justify-center mr-1">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
-                <span className="text-[12px] text-green-600">Eligible for emissions</span>
+                <span className="text-[12px] text-green-600">
+                  Eligible for emissions
+                </span>
               </div>
             </div>
 
             <div className="">
               <div className="flex justify-between py-1  px-4">
-                <div className="text-gray-600 dark:text-gray-400 text-[12px]">Total deposit value</div>
-                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">$21.76</div>
+                <div className="text-gray-600 dark:text-gray-400 text-[12px]">
+                  Total deposit value
+                </div>
+                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">
+                  $21.76
+                </div>
               </div>
-
             </div>
 
             <div>
-
-
               <div className="flex justify-between py-1  px-4">
-                <div className="text-gray-600 dark:text-gray-400 text-[12px]">LP Token to be locked</div>
-                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">$701</div>
+                <div className="text-gray-600 dark:text-gray-400 text-[12px]">
+                  LP Token to be locked
+                </div>
+                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">
+                  $701
+                </div>
               </div>
 
               <div className="flex justify-between py-1 px-4">
-                <div className="text-gray-600 dark:text-gray-400 text-[12px]">Lock duration</div>
-                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">{selectedDuration}</div>
+                <div className="text-gray-600 dark:text-gray-400 text-[12px]">
+                  Lock duration
+                </div>
+                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">
+                  {selectedDuration}
+                </div>
               </div>
               <div className="flex justify-between py-1 px-4">
-                <div className="text-gray-600 dark:text-gray-400 text-[12px]">APR </div>
-                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">36.52%</div>
+                <div className="text-gray-600 dark:text-gray-400 text-[12px]">
+                  APR{" "}
+                </div>
+                <div className="font-medium text-[12px] text-gray-800 dark:text-gray-200 ">
+                  36.52%
+                </div>
               </div>
             </div>
 
             <div className="p-4">
               <button
                 onClick={handleLock}
-                className="w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 mt-1 shadow-md font-semibold text-[13px] flex justify-center items-center transition-opacity " >
+                className="w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 mt-1 shadow-md font-semibold text-[13px] flex justify-center items-center transition-opacity "
+              >
                 Lock
               </button>
             </div>
@@ -1538,41 +1759,38 @@ export default function Navbar({ isHomeNav }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="w-[325px] lg1:w-[420px] max-h-[80vh] overflow-y-auto bg-white dark:bg-darkOverlayBackground text-[#2A1F9D] dark:text-darkText shadow-xl rounded-2xl p-4 font-poppins scrollbar-none">
             <div className="p-3 flex items-center mb-5">
-              <button onClick={handleLockPopup} className="mr-2 text-[#2A1F9D] dark:text-darkText">
-
-              </button>
-              <h2 className="flex-grow text-center  text-[#2A1F9D] dark:text-darkText font-bold text-[14px]">Locked Successfully</h2>
-              <button onClick={handleLockPopup} className="text-[#2A1F9D] dark:text-darkText">
+              <button
+                onClick={handleLockPopup}
+                className="mr-2 text-[#2A1F9D] dark:text-darkText"
+              ></button>
+              <h2 className="flex-grow text-center  text-[#2A1F9D] dark:text-darkText font-bold text-[14px]">
+                Locked Successfully
+              </h2>
+              <button
+                onClick={handleLockPopup}
+                className="text-[#2A1F9D] dark:text-darkText"
+              >
                 <X size={18} />
               </button>
             </div>
 
-
-
-
-
             <div className="w-full flex flex-col items-center -mt-6">
-
               <div className="border rounded-full p-2 my-3 text-green-500 border-green-500">
                 <Check />
               </div>
 
               <p className=" text-[14px]   ">
-                You have Locked{" "}
-                <strong >
-                  $701 Lp token
-                </strong>
+                You have Locked <strong>$701 Lp token</strong>
               </p>
               <p className="text-[14px]   text-center mb-5 mt-4">
                 You will receive{" "}
-                <p className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500 to-orange-300 bg-clip-text text-transparent mt-4">$1.75</p>
+                <p className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500 to-orange-300 bg-clip-text text-transparent mt-4">
+                  $1.75
+                </p>
               </p>
-
-
             </div>
           </div>
         </div>
-
       )}
       {isLoading && (
         <div

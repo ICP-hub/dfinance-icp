@@ -312,16 +312,38 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleAmount1Change = (e) => {
-    const value = e.target.value;
-    setAmount1(value);
-
+    // Get the value from the input field
+    let value = e.target.value;
+    
+    // Check if the input contains more than 6 decimal places
+    if (value.includes('.')) {
+      const parts = value.split('.');
+      if (parts[1] && parts[1].length > 6) {
+        // Limit to 6 decimal places
+        value = `${parts[0]}.${parts[1].substring(0, 6)}`;
+      }
+    }
+    
+    // Calculate USD value
     const usd = parseFloat(value || 0) * selected1.price;
-    setUsdValue1(usd);
-
+    
+    // Check if the USD value exceeds total deposit
+    if (usd > totalDeposit) {
+      // Recalculate the token amount to match max USD value
+      value = (totalDeposit / selected1.price).toFixed(6);
+      setAmount1(value);
+      setUsdValue1(totalDeposit);
+    } else {
+      // Update state with valid values
+      setAmount1(value);
+      setUsdValue1(usd);
+    }
+    
+    // Handle second token if second section is active
     if (secondSectionActive && usd && rdntToken?.price) {
-      const newAmount2 = (usd / 200).toFixed(6); // 200 = RDNT's USD rate
+      const newAmount2 = (Math.min(usd, totalDeposit) / rdntToken.price).toFixed(6);
       setAmount2(newAmount2);
-      setUsdValue2(usd); // keep them in sync
+      setUsdValue2(Math.min(usd, totalDeposit)); // keep them in sync, respecting the limit
     } else {
       setAmount2("");
       setUsdValue2(0);
@@ -341,21 +363,50 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleAmount2Change = (e) => {
-    const value = e.target.value;
+    // Get the value from the input field
+    let value = e.target.value;
+    
+    // Check if the input contains more than 5 decimal places
+    if (value.includes('.')) {
+      const parts = value.split('.');
+      if (parts[1] && parts[1].length > 5) {
+        // Limit to 5 decimal places
+        value = `${parts[0]}.${parts[1].substring(0, 5)}`;
+      }
+    }
+    
+    // Update RDNT amount
     setAmount2(value);
-
-    const rate = 200; // USD value per 1 RDNT (example)
+    
+    const rate = 200; // USD value per 1 RDNT
     const usd = parseFloat(value || 0) * rate;
-    setUsdValue2(usd);
-
-    // Now convert USD to selected token's amount
-    if (usd && selected1?.price) {
-      const newAmount1 = (usd / selected1.price).toFixed(6);
-      setAmount1(newAmount1);
-      setUsdValue1(usd); // keep the USD value synced
+    
+    // Check if the USD value exceeds total deposit
+    if (usd > totalDeposit) {
+      // Recalculate the RDNT amount to match max USD value
+      const adjustedValue = (totalDeposit / rate).toFixed(5);
+      setAmount2(adjustedValue);
+      setUsdValue2(totalDeposit);
+      
+      // Sync first token with the limited amount
+      if (selected1?.price) {
+        const newAmount1 = (totalDeposit / selected1.price).toFixed(5);
+        setAmount1(newAmount1);
+        setUsdValue1(totalDeposit);
+      }
     } else {
-      setAmount1("");
-      setUsdValue1(0);
+      // Update states with valid values
+      setUsdValue2(usd);
+      
+      // Convert USD to selected token's amount
+      if (usd && selected1?.price) {
+        const newAmount1 = (usd / selected1.price).toFixed(5);
+        setAmount1(newAmount1);
+        setUsdValue1(usd); // keep the USD value synced
+      } else {
+        setAmount1("");
+        setUsdValue1(0);
+      }
     }
   };
 
@@ -559,7 +610,57 @@ export default function Navbar({ isHomeNav }) {
       setIsDarkMode(false);
     }
   }, [theme, isDarkMode]);
+ useEffect(() => {
+      if (isModalOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'auto';
+      }
+      
+      // Cleanup function
+      return () => {
+        document.body.style.overflow = 'auto';
+      };
+    }, [isModalOpen]);
 
+    useEffect(() => {
+        if (showPopup) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = 'auto';
+        }
+        
+        // Cleanup function
+        return () => {
+          document.body.style.overflow = 'auto';
+        };
+      }, [showPopup]);
+
+     useEffect(() => {
+        if (confirmPopup) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = 'auto';
+        }
+        
+        // Cleanup function
+        return () => {
+          document.body.style.overflow = 'auto';
+        };
+      }, [confirmPopup]);  
+      
+    useEffect(() => {
+        if (successPopup) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = 'auto';
+        }
+        
+        // Cleanup function
+        return () => {
+          document.body.style.overflow = 'auto';
+        };
+      }, [successPopup]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -1070,8 +1171,8 @@ export default function Navbar({ isHomeNav }) {
                 </button>
                 <button
                   className="flex items-center bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90%
-    text-white rounded-lg px-3 py-2 shadow-[#00000040]
-     font-medium text-xs"
+                   text-white rounded-lg px-3 py-2 shadow-[#00000040]
+                   font-medium text-xs"
                 >
                   <span>Learn more</span>
                   <ArrowRight className="ml-1 h-3 w-3 md:h-3.5 md:w-3.5" />
@@ -1152,7 +1253,7 @@ export default function Navbar({ isHomeNav }) {
           onClick={closeModal}
         >
           <div
-            className="relative w-[325px] lg1:w-[420px] max-h-[80vh] overflow-y-auto bg-white dark:bg-darkOverlayBackground text-[#2A1F9D] dark:text-darkText shadow-xl rounded-2xl p-6 font-poppins scrollbar-none"
+            className="relative w-[325px] lg1:w-[420px] max-h-[100vh] overflow-y-auto bg-white dark:bg-darkOverlayBackground text-[#2A1F9D] dark:text-darkText shadow-xl rounded-2xl p-6 font-poppins scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1236,13 +1337,13 @@ export default function Navbar({ isHomeNav }) {
                 } p-4 rounded-xl text-[#233D63] dark:text-gray-200 flex items-center justify-between`}
               >
                 {/* Input Section */}
-                <div className="w-[80%] relative -mt-6">
+                <div className="w-[80%]relative -mt-6">
                   <input
                     type="text"
                     placeholder="0.0"
                     value={amount1}
                     onChange={handleAmount1Change}
-                    className="w-full text-gray-900 dark:text-gray-200 text-xl font-medium bg-transparent focus:outline-none pr-24"
+                    className="w-full text-gray-900 dark:text-gray-200 text-[11px] md:text-lg font-medium bg-transparent focus:outline-none pr-24"
                     disabled={secondSectionActive}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.2 mb-1">
@@ -1366,9 +1467,9 @@ export default function Navbar({ isHomeNav }) {
                       placeholder="0.0"
                       value={amount2}
                       onChange={handleAmount2Change}
-                      className="w-full text-gray-900 dark:text-gray-200 text-xl font-medium bg-transparent focus:outline-none pr-24"
+                      className="w-full text-gray-900 dark:text-gray-200 text-[11px] font-medium bg-transparent focus:outline-none pr-24"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 darkmt-0.2 mb-1">
+                    <p className="text-[13px] text-gray-500 dark:text-gray-400 darkmt-0.2 mb-1">
                       $
                       {usdValue2.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
@@ -1439,7 +1540,7 @@ export default function Navbar({ isHomeNav }) {
             </div>
 
             {/* Footer Info */}
-            <div className="pt-4 text-xs text-[#233D63] dark:text-gray-200 space-y-1">
+            <div className="pt-4 text-[10px] md:text-xs text-[#233D63] dark:text-gray-200 space-y-1">
               <div className="flex justify-between">
                 <span className="text-gray-500 dark:text-gray-400">
                   Total value of deposited assets

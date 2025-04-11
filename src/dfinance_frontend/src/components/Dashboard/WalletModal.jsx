@@ -48,12 +48,12 @@ const WalletModal = () => {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
     dispatch(setIsWalletConnected(true));
-    navigate("/dashboard");
+   
   };
 
   useEffect(() => {
     if (isWalletCreated) {
-      navigate("/dashboard/wallet-details");
+      
     }
   }, [isWalletCreated]);
 

@@ -314,7 +314,7 @@ export default function Navbar({ isHomeNav }) {
   const handleAmount1Change = (e) => {
     // Get the value from the input field
     let value = e.target.value;
-    
+
     // Check if the input contains more than 6 decimal places
     if (value.includes('.')) {
       const parts = value.split('.');
@@ -323,10 +323,10 @@ export default function Navbar({ isHomeNav }) {
         value = `${parts[0]}.${parts[1].substring(0, 6)}`;
       }
     }
-    
+
     // Calculate USD value
     const usd = parseFloat(value || 0) * selected1.price;
-    
+
     // Check if the USD value exceeds total deposit
     if (usd > totalDeposit) {
       // Recalculate the token amount to match max USD value
@@ -338,7 +338,7 @@ export default function Navbar({ isHomeNav }) {
       setAmount1(value);
       setUsdValue1(usd);
     }
-    
+
     // Handle second token if second section is active
     if (secondSectionActive && usd && rdntToken?.price) {
       const newAmount2 = (Math.min(usd, totalDeposit) / rdntToken.price).toFixed(6);
@@ -365,7 +365,7 @@ export default function Navbar({ isHomeNav }) {
   const handleAmount2Change = (e) => {
     // Get the value from the input field
     let value = e.target.value;
-    
+
     // Check if the input contains more than 5 decimal places
     if (value.includes('.')) {
       const parts = value.split('.');
@@ -374,20 +374,20 @@ export default function Navbar({ isHomeNav }) {
         value = `${parts[0]}.${parts[1].substring(0, 5)}`;
       }
     }
-    
+
     // Update RDNT amount
     setAmount2(value);
-    
+
     const rate = 200; // USD value per 1 RDNT
     const usd = parseFloat(value || 0) * rate;
-    
+
     // Check if the USD value exceeds total deposit
     if (usd > totalDeposit) {
       // Recalculate the RDNT amount to match max USD value
       const adjustedValue = (totalDeposit / rate).toFixed(5);
       setAmount2(adjustedValue);
       setUsdValue2(totalDeposit);
-      
+
       // Sync first token with the limited amount
       if (selected1?.price) {
         const newAmount1 = (totalDeposit / selected1.price).toFixed(5);
@@ -397,7 +397,7 @@ export default function Navbar({ isHomeNav }) {
     } else {
       // Update states with valid values
       setUsdValue2(usd);
-      
+
       // Convert USD to selected token's amount
       if (usd && selected1?.price) {
         const newAmount1 = (usd / selected1.price).toFixed(5);
@@ -431,7 +431,7 @@ export default function Navbar({ isHomeNav }) {
       });
     }, 1500);
   };
-  
+
   useEffect(() => {
     if (isApproved) {
       setIsApproved(false);
@@ -483,14 +483,13 @@ export default function Navbar({ isHomeNav }) {
     setTimeout(() => {
       setIsLoading(false);
       toast.success(
-        `Locked for ${selectedDuration} with ${
-          selectedDuration === "6 months"
-            ? "36.52%"
-            : selectedDuration === "12 months"
+        `Locked for ${selectedDuration} with ${selectedDuration === "6 months"
+          ? "36.52%"
+          : selectedDuration === "12 months"
             ? "91.3%"
             : selectedDuration === "3 months"
-            ? "14.61%"
-            : "3.65%"
+              ? "14.61%"
+              : "3.65%"
         } APR`,
         {
           className: "custom-toast",
@@ -610,57 +609,57 @@ export default function Navbar({ isHomeNav }) {
       setIsDarkMode(false);
     }
   }, [theme, isDarkMode]);
- useEffect(() => {
-      if (isModalOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'auto';
-      }
-      
-      // Cleanup function
-      return () => {
-        document.body.style.overflow = 'auto';
-      };
-    }, [isModalOpen]);
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
 
-    useEffect(() => {
-        if (showPopup) {
-          document.body.style.overflow = 'hidden';
-        } else {
-          document.body.style.overflow = 'auto';
-        }
-        
-        // Cleanup function
-        return () => {
-          document.body.style.overflow = 'auto';
-        };
-      }, [showPopup]);
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isModalOpen]);
 
-     useEffect(() => {
-        if (confirmPopup) {
-          document.body.style.overflow = 'hidden';
-        } else {
-          document.body.style.overflow = 'auto';
-        }
-        
-        // Cleanup function
-        return () => {
-          document.body.style.overflow = 'auto';
-        };
-      }, [confirmPopup]);  
-      
-    useEffect(() => {
-        if (successPopup) {
-          document.body.style.overflow = 'hidden';
-        } else {
-          document.body.style.overflow = 'auto';
-        }
-        
-        // Cleanup function
-        return () => {
-          document.body.style.overflow = 'auto';
-        };
-      }, [successPopup]);
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showPopup]);
+
+  useEffect(() => {
+    if (confirmPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [confirmPopup]);
+
+  useEffect(() => {
+    if (successPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [successPopup]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -691,43 +690,43 @@ export default function Navbar({ isHomeNav }) {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                        if (link.alwaysPresent) {
-                          return (
-                            <NavLink
-                              key={index}
-                              to={link.route}
-                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                            >
-                              {link.title}
-                            </NavLink>
-                          );
-                        } else if (
-                          !isTestnetMode &&
-                          !link.testnet &&
-                          link.title !== "Faq"
-                        ) {
-                          return (
-                            <NavLink
-                              key={index}
-                              to={link.route}
-                              className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                            >
-                              {link.title}
-                            </NavLink>
-                          );
-                        }
-                        return null;
-                      })
+                      if (link.alwaysPresent) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      } else if (
+                        !isTestnetMode &&
+                        !link.testnet &&
+                        link.title !== "Faq"
+                      ) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      }
+                      return null;
+                    })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                        <NavLink
-                          key={index}
-                          target={link.target}
-                          to={link.route}
-                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      ))}
+                      <NavLink
+                        key={index}
+                        target={link.target}
+                        to={link.route}
+                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                      >
+                        {link.title}
+                      </NavLink>
+                    ))}
                 </div>
               </>
             )}
@@ -760,7 +759,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                     </div>
                   </div>
                 )}
@@ -818,7 +817,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
 
                           <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                            {}
+                            { }
                             <div className="hidden lg1:flex justify-center">
                               <div
                                 className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -864,7 +863,7 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-                            {}
+                            { }
                             <div className=" w-full flex justify-center">
                               <div
                                 className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -920,7 +919,7 @@ export default function Navbar({ isHomeNav }) {
                             Settings
                           </h2>
 
-                          {}
+                          { }
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around">
                               <label
@@ -941,7 +940,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
 
-                          {}
+                          { }
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                               <label
@@ -962,7 +961,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
                           </div>
 
-                          {}
+                          { }
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex flex-row items-center justify-around relative group">
                               <label
@@ -976,7 +975,7 @@ export default function Navbar({ isHomeNav }) {
                                 />
                               </label>
 
-                              {}
+                              { }
                               <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                 Enabling this will allow the user to hear sound
                                 when supply, borrow, repay, or withdraw actions
@@ -1016,7 +1015,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                     </div>
                   </div>
                 )}
@@ -1049,7 +1048,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                         </div>
                       </div>
                     )}
@@ -1059,7 +1058,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        {}
+                        { }
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -1080,7 +1079,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        {}
+                        { }
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label
@@ -1139,7 +1138,7 @@ export default function Navbar({ isHomeNav }) {
           {/* Bottom section */}
           <div className="flex flex-col">
             <p className="text-[#233D63] dark:text-gray-200 text-xs font-light md:text-sm mb-5 md:mb-4">
-              Earn Dfinance Token on your Locked LP.
+              Earn Dfinance Token on your Locked LP. Connect wallet to add liquidity.
             </p>
 
             {isAuthenticated ? (
@@ -1330,11 +1329,10 @@ export default function Navbar({ isHomeNav }) {
             <div className="flex flex-col gap-4">
               {/* First Section */}
               <div
-                className={`relative border ${
-                  secondSectionActive
+                className={`relative border ${secondSectionActive
                     ? "border-gray-300 dark:bg-[#1D1B40] dark:border-gray-800 bg-gray-200 "
                     : "border-gray-300 dark:border-gray-600"
-                } p-4 rounded-xl text-[#233D63] dark:text-gray-200 flex items-center justify-between`}
+                  } p-4 rounded-xl text-[#233D63] dark:text-gray-200 flex items-center justify-between`}
               >
                 {/* Input Section */}
                 <div className="w-[80%]relative -mt-6">
@@ -1372,9 +1370,8 @@ export default function Navbar({ isHomeNav }) {
                       <span className="text-xs">{selected1.name}</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className={`ml-2 w-8 h-8 text-[#233D63] dark:text-gray-200 transition-transform duration-200 ${
-                          showDropdown1 ? "rotate-180" : ""
-                        }`}
+                        className={`ml-2 w-8 h-8 text-[#233D63] dark:text-gray-200 transition-transform duration-200 ${showDropdown1 ? "rotate-180" : ""
+                          }`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -1513,11 +1510,10 @@ export default function Navbar({ isHomeNav }) {
                 <button
                   onClick={handleApprove}
                   disabled={clampedPercentage < 5 || isLoading || isApproved}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${
-                    clampedPercentage < 5 || isApproved
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${clampedPercentage < 5 || isApproved
                       ? "opacity-50 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                 >
                   {isApproved ? "Approved" : "Approve"}
                 </button>
@@ -1525,11 +1521,10 @@ export default function Navbar({ isHomeNav }) {
                 <button
                   onClick={handleAddLiquidity}
                   disabled={clampedPercentage < 5 || isLoading || !isApproved}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${
-                    clampedPercentage < 5 || !isApproved
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-lg py-2 px-1 shadow-md font-semibold text-[13px] flex justify-center items-center w-1/2 transition-opacity ${clampedPercentage < 5 || !isApproved
                       ? "opacity-50 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                 >
                   Add Liquidity
                 </button>
@@ -1609,20 +1604,18 @@ export default function Navbar({ isHomeNav }) {
 
                 <div className="border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
                   <div
-                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
-                      selectedDuration === "12 months"
-                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
-                        : "bg-white dark:bg-[#1D1B40] "
-                    }`}
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === "12 months"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800 text-[#4659CF]"
+                        : "bg-white dark:bg-[#1D1B40] text-green-600 "
+                      }`}
                     onClick={() => setSelectedDuration("12 months")}
                   >
                     <div className="flex items-center">
                       <div
-                        className={`w-4 h-4 rounded-full border ${
-                          selectedDuration === "12 months"
+                        className={`w-4 h-4 rounded-full border ${selectedDuration === "12 months"
                             ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300 "
                             : "border-gray-300 dark:border-gray-500"
-                        } flex items-center justify-center mr-2`}
+                          } flex items-center justify-center mr-2`}
                       >
                         {selectedDuration === "12 months" && (
                           <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
@@ -1632,26 +1625,30 @@ export default function Navbar({ isHomeNav }) {
                         12 months
                       </span>
                     </div>
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">
+                    <span
+                      className={`ml-auto font-semibold text-[12px] ${selectedDuration === "12 months"
+                          ? " text-[#4659CF]"
+                          : " text-green-600 "
+                        }`}
+                    >
                       91.3% APR
                     </span>
+
                   </div>
 
                   <div
-                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
-                      selectedDuration === "6 months"
-                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
-                        : "bg-white dark:bg-[#1D1B40] "
-                    }`}
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === "6 months"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800 text-[#4659CF]"
+                        : "bg-white dark:bg-[#1D1B40] text-green-600 "
+                      }`}
                     onClick={() => setSelectedDuration("6 months")}
                   >
                     <div className="flex items-center">
                       <div
-                        className={`w-4 h-4 rounded-full border ${
-                          selectedDuration === "6 months"
+                        className={`w-4 h-4 rounded-full border ${selectedDuration === "6 months"
                             ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300  "
                             : "border-gray-300 dark:border-gray-500"
-                        } flex items-center justify-center mr-2`}
+                          } flex items-center justify-center mr-2`}
                       >
                         {selectedDuration === "6 months" && (
                           <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
@@ -1661,26 +1658,29 @@ export default function Navbar({ isHomeNav }) {
                         6 months
                       </span>
                     </div>
-                    <span className="ml-auto text-[#4659CF] dark:text-blue-300 font-semibold text-[12px]">
+                    <span
+                      className={`ml-auto font-semibold text-[12px] ${selectedDuration === "6 months"
+                          ? " text-[#4659CF]"
+                          : " text-green-600 "
+                        }`}
+                    >
                       36.52% APR
                     </span>
                   </div>
 
                   <div
-                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
-                      selectedDuration === "3 months"
-                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
-                        : "bg-white dark:bg-[#1D1B40] "
-                    }`}
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === "3 months"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800 text-[#4659CF]"
+                        : "bg-white dark:bg-[#1D1B40] text-green-600 "
+                      }`}
                     onClick={() => setSelectedDuration("3 months")}
                   >
                     <div className="flex items-center">
                       <div
-                        className={`w-4 h-4 rounded-full border ${
-                          selectedDuration === "3 months"
+                        className={`w-4 h-4 rounded-full border ${selectedDuration === "3 months"
                             ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300  "
                             : "border-gray-300 dark:border-gray-500"
-                        } flex items-center justify-center mr-2`}
+                          } flex items-center justify-center mr-2`}
                       >
                         {selectedDuration === "3 months" && (
                           <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
@@ -1690,26 +1690,29 @@ export default function Navbar({ isHomeNav }) {
                         3 months
                       </span>
                     </div>
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">
-                      14.61% APR
+                    <span
+                      className={`ml-auto font-semibold text-[12px] ${selectedDuration === "3 months"
+                          ? " text-[#4659CF]"
+                          : " text-green-600 "
+                        }`}
+                    >
+                       14.61% APR
                     </span>
                   </div>
 
                   <div
-                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${
-                      selectedDuration === "1 month"
-                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800"
-                        : "bg-white dark:bg-[#1D1B40] "
-                    }`}
+                    className={`p-4 flex items-center hover:bg-purple-50 dark:hover:bg-darkOverlayBackground cursor-pointer transition-colors ${selectedDuration === "1 month"
+                        ? "bg-purple-50 dark:bg-[#1D1B40] dark:border-gray-800 text-[#4659CF]"
+                        : "bg-white dark:bg-[#1D1B40] text-green-600 "
+                      }`}
                     onClick={() => setSelectedDuration("1 month")}
                   >
                     <div className="flex items-center">
                       <div
-                        className={`w-4 h-4 rounded-full border ${
-                          selectedDuration === "1 month"
+                        className={`w-4 h-4 rounded-full border ${selectedDuration === "1 month"
                             ? "border-purple-600 bg-[#4659CF] dark:bg-blue-300  "
                             : "border-gray-300 dark:border-gray-500"
-                        } flex items-center justify-center mr-2`}
+                          } flex items-center justify-center mr-2`}
                       >
                         {selectedDuration === "1 month" && (
                           <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
@@ -1719,7 +1722,12 @@ export default function Navbar({ isHomeNav }) {
                         1 month
                       </span>
                     </div>
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-semibold text-[12px]">
+                    <span
+                      className={`ml-auto font-semibold text-[12px] ${selectedDuration === "1 month"
+                          ? " text-[#4659CF]"
+                          : " text-green-600 "
+                        }`}
+                    >
                       3.65% APR
                     </span>
                   </div>

@@ -35,10 +35,10 @@ const Reward = () => {
   const handleTestnetModeToggle = () => {
     setIsTestnetMode((prevMode) => !prevMode);
   };
-
+console.log("isAuthenticated",isAuthenticated)
   return (
     <>
-      {isTestnetMode && (
+     
         <>
           <div className="mb-3">
             <p className="font-weight-500 text-gray-600 dark:text-gray-300 text-[12px] sm:text-[13px] md:text-[14px] xs:text-[11px] text-justify ml-1 mt-7">
@@ -72,7 +72,7 @@ const Reward = () => {
                 Please, connect your wallet
               </h1>
               <p className="text-[#737373] my-2 font-medium text-center dark:text-darkTextSecondary">
-                Please connect your wallet to get free testnet assets
+                Please connect your wallet to see the reward details.
               </p>
 
               <Button
@@ -92,7 +92,7 @@ const Reward = () => {
             </div>
           )}
         </>
-      )}
+      
     </>
   );
 };

@@ -41,7 +41,7 @@ const Reward = () => {
       {isTestnetMode && (
         <>
           <div className="mb-2">
-            <p className="text-gray-600 dark:text-gray-300 text-[12px] sm:text-[13px] md:text-[14px] xs:text-[11px] text-justify ml-1">
+            <p className="font-weight-500 text-gray-600 dark:text-gray-300 text-[12px] sm:text-[13px] md:text-[14px] xs:text-[11px] text-justify ml-1">
               You can earn rewards by locking your LP tokens after supplying
               liquidity on the DEX. To qualify, you must lock at least 5% of
               your supplied liquidity. The longer you lock, the higher your

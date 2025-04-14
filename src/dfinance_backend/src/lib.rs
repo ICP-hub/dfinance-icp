@@ -671,6 +671,34 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
 }
 
 #[update]
+pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous()
+        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+
+    mutate_state(|state| {
+        state.canister_list.insert(canister_name, canister_id);
+    });
+
+    Ok(())
+}
+
+#[query] //TODO: remove this later.
+pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
+    read_state(|state| {
+        state
+            .canister_list
+            .get(&canister_name)
+            .ok_or(Error::NoCanisterIdFound) // Return error if not found
+    })
+}
+
+#[update]
 // Function to store session data
 pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Result<(), Error> {
     let caller_id = ic_cdk::caller();

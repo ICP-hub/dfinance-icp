@@ -33,7 +33,7 @@ use crate::api::state_handler::{mutate_state, read_state};
 use crate::declarations::assets::ReserveData;
 use crate::declarations::assets::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
-    ExecuteWithdrawParams,
+    ExecuteWithdrawParams, AddPoolReply, SwapReply,
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::types::datatypes::{UserData, UserAccountData};

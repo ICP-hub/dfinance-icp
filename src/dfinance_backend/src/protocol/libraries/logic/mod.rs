@@ -6,3 +6,4 @@ pub mod supply;
 pub mod update;
 pub mod validation;
 pub mod user;
+pub mod kong_integration;

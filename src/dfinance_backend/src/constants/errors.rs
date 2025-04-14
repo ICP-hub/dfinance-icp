@@ -74,7 +74,12 @@ pub enum Error {
     BLOCKEDFORONEHOUR,
     USERCANNOTBELIQUIDATED,
     FeeExceedsAmount ,
-    LiquidationProtocolfeeIsHigher
+    LiquidationProtocolfeeIsHigher,
+    ICRC2ApproveError,
+    KongSwapError,
+    InvalidCaller,
+    AddPoolError,
+    TransferAssetError
 }
 
 impl Error {
@@ -152,6 +157,11 @@ impl Error {
             Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
             Error::LiquidationProtocolfeeIsHigher => "Liquidation protocol fee is higher",
+            Error::ICRC2ApproveError => "ICRC2 approve error",
+            Error::KongSwapError => "Swaping error with kong-swap",
+            Error::InvalidCaller => "This call is not allowed to make this call",
+            Error::AddPoolError => "Error while adding lp pool",
+            Error::TransferAssetError => "Error while transferring asset",
         }
     }
 }

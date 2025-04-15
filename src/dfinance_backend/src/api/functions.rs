@@ -4,7 +4,7 @@ use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
-use crate::guards::to_check_controller;
+use crate::guards::{guard_controller_only, to_check_controller};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
 use crate::protocol::libraries::types::datatypes::{RequestTracker,BlockedUserDetails, UserReserveData};
@@ -115,6 +115,7 @@ pub async fn asset_transfer(
         created_at_time: None,
         amount: amount.clone(),
     };
+
 
     let (new_result,): (TransferFromResult,) =
         call(ledger, "icrc1_transfer", (token_args, false, Some(from)))
@@ -662,18 +663,14 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
 }
 
 
+
+
 #[query]
 pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
 
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    // Allow only controller to access this function
+    guard_controller_only()?;
 
-    if !to_check_controller() {
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
     Ok(read_state(|state| {
         state
             .restrict_users

@@ -84,11 +84,12 @@ pub fn update_state(
     }
 
     update_indexes(reserve_data, reserve_cache);
-    if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
-        ic_cdk::println!("Error accruing to treasury: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
+    //     ic_cdk::println!("Error accruing to treasury: {:?}", e);
+    //     return Err(e);
+    // }
 
+    accrue_to_treasury(reserve_data, reserve_cache)?;
     reserve_data.last_update_timestamp = current_time;
     Ok(())
 }
@@ -104,6 +105,7 @@ pub fn update_state(
  * @return Result<(), Error> Returns `Ok` if the update indexes are successfully updated, or an error if the update indexes fails.
  */
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
+
     if reserve_cache.curr_liquidity_rate != Nat::from(0u128) {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_cache.curr_liquidity_rate.clone(),
@@ -161,8 +163,10 @@ pub async fn update_interest_rates(
         .curr_debt
         .clone()
         .scaled_mul(reserve_cache.next_debt_index.clone());
+
     ic_cdk::println!("curr debt {}", reserve_cache.curr_debt);
     ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
+
     let asset = reserve_data
         .asset_name
         .clone()
@@ -170,7 +174,29 @@ pub async fn update_interest_rates(
     let interest_rate_params = initialize_interest_rate_params(&asset);
     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
     ic_cdk::println!("total debt: {:?}", total_debt);
-    let calculated_interest_rates = calculate_interest_rates(
+    // let calculated_interest_rates = calculate_interest_rates(
+    //     liq_added,
+    //     liq_taken,
+    //     total_debt,
+    //     &interest_rate_params,
+    //     reserve_cache.reserve_factor.clone(),
+    //     reserve_data.asset_name.clone().expect("no name"),
+    // )
+    // .await;
+
+    // let (next_liquidity_rate, next_debt_rate) = match calculated_interest_rates {
+    //     Ok((liquidity_rate, debt_rate)) => {
+    //         ic_cdk::println!("liquidity rate: {:?}", liquidity_rate);
+    //         ic_cdk::println!("debt rate: {:?}", debt_rate);
+    //         (liquidity_rate, debt_rate)
+    //     }
+    //     Err(e) => {
+    //         ic_cdk::println!("Error calculating interest rates: {:?}", e);
+    //         return Err(e);
+    //     }
+    // };
+
+    let (next_liquidity_rate, next_debt_rate) = calculate_interest_rates(
         liq_added,
         liq_taken,
         total_debt,
@@ -178,19 +204,19 @@ pub async fn update_interest_rates(
         reserve_cache.reserve_factor.clone(),
         reserve_data.asset_name.clone().expect("no name"),
     )
-    .await;
+    .await?;
 
-    let (next_liquidity_rate, next_debt_rate) = match calculated_interest_rates {
-        Ok((liquidity_rate, debt_rate)) => {
-            ic_cdk::println!("liquidity rate: {:?}", liquidity_rate);
-            ic_cdk::println!("debt rate: {:?}", debt_rate);
-            (liquidity_rate, debt_rate)
-        }
-        Err(e) => {
-            ic_cdk::println!("Error calculating interest rates: {:?}", e);
-            return Err(e);
-        }
-    };
+    // let (next_liquidity_rate, next_debt_rate) = match calculated_interest_rates {
+    //     Ok((liquidity_rate, debt_rate)) => {
+    //         ic_cdk::println!("liquidity rate: {:?}", liquidity_rate);
+    //         ic_cdk::println!("debt rate: {:?}", debt_rate);
+    //         (liquidity_rate, debt_rate)
+    //     }
+    //     Err(e) => {
+    //         ic_cdk::println!("Error calculating interest rates: {:?}", e);
+    //         return Err(e);
+    //     }
+    // };
 
     reserve_data.current_liquidity_rate = next_liquidity_rate;
     reserve_data.borrow_rate = next_debt_rate;
@@ -222,19 +248,20 @@ pub async fn burn_scaled(
     platform_principal: Principal,
     burn_dtoken: bool,
 ) -> Result<(), Error> {
-    ic_cdk::println!("Starting burn_scaled function...");
-    ic_cdk::println!("Initial parameters:");
-    ic_cdk::println!("  Amount: {}", amount);
-    ic_cdk::println!("  Index: {}", index);
-    ic_cdk::println!("  User Principal: {}", user_principal);
-    ic_cdk::println!("  Token Canister Principal: {}", token_canister_principal);
-    ic_cdk::println!("  Platform Principal: {}", platform_principal);
-    ic_cdk::println!("  Burn DToken: {}", burn_dtoken);
+    // ic_cdk::println!("Starting burn_scaled function...");
+    // ic_cdk::println!("Initial parameters:");
+    // ic_cdk::println!("  Amount: {}", amount);
+    // ic_cdk::println!("  Index: {}", index);
+    // ic_cdk::println!("  User Principal: {}", user_principal);
+    // ic_cdk::println!("  Token Canister Principal: {}", token_canister_principal);
+    // ic_cdk::println!("  Platform Principal: {}", platform_principal);
+    // ic_cdk::println!("  Burn DToken: {}", burn_dtoken);
 
-    ic_cdk::println!("Checking if amount has a remainder when divided by index...");
-    ic_cdk::println!("Amount remainder: {}", amount.clone() % index.clone());
+    // ic_cdk::println!("Checking if amount has a remainder when divided by index...");
+    // ic_cdk::println!("Amount remainder: {}", amount.clone() % index.clone());
+
     let mut is_withdraw = false;
-    let mut adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
+    let adjusted_amount = if amount.clone() % index.clone() != Nat::from(0u128)
         && amount.clone() < Nat::from(10u128)
     {
         ic_cdk::println!("Rounding up due to remainder and amount < 10");
@@ -252,19 +279,32 @@ pub async fn burn_scaled(
     }
 
     ic_cdk::println!("Fetching user balance...");
-    let balance_result = get_balance(token_canister_principal, user_principal).await;
+    // let balance_result = get_balance(token_canister_principal, user_principal).await;
 
-    let balance = match balance_result {
-        Ok(bal) => {
-            ic_cdk::println!("Balance fetched successfully: {}", bal);
-            bal
-        }
-        Err(err) => {
-            ic_cdk::println!("Error fetching balance: {:?}", err);
-            return Err(err);
-        }
-    };
-    ic_cdk::println!("burn balance = {}", balance);
+    // let balance = match balance_result {
+    //     Ok(bal) => {
+    //         ic_cdk::println!("Balance fetched successfully: {}", bal);
+    //         bal
+    //     }
+    //     Err(err) => {
+    //         ic_cdk::println!("Error fetching balance: {:?}", err);
+    //         return Err(err);
+    //     }
+    // };
+
+    let balance = get_balance(token_canister_principal, user_principal).await?;
+
+    // let balance = match balance_result {
+    //     Ok(bal) => {
+    //         ic_cdk::println!("Balance fetched successfully: {}", bal);
+    //         bal
+    //     }
+    //     Err(err) => {
+    //         ic_cdk::println!("Error fetching balance: {:?}", err);
+    //         return Err(err);
+    //     }
+    // };
+    // ic_cdk::println!("burn balance = {}", balance);
     ic_cdk::println!("adjusted balance = {}", adjusted_amount);
     let mut balance_increase = Nat::from(0u128);
     if burn_dtoken {
@@ -291,6 +331,7 @@ pub async fn burn_scaled(
             user_state.d_token_balance,
             adjusted_amount
         );
+        
         if user_state.d_token_balance == adjusted_amount {
             ic_cdk::println!("Setting DToken balance to zero");
             user_state.d_token_balance = Nat::from(0u128);
@@ -413,6 +454,29 @@ pub async fn burn_scaled(
             amount_to_burn
         );
 
+        // match asset_transfer(
+        //     platform_principal,
+        //     token_canister_principal,
+        //     user_principal,
+        //     Nat::from(amount_to_burn),
+        // )
+        // .await
+        // {
+        //     Ok(_) => {
+        //         ic_cdk::println!("Burning successful");
+        //         if is_withdraw {
+        //             reserve.asset_supply = get_total_supply(token_canister_principal).await.unwrap();
+        //         } else {
+        //             reserve.asset_borrow = get_total_supply(token_canister_principal).await.unwrap();
+        //         }
+        //         Ok(())
+        //     }
+        //     Err(err) => {
+        //         ic_cdk::println!("Error during burning: {:?}", err);
+        //         Err(Error::ErrorBurnTokens)
+        //     }
+        // }
+
         match asset_transfer(
             platform_principal,
             token_canister_principal,
@@ -435,6 +499,7 @@ pub async fn burn_scaled(
                 Err(Error::ErrorBurnTokens)
             }
         }
+
     }
 }
 
@@ -488,14 +553,16 @@ pub async fn mint_scaled(
         return Err(Error::InvalidMintAmount);
     }
 
-    let balance_result = get_balance(token_canister_principal, user_principal).await;
-    let balance = match balance_result {
-        Ok(bal) => bal,
-        Err(err) => {
-            ic_cdk::println!("Error converting balance to u128: {:?}", err);
-            return Err(Error::ErrorGetBalance);
-        }
-    };
+    // let balance_result = get_balance(token_canister_principal, user_principal).await;
+    // let balance = match balance_result {
+    //     Ok(bal) => bal,
+    //     Err(err) => {
+    //         ic_cdk::println!("Error converting balance to u128: {:?}", err);
+    //         return Err(Error::ErrorGetBalance);
+    //     }
+    // };
+
+    let balance = get_balance(token_canister_principal, user_principal).await?;
     ic_cdk::println!("Fetched balance in Nat: {:?}", balance);
     ic_cdk::println!("mint balance = {}", balance);
 

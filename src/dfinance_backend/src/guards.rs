@@ -2,6 +2,27 @@ use candid::Principal;
 use ic_cdk::{caller, query};
 use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error, dynamic_canister::InitArgs};
 
+
+// guard to allow only app level controller
+pub fn guard_controller_only() -> Result<(), Error>
+{
+    if ic_cdk::caller() == Principal::anonymous() || !to_check_controller() {
+        return Err(Error::ErrorNotController);
+    } else {
+    Ok(())
+
+    }
+}
+
+pub fn guard_admin_only() -> Result<(), Error> {
+    if ic_cdk::caller() == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::caller()) {
+        return Err(Error::UnauthorizedAccess)
+    }
+
+    Ok(())
+}
+
+
 /*
  * @title Caller Identity Validation
  * @dev Ensures that the caller is authenticated and not an anonymous principal.
@@ -9,6 +30,14 @@ use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::E
  *
  * @returns `Ok(())` if the caller is authenticated.
  */
+
+pub fn guard_prevent_anonymous() -> Result<(), Error> {
+    if ic_cdk::caller() == Principal::anonymous() {
+        return Err(Error::AnonymousPrincipal)
+    }
+        Ok(())
+    
+}
 
 pub fn caller_is_not_anonymous() -> Result<(), Error> {
     if caller() == Principal::anonymous() {

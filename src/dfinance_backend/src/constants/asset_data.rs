@@ -5,6 +5,7 @@ use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::assets::ReserveData;
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::guards::guard_admin_only;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 
 /*  
@@ -23,26 +24,34 @@ use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
  */
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
-    let user_principal = ic_cdk::caller();
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
-    {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    // if user_principal == Principal::anonymous()
+    //     || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    // {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
+    // admin only access check
+    guard_admin_only()?;
 
-    let result = read_state(|state| {
-        if state.reserve_list.contains_key(&token_name) {
-            ic_cdk::println!("Token exists");
-            return Err(Error::TokenAlreadyExist);
-        }
-        Ok(())
-    });
+    // let result = read_state(|state| {
+    //     if state.reserve_list.contains_key(&token_name) {
+    //         ic_cdk::println!("Token exists");
+    //         return Err(Error::TokenAlreadyExist);
+    //     }
+    //     Ok(())
+    // });
 
-    if let Err(e) = result {
-        ic_cdk::println!("Error: {:?}", e);
-        return Err(e);
+
+
+    // if let Err(e) = result {
+    //     ic_cdk::println!("Error: {:?}", e);
+    //     return Err(e);
+    // }
+
+    if !read_state(|state| state.reserve_list.contains_key(&token_name)) {
+        return Err(Error::TokenAlreadyExist);
     }
 
     let token_canister_id =
@@ -50,6 +59,8 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
             Ok(principal) => principal,
             Err(e) => return Err(e),
         };
+
+        // le x =create_testtoken_canister(token_name.clone(), token_name.clone()).await.map_err(|err| return Err(err));
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
 

@@ -142,14 +142,19 @@ pub async fn calculate_interest_rates(
     let mut current_liquidity_rate = Nat::from(0u128);
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
 
-    let reserve_data_result = get_reserve_data(asset.clone());
-    let reserve = reserve_data_result.map_err(|e| e)?;
+    // let reserve_data_result = get_reserve_data(asset.clone());
+    // let reserve = reserve_data_result.map_err(|e| e)?;
+
+    let reserve = get_reserve_data(asset.clone())?;
+
+    // let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
 
     let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
+
     ic_cdk::println!("Total Supply: {:?}", total_supply);
     ic_cdk::println!("Liquidity in reserve: {:?}", reserve.asset_supply);
     // ic_cdk::println!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());
-    let available_liq = total_supply.clone() + liq_added.clone() - liq_taken.clone();
+    let available_liq = total_supply + liq_added - liq_taken;
     
     
     ic_cdk::println!("Available Liquidity: {:?}", available_liq);

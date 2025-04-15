@@ -5,6 +5,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::declarations::storable::Candid;
+use crate::guards::guard_prevent_anonymous;
 use crate::protocol::libraries::logic::borrow::execute_repay;
 use crate::protocol::libraries::logic::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
@@ -54,6 +55,11 @@ use ic_cdk::{api, update};
  */
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
+
+    // guard anonymous user
+    guard_prevent_anonymous()?;
+
+    // validations 
     if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
@@ -81,12 +87,12 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     ic_cdk::println!("User Principal (Debt User): {}", user_principal);
 
     let liquidator_principal = api::caller();
-    ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
+    // ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
 
-    if liquidator_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if liquidator_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     if let Err(e) = request_limiter("execute_liquidation") {
         ic_cdk::println!("Error limiting error: {:?}", e);
@@ -95,10 +101,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let user_key = params.on_behalf_of;
     // Acquire lock for the target user
-    if let Err(e) = acquire_lock(&user_key) {
-        ic_cdk::println!("Lock acquisition failed: {:?}", e);
-        return Err(Error::LockAcquisitionFailed);
-    };
+    // if let Err(e) = acquire_lock(&user_key) {
+    //     ic_cdk::println!("Lock acquisition failed: {:?}", e);
+    //     return Err(Error::LockAcquisitionFailed);
+    // };
 
     let result = async {
         ic_cdk::println!(
@@ -108,61 +114,68 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         );
         ic_cdk::println!("liquidation amount = {}", params.amount.clone());
 
-        let reserve_data_result = get_reserve_data(params.debt_asset.clone());
+        let repay_reserve_data = get_reserve_data(params.debt_asset.clone())?;
 
-        let repay_reserve_data = match reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
-                data
-            }
-            Err(e) => {
-                ic_cdk::println!("Error: {:?}", e);
-                // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-        };
+        // let repay_reserve_data = match reserve_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("Reserve data found for asset: {:?}", data);
+        //         data
+        //     }
+        //     Err(e) => {
+        //         ic_cdk::println!("Error: {:?}", e);
+        //         // Release the lock
+        //         if let Err(e) = release_lock(&user_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         return Err(e);
+        //     }
+        // };
 
-        let collateral_reserve_data_result = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&params.collateral_asset.to_string().clone())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| Error::NoReserveDataFound)
-        });
+        // let collateral_reserve_data_result = mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index
+        //         .get(&params.collateral_asset.to_string().clone())
+        //         .map(|reserve| reserve.0.clone())
+        //         .ok_or_else(|| Error::NoReserveDataFound)
+        // });
 
-        let mut collateral_reserve_data = match collateral_reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
-                data
-            }
-            Err(e) => {
-                // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                ic_cdk::println!("Error: {:?}", e);
-                return Err(e);
-            }
-        };
+        let mut collateral_reserve_data = read_state(|state| state.asset_index.get(&params.collateral_asset.to_string()).map(|reserve| reserve.0.clone())).ok_or_else(|| Error::NoReserveDataFound)?;
 
-        let user_data_result = user_data(user_principal);
-        let mut user_account_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found in update_user_data_supply");
-                data
-            }
-            Err(e) => {
-                // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                ic_cdk::println!("Error fetching user data: {:?}", e);
-                return Err(e);
-            }
-        };
+        // let mut collateral_reserve_data = match collateral_reserve_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("Reserve data found for asset: {:?}", data);
+        //         data
+        //     }
+        //     Err(e) => {
+        //         // Release the lock
+        //         if let Err(e) = release_lock(&user_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         ic_cdk::println!("Error: {:?}", e);
+        //         return Err(e);
+        //     }
+        // };
+
+        // let user_data_result = user_data(user_principal);
+        // let mut user_account_data = match user_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("User found in update_user_data_supply");
+        //         data
+        //     }
+        //     Err(e) => {
+        //         // Release the lock
+        //         if let Err(e) = release_lock(&user_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         ic_cdk::println!("Error fetching user data: {:?}", e);
+        //         return Err(e);
+        //     }
+        // };
+
+        let mut user_account_data = user_data(user_principal)?;
+
+
+
 
         // Check if the user has a reserve for the asset
         let mut user_reserve_data = {
@@ -179,13 +192,19 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 }
             }
         };
-        let debt_asset_price = match get_cached_exchange_rate(params.debt_asset.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
+
+
+
+        // let debt_asset_price = match get_cached_exchange_rate(params.debt_asset.clone()) {
+        //     Ok(price) => price,
+        //     Err(e) => {
+        //         ic_cdk::println!("Failed to fetch exchange rate");
+        //         return Err(e);
+        //     }
+        // };
+
+        let debt_asset_price = get_cached_exchange_rate(params.debt_asset.clone())?;
+
         ic_cdk::println!("asset price = {}",debt_asset_price);
         let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(debt_asset_price);
         ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
@@ -195,10 +214,20 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             return Err(Error::FeeExceedsAmount);
         }
 
-        let mut earned_rewards = Nat::from(0u128);
-        let mut liquidation_bonus_amount = Nat::from(0u128);
+        // let mut earned_rewards = Nat::from(0u128);
+        // let mut liquidation_bonus_amount = Nat::from(0u128);
 
-        let reward_result: Result<(Nat,Nat), Error> = to_get_reward_amount(
+        // let reward_result: Result<(Nat,Nat), Error> = to_get_reward_amount(
+        //     params.amount.clone() - transfer_token_fee.clone(),
+        //     params.collateral_asset.clone(),
+        //     params.debt_asset.clone(),
+        //     collateral_reserve_data.clone(),
+        //     user_principal.clone(),
+        //     user_reserve_data.clone(),
+        // )
+        // .await;
+
+        let (amount, liquidity_bonus) = to_get_reward_amount(
             params.amount.clone() - transfer_token_fee.clone(),
             params.collateral_asset.clone(),
             params.debt_asset.clone(),
@@ -206,18 +235,22 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             user_principal.clone(),
             user_reserve_data.clone(),
         )
-        .await;
+        .await?;
 
-        match reward_result {
-            Ok((amount,liquidity_bonus)) => {
-                earned_rewards = amount;
-                liquidation_bonus_amount = liquidity_bonus;
-            }
-            Err(err) => {
-                println!("Error occurred: {:?}", err);
-                return Err(err);
-            }
-        }
+        let earned_rewards = amount;
+        let liquidation_bonus_amount = liquidity_bonus;
+
+
+        // match reward_result {
+        //     Ok((amount,liquidity_bonus)) => {
+        //         earned_rewards = amount;
+        //         liquidation_bonus_amount = liquidity_bonus;
+        //     }
+        //     Err(err) => {
+        //         println!("Error occurred: {:?}", err);
+        //         return Err(err);
+        //     }
+        // }
         ic_cdk::println!("reward amount: {:?}", params.reward_amount);
         ic_cdk::println!("earned_rewards: {:?}", earned_rewards);
 
@@ -228,30 +261,38 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             return Err(Error::RewardIsHigher);
         }
 
-        let liquidator_data_result = user_data(liquidator_principal);
-        let mut liquidator_data = match liquidator_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found in update_user_data_supply");
-                data
-            }
-            Err(e) => {
-                // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                ic_cdk::println!("Error fetching user data: {:?}", e);
-                return Err(e);
-            }
-        };
+        // let liquidator_data_result = user_data(liquidator_principal);
+        // let mut liquidator_data = match liquidator_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("User found in update_user_data_supply");
+        //         data
+        //     }
+        //     Err(e) => {
+        //         // Release the lock
+        //         if let Err(e) = release_lock(&user_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         ic_cdk::println!("Error fetching user data: {:?}", e);
+        //         return Err(e);
+        //     }
+        // };
 
-        let dtoken_canister = read_state(|state| {
-            let asset_index = &state.asset_index;
-            asset_index
-                .get(&params.collateral_asset.to_string().clone())
-                .and_then(|reserve_data| reserve_data.d_token_canister.clone())
-                .ok_or_else(|| Error::NoCanisterIdFound)
-        })?;
 
+        let mut liquidator_data = user_data(liquidator_principal)?;
+     
+        // let dtoken_canister = read_state(|state| {
+        //     let asset_index = &state.asset_index;
+        //     asset_index
+        //         .get(&params.collateral_asset.to_string().clone())
+        //         .and_then(|reserve_data| reserve_data.d_token_canister.clone())
+        //         .ok_or_else(|| Error::NoCanisterIdFound)
+        // })?;
+
+
+        let dtoken_canister =read_state(|state| state.asset_index.get(&params.collateral_asset.to_string()).and_then(|reserve_data| reserve_data.d_token_canister.clone())).ok_or_else(|| Error::NoCanisterIdFound)?;
+
+
+        // why this 
         let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
             .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
 
@@ -260,38 +301,68 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("reward_amount: {}", reward_amount);
 
         let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
-        if let Err(e) =
-            reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache)
-        {
-            ic_cdk::println!("Failed to update reserve state: {:?}", e);
-            if let Err(e) = release_lock(&user_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
-        if let Err(e) = reserve::update_interest_rates(
+
+
+
+        // if let Err(e) =
+        //     reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache)
+        // {
+        //     ic_cdk::println!("Failed to update reserve state: {:?}", e);
+        //     if let Err(e) = release_lock(&user_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
+        reserve::update_state(&mut collateral_reserve_data, &mut collateral_reserve_cache)?;
+
+
+        // if let Err(e) = reserve::update_interest_rates(
+        //     &mut collateral_reserve_data,
+        //     &mut collateral_reserve_cache,
+        //     Nat::from(0u128),
+        //     Nat::from(0u128),
+        // )
+        // .await
+        // {
+        //     // Release the lock
+        //     if let Err(e) = release_lock(&user_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     ic_cdk::println!("Failed to update interest rates: {:?}", e);
+        //     return Err(e);
+        // };
+
+
+        reserve::update_interest_rates(
             &mut collateral_reserve_data,
             &mut collateral_reserve_cache,
             Nat::from(0u128),
             Nat::from(0u128),
         )
-        .await
-        {
-            // Release the lock
-            if let Err(e) = release_lock(&user_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            ic_cdk::println!("Failed to update interest rates: {:?}", e);
-            return Err(e);
-        };
-        ic_cdk::println!(
-            "Reserve cache fetched successfully: {:?}",
-            collateral_reserve_cache
-        );
+        .await?;
 
         ic_cdk::println!("reward amount validation: {:?}", reward_amount);
 
-        if let Err(e) = ValidationLogic::validate_liquidation(
+        // if let Err(e) = ValidationLogic::validate_liquidation(
+        //     params.debt_asset.clone(),
+        //     params.amount.clone() - transfer_token_fee.clone(),
+        //     reward_amount.clone(),
+        //     liquidator_principal,
+        //     user_principal,
+        //     repay_reserve_data,
+        // )
+        // .await
+        // {
+        //     // Release the lock
+        //     if let Err(e) = release_lock(&user_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     ic_cdk::println!("liquidation validation failed: {:?}", e);
+        //     return Err(e);
+        // };
+
+        ValidationLogic::validate_liquidation(
             params.debt_asset.clone(),
             params.amount.clone() - transfer_token_fee.clone(),
             reward_amount.clone(),
@@ -299,21 +370,37 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             user_principal,
             repay_reserve_data,
         )
-        .await
-        {
-            // Release the lock
-            if let Err(e) = release_lock(&user_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            ic_cdk::println!("liquidation validation failed: {:?}", e);
-            return Err(e);
-        };
+        .await?;
 
         ic_cdk::println!("liquidation validation successful");
 
         ic_cdk::println!("burn reward amount: {:?}", reward_amount);
 
-        let burn_scaled_result = burn_scaled(
+        // let burn_scaled_result = burn_scaled(
+        //     &mut collateral_reserve_data,
+        //     &mut user_reserve_data,
+        //     reward_amount.clone(),
+        //     collateral_reserve_cache.next_liquidity_index.clone(),
+        //     user_principal,
+        //     collateral_dtoken_principal,
+        //     platform_principal,
+        //     true,
+        // )
+        // .await;
+        // match burn_scaled_result {
+        //     Ok(()) => {
+        //         ic_cdk::println!("Burning dToken successfully completed");
+        //     }
+        //     Err(e) => {
+        //         // Release the lock
+        //         if let Err(e) = release_lock(&user_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         return Err(e);
+        //     }
+        // };
+
+        burn_scaled(
             &mut collateral_reserve_data,
             &mut user_reserve_data,
             reward_amount.clone(),
@@ -323,25 +410,17 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             platform_principal,
             true,
         )
-        .await;
-        match burn_scaled_result {
-            Ok(()) => {
-                ic_cdk::println!("Burning dToken successfully completed");
-            }
-            Err(e) => {
-                // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-        };
+        .await?;
 
         let liquidation_fee_percentage = collateral_reserve_data.configuration.liquidation_protocol_fee.clone();
-         ic_cdk::println!("liquidation protocol fee percentage : {:?}",liquidation_fee_percentage.clone());
-        ic_cdk::println!("liquidation bonus amount : {:?}",liquidation_bonus_amount);
+
+        //  ic_cdk::println!("liquidation protocol fee percentage : {:?}",liquidation_fee_percentage.clone());
+        // ic_cdk::println!("liquidation bonus amount : {:?}",liquidation_bonus_amount);
+
         let protocol_fee_amount = liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage / Nat::from(100u128));
-        ic_cdk::println!("liquidation protocol fee amount :{:?}",protocol_fee_amount.clone());
+
+        // ic_cdk::println!("liquidation protocol fee amount :{:?}",protocol_fee_amount.clone());
+
         if reward_amount.clone() < protocol_fee_amount.clone() {
             ic_cdk::println!("protocol fee amount is greater than reward amount");
             return Err(Error::LiquidationProtocolfeeIsHigher);
@@ -366,7 +445,31 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             }
             Err(e) => {
                 ic_cdk::println!("{:?}", e);
-                let rollback_dtoken_to_user = mint_scaled(
+                // let rollback_dtoken_to_user = mint_scaled(
+                //     &mut collateral_reserve_data,
+                //     &mut user_reserve_data,
+                //     reward_amount,
+                //     collateral_reserve_cache.next_liquidity_index,
+                //     user_principal,
+                //     collateral_dtoken_principal,
+                //     platform_principal,
+                //     true,
+                // )
+                // .await;
+                // match rollback_dtoken_to_user {
+                //     Ok(()) => {
+                //         ic_cdk::println!("Rolling back dtoken to user successfully");
+                //     }
+                //     Err(_) => {
+                //         // Release the lock
+                //         if let Err(e) = release_lock(&user_key) {
+                //             ic_cdk::println!("Failed to release lock: {:?}", e);
+                //         }
+                //         return Err(Error::ErrorRollBack);
+                //     }
+                // };
+
+                mint_scaled(
                     &mut collateral_reserve_data,
                     &mut user_reserve_data,
                     reward_amount,
@@ -376,33 +479,29 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                     platform_principal,
                     true,
                 )
-                .await;
-                match rollback_dtoken_to_user {
-                    Ok(()) => {
-                        ic_cdk::println!("Rolling back dtoken to user successfully");
-                    }
-                    Err(_) => {
-                        // Release the lock
-                        if let Err(e) = release_lock(&user_key) {
-                            ic_cdk::println!("Failed to release lock: {:?}", e);
-                        }
-                        return Err(Error::ErrorRollBack);
-                    }
-                };
+                .await?;
+
                 // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
+                // if let Err(e) = release_lock(&user_key) {
+                //     ic_cdk::println!("Failed to release lock: {:?}", e);
+                // }
                 return Err(e);
             }
         }
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(
+        // mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index.insert(
+        //         params.collateral_asset.clone(),
+        //         Candid(collateral_reserve_data.clone()),
+        //     );
+        // });
+
+        mutate_state(|state| 
+            state.asset_index.insert(
                 params.collateral_asset.clone(),
                 Candid(collateral_reserve_data.clone()),
-            );
-        });
+            )
+        );
 
         if let Some(ref mut reserves) = user_account_data.reserves {
             if let Some(reserve) = reserves
@@ -426,6 +525,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 .insert(user_principal, Candid(user_account_data.clone()));
         });
 
+
         let params_repay = ExecuteRepayParams {
             asset: params.debt_asset.clone(),
             amount: params.amount.clone(),
@@ -443,6 +543,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 let mut liquidator_collateral_reserve =
                     user_reserve(&mut liquidator_data, &params.collateral_asset);
                 let mut liquidator_reserve_data = match liquidator_collateral_reserve.as_mut() {
+
                     Some((_, reserve_data)) => reserve_data,
                     None => {
                         let new_reserve = UserReserveData {
@@ -466,7 +567,32 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                             .1
                     }
                 };
-                let rollback_dtoken_from_liquidator = burn_scaled(
+                // let rollback_dtoken_from_liquidator = burn_scaled(
+                //     &mut collateral_reserve_data,
+                //     &mut liquidator_reserve_data,
+                //     reward_amount.clone(),
+                //     collateral_reserve_cache.next_liquidity_index.clone(),
+                //     liquidator_principal,
+                //     collateral_dtoken_principal,
+                //     platform_principal,
+                //     true,
+                // )
+                // .await;
+                // match rollback_dtoken_from_liquidator {
+                //     Ok(()) => {
+                //         ic_cdk::println!("Rolling back dtoken from liquidator successfully");
+                //     }
+                //     Err(_) => {
+                //         // Release the lock
+                //         if let Err(e) = release_lock(&user_key) {
+                //             ic_cdk::println!("Failed to release lock: {:?}", e);
+                //         }
+                //         return Err(Error::ErrorRollBack);
+                //     }
+                // };
+
+
+                burn_scaled(
                     &mut collateral_reserve_data,
                     &mut liquidator_reserve_data,
                     reward_amount.clone(),
@@ -476,20 +602,33 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                     platform_principal,
                     true,
                 )
-                .await;
-                match rollback_dtoken_from_liquidator {
-                    Ok(()) => {
-                        ic_cdk::println!("Rolling back dtoken from liquidator successfully");
-                    }
-                    Err(_) => {
-                        // Release the lock
-                        if let Err(e) = release_lock(&user_key) {
-                            ic_cdk::println!("Failed to release lock: {:?}", e);
-                        }
-                        return Err(Error::ErrorRollBack);
-                    }
-                };
-                let rollback_dtoken_to_user = mint_scaled(
+                .await?;
+
+                // let rollback_dtoken_to_user = mint_scaled(
+                //     &mut collateral_reserve_data,
+                //     &mut user_reserve_data,
+                //     reward_amount.clone()  - protocol_fee_amount.clone(),
+                //     collateral_reserve_cache.next_liquidity_index,
+                //     user_principal,
+                //     collateral_dtoken_principal,
+                //     platform_principal,
+                //     true,
+                // )
+                // .await;
+                // match rollback_dtoken_to_user {
+                //     Ok(()) => {
+                //         ic_cdk::println!("Rolling back dtoken to user successfully");
+                //     }
+                //     Err(_) => {
+                //         // Release the lock
+                //         if let Err(e) = release_lock(&user_key) {
+                //             ic_cdk::println!("Failed to release lock: {:?}", e);
+                //         }
+                //         return Err(Error::ErrorRollBack);
+                //     }
+                // };
+
+               mint_scaled(
                     &mut collateral_reserve_data,
                     &mut user_reserve_data,
                     reward_amount.clone()  - protocol_fee_amount.clone(),
@@ -499,30 +638,25 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                     platform_principal,
                     true,
                 )
-                .await;
-                match rollback_dtoken_to_user {
-                    Ok(()) => {
-                        ic_cdk::println!("Rolling back dtoken to user successfully");
-                    }
-                    Err(_) => {
-                        // Release the lock
-                        if let Err(e) = release_lock(&user_key) {
-                            ic_cdk::println!("Failed to release lock: {:?}", e);
-                        }
-                        return Err(Error::ErrorRollBack);
-                    }
-                };
+                .await?;
+
+                // mutate_state(|state| {
+                //     let asset_index = &mut state.asset_index;
+                //     asset_index.insert(
+                //         params.collateral_asset.clone(),
+                //         Candid(collateral_reserve_data.clone()),
+                //     );
+                // });
                 mutate_state(|state| {
-                    let asset_index = &mut state.asset_index;
-                    asset_index.insert(
+                    state.asset_index.insert(
                         params.collateral_asset.clone(),
                         Candid(collateral_reserve_data.clone()),
-                    );
+                    )
                 });
                 // Release the lock
-                if let Err(e) = release_lock(&user_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
+                // if let Err(e) = release_lock(&user_key) {
+                //     ic_cdk::println!("Failed to release lock: {:?}", e);
+                // }
                 return Err(e);
             }
         }
@@ -530,10 +664,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .await;
 
     // Release the lock
-    if let Err(e) = release_lock(&user_key) {
-        ic_cdk::println!("Failed to release lock: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = release_lock(&user_key) {
+    //     ic_cdk::println!("Failed to release lock: {:?}", e);
+    //     return Err(e);
+    // }
     result
 }
 
@@ -590,22 +724,28 @@ pub async fn to_get_reward_amount(
             }
         };
 
-    let mut collateral_balance = match get_balance(d_token_canister, user_principal).await {
-        Ok(balance) => {
-            ic_cdk::println!("Collateral balance fetched: {:?}", balance);
-            balance
-        }
-        Err(e) => {
-            ic_cdk::println!("Error fetching collateral balance: {:?}", e);
-            return Err(e);
-        }
-    };
-    ic_cdk::println!("collateral_reserve = {:?}", collateral_reserve_data.clone());
-    ic_cdk::println!(
-        "user normalized = {}",
-        user_normalized_supply(collateral_reserve_data.clone()).unwrap()
-    );
-    ic_cdk::println!("liquidity index = {:?}", user_reserve_data);
+
+
+
+    // let mut collateral_balance = match get_balance(d_token_canister, user_principal).await {
+    //     Ok(balance) => {
+    //         ic_cdk::println!("Collateral balance fetched: {:?}", balance);
+    //         balance
+    //     }
+    //     Err(e) => {
+    //         ic_cdk::println!("Error fetching collateral balance: {:?}", e);
+    //         return Err(e);
+    //     }
+    // };
+
+    let mut collateral_balance = get_balance(d_token_canister, user_principal).await?;
+
+    // ic_cdk::println!("collateral_reserve = {:?}", collateral_reserve_data.clone());
+    // ic_cdk::println!(
+    //     "user normalized = {}",
+    //     user_normalized_supply(collateral_reserve_data.clone()).unwrap()
+    // );
+    // ic_cdk::println!("liquidity index = {:?}", user_reserve_data);
 
     collateral_balance = (collateral_balance
         .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))
@@ -615,53 +755,59 @@ pub async fn to_get_reward_amount(
 
     ic_cdk::println!("Fetching cached exchange rates for debt and collateral assets");
 
-    let debt_price = match get_cached_exchange_rate(debt_asset.clone()) {
-        Ok(price) => price,
-        Err(e) => {
-            ic_cdk::println!("Failed to fetch exchange rate");
-            return Err(e);
-        }
-    };
+    // let debt_price = match get_cached_exchange_rate(debt_asset.clone()) {
+    //     Ok(price) => price,
+    //     Err(e) => {
+    //         ic_cdk::println!("Failed to fetch exchange rate");
+    //         return Err(e);
+    //     }
+    // };
+
+
+    let debt_price =  get_cached_exchange_rate(debt_asset.clone())?;
     ic_cdk::println!("asset price = {}", debt_price);
 
-    let collateral_price = match get_cached_exchange_rate(collateral_asset.clone()) {
-        Ok(price) => price,
-        Err(e) => {
-            ic_cdk::println!("Failed to fetch exchange rate");
-            return Err(e);
-        }
-    };
+    // let collateral_price = match get_cached_exchange_rate(collateral_asset.clone()) {
+    //     Ok(price) => price,
+    //     Err(e) => {
+    //         ic_cdk::println!("Failed to fetch exchange rate");
+    //         return Err(e);
+    //     }
+    // };
+
+    let collateral_price =  get_cached_exchange_rate(collateral_asset.clone())?;
+
     ic_cdk::println!("asset price = {}", collateral_price);
 
     let mut collateral_amount = amount.clone();
     ic_cdk::println!("Initial collateral amount: {:?}", collateral_amount);
 
     if collateral_asset != debt_asset {
-        ic_cdk::println!("Collateral and debt assets are different, fetching exchange rates");
+        // ic_cdk::println!("Collateral and debt assets are different, fetching exchange rates");
 
         if debt_price == Nat::from(0u128) || collateral_price == Nat::from(0u128) {
             ic_cdk::println!("Invalid exchange rate for either collateral_asset or debt asset");
             return Err(Error::ErrorPriceCache);
         }
 
-        ic_cdk::println!("debt_price: {:?}", debt_price);
-        ic_cdk::println!("collateral_price: {:?}", collateral_price);
-        ic_cdk::println!("amount = {}", amount.clone());
-        ic_cdk::println!(
-            "amount_in_usd: {:?}",
-            amount.clone() * debt_price.clone()
-        );
-        ic_cdk::println!(
-            "collateral_in_usd: {:?}",
-            (amount.clone() * debt_price.clone()) / collateral_price.clone()
-        );
+        // ic_cdk::println!("debt_price: {:?}", debt_price);
+        // ic_cdk::println!("collateral_price: {:?}", collateral_price);
+        // ic_cdk::println!("amount = {}", amount.clone());
+        // ic_cdk::println!(
+        //     "amount_in_usd: {:?}",
+        //     amount.clone() * debt_price.clone()
+        // );
+        // ic_cdk::println!(
+        //     "collateral_in_usd: {:?}",
+        //     (amount.clone() * debt_price.clone()) / collateral_price.clone()
+        // );
         collateral_amount = (amount * debt_price) / collateral_price
     }
-    ic_cdk::println!("Final collateral amount: {:?}", collateral_amount);
-    ic_cdk::println!(
-        "liquidation bonus: {:?}",
-        collateral_reserve_data.configuration.liquidation_bonus
-    );
+    // ic_cdk::println!("Final collateral amount: {:?}", collateral_amount);
+    // ic_cdk::println!(
+    //     "liquidation bonus: {:?}",
+    //     collateral_reserve_data.configuration.liquidation_bonus
+    // );
 
     let liquidation_bonus_amount = collateral_amount.clone().scaled_mul(
         collateral_reserve_data

@@ -7,6 +7,7 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE};
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
+use crate::guards::guard_prevent_anonymous;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
@@ -50,7 +51,12 @@ use ic_cdk::update;
  * @return Result<Nat, Error> The user's new balance after a successful transaction or an error code if the operation fails.
  */
 #[update]
-pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Error> {
+pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
+
+     // prevent anonymous access
+     guard_prevent_anonymous()?;
+
+    // input validations 
     if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
@@ -69,10 +75,6 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
 
     if let Err(e) = request_limiter("execute_borrow") {
         ic_cdk::println!("Error limiting error: {:?}", e);
@@ -93,115 +95,146 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
     ic_cdk::println!("borrow amount = {}", borrow_amount);
 
     let result: Result<Nat, Error> = async {
-        let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
-            Ok(principal) => principal,
-            Err(e) => {
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-        };
+        // let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
+        //     Ok(principal) => principal,
+        //     Err(e) => {
+        //         if let Err(e) = release_lock(&operation_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         return Err(e);
+        //     }
+        // };
+        let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
         let platform_principal = ic_cdk::api::id();
 
-        let reserve_data_result = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&params.asset.to_string())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| Error::NoReserveDataFound)
-        });
+        // let reserve_data_result = mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index
+        //         .get(&params.asset.to_string())
+        //         .map(|reserve| reserve.0.clone())
+        //         .ok_or_else(|| Error::NoReserveDataFound)
+        // });
 
-        let mut reserve_data = match reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset: {:?}", data);
-                data
-            }
-            Err(e) => {
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-        };
+
+        let mut reserve_data = read_state(|state|
+            state.asset_index.get(&params.asset.to_string()).map(|res| res.0)
+        ).ok_or_else(|| Error::NoReserveDataFound)?;
+
+
+        // let mut reserve_data = match reserve_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("Reserve data found for asset: {:?}", data);
+        //         data
+        //     }
+        //     Err(e) => {
+        //         if let Err(e) = release_lock(&operation_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         return Err(e);
+        //     }
+        // };
 
         if reserve_data.asset_borrow == Nat::from(0u128) {
             *&mut reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
         }
-        ic_cdk::println!(
-            "Updated debt index for reserve data: {:?}",
-            reserve_data.debt_index
-        );
+
+        // ic_cdk::println!(
+        //     "Updated debt index for reserve data: {:?}",
+        //     reserve_data.debt_index
+        // );
 
         let mut reserve_cache = reserve::cache(&reserve_data);
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity and borrow index
-        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
-            ic_cdk::println!("Failed to update reserve state: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+
+        reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
+
+        // if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+        //     ic_cdk::println!("Failed to update reserve state: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
         ic_cdk::println!("Reserve state updated successfully");
 
-        if let Err(e) = ValidationLogic::validate_borrow(
-            &reserve_data,
+        // if let Err(e) = ValidationLogic::validate_borrow(
+            // &reserve_data,
+            // params.amount.clone(),
+            // user_principal,
+            // ledger_canister_id,
+        // )
+        // .await
+        // {
+        //     ic_cdk::println!("Borrow validation failed: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+        // ic_cdk::println!("Borrow validated successfully");
+
+        ValidationLogic::validate_borrow(&reserve_data,
             params.amount.clone(),
             user_principal,
-            ledger_canister_id,
-        )
-        .await
-        {
-            ic_cdk::println!("Borrow validation failed: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
-        ic_cdk::println!("Borrow validated successfully");
+            ledger_canister_id).await?;
 
         // ----------- Update logic here -------------
-        if let Err(e) = UpdateLogic::update_user_data_borrow(
-            user_principal,
+        // if let Err(e) = UpdateLogic::update_user_data_borrow(
+        //     user_principal,
+        //     &reserve_cache,
+        //     params.clone(),
+        //     &mut reserve_data,
+        // )
+        // .await
+        // {
+        //     ic_cdk::println!("Failed to update user data: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
+        UpdateLogic::update_user_data_borrow(user_principal,
             &reserve_cache,
             params.clone(),
-            &mut reserve_data,
-        )
-        .await
-        {
-            ic_cdk::println!("Failed to update user data: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+            &mut reserve_data).await?;
+        
         ic_cdk::println!("User data updated successfully");
 
         reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
         ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
 
-        if let Err(e) = reserve::update_interest_rates(
-            &mut reserve_data,
+        // if let Err(e) = reserve::update_interest_rates(
+            // &mut reserve_data,
+            // &mut reserve_cache,
+            // params.amount.clone(),
+            // Nat::from(0u128),
+        // )
+        // .await
+        // {
+        //     ic_cdk::println!("Failed to update interest rates: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
+
+        reserve::update_interest_rates( &mut reserve_data,
             &mut reserve_cache,
             params.amount.clone(),
-            Nat::from(0u128),
-        )
-        .await
-        {
-            ic_cdk::println!("Failed to update interest rates: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+            Nat::from(0u128)).await?;
+        
 
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+        // mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+        // });
+
+        mutate_state(|state| state.asset_index.insert(params.asset.clone(), Candid(reserve_data.clone())));
 
         // Transfers borrow amount from the pool to the user
         match asset_transfer_from(
@@ -219,45 +252,63 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
                 );
                 Ok(new_balance)
             }
-            Err(e) => {
+            Err(_) => {
                 //Rollback user state
                 let repay_param = ExecuteRepayParams {
                     asset: params.asset.clone(),
                     amount: borrow_amount.clone(),
                     on_behalf_of: None,
                 };
-                if let Err(e) = UpdateLogic::update_user_data_repay(
+                // if let Err(e) = UpdateLogic::update_user_data_repay(
+                //     user_principal,
+                //     &reserve_cache,
+                //     repay_param,
+                //     &mut reserve_data,
+                // )
+                // .await
+                // {
+                //     ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                //     if let Err(e) = release_lock(&operation_key) {
+                //         ic_cdk::println!("Failed to release lock: {:?}", e);
+                //     }
+                //     return Err(Error::ErrorRollBack);
+                // };
+
+                UpdateLogic::update_user_data_repay(
                     user_principal,
                     &reserve_cache,
                     repay_param,
                     &mut reserve_data,
                 )
-                .await
-                {
-                    ic_cdk::println!("Failed to rollback user state: {:?}", e);
-                    if let Err(e) = release_lock(&operation_key) {
-                        ic_cdk::println!("Failed to release lock: {:?}", e);
-                    }
-                    return Err(Error::ErrorRollBack);
-                };
-                mutate_state(|state| {
-                    let asset_index = &mut state.asset_index;
-                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-                });
-                ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
+                .await?;
+
+                // mutate_state(|state| {
+                //     let asset_index = &mut state.asset_index;
+                //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                // });
+
+
+                mutate_state(|state|     
+                    state.asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()))
+                );
+
+                
+
+
+                // ic_cdk::println!("Asset transfer failed, mint debt token. Error: {:?}", e);
+                // if let Err(e) = release_lock(&operation_key) {
+                //     ic_cdk::println!("Failed to release lock: {:?}", e);
+                // }
                 return Err(Error::ErrorMintDebtTokens);
             }
         }
     }
     .await;
 
-    if let Err(e) = release_lock(&operation_key) {
-        ic_cdk::println!("Failed to release lock: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = release_lock(&operation_key) {
+    //     ic_cdk::println!("Failed to release lock: {:?}", e);
+    //     return Err(e);
+    // }
     result
 }
 
@@ -293,6 +344,17 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
  */
 #[update]
 pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
+
+    // guard to prevent anonymous access
+    // for caller
+    guard_prevent_anonymous()?;
+
+    // for user
+    if params.on_behalf_of == Some(Principal::anonymous()){
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    // Validations
     if params.asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
@@ -308,30 +370,34 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         return Err(Error::InvalidAmount);
     }
 
-    if let Some(principal) = params.on_behalf_of {
-        if principal == Principal::anonymous() {
-            ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::AnonymousPrincipal);
-        }
-    }
+    // if let Some(principal) = params.on_behalf_of {
+    //     if principal == Principal::anonymous() {
+    //         ic_cdk::println!("Anonymous principals are not allowed");
+    //         return Err(Error::AnonymousPrincipal);
+    //     }
+    // }
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
             let user_principal = on_behalf_of;
-            let liquidator_principal = ic_cdk::caller();
-            if liquidator_principal == Principal::anonymous() {
-                ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::AnonymousPrincipal);
-            }
-            (user_principal, Some(liquidator_principal))
+            // let liquidator_principal = ic_cdk::caller();
+            // if liquidator_principal == Principal::anonymous() {
+            //     ic_cdk::println!("Anonymous principals are not allowed");
+            //     return Err(Error::AnonymousPrincipal);
+            // }
+            // (user_principal, Some(liquidator_principal))
+            (user_principal, Some(ic_cdk::caller()))
+
         } else {
-            let user_principal = ic_cdk::caller();
-            if user_principal == Principal::anonymous() {
-                ic_cdk::println!("Anonymous principals are not allowed");
-                return Err(Error::AnonymousPrincipal);
-            }
-            ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
-            (user_principal, None)
+            // let user_principal = ic_cdk::caller();
+            // if user_principal == Principal::anonymous() {
+            //     ic_cdk::println!("Anonymous principals are not allowed");
+            //     return Err(Error::AnonymousPrincipal);
+            // }
+            // ic_cdk::println!("Caller is: {:?}", user_principal.to_string());
+            // (user_principal, None)
+            (ic_cdk::caller(), None)
+
         };
 
     let operation_key = user_principal;
@@ -353,15 +419,17 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     }
 
     let result = async {
-        let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
-            Ok(principal) => principal,
-            Err(e) => {
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-        };
+        // let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
+        //     Ok(principal) => principal,
+        //     Err(e) => {
+        //         if let Err(e) = release_lock(&operation_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         return Err(e);
+        //     }
+        // };
+
+        let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
         let platform_principal = ic_cdk::api::id();
 
@@ -380,26 +448,28 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             transfer_from_principal.to_string()
         );
 
-        let reserve_data_result = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&params.asset.to_string().clone())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| Error::NoReserveDataFound)
-        });
+        // let reserve_data_result = mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index
+        //         .get(&params.asset.to_string().clone())
+        //         .map(|reserve| reserve.0.clone())
+        //         .ok_or_else(|| Error::NoReserveDataFound)
+        // });
 
-        let mut reserve_data = match reserve_data_result {
-            Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset");
-                data
-            }
-            Err(e) => {
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
-                return Err(e);
-            }
-        };
+        let mut reserve_data = read_state(|state| state.asset_index.get(&params.asset.to_string()).map(|reserve| reserve.0.clone())).ok_or_else(|| Error::NoReserveDataFound)?;
+
+        // let mut reserve_data = match reserve_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("Reserve data found for asset");
+        //         data
+        //     }
+        //     Err(e) => {
+        //         if let Err(e) = release_lock(&operation_key) {
+        //             ic_cdk::println!("Failed to release lock: {:?}", e);
+        //         }
+        //         return Err(e);
+        //     }
+        // };
 
         if reserve_data.debt_index == Nat::from(0u128) {
             reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
@@ -410,71 +480,92 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
         // Updates the liquidity and borrow index
-        if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
-            ic_cdk::println!("Failed to update reserve state: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+        // if let Err(e) = reserve::update_state(&mut reserve_data, &mut reserve_cache) {
+        //     ic_cdk::println!("Failed to update reserve state: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
+        reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
         ic_cdk::println!("Reserve state updated successfully");
 
+        // // Validates repay using the reserve_data
+        // if let Err(e) = ValidationLogic::validate_repay(
+        //     &reserve_data,
+        //     params.amount.clone(),
+        //     user_principal,
+        //     liquidator_principal,
+        //     ledger_canister_id,
+        // )
+        // .await
+        // {
+        //     ic_cdk::println!("Repay validation failed: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
         // Validates repay using the reserve_data
-        if let Err(e) = ValidationLogic::validate_repay(
+        ValidationLogic::validate_repay(
             &reserve_data,
             params.amount.clone(),
             user_principal,
             liquidator_principal,
             ledger_canister_id,
         )
-        .await
-        {
-            ic_cdk::println!("Repay validation failed: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+        .await?;
+
         ic_cdk::println!("Repay validated successfully");
 
-        if let Err(e) = update_token_price(params.asset.clone()).await {
-            ic_cdk::println!("Failed to update token price: {:?}", e);
-        }
+        update_token_price(params.asset.clone()).await?;
+
+        // if let Err(e) = update_token_price(params.asset.clone()).await {
+        //     ic_cdk::println!("Failed to update token price: {:?}", e);
+        // }
 
         ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
-        let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
+        // get exchange rates
+        let asset_price: Nat = get_cached_exchange_rate(params.asset.clone())?;
 
-        ic_cdk::println!("asset price = {}", asset_price);
+        // let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+        //     Ok(price) => price,
+        //     Err(e) => {
+        //         ic_cdk::println!("Failed to fetch exchange rate");
+        //         return Err(e);
+        //     }
+        // };
+
+        // ic_cdk::println!("asset price = {}", asset_price);
 
         let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-        ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+        // ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
 
         if params.amount.clone() < transfer_token_fee {
-            ic_cdk::println!("Amount is less than the transfer token fee");
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
+            // ic_cdk::println!("Amount is less than the transfer token fee");
+            // if let Err(e) = release_lock(&operation_key) {
+            //     ic_cdk::println!("Failed to release lock: {:?}", e);
+            // }
             return Err(Error::FeeExceedsAmount);
         }
-        ic_cdk::println!("token fee = {}", transfer_token_fee);
+        // ic_cdk::println!("token fee = {}", transfer_token_fee);
         params.amount = params.amount - transfer_token_fee.clone();
-        ic_cdk::println!("amount = {}", params.amount);
+        // ic_cdk::println!("amount = {}", params.amount);
 
-        let user_current_debt =
-            match get_asset_debt(params.asset.clone(), Some(user_principal)).await {
-                Ok(debt) => debt,
-                Err(e) => {
-                    ic_cdk::println!("Error getting asset debt: {:?}", e);
-                    return Err(e);
-                }
-            };
+        // let user_current_debt =
+        //     match get_asset_debt(params.asset.clone(), Some(user_principal)).await {
+        //         Ok(debt) => debt,
+        //         Err(e) => {
+        //             ic_cdk::println!("Error getting asset debt: {:?}", e);
+        //             return Err(e);
+        //         }
+        //     };
+        let user_current_debt: Nat = get_asset_debt(params.asset.clone(), Some(user_principal)).await?;
+
+
         ic_cdk::println!("User current debt: {:?}", user_current_debt);
         if user_current_debt == Nat::from(0u128) {
             return Err(Error::NoDebtToRepay);
@@ -485,42 +576,62 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         }
 
         // ----------- Update logic here -------------
-        if let Err(e) = UpdateLogic::update_user_data_repay(
+        // if let Err(e) = UpdateLogic::update_user_data_repay(
+        //     user_principal,
+        //     &reserve_cache,
+        //     params.clone(),
+        //     &mut reserve_data,
+        // )
+        // .await
+        // {
+        //     ic_cdk::println!("Failed to update user data: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
+        // ----------- Update logic here -------------
+        UpdateLogic::update_user_data_repay(
             user_principal,
             &reserve_cache,
             params.clone(),
             &mut reserve_data,
         )
-        .await
-        {
-            ic_cdk::println!("Failed to update user data: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+        .await?;
+
         ic_cdk::println!("User data updated successfully");
         reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
-        ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
-        if let Err(e) = reserve::update_interest_rates(
+        // ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
+        // if let Err(e) = reserve::update_interest_rates(
+        //     &mut reserve_data,
+        //     &mut reserve_cache,
+        //     Nat::from(0u128),
+        //     params.amount.clone(),
+        // )
+        // .await
+        // {
+        //     ic_cdk::println!("Failed to update interest rates: {:?}", e);
+        //     if let Err(e) = release_lock(&operation_key) {
+        //         ic_cdk::println!("Failed to release lock: {:?}", e);
+        //     }
+        //     return Err(e);
+        // }
+
+        reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
             Nat::from(0u128),
             params.amount.clone(),
         )
-        .await
-        {
-            ic_cdk::println!("Failed to update interest rates: {:?}", e);
-            if let Err(e) = release_lock(&operation_key) {
-                ic_cdk::println!("Failed to release lock: {:?}", e);
-            }
-            return Err(e);
-        }
+        .await?;
 
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+        // mutate_state(|state| {
+        //     let asset_index = &mut state.asset_index;
+        //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+        // });
+
+        mutate_state(|state| state.asset_index.insert(params.asset.clone(), Candid(reserve_data.clone())));
 
         // Transfers the asset from the user to our backend canister
         match asset_transfer_from(
@@ -538,35 +649,50 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                 );
                 Ok(new_balance)
             }
-            Err(e) => {
+            Err(_) => {
                 ic_cdk::println!("inside the error");
                 //Rollback user state
                 let borrow_param = ExecuteBorrowParams {
                     asset: params.asset.clone(),
                     amount: repay_amount.clone(),
                 };
-                if let Err(e) = UpdateLogic::update_user_data_borrow(
+                // if let Err(e) = UpdateLogic::update_user_data_borrow(
+                //     user_principal,
+                //     &reserve_cache,
+                //     borrow_param,
+                //     &mut reserve_data,
+                // )
+                // .await
+                // {
+                //     ic_cdk::println!("Failed to rollback user state: {:?}", e);
+                //     if let Err(e) = release_lock(&operation_key) {
+                //         ic_cdk::println!("Failed to release lock: {:?}", e);
+                //     }
+                //     return Err(Error::ErrorRollBack);
+                // };
+
+
+                UpdateLogic::update_user_data_borrow(
                     user_principal,
                     &reserve_cache,
                     borrow_param,
                     &mut reserve_data,
-                )
-                .await
-                {
-                    ic_cdk::println!("Failed to rollback user state: {:?}", e);
-                    if let Err(e) = release_lock(&operation_key) {
-                        ic_cdk::println!("Failed to release lock: {:?}", e);
-                    }
-                    return Err(Error::ErrorRollBack);
-                };
-                mutate_state(|state| {
-                    let asset_index = &mut state.asset_index;
-                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                ).await?;
+
+                // mutate_state(|state| {
+                //     let asset_index = &mut state.asset_index;
+                //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                // });
+
+               mutate_state(|state| {
+                    state.asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
                 });
-                ic_cdk::println!("Asset transfer failed, error: {:?}", e);
-                if let Err(e) = release_lock(&operation_key) {
-                    ic_cdk::println!("Failed to release lock: {:?}", e);
-                }
+                
+
+                // ic_cdk::println!("Asset transfer failed, error: {:?}", e);
+                // if let Err(e) = release_lock(&operation_key) {
+                //     ic_cdk::println!("Failed to release lock: {:?}", e);
+                // }
                 return Err(Error::ErrorBurnDebtTokens);
             }
         }
@@ -574,10 +700,10 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     .await;
 
     // Release the lock
-    if let Err(e) = release_lock(&operation_key) {
-        ic_cdk::println!("Failed to release lock: {:?}", e);
-        return Err(e);
-    }
+    // if let Err(e) = release_lock(&operation_key) {
+    //     ic_cdk::println!("Failed to release lock: {:?}", e);
+    //     return Err(e);
+    // }
 
     result
 }

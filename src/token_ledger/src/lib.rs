@@ -476,15 +476,7 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
 
     ic_cdk::println!("just want to check things if out ");
 
-    let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
-
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(TransferFromError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    
 
     let spender_account = Account {
         owner: ic_cdk::api::caller(),

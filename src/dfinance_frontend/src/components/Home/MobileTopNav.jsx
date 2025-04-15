@@ -24,7 +24,15 @@ import icplogo from "../../../public/wallet/icp.png";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
-
+import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import ckBTC from "../../../public/assests-icon/ckBTC.png";
+import ckETH from "../../../public/assests-icon/CKETH.svg";
+import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
+import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
+import icp from "../../../public/assests-icon/ICPMARKET.png";
+import { Principal } from "@dfinity/principal";
+import useAssetData from "../customHooks/useAssets";
+import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 const MobileTopNav = ({
   isMobileNav,
   setIsMobileNav,
@@ -34,13 +42,16 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-
+  const { isBlocked } = useFunctionBlockStatus("execute_supply");
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const {
+    assets,
 
-  const { isAuthenticated, principal } = useAuth();
-
+  } = useAssetData();
+  const { isAuthenticated, principal ,accountIdString} = useAuth();
+ const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -53,7 +64,12 @@ const MobileTopNav = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
+  const toggleRefresh = useSelector(
+    (state) => state.faucetUpdate.refreshTrigger
+  );
   /* ===================================================================================
    *                 Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
@@ -97,11 +113,346 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-
+  const [asset, setAsset] = useState("ICP"); // default asset
+  const assetImages = {
+    ckBTC: ckBTC,
+    ckETH: ckETH,
+    ckUSDC: ckUSDC,
+    ckUSDT: ckUSDT,
+    ICP: icp,
+  };
+  const [amount, setAmount] = useState("");
+  const [maxClicked, setMaxClicked] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+    fetchConversionRate,
+    ckBTCBalance,
+    ckETHBalance,
+    ckUSDCBalance,
+    ckICPBalance,
+    ckUSDTBalance,
+    fetchBalance,
+  } = useFetchConversionRate();
+  console.log("ckBTCBalance", ckBTCBalance);
   const handleSoundToggle = () => {
     dispatch(toggleSound());
   };
+const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      if (isApproved) {
+        await handleTransfer();
+      } else {
+        await handleApprove();
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const errorMessages = {
+    NoReserveDataFound:
+      "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
+    FailedToUpdatePrice:
+      "Failed to update the reserve prices. Please try again later.",
+    ValidationError:
+      "The supply validation failed. Ensure your inputs are correct.",
+    InterestRateUpdateFailed:
+      "Unable to update interest rates. Please retry the operation.",
+    ErrorMintTokens:
+      "Minting of tokens failed. Your account state has been rolled back. Try again later.",
+    Default: "An unexpected error occurred. Please try again later.",
+  };
+  const assetBalances = {
+    ICP: ckICPBalance,
+    ckETH: ckETHBalance,
+    ckUSDT: ckUSDTBalance,
+    ckBTC: ckBTCBalance,
+    ckUSDC: ckUSDCBalance,
+  };
+  const supplyBalance = assetBalances[asset] || 0;
+  console.log("supplyBalance", supplyBalance);
+  const handleApprove = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return;
+    }
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActors.ckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActors.ckETH;
+    } else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActors.ckUSDC;
+    } else if (asset === "ICP") {
+      ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") {
+      ledgerActor = ledgerActors.ckUSDT;
+    }
+    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
+    const scaledAmount = amountAsNat64;
 
+    try {
+      const approval = await ledgerActor.icrc2_approve({
+        fee: [],
+        memo: [],
+        from_subaccount: [],
+        created_at_time: [],
+        amount: scaledAmount,
+        expected_allowance: [],
+        expires_at: [],
+        spender: {
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          subaccount: [],
+        },
+      });
+      setIsApproved(true);
+      toast.success(`Approval successful!`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } catch (error) {
+      toast.error(`Error: ${error.message || "Approval failed!"}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (isBlocked) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return; // Prevent function execution
+    }
+
+    try {
+      let ledgerActor;
+      if (asset === "ckBTC") {
+        ledgerActor = ledgerActors.ckBTC;
+      } else if (asset === "ckETH") {
+        ledgerActor = ledgerActors.ckETH;
+      } else if (asset === "ckUSDC") {
+        ledgerActor = ledgerActors.ckUSDC;
+      } else if (asset === "ICP") {
+        ledgerActor = ledgerActors.ICP;
+      } else if (asset === "ckUSDT") {
+        ledgerActor = ledgerActors.ckUSDT;
+      }
+      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
+      let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
+      const scaledAmount = amountAsNat64;
+      console.log("amount", scaledAmount)
+      // Create transfer arguments for icrc2_transfer_from
+      const transferFromArgs = {
+        from: {
+          owner: Principal.fromText(principal),
+          subaccount: [],
+        },// You'll need to define this based on your app logic
+        to: {
+          owner: Principal.fromText(receiverAddress),
+          subaccount: [],
+        }, // You'll need to define this based on your app logic
+        amount: scaledAmount,
+        fee: [0], // You'll need to define this based on your asset
+        memo: [], // Optional memo field, adjust as needed
+        created_at_time: [], // Nanoseconds timestamp
+        spender_subaccount: [],
+      };
+
+      // Call the icrc2_transfer_from function
+      const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
+      dispatch(toggleDashboardRefresh());
+
+      if ("Ok" in response) {
+
+        setIsTransferDropDownOpen(false);
+
+        if (isSoundOn) {
+          const sound = new Audio(coinSound);
+          sound.play();
+        }
+
+        toast.success(`Transfer successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if ("Err" in response) {
+        handleTransferError(response.Err);
+      }
+    } catch (error) {
+      handleTransferException(error);
+    }
+  };
+
+  // Helper functions for error handling
+  const handleTransferError = (errorKey) => {
+    const errorMsg = errorKey?.toString() || "An unexpected error occurred";
+    console.error("Error:", errorKey);
+
+    if (typeof errorKey === "object" && "BLOCKEDFORONEHOUR" in errorKey) {
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      handleClosePaymentPopup();
+      setIsLoading(false);
+    } else if (errorMsg.toLowerCase().includes("panic")) {
+      setShowPanicPopup(true);
+      setIsVisible(false);
+    } else if (
+      errorMsg.toLowerCase().includes("out of cycles") ||
+      errorMsg.includes("Reject text: Canister")
+    ) {
+      toast.error("Canister is out of cycles. Admin has been notified.", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } else if (errorMsg.toLowerCase().includes("SupplyCapExceeded")) {
+      toast.error("Supply cap is exceeded.", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } else if (errorMsg.toLowerCase().includes("unauthorized access")) {
+      toast.error("Unauthorized access. Only platform or controllers can perform this action.", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } else {
+      const userFriendlyMessage = errorMessages[errorKey] || errorMessages.Default;
+      toast.error(`Supply failed: ${userFriendlyMessage}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  };
+
+  const handleTransferException = (error) => {
+    const message = error.message || "Supply action failed!";
+    console.error(`Error: ${message}`);
+
+    if (message.toLowerCase().includes("panic")) {
+      setShowPanicPopup(true);
+      setIsVisible(false);
+    } else if (
+      message.toLowerCase().includes("out of cycles") ||
+      message.includes("Reject text: Canister")
+    ) {
+      toast.error("Canister is out of cycles. Admin has been notified.", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } else if (message.toLowerCase().includes("SupplyCapExceeded")) {
+      toast.error("Supply cap is exceeded.", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } else {
+      toast.error(`Error: ${message}`, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  };
+  const handleAmountChange = (e) => {
+    setAmount(e.target.value);
+    setMaxClicked(false);
+  };
+  const handleMaxClick = () => {
+    setAmount(supplyBalance.toString());
+    setMaxClicked(true);
+  };
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
     setIsDarkMode((prevMode) => {
@@ -110,7 +461,19 @@ const MobileTopNav = ({
       return newMode;
     });
   };
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isTransferDropdownOpen, setIsTransferDropDownOpen] = useState(false);
+  const [showTransferPopup, setShowTransferPopup] = useState(false);
+  const [showDepositPopup, setShowDepositPopup] = useState(false);
 
+  const toggleDropdown = () => {
+    setIsTransferDropDownOpen(!isTransferDropdownOpen);
+   
+  };
+  const toggleDepositDropdown = () => {
+    setShowDepositPopup(!showDepositPopup);
+    
+  };
   const handleClose = () => {
     setIsMobileNav(false);
   };
@@ -129,7 +492,30 @@ const MobileTopNav = ({
     handleClose();
     navigate("/dashboard");
   };
+const truncateToSevenDecimals = (value) => {
+    const multiplier = Math.pow(10, 8);
+    const truncated = Math.floor(value * multiplier) / multiplier;
+    return truncated.toFixed(8);
+  };
+  const [receiverAddress, setReceiverAddress] = useState("");
+  const [receiverError, setReceiverError] = useState("");
+  const validateReceiverAddress = (value) => {
+    // Example: basic principal ID pattern
+    const regex = /^[a-z0-9-]{60,65}$/;
 
+    if (!value) {
+      setReceiverError("Receiver address is required.");
+    } else if (!regex.test(value)) {
+      setReceiverError("Invalid receiver address format.");
+    } else {
+      setReceiverError(""); // No error
+    }
+  };
+  const handleReceiverChange = (e) => {
+    const value = e.target.value.trim();
+    setReceiverAddress(value);
+    validateReceiverAddress(value);
+  };
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -181,7 +567,24 @@ const MobileTopNav = ({
   useEffect(() => {
     setSwitchWalletDrop(false);
   }, [location]);
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchBalance("ckBTC"),
+          fetchBalance("ckETH"),
+          fetchBalance("ckUSDC"),
+          fetchBalance("ICP"),
+          fetchBalance("ckUSDT"),
+          fetchConversionRate(),
+        ]);
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
 
+    fetchAllData();
+  }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger, toggleRefresh]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -476,6 +879,18 @@ const MobileTopNav = ({
       </div>
       {isAuthenticated && (
         <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
+         
+                                            <Button
+                                              title="Transfer"
+                                              className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+           onClickHandler={toggleDropdown}
+                                            />
+                                            <Button
+                                              title="Deposit"
+                                              className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+                                              onClickHandler={toggleDepositDropdown}
+                                            />
+                                         
           <Button
             title="Switch Wallet"
             className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
@@ -488,6 +903,308 @@ const MobileTopNav = ({
           />
         </div>
       )}
+       {isTransferDropdownOpen && (
+                      <>
+                        {/* Overlay that captures outside clicks */}
+                        <div
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                          onClick={(e) => {
+                            // Close dropdown when clicking the overlay background
+                            if (e.target === e.currentTarget) {
+                              setIsTransferDropDownOpen(false);
+                            }
+                          }}
+                        >
+                          <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+                            {/* Add close button (X) in the top-right corner */}
+                            <div className="flex justify-between items-center">
+                              <h1 className="font-semibold text-xl">Transfer</h1>
+                              <button
+                                onClick={() => setIsTransferDropDownOpen(false)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            <div className="flex flex-col gap-2 mt-5 text-sm">
+                              <div className="w-full">
+                                <div className="w-full flex justify-between my-2">
+                                  <h1>Amount</h1>
+                                </div>
+                                <div className="w-full flex justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-2 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                                  <div className="flex flex-col items-start w-[45%] lg:gap-[2rem] gap-[2.5rem]">
+                                    <input
+                                      type="text"
+                                      value={amount}
+                                      onChange={handleAmountChange}
+                                      disabled={supplyBalance === 0 || isApproved}
+                                      className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none px-2 py-1 bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
+                                      placeholder={`Enter Amount `}
+                                    />
+                                    <p className="text-[12px] text-gray-500 -mb-1">
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-3">
+                                    <div className="w-auto flex gap-2 items-center">
+                                      {/* Replace image with dropdown */}
+                                      <div className="relative">
+                                        <button
+                                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                          className="flex items-center gap-2 focus:outline-none"
+                                        >
+                                          <img
+                                            src={assetImages[asset]}
+                                            alt="Asset Icon"
+                                            className="object-fill w-6 h-6 rounded-full"
+                                          />
+                                          <span className="text-lg">{asset}</span>
+                                          <svg
+                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                          </svg>
+                                        </button>
+
+                                        {/* Dropdown menu */}
+                                        {isDropdownOpen && (
+                                          <div className="absolute right-0  mt-2 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
+                                            <div className="py-1">
+                                              {assets.map((a) => (
+                                                <button
+                                                  key={a}
+                                                  className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                  onClick={() => {
+                                                    // Clear amount when selecting a different asset
+                                                    if (a !== asset) {
+                                                      setAmount("");
+                                                      setMaxClicked(false);
+                                                    }
+                                                    setAsset(a);
+                                                    setIsDropdownOpen(false);
+                                                  }}
+                                                >
+                                                  <img
+                                                    src={assetImages[a]}
+                                                    alt={a}
+                                                    className="w-5 h-5 rounded-full"
+                                                  />
+                                                  <span>{a}</span>
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center">
+                                      <p className="text-[11px] text-gray-500 text-right w-full font-semibold">
+                                        Wallet Balance:
+                                      </p>
+                                      <div className="flex gap-1 items-center">
+                                        <p className="text-[12px] text-gray-500 -mb-[3px]">
+                                          {truncateToSevenDecimals(supplyBalance)}
+                                        </p>
+                                        <p
+                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                            }`}
+                                          onClick={() => {
+                                            if (supplyBalance > 0 && !isApproved) {
+                                              handleMaxClick();
+                                            }
+                                          }}
+                                        >
+                                          Max
+                                        </p>
+
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="w-full">
+                                <div className="w-full flex justify-between my-2">
+                                  <h1>Receiver Address</h1>
+                                </div>
+                                <div className="w-full bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                                  <input
+                                    type="text"
+                                    value={receiverAddress}
+                                    onChange={handleReceiverChange}
+                                    disabled={supplyBalance === 0 || isApproved}
+                                    className="w-full text-sm lg:text-base placeholder:text-sm placeholder:opacity-70 px-2 py-1 bg-transparent focus:outline-none dark:text-darkText"
+                                    placeholder="Enter Receiver Address"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="w-full mt-3">
+                                {/* Warning messages */}
+                                {amount > 0 && amount > supplyBalance && (
+                                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                                    <div className="text-white text-[12px]">
+                                      Insufficient wallet balance to transfer {asset}.
+                                    </div>
+                                  </div>
+                                )}
+
+                                {supplyBalance <= 0 && (
+                                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                                    <div className="text-white text-[12px]">
+                                      You do not have any {asset} in your wallet for transferring.
+                                      Please deposit {asset} before attempting to transfer.
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="flex flex-col gap-4 mt-4">
+                                  {/* Approve Button */}
+                                  <button
+                                    onClick={() => !isApproved && handleClick()}
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                                      isLoading ||
+                                      isButtonDisabled ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
+                                      }`}
+                                    disabled={
+                                      isApproved ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                    }
+                                  >
+                                    Approve {asset} to continue
+                                  </button>
+
+                                  {/* Repay Button */}
+                                  <button
+                                    onClick={() => isApproved && handleClick()}
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                                      isButtonDisabled ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
+                                      }`}
+                                    disabled={
+                                      !isApproved ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                    }
+                                  >
+                                    Transfer
+                                  </button>
+                                </div>
+
+                                {isLoading && (
+                                  <div
+                                    className="fixed inset-0 flex items-center justify-center z-50"
+                                    style={{
+                                      background: "rgba(0, 0, 0, 0.4)",
+                                      backdropFilter: "blur(1px)",
+                                    }}
+                                  >
+                                    <div className="loader"></div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Transfer Assets Popup */}
+                    {showDepositPopup && (
+                      <>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
+                          // Close dropdown when clicking the overlay background
+                          if (e.target === e.currentTarget) {
+                            setShowDepositPopup(false);
+                          }
+                        }}>
+                          <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+                            {/* Add close button (X) in the top-right corner */}
+                            <div className="flex justify-between items-center">
+                              <h1 className="font-semibold text-xl">Deposit</h1>
+                              <button
+                                onClick={() => setShowDepositPopup(false)}
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            <div className="flex flex-col gap-2 mt-5 text-sm">
+                              <div className="w-full">
+                                <div className="w-full flex justify-between my-2">
+                                  <h1>Receiver Address</h1>
+                                </div>
+                                <div className="w-full flex items-center bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                                  <textarea
+                                    value={principal}
+                                    readOnly
+                                    rows={2}
+                                    className="w-full resize-none text-[13px] lg:text-[13px] placeholder:text-sm placeholder:opacity-70 px-1 py-1 bg-transparent focus:outline-none dark:text-darkText"
+                                  />
+                                  <GrCopy
+                                    className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(principal);
+                                      toast.success("Account ID copied!");
+                                    }}
+                                  />
+                                </div>
+
+                              </div>
+
+                              <div className="w-full">
+                                <div className="w-full flex justify-between my-2">
+                                  <h1>Account Id</h1>
+                                </div>
+                                <div className="w-full flex items-center bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                                  <textarea
+                                    value={accountIdString}
+                                    readOnly
+                                    rows={2}
+                                    className="w-full resize-none text-[10px] lg:text-[13px] placeholder:text-sm placeholder:opacity-70 px-1 py-1 bg-transparent focus:outline-none dark:text-darkText"
+                                  />
+                                  <GrCopy
+                                    className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(principal);
+                                      toast.success("Principal copied!");
+                                    }}
+                                  />
+                                </div>
+                              </div>
+
+
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
     </Drawer>
   );
 };

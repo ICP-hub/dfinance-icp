@@ -1,6 +1,6 @@
 use candid::Principal;
 use ic_cdk::{caller, query};
-use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error, dynamic_canister::InitArgs};
+use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error, declarations::assets::ReserveData};
 
 
 // guard to allow only app level controller
@@ -13,6 +13,20 @@ pub fn guard_controller_only() -> Result<(), Error>
 
     }
 }
+
+pub fn guard_validate_reserve_status(reserve: &ReserveData) -> Result<(), Error> {
+    if !reserve.configuration.active {
+        return Err(Error::ReserveInactive);
+    }
+    if reserve.configuration.paused {
+        return Err(Error::ReservePaused);
+    }
+    if reserve.configuration.frozen {
+        return Err(Error::ReserveFrozen);
+    }
+    Ok(())
+}
+
 
 pub fn guard_admin_only() -> Result<(), Error> {
     if ic_cdk::caller() == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::caller()) {

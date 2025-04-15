@@ -3,6 +3,7 @@ use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
+use crate::guards::guard_validate_reserve_status;
 use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::calculate::update_token_price;
@@ -39,15 +40,18 @@ impl ValidationLogic {
         ic_cdk::println!("validation amount = {}", amount);
         ic_cdk::println!("validation reserve = {:?}", reserve);
 
-        // validating amount
-        let balance_result = get_balance(ledger_canister, user).await;
+        // let balance_result = get_balance(ledger_canister, user).await;
 
-        let user_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let user_balance = match balance_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+        // validating amount
+        let user_balance = get_balance(ledger_canister, user).await?;
+
         ic_cdk::println!("User balance: {:?}", user_balance);
 
         let final_amount = amount.clone();
@@ -58,50 +62,62 @@ impl ValidationLogic {
         }
 
         // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
+        guard_validate_reserve_status(&reserve)?;
+        // let (is_active, is_frozen, is_paused) = (
+        //     reserve.configuration.active,
+        //     reserve.configuration.frozen,
+        //     reserve.configuration.paused,
+        // );
 
-        if !is_active {
-            ic_cdk::println!("Reserve is inactive.");
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            ic_cdk::println!("Reserve is paused.");
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            ic_cdk::println!("Reserve is frozen.");
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        // if !is_active {
+        //     ic_cdk::println!("Reserve is inactive.");
+        //     return Err(Error::ReserveInactive);
+        // }
+        // if is_paused {
+        //     ic_cdk::println!("Reserve is paused.");
+        //     return Err(Error::ReservePaused);
+        // }
+        // if is_frozen {
+        //     ic_cdk::println!("Reserve is frozen.");
+        //     return Err(Error::ReserveFrozen);
+        // }
 
         // Validating supply cap limit
         let supply_cap = reserve.configuration.supply_cap.clone();
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-        let d_token_canister_id: Result<Principal, candid::types::principal::PrincipalError> =
-            Principal::from_text(reserve.d_token_canister.clone().unwrap());
-        let d_token_canister_id_result = match d_token_canister_id {
-            Ok(id) => id,
-            Err(_) => return Err(Error::NoCanisterIdFound),
-        };
+        // let d_token_canister_id: Result<Principal, candid::types::principal::PrincipalError> =
+        //     Principal::from_text(reserve.d_token_canister.clone().unwrap());
+        // let d_token_canister_id_result = match d_token_canister_id {
+        //     Ok(id) => id,
+        //     Err(_) => return Err(Error::NoCanisterIdFound),
+        // };
 
-        let total_supply_result = get_total_supply(d_token_canister_id_result).await;
-        let total_supply = match total_supply_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+
+        let d_token_canister_id: Result<Principal, candid::types::principal::PrincipalError> =
+        Principal::from_text(reserve.d_token_canister.clone().unwrap());
+    let d_token_canister_id_result = match d_token_canister_id {
+        Ok(id) => id,
+        Err(_) => return Err(Error::NoCanisterIdFound),
+    };
+
+
+        // let total_supply_result = get_total_supply(d_token_canister_id_result).await;
+        // let total_supply = match total_supply_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+
+        let total_supply = get_total_supply(d_token_canister_id_result).await?;
+
 
         ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
 
         let total_supply_amount_accure = total_supply + reserve.accure_to_platform.clone() + amount;
+
         ic_cdk::println!(
             "total supply with amount and accrue = {}",
             total_supply_amount_accure
@@ -143,21 +159,31 @@ impl ValidationLogic {
         let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
+        // let d_token_principal =
+        //     Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap();
+        // let user_dtokens = get_balance(d_token_principal, user).await;
+
+        // let user_current_supply = match user_dtokens {
+        //     Ok(supply) => supply,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+
         let d_token_principal =
             Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap();
-        let user_dtokens = get_balance(d_token_principal, user).await;
 
-        let user_current_supply = match user_dtokens {
-            Ok(supply) => supply,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let user_current_supply = get_balance(d_token_principal, user).await?;
 
-        let supplied_interest_rate = match user_normalized_supply(reserve.clone()) {
-            Ok(interest) => interest,
-            Err(e) => return Err(e),
-        };
+
+        // let supplied_interest_rate = match user_normalized_supply(reserve.clone()) {
+        //     Ok(interest) => interest,
+        //     Err(e) => return Err(e),
+        // };
+
+        let supplied_interest_rate = user_normalized_supply(reserve.clone())?;
+
         ic_cdk::println!("user current supply = {}", user_current_supply);
         ic_cdk::println!("interest rate = {}", supplied_interest_rate);
 
@@ -185,14 +211,17 @@ impl ValidationLogic {
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-        let balance_result = get_balance(ledger_canister, platform_principal).await;
+        // let balance_result = get_balance(ledger_canister, platform_principal).await;
 
-        let platform_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let platform_balance = match balance_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+        let platform_balance = get_balance(ledger_canister, platform_principal).await?;
+
         ic_cdk::println!("User balance: {:?}", platform_balance);
 
         if amount > platform_balance {
@@ -200,28 +229,33 @@ impl ValidationLogic {
         }
 
         // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
+        guard_validate_reserve_status(&reserve)?;
+        // let (is_active, is_frozen, is_paused) = (
+        //     reserve.configuration.active,
+        //     reserve.configuration.frozen,
+        //     reserve.configuration.paused,
+        // );
 
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        // if !is_active {
+        //     return Err(Error::ReserveInactive);
+        // }
+        // if is_paused {
+        //     return Err(Error::ReservePaused);
+        // }
+        // if is_frozen {
+        //     return Err(Error::ReserveFrozen);
+        // }
+        // ic_cdk::println!("is_active : {:?}", is_active);
+        // ic_cdk::println!("is_paused : {:?}", is_paused);
+        // ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
-        if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
-            ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        }
+        // if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
+        //     ic_cdk::println!("Failed to update reserves price: {:?}", e);
+        // }
+
+
+        update_token_price(reserve.asset_name.clone().unwrap()).await?;
+
 
         let mut total_collateral = Nat::from(0u128);
         let mut total_debt = Nat::from(0u128);
@@ -229,45 +263,78 @@ impl ValidationLogic {
         let mut health_factor = Nat::from(0u128);
         let mut liquidation_threshold_var = Nat::from(0u128);
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            calculate_user_account_data(None).await;
+        // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
+        //     calculate_user_account_data(None).await;
 
-        match user_data_result {
-            Ok((
-                t_collateral,
-                t_debt,
-                ltv,
-                liquidation_threshold,
-                h_factor,
-                _a_borrow,
-                _zero_ltv_collateral,
-            )) => {
-                total_collateral = t_collateral;
-                total_debt = t_debt;
-                avg_ltv = ltv;
-                health_factor = h_factor;
-                liquidation_threshold_var = liquidation_threshold;
+        // match user_data_result {
+        //     Ok((
+        //         t_collateral,
+        //         t_debt,
+        //         ltv,
+        //         liquidation_threshold,
+        //         h_factor,
+        //         _a_borrow,
+        //         _zero_ltv_collateral,
+        //     )) => {
+        //         total_collateral = t_collateral;
+        //         total_debt = t_debt;
+        //         avg_ltv = ltv;
+        //         health_factor = h_factor;
+        //         liquidation_threshold_var = liquidation_threshold;
 
-                ic_cdk::println!("total collateral = {}", total_collateral);
-                ic_cdk::println!("total debt = {}", total_debt);
-                ic_cdk::println!("Average LTV: {}", avg_ltv);
-                ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
-                ic_cdk::println!("Health Factor: {}", health_factor);
-            }
-            Err(e) => {
-                return Err(e);
-            }
+        //         ic_cdk::println!("total collateral = {}", total_collateral);
+        //         ic_cdk::println!("total debt = {}", total_debt);
+        //         ic_cdk::println!("Average LTV: {}", avg_ltv);
+        //         ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
+        //         ic_cdk::println!("Health Factor: {}", health_factor);
+        //     }
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // }
+
+
+        // bhanu can we directly assign below things ?
+    match calculate_user_account_data(None).await {
+        Ok((
+            t_collateral,
+            t_debt,
+            ltv,
+            liquidation_threshold,
+            h_factor,
+            _a_borrow,
+            _zero_ltv_collateral,
+        )) => {
+            total_collateral = t_collateral;
+            total_debt = t_debt;
+            avg_ltv = ltv;
+            health_factor = h_factor;
+            liquidation_threshold_var = liquidation_threshold;
+
+            ic_cdk::println!("total collateral = {}", total_collateral);
+            ic_cdk::println!("total debt = {}", total_debt);
+            ic_cdk::println!("Average LTV: {}", avg_ltv);
+            ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
+            ic_cdk::println!("Health Factor: {}", health_factor);
         }
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
 
         if total_debt != Nat::from(0u128) {
-            let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-                Ok(price) => price,
-                Err(e) => {
-                    ic_cdk::println!("Failed to fetch exchange rate");
-                    return Err(e);
-                }
-            };
-            ic_cdk::println!("asset price = {}",rate);
+            // let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+            //     Ok(price) => price,
+            //     Err(e) => {
+            //         ic_cdk::println!("Failed to fetch exchange rate");
+            //         return Err(e);
+            //     }
+            // };
+            // ic_cdk::println!("asset price = {}",rate);
+
+            let rate =  get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+            
 
             ic_cdk::println!("rate = {:?}", rate);
 
@@ -276,17 +343,21 @@ impl ValidationLogic {
 
             // Calculate Adjusted Collateral
             let mut adjusted_collateral = Nat::from(0u128);
+            
             if adjusted_collateral < usd_withdrawl.clone() {
                 adjusted_collateral = Nat::from(0u128);
-            } else if total_collateral < usd_withdrawl {
+            }
+            else if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
-            } else {
+            } 
+            else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
             ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
 
             let mut ltv = Nat::from(0u128);
             // Calculate new ratio (Adjusted Collateral / Total Debt)
+
             if adjusted_collateral != Nat::from(0u128) {
                 ltv = total_debt.scaled_div(adjusted_collateral);
                 ltv = ltv * Nat::from(100u128);
@@ -297,6 +368,7 @@ impl ValidationLogic {
                 return Err(Error::LTVGreaterThanThreshold);
             }
         }
+        // bhanu this should be 1 or 0 ?
         if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }
@@ -334,39 +406,42 @@ impl ValidationLogic {
 
         ic_cdk::println!("amount in borrow ={}", amount);
 
-        let balance_result = get_balance(ledger_canister, platform_principal).await;
+        // let balance_result = get_balance(ledger_canister, platform_principal).await;
 
-        let platform_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let platform_balance = match balance_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+        let platform_balance = get_balance(ledger_canister, platform_principal).await?;
         ic_cdk::println!("User balance: {:?}", platform_balance);
 
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
         // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
+        guard_validate_reserve_status(&reserve)?;
+        // let (is_active, is_frozen, is_paused) = (
+        //     reserve.configuration.active,
+        //     reserve.configuration.frozen,
+        //     reserve.configuration.paused,
+        // );
 
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
+        // if !is_active {
+        //     return Err(Error::ReserveInactive);
+        // }
+        // if is_paused {
+        //     return Err(Error::ReservePaused);
+        // }
+        // if is_frozen {
+        //     return Err(Error::ReserveFrozen);
+        // }
 
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        // ic_cdk::println!("is_active : {:?}", is_active);
+        // ic_cdk::println!("is_paused : {:?}", is_paused);
+        // ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
@@ -378,10 +453,10 @@ impl ValidationLogic {
         let mut health_factor = Nat::from(0u128);
         let mut liquidation_threshold_var = Nat::from(0u128);
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            calculate_user_account_data(None).await;
+        // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
+        //     calculate_user_account_data(None).await;
 
-        match user_data_result {
+        match calculate_user_account_data(None).await {
             Ok((
                 t_collateral,
                 t_debt,
@@ -408,13 +483,16 @@ impl ValidationLogic {
                 return Err(e);
             }
         }
-        let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
+        // let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
+        //     Ok(price) => price,
+        //     Err(e) => {
+        //         ic_cdk::println!("Failed to fetch exchange rate");
+        //         return Err(e);
+        //     }
+        // };
+
+        let rate =  get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+        
         ic_cdk::println!("asset price = {}",rate);
 
         ic_cdk::println!("rate = {:?}", rate);
@@ -479,18 +557,24 @@ impl ValidationLogic {
         liquidator: Option<Principal>,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
+
         let mut balance_result = get_balance(ledger_canister, user.clone()).await;
+
+
         if !liquidator.is_none() {
             balance_result = get_balance(ledger_canister, liquidator.unwrap().clone()).await;
         }
 
-        let user_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let user_balance = match balance_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+        let user_balance =  balance_result?;
         ic_cdk::println!("User balance: {:?}", user_balance);
+
         if amount > user_balance {
             return Err(Error::LowWalletBalance);
         }
@@ -499,17 +583,19 @@ impl ValidationLogic {
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
         // Fetch user data
-        let user_data_result = user_data(user);
+        // let user_data_result = user_data(user);
 
-        let mut user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found");
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let mut user_data = match user_data_result {
+        //     Ok(data) => {
+        //         ic_cdk::println!("User found");
+        //         data
+        //     }
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+        let mut user_data = user_data(user)?;
 
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -518,25 +604,27 @@ impl ValidationLogic {
             None => None,
         };
 
+        guard_validate_reserve_status(&reserve)?;
 
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
 
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        // let (is_active, is_frozen, is_paused) = (
+        //     reserve.configuration.active,
+        //     reserve.configuration.frozen,
+        //     reserve.configuration.paused,
+        // );
+
+        // if !is_active {
+        //     return Err(Error::ReserveInactive);
+        // }
+        // if is_paused {
+        //     return Err(Error::ReservePaused);
+        // }
+        // if is_frozen {
+        //     return Err(Error::ReserveFrozen);
+        // }
+        // ic_cdk::println!("is_active : {:?}", is_active);
+        // ic_cdk::println!("is_paused : {:?}", is_paused);
+        // ic_cdk::println!("is_frozen : {:?}", is_frozen);
         Ok(())
     }
 
@@ -572,14 +660,17 @@ impl ValidationLogic {
                 Ok(principal) => principal,
                 Err(_) => return Err(Error::NoCanisterIdFound),
             };
-        let balance_result = get_balance(repay_asset_principal, user.clone()).await;
+        // let balance_result = get_balance(repay_asset_principal, user.clone()).await;
 
-        let debt_amount = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        // let debt_amount = match balance_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+
+        let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
 
         let normalized_debt_amount  = debt_amount.clone()
             .scaled_mul(user_normalized_debt(repay_reserve_data.clone()).unwrap());
@@ -593,21 +684,33 @@ impl ValidationLogic {
             return Err(Error::RepayMoreThanDebt);
         }
 
-        let repay_ledger_canister_id = read_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&repay_asset.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| Error::NoCanisterIdFound)
-        })?;
+        // let repay_ledger_canister_id = read_state(|state| {
+        //     let reserve_list = &state.reserve_list;
+        //     reserve_list
+        //         .get(&repay_asset.to_string().clone())
+        //         .map(|principal| principal.clone())
+        //         .ok_or_else(|| Error::NoCanisterIdFound)
+        // })?;
 
-        let balance_result = get_balance(repay_ledger_canister_id, liquidator.clone()).await;
-        let liquidator_wallet_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let repay_ledger_canister_id = read_state(|state| 
+            state.reserve_list
+                .get(&repay_asset.to_string())
+                .map(|principal| principal)
+                .ok_or_else(|| Error::NoCanisterIdFound)
+        )?;
+
+        
+
+        // let balance_result = get_balance(repay_ledger_canister_id, liquidator.clone()).await;
+        // let liquidator_wallet_balance = match balance_result {
+        //     Ok(bal) => bal,
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // };
+
+        let liquidator_wallet_balance = get_balance(repay_ledger_canister_id, liquidator.clone()).await?;
+
 
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::LowWalletBalance);
@@ -616,10 +719,10 @@ impl ValidationLogic {
         let mut total_collateral = Nat::from(0u128);
         let mut health_factor = Nat::from(0u128);
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            calculate_user_account_data(Some(user)).await;
+        // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
+        //     calculate_user_account_data(Some(user)).await;
 
-        match user_data_result {
+        match calculate_user_account_data(Some(user)).await {
             Ok((
                 t_collateral,
                 _t_debt,
@@ -649,24 +752,27 @@ impl ValidationLogic {
         }
 
         // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            repay_reserve_data.configuration.active,
-            repay_reserve_data.configuration.frozen,
-            repay_reserve_data.configuration.paused,
-        );
+        guard_validate_reserve_status(&repay_reserve_data)?;
+        // let (is_active, is_frozen, is_paused) = (
+        //     repay_reserve_data.configuration.active,
+        //     repay_reserve_data.configuration.frozen,
+        //     repay_reserve_data.configuration.paused,
+        // );
 
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
+        // if !is_active {
+        //     return Err(Error::ReserveInactive);
+        // }
+        // if is_paused {
+        //     return Err(Error::ReservePaused);
+        // }
+        // if is_frozen {
+        //     return Err(Error::ReserveFrozen);
+        // }
+        // ic_cdk::println!("is_active : {:?}", is_active);
+        // ic_cdk::println!("is_paused : {:?}", is_paused);
+        // ic_cdk::println!("is_frozen : {:?}", is_frozen);
         Ok(())
     }
 }
+
+

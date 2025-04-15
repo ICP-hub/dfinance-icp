@@ -1,8 +1,10 @@
 use crate::api::functions::{get_balance, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::read_state;
+use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
+use crate::constants::interest_variables::constants::{MAX_ASSET_LENGTH, TOKEN_TRANSFER_FEE};
+use crate::constants::validators::validate_asset_name;
 use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::declarations::storable::Candid;
 use crate::guards::guard_prevent_anonymous;
@@ -60,16 +62,18 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     guard_prevent_anonymous()?;
 
     // validations 
-    if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+    validate_asset_name(&params.debt_asset)?;
+    validate_asset_name(&params.collateral_asset)?;
+    // if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if params.debt_asset.len() > 7 && params.collateral_asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-    if params.amount <= Nat::from(0u128) {
+    // if params.debt_asset.len() > MAX_ASSET_LENGTH && params.collateral_asset.len() > MAX_ASSET_LENGTH  {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
+    if params.amount <= zero_nat_value() {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -214,8 +218,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             return Err(Error::FeeExceedsAmount);
         }
 
-        // let mut earned_rewards = Nat::from(0u128);
-        // let mut liquidation_bonus_amount = Nat::from(0u128);
+        // let mut earned_rewards = zero_nat_value();
+        // let mut liquidation_bonus_amount = zero_nat_value();
 
         // let reward_result: Result<(Nat,Nat), Error> = to_get_reward_amount(
         //     params.amount.clone() - transfer_token_fee.clone(),
@@ -320,8 +324,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         // if let Err(e) = reserve::update_interest_rates(
         //     &mut collateral_reserve_data,
         //     &mut collateral_reserve_cache,
-        //     Nat::from(0u128),
-        //     Nat::from(0u128),
+        //     zero_nat_value(),
+        //     zero_nat_value(),
         // )
         // .await
         // {
@@ -337,8 +341,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         reserve::update_interest_rates(
             &mut collateral_reserve_data,
             &mut collateral_reserve_cache,
-            Nat::from(0u128),
-            Nat::from(0u128),
+            zero_nat_value(),
+            zero_nat_value(),
         )
         .await?;
 
@@ -785,7 +789,7 @@ pub async fn to_get_reward_amount(
     if collateral_asset != debt_asset {
         // ic_cdk::println!("Collateral and debt assets are different, fetching exchange rates");
 
-        if debt_price == Nat::from(0u128) || collateral_price == Nat::from(0u128) {
+        if debt_price == zero_nat_value() || collateral_price == zero_nat_value() {
             ic_cdk::println!("Invalid exchange rate for either collateral_asset or debt asset");
             return Err(Error::ErrorPriceCache);
         }

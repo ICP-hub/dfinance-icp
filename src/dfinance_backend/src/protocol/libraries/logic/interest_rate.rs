@@ -1,7 +1,6 @@
 use crate::{
     constants::{
-        errors::Error,
-        interest_variables::{
+        data_types::zero_nat_value, errors::Error, interest_variables::{
             self,
             constants::{
                 BASE_VARIABLE_BORROW_RATE, CKBTC_BASE_VARIABLE_BORROW_RATE,
@@ -18,7 +17,7 @@ use crate::{
                 ICP_VARIABLE_RATE_SLOPE1, ICP_VARIABLE_RATE_SLOPE2, MAX_EXCESS_USAGE_RATIO,
                 VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2,
             },
-        },
+        }
     },
     get_reserve_data,
     protocol::libraries::math::math_utils::ScalingMath, user_normalized_supply,
@@ -139,7 +138,7 @@ pub async fn calculate_interest_rates(
     ic_cdk::println!("Liquidity Taken: {:?}", liq_taken);
     ic_cdk::println!("Reserve Factor: {:?}", reserve_factor);
 
-    let mut current_liquidity_rate = Nat::from(0u128);
+    let mut current_liquidity_rate = zero_nat_value();
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
 
     // let reserve_data_result = get_reserve_data(asset.clone());
@@ -159,7 +158,7 @@ pub async fn calculate_interest_rates(
     
     ic_cdk::println!("Available Liquidity: {:?}", available_liq);
 
-    if total_debt.clone() != Nat::from(0u128) {
+    if total_debt.clone() != zero_nat_value() {
         let utilization_ratio = total_debt.clone().scaled_div(total_debt.clone() + available_liq.clone());
         ic_cdk::println!("Utilization Ratio: {:?}", utilization_ratio);
         ic_cdk::println!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);

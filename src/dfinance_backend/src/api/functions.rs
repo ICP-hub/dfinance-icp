@@ -1,10 +1,13 @@
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
+use crate::constants::interest_variables::constants::MAX_ASSET_LENGTH;
+use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
-use crate::guards::{guard_controller_only, to_check_controller};
+use crate::guards::{guard_controller_only, guard_prevent_anonymous, to_check_controller};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
 use crate::protocol::libraries::types::datatypes::{RequestTracker,BlockedUserDetails, UserReserveData};
@@ -235,29 +238,37 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
  */
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
+
+    // prevent anonymous caller
+    guard_prevent_anonymous()?;
+
     ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
 
-    if asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+    // if asset.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
+    // if asset.len() > MAX_ASSET_LENGTH {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
+    
+    // input asset validator
+    validate_asset_name(&asset)?;
+    validate_zero_value(&amount)?;
 
-    if amount <= Nat::from(0u128) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    // if amount <= zero_nat_value() {
+    //     ic_cdk::println!("Amount cannot be zero");
+    //     return Err(Error::InvalidAmount);
+    // }
 
     let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if user_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
 
@@ -460,7 +471,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     // Access and mutate reserves
     if let Some(user_data_reserves) = user_data.reserves.as_mut() {
         for (_reserve_name, user_reserve_data) in user_data_reserves.iter_mut() {
-            user_reserve_data.faucet_usage = Nat::from(0u128);
+            user_reserve_data.faucet_usage = zero_nat_value();
         }
     } else {
         return Err(Error::NoUserReserveDataFound);

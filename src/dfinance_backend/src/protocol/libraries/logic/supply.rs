@@ -1,6 +1,7 @@
 use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
@@ -56,7 +57,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         return Err(Error::InvalidAssetLength);
     }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= zero_nat_value() {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -194,7 +195,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         params.amount = params.amount.clone() - transfer_token_fee.clone();
 
         let liq_added = params.amount.clone();
-        let liq_taken = Nat::from(0u128);
+        let liq_taken = zero_nat_value();
 
         // if let Err(e) = reserve::update_interest_rates(
         //     &mut reserve_data,
@@ -371,7 +372,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         return Err(Error::InvalidAssetLength);
     }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= zero_nat_value() {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -533,7 +534,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         //     &mut reserve_data,
         //     &mut reserve_cache,
         //     params.amount.clone(), //amount to withdraw
-        //     Nat::from(0u128),
+        //     zero_nat_value(),
         // )
         // .await
         // {
@@ -548,7 +549,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             &mut reserve_data,
             &mut reserve_cache,
             params.amount.clone(), //amount to withdraw
-            Nat::from(0u128),
+            zero_nat_value(),
         )
         .await?;
 

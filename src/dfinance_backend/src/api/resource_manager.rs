@@ -1,3 +1,4 @@
+use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use candid::{Nat, Principal};
 use once_cell::sync::Lazy;
@@ -131,7 +132,7 @@ pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Res
     let current_locked = amount_locks
         .get(asset)
         .cloned()
-        .unwrap_or_else(|| Nat::from(0u128));
+        .unwrap_or_else(|| zero_nat_value());
 
     ic_cdk::println!(
         "Current locked amount for asset '{}': {}",
@@ -181,7 +182,7 @@ pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
         *current_locked -= amount.clone();
 
-        if *current_locked == Nat::from(0u128) {
+        if *current_locked == zero_nat_value() {
             locks.remove(asset);
             ic_cdk::println!("Asset lock for '{}' fully released.", asset);
         } else {
@@ -213,9 +214,9 @@ pub fn get_locked_amount(asset: &str) -> Nat {
             locks
                 .get(asset)
                 .cloned()
-                .unwrap_or_else(|| Nat::from(0u128))
+                .unwrap_or_else(|| zero_nat_value())
         })
-        .unwrap_or_else(|_| Nat::from(0u128))
+        .unwrap_or_else(|_| zero_nat_value())
 }
 
 /*
@@ -286,7 +287,7 @@ pub fn repay_lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
     let current_locked = amount_locks
         .get(asset)
         .cloned()
-        .unwrap_or_else(|| Nat::from(0u128));
+        .unwrap_or_else(|| zero_nat_value());
 
     ic_cdk::println!(
         "Current locked amount for asset '{}': {}",
@@ -333,7 +334,7 @@ pub fn repay_release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
         *current_locked -= amount.clone();
 
-        if *current_locked == Nat::from(0u128) {
+        if *current_locked == zero_nat_value() {
             locks.remove(asset);
             ic_cdk::println!("Asset lock for '{}' fully released.", asset);
         } else {
@@ -366,7 +367,7 @@ pub fn get_repay_locked_amount(asset: &str) -> Nat {
             locks
                 .get(asset)
                 .cloned()
-                .unwrap_or_else(|| Nat::from(0u128))
+                .unwrap_or_else(|| zero_nat_value())
         })
-        .unwrap_or_else(|_| Nat::from(0u128))
+        .unwrap_or_else(|_| zero_nat_value())
 }

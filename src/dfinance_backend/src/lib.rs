@@ -5,9 +5,14 @@ use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
+use constants::data_types::zero_nat_value;
+use constants::interest_variables::constants::MAX_ASSET_LENGTH;
 use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
+use constants::validators::validate_asset_name;
+use constants::validators::validate_zero_value;
 use declarations::assets::AssetData;
 use declarations::assets::InitArgs;
+use guards::guard_prevent_anonymous;
 use guards::to_check_controller;
 use ic_cdk::update;
 use ic_cdk::{init, query};
@@ -164,15 +169,19 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  */
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
-    if asset_name.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+    // if asset_name.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if asset_name.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
+    // if asset_name.len() > MAX_ASSET_LENGTH {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
+
+    // asset name validator
+    validate_asset_name(&asset_name)?;
+
     read_state(|state| match state.reserve_list.get(&asset_name) {
         Some(principal) => Ok(principal),
         None => {
@@ -205,14 +214,17 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
  */
 #[query]
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
-    let trimmed_symbol = base_asset_symbol.trim();
+    // let trimmed_symbol = base_asset_symbol.trim();
 
-    if trimmed_symbol.is_empty() {
-        return Err(Error::EmptyAsset);
-    }
-    if trimmed_symbol.len() > 7 {
-        return Err(Error::InvalidAssetLength);
-    }
+    // if trimmed_symbol.is_empty() {
+    //     return Err(Error::EmptyAsset);
+    // }
+    // if trimmed_symbol.len() > MAX_ASSET_LENGTH {
+    //     return Err(Error::InvalidAssetLength);
+    // }
+
+    // asset validator
+    validate_asset_name(&base_asset_symbol)?;
 
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc",
@@ -252,22 +264,32 @@ pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-    if asset_name.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
 
-    if asset_name.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
+    guard_prevent_anonymous()?;
+    // if asset_name.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if let Some(principal) = on_behalf {
-        if principal == Principal::anonymous() {
-            ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::AnonymousPrincipal);
-        }
+    // if asset_name.len() > MAX_ASSET_LENGTH {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
+
+    validate_asset_name(&asset_name)?;
+
+
+    // if let Some(principal) = on_behalf {
+    //     if principal == Principal::anonymous() {
+    //         ic_cdk::println!("Anonymous principals are not allowed");
+    //         return Err(Error::AnonymousPrincipal);
+    //     }
+    // }
+
+    if on_behalf == Some(Principal::anonymous()) {
+        return Err(Error::AnonymousPrincipal);
     }
+    
     ic_cdk::println!("Entering get_asset_supply function");
 
     ic_cdk::println!("Asset name received: {}", asset_name);
@@ -277,10 +299,10 @@ pub async fn get_asset_supply(
         None => ic_cdk::caller(),
     };
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if user_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
     let user_data_result = user_data(user_principal);
@@ -301,7 +323,7 @@ pub async fn get_asset_supply(
                 "Error: User reserve data not found for asset while get asset supply returing 0: {}",
                 asset_name
             );
-            return Ok(Nat::from(0u128));
+            return Ok(zero_nat_value());
         }
     };
 
@@ -337,9 +359,9 @@ pub async fn get_asset_supply(
         get_balance_value
     );
 
-    if get_balance_value == Nat::from(0u128) {
+    if get_balance_value == zero_nat_value() {
         ic_cdk::println!("balance 0, returnin....");
-        return Ok(Nat::from(0u128));
+        return Ok(zero_nat_value());
     }
 
     let (_, user_reserve) = user_reserve_data;
@@ -380,15 +402,18 @@ pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-    if asset_name.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+    // if asset_name.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if asset_name.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
+    // if asset_name.len() > MAX_ASSET_LENGTH {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
+
+    // input validator
+    validate_asset_name(&asset_name)?;
 
     if let Some(principal) = on_behalf {
         if principal == Principal::anonymous() {
@@ -423,13 +448,13 @@ pub async fn get_asset_debt(
                 "Error: User reserve data not found for asset while get asset debt returing 0: {}",
                 asset_name
             );
-            return Ok(Nat::from(0u128));
+            return Ok(zero_nat_value());
         }
     };
     let (_, user_reserve) = user_reserve_data;
     if !user_reserve.is_borrowed {
         ic_cdk::println!("User has no debt for asset: {}", asset_name);
-        return Ok(Nat::from(0u128));
+        return Ok(zero_nat_value());
     }
 
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
@@ -685,10 +710,11 @@ pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Resul
         return Err(Error::InvalidAssetLength);
     }
 
-    if session_start <= Nat::from(0u128) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    validate_zero_value(&session_start)?;
+    // if session_start <= zero_nat_value() {
+    //     ic_cdk::println!("Amount cannot be zero");
+    //     return Err(Error::InvalidAmount);
+    // }
 
     let session_data = SessionStorageData {
         connected_wallet,
@@ -722,7 +748,7 @@ pub fn get_caller_session() -> Result<SessionStorageData, Error> {
             .unwrap_or_else(|| SessionStorageData {
                 // Default value
                 connected_wallet: "".to_string(),
-                session_start: Nat::from(0u128),
+                session_start: zero_nat_value(),
             })
     }))
 }

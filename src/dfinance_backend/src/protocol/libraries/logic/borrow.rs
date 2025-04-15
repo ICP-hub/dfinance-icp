@@ -3,8 +3,10 @@ use crate::api::resource_manager::{
     acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
 };
 use crate::api::state_handler::*;
+use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::{INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE};
+use crate::constants::interest_variables::constants::{INITIAL_DEBT_INDEX, MAX_ASSET_LENGTH, TOKEN_TRANSFER_FEE};
+use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::guards::guard_prevent_anonymous;
@@ -57,20 +59,23 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
      guard_prevent_anonymous()?;
 
     // input validations 
-    if params.asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+    validate_asset_name(&params.asset)?;
+    validate_zero_value(&params.amount)?;
+    // if params.asset.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if params.asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
+    // if params.asset.len() > MAX_ASSET_LENGTH {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
 
-    if params.amount <= Nat::from(0u128) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+
+    // if params.amount <= zero_nat_value() {
+    //     ic_cdk::println!("Amount cannot be zero");
+    //     return Err(Error::InvalidAmount);
+    // }
 
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
@@ -135,7 +140,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         //     }
         // };
 
-        if reserve_data.asset_borrow == Nat::from(0u128) {
+        if reserve_data.asset_borrow == zero_nat_value() {
             *&mut reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
         }
 
@@ -211,7 +216,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             // &mut reserve_data,
             // &mut reserve_cache,
             // params.amount.clone(),
-            // Nat::from(0u128),
+            // zero_nat_value(),
         // )
         // .await
         // {
@@ -226,7 +231,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         reserve::update_interest_rates( &mut reserve_data,
             &mut reserve_cache,
             params.amount.clone(),
-            Nat::from(0u128)).await?;
+            zero_nat_value()).await?;
         
 
         // mutate_state(|state| {
@@ -355,17 +360,18 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     }
 
     // Validations
-    if params.asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+    validate_asset_name(&params.asset)?;
+    // if params.asset.trim().is_empty() {
+    //     ic_cdk::println!("Asset cannot be an empty string");
+    //     return Err(Error::EmptyAsset);
+    // }
 
-    if params.asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
+    // if params.asset.len() > MAX_ASSET_LENGTH {
+    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
+    //     return Err(Error::InvalidAssetLength);
+    // }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= zero_nat_value() {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -471,7 +477,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         //     }
         // };
 
-        if reserve_data.debt_index == Nat::from(0u128) {
+        if reserve_data.debt_index == zero_nat_value() {
             reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
         }
 
@@ -567,7 +573,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
 
 
         ic_cdk::println!("User current debt: {:?}", user_current_debt);
-        if user_current_debt == Nat::from(0u128) {
+        if user_current_debt == zero_nat_value() {
             return Err(Error::NoDebtToRepay);
         }
 
@@ -606,7 +612,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         // if let Err(e) = reserve::update_interest_rates(
         //     &mut reserve_data,
         //     &mut reserve_cache,
-        //     Nat::from(0u128),
+        //     zero_nat_value(),
         //     params.amount.clone(),
         // )
         // .await
@@ -621,7 +627,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
-            Nat::from(0u128),
+            zero_nat_value(),
             params.amount.clone(),
         )
         .await?;

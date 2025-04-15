@@ -35,7 +35,7 @@ do
     echo "User registered successfully!"
 
     # Call the faucet function
-    faucet_result=$(dfx canister call $backend_canister $faucet_method "(\"ICP\", 100000000)")
+    faucet_result=$(dfx canister call $backend_canister $faucet_method "(\"ICP\", 100_000_000)")
     echo "Faucet result: $faucet_result"
 
    

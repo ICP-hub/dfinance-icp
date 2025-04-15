@@ -4,7 +4,7 @@ TOKEN_NAME="ICP"
 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"
-SCALING_FACTOR=100000000
+SCALING_FACTOR=100_000_000
 
 # Escape the TOKEN_NAME for use in the ReserveData
 ESCAPED_TOKEN_NAME=$(printf '%s' "$TOKEN_NAME" | jq -sR .)
@@ -14,8 +14,8 @@ liquidity_index=1
 ltv=58
 liquidation_threshold=63
 liquidation_bonus=1
-borrow_cap=10000000000
-supply_cap=10000000000
+borrow_cap=10_000_000_000
+supply_cap=10_000_000_000
 reserve_factor=15
 
 # Perform the multiplication using bash arithmetic

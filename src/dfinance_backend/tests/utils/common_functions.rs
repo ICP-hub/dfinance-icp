@@ -237,8 +237,8 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(2u32)).unwrap(),
         asset_supply: "ckETH".to_string(),
         asset_borrow: "ckETH".to_string(),
-        supply_tokens: Nat::from(14000000u128), // 0.14 cketh
-        borrow_tokens: Nat::from(12000000u128), // 0.12 cketh
+        supply_tokens: Nat::from(14_000_000u128), // 0.14 cketh
+        borrow_tokens: Nat::from(12_000_000u128), // 0.12 cketh
     });
     // Pushing third user data
     users_with_low_health.push(LowHealthUsersData {

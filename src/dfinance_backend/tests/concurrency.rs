@@ -31,7 +31,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
-    pic.add_cycles(backend_canister, 5_000_000_000_000_000);
+    pic.add_cycles(backend_canister, INITIAL_CYCLES);
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
     ic_cdk::println!("Backend canister: {}", backend_canister);
     pic.install_canister(
@@ -376,7 +376,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Pri
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14000000u128), //  0.14 ckETH
+            amount: Nat::from(14_000_000u128), //  0.14 ckETH
             expect_success: true,
             expected_error_message: None,
         },
@@ -503,28 +503,28 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
         },
         // TestCase {
         //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(40000u128),
+        //     amount: Nat::from(40_000u128),
         //     is_collateral: false,
         //     expect_success: true,
         //     expected_error_message: None,
         // },
         // TestCase {
         //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(2000u128),
+        //     amount: Nat::from(2_000u128),
         //     is_collateral: true,
         //     expect_success: true,
         //     expected_error_message: None,
         // },
         // TestCase {
         //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(5000u128),
+        //     amount: Nat::from(5_000u128),
         //     is_collateral: true,
         //     expect_success: true,
         //     expected_error_message: None,
         // },
         // TestCase {
         //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(10000u128),
+        //     amount: Nat::from(10_000u128),
         //     is_collateral: false,
         //     expect_success: true,
         //     expected_error_message: None,
@@ -702,7 +702,7 @@ fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<P
         },
         // TestCase {
         //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(20000u128),
+        //     amount: Nat::from(20_000u128),
         //     expect_success: true,
         //     expected_error_message: None,
         // },
@@ -857,7 +857,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         },
         // TestCase {
         //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(40000u128),
+        //     amount: Nat::from(40_000u128),
         //     on_behalf_of: None,
         //     is_collateral: false,
         //     expect_success: true,
@@ -865,7 +865,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         // },
         // TestCase {
         //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(5000u128),
+        //     amount: Nat::from(5_000u128),
         //     on_behalf_of: None,
         //     is_collateral: false,
         //     expect_success: true,
@@ -873,7 +873,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         // },
         // TestCase {
         //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(10000u128),
+        //     amount: Nat::from(10_000u128),
         //     on_behalf_of: None,
         //     is_collateral: false,
         //     expect_success: true,
@@ -881,7 +881,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         // },
         // TestCase {
         //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(2000u128),
+        //     amount: Nat::from(2_000u128),
         //     on_behalf_of: None,
         //     is_collateral: false,
         //     expect_success: true,
@@ -1025,7 +1025,7 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
         },
         // TestCase {
         //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(20000u128),
+        //     amount: Nat::from(20_000u128),
         //     on_behalf_of: None,
         //     expect_success: true,
         //     expected_error_message: None,
@@ -1234,16 +1234,16 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128),
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40400_000u128),
+            reward_amount: Nat::from(40_400_000u128),
             expect_success: true,
             expected_error_message: None,
         },
         // TestCase {
         //     debt_asset: "ckBTC".to_string(),
         //     collateral_asset: "ckBTC".to_string(),
-        //     amount: Nat::from(210000u128),
+        //     amount: Nat::from(210_000u128),
         //     on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-        //     reward_amount: Nat::from(220500u128),
+        //     reward_amount: Nat::from(220_500u128),
         //     expect_success: true,
         //     expected_error_message: None,
         // },
@@ -1259,9 +1259,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
         // TestCase {
         //     debt_asset: "ckUSDT".to_string(),
         //     collateral_asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(12500000000u128),
+        //     amount: Nat::from(12_500_000_000u128),
         //     on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-        //     reward_amount: Nat::from(13062500000u128),
+        //     reward_amount: Nat::from(13_062_500_000u128),
         //     expect_success: true,
         //     expected_error_message: None,
         // },

@@ -1043,7 +1043,7 @@ export default function Navbar({ isHomeNav }) {
                                               }
                                             }}
                                           >
-                                            <div className="absolute right-[40px] mt-16 w-48 origin-top-right bg-white dark:bg-darkOverlayBackground border dark:border-gray-600 border-gray-300 rounded-xl shadow-md z-10">
+                                            <div className="absolute right-[40px] mt-2 w-48 origin-top-right bg-white dark:bg-darkOverlayBackground border dark:border-gray-600 border-gray-300 rounded-xl shadow-md z-10">
 
                                               <div className="py-1">
                                                 {assets.map((a) => (

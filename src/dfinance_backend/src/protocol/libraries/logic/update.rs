@@ -19,6 +19,9 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, PERCENTAGE_FACTOR
+};
 
 pub struct UpdateLogic;
 
@@ -365,7 +368,7 @@ impl UpdateLogic {
             user_principal,
         )
         .await?;
-        if params.is_collateral == false && dtoken_balance == Nat::from(0u128) {
+        if params.is_collateral == false && dtoken_balance == Nat::from(ZERO_VALUE) {
             if let Some((_, reserve_data)) = user_reserve {
                 reserve_data.is_collateral = true;
             }
@@ -468,7 +471,7 @@ impl UpdateLogic {
         };
         if let Some((_, reserve_data)) = user_reserve {
             reserve_data.last_update_timestamp = reserve.last_update_timestamp;
-            if debttoken_balance == Nat::from(0u128) {
+            if debttoken_balance == Nat::from(ZERO_VALUE) {
                 reserve_data.is_borrowed = false;
                 if !reserve_data.is_collateral {
                     reserve_data.is_using_as_collateral_or_borrow = false;
@@ -518,12 +521,12 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         return Err(Error::InvalidAssetLength);
     }
 
-    if added_amount == Nat::from(0u128) && amount <= Nat::from(0u128) {
+    if added_amount == Nat::from(ZERO_VALUE) && amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
 
-    if amount == Nat::from(0u128) && added_amount <= Nat::from(0u128) {
+    if amount == Nat::from(ZERO_VALUE) && added_amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -597,11 +600,11 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         }
     };
 
-    let mut total_collateral = Nat::from(0u128);
-    let mut total_debt = Nat::from(0u128);
-    let mut avg_ltv = Nat::from(0u128);
-    let mut health_factor = Nat::from(0u128);
-    let mut liquidation_threshold_var = Nat::from(0u128);
+    let mut total_collateral = Nat::from(ZERO_VALUE);
+    let mut total_debt = Nat::from(ZERO_VALUE);
+    let mut avg_ltv = Nat::from(ZERO_VALUE);
+    let mut health_factor = Nat::from(ZERO_VALUE);
+    let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
 
     let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
         calculate_user_account_data(None).await;
@@ -632,33 +635,33 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             return Err(e);
         }
     }
-    if total_debt != Nat::from(0u128) {
-        let mut ltv = Nat::from(0u128);
-        if amount != Nat::from(0u128) {
-            let mut adjusted_collateral = Nat::from(0u128);
+    if total_debt != Nat::from(ZERO_VALUE) {
+        let mut ltv = Nat::from(ZERO_VALUE);
+        if amount != Nat::from(ZERO_VALUE) {
+            let mut adjusted_collateral = Nat::from(ZERO_VALUE);
             if total_collateral < usd_amount.clone() {
-                adjusted_collateral = Nat::from(0u128);
+                adjusted_collateral = Nat::from(ZERO_VALUE);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_amount.clone();
             }
 
             ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
-            if total_debt == Nat::from(0u128) {
-                ltv = Nat::from(0u128);
+            if total_debt == Nat::from(ZERO_VALUE) {
+                ltv = Nat::from(ZERO_VALUE);
             } else {
                 ltv = total_debt.scaled_div(adjusted_collateral);
             }
         } else {
             let adjusted_collateral = total_collateral.clone() + added_usd_amount;
             ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
-            if total_debt == Nat::from(0u128) {
-                ltv = Nat::from(0u128);
+            if total_debt == Nat::from(ZERO_VALUE) {
+                ltv = Nat::from(ZERO_VALUE);
             } else {
                 ltv = total_debt.scaled_div(adjusted_collateral);
             }
         }
 
-        ltv = ltv * Nat::from(100u128);
+        ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", ltv);
         if ltv >= liquidation_threshold_var {
             return Err(Error::LTVGreaterThanThreshold);

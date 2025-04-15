@@ -15,6 +15,9 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE
+};
 
 /*
 -------------------------------------
@@ -61,7 +64,7 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
         return Err(Error::InvalidAssetLength);
     }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -126,7 +129,7 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
             }
         };
 
-        if reserve_data.asset_borrow == Nat::from(0u128) {
+        if reserve_data.asset_borrow == Nat::from(ZERO_VALUE) {
             *&mut reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
         }
         ic_cdk::println!(
@@ -187,7 +190,7 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
             &mut reserve_data,
             &mut reserve_cache,
             params.amount.clone(),
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
         )
         .await
         {
@@ -303,7 +306,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         return Err(Error::InvalidAssetLength);
     }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -401,7 +404,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             }
         };
 
-        if reserve_data.debt_index == Nat::from(0u128) {
+        if reserve_data.debt_index == Nat::from(ZERO_VALUE) {
             reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
         }
 
@@ -476,7 +479,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                 }
             };
         ic_cdk::println!("User current debt: {:?}", user_current_debt);
-        if user_current_debt == Nat::from(0u128) {
+        if user_current_debt == Nat::from(ZERO_VALUE) {
             return Err(Error::NoDebtToRepay);
         }
 
@@ -505,7 +508,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         if let Err(e) = reserve::update_interest_rates(
             &mut reserve_data,
             &mut reserve_cache,
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
             params.amount.clone(),
         )
         .await

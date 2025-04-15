@@ -26,6 +26,9 @@ use crate::{
 use candid::{CandidType, Deserialize, Nat};
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
 use serde::Serialize;
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, PERCENTAGE_FACTOR
+};
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct InterestRateParams {
@@ -49,60 +52,60 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
     println!("asset name in initialize {:?}", asset.to_string());
     match asset {
         "ckBTC" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_OPTIMAL_USAGE_RATIO))/Nat::from(100u128),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_MAX_EXCESS_USAGE_RATIO))/Nat::from(100u128),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_MAX_EXCESS_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
             base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
                 CKBTC_BASE_VARIABLE_BORROW_RATE,
-            ))/Nat::from(100u128),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKBTC_VARIABLE_RATE_SLOPE1))/Nat::from(100u128),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKBTC_VARIABLE_RATE_SLOPE2))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKBTC_VARIABLE_RATE_SLOPE1))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKBTC_VARIABLE_RATE_SLOPE2))/Nat::from(PERCENTAGE_FACTOR),
         },
         "ckETH" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKETH_OPTIMAL_USAGE_RATIO))/Nat::from(100u128),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKETH_MAX_EXCESS_USAGE_RATIO))/Nat::from(100u128),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKETH_OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(CKETH_MAX_EXCESS_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
             base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
                 CKETH_BASE_VARIABLE_BORROW_RATE,
-            ))/Nat::from(100u128),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKETH_VARIABLE_RATE_SLOPE1))/Nat::from(100u128),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKETH_VARIABLE_RATE_SLOPE2))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKETH_VARIABLE_RATE_SLOPE1))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKETH_VARIABLE_RATE_SLOPE2))/Nat::from(PERCENTAGE_FACTOR),
         },
         "ICP" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(ICP_OPTIMAL_USAGE_RATIO))/Nat::from(100u128),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(ICP_MAX_EXCESS_USAGE_RATIO))/Nat::from(100u128),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(ICP_OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(ICP_MAX_EXCESS_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
             base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
                 ICP_BASE_VARIABLE_BORROW_RATE,
-            ))/Nat::from(100u128),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(ICP_VARIABLE_RATE_SLOPE1))/Nat::from(100u128),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(ICP_VARIABLE_RATE_SLOPE2))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(ICP_VARIABLE_RATE_SLOPE1))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(ICP_VARIABLE_RATE_SLOPE2))/Nat::from(PERCENTAGE_FACTOR),
         },
         "ckUSDC" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDC_OPTIMAL_USAGE_RATIO))/Nat::from(100u128),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDC_OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
             max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(
                 CKUSDC_MAX_EXCESS_USAGE_RATIO,
-            ))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
             base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
                 CKUSDC_BASE_VARIABLE_BORROW_RATE,
-            ))/Nat::from(100u128),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE1))/Nat::from(100u128),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE2))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE1))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDC_VARIABLE_RATE_SLOPE2))/Nat::from(PERCENTAGE_FACTOR),
         },
         "ckUSDT" => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDT_OPTIMAL_USAGE_RATIO))/Nat::from(100u128),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKUSDT_OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
             max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(
                 CKUSDT_MAX_EXCESS_USAGE_RATIO,
-            ))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
             base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(
                 CKUSDT_BASE_VARIABLE_BORROW_RATE,
-            ))/Nat::from(100u128),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKUSDT_VARIABLE_RATE_SLOPE1))/Nat::from(100u128),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDT_VARIABLE_RATE_SLOPE2))/Nat::from(100u128),
+            ))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(CKUSDT_VARIABLE_RATE_SLOPE1))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(CKUSDT_VARIABLE_RATE_SLOPE2))/Nat::from(PERCENTAGE_FACTOR),
         },
         _ => InterestRateParams {
-            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO))/Nat::from(100u128),
-            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO))/Nat::from(100u128),
-            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE))/Nat::from(100u128),
-            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1))/Nat::from(100u128),
-            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE2))/Nat::from(100u128),
+            optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
+            max_excess_usage_ratio: ScalingMath::to_scaled(Nat::from(MAX_EXCESS_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
+            base_variable_borrow_rate: ScalingMath::to_scaled(Nat::from(BASE_VARIABLE_BORROW_RATE))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope1: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE1))/Nat::from(PERCENTAGE_FACTOR),
+            variable_rate_slope2: ScalingMath::to_scaled(Nat::from(VARIABLE_RATE_SLOPE2))/Nat::from(PERCENTAGE_FACTOR),
         },
     }
 }
@@ -180,7 +183,7 @@ pub async fn calculate_interest_rates(
         }
 
         current_liquidity_rate = curr_borrow_rate.clone().scaled_mul(utilization_ratio.clone())
-            .scaled_mul(Nat::from(100000000u128) - (reserve_factor/Nat::from(100u128)));
+            .scaled_mul(Nat::from(100000000u128) - (reserve_factor/Nat::from(PERCENTAGE_FACTOR)));
 
         ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
         ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);

@@ -37,8 +37,9 @@ use crate::declarations::storable::Candid;
 use crate::protocol::libraries::types::datatypes::{UserData, UserAccountData};
 use ic_cdk_timers::{set_timer_interval, set_timer};
 use std::time::Duration;
+use constants::constant_variables::constants::{ONE_DAY, ZERO_VALUE};
 
-const ONE_DAY: Duration = Duration::from_secs(86400);
+
 
 /*
  * @title Initialization Function
@@ -299,7 +300,7 @@ pub async fn get_asset_supply(
                 "Error: User reserve data not found for asset while get asset supply returing 0: {}",
                 asset_name
             );
-            return Ok(Nat::from(0u128));
+            return Ok(Nat::from(ZERO_VALUE));
         }
     };
 
@@ -335,9 +336,9 @@ pub async fn get_asset_supply(
         get_balance_value
     );
 
-    if get_balance_value == Nat::from(0u128) {
+    if get_balance_value == Nat::from(ZERO_VALUE) {
         ic_cdk::println!("balance 0, returnin....");
-        return Ok(Nat::from(0u128));
+        return Ok(Nat::from(ZERO_VALUE));
     }
 
     let (_, user_reserve) = user_reserve_data;
@@ -421,13 +422,13 @@ pub async fn get_asset_debt(
                 "Error: User reserve data not found for asset while get asset debt returing 0: {}",
                 asset_name
             );
-            return Ok(Nat::from(0u128));
+            return Ok(Nat::from(ZERO_VALUE));
         }
     };
     let (_, user_reserve) = user_reserve_data;
     if !user_reserve.is_borrowed {
         ic_cdk::println!("User has no debt for asset: {}", asset_name);
-        return Ok(Nat::from(0u128));
+        return Ok(Nat::from(ZERO_VALUE));
     }
 
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
@@ -710,7 +711,7 @@ pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> R
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
@@ -748,7 +749,7 @@ pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Resul
         return Err(Error::InvalidAssetLength);
     }
 
-    if session_start <= Nat::from(0u128) {
+    if session_start <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -785,7 +786,7 @@ pub fn get_caller_session() -> Result<SessionStorageData, Error> {
             .unwrap_or_else(|| SessionStorageData {
                 // Default value
                 connected_wallet: "".to_string(),
-                session_start: Nat::from(0u128),
+                session_start: Nat::from(ZERO_VALUE),
             })
     }))
 }

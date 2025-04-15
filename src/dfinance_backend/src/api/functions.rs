@@ -14,6 +14,9 @@ use ic_cdk::api;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
+use crate::constants::constant_variables::constants::{
+    REQUEST_LIMIT, TIME_WINDOW, BLOCK_DURATION,
+};
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 struct Account {
@@ -488,16 +491,13 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
 #[query]
 pub async fn cycle_checker() -> Result<Nat, Error> {
     let caller = ic_cdk::caller();
-    if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+    if caller == Principal::anonymous() || !to_check_controller() {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
     Ok(Nat::from(api::canister_balance128()))
 }
 
-const REQUEST_LIMIT: u32 = 100;// Maximum allowed requests within the defined time window
-const TIME_WINDOW: u64 = 3600; // Time window in seconds (one hour)
-const BLOCK_DURATION: u64 = 43200; // Block duration in seconds (12 hours = 43200 seconds)
 
 pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     let caller_id = ic_cdk::caller();

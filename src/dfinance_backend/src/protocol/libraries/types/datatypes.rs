@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
+use crate::constants::constant_variables::constants::{FAUCET_LIMIT, ZERO_VALUE};
 
 /* 
  * @title Transaction Data Structure
@@ -41,8 +42,8 @@ impl Default for UserData {
     fn default() -> Self {
         Self {
             user_id: Default::default(),
-            total_collateral: Some(Nat::from(0u128)),
-            total_debt: Some(Nat::from(0u128)),
+            total_collateral: Some(Nat::from(ZERO_VALUE)),
+            total_debt: Some(Nat::from(ZERO_VALUE)),
             reserves: Default::default(),
             
            
@@ -83,7 +84,7 @@ impl Default for UserReserveData {
             is_collateral: true,
             is_borrowed: Default::default(),
             faucet_usage: Default::default(),
-            faucet_limit: Nat::from(50000000000u128),
+            faucet_limit: Nat::from(FAUCET_LIMIT),
             d_token_balance: Default::default(),
             debt_token_blance: Default::default(),
         }

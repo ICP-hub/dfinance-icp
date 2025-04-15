@@ -5,6 +5,7 @@ mod utils;
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
+use crate::utils::constant_variables::*;
 
 #[test]
 fn call_test_function() {
@@ -45,8 +46,6 @@ impl ScalingMath for Nat {
     }
 }
 
-pub const SCALING_FACTOR: u128 = 100000000;
-const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
 
 fn get_scaling_value() -> Nat {
     Nat::from(SCALING_FACTOR)

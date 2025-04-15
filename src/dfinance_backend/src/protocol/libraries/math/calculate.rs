@@ -1,15 +1,19 @@
 use crate::api::functions::request_limiter;
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::constant_variables::constants::ZERO_VALUE;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
-use crate::guards::check_is_tester;
+use crate::guards::{check_is_tester, to_check_controller};
 use crate::protocol::libraries::types::datatypes::{CachedPrice, PriceCache};
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
 use crate::get_canister_id_by_name;
+use crate::constants::constant_variables::constants::{
+    ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKUSDC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDT_PRICE,TEST_ICP_PRICE
+};
 
 /*
  * @title Price Cache Management
@@ -50,7 +54,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
@@ -74,7 +78,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
     for asset_name in keys {
         ic_cdk::println!("Updating price for asset: {}", asset_name);
 
-        match get_exchange_rates(asset_name.clone(), None, Nat::from(0u128)).await {
+        match get_exchange_rates(asset_name.clone(), None, Nat::from(ZERO_VALUE)).await {
             Ok((exchange_rate, timestamp)) => {
                 ic_cdk::println!(
                     "Successfully updated exchange rate for {}: {} at {}",
@@ -103,7 +107,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  */
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
    
-    if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await {
+    if let Err(e) = get_exchange_rates(asset, None, Nat::from(ONE_VALUE)).await {
         return Err(e);
     };
 
@@ -311,11 +315,11 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
     };
 
     let manual_prices: HashMap<String, Nat> = vec![
-        ("ckBTC".to_string(), Nat::from(10934116666666u128)),
-        ("ckETH".to_string(), Nat::from(302148333333u128)),
-        ("ICP".to_string(), Nat::from(819611111u128)),
-        ("ckUSDC".to_string(), Nat::from(111094444u128)),
-        ("ckUSDT".to_string(), Nat::from(111111111u128)),
+        ("ckBTC".to_string(), Nat::from(TEST_CKBTC_PRICE)),
+        ("ckETH".to_string(), Nat::from(TEST_CKETH_PRICE)),
+        ("ICP".to_string(), Nat::from(TEST_ICP_PRICE)),
+        ("ckUSDC".to_string(), Nat::from(TEST_CKUSDC_PRICE)),
+        ("ckUSDT".to_string(), Nat::from(TEST_CKUSDT_PRICE)),
     ]
     .into_iter()
     .collect();

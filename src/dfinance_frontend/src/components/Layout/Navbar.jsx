@@ -36,7 +36,7 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import {  X } from 'lucide-react';
+import { X } from 'lucide-react';
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
@@ -106,7 +106,7 @@ export default function Navbar({ isHomeNav }) {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-  console.log("ckBTCBalance", ckBTCBalance);
+
 
 
 
@@ -275,7 +275,7 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     try {
@@ -295,22 +295,21 @@ export default function Navbar({ isHomeNav }) {
 
       let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
-      console.log("amount", scaledAmount)
-      console.log("transferFee", transferFee)
-      // Create transfer arguments for icrc2_transfer_from
+
+
       const transferFromArgs = {
         from: {
           owner: Principal.fromText(principal),
           subaccount: [],
-        },// You'll need to define this based on your app logic
+        },
         to: {
           owner: Principal.fromText(receiverAddress),
           subaccount: [],
-        }, // You'll need to define this based on your app logic
+        },
         amount: scaledAmount,
-        fee: [0], // You'll need to define this based on your asset
-        memo: [], // Optional memo field, adjust as needed
-        created_at_time: [], // Nanoseconds timestamp
+        fee: [0],
+        memo: [],
+        created_at_time: [],
         spender_subaccount: [],
       };
 
@@ -421,11 +420,30 @@ export default function Navbar({ isHomeNav }) {
     const message = error.message || "Supply action failed!";
     console.error(`Error: ${message}`);
 
-    if (message.toLowerCase().includes("panic")) {
+    const msgLower = message.toLowerCase();
+
+    if (msgLower.includes("panic")) {
       setShowPanicPopup(true);
       setIsVisible(false);
+
+    } else if (msgLower.includes("invalid character")) {
+      // Principal ID has an invalid character
+      const match = message.match(/"(.+?)"/);
+      const invalidChar = match ? match[1] : "?";
+
+      toast.error("Invalid principal ID format ", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+
     } else if (
-      message.toLowerCase().includes("out of cycles") ||
+      msgLower.includes("out of cycles") ||
       message.includes("Reject text: Canister")
     ) {
       toast.error("Canister is out of cycles. Admin has been notified.", {
@@ -438,7 +456,8 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-    } else if (message.toLowerCase().includes("SupplyCapExceeded")) {
+
+    } else if (msgLower.includes("supplycapexceeded")) {
       toast.error("Supply cap is exceeded.", {
         className: "custom-toast",
         position: "top-center",
@@ -449,6 +468,7 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
+
     } else {
       toast.error(`Error: ${message}`, {
         className: "custom-toast",
@@ -462,6 +482,7 @@ export default function Navbar({ isHomeNav }) {
       });
     }
   };
+
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
     setMaxClicked(false);
@@ -481,6 +502,7 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
+
   };
 
   const handleCreateInternetIdentity = () => {
@@ -626,23 +648,38 @@ export default function Navbar({ isHomeNav }) {
   const [receiverAddress, setReceiverAddress] = useState("");
   const [receiverError, setReceiverError] = useState("");
   const validateReceiverAddress = (value) => {
-    const regex = /^[a-z0-9-]{60,65}$/;
+    const trimmedValue = value?.trim();
 
-    if (!value) {
+    if (!trimmedValue) {
       setReceiverError("Receiver address is required.");
-    } else if (!regex.test(value)) {
-      setReceiverError("Invalid receiver address format.");
-    } else {
-      setReceiverError(""); // No error
+      return;
+    }
+
+    try {
+      Principal.fromText(trimmedValue);
+      setReceiverError("");
+    } catch (error) {
+      const errorMsg = error.toString();
+
+
+      if (errorMsg.toLowerCase().includes("invalid character")) {
+        const match = errorMsg.match(/"(.+?)"/);
+        const invalidChar = match ? match[1] : "?";
+        setReceiverError(`Principal ID contains an invalid character: "${invalidChar}"`);
+      } else {
+        setReceiverError("Invalid principal ID format.");
+      }
+
+      console.error("Principal validation error:", errorMsg);
     }
   };
-  
+
   const handleReceiverChange = (e) => {
     const value = e.target.value.trim();
     setReceiverAddress(value);
     validateReceiverAddress(value);
   };
-  
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -653,6 +690,21 @@ export default function Navbar({ isHomeNav }) {
       window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
   }, []);
+  useEffect(() => {
+    const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
+
+    if (shouldLockScroll) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = ""; // Restore scroll
+    }
+
+    // Clean up on unmount (just in case)
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showDepositPopup, isTransferDropdownOpen]);
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -915,6 +967,11 @@ export default function Navbar({ isHomeNav }) {
                             // Close dropdown when clicking the overlay background
                             if (e.target === e.currentTarget) {
                               setIsTransferDropDownOpen(false);
+                              setIsDropdownOpen(false);
+                              setReceiverAddress("");
+                              setAmount("");
+                              setMaxClicked(false);
+                              setIsApproved(false);
                             }
                           }}
                         >
@@ -977,30 +1034,41 @@ export default function Navbar({ isHomeNav }) {
 
                                         {/* Dropdown menu */}
                                         {isDropdownOpen && (
-                                          <div className="absolute right-0  mt-2 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
-                                            <div className="py-1">
-                                              {assets.map((a) => (
-                                                <button
-                                                  key={a}
-                                                  className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                  onClick={() => {
-                                                    // Clear amount when selecting a different asset
-                                                    if (a !== asset) {
-                                                      setAmount("");
-                                                      setMaxClicked(false);
-                                                    }
-                                                    setAsset(a);
-                                                    setIsDropdownOpen(false);
-                                                  }}
-                                                >
-                                                  <img
-                                                    src={assetImages[a]}
-                                                    alt={a}
-                                                    className="w-5 h-5 rounded-full"
-                                                  />
-                                                  <span>{a}</span>
-                                                </button>
-                                              ))}
+                                          <div
+                                            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                                            onClick={(e) => {
+                                              // Close dropdown when clicking the overlay background
+                                              if (e.target === e.currentTarget) {
+                                                setIsDropdownOpen(false);
+                                              }
+                                            }}
+                                          >
+                                            <div className="absolute right-[40px] mt-16 w-48 origin-top-right bg-white dark:bg-darkOverlayBackground border dark:border-gray-600 border-gray-300 rounded-xl shadow-md z-10">
+
+                                              <div className="py-1">
+                                                {assets.map((a) => (
+                                                  <button
+                                                    key={a}
+                                                    className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
+                                                    onClick={() => {
+                                                      // Clear amount when selecting a different asset
+                                                      if (a !== asset) {
+                                                        setAmount("");
+                                                        setMaxClicked(false);
+                                                      }
+                                                      setAsset(a);
+                                                      setIsDropdownOpen(false);
+                                                    }}
+                                                  >
+                                                    <img
+                                                      src={assetImages[a]}
+                                                      alt={a}
+                                                      className="w-5 h-5 rounded-full"
+                                                    />
+                                                    <span>{a}</span>
+                                                  </button>
+                                                ))}
+                                              </div>
                                             </div>
                                           </div>
                                         )}
@@ -1035,8 +1103,19 @@ export default function Navbar({ isHomeNav }) {
                               </div>
 
                               <div className="w-full">
-                                <div className="w-full flex justify-between my-2">
-                                  <h1>Receiver Address</h1>
+                                <div className="w-full flex items-center my-2">
+                                  <h1>Receiver Principal Address</h1>
+                                  <span className="relative cursor-pointer ">
+                                    <span className="group inline-flex ml-1 mt-1">
+                                      <Info
+                                        size={14}
+                                        className="text-[#233D63] dark:text-darkText dark:opacity-50"
+                                      />
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                        Only Principal IDs are accepted here.
+                                      </div>
+                                    </span>
+                                  </span>
                                 </div>
                                 <div className="w-full bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                                   <input
@@ -1174,7 +1253,17 @@ export default function Navbar({ isHomeNav }) {
                                     className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
                                     onClick={() => {
                                       navigator.clipboard.writeText(principal);
-                                      toast.success("Account ID copied!");
+                                      toast.dismiss();
+                                      toast.success(`Principal Coppied !`, {
+                                        className: "custom-toast",
+                                        position: "top-center",
+                                        autoClose: 3000,
+                                        hideProgressBar: false,
+                                        closeOnClick: true,
+                                        pauseOnHover: true,
+                                        draggable: true,
+                                        progress: undefined,
+                                      });
                                     }}
                                   />
                                 </div>
@@ -1195,8 +1284,18 @@ export default function Navbar({ isHomeNav }) {
                                   <GrCopy
                                     className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
                                     onClick={() => {
-                                      navigator.clipboard.writeText(principal);
-                                      toast.success("Principal copied!");
+                                      navigator.clipboard.writeText(accountIdString);
+                                      toast.dismiss();
+                                      toast.success(`Account Id  Coppied !`, {
+                                        className: "custom-toast",
+                                        position: "top-center",
+                                        autoClose: 3000,
+                                        hideProgressBar: false,
+                                        closeOnClick: true,
+                                        pauseOnHover: true,
+                                        draggable: true,
+                                        progress: undefined,
+                                      });
                                     }}
                                   />
                                 </div>

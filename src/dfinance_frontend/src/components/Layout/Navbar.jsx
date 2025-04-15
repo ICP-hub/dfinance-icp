@@ -98,11 +98,6 @@ export default function Navbar({ isHomeNav }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
@@ -154,27 +149,10 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   };
 
-  const handleClickOutside = () => {
-    setIsDropdownOpen(false);
-  };
-
-  const openTransferPopup = () => {
-    setIsDropdownOpen(false);
-    setShowTransferPopup(true);
-  };
-
-  const openDepositPopup = () => {
-    setIsDropdownOpen(false);
-    setShowDepositPopup(true);
-  };
-
-  const closePopups = () => {
-    setShowTransferPopup(false);
-    setShowDepositPopup(false);
-  };
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
   const hash = window.location.hash;
@@ -215,7 +193,7 @@ export default function Navbar({ isHomeNav }) {
     ckUSDC: ckUSDCBalance,
   };
   const supplyBalance = assetBalances[asset] || 0;
-  console.log("supplyBalance", supplyBalance);
+
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -648,7 +626,6 @@ export default function Navbar({ isHomeNav }) {
   const [receiverAddress, setReceiverAddress] = useState("");
   const [receiverError, setReceiverError] = useState("");
   const validateReceiverAddress = (value) => {
-    // Example: basic principal ID pattern
     const regex = /^[a-z0-9-]{60,65}$/;
 
     if (!value) {
@@ -659,6 +636,7 @@ export default function Navbar({ isHomeNav }) {
       setReceiverError(""); // No error
     }
   };
+  
   const handleReceiverChange = (e) => {
     const value = e.target.value.trim();
     setReceiverAddress(value);

@@ -50,8 +50,8 @@ const MobileTopNav = ({
     assets,
 
   } = useAssetData();
-  const { isAuthenticated, principal ,accountIdString} = useAuth();
- const ledgerActors = useSelector((state) => state.ledger);
+  const { isAuthenticated, principal, accountIdString } = useAuth();
+  const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -127,11 +127,7 @@ const MobileTopNav = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const {
-    ckBTCUsdRate,
-    ckETHUsdRate,
-    ckUSDCUsdRate,
-    ckICPUsdRate,
-    ckUSDTUsdRate,
+
     fetchConversionRate,
     ckBTCBalance,
     ckETHBalance,
@@ -140,11 +136,11 @@ const MobileTopNav = ({
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-  console.log("ckBTCBalance", ckBTCBalance);
+
   const handleSoundToggle = () => {
     dispatch(toggleSound());
   };
-const handleClick = async () => {
+  const handleClick = async () => {
     setIsLoading(true);
     try {
       if (isApproved) {
@@ -177,7 +173,6 @@ const handleClick = async () => {
     ckUSDC: ckUSDCBalance,
   };
   const supplyBalance = assetBalances[asset] || 0;
-  console.log("supplyBalance", supplyBalance);
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -204,7 +199,6 @@ const handleClick = async () => {
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
 
@@ -259,7 +253,7 @@ const handleClick = async () => {
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     try {
@@ -275,29 +269,28 @@ const handleClick = async () => {
       } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
 
       let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
-      console.log("amount", scaledAmount)
-      // Create transfer arguments for icrc2_transfer_from
+
       const transferFromArgs = {
         from: {
           owner: Principal.fromText(principal),
           subaccount: [],
-        },// You'll need to define this based on your app logic
+        },
         to: {
           owner: Principal.fromText(receiverAddress),
           subaccount: [],
-        }, // You'll need to define this based on your app logic
+        },
         amount: scaledAmount,
-        fee: [0], // You'll need to define this based on your asset
-        memo: [], // Optional memo field, adjust as needed
-        created_at_time: [], // Nanoseconds timestamp
+        fee: [0],
+        memo: [],
+        created_at_time: [],
         spender_subaccount: [],
       };
 
-      // Call the icrc2_transfer_from function
+
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
 
@@ -468,11 +461,11 @@ const handleClick = async () => {
 
   const toggleDropdown = () => {
     setIsTransferDropDownOpen(!isTransferDropdownOpen);
-   
+
   };
   const toggleDepositDropdown = () => {
     setShowDepositPopup(!showDepositPopup);
-    
+
   };
   const handleClose = () => {
     setIsMobileNav(false);
@@ -492,7 +485,7 @@ const handleClick = async () => {
     handleClose();
     navigate("/dashboard");
   };
-const truncateToSevenDecimals = (value) => {
+  const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
@@ -500,7 +493,6 @@ const truncateToSevenDecimals = (value) => {
   const [receiverAddress, setReceiverAddress] = useState("");
   const [receiverError, setReceiverError] = useState("");
   const validateReceiverAddress = (value) => {
-    // Example: basic principal ID pattern
     const regex = /^[a-z0-9-]{60,65}$/;
 
     if (!value) {
@@ -508,7 +500,7 @@ const truncateToSevenDecimals = (value) => {
     } else if (!regex.test(value)) {
       setReceiverError("Invalid receiver address format.");
     } else {
-      setReceiverError(""); // No error
+      setReceiverError("");
     }
   };
   const handleReceiverChange = (e) => {
@@ -703,7 +695,7 @@ const truncateToSevenDecimals = (value) => {
                           </div>
                         </div>
                       </div>
-                      {}
+                      { }
                       <div className=" w-full flex justify-center">
                         <div
                           className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -737,10 +729,22 @@ const truncateToSevenDecimals = (value) => {
 
         {!isHomeNav
           ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-              if (link.alwaysPresent) {
-                return (
+            if (link.alwaysPresent) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            } else if (isTestnetMode && link.testnet) {
+              return (
+                <React.Fragment key={index}>
                   <NavLink
-                    key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
                     style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
@@ -748,48 +752,36 @@ const truncateToSevenDecimals = (value) => {
                   >
                     {link.title}
                   </NavLink>
-                );
-              } else if (isTestnetMode && link.testnet) {
-                return (
-                  <React.Fragment key={index}>
-                    <NavLink
-                      to={link.route}
-                      className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
-                      onClick={handleClose}
-                    >
-                      {link.title}
-                    </NavLink>
-                    {link.title === "Faucet" && <>{}</>}
-                  </React.Fragment>
-                );
-              } else if (!isTestnetMode && !link.testnet) {
-                return (
-                  <NavLink
-                    key={index}
-                    to={link.route}
-                    className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
-                    onClick={handleClose}
-                  >
-                    {link.title}
-                  </NavLink>
-                );
-              }
-              return null;
-            })
+                  {link.title === "Faucet" && <>{ }</>}
+                </React.Fragment>
+              );
+            } else if (!isTestnetMode && !link.testnet) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            }
+            return null;
+          })
           : HOME_TOP_NAV_LINK.map((link, index) => (
-              <NavLink
-                key={index}
-                target={link.target}
-                to={link.route}
-                className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
-                onClick={handleClose}
-              >
-                {link.title}
-              </NavLink>
-            ))}
+            <NavLink
+              key={index}
+              target={link.target}
+              to={link.route}
+              className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+              style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
+              onClick={handleClose}
+            >
+              {link.title}
+            </NavLink>
+          ))}
 
         <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">
           Settings
@@ -828,7 +820,7 @@ const truncateToSevenDecimals = (value) => {
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
-                      // onChange={handleTestnetModeToggle}
+                    // onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>
@@ -879,18 +871,18 @@ const truncateToSevenDecimals = (value) => {
       </div>
       {isAuthenticated && (
         <div className="w-full flex flex-col lg1:flex-row justify-center  p-4  gap-3 bg-white dark:dark:bg-darkOverlayBackground">
-         
-                                            <Button
-                                              title="Transfer"
-                                              className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
-           onClickHandler={toggleDropdown}
-                                            />
-                                            <Button
-                                              title="Deposit"
-                                              className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
-                                              onClickHandler={toggleDepositDropdown}
-                                            />
-                                         
+
+          <Button
+            title="Transfer"
+            className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+            onClickHandler={toggleDropdown}
+          />
+          <Button
+            title="Deposit"
+            className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
+            onClickHandler={toggleDepositDropdown}
+          />
+
           <Button
             title="Switch Wallet"
             className=" z-20 py-3 px-9  focus:outline-none box bg-transparent  shadow-lg  text-sm rounded-lg bg-gradient-to-r from-orange-400 to-purple-700 bg-clip-text text-transparent dark:text-white font-poppins"
@@ -903,308 +895,308 @@ const truncateToSevenDecimals = (value) => {
           />
         </div>
       )}
-       {isTransferDropdownOpen && (
-                      <>
-                        {/* Overlay that captures outside clicks */}
-                        <div
-                          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-                          onClick={(e) => {
-                            // Close dropdown when clicking the overlay background
-                            if (e.target === e.currentTarget) {
-                              setIsTransferDropDownOpen(false);
-                            }
-                          }}
-                        >
-                          <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                            {/* Add close button (X) in the top-right corner */}
-                            <div className="flex justify-between items-center">
-                              <h1 className="font-semibold text-xl">Transfer</h1>
-                              <button
-                                onClick={() => setIsTransferDropDownOpen(false)}
-                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
+      {isTransferDropdownOpen && (
+        <>
+          
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+            onClick={(e) => {
+              
+              if (e.target === e.currentTarget) {
+                setIsTransferDropDownOpen(false);
+              }
+            }}
+          >
+            <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
 
-                            <div className="flex flex-col gap-2 mt-5 text-sm">
-                              <div className="w-full">
-                                <div className="w-full flex justify-between my-2">
-                                  <h1>Amount</h1>
-                                </div>
-                                <div className="w-full flex justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-2 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                                  <div className="flex flex-col items-start w-[45%] lg:gap-[2rem] gap-[2.5rem]">
-                                    <input
-                                      type="text"
-                                      value={amount}
-                                      onChange={handleAmountChange}
-                                      disabled={supplyBalance === 0 || isApproved}
-                                      className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none px-2 py-1 bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
-                                      placeholder={`Enter Amount `}
+              <div className="flex justify-between items-center">
+                <h1 className="font-semibold text-xl">Transfer</h1>
+                <button
+                  onClick={() => setIsTransferDropDownOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2 mt-5 text-sm">
+                <div className="w-full">
+                  <div className="w-full flex justify-between my-2">
+                    <h1>Amount</h1>
+                  </div>
+                  <div className="w-full flex justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-2 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                    <div className="flex flex-col items-start w-[45%] lg:gap-[2rem] gap-[2.5rem]">
+                      <input
+                        type="text"
+                        value={amount}
+                        onChange={handleAmountChange}
+                        disabled={supplyBalance === 0 || isApproved}
+                        className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none px-2 py-1 bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
+                        placeholder={`Enter Amount `}
+                      />
+                      <p className="text-[12px] text-gray-500 -mb-1">
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-3">
+                      <div className="w-auto flex gap-2 items-center">
+                       
+                        <div className="relative">
+                          <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="flex items-center gap-2 focus:outline-none"
+                          >
+                            <img
+                              src={assetImages[asset]}
+                              alt="Asset Icon"
+                              className="object-fill w-6 h-6 rounded-full"
+                            />
+                            <span className="text-lg">{asset}</span>
+                            <svg
+                              className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                          </button>
+
+                          {/* Dropdown menu */}
+                          {isDropdownOpen && (
+                            <div className="absolute right-0  mt-2 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
+                              <div className="py-1">
+                                {assets.map((a) => (
+                                  <button
+                                    key={a}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    onClick={() => {
+                                      
+                                      if (a !== asset) {
+                                        setAmount("");
+                                        setMaxClicked(false);
+                                      }
+                                      setAsset(a);
+                                      setIsDropdownOpen(false);
+                                    }}
+                                  >
+                                    <img
+                                      src={assetImages[a]}
+                                      alt={a}
+                                      className="w-5 h-5 rounded-full"
                                     />
-                                    <p className="text-[12px] text-gray-500 -mb-1">
-                                    </p>
-                                  </div>
-                                  <div className="flex flex-col items-end gap-3">
-                                    <div className="w-auto flex gap-2 items-center">
-                                      {/* Replace image with dropdown */}
-                                      <div className="relative">
-                                        <button
-                                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                          className="flex items-center gap-2 focus:outline-none"
-                                        >
-                                          <img
-                                            src={assetImages[asset]}
-                                            alt="Asset Icon"
-                                            className="object-fill w-6 h-6 rounded-full"
-                                          />
-                                          <span className="text-lg">{asset}</span>
-                                          <svg
-                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                          >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                                          </svg>
-                                        </button>
-
-                                        {/* Dropdown menu */}
-                                        {isDropdownOpen && (
-                                          <div className="absolute right-0  mt-2 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
-                                            <div className="py-1">
-                                              {assets.map((a) => (
-                                                <button
-                                                  key={a}
-                                                  className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                  onClick={() => {
-                                                    // Clear amount when selecting a different asset
-                                                    if (a !== asset) {
-                                                      setAmount("");
-                                                      setMaxClicked(false);
-                                                    }
-                                                    setAsset(a);
-                                                    setIsDropdownOpen(false);
-                                                  }}
-                                                >
-                                                  <img
-                                                    src={assetImages[a]}
-                                                    alt={a}
-                                                    className="w-5 h-5 rounded-full"
-                                                  />
-                                                  <span>{a}</span>
-                                                </button>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col items-center justify-center">
-                                      <p className="text-[11px] text-gray-500 text-right w-full font-semibold">
-                                        Wallet Balance:
-                                      </p>
-                                      <div className="flex gap-1 items-center">
-                                        <p className="text-[12px] text-gray-500 -mb-[3px]">
-                                          {truncateToSevenDecimals(supplyBalance)}
-                                        </p>
-                                        <p
-                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                            ? "text-gray-400 cursor-not-allowed"
-                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                                            }`}
-                                          onClick={() => {
-                                            if (supplyBalance > 0 && !isApproved) {
-                                              handleMaxClick();
-                                            }
-                                          }}
-                                        >
-                                          Max
-                                        </p>
-
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="w-full">
-                                <div className="w-full flex justify-between my-2">
-                                  <h1>Receiver Address</h1>
-                                </div>
-                                <div className="w-full bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                                  <input
-                                    type="text"
-                                    value={receiverAddress}
-                                    onChange={handleReceiverChange}
-                                    disabled={supplyBalance === 0 || isApproved}
-                                    className="w-full text-sm lg:text-base placeholder:text-sm placeholder:opacity-70 px-2 py-1 bg-transparent focus:outline-none dark:text-darkText"
-                                    placeholder="Enter Receiver Address"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="w-full mt-3">
-                                {/* Warning messages */}
-                                {amount > 0 && amount > supplyBalance && (
-                                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
-                                    <div className="text-white text-[12px]">
-                                      Insufficient wallet balance to transfer {asset}.
-                                    </div>
-                                  </div>
-                                )}
-
-                                {supplyBalance <= 0 && (
-                                  <div className="bg-[#BA5858] p-2 rounded-lg my-2">
-                                    <div className="text-white text-[12px]">
-                                      You do not have any {asset} in your wallet for transferring.
-                                      Please deposit {asset} before attempting to transfer.
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="flex flex-col gap-4 mt-4">
-                                  {/* Approve Button */}
-                                  <button
-                                    onClick={() => !isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                      isLoading ||
-                                      isButtonDisabled ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                      }`}
-                                    disabled={
-                                      isApproved ||
-                                      isLoading ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
-                                    }
-                                  >
-                                    Approve {asset} to continue
+                                    <span>{a}</span>
                                   </button>
-
-                                  {/* Repay Button */}
-                                  <button
-                                    onClick={() => isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                      isButtonDisabled ||
-                                      isLoading ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                      }`}
-                                    disabled={
-                                      !isApproved ||
-                                      isLoading ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
-                                    }
-                                  >
-                                    Transfer
-                                  </button>
-                                </div>
-
-                                {isLoading && (
-                                  <div
-                                    className="fixed inset-0 flex items-center justify-center z-50"
-                                    style={{
-                                      background: "rgba(0, 0, 0, 0.4)",
-                                      backdropFilter: "blur(1px)",
-                                    }}
-                                  >
-                                    <div className="loader"></div>
-                                  </div>
-                                )}
+                                ))}
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
-                      </>
-                    )}
+                      </div>
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-[11px] text-gray-500 text-right w-full font-semibold">
+                          Wallet Balance:
+                        </p>
+                        <div className="flex gap-1 items-center">
+                          <p className="text-[12px] text-gray-500 -mb-[3px]">
+                            {truncateToSevenDecimals(supplyBalance)}
+                          </p>
+                          <p
+                            className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                              }`}
+                            onClick={() => {
+                              if (supplyBalance > 0 && !isApproved) {
+                                handleMaxClick();
+                              }
+                            }}
+                          >
+                            Max
+                          </p>
 
-                    {/* Transfer Assets Popup */}
-                    {showDepositPopup && (
-                      <>
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
-                          // Close dropdown when clicking the overlay background
-                          if (e.target === e.currentTarget) {
-                            setShowDepositPopup(false);
-                          }
-                        }}>
-                          <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                            {/* Add close button (X) in the top-right corner */}
-                            <div className="flex justify-between items-center">
-                              <h1 className="font-semibold text-xl">Deposit</h1>
-                              <button
-                                onClick={() => setShowDepositPopup(false)}
-                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
-
-                            <div className="flex flex-col gap-2 mt-5 text-sm">
-                              <div className="w-full">
-                                <div className="w-full flex justify-between my-2">
-                                  <h1>Receiver Address</h1>
-                                </div>
-                                <div className="w-full flex items-center bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                                  <textarea
-                                    value={principal}
-                                    readOnly
-                                    rows={2}
-                                    className="w-full resize-none text-[13px] lg:text-[13px] placeholder:text-sm placeholder:opacity-70 px-1 py-1 bg-transparent focus:outline-none dark:text-darkText"
-                                  />
-                                  <GrCopy
-                                    className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(principal);
-                                      toast.success("Account ID copied!");
-                                    }}
-                                  />
-                                </div>
-
-                              </div>
-
-                              <div className="w-full">
-                                <div className="w-full flex justify-between my-2">
-                                  <h1>Account Id</h1>
-                                </div>
-                                <div className="w-full flex items-center bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                                  <textarea
-                                    value={accountIdString}
-                                    readOnly
-                                    rows={2}
-                                    className="w-full resize-none text-[10px] lg:text-[13px] placeholder:text-sm placeholder:opacity-70 px-1 py-1 bg-transparent focus:outline-none dark:text-darkText"
-                                  />
-                                  <GrCopy
-                                    className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(principal);
-                                      toast.success("Principal copied!");
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-
-                            </div>
-                          </div>
                         </div>
-                      </>
-                    )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <div className="w-full flex justify-between my-2">
+                    <h1>Receiver Address</h1>
+                  </div>
+                  <div className="w-full bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                    <input
+                      type="text"
+                      value={receiverAddress}
+                      onChange={handleReceiverChange}
+                      disabled={supplyBalance === 0 || isApproved}
+                      className="w-full text-sm lg:text-base placeholder:text-sm placeholder:opacity-70 px-2 py-1 bg-transparent focus:outline-none dark:text-darkText"
+                      placeholder="Enter Receiver Address"
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full mt-3">
+                 
+                  {amount > 0 && amount > supplyBalance && (
+                    <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                      <div className="text-white text-[12px]">
+                        Insufficient wallet balance to transfer {asset}.
+                      </div>
+                    </div>
+                  )}
+
+                  {supplyBalance <= 0 && (
+                    <div className="bg-[#BA5858] p-2 rounded-lg my-2">
+                      <div className="text-white text-[12px]">
+                        You do not have any {asset} in your wallet for transferring.
+                        Please deposit {asset} before attempting to transfer.
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-4 mt-4">
+                    {/* Approve Button */}
+                    <button
+                      onClick={() => !isApproved && handleClick()}
+                      className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                        isLoading ||
+                        isButtonDisabled ||
+                        amount <= 0 ||
+                        supplyBalance <= 0 ||
+                        amount > supplyBalance
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                        }`}
+                      disabled={
+                        isApproved ||
+                        isLoading ||
+                        amount <= 0 ||
+                        supplyBalance <= 0 ||
+                        amount > supplyBalance
+                      }
+                    >
+                      Approve {asset} to continue
+                    </button>
+
+                   
+                    <button
+                      onClick={() => isApproved && handleClick()}
+                      className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                        isButtonDisabled ||
+                        isLoading ||
+                        amount <= 0 ||
+                        supplyBalance <= 0 ||
+                        amount > supplyBalance
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                        }`}
+                      disabled={
+                        !isApproved ||
+                        isLoading ||
+                        amount <= 0 ||
+                        supplyBalance <= 0 ||
+                        amount > supplyBalance
+                      }
+                    >
+                      Transfer
+                    </button>
+                  </div>
+
+                  {isLoading && (
+                    <div
+                      className="fixed inset-0 flex items-center justify-center z-50"
+                      style={{
+                        background: "rgba(0, 0, 0, 0.4)",
+                        backdropFilter: "blur(1px)",
+                      }}
+                    >
+                      <div className="loader"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+
+      {showDepositPopup && (
+        <>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
+            
+            if (e.target === e.currentTarget) {
+              setShowDepositPopup(false);
+            }
+          }}>
+            <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+              
+              <div className="flex justify-between items-center">
+                <h1 className="font-semibold text-xl">Deposit</h1>
+                <button
+                  onClick={() => setShowDepositPopup(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2 mt-5 text-sm">
+                <div className="w-full">
+                  <div className="w-full flex justify-between my-2">
+                    <h1>Receiver Address</h1>
+                  </div>
+                  <div className="w-full flex items-center bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                    <textarea
+                      value={principal}
+                      readOnly
+                      rows={2}
+                      className="w-full resize-none text-[13px] lg:text-[13px] placeholder:text-sm placeholder:opacity-70 px-1 py-1 bg-transparent focus:outline-none dark:text-darkText"
+                    />
+                    <GrCopy
+                      className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
+                      onClick={() => {
+                        navigator.clipboard.writeText(principal);
+                        toast.success("Account ID copied!");
+                      }}
+                    />
+                  </div>
+
+                </div>
+
+                <div className="w-full">
+                  <div className="w-full flex justify-between my-2">
+                    <h1>Account Id</h1>
+                  </div>
+                  <div className="w-full flex items-center bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                    <textarea
+                      value={accountIdString}
+                      readOnly
+                      rows={2}
+                      className="w-full resize-none text-[10px] lg:text-[13px] placeholder:text-sm placeholder:opacity-70 px-1 py-1 bg-transparent focus:outline-none dark:text-darkText"
+                    />
+                    <GrCopy
+                      className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
+                      onClick={() => {
+                        navigator.clipboard.writeText(principal);
+                        toast.success("Principal copied!");
+                      }}
+                    />
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </Drawer>
   );
 };

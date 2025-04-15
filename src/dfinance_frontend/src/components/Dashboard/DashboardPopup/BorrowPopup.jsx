@@ -233,7 +233,7 @@ const Borrow = ({
 
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
-      dispatch(toggleDashboardRefresh());
+      // dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(

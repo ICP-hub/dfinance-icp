@@ -225,9 +225,9 @@ service : (principal) -> {
   reset_reserve_value : (text, text, nat) -> (Result_1);
   retrieve_blocked_users : (principal) -> (Result_12) query;
   retrieve_request_info : (principal) -> (Result_13) query;
+  set_canister_id : (text, principal) -> (Result_1);
   store_session_data : (text, nat) -> (Result_1);
   store_user_guide : () -> (Result_1);
-  set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

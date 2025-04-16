@@ -13,12 +13,14 @@ use crate::get_canister_id_by_name;
 
 /*
  * @title Price Cache Management
+ * @functionality Provides a caching mechanism for asset prices to optimize exchange rate lookups and reduce redundant external API calls
  * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.
  *      Allows fetching and updating asset exchange rates efficiently.
  */
 impl PriceCache {
     /*
      * @title Get Cached Price
+     * @functionality Retrieves stored asset prices from the cache to avoid unnecessary external calls
      * @dev Retrieves the cached exchange rate for a given asset, if available.
      * @param asset The name of the asset (e.g., "ckBTC", "ckETH").
      * @returns Option<Nat> - Returns the cached price if it exists, otherwise `None`.
@@ -31,6 +33,7 @@ impl PriceCache {
 
     /*
      * @title Set Cached Price
+     * @functionality Updates the in-memory price cache with new asset exchange rate values
      * @dev Updates the cached price for a specific asset.
      * @param asset The name of the asset.
      * @param price The latest exchange rate for the asset.
@@ -42,6 +45,7 @@ impl PriceCache {
 
 /*
  * @title Update Reserve Prices
+ * @functionality Refreshes all cached asset prices by fetching latest rates from the exchange rate oracle
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
  */
@@ -98,6 +102,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
 
 /*
  * @title Update Token Price
+ * @functionality Updates the cached price for a single specific token
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
  */
@@ -112,6 +117,7 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
 
 /*
  * @title Query Reserve Prices
+ * @functionality Retrieves current cached prices for all reserve assets
  * @dev Fetches the cached price data of all available assets from the state.
  * @returns Vec<PriceCache> - A list of cached prices for each asset.
  */
@@ -131,6 +137,7 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
 
 /*
  * @title Fetch Exchange Rates
+ * @functionality Retrieves real-time exchange rates from external price oracle services for converting between assets
  * @dev Fetches the latest exchange rate of a given base asset against a quote asset.
  *      Supports both cryptocurrency and fiat asset classes.
  * @param base_asset_symbol The base asset for which exchange rate is needed.
@@ -294,6 +301,7 @@ pub async fn get_exchange_rates(
 
 /*
  * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
+ * @functionality Provides a testing mechanism to populate the price cache with predefined values for simulated environments
  * @dev This function checks if the caller is a valid tester for Pocket IC and iterates over the assets in the state,
  *      updating their price caches with manually defined prices. If no price is found for an asset,
  *      it logs the absence of the price. If a price cache does not exist, a new one is created.

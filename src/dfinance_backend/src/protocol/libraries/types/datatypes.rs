@@ -5,6 +5,7 @@ use serde::Serialize;
 /* 
  * @title Transaction Data Structure
  * @dev Represents a blockchain transaction with relevant details.
+ * @functionality Tracks and stores details of blockchain transactions including hash, block, method, age, participants, value and fees.
  */
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
@@ -20,6 +21,7 @@ pub struct Transaction {
 
 /* 
  * @title Wrapper for Candid-compatible types
+ * @functionality Provides a simple wrapper around any type to enable Candid compatibility for serialization and deserialization.
  */
 #[derive(Debug)]
 pub struct Candid<T>(pub T);
@@ -28,6 +30,7 @@ pub struct Candid<T>(pub T);
  * @title User Data
  * @dev Stores user-specific financial information.
  * @notice This structure holds the user's reserves, collateral, and debt data.
+ * @functionality Aggregates all financial information for a user including collateral, debt, and associated reserve data.
  */
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
@@ -53,6 +56,7 @@ impl Default for UserData {
 /* 
  * @title User Reserve Data
  * @dev Stores the user's balance and reserve-related details.
+ * @functionality Maintains detailed information about a user's interaction with a specific reserve, including supply, borrow amounts, collateral status, and asset indices.
  */
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserReserveData {
@@ -93,6 +97,7 @@ impl Default for UserReserveData {
 /* 
  * @title User State
  * @dev Stores the user's adjusted balance and index.
+ * @functionality Tracks a user's current financial state with adjusted balance calculations and relevant index for interest accrual.
  */
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
 pub struct UserState {
@@ -112,6 +117,7 @@ impl Default for UserState {
 /* 
  * @title Reserve Initialization Parameters
  * @dev Parameters required for initializing a reserve.
+ * @functionality Contains all necessary configuration parameters to initialize a new reserve in the lending protocol, including token implementations and naming.
  */
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InitReserveInput {
@@ -135,6 +141,7 @@ pub struct InitReserveInput {
 /* 
  * @title Interest Rate Calculation Parameters
  * @dev Parameters required for calculating interest rates.
+ * @functionality Provides the necessary data points to calculate dynamic interest rates based on liquidity utilization, total debt, and current borrowing rates.
  */
 #[derive(Debug, CandidType, Deserialize, Serialize)]
 pub struct CalculateInterestRatesParams {
@@ -151,8 +158,8 @@ pub struct CalculateInterestRatesParams {
 /*
  * @title User Account Data Structure
  * @notice Stores financial data such as collateral, debt, and risk factors.
- *
  * @dev Tracks users' financial health and determines potential liquidation status.
+ * @functionality Provides comprehensive financial health metrics for a user account, including collateral-to-debt ratios, liquidation thresholds, and available borrowing capacity.
  */
 #[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct UserAccountData {
@@ -165,29 +172,48 @@ pub struct UserAccountData {
     pub has_zero_ltv_collateral: bool,
 }
 
-// Define a struct to hold request count and last request time
+/* 
+ * @title Request Tracker
+ * @functionality Monitors and limits API usage by tracking request count and timestamps to prevent abuse and rate limit violations.
+ */
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct RequestTracker {
     pub count: u32,
     pub last_request_time: u64,
 }
 
+/* 
+ * @title Blocked User Details
+ * @functionality Stores information about users who have been blocked from the system, including when the block was applied.
+ */
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct BlockedUserDetails {
     pub blocked_time: u64,
 }
 
+/* 
+ * @title Session Storage Data
+ * @functionality Maintains user session information including connected wallet address and session start time for authentication purposes.
+ */
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct SessionStorageData {
     pub connected_wallet: String,
     pub session_start: Nat,
 }
 
+/* 
+ * @title Cached Price
+ * @functionality Stores asset price data temporarily to reduce external oracle calls and improve performance.
+ */
 #[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
 pub struct CachedPrice {
     pub price: Nat,
 }
 
+/* 
+ * @title Price Cache
+ * @functionality Maintains a collection of recent asset prices to optimize performance and reduce external API calls for price data.
+ */
 #[derive(Clone, Debug, Serialize, Deserialize, CandidType)]
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,

@@ -41,6 +41,10 @@ pub struct InterestRateParams {
  * @notice Initializes and returns interest rate parameters for a given asset.
  * @dev This function assigns predefined interest rate parameters based on the asset type.
  *      If an unrecognized asset is provided, it defaults to standard values.
+ * 
+ * @functionality:
+ *      - Initializes interest rate parameters (optimal usage ratio, max excess usage ratio, base variable borrow rate, etc.)
+ *      - Returns the appropriate interest rate parameters for the provided asset.
  *
  * @param asset The asset identifier (e.g., "ckBTC", "ckETH", "ICP", "ckUSDC", "ckUSDT").
  * @return InterestRateParams A struct containing the asset's interest rate parameters.
@@ -112,6 +116,11 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
  * @notice Computes the borrow and liquidity rates based on liquidity, debt, and asset parameters.
  * @dev This function calculates interest rates considering liquidity added, liquidity taken, and total debt.
  *      It follows the optimal usage ratio and adjusts borrow rates accordingly if excess usage occurs.
+ *
+ * @functionality:
+ *      - Computes interest rates for borrowing and liquidity based on asset parameters.
+ *      - Adjusts the borrow rate according to excess usage or optimal usage ratio.
+ *      - Calculates the liquidity rate based on the borrow rate and reserve factor.
  *
  * @param liq_added The amount of liquidity added.
  * @param liq_taken The amount of liquidity taken.

@@ -20,6 +20,8 @@ use serde::Serialize;
  * @param can_be_collateral Indicates if the asset can be used as collateral.
  * @param last_update_timestamp The last recorded update timestamp.
  * @param accure_to_platform The amount accrued to the platform.
+ * 
+ * @functionality Stores and tracks complete reserve metadata and on-chain accounting values.
  */
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
@@ -43,6 +45,7 @@ pub struct ReserveData {
  * @title Reserve Cache
  * @notice Stores cached data related to a reserve of an asset.
  * @dev This struct caches important reserve data for faster access and calculations.
+ * @functionality Provides temporary in-memory values used for computation and optimization.
  *
  * @param reserve_configuration The configuration details of the reserve.
  * @param curr_liquidity_index The current liquidity index.
@@ -83,7 +86,8 @@ pub struct ReserveCache {
  * @title Reserve Configuration
  * @notice Defines the configuration settings for a reserve of an asset.
  * @dev This struct includes parameters affecting borrowing, liquidation, and supply behavior.
- *
+ * @functionality Defines protocol-level rules and parameters for reserve behavior and risk control.
+ * 
  * @param ltv The loan-to-value ratio.
  * @param liquidation_threshold The threshold for liquidation.
  * @param liquidation_bonus The penalty for liquidation.
@@ -114,6 +118,7 @@ pub struct ReserveConfiguration {
 /* 
  * @title Execute Supply Parameters
  * @notice Defines parameters required to execute a supply transaction.
+ * @functionality Carries the required information to perform asset supply transactions.
  * 
  * @param asset The asset to supply.
  * @param amount The amount of the asset to be supplied.
@@ -130,7 +135,8 @@ pub struct ExecuteSupplyParams {
 /* 
  * @title Execute Borrow Parameters
  * @notice Defines the parameters required to execute a borrow transaction.
- *
+ * @functionality Holds the inputs necessary to initiate a borrowing operation.
+ * 
  * @param asset The asset being borrowed.
  * @param amount The amount of the asset to borrow.
  */
@@ -143,7 +149,8 @@ pub struct ExecuteBorrowParams {
 /* 
  * @title Execute Repay Parameters
  * @notice Defines the parameters required to execute a repayment transaction.
- *
+ * @functionality Encapsulates information used to repay a loan, optionally on another user's behalf.
+ * 
  * @param asset The asset being repaid.
  * @param amount The amount of the asset being repaid.
  * @param on_behalf_of Optional: The principal ID of the user on whose behalf the repayment is made.
@@ -158,7 +165,8 @@ pub struct ExecuteRepayParams {
 /* 
  * @title Execute Withdraw Parameters
  * @notice Defines parameters required to execute a withdrawal transaction.
- *
+ * @functionality Manages the withdrawal of supplied or collateral assets from the protocol.
+ * 
  * @param asset The asset being withdrawn.
  * @param amount The amount to withdraw.
  * @param on_behalf_of Optional: The principal of the user on whose behalf the withdrawal is made.
@@ -175,6 +183,7 @@ pub struct ExecuteWithdrawParams {
 /* 
  * @title Initialize Arguments
  * @notice Defines the arguments required to initialize the protocol.
+ * @functionality Specifies initialization parameters when deploying the protocol canister.
  * 
  * @param controller_id The principal ID of the controller.
  */
@@ -186,7 +195,8 @@ pub struct InitArgs {
 /* 
  * @title Execute Liquidation Parameters
  * @notice Defines parameters required to execute a liquidation transaction.
- *
+ * @functionality Facilitates partial liquidation of under-collateralized accounts.
+ * 
  * @param debt_asset The asset being liquidated.
  * @param collateral_asset The collateral asset.
  * @param amount The amount being liquidated.
@@ -201,17 +211,24 @@ pub struct ExecuteLiquidationParams {
     pub on_behalf_of: Principal,
     pub reward_amount: Nat,
 }
-
+/* 
+ * @title Asset Data
+ * @notice Represents basic asset-related information.
+ * 
+ * @functionality Used for simple asset tracking such as balances and asset names.
+ */
 #[derive(CandidType, Deserialize, Clone, Default,Debug)]
 pub struct AssetData{
     pub name:String,
     pub balance:Nat
 }
 
-/*
+/* 
  * @title Accrual Treasury Variables
  * @notice Stores temporary values used during the treasury accrual process.
  * @dev Holds previous debt values and calculated accrual amounts.
+ * 
+ * @functionality Used for calculating and storing intermediate values in treasury accrual logic.
  */
 pub struct AccrueToTreasuryLocalVars {
     //

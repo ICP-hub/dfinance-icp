@@ -45,6 +45,10 @@ use ic_cdk::{api, update};
  *      7. **Debt update**: Updates the user’s debt balance in accordance with the liquidated assets.
  *      8. **Collateral release**: Releases any locks or resources tied to the collateral, ensuring the system remains in a consistent state.
  *
+ * @functionality This function provides a critical operation for ensuring the platform maintains collateral integrity
+ *               by enforcing liquidation when necessary to protect the system from excessive risk due to overdue debts
+ *               or under-collateralized positions.
+ *
  * @param params The parameters needed for the liquidation operation, including the asset name and the amount to be liquidated:
  *               - `asset`: The name of the collateral asset to be liquidated.
  *               - `amount`: The amount of collateral to be liquidated.
@@ -52,6 +56,7 @@ use ic_cdk::{api, update};
  *
  * @return Result<Nat, Error> Returns the updated collateral balance after liquidation or an error code if any operation fails.
  */
+
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
     if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
@@ -556,6 +561,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
  *      6. **Determine Max Collateral**: Compares the calculated collateral with the available collateral balance and
  *         sets the final maximum collateral.
  *      7. **Return Result**: Returns the final calculated collateral amount or an error in case of failure.
+ *
+ * @functionality This function provides an essential calculation for determining the reward amount available to the user
+ *               based on their collateral and debt assets, ensuring that the platform can accurately calculate rewards and
+ *               adjust user balances accordingly.
  *
  * @param amount The amount of debt to be considered for the reward calculation.
  * @param collateral_asset The name of the collateral asset.

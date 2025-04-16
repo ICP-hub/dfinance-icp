@@ -1,5 +1,6 @@
 use crate::api::functions::{get_balance, get_total_supply};
 use crate::api::state_handler::read_state;
+use crate::constants::constant_variables::constants::MAX_ASSET_LENGTH;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
@@ -65,28 +66,6 @@ impl ValidationLogic {
             return Err(Error::MaxAmount);
         }
 
-        // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
-
-        if !is_active {
-            ic_cdk::println!("Reserve is inactive.");
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            ic_cdk::println!("Reserve is paused.");
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            ic_cdk::println!("Reserve is frozen.");
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         // Validating supply cap limit
         let supply_cap = reserve.configuration.supply_cap.clone();
@@ -148,8 +127,6 @@ impl ValidationLogic {
     ) -> Result<(), Error> {
         ic_cdk::println!("withdraw amount for validation = {}", amount);
 
-        ic_cdk::println!("withdraw amount for validation = {}", amount);
-
         let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
@@ -208,26 +185,6 @@ impl ValidationLogic {
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
-
-        // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
-
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
@@ -360,26 +317,6 @@ impl ValidationLogic {
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
-        // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
-
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
 
         if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
@@ -532,26 +469,6 @@ impl ValidationLogic {
                 .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
             None => None,
         };
-
-
-        let (is_active, is_frozen, is_paused) = (
-            reserve.configuration.active,
-            reserve.configuration.frozen,
-            reserve.configuration.paused,
-        );
-
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
         Ok(())
     }
 
@@ -666,26 +583,59 @@ impl ValidationLogic {
             return Err(Error::USERCANNOTBELIQUIDATED);
         }
 
-        // validating reserve states
-        let (is_active, is_frozen, is_paused) = (
-            repay_reserve_data.configuration.active,
-            repay_reserve_data.configuration.frozen,
-            repay_reserve_data.configuration.paused,
-        );
-
-        if !is_active {
-            return Err(Error::ReserveInactive);
-        }
-        if is_paused {
-            return Err(Error::ReservePaused);
-        }
-        if is_frozen {
-            return Err(Error::ReserveFrozen);
-        }
-        ic_cdk::println!("is_active : {:?}", is_active);
-        ic_cdk::println!("is_paused : {:?}", is_paused);
-        ic_cdk::println!("is_frozen : {:?}", is_frozen);
         Ok(())
     }
+
+/**
+ * @title Validate Input Parameters
+ * @notice Ensures the asset and amount parameters for an operation (e.g., supply) are valid.
+ *
+ * @dev Performs basic validation checks on the asset name and amount:
+ * - Asset name cannot be empty or only whitespace.
+ * - Asset name must have a maximum length of 7 characters.
+ * - Amount must be greater than zero.
+ *
+ * @param params The parameters for the operation, containing the asset name and amount to validate.
+ * The struct is taken by value and potentially mutated (though not in this specific validation logic).
+ *
+ * @return Returns `Ok(())` if all validation checks pass.
+ * Returns `Err(Error::EmptyAsset)` if the asset name is invalid (empty/whitespace).
+ * Returns `Err(Error::InvalidAssetLength)` if the asset name exceeds the maximum length.
+ * Returns `Err(Error::InvalidAmount)` if the amount is zero or less.
+ */
+pub fn validate_input_params(
+    asset: &str,
+    amount: &Nat,
+    on_behalf_of: Option<Principal>, 
+) -> Result<(), Error> {
+    //Asset name should not be empty or just whitespace
+    if asset.trim().is_empty() {
+        ic_cdk::println!("Validation Error: Asset cannot be an empty string");
+        return Err(Error::EmptyAsset);
+    }
+
+    //Asset length constraint
+    if asset.len() > MAX_ASSET_LENGTH {
+        ic_cdk::println!(
+            "Validation Error: Asset must have a maximum length of 7 characters"
+        );
+        return Err(Error::InvalidAssetLength);
+    }
+
+    //Amount must be greater than zero
+    if *amount <= Nat::from(ZERO_VALUE) {
+        ic_cdk::println!("Validation Error: Amount cannot be zero or less.");
+        return Err(Error::InvalidAmount);
+    }
+
+    if let Some(principal_ref) = on_behalf_of { 
+        if principal_ref == Principal::anonymous() { // Dereference principal_ref with *
+            ic_cdk::println!("Validation Error: on_behalf_of cannot be anonymous");
+            return Err(Error::AnonymousPrincipal); // Return the specific error
+        }
+    }
+    // All checks passed
+    Ok(())
+}
 }
 

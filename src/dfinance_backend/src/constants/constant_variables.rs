@@ -21,4 +21,5 @@ pub mod constants {
     pub const NANOS_PER_SECOND: u128 = 1_000_000_000u128;
     pub const FAUCET_LIMIT : u128 = 50_000_000_000u128;
     pub const ONE_DAY: Duration = Duration::from_secs(86_400);
+    pub const MAX_ASSET_LENGTH: usize = 7;
 }

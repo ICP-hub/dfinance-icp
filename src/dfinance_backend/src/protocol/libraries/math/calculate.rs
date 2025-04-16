@@ -226,7 +226,7 @@ pub async fn get_exchange_rates(
             xrc_canister_id,
             "get_exchange_rate",
             (args,),
-            1_000_000_000,
+            1_000_000_000, //TODO : use constant variable xrc_cycles_fee
         )
         .await;
 

@@ -322,7 +322,8 @@ fn setup() -> (PocketIc, Principal) {
 /*
  * @title Register Users
  * @notice Registers users to participate in liquidation testing.
- * @dev Adds the primary user and test users (1 to 5).
+ * @dev Calls the `register_user` function on the backend canister to add the primary user and additional test users (1 to 5). This function handles user registration and verifies the response for success or failure.
+ * @functionality Ensures that the `register_user` function is called correctly and that the registration succeeds. If there is an error, the failure is logged, and the test halts to ensure proper error handling.
  */
 fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principal: Principal) {
     let result = pic.update_call(
@@ -363,6 +364,20 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principa
     }
 }
 
+/*
+ * @title Faucet Request Test
+ * @notice Tests the faucet function for expected success or failure with various assets.
+ * @dev This function runs a series of test cases for faucet requests with different asset types and amounts. It checks the success or failure of each request, verifying the expected outcomes (such as receiving the correct amount or receiving the appropriate error message).
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes faucet requests for different assets (ICP, ckBTC, ckUSDC, etc.).
+ * 2. Verifies success or failure based on expected outcomes.
+ * 3. Handles cases where asset length exceeds the allowed limit.
+ * 4. Simulates faucet requests for multiple users to test liquidation scenarios.
+ */
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -599,6 +614,23 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Faucet Tests Completed ========================\n"
     );
 }
+
+/*
+ * @title Supply Function Test
+ * @notice Tests the supply function for expected success or failure with various assets.
+ * @dev This function runs a series of test cases for supply requests with different asset types, amounts, and collateral statuses. It checks the success or failure of each request, verifying the expected outcomes (such as a successful supply or receiving an appropriate error message).
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes supply requests for different assets (ICP, ckETH, ckUSDT, etc.) with varying amounts and collateral statuses.
+ * 2. Verifies success or failure based on expected outcomes.
+ * 3. Handles cases where ICRC2 approval is required for the asset.
+ * 4. Simulates supply requests for multiple users to test asset supply scenarios and rollback mechanisms.
+ * 5. Validates the state of reserves and user data before and after the supply operation.
+ * 6. Handles scenarios where supply requests may fail due to insufficient approval or unexpected errors.
+ */
 
 fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -853,6 +885,22 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
+/*
+ * @title Borrow Function Test
+ * @notice Tests the borrow function for expected success or failure with various assets.
+ * @dev This function runs a series of test cases for borrow requests with different asset types and amounts. It checks the success or failure of each request, verifying the expected outcomes (such as a successful borrow or receiving an appropriate error message).
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes borrow requests for different assets (ICP, ckETH, ckUSDT, etc.) with varying amounts.
+ * 2. Verifies success or failure based on expected outcomes.
+ * 3. Simulates borrow requests for multiple users to test borrowing scenarios and error handling.
+ * 4. Validates the borrow response and checks whether the balance is updated correctly.
+ * 5. Handles cases where the borrow request may fail due to errors or unexpected conditions, including mismatched error messages.
+ */
+
 fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -997,6 +1045,22 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Borrow Tests Completed ========================\n"
     );
 }
+
+/*
+ * @title Withdraw Function Test
+ * @notice Tests the withdraw function for various assets and withdrawal conditions.
+ * @dev This function runs a series of test cases for withdraw requests with different assets, amounts, collateral status, and options for withdrawing on behalf of another principal. It verifies the success or failure of each withdrawal request and checks whether the appropriate error messages are returned when failures occur.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes withdraw requests for different assets (e.g., ICP, ckETH, ckUSDT) with varying amounts, including collateralized and non-collateralized withdrawals.
+ * 2. Checks if the withdrawal is processed successfully or rejected as expected.
+ * 3. Simulates withdrawing on behalf of another user when applicable.
+ * 4. Verifies that error messages are returned correctly if the withdrawal is unsuccessful or if the expected outcome does not match.
+ * 5. Validates whether the balance is updated correctly after the withdrawal.
+ */
 
 fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -1162,6 +1226,24 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Withdraw Tests Completed ========================\n"
     );
 }
+
+/*
+ * @title Repay Function Test
+ * @notice Tests the repay function for various assets and repayment conditions.
+ * @dev This function runs a series of test cases for repay requests with different assets, amounts, and options for repaying on behalf of another principal. It verifies the success or failure of each repayment request, checks whether the appropriate error messages are returned, and ensures the rollback mechanism is triggered when needed.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes repay requests for different assets (e.g., ICP, ckETH, ckUSDT) with varying amounts, including transaction fees.
+ * 2. Handles repayment requests both with and without approval for the ICRC2 transfer.
+ * 3. Validates the approval status for ICRC2 transfer before proceeding with repayment.
+ * 4. Verifies if the repayment is processed successfully or rejected as expected.
+ * 5. Checks whether error messages are returned correctly in case of failure.
+ * 6. Simulates repayment on behalf of another principal when applicable.
+ * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
+ */
 
 fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -1410,6 +1492,27 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Repay Tests Completed ========================\n"
     );
 }
+
+/*
+ * @title Liquidation Function Test
+ * @notice Tests the liquidation function for various assets and liquidation conditions.
+ * @dev This function runs a series of test cases for liquidation requests with different assets, amounts, and conditions for liquidating on behalf of another principal. It verifies the success or failure of each liquidation request, checks whether the appropriate error messages are returned, and ensures the rollback mechanism is triggered when needed.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes liquidation requests for different assets (e.g., ICP, ckBTC, ckUSDC) with varying amounts, including transaction fees.
+ * 2. Handles liquidation requests both with and without approval for the ICRC2 transfer.
+ * 3. Validates the approval status for ICRC2 transfer before proceeding with liquidation.
+ * 4. Verifies if the liquidation is processed successfully or rejected as expected.
+ * 5. Checks whether error messages are returned correctly in case of failure.
+ * 6. Simulates liquidation on behalf of another principal when applicable.
+ * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
+ * 8. Logs and prints detailed information about each test case, including asset details, expected success/failure, and error messages (if any).
+ * 9. Fetches and prints reserve data and user data both before and after liquidation attempts to validate state changes or rollback.
+ * 10. Provides feedback on whether the liquidation request succeeded or failed, and whether the rollback was correctly executed in case of failure.
+ */
 
 fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]

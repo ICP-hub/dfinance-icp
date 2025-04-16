@@ -55,6 +55,10 @@ fn get_scaling_value() -> Nat {
  * @title Calculate Linear Interest
  * @notice Computes interest accrued over time using a linear rate formula.
  * @dev Uses a fixed timestamp, calculates time delta, and scales the result.
+ * @param rate_input - The interest rate (scaled Nat).
+ * @param last_update_timestamp - The timestamp of the last update in seconds.
+ * @return Accumulated linear interest scaled appropriately.
+ * @functionality Returns the result of linear interest based on elapsed time and rate.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
     // let rate = rate_input/Nat::from(100u128);
@@ -85,6 +89,11 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
  * @title Calculate Compounded Interest
  * @notice Computes interest using a compounded formula based on time elapsed.
  * @dev Uses time delta, scaling factors, and power terms for accuracy.
+ * @param rate_input - The interest rate (scaled Nat).
+ * @param last_update_timestamp - The timestamp of the last update in seconds.
+ * @param current_timestamp - The current timestamp in seconds.
+ * @return Compounded interest over time, scaled appropriately.
+ * @functionality Calculates compounded interest based on time delta using a power series expansion.
  */
 pub fn calculate_compounded_interest(
     rate_input: Nat,
@@ -136,6 +145,9 @@ pub fn calculate_compounded_interest(
  * @title User Normalized Supply
  * @notice Computes the updated liquidity index based on interest rates.
  * @dev Returns the stored index if no update is needed; otherwise, applies linear interest.
+ * @param reserve_data - Reserve data containing rate and index information.
+ * @return The updated liquidity index for the reserve.
+ * @functionality Updates liquidity index based on linear interest since last update.
  */
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::Error> {
     let current_time = 1_700_000_000;
@@ -162,6 +174,15 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::
  * @title Calculate Interest Rates
  * @notice Computes liquidity and borrow rates based on utilization ratio.
  * @dev Adjusts rates dynamically based on optimal and excess usage conditions.
+ * @param liq_added - Amount of liquidity added to the reserve.
+ * @param liq_taken - Amount of liquidity taken from the reserve.
+ * @param total_debt - Total borrowed amount from the reserve.
+ * @param params - Interest rate configuration parameters.
+ * @param reserve - Reserve data including current supply and index info.
+ * @param reserve_factor - Fraction of interest reserved by the protocol.
+ * @param asset - Identifier of the asset for logging and context.
+ * @return A tuple containing the updated liquidity rate and borrow rate.
+ * @functionality Dynamically calculates interest rates for borrowing and supplying based on asset utilization.
  */
 pub async fn calculate_interest_rates(
     liq_added: Nat,
@@ -247,7 +268,9 @@ pub async fn calculate_interest_rates(
  * @title Accrue to Treasury
  * @notice Computes and transfers accrued interest to the platform treasury.
  * @dev Calculates debt accrued and mints the corresponding amount for the treasury.
+ * @functionality Allocates a portion of accrued interest to the treasury based on the reserve factor.
  */
+
 pub fn accrue_to_treasury(
     reserve_data: &mut ReserveData,
     reserve_cache: &ReserveCache,
@@ -303,6 +326,12 @@ pub fn accrue_to_treasury(
     Ok(())
 }
 
+/*
+ * @title Test Linear Interest Calculation
+ * @notice Validates the linear interest calculation functionality.
+ * @dev Ensures that the calculation of linear interest is correct based on rate and timestamps.
+ * @functionality Verifies that linear interest is computed and matches the expected output based on various rate and time conditions.
+ */
 fn test_calculate_linear_interest() {
     let current_timestamp = 1_700_000_000;
 
@@ -378,6 +407,12 @@ fn test_calculate_linear_interest() {
     println!("\n======================== All test cases completed ========================\n");
 }
 
+/*
+ * @title Test Compounded Interest Calculation
+ * @notice Validates the compounded interest calculation functionality.
+ * @dev Ensures that the compounded interest is calculated accurately based on the rate and timestamps.
+ * @functionality Verifies that compounded interest is computed correctly and matches the expected output based on rate and time conditions.
+ */
 fn test_calculate_compounded_interest() {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -451,6 +486,12 @@ fn test_calculate_compounded_interest() {
     println!("\n======================== All test cases completed. ========================\n");
 }
 
+/*
+ * @title Test Interest Rate Calculation
+ * @notice Validates the calculation of liquidity and borrow rates based on given parameters.
+ * @dev Ensures that the liquidity and borrow rates are calculated accurately based on liquidity added, liquidity taken, total debt, and various configuration parameters.
+ * @functionality Verifies the accuracy of the interest rate calculation based on real-world asset data and the platform’s rate parameters.
+ */
 async fn test_calculate_interest_rates() {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -586,6 +627,12 @@ async fn test_calculate_interest_rates() {
     println!("\n======================== All test cases completed. ========================\n");
 }
 
+/*
+ * @title Test Accrue to Treasury
+ * @notice Validates the accrued interest transfer functionality to the treasury.
+ * @dev Ensures the calculation of accrued interest is accurate and matches the expected treasury amount.
+ * @functionality Validates that the accrued interest is accurately computed and transferred to the platform treasury.
+ */
 async fn test_accrue_to_treasury() {
     #[derive(Debug, Clone)]
     struct TestCase {

@@ -26,6 +26,15 @@ use crate::constants::constant_variables::constants::{
  */
 
 /**
+ * @functionality This function allows users to borrow a specified amount of an asset. It performs 
+ * a series of checks, validations, state updates, and transfers:
+ * - Validates the asset and amount parameters.
+ * - Ensures that the caller is authenticated and not anonymous.
+ * - Acquires a lock to prevent concurrent operations on the same user.
+ * - Validates the borrowing request and updates relevant data (reserve and user state).
+ * - Transfers the borrowed amount to the user's wallet.
+ * - Implements a rollback mechanism in case of any failure during the transaction.
+ *
  * @title Execute Borrow Function
  *
  * @notice Allows users to borrow a specified amount of assets while performing necessary checks,
@@ -293,7 +302,15 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
  *      - Updates the user’s debt position in the reserve system.
  *      - Transfers the tokens from the user or liquidator to the platform canister.
  *      - Rolls back changes if any step fails to maintain system consistency.
+ *
+ * @functionality: 
+ *      - Validates input parameters like asset name, amount, and optional on-behalf-of principal.
+ *      - Handles locking mechanism to prevent re-entrancy during repayment.
+ *      - Fetches and updates reserve data to reflect the repayment.
+ *      - Transfers assets from user or liquidator and ensures consistency.
+ *      - Rolls back any changes if any step fails during the repayment process.
  */
+
 #[update]
 pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     if params.asset.trim().is_empty() {

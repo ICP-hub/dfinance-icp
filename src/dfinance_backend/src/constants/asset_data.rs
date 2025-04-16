@@ -21,6 +21,8 @@ use crate::guards::to_check_controller;
  *  
  * # Returns  
  * @return `Ok(())` on success.  
+ * 
+ * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
@@ -93,6 +95,8 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
  *  
  * # Returns  
  * @return `Ok(())` on success.  
+ * 
+ * @functionality Modifies a specific parameter of an existing reserve configuration.
  */
 #[update]
 pub async fn reset_reserve_value(

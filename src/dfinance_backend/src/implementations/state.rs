@@ -7,6 +7,7 @@ use crate::protocol::libraries::types::assets::{AssetIndex, BlockedUsersFunction
 
 /* 
  * @title State 
+ * @functionality Manages and initializes the global state of the lending protocol using stable memory.
  * @notice This struct represents the global state of the lending protocol.
  * @dev The state is initialized using a memory manager that allocates persistent storage.
  *      It manages key protocol components such as user profiles, reserves, price cache, and metadata.

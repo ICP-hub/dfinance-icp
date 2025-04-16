@@ -371,6 +371,38 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principa
     }
 }
 
+/*
+ * @title Faucet Functionality Test
+ * @description Tests the `faucet` method with various asset and amount combinations to ensure proper token distribution, validation, and error handling.
+ *
+ * @details
+ * - Covers valid and invalid asset requests, including:
+ *   - Proper asset names with acceptable amounts.
+ *   - Invalid asset identifiers.
+ *   - Zero amount requests.
+ *   - Requests exceeding the faucet’s distribution limits.
+ * - Verifies correct behavior by decoding the response and matching it with expected results.
+ * - Logs clear output for each test case to highlight pass/fail status and error message validation.
+ *
+ * @steps
+ * 1. Define multiple test cases with different asset names and amounts.
+ * 2. For each case:
+ *    - Call the faucet function with the provided parameters.
+ *    - If successful, verify the returned balance.
+ *    - If failed, ensure the error message matches the expected result.
+ * 3. Repeat the same faucet call for 5 simulated users to test multi-user behavior.
+ *
+ * @params
+ * - `pic`: The `PocketIc` instance simulating the IC environment.
+ * - `backend_canister`: Principal ID of the canister being tested.
+ *
+ * @result
+ * - Ensures proper validation of faucet logic across multiple edge and real-world scenarios.
+ * - Useful for catching input validation bugs, incorrect limits, and broken transfer logic.
+ *
+ * @note Uses `ic_cdk::println!` for consistent logging across test cases.
+ */
+
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -637,6 +669,37 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Faucet Tests Completed ========================\n"
     );
 }
+/*
+ * @title IC Supply Functionality Test
+ * @description This function tests the `execute_supply` method of the backend canister by simulating valid and invalid supply scenarios.
+ *
+ * @details
+ * - Defines a list of test cases involving various assets, amounts, and collateral configurations.
+ * - Validates the asset principal, approves ICRC2 transfers, and submits the supply request.
+ * - Checks the expected outcome of each test (success or failure), and validates error messages if provided.
+ * - Ensures edge cases such as invalid asset names, zero amounts, long asset names, and insufficient balance are properly handled.
+ * - Provides detailed logging for each test case to indicate success/failure, expected vs actual outcomes, and reasons for failure.
+ *
+ * @steps
+ * 1. Loop through a list of structured test cases.
+ * 2. For each test case:
+ *    a. Resolve asset principal and check validity.
+ *    b. Call ICRC2 approve to simulate user consent for transfer.
+ *    c. Attempt supply operation and capture the result.
+ *    d. Compare actual behavior with expected success/failure and expected error messages.
+ *    e. Log the test result and mismatch details if applicable.
+ *
+ * @params
+ * - `pic`: An instance of PocketIc used to simulate the Internet Computer.
+ * - `backend_canister`: The principal of the backend canister being tested.
+ *
+ * @result
+ * - Confirms that the supply logic correctly handles both typical and edge-case inputs.
+ * - Validates proper approval handling, input validation, error feedback, and backend canister interaction.
+ *
+ * @note
+ * Uses `ic_cdk::println!` for detailed output during each step of the test run.
+ */
 
 fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -888,6 +951,39 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
+/*
+ * @title IC Borrow Functionality Test
+ * @description This function tests the `execute_borrow` method of the backend canister by simulating both valid and invalid borrow scenarios.
+ *
+ * @details
+ * - Defines a list of test cases with various assets and borrow amounts.
+ * - Simulates borrow requests and validates the results against expected outcomes.
+ * - Tests include successful borrow attempts as well as failures due to input validation and business logic constraints.
+ * - Ensures edge cases such as empty asset names, unknown assets, zero/huge borrow amounts, and long asset strings are handled correctly.
+ * - Logs each test case with detailed information about the scenario and the test result.
+ *
+ * @steps
+ * 1. Define a vector of test cases including expected outcomes.
+ * 2. For each test case:
+ *    a. Prepare borrow parameters with asset and amount.
+ *    b. Call the `execute_borrow` method on the backend canister.
+ *    c. Decode and analyze the response:
+ *       - If success is expected, assert that a balance is returned.
+ *       - If failure is expected, validate that the error message matches the expected message.
+ *    d. Log success or failure based on test expectations.
+ *
+ * @params
+ * - `pic`: An instance of PocketIc used to simulate the Internet Computer.
+ * - `backend_canister`: The principal of the backend canister under test.
+ *
+ * @result
+ * - Verifies that the backend correctly processes valid borrow requests.
+ * - Confirms appropriate error handling for various invalid scenarios.
+ * - Provides detailed feedback to developers for debugging and refining borrow logic.
+ *
+ * @note
+ * Uses `ic_cdk::println!` for verbose logging during test execution.
+ */
 fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -1070,7 +1166,39 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Borrow Tests Completed ========================\n"
     );
 }
-
+/*
+ * @title IC Withdraw Functionality Test
+ * @description This function tests the `execute_withdraw` method of the backend canister by simulating both valid and invalid withdraw scenarios.
+ *
+ * @details
+ * - Defines a list of test cases with various assets, withdrawal amounts, and conditions (e.g., collateral).
+ * - Simulates withdrawal requests and validates the results against expected outcomes.
+ * - Tests include successful withdrawal attempts as well as failures due to input validation and business logic constraints.
+ * - Ensures edge cases such as large amounts exceeding balance, empty asset names, unknown assets, zero/huge withdrawal amounts, and long asset strings are handled correctly.
+ * - Logs each test case with detailed information about the scenario and the test result.
+ *
+ * @steps
+ * 1. Define a vector of test cases including expected outcomes.
+ * 2. For each test case:
+ *    a. Prepare withdrawal parameters with asset, amount, and additional info (e.g., collateral).
+ *    b. Call the `execute_withdraw` method on the backend canister.
+ *    c. Decode and analyze the response:
+ *       - If success is expected, assert that a balance is returned.
+ *       - If failure is expected, validate that the error message matches the expected message.
+ *    d. Log success or failure based on test expectations.
+ *
+ * @params
+ * - `pic`: An instance of PocketIc used to simulate the Internet Computer.
+ * - `backend_canister`: The principal of the backend canister under test.
+ *
+ * @result
+ * - Verifies that the backend correctly processes valid withdraw requests.
+ * - Confirms appropriate error handling for various invalid scenarios.
+ * - Provides detailed feedback to developers for debugging and refining withdraw logic.
+ *
+ * @note
+ * Uses `ic_cdk::println!` for verbose logging during test execution.
+ */
 fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -1288,7 +1416,39 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Withdraw Tests Completed ========================\n"
     );
 }
-
+/*
+ * @title IC Repay Functionality Test
+ * @description This function tests the `execute_repay` method of the backend canister by simulating both valid and invalid repay scenarios.
+ *
+ * @details
+ * - Defines a list of test cases with various assets and repay amounts.
+ * - Simulates repay requests and validates the results against expected outcomes.
+ * - Tests include successful repay attempts as well as failures due to input validation and business logic constraints.
+ * - Ensures edge cases such as empty asset names, unknown assets, zero/huge repay amounts, and long asset strings are handled correctly.
+ * - Logs each test case with detailed information about the scenario and the test result.
+ *
+ * @steps
+ * 1. Define a vector of test cases including expected outcomes.
+ * 2. For each test case:
+ *    a. Prepare repay parameters with asset and amount.
+ *    b. Call the `execute_repay` method on the backend canister.
+ *    c. Decode and analyze the response:
+ *       - If success is expected, assert that a balance is returned.
+ *       - If failure is expected, validate that the error message matches the expected message.
+ *    d. Log success or failure based on test expectations.
+ *
+ * @params
+ * - `pic`: An instance of PocketIc used to simulate the Internet Computer.
+ * - `backend_canister`: The principal of the backend canister under test.
+ *
+ * @result
+ * - Verifies that the backend correctly processes valid repay requests.
+ * - Confirms appropriate error handling for various invalid scenarios.
+ * - Provides detailed feedback to developers for debugging and refining repay logic.
+ *
+ * @note
+ * Uses `ic_cdk::println!` for verbose logging during test execution.
+ */
 fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -1551,6 +1711,40 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Repay Tests Completed ========================\n"
     );
 }
+
+/*
+ * @title IC Liquidation Functionality Test
+ * @description This function tests the `execute_liquidation` method of the backend canister by simulating both valid and invalid liquidation scenarios.
+ *
+ * @details
+ * - Defines a list of test cases with various debt and collateral assets and liquidation amounts.
+ * - Simulates liquidation requests and validates the results against expected outcomes.
+ * - Tests include successful liquidation attempts as well as failures due to input validation and business logic constraints.
+ * - Ensures edge cases such as low collateral, invalid assets, anonymous principals, and zero amounts are handled correctly.
+ * - Logs each test case with detailed information about the scenario and the test result.
+ *
+ * @steps
+ * 1. Define a vector of test cases including expected outcomes.
+ * 2. For each test case:
+ *    a. Prepare liquidation parameters with debt and collateral asset, amount, and reward.
+ *    b. Call the `execute_liquidation` method on the backend canister.
+ *    c. Decode and analyze the response:
+ *       - If success is expected, assert that liquidation completes without error.
+ *       - If failure is expected, validate that the error message matches the expected message.
+ *    d. Log success or failure based on test expectations.
+ *
+ * @params
+ * - `pic`: An instance of PocketIc used to simulate the Internet Computer.
+ * - `backend_canister`: The principal of the backend canister under test.
+ *
+ * @result
+ * - Verifies that the backend correctly processes valid liquidation requests.
+ * - Confirms appropriate error handling for various invalid scenarios, including collateral checks and asset validation.
+ * - Provides detailed feedback to developers for debugging and refining liquidation logic.
+ *
+ * @note
+ * Uses `ic_cdk::println!` for verbose logging during test execution.
+ */
 
 fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]

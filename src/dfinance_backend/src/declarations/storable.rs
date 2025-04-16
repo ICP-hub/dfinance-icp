@@ -5,6 +5,7 @@ use ic_stable_structures::storable::{Blob, Bound, Storable};
 
 /*
  * @title Candid Wrapper for Storable
+ * @functionality Enables storing any Candid-serializable type in stable memory by encoding and decoding with Candid.
  * @notice A generic wrapper that enables storing Candid-serializable types in stable memory.
  * @dev Implements the `Storable` trait, allowing seamless conversion between Candid-encoded 
  *      bytes and the original data type. Uses unbounded storage to accommodate varying sizes.
@@ -43,6 +44,7 @@ where
 
 /*
  * @title StoredPrincipal Wrapper
+ * @functionality Enables stable memory storage of `Principal` values using a fixed-size binary format.
  * @notice A lightweight wrapper for storing `Principal` values in stable memory.
  * @dev Implements the `Storable` trait using a fixed-size `Blob` (29 bytes), ensuring 
  *      compatibility with the Internet Computer's stable storage constraints. 

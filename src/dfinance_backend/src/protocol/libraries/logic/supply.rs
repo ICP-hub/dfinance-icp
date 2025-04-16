@@ -25,6 +25,7 @@ use crate::constants::constant_variables::constants::{
 
 /*
  * @title Execute Supply Function
+ * @functionality Asset supply processing
  * @notice Allows users to supply assets to the platform, handling validation, state updates, and asset transfer.
  *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
  *
@@ -276,6 +277,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 
 /*
  * @title Execute Withdraw Function
+ * @functionality Asset withdrawal processing
  * @notice Allows users to withdraw assets from the platform, handling validation, state updates, and asset transfer.
  *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
  *

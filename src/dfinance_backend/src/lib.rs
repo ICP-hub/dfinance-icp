@@ -46,6 +46,8 @@ use constants::constant_variables::constants::{ONE_DAY, ZERO_VALUE};
  * @dev Initializes the contract by setting the controller and scheduling a task.
  * @param args The principal ID of the controller.
  * @returns None
+ * 
+ * @functionality Initialize Contract and Schedule Task
  */
 #[init]
 pub async fn init(args: Principal) {
@@ -75,6 +77,8 @@ pub async fn init(args: Principal) {
  *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
  *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
  *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ *
+ * @functionality Retrieve Controller Information
  */
 pub fn get_controller() -> Result<InitArgs, Error> {
     match read_state(|state| state.meta_data.get(&0).ok_or_else(|| Error::UserNotFound)) {
@@ -88,6 +92,7 @@ pub fn get_controller() -> Result<InitArgs, Error> {
  * @dev Fetches the reserve data for a specific asset.
  * @param asset The asset name.
  * @returns The reserve data if found.
+ *  @functionality Retrieve Reserve Data for a Specified Asset
  */
 #[query]
 fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
@@ -105,6 +110,8 @@ fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
  * @dev Retrieves user data for a given principal.
  * @param user The principal of the user.
  * @returns The user data if found.
+ *
+ * @functionality Retrieve User Data for a Specified Principal
  */
 #[query]
 fn get_user_data(user: Principal) -> Result<UserData, Error> {
@@ -126,6 +133,8 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
  * @title Get All Assets
  * @dev Retrieves a list of all asset names available in the reserve.
  * @returns A vector containing asset names.
+ *
+ * @functionality Retrieve a List of All Available Assets in the Reserve
  */
 #[query]
 pub fn get_all_assets() -> Vec<String> {
@@ -139,11 +148,13 @@ pub fn get_all_assets() -> Vec<String> {
     })
 }
 
+
 /*
  * @title Get Reserve Ledger Canister ID
  * @dev Retrieves the principal ID of the canister handling a specific asset.
  * @param asset The asset name.
  * @returns The principal ID if found.
+ * @functionality This function retrieves the principal ID associated with the reserve ledger canister for a specific asset.
  */
 pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
     read_state(|state| {
@@ -160,6 +171,7 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  * @dev Retrieves the principal ID associated with an asset.
  * @param asset_name The name of the asset.
  * @returns The principal ID if found.
+ * @functionality This function returns the principal ID linked to a particular asset.
  */
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
@@ -184,6 +196,7 @@ pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
  * @title Get All Users
  * @dev Retrieves a list of all registered users along with their data.
  * @returns A vector of tuples containing user principals and their data.
+ * @functionality This function returns a list of all registered users and their respective data.
  */
 #[query]
 pub async fn get_all_users() -> Vec<(Principal, UserData)> {
@@ -201,6 +214,7 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
  * @dev Retrieves the cached exchange rate for a given asset.
  * @param base_asset_symbol The symbol of the base asset.
  * @returns The cached exchange rate as `PriceCache`.
+ * @functionality This function fetches the cached exchange rate for a specified base asset symbol.
  */
 #[query]
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
@@ -246,6 +260,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
  * @param asset_name The asset name.
  * @param on_behalf (Optional) The principal requesting the asset supply.
  * @returns The total asset supply as `Nat`.
+ * @functionality This function fetches the total supply of a given asset and handles calculations related to user reserves and balance.
  */
 pub async fn get_asset_supply(
     asset_name: String,
@@ -374,6 +389,7 @@ pub async fn get_asset_supply(
  * @param asset_name The name of the asset.
  * @param on_behalf (Optional) The principal requesting the asset debt.
  * @returns The total debt as `Nat`.
+ * @functionality This function calculates and returns the total debt for a given asset, taking into account the user’s borrow status and balance.
  */
 pub async fn get_asset_debt(
     asset_name: String,
@@ -484,6 +500,7 @@ pub async fn get_asset_debt(
  * @dev Calculates the normalized supply of a user for a given reserve.
  * @param reserve_data The reserve data containing liquidity index and rate.
  * @returns The normalized supply as `Nat`.
+ * @functionality This function computes the normalized supply of a user based on the reserve's liquidity rate and index, adjusting for interest accumulation.
  */
 #[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
@@ -518,6 +535,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @dev Computes the normalized debt of a user for a given reserve.
  * @param reserve_data The reserve data containing debt index and borrow rate.
  * @returns The normalized debt as `Nat`.
+ * @functionality This function calculates the normalized debt of a user based on the reserve's debt index and borrow rate, adjusting for interest over time.
  */
 #[query]
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
@@ -559,6 +577,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @title Get Lock Status
  * @dev Checks if the user has an active lock.
  * @returns `true` if the user has a lock, `false` otherwise.
+ * @functionality This function checks the user's lock status, determining if they have an active lock or not.
  */
 #[query]
 async fn get_lock() -> Result<bool, Error> {
@@ -584,6 +603,7 @@ async fn get_lock() -> Result<bool, Error> {
  * @title Get Total Users
  * @dev Retrieves the total number of registered users.
  * @returns The total user count as `usize`.
+ * @functionality This function returns the total number of users that are currently registered in the system.
  */
 #[query]
 pub fn get_total_users() -> usize {
@@ -595,6 +615,7 @@ pub fn get_total_users() -> usize {
  * @dev Fetches the user’s account data.
  * @param on_behalf (Optional) The principal requesting the data.
  * @returns A tuple containing user financial data.
+ * @functionality This function retrieves and calculates the financial data of a user, including asset balances and debts.
  */
 #[query]
 async fn get_user_account_data(
@@ -611,8 +632,9 @@ async fn get_user_account_data(
  * @title Schedule Midnight Task
  * @dev This function schedules a task to reset faucet usage at midnight.
  * @returns None
+ * @functionality Schedules a daily reset task at midnight for faucet usage.
  */
- pub async fn schedule_midnight_task() {
+pub async fn schedule_midnight_task() {
     let initial_delay = time_until_midnight();
     
     
@@ -637,6 +659,7 @@ async fn get_user_account_data(
  * 
  * This function retrieves all user data and calls `reset_faucet_usage` for each user. 
  * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.
+ * @functionality Resets faucet usage for all users at midnight.
  */
 async fn run_midnight_reset() {
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
@@ -659,6 +682,7 @@ async fn run_midnight_reset() {
  * @title Time Until Midnight
  * @dev Calculates the duration remaining until midnight (UTC).
  * @returns A `Duration` representing the time left until midnight.
+ * @functionality Computes the remaining time until midnight (UTC).
  */
 fn time_until_midnight() -> Duration {
     let now = ic_cdk::api::time();
@@ -669,9 +693,10 @@ fn time_until_midnight() -> Duration {
 
 /*
  * @title Schedule after upgrade by admin
- * @dev This function wil re-initialize the scheduled tasks, such as the midnight reset.
+ * @dev This function will re-initialize the scheduled tasks, such as the midnight reset.
  * @notice Re-initializes scheduled tasks, such as the midnight reset.
  * @returns ok or Error.
+ * @functionality Allows the admin to re-initialize scheduled tasks after an upgrade.
  */
 #[update]
 pub async fn admin_restart_reset_task() -> Result<(), Error> {
@@ -683,6 +708,13 @@ pub async fn admin_restart_reset_task() -> Result<(), Error> {
     return Ok(());
 }
 
+/*
+ * @title Get Transfer Fee
+ * @dev Retrieves the transfer fee for an asset based on its exchange rate.
+ * @param asset_name The name of the asset.
+ * @returns The transfer fee as `Nat`.
+ * @functionality Calculates the transfer fee for a given asset based on its exchange rate.
+ */
 #[query]
 pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
 
@@ -703,9 +735,16 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
 
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
     Ok(transfer_token_fee)
-
 }
 
+/*
+ * @title Set Canister ID
+ * @dev Allows an admin to associate a canister name with its principal ID.
+ * @param canister_name The name of the canister.
+ * @param canister_id The principal ID of the canister.
+ * @returns Ok or Error.
+ * @functionality Allows an admin to store a canister's principal ID by its name.
+ */
 #[update]
 pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
@@ -724,6 +763,13 @@ pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> R
     Ok(())
 }
 
+/*
+ * @title Get Canister ID by Name
+ * @dev Retrieves the principal ID associated with a given canister name.
+ * @param canister_name The name of the canister.
+ * @returns The principal ID of the canister or an error.
+ * @functionality Retrieves the principal ID associated with a given canister name.
+ */
 #[query] //TODO: remove this later.
 pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
     read_state(|state| {
@@ -734,6 +780,14 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
     })
 }
 
+/*
+ * @title Store Session Data
+ * @dev Stores the session information, including the connected wallet and session start time.
+ * @param connected_wallet The wallet address.
+ * @param session_start The session start time.
+ * @returns Ok or Error.
+ * @functionality Stores session data, including connected wallet and session start time.
+ */
 #[update]
 // Function to store session data
 pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Result<(), Error> {
@@ -769,6 +823,12 @@ pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Resul
     Ok(())
 }
 
+/*
+ * @title Get Caller Session
+ * @dev Retrieves the session data for the caller.
+ * @returns The session data for the caller.
+ * @functionality Retrieves the session data for the caller.
+ */
 #[query]
 pub fn get_caller_session() -> Result<SessionStorageData, Error> {
     let caller_id = ic_cdk::caller();
@@ -791,6 +851,12 @@ pub fn get_caller_session() -> Result<SessionStorageData, Error> {
     }))
 }
 
+/*
+ * @title Store User Guide
+ * @dev Stores whether the user has seen the user guide.
+ * @returns Ok or Error.
+ * @functionality Stores whether the user has seen the guide.
+ */
 #[update]
 pub fn store_user_guide() -> Result<(), Error> {
     let caller_id = ic_cdk::caller();
@@ -807,6 +873,12 @@ pub fn store_user_guide() -> Result<(), Error> {
     Ok(())
 }
 
+/*
+ * @title Get User Guide
+ * @dev Retrieves whether the user has seen the user guide.
+ * @returns true if the user has seen the guide, false otherwise.
+ * @functionality Retrieves whether the user has seen the guide.
+ */
 #[query]
 pub fn get_user_guide() -> Result<bool, Error> {
     let caller_id = ic_cdk::caller();

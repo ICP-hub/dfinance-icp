@@ -8,6 +8,7 @@ use crate::constants::constant_variables::constants::{
 
 /* 
  * @title Get Scaling Value
+ * @functionality Provides access to the system's scaling factor used for fixed-point arithmetic
  * @dev Returns the SCALING_FACTOR used in interest calculations.
  * @returns The scaling factor as a `Nat` value.
  */
@@ -17,6 +18,7 @@ fn get_scaling_value() -> Nat {
 
 /* 
  * @title Calculate Linear Interest
+ * @functionality Computes simple interest linearly based on time elapsed and interest rate
  * @dev Computes interest using a simple linear model based on the provided interest rate.
  * @param rate_input The annual interest rate as a `Nat` (percentage basis).
  * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.
@@ -36,6 +38,7 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
 
 /* 
  * @title Calculate Compounded Interest
+ * @functionality Calculates continuously compounded interest with high precision using Taylor series approximation
  * @dev Computes interest using a continuous compounding formula based on the provided interest rate.
  * @param rate_input The annual interest rate as a `Nat` (percentage basis).
  * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.
@@ -87,6 +90,7 @@ pub fn calculate_compounded_interest(
 
 /* 
  * @title Scaling Math Operations
+ * @functionality Defines a trait for performing fixed-point arithmetic operations with consistent precision
  * @dev Defines mathematical operations for scaling values.
  * @notice Provides multiplication and division functions that handle `SCALING_FACTOR`.
  */
@@ -98,6 +102,7 @@ pub trait ScalingMath {
 
 /* 
  * @title ScalingMath Implementation for `Nat`
+ * @functionality Implements fixed-point arithmetic for the Nat type to maintain precision in financial calculations
  * @dev Implements precise scaling operations for `Nat` using a predefined scaling factor.
  * @notice Ensures consistent precision in arithmetic operations such as multiplication and division.
  */
@@ -117,6 +122,7 @@ impl ScalingMath for Nat {
 
 /*
  * @title Maximum Value Helper
+ * @functionality Provides access to the maximum value constraint for numerical operations
  * @dev Returns the maximum possible value that can be stored in a `Nat` type.
  *      This value is `2^128 - 1`, representing the largest unsigned 128-bit integer.
  * @returns `Nat` - The maximum possible `Nat` value.
@@ -127,6 +133,7 @@ pub fn get_max_value() -> Nat {
 
 /*
  * @title Timestamp Utility
+ * @functionality Provides standardized access to the current system time in seconds
  * @notice Returns the current timestamp in seconds.
  * @dev Converts nanoseconds from `time()` API to seconds.
  * @return `u64` The current timestamp.

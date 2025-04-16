@@ -112,6 +112,7 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
  * @param token_name Name of the new token.
  * @param token_symbol Symbol for the token.
  * @returns Principal ID of the created token canister.
+ * @functionality Creates a new token canister with specific configurations.
  */
 pub async fn create_token_canister(
     token_name: String,
@@ -222,6 +223,7 @@ pub async fn create_token_canister(
  * @param token_symbol - The symbol of the token.
  *
  * @returns The `Principal` ID of the newly created test token canister.
+ * @functionality Creates a test token canister with predefined configurations.
  */
 pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
@@ -343,6 +345,7 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
  * @returns 
  *      - `Ok("done")`: If the controllers were successfully added.
  *      - `Ok("principals are not allowed")`: If the caller is not a controller of the canister.
+ * @functionality Adds a new user as a controller of the specified canister.
  */
 #[update]
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {

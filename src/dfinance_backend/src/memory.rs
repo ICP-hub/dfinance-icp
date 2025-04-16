@@ -6,7 +6,9 @@ use std::cell::RefCell;
  * @dev This thread-local static variable initializes and manages the memory allocation.
  * @notice It uses the `MemoryManager` with the `DefaultMemoryImpl` implementation.
  * @returns A `RefCell` wrapping a `MemoryManager` instance.
+ * @functionality Initializes and manages memory allocation using the `MemoryManager` with the `DefaultMemoryImpl` implementation.
  */
+
 
 thread_local! {
 

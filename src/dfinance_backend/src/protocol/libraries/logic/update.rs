@@ -27,6 +27,7 @@ pub struct UpdateLogic;
 
 impl UpdateLogic {
     /*
+     * @functionality asset-supply
      * @title Update User Data for Supplying Assets
      * @notice Updates user data and mints dTokens when assets are supplied.
      *
@@ -150,6 +151,7 @@ impl UpdateLogic {
     }
 
     /*
+     * @functionality asset-borrow
      * @title Update User Data for Borrowing
      * @notice Updates user data and mints debt tokens when borrowing assets.
      *
@@ -280,6 +282,7 @@ impl UpdateLogic {
     }
 
     /*
+     * @functionality asset-withdraw
      * @title Update User Data for Withdrawals
      * @notice Handles user data updates when withdrawing assets.
      *
@@ -386,6 +389,7 @@ impl UpdateLogic {
     }
 
     /*
+     * @functionality asset-repay
      * @title Update User Data for Repayments
      * @notice Handles user data updates when repaying borrowed assets.
      *
@@ -495,6 +499,7 @@ impl UpdateLogic {
 }
 
 /*
+ * @functionality collateral-management
  * @title Toggle Collateral Status
  * @notice Allows a user to toggle the collateral status of an asset.
  *
@@ -700,6 +705,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 }
 
 /*
+ * @functionality user-data-access
  * @title Fetch User Data
  * @notice Retrieves user data from state.
  *
@@ -719,6 +725,7 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
 }
 
 /*
+ * @functionality user-reserve-access
  * @title Fetch User Reserve Data
  * @notice Retrieves reserve data for a specific asset from the user's profile.
  *

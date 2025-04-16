@@ -25,11 +25,16 @@ use crate::constants::constant_variables::constants::{
 
 /*
  * @title User Account Data Calculation
+ * @functionality User account metric calculation logic.
+ *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
+ * @functionality Helps determine user’s borrowing power and risk exposure.
  *
  * @dev Aggregates user reserves, fetches exchange rates, and determines borrowing capacity.
+ * @functionality Performs weighted calculations based on user reserve data and asset configuration.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * @functionality Allows calculating data for a different user (e.g., by admin).
  *
  * @return A tuple containing:
  *   - Total collateral
@@ -39,7 +44,9 @@ use crate::constants::constant_variables::constants::{
  *   - Health factor
  *   - Available borrow
  *   - Has zero-LTV collateral (bool)
+ * @functionality Returns all relevant account status metrics for lending/borrowing logic.
  */
+
 
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
@@ -292,11 +299,16 @@ pub async fn calculate_user_account_data(
 
 /*
  * @title User Account Data Calculation
+ * @functionality Calculates the user's financial metrics for lending and borrowing.
+ *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
+ * @functionality Provides a risk and capacity snapshot for a given or calling user.
  *
  * @dev Aggregates user reserves, fetches exchange rates, and determines borrowing capacity.
+ * @functionality Performs dynamic calculations using live user data and asset configurations.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * @functionality Allows an admin or proxy to calculate metrics for another user.
  *
  * @return A tuple containing:
  *   - Total collateral
@@ -306,7 +318,9 @@ pub async fn calculate_user_account_data(
  *   - Health factor
  *   - Available borrow
  *   - Has zero-LTV collateral (bool)
+ * @functionality Returns core metrics used in the lending protocol to assess borrowing limits and liquidation risk.
  */
+
 pub async fn calculate_user_asset_data(
     on_behalf: Option<Principal>,
     dtoken_balance: Option<Vec<AssetData>>,
@@ -590,16 +604,27 @@ pub async fn calculate_user_asset_data(
 
 /*
  * @title Get User Balance in Base Currency
+ * @functionality Calculates the user's total asset balance expressed in a base currency like USD.
+ *
  * @notice Computes the user's total balance in the base currency (USD equivalent).
+ * @functionality Useful for showing portfolio value or computing risk thresholds.
  *
  * @dev Fetches the user's scaled balance, applies normalization, and multiplies by the asset's exchange rate.
+ * @functionality Leverages dToken balance, reserve data, and asset price for accurate computation.
  *
  * @param user_principal The principal of the user whose balance is being calculated.
+ * @functionality Used to identify the user and retrieve their balance from the dToken canister.
+ *
  * @param reserve The reserve data associated with the user's asset.
+ * @functionality Provides configuration like liquidity index and reserve ID for normalization.
+ *
  * @param asset_price The price of the asset in the base currency.
+ * @functionality Used to convert normalized token balance into base currency value.
  *
  * @return The user's balance in base currency.
+ * @functionality Returns a single `Nat` representing the USD-equivalent value of the user's position.
  */
+
 pub async fn get_user_balance_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -675,6 +700,30 @@ pub async fn get_user_balance_in_base_currency(
         .scaled_mul(asset_price.clone()))
 }
 
+/*
+ * @title Get User Asset Balance in Base Currency
+ * @functionality Calculates a user’s balance for a specific asset, converted to base currency (e.g., USD).
+ *
+ * @notice Computes the base currency equivalent of a user-supplied asset balance using normalization and asset pricing.
+ *
+ * @dev Applies liquidity index and normalization factors to the raw user balance, then multiplies by the asset price.
+ * @functionality Used when user asset balance is already known (e.g., from dToken or storage), avoiding extra canister calls.
+ *
+ * @param user_principal The principal of the user whose balance is being calculated.
+ * @functionality Used for logging and possible tracking in async operations.
+ *
+ * @param reserve The reserve data associated with the user's asset.
+ * @functionality Contains the liquidity index and asset reserve reference for normalization.
+ *
+ * @param user_balance The already known balance of the user (e.g., dToken balance).
+ * @functionality Input directly instead of fetching via canister, for efficiency in batch operations or caching.
+ *
+ * @param asset_price The price of the asset in the base currency.
+ * @functionality Converts the normalized token balance into a base currency value.
+ *
+ * @return The user's asset balance in base currency.
+ * @functionality Returns a single `Nat` representing the asset’s value in base currency after normalization and price adjustment.
+ */
 
 pub async fn get_user_asset_balance_in_base_currency(
     user_principal: Principal,
@@ -736,16 +785,26 @@ pub async fn get_user_asset_balance_in_base_currency(
 
 /*
  * @title Get User Debt in Base Currency
- * @notice Computes the user's total outstanding debt in the base currency.
+ * @functionality Calculates a user’s total outstanding debt in the base currency (e.g., USD).
  *
- * @dev Fetches the user's debt balance, applies normalization, and multiplies by the asset's exchange rate.
+ * @notice Computes the user's normalized debt and converts it to base currency using the asset's price.
+ *
+ * @dev Retrieves the debt token balance from the relevant canister, applies variable borrow index and normalization,
+ *      then multiplies the result by the asset's exchange rate to determine the debt value in base currency.
  *
  * @param user_principal The principal of the user whose debt is being calculated.
+ * @functionality Used to identify the user's account when querying the debt token canister.
+ *
  * @param reserve The reserve data associated with the user's asset.
+ * @functionality Provides access to debt token canister and indexes used in debt normalization.
+ *
  * @param asset_price The price of the asset in the base currency.
+ * @functionality Converts the user's normalized debt into its base currency equivalent.
  *
  * @return The user's debt in base currency.
+ * @functionality Returns a single `Nat` representing the debt after applying index-based normalization and price adjustment.
  */
+
 pub async fn get_user_debt_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -808,6 +867,32 @@ pub async fn get_user_debt_in_base_currency(
     Ok(result)
 }
 
+/*
+ * @title Get User Asset Debt in Base Currency
+ * @functionality Calculates a user's outstanding debt for a specific asset, expressed in the base currency (e.g., USD).
+ *
+ * @notice Computes the user's variable debt balance, applies normalization using indexes,
+ *         and converts the result to base currency using the asset's current price.
+ *
+ * @dev Uses the user's raw balance (provided as `user_balance`), divides it by the current variable borrow index to get the scaled value,
+ *      multiplies it by the normalized debt factor retrieved from the reserve data, and finally multiplies the result by the asset's price.
+ *
+ * @param user_principal The principal of the user whose debt is being calculated.
+ * @functionality Identifies the user within the system (used mainly for logging or future extensions).
+ *
+ * @param reserve The user reserve data for the specific asset.
+ * @functionality Provides access to the reserve ID and current variable borrow index for normalization.
+ *
+ * @param user_balance The raw debt balance (variable debt) of the user for the asset.
+ * @functionality Serves as the base value to normalize and convert into base currency.
+ *
+ * @param asset_price The price of the asset in the base currency.
+ * @functionality Used to compute the equivalent debt in base currency by multiplying with the normalized debt.
+ *
+ * @return Result<Nat, Error> The user's debt in base currency or an error if reserve data is invalid.
+ * @functionality Returns a `Nat` representing the total normalized debt in base currency after applying all adjustments.
+ */
+
 pub async fn get_user_asset_debt_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
@@ -863,11 +948,20 @@ pub async fn get_user_asset_debt_in_base_currency(
  *
  * @dev Uses concurrency for improved efficiency by fetching users in batches.
  *
+ * @functionality This function fetches user data in batches and calculates their health factors to determine whether they are eligible for liquidation.
+ *                It processes users concurrently using the `stream::iter` method and filters out users with health factors below the defined threshold.
+ *
  * @param total_pages The total number of pages to fetch users from.
+ * @functionality Defines how many pages of users will be processed in parallel, optimizing efficiency.
+ *
  * @param page_size The number of users per page.
+ * @functionality Specifies how many users will be processed per page for each batch, allowing concurrency control.
  *
  * @return A vector of tuples containing (Principal, UserAccountData, UserData).
+ * @functionality Returns a list of users who are eligible for liquidation, based on their health factor, 
+ *                along with their account data and associated user data.
  */
+
 #[update]
 pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
@@ -950,7 +1044,11 @@ pub async fn get_liquidation_users_concurrent(
 /*
  * @title Register User
  * @dev Registers a new user if they do not already exist.
- * @returns A string message indicating success.
+ * @functionality This function checks if the user is anonymous or if the request exceeds the rate limit. 
+ *                If valid, it registers the user by inserting their profile into the state, or returns an error 
+ *                if the user already exists.
+ *
+ * @returns A string message indicating success or failure.
  */
 #[update]
 fn register_user() -> Result<String, Error> {
@@ -989,7 +1087,13 @@ fn register_user() -> Result<String, Error> {
  * @notice Identifies users with a health factor below the liquidation threshold,
  *         enabling liquidation testing for Pocket IC.
  *
- * @dev This function has been designed specifically for testing purposes in Pocket IC
+ * @functionality This function is specifically designed for testing purposes in Pocket IC,
+ *                simulating a scenario where a user has a low health factor, potentially 
+ *                triggering liquidation. It registers a user's supply and borrow assets, 
+ *                validates the data, performs necessary token transfers, and updates the 
+ *                user’s reserve data and state.
+ *
+ * @dev This function has been designed specifically for testing purposes in Pocket IC 
  *      by identifying users who fall below the threshold required for liquidation.
  *
  * @param asset_supply The asset being supplied by the user (e.g., collateral asset).
@@ -1222,6 +1326,27 @@ pub async fn create_user_reserve_with_low_health(
     Ok(user_data)
 }
 
+/*
+ * @title Get All Users List
+ * @notice Fetches a list of all users' account data and user data.
+ *
+ * @dev This function paginates through the list of users and returns a batch of user data in pages. 
+ *      It is designed for efficient retrieval of all user information in a paginated manner to avoid 
+ *      excessive gas usage for large datasets. The function fetches the user data and account data 
+ *      concurrently in batches.
+ *
+ * @param total_pages The total number of pages to fetch users from.
+ * @param page_size The number of users per page.
+ *
+ * @functionality This function handles pagination and concurrency for retrieving user data. 
+ *                It processes the users in batches of a specified size and ensures that the user 
+ *                data is fetched and returned in a structured format. If there are issues during the 
+ *                retrieval or data processing, it returns an appropriate error.
+ *
+ * @return Result<Vec<(Principal, UserAccountData, UserData)>, Error>:
+ *         - Ok(Vec): A vector containing tuples of user principal, user account data, and user data.
+ *         - Err(Error): An error if the retrieval or processing fails.
+ */
 #[update]
 pub async fn get_all_user_list(
     total_pages: usize,

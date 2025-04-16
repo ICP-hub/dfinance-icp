@@ -18,21 +18,26 @@ pub struct ValidationLogic;
 impl ValidationLogic {
 
     /*
-     * @title Validate Supply
-     * @notice Ensures the supply amount is valid before processing the transaction.
-     *
-     * @dev Performs checks on:
-     * - User's balance in the ledger canister.
-     * - Reserve status (active, paused, or frozen).
-     * - Supply cap constraints.
-     *
-     * @param reserve The reserve data for the asset being supplied.
-     * @param amount The amount the user wants to supply.
-     * @param user The principal of the user supplying the asset.
-     * @param ledger_canister The principal of the ledger canister for balance verification.
-     *
-     * @return Returns `Ok(())` if validation is successful.
-     */
+    * @title Validate Supply
+    * @notice Ensures the supply amount is valid before processing the transaction.
+    *
+    * @dev Performs checks on:
+    * - User's balance in the ledger canister.
+    * - Reserve status (active, paused, or frozen).
+    * - Supply cap constraints.
+    *
+    * @functionality This function first checks the user's balance to ensure they have enough funds in the ledger canister. 
+    *                It then checks the state of the reserve (whether it is active, paused, or frozen). 
+    *                Finally, it verifies if the total supply of the asset, including the user's intended supply, exceeds the supply cap. 
+    *                If any of these checks fail, it returns an error.
+    *
+    * @param reserve The reserve data for the asset being supplied.
+    * @param amount The amount the user wants to supply.
+    * @param user The principal of the user supplying the asset.
+    * @param ledger_canister The principal of the ledger canister for balance verification.
+    *
+    * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
+ */
     pub async fn validate_supply(
         reserve: &ReserveData,
         amount: Nat,
@@ -118,21 +123,23 @@ impl ValidationLogic {
     }
 
     /*
-     * @title Validate Withdraw
-     * @notice Ensures a user can withdraw a specified amount from the reserve.
-     *
-     * @dev Performs checks on:
-     * - User's supplied balance.
-     * - Platform's available balance.
-     * - Loan-to-value (LTV) constraints to prevent liquidation risk.
-     *
-     * @param reserve The reserve data for the asset being withdrawn.
-     * @param amount The withdrawal amount requested by the user.
-     * @param user The principal of the user withdrawing.
-     * @param ledger_canister The principal of the ledger canister for balance verification.
-     *
-     * @return Returns `Ok(())` if validation is successful.
-     */
+    * @title Validate Withdraw
+    * @notice Ensures a user can withdraw a specified amount from the reserve.
+    *
+    * @dev Performs checks on:
+    * - User's supplied balance.
+    * - Platform's available balance.
+    * - Loan-to-value (LTV) constraints to prevent liquidation risk.
+    *
+    * @functionality This function first validates that the user has enough supplied balance to make the withdrawal. It then checks if the requested withdrawal amount exceeds the user's available supply. Next, it verifies the platform's available balance to ensure the withdrawal amount does not exceed what the platform can handle. The function also validates the reserve's state (active, paused, frozen) and updates the token price. Finally, the LTV ratio and health factor are calculated to ensure the withdrawal does not trigger a liquidation condition, based on the user's total collateral and debt. If any of these checks fail, it returns an appropriate error.
+    *
+    * @param reserve The reserve data for the asset being withdrawn.
+    * @param amount The withdrawal amount requested by the user.
+    * @param user The principal of the user withdrawing.
+    * @param ledger_canister The principal of the ledger canister for balance verification.
+    *
+    * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
+    */
     pub async fn validate_withdraw(
         reserve: &ReserveData,
         amount: Nat,
@@ -306,7 +313,7 @@ impl ValidationLogic {
         Ok(())
     }
 
-    /*
+   /*
      * @title Validate Borrow
      * @notice Ensures a user can borrow a specified amount from the reserve.
      *
@@ -321,6 +328,9 @@ impl ValidationLogic {
      * @param ledger_canister The principal of the ledger canister for balance verification.
      *
      * @return Returns `Ok(())` if validation is successful.
+     * @functionality Verifies that borrowing conditions are met for the user, such as ensuring borrowing is enabled,
+     * checking the platform's balance, validating the reserve's status, calculating LTV, ensuring the health factor
+     * is above a certain threshold, and confirming that the borrow amount does not exceed the borrow cap.
      */
     pub async fn validate_borrow(
         reserve: &ReserveData,
@@ -456,8 +466,7 @@ impl ValidationLogic {
         };
         Ok(())
     }
-
-    /*
+/*
      * @title Validate Repay
      * @notice Ensures a user can repay a specified amount of borrowed assets.
      *
@@ -474,6 +483,9 @@ impl ValidationLogic {
      * @param ledger_canister The principal of the ledger canister for balance verification.
      *
      * @return Returns `Ok(())` if validation is successful.
+     * @functionality Validates repayment conditions by ensuring that the user or liquidator has sufficient balance,
+     * checks if the reserve is active and not paused or frozen, verifies the repayment amount is correct, 
+     * and ensures the user's outstanding debt allows for repayment.
      */
     pub async fn validate_repay(
         reserve: &ReserveData,
@@ -543,7 +555,7 @@ impl ValidationLogic {
         Ok(())
     }
 
-    /*
+   /*
      * @title Validate Liquidation
      * @notice Ensures a liquidator can liquidate a borrower's collateral.
      *
@@ -561,6 +573,9 @@ impl ValidationLogic {
      * @param repay_reserve_data The reserve data associated with the asset.
      *
      * @return Returns `Ok(())` if liquidation validation passes.
+     * @functionality Validates that a liquidation can occur by checking various conditions such as ensuring 
+     * the liquidator has enough balance to repay, the borrower’s collateral is sufficient, 
+     * and that the borrower is eligible for liquidation based on the health factor and debt amount.
      */
     pub async fn validate_liquidation(
         repay_asset: String,
@@ -673,3 +688,4 @@ impl ValidationLogic {
         Ok(())
     }
 }
+

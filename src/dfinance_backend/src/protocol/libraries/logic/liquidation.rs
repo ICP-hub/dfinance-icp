@@ -57,19 +57,13 @@ use crate::constants::constant_variables::constants::{
  */
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
-    if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
 
-    if params.debt_asset.len() > 7 && params.collateral_asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-    if params.amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    //validating Input parameters
+    ValidationLogic::validate_input_params(&params.debt_asset, &params.amount, Some(params.on_behalf_of.clone()))?;
+
+    //validating Input parameters
+    ValidationLogic::validate_input_params(&params.collateral_asset, &params.reward_amount , None)?;
+
 
     if params.on_behalf_of == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
@@ -85,11 +79,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let liquidator_principal = api::caller();
     ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
-
-    if liquidator_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
 
     if let Err(e) = request_limiter("execute_liquidation") {
         ic_cdk::println!("Error limiting error: {:?}", e);

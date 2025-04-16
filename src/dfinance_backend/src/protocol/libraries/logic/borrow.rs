@@ -54,20 +54,8 @@ use crate::constants::constant_variables::constants::{
  */
 #[update]
 pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Error> {
-    if params.asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
-
-    if params.asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-
-    if params.amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+     //validating Input parameters
+     ValidationLogic::validate_input_params(&params.asset, &params.amount, None)?;
 
     let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
@@ -201,10 +189,7 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
             return Err(e);
         }
 
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+       
 
         // Transfers borrow amount from the pool to the user
         match asset_transfer_from(
@@ -220,6 +205,10 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
                     "Asset transfer from backend to user executed successfully. New balance: {:?}",
                     new_balance
                 );
+                mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                });
                 Ok(new_balance)
             }
             Err(e) => {
@@ -296,27 +285,8 @@ pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Erro
  */
 #[update]
 pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
-    if params.asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
-
-    if params.asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-
-    if params.amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
-
-    if let Some(principal) = params.on_behalf_of {
-        if principal == Principal::anonymous() {
-            ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::AnonymousPrincipal);
-        }
-    }
+        //validating Input parameters
+        ValidationLogic::validate_input_params(&params.asset, &params.amount , params.on_behalf_of.clone())?;
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -520,10 +490,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             return Err(e);
         }
 
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+        
 
         // Transfers the asset from the user to our backend canister
         match asset_transfer_from(
@@ -539,6 +506,10 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                     "Asset transfer from user to backend executed successfully, new balance: {:?}",
                     new_balance
                 );
+                mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                });
                 Ok(new_balance)
             }
             Err(e) => {

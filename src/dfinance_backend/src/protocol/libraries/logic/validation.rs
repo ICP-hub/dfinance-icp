@@ -254,7 +254,7 @@ impl ValidationLogic {
         // }
 
 
-        update_token_price(reserve.asset_name.clone().unwrap()).await?;
+        let _ = update_token_price(reserve.asset_name.clone().unwrap()).await;
 
 
         let mut total_collateral = Nat::from(0u128);

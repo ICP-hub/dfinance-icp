@@ -50,7 +50,7 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
     //     return Err(e);
     // }
 
-    if !read_state(|state| state.reserve_list.contains_key(&token_name)) {
+    if read_state(|state| state.reserve_list.contains_key(&token_name)) {
         return Err(Error::TokenAlreadyExist);
     }
 

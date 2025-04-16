@@ -86,20 +86,20 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         return Err(e);
     }
 
-    let operation_key = user_principal;
-    // Acquire the lock
-    {
-        if let Err(e) = acquire_lock(&operation_key) {
-            ic_cdk::println!("Lock acquisition failed: {:?}", e);
-            return Err(Error::LockAcquisitionFailed);
-        }
-    }
+    // let operation_key = user_principal;
+    // // Acquire the lock
+    // {
+    //     if let Err(e) = acquire_lock(&operation_key) {
+    //         ic_cdk::println!("Lock acquisition failed: {:?}", e);
+    //         return Err(Error::LockAcquisitionFailed);
+    //     }
+    // }
 
     // let amount_requested = params.amount.clone();
     let borrow_amount = params.amount.clone();
     ic_cdk::println!("borrow amount = {}", borrow_amount);
 
-    let result: Result<Nat, Error> = async {
+    // let result: Result<Nat, Error> = async {
         // let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
         //     Ok(principal) => principal,
         //     Err(e) => {
@@ -307,14 +307,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                 return Err(Error::ErrorMintDebtTokens);
             }
         }
-    }
-    .await;
+    // }
+    // .await;
 
     // if let Err(e) = release_lock(&operation_key) {
     //     ic_cdk::println!("Failed to release lock: {:?}", e);
     //     return Err(e);
     // }
-    result
+    // result
 }
 
 /*
@@ -406,7 +406,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
 
         };
 
-    let operation_key = user_principal;
+    // let operation_key = user_principal;
 
     if let Err(e) = request_limiter("execute_repay") {
         ic_cdk::println!("Error limiting error: {:?}", e);
@@ -416,15 +416,15 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     if params.on_behalf_of.is_none() {
         ic_cdk::println!("inside the on behalf");
         // Acquire the lock
-        {
-            if let Err(e) = acquire_lock(&operation_key) {
-                ic_cdk::println!("Lock acquisition failed: {:?}", e);
-                return Err(Error::LockAcquisitionFailed);
-            }
-        }
+        // {
+        //     if let Err(e) = acquire_lock(&operation_key) {
+        //         ic_cdk::println!("Lock acquisition failed: {:?}", e);
+        //         return Err(Error::LockAcquisitionFailed);
+        //     }
+        // }
     }
 
-    let result = async {
+    // let result = async {
         // let ledger_canister_id = match reserve_ledger_canister_id(params.asset.clone()) {
         //     Ok(principal) => principal,
         //     Err(e) => {
@@ -526,7 +526,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
 
         ic_cdk::println!("Repay validated successfully");
 
-        update_token_price(params.asset.clone()).await?;
+        let _ = update_token_price(params.asset.clone()).await;
 
         // if let Err(e) = update_token_price(params.asset.clone()).await {
         //     ic_cdk::println!("Failed to update token price: {:?}", e);
@@ -702,8 +702,8 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                 return Err(Error::ErrorBurnDebtTokens);
             }
         }
-    }
-    .await;
+    // }
+    // .await;
 
     // Release the lock
     // if let Err(e) = release_lock(&operation_key) {
@@ -711,5 +711,5 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     //     return Err(e);
     // }
 
-    result
+    // result
 }

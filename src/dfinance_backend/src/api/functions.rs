@@ -456,17 +456,17 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     }
 
     //Retrieve user data.
-    let user_data_result = user_data(user_principal);
+    let mut user_data = user_data(user_principal)?;
 
-    let mut user_data = match user_data_result {
-        Ok(data) => {
-            ic_cdk::println!("User found");
-            data
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    };
+    // let mut user_data = match user_data_result {
+    //     Ok(data) => {
+    //         ic_cdk::println!("User found");
+    //         data
+    //     }
+    //     Err(e) => {
+    //         return Err(e);
+    //     }
+    // };
 
     // Access and mutate reserves
     if let Some(user_data_reserves) = user_data.reserves.as_mut() {

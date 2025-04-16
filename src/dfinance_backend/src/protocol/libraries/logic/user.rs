@@ -974,7 +974,10 @@ fn register_user() -> Result<String, Error> {
         match user_index.get(&user_principal) {
             Some(_) => Ok("User available".to_string()),
             None => {
-                let default_user_data = UserData::default();
+                let mut default_user_data = UserData::default();
+                let user_count = user_index.len(); //user_id is starting from 1
+                let new_user_id = (user_count + 1).to_string();
+                default_user_data.user_id = Some(new_user_id);
                 user_index.insert(user_principal.clone(), Candid(default_user_data));
                 Ok("User added".to_string())
             }

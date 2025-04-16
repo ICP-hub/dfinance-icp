@@ -13,6 +13,9 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE
+};
 
 /*
 -------------------------------------
@@ -52,7 +55,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         return Err(Error::InvalidAssetLength);
     }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -169,7 +172,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         params.amount = params.amount.clone() - transfer_token_fee.clone();
 
         let liq_added = params.amount.clone();
-        let liq_taken = Nat::from(0u128);
+        let liq_taken = Nat::from(ZERO_VALUE);
 
         if let Err(e) = reserve::update_interest_rates(
             &mut reserve_data,
@@ -304,7 +307,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         return Err(Error::InvalidAssetLength);
     }
 
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -433,7 +436,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             &mut reserve_data,
             &mut reserve_cache,
             params.amount.clone(), //amount to withdraw
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
         )
         .await
         {

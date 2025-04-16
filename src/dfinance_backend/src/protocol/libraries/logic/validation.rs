@@ -9,6 +9,9 @@ use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, ONE_VALUE, PERCENTAGE_FACTOR
+};
 
 pub struct ValidationLogic;
 
@@ -223,11 +226,11 @@ impl ValidationLogic {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
         }
 
-        let mut total_collateral = Nat::from(0u128);
-        let mut total_debt = Nat::from(0u128);
-        let mut avg_ltv = Nat::from(0u128);
-        let mut health_factor = Nat::from(0u128);
-        let mut liquidation_threshold_var = Nat::from(0u128);
+        let mut total_collateral = Nat::from(ZERO_VALUE);
+        let mut total_debt = Nat::from(ZERO_VALUE);
+        let mut avg_ltv = Nat::from(ZERO_VALUE);
+        let mut health_factor = Nat::from(ZERO_VALUE);
+        let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             calculate_user_account_data(None).await;
@@ -259,7 +262,7 @@ impl ValidationLogic {
             }
         }
 
-        if total_debt != Nat::from(0u128) {
+        if total_debt != Nat::from(ZERO_VALUE) {
             let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
                 Ok(price) => price,
                 Err(e) => {
@@ -275,9 +278,9 @@ impl ValidationLogic {
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
 
             // Calculate Adjusted Collateral
-            let mut adjusted_collateral = Nat::from(0u128);
+            let mut adjusted_collateral = Nat::from(ZERO_VALUE);
             if adjusted_collateral < usd_withdrawl.clone() {
-                adjusted_collateral = Nat::from(0u128);
+                adjusted_collateral = Nat::from(ZERO_VALUE);
             } else if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
             } else {
@@ -285,11 +288,11 @@ impl ValidationLogic {
             }
             ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
 
-            let mut ltv = Nat::from(0u128);
+            let mut ltv = Nat::from(ZERO_VALUE);
             // Calculate new ratio (Adjusted Collateral / Total Debt)
-            if adjusted_collateral != Nat::from(0u128) {
+            if adjusted_collateral != Nat::from(ZERO_VALUE) {
                 ltv = total_debt.scaled_div(adjusted_collateral);
-                ltv = ltv * Nat::from(100u128);
+                ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
                 println!("New ltv: {}", ltv);
             }
 
@@ -297,7 +300,7 @@ impl ValidationLogic {
                 return Err(Error::LTVGreaterThanThreshold);
             }
         }
-        if health_factor < Nat::from(1u128) {
+        if health_factor < Nat::from(ONE_VALUE) {
             return Err(Error::HealthFactorLess);
         }
         Ok(())
@@ -372,11 +375,11 @@ impl ValidationLogic {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
         }
 
-        let mut total_collateral = Nat::from(0u128);
-        let mut total_debt = Nat::from(0u128);
-        let mut avg_ltv = Nat::from(0u128);
-        let mut health_factor = Nat::from(0u128);
-        let mut liquidation_threshold_var = Nat::from(0u128);
+        let mut total_collateral = Nat::from(ZERO_VALUE);
+        let mut total_debt = Nat::from(ZERO_VALUE);
+        let mut avg_ltv = Nat::from(ZERO_VALUE);
+        let mut health_factor = Nat::from(ZERO_VALUE);
+        let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             calculate_user_account_data(None).await;
@@ -425,9 +428,9 @@ impl ValidationLogic {
         let adjusted_debt = total_debt + usd_borrow;
         ic_cdk::println!("adjusted amount = {}", adjusted_debt);
 
-        let mut ltv = Nat::from(0u128);
+        let mut ltv = Nat::from(ZERO_VALUE);
         ltv = adjusted_debt.scaled_div(total_collateral);
-        ltv = ltv * Nat::from(100u128);
+        ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", ltv);
 
         if ltv >= liquidation_threshold_var {
@@ -613,8 +616,8 @@ impl ValidationLogic {
             return Err(Error::LowWalletBalance);
         }
 
-        let mut total_collateral = Nat::from(0u128);
-        let mut health_factor = Nat::from(0u128);
+        let mut total_collateral = Nat::from(ZERO_VALUE);
+        let mut health_factor = Nat::from(ZERO_VALUE);
 
         let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
             calculate_user_account_data(Some(user)).await;
@@ -644,7 +647,7 @@ impl ValidationLogic {
             return Err(Error::RewardIsHigher);
         }
 
-        if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
+        if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             return Err(Error::USERCANNOTBELIQUIDATED);
         }
 

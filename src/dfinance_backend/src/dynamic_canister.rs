@@ -9,6 +9,10 @@ use crate::constants::interest_variables::constants::{
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
+use crate::constants::constant_variables::constants::{
+    INITIAL_TEST_TOKEN_BALANCE
+};
+use crate::guards::to_check_controller;
 use candid::{CandidType, Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
@@ -257,7 +261,7 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
 
             subaccount: None,
         },
-        Nat::from(100_000_000_000_000u64),
+        Nat::from(INITIAL_TEST_TOKEN_BALANCE),
     )];
 
     let feature_flags = Some(FeatureFlags { icrc2: true });
@@ -342,7 +346,7 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
  */
 #[update]
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {
-    if !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+    if !to_check_controller() {
         ic_cdk::println!("principals are not allowed");
         return Ok("principals are not allowed".to_string());
     }

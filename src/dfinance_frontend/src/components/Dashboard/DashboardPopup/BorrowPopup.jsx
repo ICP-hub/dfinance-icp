@@ -476,6 +476,7 @@ const Borrow = ({
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
+  
 
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));

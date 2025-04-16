@@ -2,6 +2,9 @@ use std::ops::Mul;
 use candid::Nat;
 use ic_cdk::api::time;
 use crate::constants::interest_variables::constants::{CURRENT_TIMESTAMP, MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR};
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, TWO_VALUE, NANOS_PER_SECOND
+};
 
 /* 
  * @title Get Scaling Value
@@ -24,7 +27,7 @@ fn get_scaling_value() -> Nat {
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
     // let rate = rate_input/Nat::from(100u128);
         let rate = rate_input;
-    let current_timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let current_timestamp = ic_cdk::api::time() / NANOS_PER_SECOND as u64; // Convert nanoseconds to seconds
     ic_cdk::println!("current time in cal_linear function {} and seconds per year {} and last timestamp {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp);
     let time_delta = current_timestamp - last_update_timestamp;
     let result = rate.clone() * time_delta / SECONDS_PER_YEAR;
@@ -63,7 +66,7 @@ pub fn calculate_compounded_interest(
     let exp_minus_one = exp - 1;
     ic_cdk::println!("exp_minus_one: {}", exp_minus_one);
     
-    let exp_minus_two = if exp > 2 { exp - 2 } else { 0 };
+    let exp_minus_two = if exp > TWO_VALUE as u64 { exp - TWO_VALUE as u64 } else { ZERO_VALUE as u64 };
     ic_cdk::println!("exp_minus_two: {}", exp_minus_two);
     
     let base_power_two = rate.clone().scaled_mul(rate.clone()) / (SECONDS_PER_YEAR as u128 * SECONDS_PER_YEAR as u128) ;

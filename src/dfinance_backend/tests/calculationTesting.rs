@@ -5,6 +5,7 @@ mod utils;
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
+use crate::utils::constant_variables::*;
 
 #[test]
 fn call_test_function() {
@@ -17,10 +18,10 @@ fn call_test_function() {
 impl Default for AccrueToTreasuryLocalVars {
     fn default() -> Self {
         AccrueToTreasuryLocalVars {
-            prev_total_variable_debt: Nat::from(0u128),
-            curr_total_variable_debt: Nat::from(0u128),
-            total_debt_accrued: Nat::from(0u128),
-            amount_to_mint: Nat::from(0u128),
+            prev_total_variable_debt: Nat::from(ZERO_VALUE),
+            curr_total_variable_debt: Nat::from(ZERO_VALUE),
+            total_debt_accrued: Nat::from(ZERO_VALUE),
+            amount_to_mint: Nat::from(ZERO_VALUE),
         }
     }
 }
@@ -45,8 +46,6 @@ impl ScalingMath for Nat {
     }
 }
 
-pub const SCALING_FACTOR: u128 = 100000000;
-const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
 
 fn get_scaling_value() -> Nat {
     Nat::from(SCALING_FACTOR)
@@ -139,7 +138,7 @@ pub fn calculate_compounded_interest(
  * @dev Returns the stored index if no update is needed; otherwise, applies linear interest.
  */
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::Error> {
-    let current_time = 1700000000;
+    let current_time = 1_700_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
@@ -180,7 +179,7 @@ pub async fn calculate_interest_rates(
     ic_cdk::println!("Liquidity Taken: {:?}", liq_taken);
     ic_cdk::println!("Reserve Factor: {:?}", reserve_factor);
 
-    let mut current_liquidity_rate = Nat::from(0u128);
+    let mut current_liquidity_rate = Nat::from(ZERO_VALUE);
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
 
     let total_supply = reserve
@@ -194,7 +193,7 @@ pub async fn calculate_interest_rates(
 
     ic_cdk::println!("Available Liquidity: {:?}", available_liq);
 
-    if total_debt.clone() != Nat::from(0u128) {
+    if total_debt.clone() != Nat::from(ZERO_VALUE) {
         let utilization_ratio = total_debt
             .clone()
             .scaled_div(total_debt.clone() + available_liq.clone());
@@ -233,7 +232,7 @@ pub async fn calculate_interest_rates(
         current_liquidity_rate = curr_borrow_rate
             .clone()
             .scaled_mul(utilization_ratio.clone())
-            .scaled_mul(Nat::from(100000000u128) - (reserve_factor / Nat::from(100u128)));
+            .scaled_mul(Nat::from(100_000_000u128) - (reserve_factor / Nat::from(100u128)));
 
         ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
         ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);
@@ -255,7 +254,7 @@ pub fn accrue_to_treasury(
 ) -> Result<(), errors::Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    if reserve_cache.reserve_factor == Nat::from(0u128) {
+    if reserve_cache.reserve_factor == Nat::from(ZERO_VALUE) {
         return Ok(());
     }
 
@@ -291,7 +290,7 @@ pub fn accrue_to_treasury(
         reserve_cache.reserve_factor.clone(),
     ); //percent
     ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
-    if vars.amount_to_mint != Nat::from(0u128) {
+    if vars.amount_to_mint != Nat::from(ZERO_VALUE) {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
             reserve_cache.next_liquidity_index.clone(),
@@ -467,9 +466,9 @@ async fn test_calculate_interest_rates() {
     }
 
     let test_cases = vec![TestCase {
-        liq_added: Nat::from(1000u128),
+        liq_added: Nat::from(1_000u128),
         liq_taken: Nat::from(500u128),
-        total_debt: Nat::from(5000u128),
+        total_debt: Nat::from(5_000u128),
         params: InterestRateParams {
             base_variable_borrow_rate: Nat::from(3u128),
             optimal_usage_ratio: Nat::from(80u128),
@@ -484,17 +483,17 @@ async fn test_calculate_interest_rates() {
             debt_token_canister: Some("canister2".to_string()),
             borrow_rate: Nat::from(5u128),
             current_liquidity_rate: Nat::from(2u128),
-            asset_supply: Nat::from(10000u128),
-            asset_borrow: Nat::from(3000u128),
-            liquidity_index: Nat::from(1000000u128),
-            debt_index: Nat::from(1000000u128),
+            asset_supply: Nat::from(10_000u128),
+            asset_borrow: Nat::from(3_000u128),
+            liquidity_index: Nat::from(1_000_000u128),
+            debt_index: Nat::from(1_000_000u128),
             configuration: ReserveConfiguration {
                 ltv: Nat::from(75u128),
                 liquidation_threshold: Nat::from(85u128),
                 liquidation_bonus: Nat::from(10u128),
                 borrowing_enabled: true,
-                borrow_cap: Nat::from(100000u128),
-                supply_cap: Nat::from(200000u128),
+                borrow_cap: Nat::from(100_000u128),
+                supply_cap: Nat::from(200_000u128),
                 liquidation_protocol_fee: Nat::from(5u128),
                 active: true,
                 frozen: false,
@@ -502,13 +501,13 @@ async fn test_calculate_interest_rates() {
                 reserve_factor: Nat::from(10u128),
             },
             can_be_collateral: Some(true),
-            last_update_timestamp: 1700000000,
+            last_update_timestamp: 1_700_000_000,
             accure_to_platform: Nat::from(500u128),
         },
         reserve_factor: Nat::from(10u128),
         asset: "TestAsset".to_string(),
-        expected_liquidity_rate: Nat::from(15943866u128),
-        expected_borrow_rate: Nat::from(17857131u128),
+        expected_liquidity_rate: Nat::from(15_943_866u128),
+        expected_borrow_rate: Nat::from(17_857_131u128),
     }];
 
     for (i, case) in test_cases.iter().enumerate() {
@@ -603,17 +602,17 @@ async fn test_accrue_to_treasury() {
             debt_token_canister: Some("canister2".to_string()),
             borrow_rate: Nat::from(5u128),
             current_liquidity_rate: Nat::from(2u128),
-            asset_supply: Nat::from(10000u128),
-            asset_borrow: Nat::from(3000u128),
-            liquidity_index: Nat::from(1000000u128),
-            debt_index: Nat::from(1000000u128),
+            asset_supply: Nat::from(10_000u128),
+            asset_borrow: Nat::from(3_000u128),
+            liquidity_index: Nat::from(1_000_000u128),
+            debt_index: Nat::from(1_000_000u128),
             configuration: ReserveConfiguration {
                 ltv: Nat::from(75u128),
                 liquidation_threshold: Nat::from(85u128),
                 liquidation_bonus: Nat::from(10u128),
                 borrowing_enabled: true,
-                borrow_cap: Nat::from(100000u128),
-                supply_cap: Nat::from(200000u128),
+                borrow_cap: Nat::from(10_0000u128),
+                supply_cap: Nat::from(200_000u128),
                 liquidation_protocol_fee: Nat::from(5u128),
                 active: true,
                 frozen: false,
@@ -621,7 +620,7 @@ async fn test_accrue_to_treasury() {
                 reserve_factor: Nat::from(10u128),
             },
             can_be_collateral: Some(true),
-            last_update_timestamp: 1700000000,
+            last_update_timestamp: 1_700_000_000,
             accure_to_platform: Nat::from(500u128),
         },
         reserve_cache: ReserveCache {
@@ -630,27 +629,27 @@ async fn test_accrue_to_treasury() {
                 liquidation_threshold: Nat::from(85u128),
                 liquidation_bonus: Nat::from(10u128),
                 borrowing_enabled: true,
-                borrow_cap: Nat::from(100000u128),
-                supply_cap: Nat::from(200000u128),
+                borrow_cap: Nat::from(100_000u128),
+                supply_cap: Nat::from(200_000u128),
                 liquidation_protocol_fee: Nat::from(5u128),
                 active: true,
                 frozen: false,
                 paused: false,
                 reserve_factor: Nat::from(10u128),
             },
-            curr_liquidity_index: Nat::from(1000000u128),
-            next_liquidity_index: Nat::from(1200000u128),
+            curr_liquidity_index: Nat::from(1_000_000u128),
+            next_liquidity_index: Nat::from(1_200_000u128),
             curr_liquidity_rate: Nat::from(2u128),
-            reserve_last_update_timestamp: 1700000000,
-            curr_debt_index: Nat::from(1000000u128),
-            next_debt_index: Nat::from(1100000u128),
+            reserve_last_update_timestamp: 1_700_000_000,
+            curr_debt_index: Nat::from(1_000_000u128),
+            next_debt_index: Nat::from(1_100_000u128),
             curr_debt_rate: Nat::from(5u128),
             next_debt_rate: Nat::from(6u128),
-            debt_last_update_timestamp: 1700000000,
+            debt_last_update_timestamp: 1_700_000_000,
             reserve_factor: Nat::from(10u128),
-            curr_debt: Nat::from(5000u128),
-            next_debt: Nat::from(5500u128),
-            curr_supply: Nat::from(10000u128),
+            curr_debt: Nat::from(5_000u128),
+            next_debt: Nat::from(5_500u128),
+            curr_supply: Nat::from(10_000u128),
         },
         expected_accure_to_platform: Nat::from(500u128),
     }];

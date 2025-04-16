@@ -3,6 +3,8 @@ use crate::utils::structs::*;
 use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
 use pocket_ic::{PocketIc, WasmResult};
+use crate::utils::constant_variables::*;
+
 
 /*
  * @title Get User Principal
@@ -10,7 +12,7 @@ use pocket_ic::{PocketIc, WasmResult};
  * @dev Converts a fixed text representation into a Principal type.
  */
 pub fn get_user_principal() -> Principal {
-    Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae").unwrap()
+    Principal::from_text(CONTROLLER_ID).unwrap()
 }
 
 /*
@@ -32,27 +34,27 @@ pub fn generate_principals(count: usize) -> Vec<Principal> {
 pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
     if index == Nat::from(1u32) {
         Ok(
-            Principal::from_text("d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe")
+            Principal::from_text(TESTER_1)
                 .unwrap(),
         )
     } else if index == Nat::from(2u32) {
         Ok(
-            Principal::from_text("a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae")
+            Principal::from_text(TESTER_2)
                 .unwrap(),
         )
     } else if index == Nat::from(3u32) {
         Ok(
-            Principal::from_text("vgwvq-vfd6w-fphlc-bbw46-uef3k-pgsdk-4pimw-k4cge-gbzts-wxbuu-tae")
+            Principal::from_text(TESTER_3)
                 .unwrap(),
         )
     } else if index == Nat::from(4u32) {
         Ok(
-            Principal::from_text("7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshcl-ggv2m-yae")
+            Principal::from_text(TESTER_4)
                 .unwrap(),
         )
     } else if index == Nat::from(5u32) {
         Ok(
-            Principal::from_text("oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe")
+            Principal::from_text(TESTER_5)
                 .unwrap(),
         )
     } else {
@@ -68,11 +70,11 @@ pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
  */
 pub fn get_users_principals_vector() -> Vec<Principal> {
     vec![
-        "d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe",
-        "a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae",
-        "vgwvq-vfd6w-fphlc-bbw46-uef3k-pgsdk-4pimw-k4cge-gbzts-wxbuu-tae",
-        "7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshcl-ggv2m-yae",
-        "oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe",
+        TESTER_1,
+        TESTER_2,
+        TESTER_3,
+        TESTER_4,
+        TESTER_5,
     ]
     .into_iter()
     .filter_map(|s| Principal::from_text(s).ok()) // Convert each string into a Principal
@@ -235,8 +237,8 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(2u32)).unwrap(),
         asset_supply: "ckETH".to_string(),
         asset_borrow: "ckETH".to_string(),
-        supply_tokens: Nat::from(14000000u128), // 0.14 cketh
-        borrow_tokens: Nat::from(12000000u128), // 0.12 cketh
+        supply_tokens: Nat::from(14_000_000u128), // 0.14 cketh
+        borrow_tokens: Nat::from(12_000_000u128), // 0.12 cketh
     });
     // Pushing third user data
     users_with_low_health.push(LowHealthUsersData {

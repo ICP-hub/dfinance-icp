@@ -13,11 +13,14 @@ use crate::{
     protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
     user_normalized_debt, user_normalized_supply,
 };
-use crate::guards::check_is_tester;
+use crate::guards::{check_is_tester, to_check_controller};
 use crate::{get_all_users, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, PERCENTAGE_FACTOR, SCALING_FACTOR, HEALTH_FACTOR_BARRIER
+};
 
 
 /*
@@ -86,12 +89,12 @@ pub async fn calculate_user_account_data(
     if user_data.reserves.is_none() {
         ic_cdk::println!("No reserves found for the user.");
         return Ok((
-            Nat::from(0u128),
-            Nat::from(0u128),
-            Nat::from(0u128),
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
             max,
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
             false,
         ));
     }
@@ -102,12 +105,12 @@ pub async fn calculate_user_account_data(
         .ok_or_else(|| Error::NoUserReserveDataFound)?;
     ic_cdk::println!("User reserves found");
 
-    let mut total_collateral = Nat::from(0u128);
-    let mut total_debt = Nat::from(0u128);
-    let mut avg_ltv = Nat::from(0u128);
-    let mut avg_liquidation_threshold = Nat::from(0u128);
+    let mut total_collateral = Nat::from(ZERO_VALUE);
+    let mut total_debt = Nat::from(ZERO_VALUE);
+    let mut avg_ltv = Nat::from(ZERO_VALUE);
+    let mut avg_liquidation_threshold = Nat::from(ZERO_VALUE);
     let mut has_zero_ltv_collateral = false;
-    let mut available_borrow = Nat::from(0u128);
+    let mut available_borrow = Nat::from(ZERO_VALUE);
 
     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
         ic_cdk::println!("Processing reserve: {:?}", reserve_name);
@@ -173,7 +176,7 @@ pub async fn calculate_user_account_data(
             total_collateral += user_balance.clone();
             ic_cdk::println!("Total collateral so far: {}", total_collateral);
 
-            if reserve_data.configuration.ltv != Nat::from(0u128) {
+            if reserve_data.configuration.ltv != Nat::from(ZERO_VALUE) {
                 avg_ltv += user_balance
                     .clone()
                     .scaled_mul(reserve_data.configuration.ltv.clone());
@@ -195,7 +198,7 @@ pub async fn calculate_user_account_data(
             );
 
             available_borrow +=
-                user_balance.scaled_mul(reserve_data.configuration.ltv) / Nat::from(100u128);
+                user_balance.scaled_mul(reserve_data.configuration.ltv) / Nat::from(PERCENTAGE_FACTOR);
             ic_cdk::println!(
                 "available borrow after adding collateral of {} = {}",
                 reserve_name,
@@ -228,7 +231,7 @@ pub async fn calculate_user_account_data(
         }
     }
     if available_borrow < total_debt.clone() || available_borrow < Nat::from(MIN_BORROW) {
-        available_borrow = Nat::from(0u128);
+        available_borrow = Nat::from(ZERO_VALUE);
     } else {
         available_borrow -= total_debt.clone();
     }
@@ -237,25 +240,25 @@ pub async fn calculate_user_account_data(
         "available borrow after subtracting debt = {}",
         available_borrow.clone()
     );
-    avg_ltv = if total_collateral != Nat::from(0u128) {
+    avg_ltv = if total_collateral != Nat::from(ZERO_VALUE) {
         // weighted average.
         avg_ltv.scaled_div(total_collateral.clone())
     } else {
-        Nat::from(0u128)
+        Nat::from(ZERO_VALUE)
     };
     ic_cdk::println!("Final Avg LTV: {}", avg_ltv);
 
-    avg_liquidation_threshold = if total_collateral != Nat::from(0u128) {
+    avg_liquidation_threshold = if total_collateral != Nat::from(ZERO_VALUE) {
         avg_liquidation_threshold.scaled_div(total_collateral.clone())
     } else {
-        Nat::from(0u128)
+        Nat::from(ZERO_VALUE)
     };
     ic_cdk::println!(
         "Final Avg Liquidation Threshold: {}",
         avg_liquidation_threshold
     );
 
-    let health_factor = if total_debt == Nat::from(0u128) {
+    let health_factor = if total_debt == Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Health factor: No debt, setting to MAX.");
         max
     } else {
@@ -359,12 +362,12 @@ pub async fn calculate_user_asset_data(
     if user_data.reserves.is_none() {
         ic_cdk::println!("No reserves found for the user.");
         return Ok((
-            Nat::from(0u128),
-            Nat::from(0u128),
-            Nat::from(0u128),
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
             max,
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
             false,
         ));
     }
@@ -375,12 +378,12 @@ pub async fn calculate_user_asset_data(
         .ok_or_else(|| Error::NoUserReserveDataFound)?;
     ic_cdk::println!("User reserves found");
 
-    let mut total_collateral = Nat::from(0u128);
-    let mut total_debt = Nat::from(0u128);
-    let mut avg_ltv = Nat::from(0u128);
-    let mut avg_liquidation_threshold = Nat::from(0u128);
+    let mut total_collateral = Nat::from(ZERO_VALUE);
+    let mut total_debt = Nat::from(ZERO_VALUE);
+    let mut avg_ltv = Nat::from(ZERO_VALUE);
+    let mut avg_liquidation_threshold = Nat::from(ZERO_VALUE);
     let mut has_zero_ltv_collateral = false;
-    let mut available_borrow = Nat::from(0u128);
+    let mut available_borrow = Nat::from(ZERO_VALUE);
 
     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
         ic_cdk::println!("Processing reserve: {:?}", reserve_name);
@@ -424,7 +427,7 @@ pub async fn calculate_user_asset_data(
             let balance: Nat = dtoken_balance.iter()
                 .find(|asset| asset.name == user_reserve_data.reserve)
                 .map(|asset| asset.balance.clone())
-                .unwrap_or(Nat::from(0u128));
+                .unwrap_or(Nat::from(ZERO_VALUE));
                 
             let user_balance_in_base_currency = get_user_asset_balance_in_base_currency(
                 user_principal,
@@ -453,7 +456,7 @@ pub async fn calculate_user_asset_data(
             total_collateral += user_balance.clone();
             ic_cdk::println!("Total collateral so far: {}", total_collateral);
 
-            if reserve_data.configuration.ltv != Nat::from(0u128) {
+            if reserve_data.configuration.ltv != Nat::from(ZERO_VALUE) {
                 avg_ltv += user_balance
                     .clone()
                     .scaled_mul(reserve_data.configuration.ltv.clone());
@@ -475,7 +478,7 @@ pub async fn calculate_user_asset_data(
             );
 
             available_borrow +=
-                user_balance.scaled_mul(reserve_data.configuration.ltv) / Nat::from(100u128);
+                user_balance.scaled_mul(reserve_data.configuration.ltv) / Nat::from(PERCENTAGE_FACTOR);
             ic_cdk::println!(
                 "available borrow after adding collateral of {} = {}",
                 reserve_name,
@@ -500,7 +503,7 @@ pub async fn calculate_user_asset_data(
             let balance: Nat = debt_token_balance.iter()
                 .find(|asset| asset.name == user_reserve_data.reserve)
                 .map(|asset| asset.balance.clone())
-                .unwrap_or(Nat::from(0u128));
+                .unwrap_or(Nat::from(ZERO_VALUE));
 
             
             let user_debt_in_base_currency = get_user_asset_debt_in_base_currency(
@@ -526,7 +529,7 @@ pub async fn calculate_user_asset_data(
         }
     }
     if available_borrow < total_debt.clone() || available_borrow < Nat::from(MIN_BORROW) {
-        available_borrow = Nat::from(0u128);
+        available_borrow = Nat::from(ZERO_VALUE);
     } else {
         available_borrow -= total_debt.clone();
     }
@@ -535,25 +538,25 @@ pub async fn calculate_user_asset_data(
         "available borrow after subtracting debt = {}",
         available_borrow.clone()
     );
-    avg_ltv = if total_collateral != Nat::from(0u128) {
+    avg_ltv = if total_collateral != Nat::from(ZERO_VALUE) {
         // weighted average.
         avg_ltv.scaled_div(total_collateral.clone())
     } else {
-        Nat::from(0u128)
+        Nat::from(ZERO_VALUE)
     };
     ic_cdk::println!("Final Avg LTV: {}", avg_ltv);
 
-    avg_liquidation_threshold = if total_collateral != Nat::from(0u128) {
+    avg_liquidation_threshold = if total_collateral != Nat::from(ZERO_VALUE) {
         avg_liquidation_threshold.scaled_div(total_collateral.clone())
     } else {
-        Nat::from(0u128)
+        Nat::from(ZERO_VALUE)
     };
     ic_cdk::println!(
         "Final Avg Liquidation Threshold: {}",
         avg_liquidation_threshold
     );
 
-    let health_factor = if total_debt == Nat::from(0u128) {
+    let health_factor = if total_debt == Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Health factor: No debt, setting to MAX.");
         max
     } else {
@@ -648,7 +651,7 @@ pub async fn get_user_balance_in_base_currency(
     };
     ic_cdk::println!("user balance normailized supply = {:?}", normalized_supply);
     ic_cdk::println!("user liq index {}", reserve.liquidity_index.clone());
-    let user_scaled = if reserve.liquidity_index != Nat::from(0u128) {
+    let user_scaled = if reserve.liquidity_index != Nat::from(ZERO_VALUE) {
         user_scaled_balance.clone().scaled_div(reserve.liquidity_index.clone())
     } else {
         user_scaled_balance.clone()
@@ -708,7 +711,7 @@ pub async fn get_user_asset_balance_in_base_currency(
     };
     ic_cdk::println!("user balance normailized supply = {:?}", normalized_supply);
     ic_cdk::println!("user liq index {}", reserve.liquidity_index.clone());
-    let user_scaled = if reserve.liquidity_index != Nat::from(0u128) {
+    let user_scaled = if reserve.liquidity_index != Nat::from(ZERO_VALUE) {
         user_scaled_balance.clone().scaled_div(reserve.liquidity_index.clone())
     } else {
         user_scaled_balance.clone()
@@ -791,7 +794,7 @@ pub async fn get_user_debt_in_base_currency(
         }
     };
 
-    if user_variable_debt != Nat::from(0u128) {
+    if user_variable_debt != Nat::from(ZERO_VALUE) {
         user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
         user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
         ic_cdk::println!(
@@ -840,7 +843,7 @@ pub async fn get_user_asset_debt_in_base_currency(
         }
     };
 
-    if user_variable_debt != Nat::from(0u128) {
+    if user_variable_debt != Nat::from(ZERO_VALUE) {
         user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
         user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
         ic_cdk::println!(
@@ -907,7 +910,11 @@ pub async fn get_liquidation_users_concurrent(
                             has_zero_ltv_collateral: user_account_data_tuple.6,
                         };
 
-                        if user_account_data.health_factor < Nat::from(10_000_000_000u128) {
+                        // Fetch the user's health factor scaled by 100 and 10^8, 
+                        // unscale it by 100
+                        // then compare it with the health factor limit (scaled to 10^8).
+                        // This helps determine if the user's position is still safe or needs liquidation.
+                        if user_account_data.health_factor.clone()/Nat::from(PERCENTAGE_FACTOR) < Nat::from(HEALTH_FACTOR_BARRIER) {
                             ic_cdk::println!(
                                 "Low health factor user: {:?}, Health Factor: {:?}",
                                 user_principal, user_account_data.health_factor
@@ -1023,7 +1030,7 @@ pub async fn create_user_reserve_with_low_health(
         return Err(Error::InvalidAssetLength);
     }
 
-    if supply_tokens <= Nat::from(0u128) || borrow_tokens <= Nat::from(0u128) {
+    if supply_tokens <= Nat::from(ZERO_VALUE) || borrow_tokens <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Supply and Borrow amounts must be greater than zero");
         return Err(Error::InvalidAmount);
     }
@@ -1049,7 +1056,7 @@ pub async fn create_user_reserve_with_low_health(
 
         reserve_data.asset_supply += supply_tokens.clone();
         reserve_data.asset_borrow += borrow_tokens.clone();
-        reserve_data.debt_index = Nat::from(100_000_000u128);
+        reserve_data.debt_index = Nat::from(SCALING_FACTOR);
         (reserve_data.clone(), reserve_data)
     } else {
         let mut supply_reserve_data = mutate_state(|state| {
@@ -1061,7 +1068,7 @@ pub async fn create_user_reserve_with_low_health(
         })?;
 
         supply_reserve_data.asset_supply += supply_tokens.clone();
-        supply_reserve_data.debt_index = Nat::from(100_000_000u128);
+        supply_reserve_data.debt_index = Nat::from(SCALING_FACTOR);
 
         let mut borrow_reserve_data = mutate_state(|state| {
             state
@@ -1072,7 +1079,7 @@ pub async fn create_user_reserve_with_low_health(
         })?;
 
         borrow_reserve_data.asset_borrow += borrow_tokens.clone();
-        borrow_reserve_data.debt_index = Nat::from(100_000_000u128);
+        borrow_reserve_data.debt_index = Nat::from(SCALING_FACTOR);
 
         (supply_reserve_data, borrow_reserve_data)
     };
@@ -1085,8 +1092,8 @@ pub async fn create_user_reserve_with_low_health(
     if asset_supply == asset_borrow {
         let mut user_reserve = user_reserve(&mut user_data, &asset_supply);
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
-            reserve_data.liquidity_index = Nat::from(100_000_000u128);
-            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
+            reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
             reserve_data.d_token_balance += supply_tokens.clone();
             reserve_data.debt_token_blance += borrow_tokens.clone();
             reserve_data.is_using_as_collateral_or_borrow = true;
@@ -1096,8 +1103,8 @@ pub async fn create_user_reserve_with_low_health(
     } else {
         let mut supply_user_reserve = user_reserve(&mut user_data, &asset_supply);
         let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
-            reserve_data.liquidity_index = Nat::from(100_000_000u128);
-            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
+            reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
             reserve_data.d_token_balance += supply_tokens.clone();
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.is_collateral = true;
@@ -1105,8 +1112,8 @@ pub async fn create_user_reserve_with_low_health(
 
         let mut borrow_user_reserve = user_reserve(&mut user_data, &asset_borrow);
         let mut user_reserve_data = if let Some((_, reserve_data)) = borrow_user_reserve {
-            reserve_data.liquidity_index = Nat::from(100_000_000u128);
-            reserve_data.variable_borrow_index = Nat::from(100_000_000u128);
+            reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
+            reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
             reserve_data.debt_token_blance += borrow_tokens.clone();
             reserve_data.is_using_as_collateral_or_borrow = true;
             reserve_data.is_borrowed = true;
@@ -1224,7 +1231,7 @@ pub async fn get_all_user_list(
     let user_principal = ic_cdk::caller();
     
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::ErrorNotController);

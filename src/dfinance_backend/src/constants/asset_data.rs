@@ -6,6 +6,7 @@ use crate::declarations::storable::Candid;
 use crate::declarations::assets::ReserveData;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
+use crate::guards::to_check_controller;
 
 /*  
  * @title Reserve Initialization 
@@ -28,7 +29,7 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
@@ -106,7 +107,7 @@ pub async fn reset_reserve_value(
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);

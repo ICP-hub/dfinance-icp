@@ -29,7 +29,7 @@ fi
 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"
-SCALING_FACTOR=100000000
+SCALING_FACTOR=100_000_000
 
 # Escape the input values for JSON serialization
 ESCAPED_ASSET_NAME=$(printf '%s' "$ASSET_NAME" | jq -sR .)

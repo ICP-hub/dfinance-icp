@@ -19,6 +19,9 @@ use crate::{
 use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
+use crate::constants::constant_variables::constants::{
+    PERCENTAGE_FACTOR , ZERO_VALUE, ONE_VALUE
+};
 
 /*
 -------------------------------------
@@ -68,7 +71,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
-    if params.amount <= Nat::from(0u128) {
+    if params.amount <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -200,8 +203,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             return Err(Error::FeeExceedsAmount);
         }
 
-        let mut earned_rewards = Nat::from(0u128);
-        let mut liquidation_bonus_amount = Nat::from(0u128);
+        let mut earned_rewards = Nat::from(ZERO_VALUE);
+        let mut liquidation_bonus_amount = Nat::from(ZERO_VALUE);
 
         let reward_result: Result<(Nat,Nat), Error> = to_get_reward_amount(
             params.amount.clone() - transfer_token_fee.clone(),
@@ -227,7 +230,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("earned_rewards: {:?}", earned_rewards);
 
         if params.reward_amount > earned_rewards
-            && (params.reward_amount.clone() % earned_rewards) != Nat::from(1u32)
+            && (params.reward_amount.clone() % earned_rewards) != Nat::from(ONE_VALUE)
         {
             ic_cdk::println!("Reward amount is greater than earned rewards");
             return Err(Error::RewardIsHigher);
@@ -277,8 +280,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         if let Err(e) = reserve::update_interest_rates(
             &mut collateral_reserve_data,
             &mut collateral_reserve_cache,
-            Nat::from(0u128),
-            Nat::from(0u128),
+            Nat::from(ZERO_VALUE),
+            Nat::from(ZERO_VALUE),
         )
         .await
         {
@@ -345,7 +348,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         let liquidation_fee_percentage = collateral_reserve_data.configuration.liquidation_protocol_fee.clone();
          ic_cdk::println!("liquidation protocol fee percentage : {:?}",liquidation_fee_percentage.clone());
         ic_cdk::println!("liquidation bonus amount : {:?}",liquidation_bonus_amount);
-        let protocol_fee_amount = liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage / Nat::from(100u128));
+        let protocol_fee_amount = liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage / Nat::from(PERCENTAGE_FACTOR));
         ic_cdk::println!("liquidation protocol fee amount :{:?}",protocol_fee_amount.clone());
         if reward_amount.clone() < protocol_fee_amount.clone() {
             ic_cdk::println!("protocol fee amount is greater than reward amount");
@@ -648,7 +651,7 @@ pub async fn to_get_reward_amount(
     if collateral_asset != debt_asset {
         ic_cdk::println!("Collateral and debt assets are different, fetching exchange rates");
 
-        if debt_price == Nat::from(0u128) || collateral_price == Nat::from(0u128) {
+        if debt_price == Nat::from(ZERO_VALUE) || collateral_price == Nat::from(ZERO_VALUE) {
             ic_cdk::println!("Invalid exchange rate for either collateral_asset or debt asset");
             return Err(Error::ErrorPriceCache);
         }
@@ -677,7 +680,7 @@ pub async fn to_get_reward_amount(
             .configuration
             .liquidation_bonus
             .clone()
-            / Nat::from(100u128),
+            / Nat::from(PERCENTAGE_FACTOR),
     );
  
     let final_collateral_amount = collateral_amount.clone() + liquidation_bonus_amount.clone();

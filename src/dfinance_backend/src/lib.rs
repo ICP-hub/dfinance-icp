@@ -1,7 +1,6 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
-use api::resource_manager::acquire_lock;
 use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
@@ -12,7 +11,6 @@ use guards::to_check_controller;
 use ic_cdk::update;
 use ic_cdk::{init, query};
 use ic_cdk_macros::export_candid;
-use protocol::libraries::logic::update;
 use protocol::libraries::logic::update::user_data;
 use protocol::libraries::logic::update::user_reserve;
 use protocol::libraries::logic::user::calculate_user_asset_data;
@@ -37,10 +35,11 @@ use crate::declarations::assets::{
 };
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::types::datatypes::{UserData, UserAccountData};
-use ic_cdk_timers::set_timer_interval;
+use ic_cdk_timers::{set_timer_interval, set_timer};
 use std::time::Duration;
+use constants::constant_variables::constants::{ONE_DAY, ZERO_VALUE};
 
-const ONE_DAY: Duration = Duration::from_secs(86400);
+
 
 /*
  * @title Initialization Function
@@ -301,7 +300,7 @@ pub async fn get_asset_supply(
                 "Error: User reserve data not found for asset while get asset supply returing 0: {}",
                 asset_name
             );
-            return Ok(Nat::from(0u128));
+            return Ok(Nat::from(ZERO_VALUE));
         }
     };
 
@@ -337,9 +336,9 @@ pub async fn get_asset_supply(
         get_balance_value
     );
 
-    if get_balance_value == Nat::from(0u128) {
+    if get_balance_value == Nat::from(ZERO_VALUE) {
         ic_cdk::println!("balance 0, returnin....");
-        return Ok(Nat::from(0u128));
+        return Ok(Nat::from(ZERO_VALUE));
     }
 
     let (_, user_reserve) = user_reserve_data;
@@ -423,13 +422,13 @@ pub async fn get_asset_debt(
                 "Error: User reserve data not found for asset while get asset debt returing 0: {}",
                 asset_name
             );
-            return Ok(Nat::from(0u128));
+            return Ok(Nat::from(ZERO_VALUE));
         }
     };
     let (_, user_reserve) = user_reserve_data;
     if !user_reserve.is_borrowed {
         ic_cdk::println!("User has no debt for asset: {}", asset_name);
-        return Ok(Nat::from(0u128));
+        return Ok(Nat::from(ZERO_VALUE));
     }
 
     let asset_reserve = match get_reserve_data(asset_name.clone()) {
@@ -577,7 +576,7 @@ async fn get_lock() -> Result<bool, Error> {
 
     match result {
         Ok(_) => Ok(result.unwrap()),
-        Err(e) => Err(Error::LockAcquisitionFailed),
+        Err(_e) => Err(Error::LockAcquisitionFailed),
     }
 }
 
@@ -613,16 +612,47 @@ async fn get_user_account_data(
  * @dev This function schedules a task to reset faucet usage at midnight.
  * @returns None
  */
-pub async fn schedule_midnight_task() {
-    let _timer_id = set_timer_interval(time_until_midnight(), || {
+ pub async fn schedule_midnight_task() {
+    let initial_delay = time_until_midnight();
+    
+    
+    set_timer(initial_delay, || {
         ic_cdk::spawn(async {
-            let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
 
-            for (user_principal, _) in vector_user_data {
-                if let Err(_) = reset_faucet_usage(user_principal).await {}
-            }
+            run_midnight_reset().await;
+    
+            set_timer_interval(ONE_DAY, || {
+                ic_cdk::spawn(async {
+                    run_midnight_reset().await;
+                });
+            });
         });
     });
+}
+
+/*
+ * @title Run Midnight Reset
+ * @dev Resets faucet usage for all registered users at midnight (UTC).
+ * @returns None
+ * 
+ * This function retrieves all user data and calls `reset_faucet_usage` for each user. 
+ * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.
+ */
+async fn run_midnight_reset() {
+    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    for (user_principal, _) in vector_user_data {
+        if let Err(_) = reset_faucet_usage(user_principal).await {
+            ic_cdk::println!(
+                "Error resetting faucet usage for user: {}",
+                user_principal.to_string()
+            );
+        } else {
+            ic_cdk::println!(
+                "Successfully reset faucet usage for user: {}",
+                user_principal.to_string()
+            );
+        }
+    }
 }
 
 /*
@@ -633,18 +663,24 @@ pub async fn schedule_midnight_task() {
 fn time_until_midnight() -> Duration {
     let now = ic_cdk::api::time();
     let nanos_since_midnight = now % ONE_DAY.as_nanos() as u64;
-    Duration::from_nanos(ONE_DAY.as_nanos() as u64 - nanos_since_midnight)
+    let duration_until_midnight = ONE_DAY.as_nanos() as u64 - nanos_since_midnight;
+    Duration::from_nanos(duration_until_midnight)
 }
 
 /*
- * @title Post Upgrade Hook
- * @dev This function is automatically executed after an upgrade.
+ * @title Schedule after upgrade by admin
+ * @dev This function wil re-initialize the scheduled tasks, such as the midnight reset.
  * @notice Re-initializes scheduled tasks, such as the midnight reset.
- * @returns None (Executes `schedule_midnight_task` asynchronously).
+ * @returns ok or Error.
  */
-#[ic_cdk::post_upgrade]
-pub async fn post_upgrade() {
+#[update]
+pub async fn admin_restart_reset_task() -> Result<(), Error> {
+   
+    if !to_check_controller() {
+        return Err(Error::ErrorNotController);
+    }
     schedule_midnight_task().await;
+    return Ok(());
 }
 
 #[query]
@@ -675,7 +711,7 @@ pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> R
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
@@ -713,7 +749,7 @@ pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Resul
         return Err(Error::InvalidAssetLength);
     }
 
-    if session_start <= Nat::from(0u128) {
+    if session_start <= Nat::from(ZERO_VALUE) {
         ic_cdk::println!("Amount cannot be zero");
         return Err(Error::InvalidAmount);
     }
@@ -750,7 +786,7 @@ pub fn get_caller_session() -> Result<SessionStorageData, Error> {
             .unwrap_or_else(|| SessionStorageData {
                 // Default value
                 connected_wallet: "".to_string(),
-                session_start: Nat::from(0u128),
+                session_start: Nat::from(ZERO_VALUE),
             })
     }))
 }

@@ -368,7 +368,7 @@ impl ValidationLogic {
                 return Err(Error::LTVGreaterThanThreshold);
             }
         }
-        // bhanu this should be 1 or 0 ?
+      
         if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }

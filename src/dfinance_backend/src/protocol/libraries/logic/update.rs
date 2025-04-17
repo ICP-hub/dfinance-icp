@@ -181,10 +181,9 @@ impl UpdateLogic {
 
         let platform_principal = ic_cdk::api::id();
 
-        let asset_reserve = get_reserve_data(params.asset.clone());
-        ic_cdk::println!("Asset reserve read: {:?}", asset_reserve);
+        // let asset_reserve = get_reserve_data(params.asset.clone());
+        // ic_cdk::println!("Asset reserve read: {:?}", asset_reserve);
 
-        // bhanu : unused code any use ?
         // let asset_reserve_data = match asset_reserve {
         //     Ok(data) => {
         //         ic_cdk::println!("Reserve data found for asset: {:?}", data);
@@ -835,7 +834,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
                 adjusted_collateral = total_collateral.clone() - usd_amount.clone();
             }
 
-            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+            // ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
             if total_debt == zero_nat_value() {
                 ltv = zero_nat_value();
             } else {

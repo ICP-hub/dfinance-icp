@@ -1,10 +1,10 @@
 use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::mutate_state;
+use crate::stable_storage::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
-use crate::declarations::storable::Candid;
+use crate::stable_storage::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;

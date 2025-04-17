@@ -1,6 +1,9 @@
 use candid::Principal;
-use ic_cdk::{caller, query};
-use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error};
+use ic_cdk::query;
+use crate::{
+    stable_storage::state_handler::{mutate_state, read_state}, 
+    constants::errors::Error
+};
 
 /*
  * @title Caller Identity Validation

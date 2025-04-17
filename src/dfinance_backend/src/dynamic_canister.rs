@@ -1,4 +1,3 @@
-use crate::constants::asset_address::default;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
@@ -9,21 +8,18 @@ use crate::constants::interest_variables::constants::{
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
-use crate::constants::constant_variables::constants::{
-    INITIAL_TEST_TOKEN_BALANCE
-};
+use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::guards::to_check_controller;
-use candid::{CandidType, Encode, Nat, Principal};
+use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
 };
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
-use serde::Deserialize;
 use std::borrow::Cow;
-use crate::declarations::structs::{DynamicCanisterInitArgs, LedgerArg, InitArgs, ArchiveOptions, FeatureFlags};
-
+use crate::declarations::structs::{DynamicCanisterInitArgs, LedgerArg, ArchiveOptions, FeatureFlags};
+use crate::get_controller;
 /*
  * @title Load Token Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the token ledger.
@@ -42,6 +38,17 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
         "../../../target/wasm32-unknown-unknown/release/token_ledger.wasm"
     ))
+}
+
+fn default() -> Result<Principal, Error> {
+    let default_var = match get_controller() {
+        Ok(init_args) => init_args.controller_id,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    Ok(default_var)
 }
 
 /*

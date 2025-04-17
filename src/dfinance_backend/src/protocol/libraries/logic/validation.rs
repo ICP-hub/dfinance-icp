@@ -1,5 +1,5 @@
 use crate::api::functions::{get_balance, get_total_supply};
-use crate::api::state_handler::read_state;
+use crate::stable_storage::state_handler::read_state;
 use crate::constants::constant_variables::constants::MAX_ASSET_LENGTH;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;

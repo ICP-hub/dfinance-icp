@@ -23,17 +23,15 @@ mod constants;
 pub mod declarations;
 mod dynamic_canister;
 mod guards;
-mod implementations;
-mod memory;
+mod stable_storage;
 mod protocol;
-mod state;
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::declarations::structs::ReserveData;
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
     ExecuteWithdrawParams,
 };
-use crate::declarations::storable::Candid;
+use crate::stable_storage::storable::Candid;
 use crate::protocol::libraries::types::datatypes::{UserData, UserAccountData};
 use ic_cdk_timers::{set_timer_interval, set_timer};
 use std::time::Duration;

@@ -1,22 +1,19 @@
 use crate::api::functions::{get_balance, request_limiter};
 use crate::constants::errors::Error;
-use crate::declarations::structs::{ReserveCache, ReserveData};
+use crate::declarations::structs::{
+    ReserveCache, ReserveData, ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+};
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
 use crate::protocol::libraries::math::price::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
-use crate::protocol::libraries::types::datatypes::UserData;
-use crate::{
-    api::state_handler::mutate_state,
-    declarations::{
-        structs::{
-            ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
-        },
+use crate::protocol::libraries::types::datatypes::{UserData,UserReserveData};
+use crate::stable_storage::{
+        state_handler::mutate_state,
         storable::Candid,
-    },
-    protocol::libraries::types::datatypes::UserReserveData,
-};
+    };
+
 use candid::{Nat, Principal};
 use ic_cdk::update;
 use crate::constants::constant_variables::constants::{

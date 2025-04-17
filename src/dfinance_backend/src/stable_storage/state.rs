@@ -1,10 +1,23 @@
 
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 
-use crate::constants::memory::{ASSET_INDEX_MEMORY_ID, BLOCKED_USERS_FUNCTION, CANISTER_MEMORY_ID, FUNCTION_REQUESTS, META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST, USER_GUIDE_DATA, USER_PROFILE_MEMORY_ID};
-use crate::declarations::state::State;
-use crate::protocol::libraries::types::assets::{AssetIndex, BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList, ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile};
+use crate::stable_storage::memory::{ASSET_INDEX_MEMORY_ID, BLOCKED_USERS_FUNCTION, CANISTER_MEMORY_ID, FUNCTION_REQUESTS, META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST, USER_GUIDE_DATA, USER_PROFILE_MEMORY_ID};
+use crate::stable_storage::types::{AssetIndex, BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList, ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile};
 
+
+pub struct State {
+    pub asset_index: AssetIndex,
+    pub user_profile: UserProfile,
+    pub reserve_list: ReserveList,
+    pub price_cache_list: PriceCacheList,
+    pub canister_list:CanisterList, 
+    pub meta_data: MetaData,
+    pub tester_list:TesterList,
+    pub userrequests: FunctionRequests,
+    pub restrict_users:BlockedUsersFunction,
+    pub session_details:SessionDetails,
+    pub user_guide_data:UserGuideData,
+}
 /* 
  * @title State 
  * @functionality Manages and initializes the global state of the lending protocol using stable memory.

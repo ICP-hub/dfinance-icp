@@ -1,9 +1,9 @@
 use crate::api::functions::request_limiter;
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::constants::constant_variables::constants::ZERO_VALUE;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
-use crate::declarations::storable::Candid;
+use crate::stable_storage::storable::Candid;
 use crate::guards::{check_is_tester, to_check_controller};
 use crate::protocol::libraries::types::datatypes::{CachedPrice, PriceCache};
 use candid::{Nat, Principal};

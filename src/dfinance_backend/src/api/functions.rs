@@ -1,7 +1,7 @@
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::{mutate_state, read_state};
+use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
-use crate::declarations::storable::Candid;
+use crate::stable_storage::storable::Candid;
 use crate::get_cached_exchange_rate;
 use crate::guards::to_check_controller;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};

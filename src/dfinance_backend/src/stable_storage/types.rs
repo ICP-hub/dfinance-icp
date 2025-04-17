@@ -3,10 +3,16 @@ use ic_stable_structures::StableBTreeMap;
 use std::collections::BTreeMap;
 
 use crate::declarations::structs::InitArgs;
-use crate::declarations::{structs::ReserveData, storable::Candid};
-use crate::protocol::libraries::types::{datatypes::UserData, memory::VMem};
+use crate::declarations::structs::ReserveData;
+use crate::protocol::libraries::types::datatypes::UserData;
+use crate::stable_storage::storable::Candid;
 
-use super::datatypes::{BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData};
+use crate::protocol::libraries::types::datatypes::{BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData};
+
+
+use ic_stable_structures::{memory_manager::VirtualMemory, DefaultMemoryImpl};
+pub type VMem = VirtualMemory<DefaultMemoryImpl>;
+
 
 pub type AssetIndex = StableBTreeMap<String, Candid<ReserveData>, VMem>;
 pub type UserProfile = StableBTreeMap<Principal, Candid<UserData>, VMem>;

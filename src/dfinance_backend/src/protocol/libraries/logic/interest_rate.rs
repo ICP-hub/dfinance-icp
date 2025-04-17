@@ -23,9 +23,8 @@ use crate::{
     get_reserve_data,
     protocol::libraries::math::math_utils::ScalingMath, user_normalized_supply,
 };
-use candid::{CandidType, Deserialize, Nat};
+use candid::Nat;
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
-use serde::Serialize;
 use crate::constants::constant_variables::constants::{
     ZERO_VALUE, PERCENTAGE_FACTOR
 };

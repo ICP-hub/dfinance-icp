@@ -3,12 +3,12 @@ use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance, re
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::structs::AssetData;
-use crate::declarations::storable::Candid;
+use crate::stable_storage::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::math::math_utils::get_max_value;
 use crate::protocol::libraries::types::datatypes::{UserAccountData, UserData};
 use crate::{
-    api::state_handler::mutate_state,
+    stable_storage::state_handler::mutate_state,
     get_cached_exchange_rate, get_reserve_data,
     protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
     user_normalized_debt, user_normalized_supply,

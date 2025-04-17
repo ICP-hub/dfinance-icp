@@ -1,12 +1,10 @@
 use crate::api::functions::{asset_transfer_from, request_limiter};
-use crate::api::resource_manager::{
-    acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
-};
-use crate::api::state_handler::*;
+use crate::api::resource_manager::{acquire_lock, release_lock};
+use crate::stable_storage::state_handler::*;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE};
 use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::declarations::storable::Candid;
+use crate::stable_storage::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
@@ -15,9 +13,7 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::constants::constant_variables::constants::{
-    ZERO_VALUE
-};
+use crate::constants::constant_variables::constants::ZERO_VALUE;
 
 /*
 -------------------------------------
@@ -62,7 +58,7 @@ use crate::constants::constant_variables::constants::{
  * @return Result<Nat, Error> The user's new balance after a successful transaction or an error code if the operation fails.
  */
 #[update]
-pub async fn execute_borrow(mut params: ExecuteBorrowParams) -> Result<Nat, Error> {
+pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
      //validating Input parameters
      ValidationLogic::validate_input_params(&params.asset, &params.amount, None)?;
 

@@ -15,6 +15,9 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE
+};
 
 /*
 -------------------------------------
@@ -24,6 +27,7 @@ use ic_cdk::update;
 
 /*
  * @title Execute Supply Function
+ * @functionality Asset supply processing
  * @notice Allows users to supply assets to the platform, handling validation, state updates, and asset transfer.
  *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
  *
@@ -332,6 +336,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 
 /*
  * @title Execute Withdraw Function
+ * @functionality Asset withdrawal processing
  * @notice Allows users to withdraw assets from the platform, handling validation, state updates, and asset transfer.
  *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
  *
@@ -599,7 +604,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         {
             Ok(new_balance) => {
                 println!("Asset transfer from backend to user executed successfully");
-
+                mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                });
                 return Ok(new_balance);
             }
             Err(_) => {

@@ -4,6 +4,7 @@ use serde::Serialize;
 
 /* 
  * @title Transfer From Arguments
+ * @functionality Encapsulates all necessary parameters to perform a delegated asset transfer.
  * @notice Defines the arguments for transferring assets.
  * @dev This struct includes the sender, recipient, transfer amount, and optional metadata.
  */
@@ -20,6 +21,7 @@ pub struct TransferFromArgs {
 
 /* 
  * @title Transfer Arguments
+ * @functionality Defines the standard parameters for initiating an asset transfer.
  * @notice Defines the structure for an asset transfer.
  * @dev This struct stores necessary data for a direct asset transfer.
  */
@@ -35,6 +37,7 @@ pub struct TransferArgs {
 
 /* 
  * @title Transfer Account
+ * @functionality Represents an account holder and their optional subaccount for transfers.
  * @notice Represents an account involved in a transfer.
  * @dev This struct defines an account using a `Principal` owner and an optional subaccount identifier.
  */
@@ -46,7 +49,8 @@ pub struct TransferAccount {
 
 /*
  * @title TransferFromResult Enum
- * @notice Represents the possible outcomes transaction.
+ * @functionality Captures the success or failure of a delegated transfer operation.
+ * @notice Represents the possible outcomes of a transaction.
  * @dev This enum encapsulates the result. 
  *      A successful transaction returns `Ok(Nat)`, where `Nat` represents the transferred amount.
  *      If the transaction fails, it returns `Err(TransferFromError)`, specifying the error type.
@@ -59,7 +63,8 @@ pub enum TransferFromResult {
 
 /* 
  * @title Transfer From Error
- * @notice Enumerates possible errors encountered during transaction.
+ * @functionality Enumerates specific reasons a delegated transfer may fail.
+ * @notice Enumerates possible errors encountered during a transaction.
  * @dev Errors include insufficient funds, incorrect fees, or duplicate transactions.
  */
 #[derive(CandidType, Deserialize, Debug)]
@@ -74,8 +79,10 @@ pub enum TransferFromError {
     TooOld,
     InsufficientFunds { balance: Nat },
 }
+
 /* 
  * @title Approve Arguments
+ * @functionality Defines the parameters for approving a spender to use funds.
  * @notice Defines the structure for an approval request.
  * @dev Used when approving a spender to use funds on behalf of the owner.
  */
@@ -93,6 +100,7 @@ pub struct ApproveArgs {
 
 /* 
  * @title Approve Error
+ * @functionality Details the reasons an approval attempt might fail.
  * @notice Lists possible errors encountered during an approval operation.
  * @dev Errors include duplicate transactions, insufficient funds, and expiration issues.
  */
@@ -111,6 +119,7 @@ pub enum ApproveError {
 
 /* 
  * @title Approve Result
+ * @functionality Represents the result of a spender approval operation, either success or failure.
  * @notice Defines the possible outcomes of an approval transaction.
  * @dev The result is either `Ok(Nat)` (successful approval) or an error (`Err(ApproveError)`).
  */

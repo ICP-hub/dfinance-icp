@@ -22,11 +22,15 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, PERCENTAGE_FACTOR
+};
 
 pub struct UpdateLogic;
 
 impl UpdateLogic {
     /*
+     * @functionality asset-supply
      * @title Update User Data for Supplying Assets
      * @notice Updates user data and mints dTokens when assets are supplied.
      *
@@ -152,6 +156,7 @@ impl UpdateLogic {
     }
 
     /*
+     * @functionality asset-borrow
      * @title Update User Data for Borrowing
      * @notice Updates user data and mints debt tokens when borrowing assets.
      *
@@ -345,6 +350,7 @@ impl UpdateLogic {
     }
 
     /*
+     * @functionality asset-withdraw
      * @title Update User Data for Withdrawals
      * @notice Handles user data updates when withdrawing assets.
      *
@@ -493,6 +499,7 @@ impl UpdateLogic {
     }
 
     /*
+     * @functionality asset-repay
      * @title Update User Data for Repayments
      * @notice Handles user data updates when repaying borrowed assets.
      *
@@ -603,6 +610,7 @@ impl UpdateLogic {
 }
 
 /*
+ * @functionality collateral-management
  * @title Toggle Collateral Status
  * @notice Allows a user to toggle the collateral status of an asset.
  *
@@ -850,7 +858,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             }
         }
 
-        ltv = ltv * Nat::from(100u128);
+        ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", ltv);
         if ltv >= liquidation_threshold_var {
             return Err(Error::LTVGreaterThanThreshold);
@@ -910,6 +918,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 }
 
 /*
+ * @functionality user-data-access
  * @title Fetch User Data
  * @notice Retrieves user data from state.
  *
@@ -935,6 +944,7 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
 }
 
 /*
+ * @functionality user-reserve-access
  * @title Fetch User Reserve Data
  * @notice Retrieves reserve data for a specific asset from the user's profile.
  *

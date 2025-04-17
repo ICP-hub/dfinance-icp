@@ -5,6 +5,7 @@ mod utils;
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
+use crate::utils::constant_variables::*;
 
 #[test]
 fn call_test_function() {
@@ -17,10 +18,10 @@ fn call_test_function() {
 impl Default for AccrueToTreasuryLocalVars {
     fn default() -> Self {
         AccrueToTreasuryLocalVars {
-            prev_total_variable_debt: Nat::from(0u128),
-            curr_total_variable_debt: Nat::from(0u128),
-            total_debt_accrued: Nat::from(0u128),
-            amount_to_mint: Nat::from(0u128),
+            prev_total_variable_debt: Nat::from(ZERO_VALUE),
+            curr_total_variable_debt: Nat::from(ZERO_VALUE),
+            total_debt_accrued: Nat::from(ZERO_VALUE),
+            amount_to_mint: Nat::from(ZERO_VALUE),
         }
     }
 }
@@ -45,8 +46,6 @@ impl ScalingMath for Nat {
     }
 }
 
-pub const SCALING_FACTOR: u128 = 100000000;
-const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
 
 fn get_scaling_value() -> Nat {
     Nat::from(SCALING_FACTOR)
@@ -56,6 +55,10 @@ fn get_scaling_value() -> Nat {
  * @title Calculate Linear Interest
  * @notice Computes interest accrued over time using a linear rate formula.
  * @dev Uses a fixed timestamp, calculates time delta, and scales the result.
+ * @param rate_input - The interest rate (scaled Nat).
+ * @param last_update_timestamp - The timestamp of the last update in seconds.
+ * @return Accumulated linear interest scaled appropriately.
+ * @functionality Returns the result of linear interest based on elapsed time and rate.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
     // let rate = rate_input/Nat::from(100u128);
@@ -86,6 +89,11 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
  * @title Calculate Compounded Interest
  * @notice Computes interest using a compounded formula based on time elapsed.
  * @dev Uses time delta, scaling factors, and power terms for accuracy.
+ * @param rate_input - The interest rate (scaled Nat).
+ * @param last_update_timestamp - The timestamp of the last update in seconds.
+ * @param current_timestamp - The current timestamp in seconds.
+ * @return Compounded interest over time, scaled appropriately.
+ * @functionality Calculates compounded interest based on time delta using a power series expansion.
  */
 pub fn calculate_compounded_interest(
     rate_input: Nat,
@@ -137,9 +145,12 @@ pub fn calculate_compounded_interest(
  * @title User Normalized Supply
  * @notice Computes the updated liquidity index based on interest rates.
  * @dev Returns the stored index if no update is needed; otherwise, applies linear interest.
+ * @param reserve_data - Reserve data containing rate and index information.
+ * @return The updated liquidity index for the reserve.
+ * @functionality Updates liquidity index based on linear interest since last update.
  */
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::Error> {
-    let current_time = 1700000000;
+    let current_time = 1_700_000_000;
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
@@ -163,6 +174,15 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::
  * @title Calculate Interest Rates
  * @notice Computes liquidity and borrow rates based on utilization ratio.
  * @dev Adjusts rates dynamically based on optimal and excess usage conditions.
+ * @param liq_added - Amount of liquidity added to the reserve.
+ * @param liq_taken - Amount of liquidity taken from the reserve.
+ * @param total_debt - Total borrowed amount from the reserve.
+ * @param params - Interest rate configuration parameters.
+ * @param reserve - Reserve data including current supply and index info.
+ * @param reserve_factor - Fraction of interest reserved by the protocol.
+ * @param asset - Identifier of the asset for logging and context.
+ * @return A tuple containing the updated liquidity rate and borrow rate.
+ * @functionality Dynamically calculates interest rates for borrowing and supplying based on asset utilization.
  */
 pub async fn calculate_interest_rates(
     liq_added: Nat,
@@ -180,7 +200,7 @@ pub async fn calculate_interest_rates(
     ic_cdk::println!("Liquidity Taken: {:?}", liq_taken);
     ic_cdk::println!("Reserve Factor: {:?}", reserve_factor);
 
-    let mut current_liquidity_rate = Nat::from(0u128);
+    let mut current_liquidity_rate = Nat::from(ZERO_VALUE);
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
 
     let total_supply = reserve
@@ -194,7 +214,7 @@ pub async fn calculate_interest_rates(
 
     ic_cdk::println!("Available Liquidity: {:?}", available_liq);
 
-    if total_debt.clone() != Nat::from(0u128) {
+    if total_debt.clone() != Nat::from(ZERO_VALUE) {
         let utilization_ratio = total_debt
             .clone()
             .scaled_div(total_debt.clone() + available_liq.clone());
@@ -233,7 +253,7 @@ pub async fn calculate_interest_rates(
         current_liquidity_rate = curr_borrow_rate
             .clone()
             .scaled_mul(utilization_ratio.clone())
-            .scaled_mul(Nat::from(100000000u128) - (reserve_factor / Nat::from(100u128)));
+            .scaled_mul(Nat::from(100_000_000u128) - (reserve_factor / Nat::from(100u128)));
 
         ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
         ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);
@@ -248,14 +268,16 @@ pub async fn calculate_interest_rates(
  * @title Accrue to Treasury
  * @notice Computes and transfers accrued interest to the platform treasury.
  * @dev Calculates debt accrued and mints the corresponding amount for the treasury.
+ * @functionality Allocates a portion of accrued interest to the treasury based on the reserve factor.
  */
+
 pub fn accrue_to_treasury(
     reserve_data: &mut ReserveData,
     reserve_cache: &ReserveCache,
 ) -> Result<(), errors::Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    if reserve_cache.reserve_factor == Nat::from(0u128) {
+    if reserve_cache.reserve_factor == Nat::from(ZERO_VALUE) {
         return Ok(());
     }
 
@@ -291,7 +313,7 @@ pub fn accrue_to_treasury(
         reserve_cache.reserve_factor.clone(),
     ); //percent
     ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
-    if vars.amount_to_mint != Nat::from(0u128) {
+    if vars.amount_to_mint != Nat::from(ZERO_VALUE) {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
             reserve_cache.next_liquidity_index.clone(),
@@ -304,6 +326,12 @@ pub fn accrue_to_treasury(
     Ok(())
 }
 
+/*
+ * @title Test Linear Interest Calculation
+ * @notice Validates the linear interest calculation functionality.
+ * @dev Ensures that the calculation of linear interest is correct based on rate and timestamps.
+ * @functionality Verifies that linear interest is computed and matches the expected output based on various rate and time conditions.
+ */
 fn test_calculate_linear_interest() {
     let current_timestamp = 1_700_000_000;
 
@@ -379,6 +407,12 @@ fn test_calculate_linear_interest() {
     println!("\n======================== All test cases completed ========================\n");
 }
 
+/*
+ * @title Test Compounded Interest Calculation
+ * @notice Validates the compounded interest calculation functionality.
+ * @dev Ensures that the compounded interest is calculated accurately based on the rate and timestamps.
+ * @functionality Verifies that compounded interest is computed correctly and matches the expected output based on rate and time conditions.
+ */
 fn test_calculate_compounded_interest() {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -452,6 +486,12 @@ fn test_calculate_compounded_interest() {
     println!("\n======================== All test cases completed. ========================\n");
 }
 
+/*
+ * @title Test Interest Rate Calculation
+ * @notice Validates the calculation of liquidity and borrow rates based on given parameters.
+ * @dev Ensures that the liquidity and borrow rates are calculated accurately based on liquidity added, liquidity taken, total debt, and various configuration parameters.
+ * @functionality Verifies the accuracy of the interest rate calculation based on real-world asset data and the platform’s rate parameters.
+ */
 async fn test_calculate_interest_rates() {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -467,9 +507,9 @@ async fn test_calculate_interest_rates() {
     }
 
     let test_cases = vec![TestCase {
-        liq_added: Nat::from(1000u128),
+        liq_added: Nat::from(1_000u128),
         liq_taken: Nat::from(500u128),
-        total_debt: Nat::from(5000u128),
+        total_debt: Nat::from(5_000u128),
         params: InterestRateParams {
             base_variable_borrow_rate: Nat::from(3u128),
             optimal_usage_ratio: Nat::from(80u128),
@@ -484,17 +524,17 @@ async fn test_calculate_interest_rates() {
             debt_token_canister: Some("canister2".to_string()),
             borrow_rate: Nat::from(5u128),
             current_liquidity_rate: Nat::from(2u128),
-            asset_supply: Nat::from(10000u128),
-            asset_borrow: Nat::from(3000u128),
-            liquidity_index: Nat::from(1000000u128),
-            debt_index: Nat::from(1000000u128),
+            asset_supply: Nat::from(10_000u128),
+            asset_borrow: Nat::from(3_000u128),
+            liquidity_index: Nat::from(1_000_000u128),
+            debt_index: Nat::from(1_000_000u128),
             configuration: ReserveConfiguration {
                 ltv: Nat::from(75u128),
                 liquidation_threshold: Nat::from(85u128),
                 liquidation_bonus: Nat::from(10u128),
                 borrowing_enabled: true,
-                borrow_cap: Nat::from(100000u128),
-                supply_cap: Nat::from(200000u128),
+                borrow_cap: Nat::from(100_000u128),
+                supply_cap: Nat::from(200_000u128),
                 liquidation_protocol_fee: Nat::from(5u128),
                 active: true,
                 frozen: false,
@@ -502,13 +542,13 @@ async fn test_calculate_interest_rates() {
                 reserve_factor: Nat::from(10u128),
             },
             can_be_collateral: Some(true),
-            last_update_timestamp: 1700000000,
+            last_update_timestamp: 1_700_000_000,
             accure_to_platform: Nat::from(500u128),
         },
         reserve_factor: Nat::from(10u128),
         asset: "TestAsset".to_string(),
-        expected_liquidity_rate: Nat::from(15943866u128),
-        expected_borrow_rate: Nat::from(17857131u128),
+        expected_liquidity_rate: Nat::from(15_943_866u128),
+        expected_borrow_rate: Nat::from(17_857_131u128),
     }];
 
     for (i, case) in test_cases.iter().enumerate() {
@@ -587,6 +627,12 @@ async fn test_calculate_interest_rates() {
     println!("\n======================== All test cases completed. ========================\n");
 }
 
+/*
+ * @title Test Accrue to Treasury
+ * @notice Validates the accrued interest transfer functionality to the treasury.
+ * @dev Ensures the calculation of accrued interest is accurate and matches the expected treasury amount.
+ * @functionality Validates that the accrued interest is accurately computed and transferred to the platform treasury.
+ */
 async fn test_accrue_to_treasury() {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -603,17 +649,17 @@ async fn test_accrue_to_treasury() {
             debt_token_canister: Some("canister2".to_string()),
             borrow_rate: Nat::from(5u128),
             current_liquidity_rate: Nat::from(2u128),
-            asset_supply: Nat::from(10000u128),
-            asset_borrow: Nat::from(3000u128),
-            liquidity_index: Nat::from(1000000u128),
-            debt_index: Nat::from(1000000u128),
+            asset_supply: Nat::from(10_000u128),
+            asset_borrow: Nat::from(3_000u128),
+            liquidity_index: Nat::from(1_000_000u128),
+            debt_index: Nat::from(1_000_000u128),
             configuration: ReserveConfiguration {
                 ltv: Nat::from(75u128),
                 liquidation_threshold: Nat::from(85u128),
                 liquidation_bonus: Nat::from(10u128),
                 borrowing_enabled: true,
-                borrow_cap: Nat::from(100000u128),
-                supply_cap: Nat::from(200000u128),
+                borrow_cap: Nat::from(10_0000u128),
+                supply_cap: Nat::from(200_000u128),
                 liquidation_protocol_fee: Nat::from(5u128),
                 active: true,
                 frozen: false,
@@ -621,7 +667,7 @@ async fn test_accrue_to_treasury() {
                 reserve_factor: Nat::from(10u128),
             },
             can_be_collateral: Some(true),
-            last_update_timestamp: 1700000000,
+            last_update_timestamp: 1_700_000_000,
             accure_to_platform: Nat::from(500u128),
         },
         reserve_cache: ReserveCache {
@@ -630,27 +676,27 @@ async fn test_accrue_to_treasury() {
                 liquidation_threshold: Nat::from(85u128),
                 liquidation_bonus: Nat::from(10u128),
                 borrowing_enabled: true,
-                borrow_cap: Nat::from(100000u128),
-                supply_cap: Nat::from(200000u128),
+                borrow_cap: Nat::from(100_000u128),
+                supply_cap: Nat::from(200_000u128),
                 liquidation_protocol_fee: Nat::from(5u128),
                 active: true,
                 frozen: false,
                 paused: false,
                 reserve_factor: Nat::from(10u128),
             },
-            curr_liquidity_index: Nat::from(1000000u128),
-            next_liquidity_index: Nat::from(1200000u128),
+            curr_liquidity_index: Nat::from(1_000_000u128),
+            next_liquidity_index: Nat::from(1_200_000u128),
             curr_liquidity_rate: Nat::from(2u128),
-            reserve_last_update_timestamp: 1700000000,
-            curr_debt_index: Nat::from(1000000u128),
-            next_debt_index: Nat::from(1100000u128),
+            reserve_last_update_timestamp: 1_700_000_000,
+            curr_debt_index: Nat::from(1_000_000u128),
+            next_debt_index: Nat::from(1_100_000u128),
             curr_debt_rate: Nat::from(5u128),
             next_debt_rate: Nat::from(6u128),
-            debt_last_update_timestamp: 1700000000,
+            debt_last_update_timestamp: 1_700_000_000,
             reserve_factor: Nat::from(10u128),
-            curr_debt: Nat::from(5000u128),
-            next_debt: Nat::from(5500u128),
-            curr_supply: Nat::from(10000u128),
+            curr_debt: Nat::from(5_000u128),
+            next_debt: Nat::from(5_500u128),
+            curr_supply: Nat::from(10_000u128),
         },
         expected_accure_to_platform: Nat::from(500u128),
     }];

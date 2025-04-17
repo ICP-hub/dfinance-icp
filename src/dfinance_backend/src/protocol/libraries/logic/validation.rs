@@ -1,5 +1,6 @@
 use crate::api::functions::{get_balance, get_total_supply};
 use crate::api::state_handler::read_state;
+use crate::constants::constant_variables::constants::MAX_ASSET_LENGTH;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::assets::ReserveData;
@@ -10,27 +11,35 @@ use crate::protocol::libraries::math::calculate::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
+use crate::constants::constant_variables::constants::{
+    ZERO_VALUE, ONE_VALUE, PERCENTAGE_FACTOR
+};
 
 pub struct ValidationLogic;
 
 impl ValidationLogic {
 
     /*
-     * @title Validate Supply
-     * @notice Ensures the supply amount is valid before processing the transaction.
-     *
-     * @dev Performs checks on:
-     * - User's balance in the ledger canister.
-     * - Reserve status (active, paused, or frozen).
-     * - Supply cap constraints.
-     *
-     * @param reserve The reserve data for the asset being supplied.
-     * @param amount The amount the user wants to supply.
-     * @param user The principal of the user supplying the asset.
-     * @param ledger_canister The principal of the ledger canister for balance verification.
-     *
-     * @return Returns `Ok(())` if validation is successful.
-     */
+    * @title Validate Supply
+    * @notice Ensures the supply amount is valid before processing the transaction.
+    *
+    * @dev Performs checks on:
+    * - User's balance in the ledger canister.
+    * - Reserve status (active, paused, or frozen).
+    * - Supply cap constraints.
+    *
+    * @functionality This function first checks the user's balance to ensure they have enough funds in the ledger canister. 
+    *                It then checks the state of the reserve (whether it is active, paused, or frozen). 
+    *                Finally, it verifies if the total supply of the asset, including the user's intended supply, exceeds the supply cap. 
+    *                If any of these checks fail, it returns an error.
+    *
+    * @param reserve The reserve data for the asset being supplied.
+    * @param amount The amount the user wants to supply.
+    * @param user The principal of the user supplying the asset.
+    * @param ledger_canister The principal of the ledger canister for balance verification.
+    *
+    * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
+ */
     pub async fn validate_supply(
         reserve: &ReserveData,
         amount: Nat,
@@ -131,29 +140,29 @@ impl ValidationLogic {
     }
 
     /*
-     * @title Validate Withdraw
-     * @notice Ensures a user can withdraw a specified amount from the reserve.
-     *
-     * @dev Performs checks on:
-     * - User's supplied balance.
-     * - Platform's available balance.
-     * - Loan-to-value (LTV) constraints to prevent liquidation risk.
-     *
-     * @param reserve The reserve data for the asset being withdrawn.
-     * @param amount The withdrawal amount requested by the user.
-     * @param user The principal of the user withdrawing.
-     * @param ledger_canister The principal of the ledger canister for balance verification.
-     *
-     * @return Returns `Ok(())` if validation is successful.
-     */
+    * @title Validate Withdraw
+    * @notice Ensures a user can withdraw a specified amount from the reserve.
+    *
+    * @dev Performs checks on:
+    * - User's supplied balance.
+    * - Platform's available balance.
+    * - Loan-to-value (LTV) constraints to prevent liquidation risk.
+    *
+    * @functionality This function first validates that the user has enough supplied balance to make the withdrawal. It then checks if the requested withdrawal amount exceeds the user's available supply. Next, it verifies the platform's available balance to ensure the withdrawal amount does not exceed what the platform can handle. The function also validates the reserve's state (active, paused, frozen) and updates the token price. Finally, the LTV ratio and health factor are calculated to ensure the withdrawal does not trigger a liquidation condition, based on the user's total collateral and debt. If any of these checks fail, it returns an appropriate error.
+    *
+    * @param reserve The reserve data for the asset being withdrawn.
+    * @param amount The withdrawal amount requested by the user.
+    * @param user The principal of the user withdrawing.
+    * @param ledger_canister The principal of the ledger canister for balance verification.
+    *
+    * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
+    */
     pub async fn validate_withdraw(
         reserve: &ReserveData,
         amount: Nat,
         user: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
-        ic_cdk::println!("withdraw amount for validation = {}", amount);
-
         ic_cdk::println!("withdraw amount for validation = {}", amount);
 
         let final_amount = amount.clone();
@@ -355,12 +364,12 @@ impl ValidationLogic {
             }
             ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
 
-            let mut ltv = Nat::from(0u128);
+            let mut ltv = Nat::from(ZERO_VALUE);
             // Calculate new ratio (Adjusted Collateral / Total Debt)
 
             if adjusted_collateral != Nat::from(0u128) {
                 ltv = total_debt.scaled_div(adjusted_collateral);
-                ltv = ltv * Nat::from(100u128);
+                ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
                 println!("New ltv: {}", ltv);
             }
 
@@ -375,7 +384,7 @@ impl ValidationLogic {
         Ok(())
     }
 
-    /*
+   /*
      * @title Validate Borrow
      * @notice Ensures a user can borrow a specified amount from the reserve.
      *
@@ -390,6 +399,9 @@ impl ValidationLogic {
      * @param ledger_canister The principal of the ledger canister for balance verification.
      *
      * @return Returns `Ok(())` if validation is successful.
+     * @functionality Verifies that borrowing conditions are met for the user, such as ensuring borrowing is enabled,
+     * checking the platform's balance, validating the reserve's status, calculating LTV, ensuring the health factor
+     * is above a certain threshold, and confirming that the borrow amount does not exceed the borrow cap.
      */
     pub async fn validate_borrow(
         reserve: &ReserveData,
@@ -447,11 +459,11 @@ impl ValidationLogic {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
         }
 
-        let mut total_collateral = Nat::from(0u128);
-        let mut total_debt = Nat::from(0u128);
-        let mut avg_ltv = Nat::from(0u128);
-        let mut health_factor = Nat::from(0u128);
-        let mut liquidation_threshold_var = Nat::from(0u128);
+        let mut total_collateral = Nat::from(ZERO_VALUE);
+        let mut total_debt = Nat::from(ZERO_VALUE);
+        let mut avg_ltv = Nat::from(ZERO_VALUE);
+        let mut health_factor = Nat::from(ZERO_VALUE);
+        let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
 
         // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
         //     calculate_user_account_data(None).await;
@@ -503,9 +515,9 @@ impl ValidationLogic {
         let adjusted_debt = total_debt + usd_borrow;
         ic_cdk::println!("adjusted amount = {}", adjusted_debt);
 
-        let mut ltv = Nat::from(0u128);
+        let mut ltv = Nat::from(ZERO_VALUE);
         ltv = adjusted_debt.scaled_div(total_collateral);
-        ltv = ltv * Nat::from(100u128);
+        ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", ltv);
 
         if ltv >= liquidation_threshold_var {
@@ -531,8 +543,7 @@ impl ValidationLogic {
         };
         Ok(())
     }
-
-    /*
+/*
      * @title Validate Repay
      * @notice Ensures a user can repay a specified amount of borrowed assets.
      *
@@ -549,6 +560,9 @@ impl ValidationLogic {
      * @param ledger_canister The principal of the ledger canister for balance verification.
      *
      * @return Returns `Ok(())` if validation is successful.
+     * @functionality Validates repayment conditions by ensuring that the user or liquidator has sufficient balance,
+     * checks if the reserve is active and not paused or frozen, verifies the repayment amount is correct, 
+     * and ensures the user's outstanding debt allows for repayment.
      */
     pub async fn validate_repay(
         reserve: &ReserveData,
@@ -628,7 +642,7 @@ impl ValidationLogic {
         Ok(())
     }
 
-    /*
+   /*
      * @title Validate Liquidation
      * @notice Ensures a liquidator can liquidate a borrower's collateral.
      *
@@ -646,6 +660,9 @@ impl ValidationLogic {
      * @param repay_reserve_data The reserve data associated with the asset.
      *
      * @return Returns `Ok(())` if liquidation validation passes.
+     * @functionality Validates that a liquidation can occur by checking various conditions such as ensuring 
+     * the liquidator has enough balance to repay, the borrower’s collateral is sufficient, 
+     * and that the borrower is eligible for liquidation based on the health factor and debt amount.
      */
     pub async fn validate_liquidation(
         repay_asset: String,
@@ -716,8 +733,8 @@ impl ValidationLogic {
             return Err(Error::LowWalletBalance);
         }
 
-        let mut total_collateral = Nat::from(0u128);
-        let mut health_factor = Nat::from(0u128);
+        let mut total_collateral = Nat::from(ZERO_VALUE);
+        let mut health_factor = Nat::from(ZERO_VALUE);
 
         // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
         //     calculate_user_account_data(Some(user)).await;
@@ -747,7 +764,7 @@ impl ValidationLogic {
             return Err(Error::RewardIsHigher);
         }
 
-        if health_factor / Nat::from(100u128) > Nat::from(SCALING_FACTOR) {
+        if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             return Err(Error::USERCANNOTBELIQUIDATED);
         }
 

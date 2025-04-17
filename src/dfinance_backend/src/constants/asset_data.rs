@@ -7,6 +7,7 @@ use crate::declarations::assets::ReserveData;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::guards::guard_admin_only;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
+use crate::guards::to_check_controller;
 
 /*  
  * @title Reserve Initialization 
@@ -21,6 +22,8 @@ use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
  *  
  * # Returns  
  * @return `Ok(())` on success.  
+ * 
+ * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
@@ -103,6 +106,8 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
  *  
  * # Returns  
  * @return `Ok(())` on success.  
+ * 
+ * @functionality Modifies a specific parameter of an existing reserve configuration.
  */
 #[update]
 pub async fn reset_reserve_value(
@@ -113,7 +118,7 @@ pub async fn reset_reserve_value(
     let user_principal = ic_cdk::caller();
 
     if user_principal == Principal::anonymous()
-        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+        || !to_check_controller()
     {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);

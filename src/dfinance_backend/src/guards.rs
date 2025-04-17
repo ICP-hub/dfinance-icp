@@ -43,6 +43,8 @@ pub fn guard_admin_only() -> Result<(), Error> {
  *      This function is used to restrict access to authorized users only.
  *
  * @returns `Ok(())` if the caller is authenticated.
+ * 
+ * @functionality Caller Identity Validation
  */
 
 pub fn guard_prevent_anonymous() -> Result<(), Error> {
@@ -68,6 +70,8 @@ pub fn caller_is_not_anonymous() -> Result<(), Error> {
  *  
  * # Returns  
  * @return `true` if the caller is a controller, otherwise `false`.  
+ * 
+ * @functionality Controller Permissions Check
  */
 #[query]
 pub fn to_check_controller() -> bool {
@@ -90,6 +94,8 @@ pub fn to_check_controller() -> bool {
  *      - `Ok(())`: If the tester was successfully added.
  *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
  *      - `Err(Error::ErrorNotController)`: If the caller is not a controller.
+ * 
+ * @functionality Add Tester
  */
 #[ic_cdk::update]
 pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
@@ -118,6 +124,8 @@ pub fn add_tester(username: String, principal: Principal)->Result<(), Error> {
  * @returns 
  *      - `Ok(Vec<Principal>)`: A list of principal IDs for all testers.
  *      - `Err(Error::AnonymousPrincipal)`: If the caller is an anonymous principal.
+ * 
+ * @functionality Get Testers List
  */
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
     let user_principal = ic_cdk::caller();
@@ -147,7 +155,10 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
  * @returns 
  *      - `true`: If the caller is found in the list of testers.
  *      - `false`: If the caller is not a tester or if there is an error retrieving the tester list.
+ * 
+ * @functionality Check if Caller is Tester
  */
+
 #[ic_cdk::query]
 pub fn check_is_tester()-> bool {
 

@@ -17,6 +17,9 @@ use ic_cdk::api;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
+use crate::constants::constant_variables::constants::{
+    REQUEST_LIMIT, TIME_WINDOW, BLOCK_DURATION,
+};
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 struct Account {
@@ -29,6 +32,7 @@ struct Account {
  * @notice Transfers assets from one principal to another using the ICRC-2 standard.
  * @dev This function interacts with the specified ledger canister to execute a `icrc2_transfer_from` call.
  *      It enables asset transfers between users, with optional memo and timestamp settings.
+ * @functionality Token transfer functionality using ICRC-2 standard where a pre-approved spender can transfer tokens from one account to another
  *
  * # Parameters
  * - `ledger_canister_id` - The Principal of the ledger canister handling the asset.
@@ -91,6 +95,7 @@ pub async fn asset_transfer_from(
  * @title Asset Transfer Function
  * @notice Transfers assets to a specified principal using the ICRC-1 standard.
  * @dev Calls the ledger canister to execute `icrc1_transfer`, allowing direct asset transfers.
+ * @functionality Direct token transfer functionality using ICRC-1 standard for sending tokens from one account to another
  *
  * # Parameters
  * - `to` - The Principal of the recipient.
@@ -139,6 +144,7 @@ pub async fn asset_transfer(
  * @notice Fetches the balance of a given principal from a specified ledger canister.
  * @dev Calls `icrc1_balance_of` on the ledger canister to retrieve the balance of the provided principal.
  *      Uses `call_raw` for efficient interaction with the canister.
+ * @functionality Account balance query functionality that allows checking token balances for any account
  *
  * # Parameters
  * - `canister` - The Principal of the ledger canister.
@@ -199,6 +205,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
  * @notice Queries the total supply of tokens from a specified ledger canister.
  * @dev Calls the `icrc1_total_supply` method of the given `canister_id` to fetch the total supply.
  *      Ensures that the provided `canister_id` is valid and not an anonymous principal.
+ * @functionality Token metadata functionality that allows querying the total supply of tokens in circulation
  *
  * # Parameters
  * - `canister_id` - The principal of the ledger canister from which to retrieve the total supply.
@@ -228,6 +235,7 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
  * @title Token Faucet
  * @notice This function allows users to request tokens from the faucet for a specified asset and amount.
  * @dev The function performs several validation checks, updates user data, and transfers tokens from the platform to the user.
+ * @functionality Test token distribution functionality that provides users with tokens for testing purposes with rate limiting
  *
  * # Parameters
  * - `asset` - The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
@@ -442,6 +450,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
  * @title Reset Faucet Usage
  * @notice This function resets the faucet usage for a specified user by setting their faucet usage to zero.
  * @dev It validates the caller, retrieves the user data, resets the faucet usage, and updates the state.
+ * @functionality Administrative functionality that allows resetting a user's faucet usage to enable additional token requests
  *
  * # Parameters
  * - `user_principal` - The principal of the user whose faucet usage is to be reset.
@@ -493,6 +502,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
  * @title Cycle Checker
  * @notice Retrieves the current cycle balance of the canister.
  * @dev Uses `canister_balance128` API to fetch the balance and return it as a `Nat`.
+ * @functionality Canister monitoring functionality that allows checking the remaining computational resources
  *
  * # Returns
  * - `Nat` - The current cycle balance of the canister.
@@ -500,17 +510,27 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
 #[query]
 pub async fn cycle_checker() -> Result<Nat, Error> {
     let caller = ic_cdk::caller();
-    if caller == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+    if caller == Principal::anonymous() || !to_check_controller() {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
     Ok(Nat::from(api::canister_balance128()))
 }
 
-const REQUEST_LIMIT: u32 = 100;// Maximum allowed requests within the defined time window
-const TIME_WINDOW: u64 = 3600; // Time window in seconds (one hour)
-const BLOCK_DURATION: u64 = 43200; // Block duration in seconds (12 hours = 43200 seconds)
 
+/*
+ * @title Request Rate Limiter
+ * @notice Implements a request rate limiting mechanism to prevent abuse of functions.
+ * @dev Tracks request counts per function within a time window and blocks users who exceed limits.
+ * @functionality Security functionality that implements rate limiting to prevent API abuse and DDoS attacks
+ *
+ * # Parameters
+ * - `function_name` - The name of the function being called, used to track specific function usage.
+ *
+ * # Returns
+ * - `Ok(())` - If the request is allowed to proceed.
+ * - `Err(Error)` - If the user is blocked or exceeds the request limit.
+ */
 pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     let caller_id = ic_cdk::caller();
     let current_time_stamp = current_timestamp();
@@ -643,7 +663,19 @@ pub fn request_limiter(function_name: &str) -> Result<(), Error> {
     Ok(())
 }
 
-
+/*
+ * @title Retrieve User Request Information
+ * @notice Retrieves information about a user's API requests, showing function names and count.
+ * @dev Only callable by controllers, returns a vector of function names and their request counts.
+ * @functionality Administrative monitoring functionality that allows checking API usage patterns for specific users
+ *
+ * # Parameters
+ * - `caller_id` - The Principal of the user whose request information is being retrieved.
+ *
+ * # Returns
+ * - `Ok(Vec<(String, u32)>)` - Vector of function names and their request counts.
+ * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
+ */
 #[query]
 pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>, Error> {
     // let caller_id = ic_cdk::caller();
@@ -675,7 +707,19 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
 
 
 
-
+/*
+ * @title Retrieve Blocked User Information
+ * @notice Retrieves information about functions for which a user is blocked.
+ * @dev Only callable by controllers, returns function names and block expiration timestamps.
+ * @functionality Administrative security functionality that allows checking which users are currently blocked from specific functions
+ *
+ * # Parameters
+ * - `caller_id` - The Principal of the user whose block information is being retrieved.
+ *
+ * # Returns
+ * - `Ok(Vec<(String, u64)>)` - Vector of function names and block expiration timestamps.
+ * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
+ */
 #[query]
 pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
 
@@ -697,6 +741,20 @@ pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>
     }))
 }
 
+/*
+ * @title Remove Function Block
+ * @notice Removes a block on a specific function for a user.
+ * @dev Only callable by controllers, allows administrators to manually unblock user access.
+ * @functionality Administrative security functionality that allows removing function-specific blocks for users
+ *
+ * # Parameters
+ * - `caller_id` - The Principal of the user whose block is being removed.
+ * - `function_name` - The name of the function to unblock.
+ *
+ * # Returns
+ * - `Ok(())` - If the block was successfully removed.
+ * - `Err(Error)` - If the caller is not authorized or the block doesn't exist.
+ */
 #[update]
 pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> Result<(), Error> {
 
@@ -742,7 +800,19 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
         Err(Error::ErrorNotController)
     })
 }
-
+/*
+ * @title Check Function Block Status
+ * @notice Checks if the caller is blocked from using a specific function.
+ * @dev Compares current timestamp with block expiration time to determine if block is active.
+ * @functionality User verification functionality that allows users to check if they're currently blocked from using specific functions
+ *
+ * # Parameters
+ * - `function_name` - The name of the function to check.
+ *
+ * # Returns
+ * - `Ok(bool)` - True if blocked, false otherwise.
+ * - `Err(Error)` - If the caller is an anonymous principal.
+ */
 #[query]
 pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
     let caller_id = ic_cdk::caller();
@@ -762,7 +832,16 @@ pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
             .unwrap_or(false)
     }))
 }
-
+/*
+ * @title Inspect Incoming Messages
+ * @notice Inspects incoming messages to check if the caller is blocked from using the requested function.
+ * @dev Executed before message processing to reject blocked requests early in the execution flow.
+ * @functionality Security pre-processing functionality that validates all incoming calls before execution to enforce rate limiting
+ *
+ * # Note
+ * This function is called by the Internet Computer before processing each incoming message,
+ * allowing early rejection of requests from blocked users.
+ */
 #[ic_cdk::inspect_message]
 pub fn inspect_message() {
     let method_name = ic_cdk::api::call::method_name();

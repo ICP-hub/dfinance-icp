@@ -713,17 +713,17 @@ const Repay = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="flex flex-col items-start w-[45%] gap-8">
+              <div className="w-full flex justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="flex flex-col items-start w-[45%] lg:gap-[2rem] gap-[2.5rem]">
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0 || isApproved}
-                    className="lg:text-[14px] placeholder:text-[10px] lg:placeholder:text-[12px] focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
-                  <p className="text-[11px] text-gray-500 -mb-1">
+                  <p className="text-[12px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
@@ -733,7 +733,7 @@ const Repay = ({
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-3">
-                  <div className="w-auto flex items-center gap-2 lg:mb-5">
+                  <div className="w-auto flex gap-2 items-center">
                     <img
                       src={image}
                       alt="Item Image"
@@ -741,19 +741,20 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
+
+                  <div className="flex flex-col items-center justify-center">
                     {/* Wallet Balance label (Always on top in small screens) */}
-                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+                    <p className="text-[11px] text-gray-500 text-right w-full font-semibold">
                       Wallet Balance:
                     </p>
 
                     {/* Value and Max button in same line below on small screens */}
                     <div className="flex gap-1 items-center">
-                      <p className="text-[10px] text-gray-500">
+                      <p className="text-[12px] text-gray-500 -mb-[3px]">
                         {truncateToSevenDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${
                           assetBorrow === 0 || isApproved
                             ? "text-gray-400 cursor-not-allowed"
                             : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"

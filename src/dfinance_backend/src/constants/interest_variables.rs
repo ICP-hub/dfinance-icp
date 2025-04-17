@@ -43,14 +43,14 @@ pub mod constants {
     pub const TRANSFER_FEE: u64 = 0;
     pub const DECIMALS: u8 = 8;
     pub const MAX_MEMO_LENGTH: u16 = 256;
-    pub const MAX_NUMBER_OF_ACCOUNTS: u64 = 1000;
+    pub const MAX_NUMBER_OF_ACCOUNTS: u64 = 1_000;
     pub const ACCOUNTS_OVERFLOW_TRIM_QUANTITY: u64 = 100;
-    pub const NUM_BLOCKS_TO_ARCHIVE: usize = 1000;
-    pub const TRIGGER_THRESHOLD: usize = 2000;
+    pub const NUM_BLOCKS_TO_ARCHIVE: usize = 1_000;
+    pub const TRIGGER_THRESHOLD: usize = 2_000;
     pub const MAX_TRANSACTIONS_PER_RESPONSE: u64 = 200;
     pub const MAX_MESSAGE_SIZE_BYTES: u64 = 1024;
     pub const CYCLES_FOR_ARCHIVE_CREATION: u64 = 100_000_000_000;
-    pub const NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2000;
+    pub const NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2_000;
 
     // ------------------- Test Token Canister Constants -------------------
 
@@ -58,18 +58,18 @@ pub mod constants {
     pub const TEST_TRANSFER_FEE: u64 = 0;
     pub const TEST_DECIMALS: u8 = 8;
     pub const TEST_MAX_MEMO_LENGTH: u16 = 256;
-    pub const TEST_MAX_NUMBER_OF_ACCOUNTS: u64 = 1000;
+    pub const TEST_MAX_NUMBER_OF_ACCOUNTS: u64 = 1_000;
     pub const TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY: u64 = 100;
-    pub const TEST_NUM_BLOCKS_TO_ARCHIVE: usize = 1000;
-    pub const TEST_TRIGGER_THRESHOLD: usize = 2000;
+    pub const TEST_NUM_BLOCKS_TO_ARCHIVE: usize = 1_000;
+    pub const TEST_TRIGGER_THRESHOLD: usize = 2_000;
     pub const TEST_MAX_TRANSACTIONS_PER_RESPONSE: u64 = 200;
     pub const TEST_MAX_MESSAGE_SIZE_BYTES: u64 = 1024;
     pub const TEST_CYCLES_FOR_ARCHIVE_CREATION: u64 = 100_000_000_000;
-    pub const TEST_NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2000;
+    pub const TEST_NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2_000;
 
     // ------------------- General Constants -------------------
-    pub const INITIAL_DEBT_INDEX: u128 = 100000000;
-    pub const SCALING_FACTOR: u128 = 100000000;
+    pub const INITIAL_DEBT_INDEX: u128 = 100_000_000;
+    pub const SCALING_FACTOR: u128 = 100_000_000;
     pub const MIN_BORROW: u128 = 100;
     pub const MAX_ASSET_LENGTH: usize = 7;
 

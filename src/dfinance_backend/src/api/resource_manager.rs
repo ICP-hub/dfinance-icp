@@ -7,6 +7,7 @@ use std::sync::Mutex;
 
 /*
  * Global lock to manage user locks.
+ * @functionality Concurrency Control
  */
 pub static LOCKS: Lazy<Mutex<HashMap<Principal, bool>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 pub static AMOUNT_LOCKS: Lazy<Mutex<HashMap<String, Nat>>> =
@@ -18,6 +19,7 @@ pub static TO_CHECK_AMOUNT: Lazy<Mutex<HashMap<Principal, ()>>> =
 
 /*
  * @title Lock Management - Acquire Lock
+ * @functionality Principal-based Locking
  * @notice Attempts to acquire a lock for the given key (Principal).
  * @dev Uses a global lock (`LOCKS`) to track locked keys and prevent concurrent operations.
  *
@@ -58,6 +60,7 @@ pub fn acquire_lock(key: &Principal) -> Result<(), Error> {
 
 /*
  * @title Lock Management - Release Lock
+ * @functionality Principal-based Locking
  * @notice Releases the lock for the given key (Principal).
  * @dev Uses a global lock (`LOCKS`) to track and remove locked keys.
  *
@@ -99,6 +102,7 @@ pub fn release_lock(key: &Principal) -> Result<(), Error> {
 
 /*
  * @title Asset Lock Management - Lock Amount
+ * @functionality Asset Amount Tracking
  * @notice Locks a specified amount of an asset for a user.
  * @dev Manages locked amounts using `AMOUNT_LOCKS` and tracks users in `TO_CHECK_AMOUNT`.
  *
@@ -157,6 +161,7 @@ pub fn lock_amount(asset: &str, amount: &Nat, user_principal: &Principal) -> Res
 
 /*
  * @title Asset Lock Management - Release Amount
+ * @functionality Asset Amount Tracking
  * @notice Releases a specified amount of an asset from the locked balance.
  * @dev Updates `AMOUNT_LOCKS` to reflect the released amount. If the locked balance becomes zero, it removes the asset entry.
  *
@@ -198,6 +203,7 @@ pub fn release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
 /*
  * @title Asset Lock Management - Get Locked Amount
+ * @functionality Asset Amount Querying
  * @notice Retrieves the currently locked amount for a specified asset.
  * @dev Fetches the locked amount from `AMOUNT_LOCKS`. If no amount is found, it returns `0`.
  *
@@ -221,6 +227,7 @@ pub fn get_locked_amount(asset: &str) -> Nat {
 
 /*
  * @title Asset Lock Management - Check Locked Amount
+ * @functionality Lock Verification
  * @notice Checks if a given user principal has a locked amount.
  * @dev Acquires a lock on `TO_CHECK_AMOUNT` and checks if the user's principal exists in the map.
  *      If found, it removes the entry and returns `true`, indicating that the user had a locked amount.
@@ -262,6 +269,7 @@ pub fn is_amount_locked(user_principal: &Principal) -> bool {
 
 /*
  * @title Repay Lock Management
+ * @functionality Repayment Tracking
  * @notice Locks a specified amount of an asset for repayment.
  * @dev Uses `REPAY_AMOUNT_LOCKS` to manage locked amounts for repayment.
  *      Ensures proper handling in case of lock acquisition failure.
@@ -308,6 +316,7 @@ pub fn repay_lock_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
 /*
  * @title Repay Lock Release
+ * @functionality Repayment Tracking
  * @notice Releases a specified amount of an asset from the locked repayment balance.
  * @dev Updates `REPAY_AMOUNT_LOCKS` to reflect the released amount.
  *      If the locked balance reaches zero, it removes the asset entry.
@@ -350,6 +359,7 @@ pub fn repay_release_amount(asset: &str, amount: &Nat) -> Result<(), Error> {
 
 /*
  * @title Get Repay Locked Amount
+ * @functionality Repayment Querying
  * @notice Retrieves the currently locked repayment amount for a specified asset.
  * @dev Fetches the locked amount from `REPAY_AMOUNT_LOCKS`.
  *      If the lock cannot be acquired or no amount is found, it returns `0`.

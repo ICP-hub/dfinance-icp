@@ -7,8 +7,7 @@ mod utils;
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
+use crate::utils::constant_variables::*;
 
 #[test]
 fn call_test_function() {
@@ -28,7 +27,7 @@ fn setup() -> (PocketIc, Principal) {
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
-    pic.add_cycles(backend_canister, 5_000_000_000_000_000);
+    pic.add_cycles(backend_canister, INITIAL_CYCLES);
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
     ic_cdk::println!("Backend canister: {}", backend_canister);
     pic.install_canister(
@@ -52,28 +51,28 @@ fn setup() -> (PocketIc, Principal) {
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
+        borrow_rate: Nat::from(ZERO_VALUE),
+        current_liquidity_rate: Nat::from(ZERO_VALUE),
+        asset_supply: Nat::from(ZERO_VALUE),
+        asset_borrow: Nat::from(ZERO_VALUE),
+        liquidity_index: Nat::from(LIQUIDATION_INDEX),
+        debt_index: Nat::from(ZERO_VALUE),
         configuration: ReserveConfiguration {
-            ltv: Nat::from(5800000000u128),
-            liquidation_threshold: Nat::from(6300000000u128),
-            liquidation_bonus: Nat::from(100000000u128),
+            ltv: Nat::from(ICP_LTV),
+            liquidation_threshold: Nat::from(ICP_LIQUIDATION_THRESHOLD),
+            liquidation_bonus: Nat::from(ICP_LIQUIDATION_BONUS),
             borrowing_enabled: true,
-            borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
-            supply_cap: Nat::from(1_000_000_000_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
+            borrow_cap: Nat::from(BORROW_CAP),
+            supply_cap: Nat::from(SUPPLY_CAP),
+            liquidation_protocol_fee: Nat::from(ZERO_VALUE),
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(1500000000u128),
+            reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
+        accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
     let ckBTC_token_name = "ckBTC".to_string();
@@ -82,28 +81,28 @@ fn setup() -> (PocketIc, Principal) {
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
+        borrow_rate: Nat::from(ZERO_VALUE),
+        current_liquidity_rate: Nat::from(ZERO_VALUE),
+        asset_supply: Nat::from(ZERO_VALUE),
+        asset_borrow: Nat::from(ZERO_VALUE),
+        liquidity_index: Nat::from(LIQUIDATION_INDEX),
+        debt_index: Nat::from(ZERO_VALUE),
         configuration: ReserveConfiguration {
-            ltv: Nat::from(7300000000u128),
-            liquidation_threshold: Nat::from(7800000000u128),
-            liquidation_bonus: Nat::from(500000000u128),
+            ltv: Nat::from(BTC_LTV),
+            liquidation_threshold: Nat::from(BTC_LIQUIDATION_THRESHOLD),
+            liquidation_bonus: Nat::from(BTC_LIQUIDATION_BONUS),
             borrowing_enabled: true,
-            borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
-            supply_cap: Nat::from(1_000_000_000_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
+            borrow_cap: Nat::from(BORROW_CAP),
+            supply_cap: Nat::from(SUPPLY_CAP),
+            liquidation_protocol_fee: Nat::from(ZERO_VALUE),
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(1500000000u128),
+            reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
+        accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
     let ckETH_token_name = "ckETH".to_string();
@@ -112,28 +111,28 @@ fn setup() -> (PocketIc, Principal) {
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
+        borrow_rate: Nat::from(ZERO_VALUE),
+        current_liquidity_rate: Nat::from(ZERO_VALUE),
+        asset_supply: Nat::from(ZERO_VALUE),
+        asset_borrow: Nat::from(ZERO_VALUE),
+        liquidity_index: Nat::from(LIQUIDATION_INDEX),
+        debt_index: Nat::from(ZERO_VALUE),
         configuration: ReserveConfiguration {
-            ltv: Nat::from(8000000000u128),
-            liquidation_threshold: Nat::from(8300000000u128),
-            liquidation_bonus: Nat::from(500000000u128),
+            ltv: Nat::from(ETH_LTV),
+            liquidation_threshold: Nat::from(ETH_LIQUIDATION_THRESHOLD),
+            liquidation_bonus: Nat::from(ETH_LIQUIDATION_BONUS),
             borrowing_enabled: true,
-            borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
-            supply_cap: Nat::from(1_000_000_000_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
+            borrow_cap: Nat::from(BORROW_CAP),
+            supply_cap: Nat::from(SUPPLY_CAP),
+            liquidation_protocol_fee: Nat::from(ZERO_VALUE),
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(1500000000u128),
+            reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
+        accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
     let ckUSDC_token_name = "ckUSDC".to_string();
@@ -142,28 +141,28 @@ fn setup() -> (PocketIc, Principal) {
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(100000000u128),
-        debt_index: Nat::from(0u128),
+        borrow_rate: Nat::from(ZERO_VALUE),
+        current_liquidity_rate: Nat::from(ZERO_VALUE),
+        asset_supply: Nat::from(ZERO_VALUE),
+        asset_borrow: Nat::from(ZERO_VALUE),
+        liquidity_index: Nat::from(LIQUIDATION_INDEX),
+        debt_index: Nat::from(ZERO_VALUE),
         configuration: ReserveConfiguration {
-            ltv: Nat::from(7500000000u128),
-            liquidation_threshold: Nat::from(7800000000u128),
-            liquidation_bonus: Nat::from(500000000u128),
+            ltv: Nat::from(USDC_LTV),
+            liquidation_threshold: Nat::from(USDC_LIQUIDATION_THRESHOLD),
+            liquidation_bonus: Nat::from(USDC_LIQUIDATION_BONUS),
             borrowing_enabled: true,
-            borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
-            supply_cap: Nat::from(1_000_000_000_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
+            borrow_cap: Nat::from(BORROW_CAP),
+            supply_cap: Nat::from(SUPPLY_CAP),
+            liquidation_protocol_fee: Nat::from(ZERO_VALUE),
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(1500000000u128),
+            reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
+        accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
     let ckUSDT_token_name = "ckUSDT".to_string();
@@ -172,28 +171,28 @@ fn setup() -> (PocketIc, Principal) {
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
-        borrow_rate: Nat::from(0u128),
-        current_liquidity_rate: Nat::from(0u128),
-        asset_supply: Nat::from(0u128),
-        asset_borrow: Nat::from(0u128),
-        liquidity_index: Nat::from(1_00_000_000u128),
-        debt_index: Nat::from(0u128),
+        borrow_rate: Nat::from(ZERO_VALUE),
+        current_liquidity_rate: Nat::from(ZERO_VALUE),
+        asset_supply: Nat::from(ZERO_VALUE),
+        asset_borrow: Nat::from(ZERO_VALUE),
+        liquidity_index: Nat::from(LIQUIDATION_INDEX),
+        debt_index: Nat::from(ZERO_VALUE),
         configuration: ReserveConfiguration {
-            ltv: Nat::from(75_00_000_000u128),
-            liquidation_threshold: Nat::from(7800000000u128),
-            liquidation_bonus: Nat::from(450000000u128),
+            ltv: Nat::from(USDT_LTV),
+            liquidation_threshold: Nat::from(USDT_LIQUIDATION_THRESHOLD),
+            liquidation_bonus: Nat::from(USDT_LIQUIDATION_BONUS),
             borrowing_enabled: true,
-            borrow_cap: Nat::from(1_000_000_000_000_000_000u128),
-            supply_cap: Nat::from(1_000_000_000_000_000_000u128),
-            liquidation_protocol_fee: Nat::from(0u128),
+            borrow_cap: Nat::from(BORROW_CAP),
+            supply_cap: Nat::from(SUPPLY_CAP),
+            liquidation_protocol_fee: Nat::from(ZERO_VALUE),
             frozen: false,
             active: true,
             paused: false,
-            reserve_factor: Nat::from(1500000000u128),
+            reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
         last_update_timestamp: 1,
-        accure_to_platform: Nat::from(0u128),
+        accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
     let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
@@ -323,7 +322,8 @@ fn setup() -> (PocketIc, Principal) {
 /*
  * @title Register Users
  * @notice Registers users to participate in liquidation testing.
- * @dev Adds the primary user and test users (1 to 5).
+ * @dev Calls the `register_user` function on the backend canister to add the primary user and additional test users (1 to 5). This function handles user registration and verifies the response for success or failure.
+ * @functionality Ensures that the `register_user` function is called correctly and that the registration succeeds. If there is an error, the failure is logged, and the test halts to ensure proper error handling.
  */
 fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principal: Principal) {
     let result = pic.update_call(
@@ -364,6 +364,20 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principa
     }
 }
 
+/*
+ * @title Faucet Request Test
+ * @notice Tests the faucet function for expected success or failure with various assets.
+ * @dev This function runs a series of test cases for faucet requests with different asset types and amounts. It checks the success or failure of each request, verifying the expected outcomes (such as receiving the correct amount or receiving the appropriate error message).
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes faucet requests for different assets (ICP, ckBTC, ckUSDC, etc.).
+ * 2. Verifies success or failure based on expected outcomes.
+ * 3. Handles cases where asset length exceeds the allowed limit.
+ * 4. Simulates faucet requests for multiple users to test liquidation scenarios.
+ */
 fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -401,14 +415,14 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14000000u128), //  0.14 ckETH
+            amount: Nat::from(14_000_000u128), //  0.14 ckETH
             expect_success: true,
             expected_error_message: None,
         },
         // // Asset length exceeds 7 characters
         TestCase {
             asset: "ckETH_long".to_string(),
-            amount: Nat::from(100000u128),
+            amount: Nat::from(100_000u128),
             expect_success: false,
             expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
@@ -600,6 +614,23 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         "\n======================== IC Faucet Tests Completed ========================\n"
     );
 }
+
+/*
+ * @title Supply Function Test
+ * @notice Tests the supply function for expected success or failure with various assets.
+ * @dev This function runs a series of test cases for supply requests with different asset types, amounts, and collateral statuses. It checks the success or failure of each request, verifying the expected outcomes (such as a successful supply or receiving an appropriate error message).
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes supply requests for different assets (ICP, ckETH, ckUSDT, etc.) with varying amounts and collateral statuses.
+ * 2. Verifies success or failure based on expected outcomes.
+ * 3. Handles cases where ICRC2 approval is required for the asset.
+ * 4. Simulates supply requests for multiple users to test asset supply scenarios and rollback mechanisms.
+ * 5. Validates the state of reserves and user data before and after the supply operation.
+ * 6. Handles scenarios where supply requests may fail due to insufficient approval or unexpected errors.
+ */
 
 fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
@@ -854,6 +885,22 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
+/*
+ * @title Borrow Function Test
+ * @notice Tests the borrow function for expected success or failure with various assets.
+ * @dev This function runs a series of test cases for borrow requests with different asset types and amounts. It checks the success or failure of each request, verifying the expected outcomes (such as a successful borrow or receiving an appropriate error message).
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes borrow requests for different assets (ICP, ckETH, ckUSDT, etc.) with varying amounts.
+ * 2. Verifies success or failure based on expected outcomes.
+ * 3. Simulates borrow requests for multiple users to test borrowing scenarios and error handling.
+ * 4. Validates the borrow response and checks whether the balance is updated correctly.
+ * 5. Handles cases where the borrow request may fail due to errors or unexpected conditions, including mismatched error messages.
+ */
+
 fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -999,6 +1046,22 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
+/*
+ * @title Withdraw Function Test
+ * @notice Tests the withdraw function for various assets and withdrawal conditions.
+ * @dev This function runs a series of test cases for withdraw requests with different assets, amounts, collateral status, and options for withdrawing on behalf of another principal. It verifies the success or failure of each withdrawal request and checks whether the appropriate error messages are returned when failures occur.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes withdraw requests for different assets (e.g., ICP, ckETH, ckUSDT) with varying amounts, including collateralized and non-collateralized withdrawals.
+ * 2. Checks if the withdrawal is processed successfully or rejected as expected.
+ * 3. Simulates withdrawing on behalf of another user when applicable.
+ * 4. Verifies that error messages are returned correctly if the withdrawal is unsuccessful or if the expected outcome does not match.
+ * 5. Validates whether the balance is updated correctly after the withdrawal.
+ */
+
 fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -1014,7 +1077,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Withdrawals (Direct)
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(100_00u128), // 100 ckUSDT
+            amount: Nat::from(10_000u128), // 100 ckUSDT
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1030,7 +1093,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(2000u128), // 0.02 ckETH
+            amount: Nat::from(2_000u128), // 0.02 ckETH
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -1038,7 +1101,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(2_00_000_000u128), // 2 ICP
+            amount: Nat::from(200_000_000u128), // 2 ICP
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -1046,7 +1109,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(2_00_00u128), // 0.00000002 ICP
+            amount: Nat::from(20_000u128), // 0.00000002 ICP
             on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
@@ -1164,6 +1227,24 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
+/*
+ * @title Repay Function Test
+ * @notice Tests the repay function for various assets and repayment conditions.
+ * @dev This function runs a series of test cases for repay requests with different assets, amounts, and options for repaying on behalf of another principal. It verifies the success or failure of each repayment request, checks whether the appropriate error messages are returned, and ensures the rollback mechanism is triggered when needed.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes repay requests for different assets (e.g., ICP, ckETH, ckUSDT) with varying amounts, including transaction fees.
+ * 2. Handles repayment requests both with and without approval for the ICRC2 transfer.
+ * 3. Validates the approval status for ICRC2 transfer before proceeding with repayment.
+ * 4. Verifies if the repayment is processed successfully or rejected as expected.
+ * 5. Checks whether error messages are returned correctly in case of failure.
+ * 6. Simulates repayment on behalf of another principal when applicable.
+ * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
+ */
+
 fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -1178,14 +1259,14 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Valid  test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(2_00_000_000u128), // 2 ICP (includes transaction fee)
+            amount: Nat::from(200_000_000u128), // 2 ICP (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_00_000_000u128), // 1 ICP (includes transaction fee)
+            amount: Nat::from(100_000_000u128), // 1 ICP (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
@@ -1412,6 +1493,27 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     );
 }
 
+/*
+ * @title Liquidation Function Test
+ * @notice Tests the liquidation function for various assets and liquidation conditions.
+ * @dev This function runs a series of test cases for liquidation requests with different assets, amounts, and conditions for liquidating on behalf of another principal. It verifies the success or failure of each liquidation request, checks whether the appropriate error messages are returned, and ensures the rollback mechanism is triggered when needed.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes liquidation requests for different assets (e.g., ICP, ckBTC, ckUSDC) with varying amounts, including transaction fees.
+ * 2. Handles liquidation requests both with and without approval for the ICRC2 transfer.
+ * 3. Validates the approval status for ICRC2 transfer before proceeding with liquidation.
+ * 4. Verifies if the liquidation is processed successfully or rejected as expected.
+ * 5. Checks whether error messages are returned correctly in case of failure.
+ * 6. Simulates liquidation on behalf of another principal when applicable.
+ * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
+ * 8. Logs and prints detailed information about each test case, including asset details, expected success/failure, and error messages (if any).
+ * 9. Fetches and prints reserve data and user data both before and after liquidation attempts to validate state changes or rollback.
+ * 10. Provides feedback on whether the liquidation request succeeded or failed, and whether the rollback was correctly executed in case of failure.
+ */
+
 fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -1431,16 +1533,16 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.4 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40400_000u128), // 4.04 ICP
+            reward_amount: Nat::from(40_400_000u128), // 4.04 ICP
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(210000u128), // 0.0021 ckBTC (includes transaction fee)
+            amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220500u128), // 0.002205 ckBTC
+            reward_amount: Nat::from(220_500u128), // 0.002205 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
@@ -1456,9 +1558,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             debt_asset: "ckUSDT".to_string(),
             collateral_asset: "ckUSDT".to_string(),
-            amount: Nat::from(12500000000u128), // 1250 ckUSDT (includes transaction fee)
+            amount: Nat::from(12_500_000_000u128), // 1250 ckUSDT (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13062500000u128), // 1306.25 ckUSDT
+            reward_amount: Nat::from(13_062_500_000u128), // 1306.25 ckUSDT
             expect_success: true,
             expected_error_message: None,
         },

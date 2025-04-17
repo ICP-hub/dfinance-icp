@@ -73,9 +73,9 @@ echo "User Principal: $USER"
 
 export ARCHIVE_CONTROLLER=$USER
 
-export TRIGGER_THRESHOLD=2000
-export NUM_OF_BLOCK_TO_ARCHIVE=1000
-export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+export TRIGGER_THRESHOLD=2_000
+export NUM_OF_BLOCK_TO_ARCHIVE=1_000
+export CYCLE_FOR_ARCHIVE_CREATION=10_000_000_000_000
 export FEATURE_FLAGS=true
 
 dfx deploy ckbtc_ledger --argument "(variant {Init =
@@ -118,9 +118,9 @@ echo "User Principal: $USER"
 
 export ARCHIVE_CONTROLLER=$USER
 
-export TRIGGER_THRESHOLD=2000
-export NUM_OF_BLOCK_TO_ARCHIVE=1000
-export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
+export TRIGGER_THRESHOLD=2_000
+export NUM_OF_BLOCK_TO_ARCHIVE=1_000
+export CYCLE_FOR_ARCHIVE_CREATION=10_000_000_000_000
 export FEATURE_FLAGS=true
 
 dfx deploy cketh_ledger --argument "(variant {Init =
@@ -223,5 +223,8 @@ export admin_principal=$(dfx identity get-principal)
 dfx deploy dfinance_backend --argument "(
     principal \"$admin_principal\"
 )"
+
+XRC_CANISTER_ID=$(dfx canister id xrc)
+dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
 
 dfx deploy

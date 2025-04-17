@@ -3,20 +3,24 @@ use crate::utils::structs::*;
 use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
 use pocket_ic::{PocketIc, WasmResult};
+use crate::utils::constant_variables::*;
+
 
 /*
  * @title Get User Principal
  * @notice Returns a predefined principal ID.
  * @dev Converts a fixed text representation into a Principal type.
+ * @functionality Returns a predefined principal for the user.
  */
 pub fn get_user_principal() -> Principal {
-    Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae").unwrap()
+    Principal::from_text(CONTROLLER_ID).unwrap()
 }
 
 /*
  * @title Generate Principals
  * @notice Creates a list of unique Principal IDs.
  * @dev Generates `count` principals using a sequential byte pattern.
+ * @functionality Generates a list of unique Principal IDs based on a count.
  */
 pub fn generate_principals(count: usize) -> Vec<Principal> {
     (1..=count)
@@ -28,31 +32,32 @@ pub fn generate_principals(count: usize) -> Vec<Principal> {
  * @title Get User Principal
  * @notice Retrieves a predefined Principal based on the given index.
  * @dev Returns an error if the index is out of the predefined range.
+ * @functionality Retrieves a user principal based on an index value.
  */
 pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
     if index == Nat::from(1u32) {
         Ok(
-            Principal::from_text("d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe")
+            Principal::from_text(TESTER_1)
                 .unwrap(),
         )
     } else if index == Nat::from(2u32) {
         Ok(
-            Principal::from_text("a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae")
+            Principal::from_text(TESTER_2)
                 .unwrap(),
         )
     } else if index == Nat::from(3u32) {
         Ok(
-            Principal::from_text("vgwvq-vfd6w-fphlc-bbw46-uef3k-pgsdk-4pimw-k4cge-gbzts-wxbuu-tae")
+            Principal::from_text(TESTER_3)
                 .unwrap(),
         )
     } else if index == Nat::from(4u32) {
         Ok(
-            Principal::from_text("7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshcl-ggv2m-yae")
+            Principal::from_text(TESTER_4)
                 .unwrap(),
         )
     } else if index == Nat::from(5u32) {
         Ok(
-            Principal::from_text("oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe")
+            Principal::from_text(TESTER_5)
                 .unwrap(),
         )
     } else {
@@ -65,14 +70,15 @@ pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
  * @title Get Users Principals Vector
  * @notice Returns a vector of predefined Principal identifiers.
  * @dev Filters out any invalid Principal conversions and collects valid ones into a vector.
+ * @functionality Retrieves a vector of predefined user principals.
  */
 pub fn get_users_principals_vector() -> Vec<Principal> {
     vec![
-        "d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe",
-        "a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae",
-        "vgwvq-vfd6w-fphlc-bbw46-uef3k-pgsdk-4pimw-k4cge-gbzts-wxbuu-tae",
-        "7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshcl-ggv2m-yae",
-        "oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe",
+        TESTER_1,
+        TESTER_2,
+        TESTER_3,
+        TESTER_4,
+        TESTER_5,
     ]
     .into_iter()
     .filter_map(|s| Principal::from_text(s).ok()) // Convert each string into a Principal
@@ -87,6 +93,7 @@ pub fn get_users_principals_vector() -> Vec<Principal> {
  * @param backend_canister The principal of the backend canister handling asset queries.
  * @return An Option<Principal> containing the asset's principal if found, otherwise None.
  * @dev Handles multiple error cases including query rejection, decoding failure, and backend errors.
+ * @functionality Queries the backend canister to get the principal of an asset.
  */
 pub fn test_get_asset_principal(
     asset: String,
@@ -140,6 +147,7 @@ pub fn test_get_asset_principal(
  * @return A boolean indicating whether the approval was successful.
  * @dev This function encodes the approval arguments, sends an update call, and processes the response.
  * @dev It handles multiple error scenarios such as rejection, decoding failure, and transaction errors.
+ * @functionality Approves a backend canister to spend a specified amount of an asset on behalf of the user.
  */
 pub fn test_icrc2_aprove(
     user_principal: Principal,
@@ -209,6 +217,7 @@ pub fn test_icrc2_aprove(
  * - It ensures that the approval process for ICRC2 transfers is validated before supply operations.
  * - Each user is assigned an asset to supply and borrow with predefined amounts.
  * - The function also verifies the expected behavior and error handling in case of failures.
+ * @functionality Tests creating a user reserve with a low health factor by simulating supply and borrow operations.
  */
 pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, CandidType, Deserialize, Clone)]
@@ -235,8 +244,8 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(2u32)).unwrap(),
         asset_supply: "ckETH".to_string(),
         asset_borrow: "ckETH".to_string(),
-        supply_tokens: Nat::from(14000000u128), // 0.14 cketh
-        borrow_tokens: Nat::from(12000000u128), // 0.12 cketh
+        supply_tokens: Nat::from(14_000_000u128), // 0.14 cketh
+        borrow_tokens: Nat::from(12_000_000u128), // 0.12 cketh
     });
     // Pushing third user data
     users_with_low_health.push(LowHealthUsersData {
@@ -340,7 +349,9 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
  * @param backend_canister - Backend canister's principal.
  * @param user_principal - Principal of the caller.
  * @param tester_principal - Principal of the tester to add.
- * Handles errors and panics on failure.
+ * @dev Encodes the tester principal and sends an update call to add the tester.
+ * @dev Handles errors and panics on failure to ensure test visibility.
+ * @functionality Adds a new tester principal to the backend canister and verifies the operation.
  */
 pub fn test_add_tester(
     pic: &PocketIc,
@@ -385,7 +396,8 @@ pub fn test_add_tester(
  * @param pic - PocketIc instance for executing the query.
  * @param backend_canister - Backend canister's principal.
  * @param asset - Asset identifier.
- * Handles decoding and logs reserve details or errors.
+ * @dev Sends a query to fetch reserve metrics like supply, borrow, and indices.
+ * @functionality Retrieves and logs current reserve state for a specified asset from the backend canister.
  */
 pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &str) {
     let result = pic.query_call(
@@ -448,7 +460,8 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
  * @param backend_canister - Backend canister's principal.
  * @param user_principal - User's principal.
  * @param asset - Asset identifier.
- * Logs user-specific reserve details or errors.
+ * @dev Retrieves user-specific reserve metrics like balances and indices.
+ * @functionality Queries and logs user's asset-related reserve data from the backend canister.
  */
 pub fn fetch_user_data(
     pic: &PocketIc,

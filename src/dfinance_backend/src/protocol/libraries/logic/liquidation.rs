@@ -22,6 +22,9 @@ use crate::{
 use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
+use crate::constants::constant_variables::constants::{
+    PERCENTAGE_FACTOR , ZERO_VALUE, ONE_VALUE
+};
 
 /*
 -------------------------------------
@@ -48,6 +51,10 @@ use ic_cdk::{api, update};
  *      7. **Debt update**: Updates the user’s debt balance in accordance with the liquidated assets.
  *      8. **Collateral release**: Releases any locks or resources tied to the collateral, ensuring the system remains in a consistent state.
  *
+ * @functionality This function provides a critical operation for ensuring the platform maintains collateral integrity
+ *               by enforcing liquidation when necessary to protect the system from excessive risk due to overdue debts
+ *               or under-collateralized positions.
+ *
  * @param params The parameters needed for the liquidation operation, including the asset name and the amount to be liquidated:
  *               - `asset`: The name of the collateral asset to be liquidated.
  *               - `amount`: The amount of collateral to be liquidated.
@@ -55,6 +62,7 @@ use ic_cdk::{api, update};
  *
  * @return Result<Nat, Error> Returns the updated collateral balance after liquidation or an error code if any operation fails.
  */
+
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
 
@@ -259,7 +267,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         ic_cdk::println!("earned_rewards: {:?}", earned_rewards);
 
         if params.reward_amount > earned_rewards
-            && (params.reward_amount.clone() % earned_rewards) != Nat::from(1u32)
+            && (params.reward_amount.clone() % earned_rewards) != Nat::from(ONE_VALUE)
         {
             ic_cdk::println!("Reward amount is greater than earned rewards");
             return Err(Error::RewardIsHigher);
@@ -695,6 +703,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
  *         sets the final maximum collateral.
  *      7. **Return Result**: Returns the final calculated collateral amount or an error in case of failure.
  *
+ * @functionality This function provides an essential calculation for determining the reward amount available to the user
+ *               based on their collateral and debt assets, ensuring that the platform can accurately calculate rewards and
+ *               adjust user balances accordingly.
+ *
  * @param amount The amount of debt to be considered for the reward calculation.
  * @param collateral_asset The name of the collateral asset.
  * @param debt_asset The name of the debt asset.
@@ -818,7 +830,7 @@ pub async fn to_get_reward_amount(
             .configuration
             .liquidation_bonus
             .clone()
-            / Nat::from(100u128),
+            / Nat::from(PERCENTAGE_FACTOR),
     );
  
     let final_collateral_amount = collateral_amount.clone() + liquidation_bonus_amount.clone();

@@ -1,5 +1,6 @@
 use crate::api::functions::request_limiter;
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::constant_variables::constants::ZERO_VALUE;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::storable::Candid;
@@ -9,15 +10,21 @@ use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
+use crate::get_canister_id_by_name;
+use crate::constants::constant_variables::constants::{
+    ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKUSDC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDT_PRICE,TEST_ICP_PRICE
+};
 
 /*
  * @title Price Cache Management
+ * @functionality Provides a caching mechanism for asset prices to optimize exchange rate lookups and reduce redundant external API calls
  * @dev Handles storing and retrieving cached prices of assets to avoid redundant calls.
  *      Allows fetching and updating asset exchange rates efficiently.
  */
 impl PriceCache {
     /*
      * @title Get Cached Price
+     * @functionality Retrieves stored asset prices from the cache to avoid unnecessary external calls
      * @dev Retrieves the cached exchange rate for a given asset, if available.
      * @param asset The name of the asset (e.g., "ckBTC", "ckETH").
      * @returns Option<Nat> - Returns the cached price if it exists, otherwise `None`.
@@ -30,6 +37,7 @@ impl PriceCache {
 
     /*
      * @title Set Cached Price
+     * @functionality Updates the in-memory price cache with new asset exchange rate values
      * @dev Updates the cached price for a specific asset.
      * @param asset The name of the asset.
      * @param price The latest exchange rate for the asset.
@@ -41,6 +49,7 @@ impl PriceCache {
 
 /*
  * @title Update Reserve Prices
+ * @functionality Refreshes all cached asset prices by fetching latest rates from the exchange rate oracle
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
  */
@@ -100,12 +109,13 @@ pub async fn update_reserves_price() -> Result<(), Error> {
 
 /*
  * @title Update Token Price
+ * @functionality Updates the cached price for a single specific token
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
  */
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
    
-    if let Err(e) = get_exchange_rates(asset, None, Nat::from(1u128)).await {
+    if let Err(e) = get_exchange_rates(asset, None, Nat::from(ONE_VALUE)).await {
         return Err(e);
     };
 
@@ -114,6 +124,7 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
 
 /*
  * @title Query Reserve Prices
+ * @functionality Retrieves current cached prices for all reserve assets
  * @dev Fetches the cached price data of all available assets from the state.
  * @returns Vec<PriceCache> - A list of cached prices for each asset.
  */
@@ -133,6 +144,7 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
 
 /*
  * @title Fetch Exchange Rates
+ * @functionality Retrieves real-time exchange rates from external price oracle services for converting between assets
  * @dev Fetches the latest exchange rate of a given base asset against a quote asset.
  *      Supports both cryptocurrency and fiat asset classes.
  * @param base_asset_symbol The base asset for which exchange rate is needed.
@@ -205,13 +217,19 @@ pub async fn get_exchange_rates(
             symbol: base_asset.clone(),
         },
     };
+    let xrc_canister_id = match get_canister_id_by_name("xrc".to_string()){
+        Ok(id) => id,
+        Err(e) => {
+            ic_cdk::println!("Error fetching xrc canister ID : {:?}", e);
+            return Err(Error::NoCanisterIdFound);
+        }
+    };
     let res: Result<(GetExchangeRateResult,), (ic_cdk::api::call::RejectionCode, String)> =
         ic_cdk::api::call::call_with_payment128(
-            Principal::from_text("by6od-j4aaa-aaaaa-qaadq-cai").unwrap(),
-        //    Principal::from_text("uf6dk-hyaaa-aaaaq-qaaaq-cai").unwrap(),
+            xrc_canister_id,
             "get_exchange_rate",
             (args,),
-            1_000_000_000,
+            1_000_000_000, //TODO : use constant variable xrc_cycles_fee
         )
         .await;
 
@@ -290,6 +308,7 @@ pub async fn get_exchange_rates(
 
 /*
  * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
+ * @functionality Provides a testing mechanism to populate the price cache with predefined values for simulated environments
  * @dev This function checks if the caller is a valid tester for Pocket IC and iterates over the assets in the state,
  *      updating their price caches with manually defined prices. If no price is found for an asset,
  *      it logs the absence of the price. If a price cache does not exist, a new one is created.
@@ -307,11 +326,11 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
     };
 
     let manual_prices: HashMap<String, Nat> = vec![
-        ("ckBTC".to_string(), Nat::from(10934116666666u128)),
-        ("ckETH".to_string(), Nat::from(302148333333u128)),
-        ("ICP".to_string(), Nat::from(819611111u128)),
-        ("ckUSDC".to_string(), Nat::from(111094444u128)),
-        ("ckUSDT".to_string(), Nat::from(111111111u128)),
+        ("ckBTC".to_string(), Nat::from(TEST_CKBTC_PRICE)),
+        ("ckETH".to_string(), Nat::from(TEST_CKETH_PRICE)),
+        ("ICP".to_string(), Nat::from(TEST_ICP_PRICE)),
+        ("ckUSDC".to_string(), Nat::from(TEST_CKUSDC_PRICE)),
+        ("ckUSDT".to_string(), Nat::from(TEST_CKUSDT_PRICE)),
     ]
     .into_iter()
     .collect();

@@ -9,6 +9,10 @@ use crate::constants::interest_variables::constants::{
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
+use crate::constants::constant_variables::constants::{
+    INITIAL_TEST_TOKEN_BALANCE
+};
+use crate::guards::to_check_controller;
 use candid::{CandidType, Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
@@ -108,6 +112,7 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
  * @param token_name Name of the new token.
  * @param token_symbol Symbol for the token.
  * @returns Principal ID of the created token canister.
+ * @functionality Creates a new token canister with specific configurations.
  */
 pub async fn create_token_canister(
     token_name: String,
@@ -218,6 +223,7 @@ pub async fn create_token_canister(
  * @param token_symbol - The symbol of the token.
  *
  * @returns The `Principal` ID of the newly created test token canister.
+ * @functionality Creates a test token canister with predefined configurations.
  */
 pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
@@ -257,7 +263,7 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
 
             subaccount: None,
         },
-        Nat::from(100_000_000_000_000u64),
+        Nat::from(INITIAL_TEST_TOKEN_BALANCE),
     )];
 
     let feature_flags = Some(FeatureFlags { icrc2: true });
@@ -339,10 +345,11 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
  * @returns 
  *      - `Ok("done")`: If the controllers were successfully added.
  *      - `Ok("principals are not allowed")`: If the caller is not a controller of the canister.
+ * @functionality Adds a new user as a controller of the specified canister.
  */
 #[update]
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {
-    if !ic_cdk::api::is_controller(&ic_cdk::api::caller()) {
+    if !to_check_controller() {
         ic_cdk::println!("principals are not allowed");
         return Ok("principals are not allowed".to_string());
     }

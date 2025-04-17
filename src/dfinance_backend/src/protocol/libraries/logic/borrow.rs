@@ -5,12 +5,12 @@ use crate::api::resource_manager::{
 use crate::api::state_handler::*;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE};
-use crate::declarations::assets::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_token_price;
+use crate::protocol::libraries::math::price::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};

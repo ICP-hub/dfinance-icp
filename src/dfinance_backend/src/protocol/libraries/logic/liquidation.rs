@@ -3,7 +3,7 @@ use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
-use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::borrow::execute_repay;
 use crate::protocol::libraries::logic::reserve::{self, burn_scaled, mint_scaled};
@@ -13,7 +13,7 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::{
     api::state_handler::mutate_state,
-    declarations::assets::ExecuteSupplyParams,
+    declarations::structs::ExecuteSupplyParams,
     protocol::libraries::logic::update::UpdateLogic,
 };
 use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};

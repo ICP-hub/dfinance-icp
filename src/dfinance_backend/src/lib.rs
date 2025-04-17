@@ -5,8 +5,8 @@ use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
 use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
-use declarations::assets::AssetData;
-use declarations::assets::InitArgs;
+use declarations::structs::AssetData;
+use declarations::structs::InitArgs;
 use guards::to_check_controller;
 use ic_cdk::update;
 use ic_cdk::{init, query};
@@ -28,8 +28,8 @@ mod memory;
 mod protocol;
 mod state;
 use crate::api::state_handler::{mutate_state, read_state};
-use crate::declarations::assets::ReserveData;
-use crate::declarations::assets::{
+use crate::declarations::structs::ReserveData;
+use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
     ExecuteWithdrawParams,
 };

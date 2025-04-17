@@ -2,7 +2,7 @@ use super::update::user_data;
 use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance, request_limiter};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
-use crate::declarations::assets::AssetData;
+use crate::declarations::structs::AssetData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::math::math_utils::get_max_value;

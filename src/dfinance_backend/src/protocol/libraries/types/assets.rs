@@ -2,8 +2,8 @@ use candid::Principal;
 use ic_stable_structures::StableBTreeMap;
 use std::collections::BTreeMap;
 
-use crate::declarations::assets::InitArgs;
-use crate::declarations::{assets::ReserveData, storable::Candid};
+use crate::declarations::structs::InitArgs;
+use crate::declarations::{structs::ReserveData, storable::Candid};
 use crate::protocol::libraries::types::{datatypes::UserData, memory::VMem};
 
 use super::datatypes::{BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData};

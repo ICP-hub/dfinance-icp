@@ -2,27 +2,25 @@ use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
-use crate::declarations::transfer::*;
 use crate::get_cached_exchange_rate;
 use crate::guards::to_check_controller;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
 use crate::protocol::libraries::types::datatypes::{RequestTracker,BlockedUserDetails, UserReserveData};
-use candid::{decode_one, encode_args, CandidType, Deserialize};
+use candid::{decode_one, encode_args};
 use candid::{Nat, Principal};
 use ic_cdk::api;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
-use serde::Serialize;
 use crate::constants::constant_variables::constants::{
     REQUEST_LIMIT, TIME_WINDOW, BLOCK_DURATION,
 };
-
-#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
-struct Account {
-    owner: Principal,
-    subaccount: Option<Vec<u8>>,
-}
+use crate::declarations::structs::TransferFromResult;
+use icrc_ledger_types::{
+    icrc1::transfer::TransferArg,
+    icrc2::transfer_from::TransferFromArgs,
+};
+use icrc_ledger_types::icrc1::account::Account;
 
 /*
  * @title Asset Transfer From Function
@@ -55,13 +53,13 @@ pub async fn asset_transfer_from(
     );
 
     let args = TransferFromArgs {
-        to: TransferAccount {
+        to: Account {
             owner: to,
             subaccount: None,
         },
         fee: None,
         spender_subaccount: None,
-        from: TransferAccount {
+        from: Account {
             owner: from,
             subaccount: None,
         },
@@ -109,13 +107,13 @@ pub async fn asset_transfer(
     from: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
-    let token_args = TransferArgs {
-        to: TransferAccount {
+    let token_args = TransferArg {
+        to: Account {
             owner: to,
             subaccount: None,
         },
         fee: None,
-        spender_subaccount: None,
+        from_subaccount: None,
         memo: None,
         created_at_time: None,
         amount: amount.clone(),

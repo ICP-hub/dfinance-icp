@@ -1,16 +1,16 @@
 use crate::api::functions::{get_balance, request_limiter};
 use crate::constants::errors::Error;
-use crate::declarations::assets::{ReserveCache, ReserveData};
+use crate::declarations::structs::{ReserveCache, ReserveData};
 use crate::get_reserve_data;
 use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
-use crate::protocol::libraries::math::calculate::get_exchange_rates;
+use crate::protocol::libraries::math::price::get_exchange_rates;
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
 use crate::protocol::libraries::types::datatypes::UserData;
 use crate::{
     api::state_handler::mutate_state,
     declarations::{
-        assets::{
+        structs::{
             ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
         },
         storable::Candid,

@@ -139,22 +139,6 @@ pub struct InitReserveInput {
     pub params: Vec<u8>,
 }
 
-/* 
- * @title Interest Rate Calculation Parameters
- * @dev Parameters required for calculating interest rates.
- * @functionality Provides the necessary data points to calculate dynamic interest rates based on liquidity utilization, total debt, and current borrowing rates.
- */
-#[derive(Debug, CandidType, Deserialize, Serialize)]
-pub struct CalculateInterestRatesParams {
-    pub liquidity_added: Nat,
-    pub liquidity_taken: Nat,
-    pub total_stable_debt: Nat,
-    pub total_variable_debt: Nat,
-    pub average_stable_borrow_rate: Nat,
-    pub reserve: String,
-    pub d_token: Option<String>,
-}
-
 
 /*
  * @title User Account Data Structure

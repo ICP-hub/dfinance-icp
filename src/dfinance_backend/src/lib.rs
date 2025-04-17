@@ -9,8 +9,8 @@ use constants::interest_variables::constants::MAX_ASSET_LENGTH;
 use constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use constants::validators::validate_asset_name;
 use constants::validators::validate_zero_value;
-use declarations::assets::AssetData;
-use declarations::assets::InitArgs;
+use declarations::structs::AssetData;
+use declarations::structs::InitArgs;
 use guards::guard_prevent_anonymous;
 use guards::to_check_controller;
 use ic_cdk::update;
@@ -33,8 +33,8 @@ mod memory;
 mod protocol;
 mod state;
 use crate::api::state_handler::{mutate_state, read_state};
-use crate::declarations::assets::ReserveData;
-use crate::declarations::assets::{
+use crate::declarations::structs::ReserveData;
+use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
     ExecuteWithdrawParams,
 };

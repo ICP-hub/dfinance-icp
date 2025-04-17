@@ -1,6 +1,6 @@
 use candid::Principal;
 use ic_cdk::{caller, query};
-use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error, declarations::assets::ReserveData};
+use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error, declarations::structs::ReserveData};
 
 
 // guard to allow only app level controller
@@ -42,7 +42,8 @@ pub fn guard_admin_only() -> Result<(), Error> {
  * @dev Ensures that the caller is authenticated and not an anonymous principal.
  *      This function is used to restrict access to authorized users only.
  *
- * @returns `Ok(())` if the caller is authenticated.
+ * @returns `true` if the caller is authenticated.
+ * @returns `false` if the caller is not authenticated.
  * 
  * @functionality Caller Identity Validation
  */

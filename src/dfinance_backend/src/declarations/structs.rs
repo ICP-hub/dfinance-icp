@@ -1,5 +1,11 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
+use icrc_ledger_types::icrc::generic_value::Value;
+use icrc_ledger_types::icrc1::account::Account;
+
+use icrc_ledger_types::icrc1::transfer::TransferError;
+use icrc_ledger_types::icrc2::transfer_from::TransferFromError;
+use icrc_ledger_types::icrc2::approve::ApproveError;
 
 /* 
  * @title Reserve Data
@@ -236,4 +242,127 @@ pub struct AccrueToTreasuryLocalVars {
     pub curr_total_variable_debt: Nat,
     pub total_debt_accrued: Nat,
     pub amount_to_mint: Nat,
+}
+
+/* 
+ * @title Interest Rate Calculation Parameters
+ * @dev Parameters required for calculating interest rates.
+ * @functionality Provides the necessary data points to calculate dynamic interest rates based on liquidity utilization, total debt, and current borrowing rates.
+ */
+#[derive(Debug, CandidType, Deserialize, Serialize)]
+pub struct CalculateInterestRatesParams {
+    pub liquidity_added: Nat,
+    pub liquidity_taken: Nat,
+    pub total_stable_debt: Nat,
+    pub total_variable_debt: Nat,
+    pub average_stable_borrow_rate: Nat,
+    pub reserve: String,
+    pub d_token: Option<String>,
+}
+
+/* 
+ * @title Interest Rate Parameters
+ * @notice Defines parameters for interest rate calculations.
+ * @dev This struct contains the necessary parameters to compute interest rates based on utilization ratios.
+ * 
+ * @functionality Used in the calculation of variable interest rates based on market conditions and reserve utilization.
+ */
+#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
+pub struct InterestRateParams {
+    pub optimal_usage_ratio: Nat,
+    pub max_excess_usage_ratio: Nat,
+    pub base_variable_borrow_rate: Nat,
+    pub variable_rate_slope1: Nat,
+    pub variable_rate_slope2: Nat,
+}
+
+
+
+/*
+ * @title Initialization Arguments for Token Canister
+ * @dev Structure containing necessary parameters for initializing a token canister.
+ */
+#[derive(Debug, CandidType, Deserialize)]
+pub struct DynamicCanisterInitArgs {
+    pub minting_account: Account,
+    pub fee_collector_account: Option<Account>,
+    pub initial_balances: Vec<(Account, Nat)>,
+    pub transfer_fee: Nat,
+    pub decimals: Option<u8>,
+    pub token_name: String,
+    pub token_symbol: String,
+    pub metadata: Vec<(String, Value)>,
+    pub archive_options: ArchiveOptions,
+    pub max_memo_length: Option<u16>,
+    pub feature_flags: Option<FeatureFlags>,
+    pub maximum_number_of_accounts: Option<u64>,
+    pub accounts_overflow_trim_quantity: Option<u64>,
+}
+
+/*
+ * @title Archive Options
+ * @dev Configuration parameters for transaction archival.
+ */
+#[derive(Debug, CandidType, Deserialize)]
+pub struct ArchiveOptions {
+    pub trigger_threshold: usize,
+    pub num_blocks_to_archive: usize,
+    pub node_max_memory_size_bytes: Option<u64>,
+    pub max_message_size_bytes: Option<u64>,
+    pub controller_id: Principal,
+    #[serde(default)]
+    pub more_controller_ids: Option<Vec<Principal>>,
+    #[serde(default)]
+    pub cycles_for_archive_creation: Option<u64>,
+    #[serde(default)]
+    pub max_transactions_per_response: Option<u64>,
+}
+
+#[derive(Debug, Deserialize, CandidType)]
+
+pub struct UpgradeArgs {}
+
+/*
+ * @title Ledger Arguments
+ * @dev Enum defining initialization and upgrade options for the ledger canister.
+ */
+#[derive(Debug, Deserialize, CandidType)]
+pub enum LedgerArg {
+    Init(DynamicCanisterInitArgs),
+    Upgrade(Option<UpgradeArgs>),
+}
+
+/*
+ * @title Feature Flags
+ * @dev Enables or disables token features like ICRC2.
+ */
+#[derive(Debug, CandidType, Deserialize)]
+pub struct FeatureFlags {
+    pub icrc2: bool,
+}
+
+
+/* 
+ * @title Approve Result
+ * @functionality Represents the result of a spender approval operation, either success or failure.
+ * @notice Defines the possible outcomes of an approval transaction.
+ * @dev The result is either `Ok(Nat)` (successful approval) or an error (`Err(ApproveError)`).
+ */
+#[derive(CandidType, Deserialize, Serialize, Debug)]
+pub enum ApproveResult {
+    Ok(Nat),
+    Err(ApproveError),
+}
+/*
+ * @title TransferFromResult Enum
+ * @functionality Captures the success or failure of a delegated transfer operation.
+ * @notice Represents the possible outcomes of a transaction.
+ * @dev This enum encapsulates the result. 
+ *      A successful transaction returns `Ok(Nat)`, where `Nat` represents the transferred amount.
+ *      If the transaction fails, it returns `Err(TransferFromError)`, specifying the error type.
+ */
+#[derive(CandidType, Deserialize, Debug)]
+pub enum TransferFromResult {
+    Ok(Nat),
+    Err(TransferFromError),
 }

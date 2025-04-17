@@ -3,7 +3,7 @@ use ic_cdk::update;
 use candid::{Nat, Principal};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
-use crate::declarations::assets::ReserveData;
+use crate::declarations::structs::ReserveData;
 use crate::api::state_handler::{mutate_state, read_state};
 use crate::guards::guard_admin_only;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};

@@ -4,7 +4,7 @@ use crate::api::state_handler::read_state;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
-use crate::declarations::assets::AssetData;
+use crate::declarations::structs::AssetData;
 use crate::declarations::storable::Candid;
 use crate::protocol::libraries::logic::update::user_reserve;
 use crate::protocol::libraries::math::math_utils::get_max_value;

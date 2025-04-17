@@ -5,7 +5,7 @@ use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{MAX_ASSET_LENGTH, TOKEN_TRANSFER_FEE};
 use crate::constants::validators::validate_asset_name;
-use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::declarations::storable::Candid;
 use crate::guards::guard_prevent_anonymous;
 use crate::protocol::libraries::logic::borrow::execute_repay;
@@ -16,7 +16,7 @@ use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::{
     api::state_handler::mutate_state,
-    declarations::assets::ExecuteSupplyParams,
+    declarations::structs::ExecuteSupplyParams,
     protocol::libraries::logic::update::UpdateLogic,
 };
 use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};

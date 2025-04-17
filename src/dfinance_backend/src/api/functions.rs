@@ -720,6 +720,20 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
  * - `Ok(Vec<(String, u64)>)` - Vector of function names and block expiration timestamps.
  * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
  */
+
+ /*
+ * @title Retrieve Blocked User Information
+ * @notice Retrieves information about functions for which a user is blocked.
+ * @dev Only callable by controllers, returns function names and block expiration timestamps.
+ * @functionality Administrative security functionality that allows checking which users are currently blocked from specific functions
+ *
+ * # Parameters
+ * - `caller_id` - The Principal of the user whose block information is being retrieved.
+ *
+ * # Returns
+ * - `Ok(Vec<(String, u64)>)` - Vector of function names and block expiration timestamps.
+ * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
+ */
 #[query]
 pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
 

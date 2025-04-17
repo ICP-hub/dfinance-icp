@@ -1,29 +1,24 @@
-use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::constant_variables::constants::{BLOCK_DURATION, REQUEST_LIMIT, TIME_WINDOW};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::MAX_ASSET_LENGTH;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::storable::Candid;
+use crate::declarations::structs::TransferFromResult;
 use crate::get_cached_exchange_rate;
 use crate::guards::{guard_controller_only, guard_prevent_anonymous, to_check_controller};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
-use crate::protocol::libraries::types::datatypes::{RequestTracker,BlockedUserDetails, UserReserveData};
+use crate::protocol::libraries::types::datatypes::{
+    BlockedUserDetails, RequestTracker, UserReserveData,
+};
 use candid::{decode_one, encode_args};
 use candid::{Nat, Principal};
 use ic_cdk::api;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
-use crate::constants::constant_variables::constants::{
-    REQUEST_LIMIT, TIME_WINDOW, BLOCK_DURATION,
-};
-use crate::declarations::structs::TransferFromResult;
-use icrc_ledger_types::{
-    icrc1::transfer::TransferArg,
-    icrc2::transfer_from::TransferFromArgs,
-};
 use icrc_ledger_types::icrc1::account::Account;
+use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs};
 
 /*
  * @title Asset Transfer From Function
@@ -244,204 +239,118 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
  */
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
-
-    // prevent anonymous caller
     guard_prevent_anonymous()?;
 
-    ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
-
-    // if asset.trim().is_empty() {
-    //     ic_cdk::println!("Asset cannot be an empty string");
-    //     return Err(Error::EmptyAsset);
-    // }
-
-    // if asset.len() > MAX_ASSET_LENGTH {
-    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
-    //     return Err(Error::InvalidAssetLength);
-    // }
-    
     // input asset validator
     validate_asset_name(&asset)?;
     validate_zero_value(&amount)?;
 
-    // if amount <= zero_nat_value() {
-    //     ic_cdk::println!("Amount cannot be zero");
-    //     return Err(Error::InvalidAmount);
-    // }
-
     let user_principal = ic_cdk::caller();
 
-    // if user_principal == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
+    let mut user_data = user_data(user_principal)?;
 
-    ic_cdk::println!("user ledger id {:?}", user_principal.to_string());
+    let ledger_canister_id = mutate_state(|state| {
+        let reserve_list = &state.reserve_list;
+        reserve_list
+            .get(&asset.to_string().clone())
+            .map(|principal| principal.clone())
+            .ok_or_else(|| Error::NoCanisterIdFound)
+    })?;
 
-    if let Err(e) = request_limiter("faucet") {
-        ic_cdk::println!("Error limiting error: {:?}", e);
-        return Err(e);
+    let platform_principal = ic_cdk::api::id();
+    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+
+    let balance = get_balance(ledger_canister_id, platform_principal).await?;
+
+    ic_cdk::println!("balance of wallet = {}", balance);
+
+    if amount > balance {
+        ic_cdk::println!("wallet balance is low");
+        return Err(Error::LowWalletBalance);
     }
 
-    let operation_key = user_principal;
-    // Acquire the lock
-    {
-        if let Err(e) = acquire_lock(&operation_key) {
-            ic_cdk::println!("Lock acquisition failed: {:?}", e);
-            return Err(Error::LockAcquisitionFailed);
-        }
-    }
+    let asset_price = get_cached_exchange_rate(asset.clone())?;
+    ic_cdk::println!("asset price = {}", asset_price);
 
-    let result = async {
-        let user_data_result = user_data(user_principal);
+    let usd_amount = ScalingMath::scaled_mul(amount.clone(), asset_price.clone());
 
-        let mut user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found");
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
+    ic_cdk::println!("usd amount of the facut = {}, {}", usd_amount, asset_price);
 
-        let ledger_canister_id = mutate_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&asset.to_string().clone())
-                .map(|principal| principal.clone())
-                .ok_or_else(|| Error::NoCanisterIdFound)
-        })?;
+    let user_reserve = user_reserve(&mut user_data, &asset);
+    ic_cdk::println!("user reserve = {:?}", user_reserve);
 
-        let platform_principal = ic_cdk::api::id();
-        ic_cdk::println!("Platform principal: {:?}", platform_principal);
+    if let Some((_, user_reserve_data)) = user_reserve {
+        ic_cdk::println!("inside if statement");
 
-        let balance_result = get_balance(ledger_canister_id, platform_principal).await;
-        let balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
-
-        ic_cdk::println!("balance of wallet = {}", balance);
-
-        if amount > balance {
-            ic_cdk::println!("wallet balance is low");
-            return Err(Error::LowWalletBalance);
+        if usd_amount.clone() > user_reserve_data.faucet_limit {
+            return Err(Error::AmountExceedsLimit);
         }
 
-        let asset_price = match get_cached_exchange_rate(asset.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
+        if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
+            > user_reserve_data.faucet_limit
+        {
+            return Err(Error::ExceedsRemainingLimit);
+        }
+        user_reserve_data.faucet_usage += usd_amount;
+        ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
+    } else {
+        let mut new_reserve = UserReserveData {
+            reserve: asset.clone(),
+            is_collateral: true,
+            ..Default::default()
         };
-        ic_cdk::println!("asset price = {}",asset_price);
 
-        let usd_amount = ScalingMath::scaled_mul(amount.clone(),asset_price.clone());
+        if usd_amount > new_reserve.faucet_limit {
+            return Err(Error::AmountExceedsLimit);
+        }
+
+        if (new_reserve.faucet_usage.clone() + usd_amount.clone())
+            > new_reserve.faucet_limit.clone()
+        {
+            return Err(Error::ExceedsRemainingLimit);
+        }
+
+        new_reserve.faucet_usage += usd_amount;
+        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
+
+        if let Some(ref mut reserves) = user_data.reserves {
+            reserves.push((asset.clone(), new_reserve.clone()));
+        } else {
+            user_data.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
+        }
 
         ic_cdk::println!(
-            "usd amount of the facut = {}, {}",
-            usd_amount,
-            asset_price
+            "faucet new_reserve.faucet_usage = {}",
+            new_reserve.faucet_usage
         );
-
-        let user_reserve = user_reserve(&mut user_data, &asset);
-        ic_cdk::println!("user reserve = {:?}", user_reserve);
-
-        if let Some((_, user_reserve_data)) = user_reserve {
-            ic_cdk::println!("inside if statement");
-            ic_cdk::println!(
-                "faucet user_reserve_data.faucet_limit = {}",
-                user_reserve_data.faucet_limit
-            );
-            if usd_amount.clone() > user_reserve_data.faucet_limit {
-                ic_cdk::println!("amount is too much");
-                return Err(Error::AmountExceedsLimit);
-            }
-
-            if (user_reserve_data.faucet_usage.clone() + usd_amount.clone())
-                > user_reserve_data.faucet_limit
-            {
-                ic_cdk::println!("amount is too much second");
-                return Err(Error::ExceedsRemainingLimit);
-            }
-            user_reserve_data.faucet_usage += usd_amount;
-            ic_cdk::println!("if faucet usage = {}", user_reserve_data.faucet_usage);
-        } else {
-            let mut new_reserve = UserReserveData {
-                reserve: asset.clone(),
-                is_collateral: true,
-                ..Default::default()
-            };
-
-            if usd_amount > new_reserve.faucet_limit {
-                ic_cdk::println!("amount is too much");
-                return Err(Error::AmountExceedsLimit);
-            }
-
-            if (new_reserve.faucet_usage.clone() + usd_amount.clone())
-                > new_reserve.faucet_limit.clone()
-            {
-                ic_cdk::println!("amount is too much second");
-                return Err(Error::ExceedsRemainingLimit);
-            }
-
-            new_reserve.faucet_usage += usd_amount;
-            ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
-
-            if let Some(ref mut reserves) = user_data.reserves {
-                reserves.push((asset.clone(), new_reserve.clone()));
-            } else {
-                user_data.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
-            }
-
-            ic_cdk::println!(
-                "faucet new_reserve.faucet_usage = {}",
-                new_reserve.faucet_usage
-            );
-        }
-
-        ic_cdk::println!("user data before submit = {:?}", user_data);
-
-        mutate_state(|state| {
-            state
-                .user_profile
-                .insert(user_principal, Candid(user_data.clone()));
-        });
-
-        ic_cdk::println!("updated user data = {:?}", user_data);
-
-        match asset_transfer_from(
-            ledger_canister_id,
-            platform_principal,
-            user_principal,
-            amount.clone(),
-        )
-        .await
-        {
-            Ok(new_balance) => {
-                ic_cdk::println!("Asset transfer from backend to user executed successfully");
-                Ok(new_balance)
-            }
-            Err(_) => {
-                return Err(Error::ErrorFaucetTokens);
-            }
-        }
-    }
-    .await;
-
-    ic_cdk::println!("Faucet result: {:?}", result);
-
-    // Release the lock
-    if let Err(e) = release_lock(&operation_key) {
-        ic_cdk::println!("Failed to release lock: {:?}", e);
-        return Err(e);
     }
 
-    result
+    ic_cdk::println!("user data before submit = {:?}", user_data);
+
+    mutate_state(|state| {
+        state
+            .user_profile
+            .insert(user_principal, Candid(user_data.clone()));
+    });
+
+    ic_cdk::println!("updated user data = {:?}", user_data);
+
+    match asset_transfer_from(
+        ledger_canister_id,
+        platform_principal,
+        user_principal,
+        amount.clone(),
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            ic_cdk::println!("Asset transfer from backend to user executed successfully");
+            Ok(new_balance)
+        }
+        Err(_) => {
+            return Err(Error::ErrorFaucetTokens);
+        }
+    }
 }
 
 /*
@@ -462,18 +371,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::AnonymousPrincipal);
     }
 
-    //Retrieve user data.
     let mut user_data = user_data(user_principal)?;
-
-    // let mut user_data = match user_data_result {
-    //     Ok(data) => {
-    //         ic_cdk::println!("User found");
-    //         data
-    //     }
-    //     Err(e) => {
-    //         return Err(e);
-    //     }
-    // };
 
     // Access and mutate reserves
     if let Some(user_data_reserves) = user_data.reserves.as_mut() {
@@ -515,303 +413,6 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
     Ok(Nat::from(api::canister_balance128()))
 }
 
-
-/*
- * @title Request Rate Limiter
- * @notice Implements a request rate limiting mechanism to prevent abuse of functions.
- * @dev Tracks request counts per function within a time window and blocks users who exceed limits.
- * @functionality Security functionality that implements rate limiting to prevent API abuse and DDoS attacks
- *
- * # Parameters
- * - `function_name` - The name of the function being called, used to track specific function usage.
- *
- * # Returns
- * - `Ok(())` - If the request is allowed to proceed.
- * - `Err(Error)` - If the user is blocked or exceeds the request limit.
- */
-pub fn request_limiter(function_name: &str) -> Result<(), Error> {
-    let caller_id = ic_cdk::caller();
-    let current_time_stamp = current_timestamp();
-
-    // if caller_id == Principal::anonymous() {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::InvalidPrincipal);
-    // }
-
-    // Check if user is blocked for this specific function
-    let is_blocked = mutate_state(|state| {
-        state
-            .restrict_users
-            .get(&caller_id)
-            .and_then(|candid| candid.0.get(function_name).cloned())
-            .map(|details| details.blocked_time > current_time_stamp)
-            .unwrap_or(false)
-    });
-
-    let tocheck = read_state(|state| {
-        state
-            .restrict_users
-            .get(&caller_id)
-            .and_then(|candid| candid.0.get(function_name).cloned())
-    });
-
-    ic_cdk::println!("tocheck request limiter = {:?}", tocheck);
-
-    if is_blocked {
-        ic_cdk::println!(
-            "[RequestLimiter] User {:?} is blocked from '{}' until further notice",
-            caller_id,
-            function_name
-        );
-        return Err(Error::BLOCKEDFORONEHOUR);
-    }
-
-    // Retrieve user's request history
-    let mut user_requests = mutate_state(|state| {
-        state
-            .userrequests
-            .get(&caller_id)
-            .map(|candid| candid.0.clone())
-            .unwrap_or_default()
-    });
-
-    // Get the request tracker for the specific function or initialize it
-    let mut entry = user_requests
-        .get(function_name)
-        .cloned()
-        .unwrap_or(RequestTracker {
-            count: 0,
-            last_request_time: current_time_stamp,
-        });
-
-    // Reset request count if outside the time window
-    if current_time_stamp - entry.last_request_time > TIME_WINDOW {
-        ic_cdk::println!(
-            "[RequestLimiter] Resetting count for function: {}",
-            function_name
-        );
-        entry.count = 0;
-        entry.last_request_time = current_time_stamp;
-    }
-
-    // Increment the request count
-    entry.count += 1;
-    ic_cdk::println!(
-        "[RequestLimiter] Updated count for '{}': {}",
-        function_name,
-        entry.count
-    );
-
-    if entry.count > REQUEST_LIMIT {
-        ic_cdk::println!(
-            "[RequestLimiter] Blocking user {:?} from calling '{}' for {} seconds",
-            caller_id,
-            function_name,
-            BLOCK_DURATION
-        );
-
-        // Retrieve existing blocked functions or create new map
-        let mut blocked_functions = mutate_state(|state| {
-            state
-                .restrict_users
-                .get(&caller_id)
-                .map(|candid| candid.0.clone())
-                .unwrap_or_default()
-        });
-
-        // Block only this function
-        blocked_functions.insert(
-            function_name.to_string(),
-            BlockedUserDetails {
-                blocked_time: current_time_stamp + BLOCK_DURATION,
-            },
-        );
-
-        // Save updated blocked functions list
-        mutate_state(|state| {
-            state
-                .restrict_users
-                .insert(caller_id, Candid(blocked_functions));
-        });
-
-        // Remove tracking data for this function only, not all requests
-        user_requests.remove(function_name);
-
-        // Save updated request history
-        mutate_state(|state| {
-            state.userrequests.insert(caller_id, Candid(user_requests));
-        });
-
-        return Err(Error::BLOCKEDFORONEHOUR);
-    }
-
-    // Update the function's request tracker in the BTreeMap
-    user_requests.insert(function_name.to_string(), entry);
-
-    // Save the updated request history
-    mutate_state(|state| {
-        state.userrequests.insert(caller_id, Candid(user_requests));
-    });
-
-    ic_cdk::println!(
-        "[RequestLimiter] Request successfully stored for '{}' by {:?}",
-        function_name,
-        caller_id
-    );
-    Ok(())
-}
-
-/*
- * @title Retrieve User Request Information
- * @notice Retrieves information about a user's API requests, showing function names and count.
- * @dev Only callable by controllers, returns a vector of function names and their request counts.
- * @functionality Administrative monitoring functionality that allows checking API usage patterns for specific users
- *
- * # Parameters
- * - `caller_id` - The Principal of the user whose request information is being retrieved.
- *
- * # Returns
- * - `Ok(Vec<(String, u32)>)` - Vector of function names and their request counts.
- * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
- */
-#[query]
-pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>, Error> {
-    // let caller_id = ic_cdk::caller();
-
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-
-    if !to_check_controller() {
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
-
-    Ok(read_state(|state| {
-        state
-            .userrequests
-            .get(&caller_id)
-            .map(|candid| {
-                candid
-                    .0
-                    .iter()
-                    .map(|(function, tracker)| (function.clone(), tracker.count)) // Extract only function name & count
-                    .collect::<Vec<(String, u32)>>()
-            })
-            .unwrap_or_default()
-    }))
-}
-
-
-
-/*
- * @title Retrieve Blocked User Information
- * @notice Retrieves information about functions for which a user is blocked.
- * @dev Only callable by controllers, returns function names and block expiration timestamps.
- * @functionality Administrative security functionality that allows checking which users are currently blocked from specific functions
- *
- * # Parameters
- * - `caller_id` - The Principal of the user whose block information is being retrieved.
- *
- * # Returns
- * - `Ok(Vec<(String, u64)>)` - Vector of function names and block expiration timestamps.
- * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
- */
-
- /*
- * @title Retrieve Blocked User Information
- * @notice Retrieves information about functions for which a user is blocked.
- * @dev Only callable by controllers, returns function names and block expiration timestamps.
- * @functionality Administrative security functionality that allows checking which users are currently blocked from specific functions
- *
- * # Parameters
- * - `caller_id` - The Principal of the user whose block information is being retrieved.
- *
- * # Returns
- * - `Ok(Vec<(String, u64)>)` - Vector of function names and block expiration timestamps.
- * - `Err(Error)` - If the caller is not authorized or the principal is invalid.
- */
-#[query]
-pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
-
-    // Allow only controller to access this function
-    guard_controller_only()?;
-
-    Ok(read_state(|state| {
-        state
-            .restrict_users
-            .get(&caller_id)
-            .map(|candid| {
-                candid
-                    .0
-                    .iter()
-                    .map(|(function, details)| (function.clone(), details.blocked_time)) // Extract function name & blocked timestamp
-                    .collect::<Vec<(String, u64)>>()
-            })
-            .unwrap_or_default()
-    }))
-}
-
-/*
- * @title Remove Function Block
- * @notice Removes a block on a specific function for a user.
- * @dev Only callable by controllers, allows administrators to manually unblock user access.
- * @functionality Administrative security functionality that allows removing function-specific blocks for users
- *
- * # Parameters
- * - `caller_id` - The Principal of the user whose block is being removed.
- * - `function_name` - The name of the function to unblock.
- *
- * # Returns
- * - `Ok(())` - If the block was successfully removed.
- * - `Err(Error)` - If the caller is not authorized or the block doesn't exist.
- */
-#[update]
-pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> Result<(), Error> {
-
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-
-    if !to_check_controller() {
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
-
-    mutate_state(|state| {
-        if let Some(mut candid) = state.restrict_users.get(&caller_id) {
-            let blocked_functions = &mut candid.0; // Get the inner BTreeMap
-
-            if blocked_functions.remove(&function_name).is_some() {
-                ic_cdk::println!(
-                    "[RequestLimiter] Unblocked function '{}' for user {:?}",
-                    function_name,
-                    caller_id
-                );
-
-                // If no functions remain blocked, remove the user from the blocked list
-                if blocked_functions.is_empty() {
-                    state.restrict_users.remove(&caller_id);
-                } else {
-                    state
-                        .restrict_users
-                        .insert(caller_id, Candid(blocked_functions.clone()));
-                }
-
-                return Ok(());
-            }
-        }
-
-        ic_cdk::println!(
-            "[RequestLimiter] Function '{}' not found in blocked list for user {:?}",
-            function_name,
-            caller_id
-        );
-        Err(Error::ErrorNotController)
-    })
-}
 /*
  * @title Check Function Block Status
  * @notice Checks if the caller is blocked from using a specific function.
@@ -826,7 +427,7 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
 #[query]
-pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
+pub fn is_function_blocked(function_name: String) -> Result<bool, Error> {
     let caller_id = ic_cdk::caller();
     let current_time_stamp = current_timestamp();
 
@@ -854,42 +455,3 @@ pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
  * This function is called by the Internet Computer before processing each incoming message,
  * allowing early rejection of requests from blocked users.
  */
-#[ic_cdk::inspect_message]
-pub fn inspect_message() {
-    let method_name = ic_cdk::api::call::method_name();
-    let caller_id = ic_cdk::caller();
-    let current_time_stamp = current_timestamp();
-
-    ic_cdk::println!(
-        "[InspectMessage] Caller: {:?}, Method: {}, Timestamp: {}",
-        caller_id,
-        method_name,
-        current_time_stamp
-    );
-
-    // Read state to check if the user is blocked from this function
-    let is_blocked = read_state(|state| {
-        state
-            .restrict_users
-            .get(&caller_id)
-            .and_then(|candid| candid.0.get(&method_name).cloned())
-            .map(|details| details.blocked_time > current_time_stamp)
-            .unwrap_or(false)
-    });
-
-    ic_cdk::println!("is_blocked = {:?}", is_blocked);
-
-    if is_blocked {
-        ic_cdk::println!(
-            "[InspectMessage] User {:?} is blocked from '{}' until further notice.",
-            caller_id,
-            method_name
-        );
-        ic_cdk::println!("You are temporarily blocked from using this function");
-        ic_cdk::api::call::reject("You are temporarily blocked from using this function.");
-        return;
-    }
-
-    ic_cdk::println!("[InspectMessage] Execution allowed for {}", method_name);
-    ic_cdk::api::call::accept_message(); // Explicitly allow the request
-}

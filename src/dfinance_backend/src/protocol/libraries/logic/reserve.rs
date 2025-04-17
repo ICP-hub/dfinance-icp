@@ -1,11 +1,14 @@
 use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
 use crate::api::functions::get_total_supply;
+use crate::constants::constant_variables::constants::{
+    MIN_UNIT, ONE_VALUE, TOLERANCE_FACTOR, ZERO_VALUE,
+};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
+use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::declarations::structs::ReserveCache;
 use crate::declarations::structs::ReserveData;
-use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::protocol::libraries::logic::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -14,10 +17,6 @@ use crate::protocol::libraries::math::math_utils::current_timestamp;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use candid::{Nat, Principal};
-use crate::constants::constant_variables::constants::{
-    ZERO_VALUE, ONE_VALUE, TOLERANCE_FACTOR, MIN_UNIT
-};
-
 
 impl Default for AccrueToTreasuryLocalVars {
     fn default() -> Self {
@@ -33,8 +32,8 @@ impl Default for AccrueToTreasuryLocalVars {
 /*
  * @title Reserve Cache Generator
  * @notice Generates a cache structure from `ReserveData`.
- * @functionality This function extracts essential parameters from the `ReserveData` and stores them in a `ReserveCache`. 
- *                This allows for quicker access to these values during subsequent operations without having to repeatedly 
+ * @functionality This function extracts essential parameters from the `ReserveData` and stores them in a `ReserveCache`.
+ *                This allows for quicker access to these values during subsequent operations without having to repeatedly
  *                fetch them from the original `ReserveData`.
  * @dev This function copies essential reserve parameters into `ReserveCache` for quick access.
  * @param reserve_data The reference to `ReserveData`.
@@ -68,9 +67,9 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
  *
  * @notice Updates the reserve state if the current timestamp differs from the last update timestamp.
  *         It ensures only necessary updates are made, such as updating indexes and accruing treasury rewards.
- * @functionality This function checks if the reserve data is outdated by comparing the current timestamp 
- *                with the last update timestamp. If outdated, it updates reserve indexes, accrues treasury rewards, 
- *                and updates the last update timestamp to the current time. This helps keep the reserve data fresh 
+ * @functionality This function checks if the reserve data is outdated by comparing the current timestamp
+ *                with the last update timestamp. If outdated, it updates reserve indexes, accrues treasury rewards,
+ *                and updates the last update timestamp to the current time. This helps keep the reserve data fresh
  *                and up-to-date.
  *
  * @dev The function follows these steps:
@@ -95,10 +94,6 @@ pub fn update_state(
     }
 
     update_indexes(reserve_data, reserve_cache);
-    // if let Err(e) = accrue_to_treasury(reserve_data, reserve_cache) {
-    //     ic_cdk::println!("Error accruing to treasury: {:?}", e);
-    //     return Err(e);
-    // }
 
     accrue_to_treasury(reserve_data, reserve_cache)?;
     reserve_data.last_update_timestamp = current_time;
@@ -109,7 +104,7 @@ pub fn update_state(
  * @title Update Indexes
  * @notice Updates liquidity and debt indices based on reserve data.
  * @functionality This function updates the liquidity and debt indices in the `ReserveCache` based on the current
- *                reserve data, calculating linear interest for liquidity and compounded interest for debt. 
+ *                reserve data, calculating linear interest for liquidity and compounded interest for debt.
  *                The indices are updated and stored in both the `reserve_cache` and `reserve_data` structures.
  * @dev Uses linear interest for liquidity and compounded interest for debt.
  *
@@ -119,7 +114,6 @@ pub fn update_state(
  * @return Result<(), Error> Returns `Ok` if the update indexes are successfully updated, or an error if the update indexes fails.
  */
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
-
     if reserve_cache.curr_liquidity_rate != zero_nat_value() {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_cache.curr_liquidity_rate.clone(),
@@ -153,8 +147,8 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
  * @notice Updates the interest rates based on collateral changes and debt levels.
  *         It calculates new liquidity and debt rates, and updates the reserve data accordingly.
  *
- * @functionality This function is responsible for updating the interest rates in the reserve based on 
- *                changes in collateral (both added and taken) and debt levels. It recalculates the 
+ * @functionality This function is responsible for updating the interest rates in the reserve based on
+ *                changes in collateral (both added and taken) and debt levels. It recalculates the
  *                liquidity and debt rates and updates the `ReserveData` struct accordingly.
  *
  * @dev The function follows these steps:
@@ -192,27 +186,6 @@ pub async fn update_interest_rates(
     let interest_rate_params = initialize_interest_rate_params(&asset);
     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
     ic_cdk::println!("total debt: {:?}", total_debt);
-    // let calculated_interest_rates = calculate_interest_rates(
-    //     liq_added,
-    //     liq_taken,
-    //     total_debt,
-    //     &interest_rate_params,
-    //     reserve_cache.reserve_factor.clone(),
-    //     reserve_data.asset_name.clone().expect("no name"),
-    // )
-    // .await;
-
-    // let (next_liquidity_rate, next_debt_rate) = match calculated_interest_rates {
-    //     Ok((liquidity_rate, debt_rate)) => {
-    //         ic_cdk::println!("liquidity rate: {:?}", liquidity_rate);
-    //         ic_cdk::println!("debt rate: {:?}", debt_rate);
-    //         (liquidity_rate, debt_rate)
-    //     }
-    //     Err(e) => {
-    //         ic_cdk::println!("Error calculating interest rates: {:?}", e);
-    //         return Err(e);
-    //     }
-    // };
 
     let (next_liquidity_rate, next_debt_rate) = calculate_interest_rates(
         liq_added,
@@ -223,18 +196,6 @@ pub async fn update_interest_rates(
         reserve_data.asset_name.clone().expect("no name"),
     )
     .await?;
-
-    // let (next_liquidity_rate, next_debt_rate) = match calculated_interest_rates {
-    //     Ok((liquidity_rate, debt_rate)) => {
-    //         ic_cdk::println!("liquidity rate: {:?}", liquidity_rate);
-    //         ic_cdk::println!("debt rate: {:?}", debt_rate);
-    //         (liquidity_rate, debt_rate)
-    //     }
-    //     Err(e) => {
-    //         ic_cdk::println!("Error calculating interest rates: {:?}", e);
-    //         return Err(e);
-    //     }
-    // };
 
     reserve_data.current_liquidity_rate = next_liquidity_rate;
     reserve_data.borrow_rate = next_debt_rate;
@@ -271,18 +232,6 @@ pub async fn burn_scaled(
     platform_principal: Principal,
     burn_dtoken: bool,
 ) -> Result<(), Error> {
-    // ic_cdk::println!("Starting burn_scaled function...");
-    // ic_cdk::println!("Initial parameters:");
-    // ic_cdk::println!("  Amount: {}", amount);
-    // ic_cdk::println!("  Index: {}", index);
-    // ic_cdk::println!("  User Principal: {}", user_principal);
-    // ic_cdk::println!("  Token Canister Principal: {}", token_canister_principal);
-    // ic_cdk::println!("  Platform Principal: {}", platform_principal);
-    // ic_cdk::println!("  Burn DToken: {}", burn_dtoken);
-
-    // ic_cdk::println!("Checking if amount has a remainder when divided by index...");
-    // ic_cdk::println!("Amount remainder: {}", amount.clone() % index.clone());
-
     let mut is_withdraw = false;
     let adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
         && amount.clone() < Nat::from(10u128)
@@ -302,32 +251,9 @@ pub async fn burn_scaled(
     }
 
     ic_cdk::println!("Fetching user balance...");
-    // let balance_result = get_balance(token_canister_principal, user_principal).await;
-
-    // let balance = match balance_result {
-    //     Ok(bal) => {
-    //         ic_cdk::println!("Balance fetched successfully: {}", bal);
-    //         bal
-    //     }
-    //     Err(err) => {
-    //         ic_cdk::println!("Error fetching balance: {:?}", err);
-    //         return Err(err);
-    //     }
-    // };
 
     let balance = get_balance(token_canister_principal, user_principal).await?;
 
-    // let balance = match balance_result {
-    //     Ok(bal) => {
-    //         ic_cdk::println!("Balance fetched successfully: {}", bal);
-    //         bal
-    //     }
-    //     Err(err) => {
-    //         ic_cdk::println!("Error fetching balance: {:?}", err);
-    //         return Err(err);
-    //     }
-    // };
-    // ic_cdk::println!("burn balance = {}", balance);
     ic_cdk::println!("adjusted balance = {}", adjusted_amount);
     let mut balance_increase = zero_nat_value();
     if burn_dtoken {
@@ -354,7 +280,7 @@ pub async fn burn_scaled(
             user_state.d_token_balance,
             adjusted_amount
         );
-        
+
         if user_state.d_token_balance == adjusted_amount {
             ic_cdk::println!("Setting DToken balance to zero");
             user_state.d_token_balance = zero_nat_value();
@@ -374,7 +300,7 @@ pub async fn burn_scaled(
         }
 
         ic_cdk::println!("Updated DToken balance: {}", user_state.d_token_balance);
-      
+
         user_state.liquidity_index = index.clone();
     } else {
         ic_cdk::println!("Processing variable borrow burn...");
@@ -424,7 +350,6 @@ pub async fn burn_scaled(
         );
         ic_cdk::println!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
-        
         user_state.variable_borrow_index = index;
     }
 
@@ -443,9 +368,11 @@ pub async fn burn_scaled(
             Ok(_) => {
                 ic_cdk::println!("Burning successful");
                 if is_withdraw {
-                    reserve.asset_supply = get_total_supply(token_canister_principal).await.unwrap();
+                    reserve.asset_supply =
+                        get_total_supply(token_canister_principal).await.unwrap();
                 } else {
-                    reserve.asset_borrow = get_total_supply(token_canister_principal).await.unwrap();
+                    reserve.asset_borrow =
+                        get_total_supply(token_canister_principal).await.unwrap();
                 }
                 Ok(())
             }
@@ -477,29 +404,6 @@ pub async fn burn_scaled(
             amount_to_burn
         );
 
-        // match asset_transfer(
-        //     platform_principal,
-        //     token_canister_principal,
-        //     user_principal,
-        //     Nat::from(amount_to_burn),
-        // )
-        // .await
-        // {
-        //     Ok(_) => {
-        //         ic_cdk::println!("Burning successful");
-        //         if is_withdraw {
-        //             reserve.asset_supply = get_total_supply(token_canister_principal).await.unwrap();
-        //         } else {
-        //             reserve.asset_borrow = get_total_supply(token_canister_principal).await.unwrap();
-        //         }
-        //         Ok(())
-        //     }
-        //     Err(err) => {
-        //         ic_cdk::println!("Error during burning: {:?}", err);
-        //         Err(Error::ErrorBurnTokens)
-        //     }
-        // }
-
         match asset_transfer(
             platform_principal,
             token_canister_principal,
@@ -511,9 +415,11 @@ pub async fn burn_scaled(
             Ok(_) => {
                 ic_cdk::println!("Burning successful");
                 if is_withdraw {
-                    reserve.asset_supply = get_total_supply(token_canister_principal).await.unwrap();
+                    reserve.asset_supply =
+                        get_total_supply(token_canister_principal).await.unwrap();
                 } else {
-                    reserve.asset_borrow = get_total_supply(token_canister_principal).await.unwrap();
+                    reserve.asset_borrow =
+                        get_total_supply(token_canister_principal).await.unwrap();
                 }
                 Ok(())
             }
@@ -522,7 +428,6 @@ pub async fn burn_scaled(
                 Err(Error::ErrorBurnTokens)
             }
         }
-
     }
 }
 
@@ -559,10 +464,7 @@ pub async fn mint_scaled(
     platform_principal: Principal,
     minting_dtoken: bool,
 ) -> Result<(), Error> {
-    ic_cdk::println!("--- mint_scaled_modified called ---");
-    ic_cdk::println!("Initial user state: {:?}", user_state);
-    ic_cdk::println!("Amount value: {}", amount);
-    ic_cdk::println!("current index value = {}", index);
+
     let mut is_supply = true;
     let mut adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
         && amount.clone() < Nat::from(10u128)
@@ -571,7 +473,6 @@ pub async fn mint_scaled(
     } else {
         amount.clone().scaled_div(index.clone())
     };
-    ic_cdk::println!("Adjusted amount: {}", adjusted_amount.clone());
 
     ic_cdk::println!("Adjusted amount: {}", adjusted_amount);
     //acuire transaction lock
@@ -580,23 +481,13 @@ pub async fn mint_scaled(
         return Err(Error::InvalidMintAmount);
     }
 
-    // let balance_result = get_balance(token_canister_principal, user_principal).await;
-    // let balance = match balance_result {
-    //     Ok(bal) => bal,
-    //     Err(err) => {
-    //         ic_cdk::println!("Error converting balance to u128: {:?}", err);
-    //         return Err(Error::ErrorGetBalance);
-    //     }
-    // };
-
     let balance = get_balance(token_canister_principal, user_principal).await?;
     ic_cdk::println!("Fetched balance in Nat: {:?}", balance);
-    ic_cdk::println!("mint balance = {}", balance);
 
     let mut balance_increase = zero_nat_value();
     if minting_dtoken {
         println!("minting dtoken");
-        
+
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
             .clone()
@@ -615,8 +506,7 @@ pub async fn mint_scaled(
             user_state.d_token_balance += adjusted_amount.clone();
         }
         ic_cdk::println!("new dtoken balance {}", user_state.d_token_balance);
-        // reserve.asset_supply += adjusted_amount; //get_trans_amount
-        
+
         println!("user new dtoken balance {}", user_state.d_token_balance);
         user_state.liquidity_index = index;
         println!("user new liq index {}", user_state.liquidity_index);
@@ -664,7 +554,7 @@ pub async fn mint_scaled(
             } else {
                 reserve.asset_borrow = get_total_supply(token_canister_principal).await.unwrap();
             }
-           
+
             Ok(())
         }
         Err(err) => {

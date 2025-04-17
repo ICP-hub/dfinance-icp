@@ -1,7 +1,6 @@
 use crate::constants::errors::Error;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
-use api::resource_manager::LOCKS;
 use candid::Nat;
 use candid::Principal;
 use constants::data_types::zero_nat_value;
@@ -180,16 +179,6 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  */
 #[query]
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
-    // if asset_name.trim().is_empty() {
-    //     ic_cdk::println!("Asset cannot be an empty string");
-    //     return Err(Error::EmptyAsset);
-    // }
-
-    // if asset_name.len() > MAX_ASSET_LENGTH {
-    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
-    //     return Err(Error::InvalidAssetLength);
-    // }
-
     // asset name validator
     validate_asset_name(&asset_name)?;
 
@@ -227,15 +216,6 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
  */
 #[query]
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
-    // let trimmed_symbol = base_asset_symbol.trim();
-
-    // if trimmed_symbol.is_empty() {
-    //     return Err(Error::EmptyAsset);
-    // }
-    // if trimmed_symbol.len() > MAX_ASSET_LENGTH {
-    //     return Err(Error::InvalidAssetLength);
-    // }
-
     // asset validator
     validate_asset_name(&base_asset_symbol)?;
 
@@ -278,45 +258,17 @@ pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-
     guard_prevent_anonymous()?;
-    // if asset_name.trim().is_empty() {
-    //     ic_cdk::println!("Asset cannot be an empty string");
-    //     return Err(Error::EmptyAsset);
-    // }
-
-    // if asset_name.len() > MAX_ASSET_LENGTH {
-    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
-    //     return Err(Error::InvalidAssetLength);
-    // }
-
     validate_asset_name(&asset_name)?;
-
-
-    // if let Some(principal) = on_behalf {
-    //     if principal == Principal::anonymous() {
-    //         ic_cdk::println!("Anonymous principals are not allowed");
-    //         return Err(Error::AnonymousPrincipal);
-    //     }
-    // }
 
     if on_behalf == Some(Principal::anonymous()) {
         return Err(Error::AnonymousPrincipal);
     }
-    
-    ic_cdk::println!("Entering get_asset_supply function");
-
-    ic_cdk::println!("Asset name received: {}", asset_name);
 
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
-
-    // if user_principal == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
     let user_data_result = user_data(user_principal);
@@ -417,16 +369,6 @@ pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-    // if asset_name.trim().is_empty() {
-    //     ic_cdk::println!("Asset cannot be an empty string");
-    //     return Err(Error::EmptyAsset);
-    // }
-
-    // if asset_name.len() > MAX_ASSET_LENGTH {
-    //     ic_cdk::println!("Asset must have a maximum length of 7 characters");
-    //     return Err(Error::InvalidAssetLength);
-    // }
-
     // input validator
     validate_asset_name(&asset_name)?;
 
@@ -595,32 +537,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             cumulated_borrow_interest.clone().scaled_mul(reserve_data.debt_index.clone())
         );
         return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
-    }
-}
-
-/*
- * @title Get Lock Status
- * @dev Checks if the user has an active lock.
- * @returns `true` if the user has a lock, `false` otherwise.
- * @functionality This function checks the user's lock status, determining if they have an active lock or not.
- */
-#[query]
-async fn get_lock() -> Result<bool, Error> {
-    let user_principal = ic_cdk::api::caller();
-    ic_cdk::println!("user principal = {} ", user_principal);
-
-    if !to_check_controller() {
-        ic_cdk::println!("Only controller allowed");
-        return Err(Error::ErrorNotController);
-    }
-
-    let result = LOCKS
-        .lock()
-        .map(|locks| locks.get(&user_principal).cloned().unwrap_or_else(|| false));
-
-    match result {
-        Ok(_) => Ok(result.unwrap()),
-        Err(_e) => Err(Error::LockAcquisitionFailed),
     }
 }
 
@@ -829,10 +745,6 @@ pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Resul
     }
 
     validate_zero_value(&session_start)?;
-    // if session_start <= zero_nat_value() {
-    //     ic_cdk::println!("Amount cannot be zero");
-    //     return Err(Error::InvalidAmount);
-    // }
 
     let session_data = SessionStorageData {
         connected_wallet,

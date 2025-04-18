@@ -197,8 +197,6 @@ const FaucetDetails = () => {
           fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-        const allAssets = await backendActor.getAllAssets();
-        setAssets(allAssets);
       } catch (error) {
         console.error("Error fetching data:", error);
       }

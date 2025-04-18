@@ -185,6 +185,7 @@ type UserReserveData = record {
 service : (principal) -> {
   add_controllers : (principal, principal) -> (Result);
   add_tester : (text, principal) -> (Result_1);
+  admin_restart_reset_task : () -> (Result_1);
   check_is_tester : () -> (bool) query;
   create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_2);
   cycle_checker : () -> (Result_3) query;

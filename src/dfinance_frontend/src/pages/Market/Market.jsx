@@ -83,8 +83,6 @@ const WalletDetails = () => {
    * =================================================================================== */
 
   const itemsPerPage = 8;
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const filteredReserveData = Object.fromEntries(filteredItems);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);

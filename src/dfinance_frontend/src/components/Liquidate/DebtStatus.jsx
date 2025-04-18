@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
 import Button from "../../components/Common/Button";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
@@ -36,7 +35,7 @@ const DebtStatus = () => {
   const liquidateTrigger = useSelector(
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
-  const theme = useSelector((state) => state.theme.theme);
+
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
@@ -45,14 +44,13 @@ const DebtStatus = () => {
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(true);
-  const [error, setError] = useState("");
   const [supplyDataLoading, setSupplyDataLoading] = useState(true);
   const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [userLoadingStates, setUserLoadingStates] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const cachedData = useRef({});
+
   const [userAccountData, setUserAccountData] = useState([]);
   /* ===================================================================================
    *                                  HOOKS
@@ -67,7 +65,6 @@ const DebtStatus = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
-  const navigate = useNavigate();
   const {
     getAllUsers,
     user,
@@ -76,9 +73,7 @@ const DebtStatus = () => {
     createLedgerActor,
   } = useAuth();
 
-  const showSearchBar = () => {
-    setShowSearch(!Showsearch);
-  };
+
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -150,7 +145,7 @@ const DebtStatus = () => {
   };
 
   const relevantItems = liquidationUsers.filter((item) => {
-    console.log("Item:", item.debt);
+
     return (
       item.principal?._arr.toText() !== user.toString() &&
       item.debt !== 0n &&
@@ -170,7 +165,7 @@ const DebtStatus = () => {
       currentItems.map(async (mappedItem) => {
         const principal = mappedItem.principal?._arr;
         const userBalances = {};
-        console.log("principal:", principal);
+
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
@@ -263,12 +258,12 @@ const DebtStatus = () => {
 
   const calculateAssetSupply = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
-    console.log("reserve in asset supply", reserves);
+
     let currentLiquidity = 0;
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
-        console.log("Liquidity Index for", assetName, ":", currentLiquidity);
+
       }
     });
 
@@ -283,18 +278,18 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-        Number(currentLiquidity)
+      Number(currentLiquidity)
     );
   };
 
   const calculateAssetBorrow = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
-    console.log("reserves in borrow", reserves);
+
     let debtIndex = 0;
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
-        console.log("Debt Index for", assetName, ":", debtIndex);
+
       }
     });
 
@@ -309,7 +304,7 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-        Number(debtIndex)
+      Number(debtIndex)
     );
   };
 
@@ -377,26 +372,26 @@ const DebtStatus = () => {
   useEffect(() => {
     const loadUsers = async () => {
       setLiquidationLoading(true);
-  
+
       try {
         const usersPerPage = 10;
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-  
+
         const data = await fetchLiquidationUsers(totalPages, usersPerPage);
-        setLiquidationUsers(data); 
+        setLiquidationUsers(data);
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later.");
+        console.error("Failed to fetch users. Please try again later.");
       } finally {
         setTimeout(() => {
           setLiquidationLoading(false);
         }, 1200);
       }
     };
-  
+
     loadUsers();
   }, [totalUsers, liquidateTrigger]);
-  
+
   useEffect(() => {
     if (currentItems.length > 0) {
       fetchAssetData();
@@ -447,11 +442,7 @@ const DebtStatus = () => {
     }
   }, [showPopup]);
 
-  useEffect(() => {
-    console.log("liquidationUsers:", liquidationUsers);
-    console.log("relevantItems:", relevantItems);
-    console.log("currentItems:", currentItems);
-  }, [liquidationUsers, relevantItems, currentItems,liquidateTrigger]);
+
 
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -515,11 +506,10 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
-                          index !== liquidationUsers.length - 1
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
                             ? "gradient-line-bottom"
                             : ""
-                        }`}
+                          }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -563,14 +553,14 @@ const DebtStatus = () => {
                                           assetName === "ckBTC"
                                             ? ckBTC
                                             : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
+                                              ? ckETH
+                                              : assetName === "ckUSDC"
+                                                ? ckUSDC
+                                                : assetName === "ICP"
+                                                  ? icp
+                                                  : assetName === "ckUSDT"
+                                                    ? ckUSDT
+                                                    : undefined
                                         }
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
@@ -604,10 +594,6 @@ const DebtStatus = () => {
                                       item1?.[1]?.Ok.configuration
                                         .liquidation_threshold
                                     ) / 100000000 || 0;
-                                  console.log(
-                                    "reserveliquidationThreshold",
-                                    reserveliquidationThreshold
-                                  );
                                   if (assetSupply > 0) {
                                     return (
                                       <img
@@ -616,14 +602,14 @@ const DebtStatus = () => {
                                           assetName === "ckBTC"
                                             ? ckBTC
                                             : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
+                                              ? ckETH
+                                              : assetName === "ckUSDC"
+                                                ? ckUSDC
+                                                : assetName === "ICP"
+                                                  ? icp
+                                                  : assetName === "ckUSDT"
+                                                    ? ckUSDT
+                                                    : undefined
                                         }
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
@@ -635,7 +621,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        {}
+                        { }
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

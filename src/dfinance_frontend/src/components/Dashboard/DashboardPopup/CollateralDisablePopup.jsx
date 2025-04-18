@@ -36,7 +36,6 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [prevHealthFactor, setPrevHealthFactor] = useState(null);
-  const [isCollateral, setIsCollateral] = useState(currentCollateralStatus);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const value = currentHealthFactor;
   const [usdValue, setUsdValue] = useState(0);
@@ -78,7 +77,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
           progress: undefined,
         });
         setIsModalOpen(false)
-        return; // Prevent function execution
+        return; 
       }
       const addedAmount = currentCollateralStatus
         ? BigInt(0)
@@ -110,7 +109,6 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
           });
           setIsModalOpen(false);
           setIsLoading(false)}
-        // Handle panic errors
         if (
           typeof errorMsg === "string" &&
           errorMsg.toLowerCase().includes("panic")
@@ -157,7 +155,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
         throw new Error(JSON.stringify(errorMsg));
       }
 
-      setIsCollateral(currentCollateralStatus);
+      
     } catch (error) {
       console.error("Error in toggleCollateral:", error);
       throw error;
@@ -168,23 +166,6 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
    *                                  FUNCTIONS
    * =================================================================================== */
   const paymentModalRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (paymentModalRef.current && !paymentModalRef.current.contains(event.target)) {
-        setIsPaymentDone(false);
-        setIsVisible(false)
-        setIsModalOpen(false)
-      }
-    };
-
-    if (isPaymentDone) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isPaymentDone]);
 
   const handleToggleCollateral = async () => {
     if (isBlocked) {
@@ -198,7 +179,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return; 
     }
     setIsLoading(true);
     try {
@@ -227,18 +208,8 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
     return (totalDeptValue / totalCollateralValue) * 100;
   };
 
-  const handleClick = async () => {
-    setIsLoading(true);
-    try {
-      if (isApproved) {
-        await handleSupplyETH();
-      } else {
-        await handleApprove();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+  
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
 
@@ -263,6 +234,24 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (paymentModalRef.current && !paymentModalRef.current.contains(event.target)) {
+        setIsPaymentDone(false);
+        setIsVisible(false)
+        setIsModalOpen(false)
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
+
 
   useEffect(() => {
     if (assetSupply && conversionRate) {
@@ -393,21 +382,21 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
               <div className="w-full flex justify-between my-2">
                 <h1>Transaction overview</h1>
               </div>
-              <div className="w-full bg-gray-100 cursor-pointer p-3  rounded-md text-sm dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="w-full flex justify-between items-center my-3">
-                  <p>Supply Balance</p>
+              <div className="w-full bg-gray-100 cursor-pointer p-3  rounded-md text-xs sm:text-sm dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="w-full flex justify-between items-center ">
+                  <p className="text-xs sm:text-sm">Supply Balance</p>
                   <div className="w-auto flex items-center gap-2">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-6 h-6 rounded-full"
+                      className="object-cover w-4 h-4 sm:w-6 sm:h-6 rounded-full"
                     />
-                    <span className="text-lg">{formatValue(assetSupply)}</span>
-                    <span className="text-lg">{asset}</span>
+                    <span className="text-xs sm:text-lg">{formatValue(assetSupply)}</span>
+                    <span className="text-xs sm:text-lg">{asset}</span>
                   </div>
                 </div>
 
-                <div className="w-full flex flex-col my-2">
+                <div className="w-full flex flex-col ">
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>

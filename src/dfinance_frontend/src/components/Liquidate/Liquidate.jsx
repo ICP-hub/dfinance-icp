@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Button from "../Common/Button";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import DebtStatus from "./DebtStatus";
@@ -25,7 +25,6 @@ const Liquidate = () => {
    * =================================================================================== */
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const location = useLocation();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
@@ -55,12 +54,12 @@ const Liquidate = () => {
   }, [isWalletCreated, isAuthenticated]);
 
   const handleLiquidateClick = () => {
-    // if (!isAuthenticated) {
-    //   setShowWarning(true);
-    // } else {
-    //   setShowDebtStatus(true);
-    // }
-    navigate("/Liquidate/debt-users-list"); 
+    if (!isAuthenticated) {
+      setShowWarning(true);
+    } else {
+      navigate("/Liquidate/debt-users-list"); 
+    }
+    
   };
 
   const handleBackClick = () => {
@@ -69,13 +68,13 @@ const Liquidate = () => {
 
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden"; 
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto"; 
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto"; 
     };
   }, [isFreezePopupVisible]);
 

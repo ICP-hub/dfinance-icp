@@ -360,7 +360,7 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-      handleClosePaymentPopup();
+      setIsTransferDropDownOpen(false);
       setIsLoading(false);
     } else if (errorMsg.toLowerCase().includes("panic")) {
       setShowPanicPopup(true);
@@ -536,7 +536,7 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleClickAway = () => {
-    console.log("Clicked away");
+    
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setDropdownVisible(false);
@@ -646,18 +646,18 @@ export default function Navbar({ isHomeNav }) {
     return truncated.toFixed(8);
   };
   const [receiverAddress, setReceiverAddress] = useState("");
-  const [receiverError, setReceiverError] = useState("");
+
   const validateReceiverAddress = (value) => {
     const trimmedValue = value?.trim();
 
     if (!trimmedValue) {
-      setReceiverError("Receiver address is required.");
+      console.error("Receiver address is required.");
       return;
     }
 
     try {
       Principal.fromText(trimmedValue);
-      setReceiverError("");
+      ;
     } catch (error) {
       const errorMsg = error.toString();
 
@@ -665,9 +665,9 @@ export default function Navbar({ isHomeNav }) {
       if (errorMsg.toLowerCase().includes("invalid character")) {
         const match = errorMsg.match(/"(.+?)"/);
         const invalidChar = match ? match[1] : "?";
-        setReceiverError(`Principal ID contains an invalid character: "${invalidChar}"`);
+        console.error(`Principal ID contains an invalid character: "${invalidChar}"`);
       } else {
-        setReceiverError("Invalid principal ID format.");
+        console.error("Invalid principal ID format.");
       }
 
       console.error("Principal validation error:", errorMsg);

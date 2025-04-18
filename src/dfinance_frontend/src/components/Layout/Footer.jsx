@@ -89,10 +89,10 @@ const Footer = () => {
 
       if (approval?.Ok && approval.Ok > 0n) {
         setIsApproved(true);
-        console.log("Approval successful!");
+       
       } else {
         setIsApproved(false);
-        console.log("Approval failed!");
+       
       }
     } catch (error) {
       console.error(`Approval failed: ${error.message}`);
@@ -103,7 +103,7 @@ const Footer = () => {
 
   const handleCreateUserReserve = async () => {
     if (!isApproved) {
-      console.log("Please approve before creating a reserve!");
+     
       return;
     }
 
@@ -115,7 +115,6 @@ const Footer = () => {
         34000000000,
         29000000000
       );
-      console.log("Reserve created:", response);
     } catch (error) {
       console.error(`Error creating reserve: ${error.message}`);
     } finally {

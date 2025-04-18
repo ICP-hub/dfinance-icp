@@ -215,7 +215,7 @@ const Repay = ({
   }
 
   const numericBalance = balance;
-  const supplyBalance = Math.max(numericBalance - transferFee, 0);
+  const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
@@ -542,7 +542,7 @@ const Repay = ({
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8);
-      const truncated = Math.floor(value * multiplier) / multiplier;
+      const truncated = Math.round(value * multiplier) / multiplier;
       return truncated.toFixed(8);
     };
 
@@ -797,7 +797,6 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
-                      {console.log("truncatedValue", truncatedValue)}
                       <span
                         className={`${
                           truncatedValue > 3

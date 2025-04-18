@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import CreateWallet from "../components/Dashboard/CreateWallet";
+import CreateWallet from "../pages/Dashboard/Dashboard";
 import Market from "../pages/Market/Market";
 import MainDashboard from "../pages/Dashboard/MainDashboard";
 import Home from "../pages/Home/Home";
@@ -9,13 +9,6 @@ import MiniLoader from "../components/Common/MiniLoader";
 
 const Error = lazy(() => import("../pages/Error"));
 const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
-const TransactionHistoryBox = lazy(() =>
-  import("../components/Dashboard/TransactionHistory")
-);
-const StakeDetails = lazy(() => import("../pages/Stake/Stake"));
-const TransactionDetail = lazy(() =>
-  import("../components/Dashboard/Transaction")
-);
 const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
 const DashboardCards = lazy(() => import("../pages/info/info"));
 const HealthFactorList = lazy(() =>
@@ -126,58 +119,10 @@ export default [
     ),
   },
   {
-    path: "/dashboard/transaction-history",
-    element: (
-      <MainDashboard>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <TransactionHistoryBox />
-        </Suspense>
-      </MainDashboard>
-    ),
-  },
-  {
-    path: "/dashboard/transaction/:id",
-    element: (
-      <MainDashboard>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <TransactionDetail />
-        </Suspense>
-      </MainDashboard>
-    ),
-  },
-  {
     path: "/market",
     element: (
       <MainDashboard>
         <Market />
-      </MainDashboard>
-    ),
-  },
-  {
-    path: "/stake",
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <StakeDetails />
-        </Suspense>
       </MainDashboard>
     ),
   },

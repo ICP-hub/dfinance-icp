@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Drawer, useMediaQuery } from "@mui/material";
+import { Drawer } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -125,7 +125,6 @@ const MobileTopNav = ({
   const [maxClicked, setMaxClicked] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const {
 
     fetchConversionRate,
@@ -501,7 +500,7 @@ const MobileTopNav = ({
   };
 
   const handleTour = () => {
-    console.log("button triggered");
+   
     dispatch(joyRideTrigger());
     handleClose();
     navigate("/dashboard");
@@ -529,32 +528,21 @@ const MobileTopNav = ({
     setReceiverAddress(value);
     validateReceiverAddress(value);
   };
-  const handleCloseDropdownOnScroll = () => {
-    setSwitchTokenDrop(false);
-    setSwitchWalletDrop(false);
-    setIsPopupVisible(false);
-    setDropdownVisible(false);
-    
-  };
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-useEffect(() => {
-    window.addEventListener("scroll", handleCloseDropdownOnScroll);
-    return () => {
-      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
-    };
-  }, []);
+
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
-  
+
     if (shouldLockScroll) {
-      document.body.style.overflow = "hidden"; 
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ""; 
+      document.body.style.overflow = "";
     }
-  
-   
+
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -1028,7 +1016,7 @@ useEffect(() => {
                                 }
                               }}
                             >
-                              <div className="absolute right-[40px]  mt-20 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
+                              <div className="absolute right-[30px]  mt-2 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
                                 <div className="py-1">
                                   {assets.map((a) => (
                                     <button
@@ -1138,7 +1126,6 @@ useEffect(() => {
                       onClick={() => !isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                         isLoading ||
-                        isButtonDisabled ||
                         amount <= 0 ||
                         supplyBalance <= 0 ||
                         amount > supplyBalance
@@ -1160,7 +1147,6 @@ useEffect(() => {
                     <button
                       onClick={() => isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                        isButtonDisabled ||
                         isLoading ||
                         amount <= 0 ||
                         supplyBalance <= 0 ||

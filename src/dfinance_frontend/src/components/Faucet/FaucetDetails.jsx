@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
 import {
-  FAUCET_ASSETS_TABLE_ROW,
   FAUCET_ASSETS_TABLE_COL,
 } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
@@ -67,7 +66,7 @@ const FaucetDetails = () => {
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-  const [error, setError] = useState(null);
+  
   const [hasLoaded, setHasLoaded] = useState(false);
 
   /* ===================================================================================
@@ -83,19 +82,7 @@ const FaucetDetails = () => {
    *                                  FUNCTION
    * =================================================================================== */
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (
-      currentPage < Math.ceil(FAUCET_ASSETS_TABLE_ROW.length / ITEMS_PER_PAGE)
-    ) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  
 
   const handleFaucetClick = (asset) => {
     let assetImage;
@@ -213,7 +200,7 @@ const FaucetDetails = () => {
         const allAssets = await backendActor.getAllAssets();
         setAssets(allAssets);
       } catch (error) {
-        setError(error);
+        console.error("Error fetching data:", error);
       }
     };
 

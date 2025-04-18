@@ -14,7 +14,7 @@ const useTransferFee = (asset) => {
             const rawFee = feeResponse?.Ok;
             if (typeof rawFee === "bigint") {
                 if (rawFee === 0n) {
-                    setTransferFee(0); // Set fee as 0 directly
+                    setTransferFee(0); 
                     return
                   }
                 const convertedFee = (Number(rawFee) / 100000000).toFixed(8); 

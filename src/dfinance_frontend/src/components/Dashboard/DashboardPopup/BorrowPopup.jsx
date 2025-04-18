@@ -72,12 +72,9 @@ const Borrow = ({
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =
-    useState(false);
-  const [error, setError] = useState("");
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =useState(false);
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -115,25 +112,7 @@ const Borrow = ({
    * =================================================================================== */
   const paymentModalRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        paymentModalRef.current &&
-        !paymentModalRef.current.contains(event.target)
-      ) {
-        setIsPaymentDone(false);
-        setIsVisible(false);
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isPaymentDone) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isPaymentDone]);
+  
 
   // Fetches asset data and updates supply/borrow values.
   const fetchAssetData = () => {
@@ -485,15 +464,14 @@ const Borrow = ({
       setUsdValue(0);
       return;
     }
-    if (numericAmount <= supplyBalance) {
+    if (numericAmount <= borrowableValue) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(7));
-      setError("");
     } else if (inputAmount.length > 8) {
-      setError("Amount exceeds the maximum allowed digits.");
+      console.error("Amount exceeds the maximum allowed digits.");
     } else {
-      setError("Amount must be a positive number.");
+      console.error("Amount must be a positive number.");
       setUsdValue(0);
     }
   };
@@ -525,6 +503,27 @@ const Borrow = ({
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
+
   useEffect(() => {
     if (showPanicPopup) {
       setIsVisible(false);
@@ -534,7 +533,7 @@ const Borrow = ({
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault(); 
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -571,9 +570,9 @@ const Borrow = ({
       } finally {
       }
     };
-    setTimeout(() => {
-      setLoading(false);
-    }, 400);
+    // setTimeout(() => {
+    //   setLoading(false);
+    // }, 400);
     updateValues();
   }, [
     asset,
@@ -635,7 +634,6 @@ const Borrow = ({
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-    setPrevHealthFactor(currentHealthFactor);
 
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);

@@ -1,7 +1,7 @@
-import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, {  lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import Element from "../../public/element/Elements.svg";
-import { useDispatch, useSelector } from "react-redux";
+import {  useSelector } from "react-redux";
 import Astro from "../../public/Error/astro.png";
 import Globe from "../../public/Error/globe.png";
 import { useAuth } from "../utils/useAuthClient";

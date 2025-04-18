@@ -176,7 +176,6 @@ export const useAuthClient = (options = defaultOptions) => {
    * @param {AuthClient} client - AuthClient instance.
    */
   const updateClient = async (client) => {
-    console.log("client", client);
     try {
       const isAuthenticated = await client.isAuthenticated();
       setIsAuthenticated(isAuthenticated);
@@ -203,7 +202,7 @@ export const useAuthClient = (options = defaultOptions) => {
       );
       setBackendActor(backendActor);
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
     }
   };
 
@@ -244,7 +243,6 @@ export const useAuthClient = (options = defaultOptions) => {
       const identity = authClient.getIdentity();
       if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
         const result = await backendActor.register_user();
-        console.log("result in check user", result);
         if (result.Ok) {
           if (result.Ok === "User available") {
           } else if (result.Ok === "User added") {

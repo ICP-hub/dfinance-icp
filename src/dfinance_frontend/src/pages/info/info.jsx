@@ -122,7 +122,6 @@ const DashboardCards = () => {
     }
     try {
       const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result);
       setLike(result);
     } catch (err) {
       console.error("Error fetching controller status:", err);
@@ -143,7 +142,6 @@ const DashboardCards = () => {
     }
     try {
       const totalUser = await backendActor.get_total_users();
-      console.log("gettotaluser", totalUser);
       setTotalUsers(totalUser);
     } catch (error) {
       console.error("Error fetching total users:", error);
@@ -186,7 +184,6 @@ const DashboardCards = () => {
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
       const result = await backendActor.get_all_user_list(totalPages, pageSize);
-      console.log("result:", result);
 
       if (!result.Ok || !Array.isArray(result.Ok)) {
         throw new Error("Unexpected response format");
@@ -206,7 +203,6 @@ const DashboardCards = () => {
         })
       );
 
-      console.log("parsedResult", parsedResult);
 
       const structuredData = parsedResult.reduce((acc, user) => {
         if (user.principal && user.principal !== "Unknown_Principal") {
@@ -244,10 +240,8 @@ const DashboardCards = () => {
     }
 
     const response = await backendActor.cycle_checker();
-    console.log("Raw response from cycle_checker:", response);
 
     const cycles = response.Ok ?? "Error retrieving cycles";
-    console.log("Extracted cycle value:", cycles);
 
     return cycles.toString();
   };
@@ -286,7 +280,6 @@ const DashboardCards = () => {
         "uWDc83b20aMxTTyrz"
       );
 
-      console.log("Email sent successfully.");
     } catch (err) {
       console.error("Failed to send email:", err);
     }
@@ -302,7 +295,6 @@ const DashboardCards = () => {
    */
   const handleNotification = (currentCycles, assetBalance) => {
     const oneDay = 24 * 60 * 60 * 1000;
-    console.log("Handling notification for cycles:", currentCycles);
 
     const sendWarningEmail = async () => {
       const htmlMessage = `
@@ -311,7 +303,7 @@ const DashboardCards = () => {
    Threshold : ${formatNumber(threshold + 2000000000000)}
     `;
       try {
-        console.log("Sending warning email...");
+       
         await sendEmailNotification("Cycle Warning", htmlMessage);
         lastWarningEmailTimestamp = Date.now();
       } catch (error) {
@@ -326,7 +318,6 @@ const DashboardCards = () => {
       Threshold: ${formatNumber(threshold)}
     `;
       try {
-        console.log("Sending exhausted email...");
         await sendEmailNotification("Cycle Exhausted", htmlMessage);
         lastExhaustedEmailTimestamp = Date.now();
       } catch (error) {
@@ -335,24 +326,16 @@ const DashboardCards = () => {
     };
 
     if (emailInterval) {
-      console.log("Clearing previous interval...");
       clearInterval(emailInterval);
     }
 
     emailInterval = setInterval(async () => {
-      console.log("Interval triggered. Checking conditions...");
-      console.log("currentCycles", currentCycles);
-      console.log("threshold", threshold);
       if (currentCycles <= threshold) {
-        console.log("Cycles are exhausted. Sending exhausted email...");
         await sendExhaustedEmail();
       } else if (
         currentCycles > threshold &&
         currentCycles < threshold + 2000000000000
       ) {
-        console.log(
-          "Cycles are nearing the safe threshold. Sending warning email..."
-        );
         await sendWarningEmail();
       }
     }, oneDay);
@@ -361,7 +344,6 @@ const DashboardCards = () => {
   const onCycleUpdate = async () => {
     try {
       const newCycles = await getCycles();
-      console.log("Cycle count updated:", newCycles);
 
       handleTokenNotification(newCycles);
     } catch (error) {
@@ -416,7 +398,6 @@ const DashboardCards = () => {
 
     emailInterval = setInterval(async () => {
       if (assetBalance <= tokenThreshold) {
-        console.log("Token balance is exhausted. Sending exhausted email...");
         await sendTokenExhaustedEmail();
       } else if (
         assetBalance > tokenThreshold &&
@@ -504,7 +485,6 @@ const DashboardCards = () => {
   };
 
   const onTokenUpdate = (newBalance) => {
-    console.log("Balance count updated:", newBalance);
     handleTokenNotification(newBalance);
   };
 
@@ -524,28 +504,17 @@ const DashboardCards = () => {
   }, [assetBalances, tokenThreshold]);
 
   useEffect(() => {
-    console.log(
-      "Checking dependencies: totalUsers =",
-      totalUsers,
-      "interestAccure =",
-      interestAccure
-    );
 
     if (totalUsers === null || interestAccure === null) {
-      console.log("Values not available yet, skipping fetch.");
       return;
     }
 
     const fetchData = async () => {
-      console.log("Fetching data...");
 
       setLoading(true);
 
       try {
         const cycles = await getCycles();
-        console.log("totalUsers:", totalUsers);
-        console.log("Cycles:", cycles);
-        console.log("interestAccure:", interestAccure);
 
         const formattedData = [
           { title: "Users", value: totalUsers, link: "/users" },
@@ -669,7 +638,6 @@ const DashboardCards = () => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
-        console.log("cycleValue", cycleValue);
         setCycles(cycleValue);
       } catch (error) {
         console.error("Error fetching cycles:", error);

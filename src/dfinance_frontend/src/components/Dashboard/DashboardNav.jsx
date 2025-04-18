@@ -83,13 +83,6 @@ const DashboardNav = () => {
     return `${num.toFixed(2)}%`;
   };
 
-  // Update UI correctly
-  useEffect(() => {
-    setWalletDetailTab((prevTab) =>
-      prevTab.map((item) => (item.id === 1 ? { ...item, count: netApy } : item))
-    );
-  }, [netApy]);
-
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -172,7 +165,6 @@ const DashboardNav = () => {
   const isDashboardRoute = location.pathname === "/dashboard";
   const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
   const isMarketRoute = location.pathname === "/market";
-  const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -246,41 +238,7 @@ const DashboardNav = () => {
     return `noBorrow`;
   };
 
-  useEffect(() => {
-    if (
-      typeof totalUsdValueSupply === "number" &&
-      typeof totalUsdValueBorrow === "number" &&
-      principal
-    ) {
-      const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
-      const newValue = calculatedNetWorth === 0 ? "-" : calculatedNetWorth;
-      setNetWorth((prev) => (prev !== newValue ? newValue : prev));
-
-      setWalletDetailTab((prevTab) =>
-        prevTab.map((item) =>
-          item.id === 0
-            ? {
-                ...item,
-                count:
-                  newValue === "-" ? (
-                    newValue
-                  ) : (
-                    <>
-                      <span style={{ fontWeight: "lighter" }}>$</span>
-                      {formatNumber(newValue, 2)}
-                    </>
-                  ),
-              }
-            : item
-        )
-      );
-    }
-  }, [
-    totalUsdValueSupply,
-    totalUsdValueBorrow,
-    dashboardRefreshTrigger,
-    principal,
-  ]);
+  
 
   const getConversionRate = (asset) => {
     switch (asset) {
@@ -322,7 +280,6 @@ const DashboardNav = () => {
         const supplyApy =
           (Number(reserveData[assetKey].Ok.current_liquidity_rate) || 0) /
           100000000;
-        console.log("supplyApy", supplyApy);
         const debtApy =
           (Number(reserveData[assetKey].Ok.borrow_rate) || 0) / 100000000;
 
@@ -334,11 +291,9 @@ const DashboardNav = () => {
         const assetBalance =
           assetBalances?.find((balance) => balance.asset === assetKey)
             ?.dtokenBalance || 0;
-        console.log("assetBalance");
         const assetSupply =
           (Number(assetBalance) * Number(getAssetSupplyValue(assetKey) || 0)) /
             Number(currentLiquidity) || 0;
-        console.log("assetSupply", assetSupply);
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
@@ -403,20 +358,53 @@ const DashboardNav = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  /*FUNCTION MIGHT BE USED LATER */
-  // const toggleDropdown = () => {
-  //   if (!isDrop) {
-  //     document.addEventListener("mousedown", handleClickOutside);
-  //   } else {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   }
-  //   setIsDrop(!isDrop);
-  // };
+ 
 
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    setWalletDetailTab((prevTab) =>
+      prevTab.map((item) => (item.id === 1 ? { ...item, count: netApy } : item))
+    );
+  }, [netApy]);
+  
+  useEffect(() => {
+    if (
+      typeof totalUsdValueSupply === "number" &&
+      typeof totalUsdValueBorrow === "number" &&
+      principal
+    ) {
+      const calculatedNetWorth = totalUsdValueSupply - totalUsdValueBorrow;
+      const newValue = calculatedNetWorth === 0 ? "-" : calculatedNetWorth;
+      setNetWorth((prev) => (prev !== newValue ? newValue : prev));
 
+      setWalletDetailTab((prevTab) =>
+        prevTab.map((item) =>
+          item.id === 0
+            ? {
+                ...item,
+                count:
+                  newValue === "-" ? (
+                    newValue
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: "lighter" }}>$</span>
+                      {formatNumber(newValue, 2)}
+                    </>
+                  ),
+              }
+            : item
+        )
+      );
+    }
+  }, [
+    totalUsdValueSupply,
+    totalUsdValueBorrow,
+    dashboardRefreshTrigger,
+    principal,
+  ]);
+  
   useEffect(() => {
     if (userAccountData?.Ok?.[4] !== undefined && principal) {
       const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
@@ -533,14 +521,7 @@ const DashboardNav = () => {
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
               Number(DebtIndex) || 0;
 
-          console.log(
-            "Asset Borrow:",
-            asset,
-            "Debt Index:",
-            DebtIndex,
-            "Borrow:",
-            borrow
-          ); // 🔍 Debugging log
+         
 
           if (borrow > 0) {
             totalBorrow += borrow;

@@ -110,8 +110,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       return;
     }
     const numericAmount = parseFloat(inputAmount);
-    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
-    if (numericAmount > exchangeRate) {
+     if (numericAmount > exchangeRate) {
       return;
     }
     let formattedAmount;
@@ -185,7 +184,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return; 
     }
 
     setLoading(true);
@@ -200,7 +199,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8));
-        console.log("natAmount", natAmount);
+        
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
         if (numericAmount > availableAmount) {
           toast.error(`Faucet limit exceeded! `, {
@@ -278,10 +277,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     } catch (error) {
       console.error(error.message);
 
-      // ✅ **Check for "Out of Cycles" Error**
+      
       if (
         error.message.includes("out of cycles") ||
-        error.message.includes("Reject text: Canister") // Matches error pattern
+        error.message.includes("Reject text: Canister") 
       ) {
         toast.error(
           "Canister is out of cycles. Please wait, the admin has been notified.",
@@ -328,57 +327,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const normalizedAsset = asset ? asset.toLowerCase() : "default";
   const transferFee = fees[normalizedAsset] || fees.default;
 
-  /**
-   * handleResetFaucetUsage function
-   *
-   * This function resets the faucet usage data to its initial state for the selected asset.
-   */
-  const handleResetFaucetUsage = async () => {
-    setLoading(true);
-    try {
-      const result = await backendActor.reset_faucet_usage();
-      if (result.Ok === null || result.Ok === undefined) {
-        const updatedLimits = { ...FaucetLimit };
-        updatedLimits[asset] = 50000000000;
-        setFaucetLimit(updatedLimits);
-        toast.success(`Reset faucet succesfull for ${asset}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      } else {
-        toast.error(`Unexpected response from backend: ${result.Ok}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      }
-    } catch (error) {
-      toast.success("Failed to reset faucet usage", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+ 
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -424,15 +373,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
-      console.log(
-        "btc",
-        FaucetLimit[asset],
-        FaucetUsage[asset],
-        ckBTCUsdRate,
-        btcAmount
-      );
+      
       const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
-      console.log("tr", truncatedBtcAmount);
+      
       setFaucetBTC(truncatedBtcAmount);
     }
 
@@ -514,27 +457,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, []);
 
-  useEffect(() => {
-    const resetFaucetLimitsAtMidnight = () => {
-      const now = new Date();
-      const midnightUTC = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
-      );
-      const timeUntilMidnight = midnightUTC.getTime() - now.getTime();
-
-      setTimeout(() => {
-        handleResetFaucetUsage();
-
-        setInterval(() => {
-          handleResetFaucetUsage();
-        }, 24 * 60 * 60 * 1000);
-      }, timeUntilMidnight);
-    };
-
-    resetFaucetLimitsAtMidnight();
-
-    return () => {};
-  }, []);
+ 
 
   useEffect(() => {
     const handleKeyDown = (event) => {

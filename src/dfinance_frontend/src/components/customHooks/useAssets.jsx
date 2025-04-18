@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-import { idlFactory } from "../../../../declarations/dtoken";
-import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import { useDispatch, useSelector } from "react-redux";
+
+import { useSelector } from "react-redux";
 
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
@@ -13,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
  * @returns {Object} - Returns asset data and utility functions.
  */
 const useAssetData = (searchQuery = "") => {
-  const dispatch = useDispatch();
+ 
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
@@ -22,7 +21,7 @@ const useAssetData = (searchQuery = "") => {
     fetchReserveData,
     backendActor,
     isAuthenticated,
-    createLedgerActor,
+    
   } = useAuth();
 
   const [assets, setAssets] = useState([]);
@@ -32,7 +31,6 @@ const useAssetData = (searchQuery = "") => {
   const [totalBorrowSize, setTotalBorrowSize] = useState(0);
   const [totalReserveFactor, setTotalReserveFactor] = useState(0);
   const [interestAccure, setInterestAccure] = useState(0);
-  const [error, setError] = useState(null);
   const [asset_supply, setAssetSupply] = useState({});
   const [asset_borrow, setAssetBorrow] = useState({});
   const [loading, setLoading] = useState(true);
@@ -49,7 +47,6 @@ const useAssetData = (searchQuery = "") => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
 
-  // Fetch list of all assets from the backend
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
@@ -58,7 +55,7 @@ const useAssetData = (searchQuery = "") => {
         const assetNames = await backendActor.get_all_assets();
         setAssets(assetNames);
       } catch (error) {
-        setError(error.message);
+        console.error(error.message);
       }
     };
 
@@ -208,12 +205,10 @@ const useAssetData = (searchQuery = "") => {
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
 
-        console.log("Data successfully fetched and state updated.");
       } catch (err) {
         console.error("Error during fetch:", err.message);
-        setError(err.message);
+        console.error(err.message);
       } finally {
-        console.log("Fetch completed.");
         setLoading(false);
       }
     };
@@ -229,7 +224,6 @@ const useAssetData = (searchQuery = "") => {
     ckBTCUsdRate,
   ]);
 
-  // Filter assets based on search query
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(

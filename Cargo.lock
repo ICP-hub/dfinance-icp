@@ -1647,7 +1647,6 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pocket-ic",
- "regex",
  "serde",
  "serde_bytes",
  "serde_json",

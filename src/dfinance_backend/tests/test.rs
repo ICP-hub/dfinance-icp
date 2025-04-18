@@ -1802,7 +1802,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
             reward_amount: Nat::from(0u128), // Reward: 0.00000000 ckETH
             expect_success: false,
-            expected_error_message: Some("Invalid burn amount".to_string()),
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
         TestCase {
             debt_asset: "ckETH".to_string(),
@@ -1839,7 +1839,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ckETH".to_string(),
             amount: Nat::from(10u128),
             on_behalf_of: Principal::anonymous(),
-            reward_amount: Nat::from(0u128),
+            reward_amount: Nat::from(10u128),
             expect_success: false,
             expected_error_message: Some("Anonymous principals are not allowed".to_string()),
         },

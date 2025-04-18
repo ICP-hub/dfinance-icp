@@ -1,9 +1,44 @@
 use candid::Principal;
-use ic_cdk::query;
+use ic_cdk::{caller, query};
 use crate::{
     stable_storage::state_handler::{mutate_state, read_state}, 
     constants::errors::Error
 };
+use crate::declarations::structs::ReserveData;
+
+// guard to allow only app level controller
+pub fn guard_controller_only() -> Result<(), Error>
+{
+    if ic_cdk::caller() == Principal::anonymous() || !to_check_controller() {
+        return Err(Error::ErrorNotController);
+    } else {
+    Ok(())
+
+    }
+}
+
+pub fn guard_validate_reserve_status(reserve: &ReserveData) -> Result<(), Error> {
+    if !reserve.configuration.active {
+        return Err(Error::ReserveInactive);
+    }
+    if reserve.configuration.paused {
+        return Err(Error::ReservePaused);
+    }
+    if reserve.configuration.frozen {
+        return Err(Error::ReserveFrozen);
+    }
+    Ok(())
+}
+
+
+pub fn guard_admin_only() -> Result<(), Error> {
+    if ic_cdk::caller() == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::caller()) {
+        return Err(Error::UnauthorizedAccess)
+    }
+
+    Ok(())
+}
+
 
 /*
  * @title Caller Identity Validation
@@ -16,8 +51,20 @@ use crate::{
  * @functionality Caller Identity Validation
  */
 
-pub fn check_anonymous() -> bool {
-    ic_cdk::caller() == Principal::anonymous()
+pub fn guard_prevent_anonymous() -> Result<(), Error> {
+    if ic_cdk::caller() == Principal::anonymous() {
+        return Err(Error::AnonymousPrincipal)
+    }
+        Ok(())
+    
+}
+
+pub fn caller_is_not_anonymous() -> Result<(), Error> {
+    if caller() == Principal::anonymous() {
+        Err(Error::AnonymousPrincipal)
+    } else {
+        Ok(())
+    }
 }
 
 /*  

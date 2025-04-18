@@ -1,44 +1,42 @@
 use crate::api::functions::{get_balance, get_total_supply};
 use crate::stable_storage::state_handler::read_state;
 use crate::constants::constant_variables::constants::MAX_ASSET_LENGTH;
+use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::structs::ReserveData;
+use crate::guards::guard_validate_reserve_status;
 use crate::protocol::libraries::logic::update::user_data;
 use crate::protocol::libraries::logic::user::calculate_user_account_data;
-use crate::protocol::libraries::math::price::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
+use crate::protocol::libraries::math::price::update_token_price;
 use crate::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
-use crate::constants::constant_variables::constants::{
-    ZERO_VALUE, ONE_VALUE, PERCENTAGE_FACTOR
-};
 
 pub struct ValidationLogic;
 
 impl ValidationLogic {
-
     /*
-    * @title Validate Supply
-    * @notice Ensures the supply amount is valid before processing the transaction.
-    *
-    * @dev Performs checks on:
-    * - User's balance in the ledger canister.
-    * - Reserve status (active, paused, or frozen).
-    * - Supply cap constraints.
-    *
-    * @functionality This function first checks the user's balance to ensure they have enough funds in the ledger canister. 
-    *                It then checks the state of the reserve (whether it is active, paused, or frozen). 
-    *                Finally, it verifies if the total supply of the asset, including the user's intended supply, exceeds the supply cap. 
-    *                If any of these checks fail, it returns an error.
-    *
-    * @param reserve The reserve data for the asset being supplied.
-    * @param amount The amount the user wants to supply.
-    * @param user The principal of the user supplying the asset.
-    * @param ledger_canister The principal of the ledger canister for balance verification.
-    *
-    * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
- */
+     * @title Validate Supply
+     * @notice Ensures the supply amount is valid before processing the transaction.
+     *
+     * @dev Performs checks on:
+     * - User's balance in the ledger canister.
+     * - Reserve status (active, paused, or frozen).
+     * - Supply cap constraints.
+     *
+     * @functionality This function first checks the user's balance to ensure they have enough funds in the ledger canister.
+     *                It then checks the state of the reserve (whether it is active, paused, or frozen).
+     *                Finally, it verifies if the total supply of the asset, including the user's intended supply, exceeds the supply cap.
+     *                If any of these checks fail, it returns an error.
+     *
+     * @param reserve The reserve data for the asset being supplied.
+     * @param amount The amount the user wants to supply.
+     * @param user The principal of the user supplying the asset.
+     * @param ledger_canister The principal of the ledger canister for balance verification.
+     *
+     * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
+     */
     pub async fn validate_supply(
         reserve: &ReserveData,
         amount: Nat,
@@ -49,14 +47,8 @@ impl ValidationLogic {
         ic_cdk::println!("validation reserve = {:?}", reserve);
 
         // validating amount
-        let balance_result = get_balance(ledger_canister, user).await;
+        let user_balance = get_balance(ledger_canister, user).await?;
 
-        let user_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
         ic_cdk::println!("User balance: {:?}", user_balance);
 
         let final_amount = amount.clone();
@@ -66,6 +58,8 @@ impl ValidationLogic {
             return Err(Error::MaxAmount);
         }
 
+        // validating reserve states
+        guard_validate_reserve_status(&reserve)?;
 
         // Validating supply cap limit
         let supply_cap = reserve.configuration.supply_cap.clone();
@@ -78,17 +72,12 @@ impl ValidationLogic {
             Err(_) => return Err(Error::NoCanisterIdFound),
         };
 
-        let total_supply_result = get_total_supply(d_token_canister_id_result).await;
-        let total_supply = match total_supply_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let total_supply = get_total_supply(d_token_canister_id_result).await?;
 
         ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
 
         let total_supply_amount_accure = total_supply + reserve.accure_to_platform.clone() + amount;
+
         ic_cdk::println!(
             "total supply with amount and accrue = {}",
             total_supply_amount_accure
@@ -102,23 +91,23 @@ impl ValidationLogic {
     }
 
     /*
-    * @title Validate Withdraw
-    * @notice Ensures a user can withdraw a specified amount from the reserve.
-    *
-    * @dev Performs checks on:
-    * - User's supplied balance.
-    * - Platform's available balance.
-    * - Loan-to-value (LTV) constraints to prevent liquidation risk.
-    *
-    * @functionality This function first validates that the user has enough supplied balance to make the withdrawal. It then checks if the requested withdrawal amount exceeds the user's available supply. Next, it verifies the platform's available balance to ensure the withdrawal amount does not exceed what the platform can handle. The function also validates the reserve's state (active, paused, frozen) and updates the token price. Finally, the LTV ratio and health factor are calculated to ensure the withdrawal does not trigger a liquidation condition, based on the user's total collateral and debt. If any of these checks fail, it returns an appropriate error.
-    *
-    * @param reserve The reserve data for the asset being withdrawn.
-    * @param amount The withdrawal amount requested by the user.
-    * @param user The principal of the user withdrawing.
-    * @param ledger_canister The principal of the ledger canister for balance verification.
-    *
-    * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
-    */
+     * @title Validate Withdraw
+     * @notice Ensures a user can withdraw a specified amount from the reserve.
+     *
+     * @dev Performs checks on:
+     * - User's supplied balance.
+     * - Platform's available balance.
+     * - Loan-to-value (LTV) constraints to prevent liquidation risk.
+     *
+     * @functionality This function first validates that the user has enough supplied balance to make the withdrawal. It then checks if the requested withdrawal amount exceeds the user's available supply. Next, it verifies the platform's available balance to ensure the withdrawal amount does not exceed what the platform can handle. The function also validates the reserve's state (active, paused, frozen) and updates the token price. Finally, the LTV ratio and health factor are calculated to ensure the withdrawal does not trigger a liquidation condition, based on the user's total collateral and debt. If any of these checks fail, it returns an appropriate error.
+     *
+     * @param reserve The reserve data for the asset being withdrawn.
+     * @param amount The withdrawal amount requested by the user.
+     * @param user The principal of the user withdrawing.
+     * @param ledger_canister The principal of the ledger canister for balance verification.
+     *
+     * @return Returns `Ok(())` if validation is successful, or an `Err(Error)` if any of the validations fail.
+     */
     pub async fn validate_withdraw(
         reserve: &ReserveData,
         amount: Nat,
@@ -132,19 +121,11 @@ impl ValidationLogic {
 
         let d_token_principal =
             Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap();
-        let user_dtokens = get_balance(d_token_principal, user).await;
 
-        let user_current_supply = match user_dtokens {
-            Ok(supply) => supply,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let user_current_supply = get_balance(d_token_principal, user).await?;
 
-        let supplied_interest_rate = match user_normalized_supply(reserve.clone()) {
-            Ok(interest) => interest,
-            Err(e) => return Err(e),
-        };
+        let supplied_interest_rate = user_normalized_supply(reserve.clone())?;
+
         ic_cdk::println!("user current supply = {}", user_current_supply);
         ic_cdk::println!("interest rate = {}", supplied_interest_rate);
 
@@ -172,34 +153,27 @@ impl ValidationLogic {
         let platform_principal = ic_cdk::api::id();
         ic_cdk::println!("Platform principal: {:?}", platform_principal);
 
-        let balance_result = get_balance(ledger_canister, platform_principal).await;
+        let platform_balance = get_balance(ledger_canister, platform_principal).await?;
 
-        let platform_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
         ic_cdk::println!("User balance: {:?}", platform_balance);
 
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
 
-        if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
-            ic_cdk::println!("Failed to update reserves price: {:?}", e);
-        }
+        // validating reserve states
+        guard_validate_reserve_status(&reserve)?;
 
-        let mut total_collateral = Nat::from(ZERO_VALUE);
-        let mut total_debt = Nat::from(ZERO_VALUE);
-        let mut avg_ltv = Nat::from(ZERO_VALUE);
-        let mut health_factor = Nat::from(ZERO_VALUE);
-        let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
+        let _ = update_token_price(reserve.asset_name.clone().unwrap()).await;
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            calculate_user_account_data(None).await;
+        let mut total_collateral = Nat::from(0u128);
+        let mut total_debt = Nat::from(0u128);
+        let mut avg_ltv = Nat::from(0u128);
+        let mut health_factor = Nat::from(0u128);
+        let mut liquidation_threshold_var = Nat::from(0u128);
 
-        match user_data_result {
+        // bhanu can we directly assign below things ?
+        match calculate_user_account_data(None).await {
             Ok((
                 t_collateral,
                 t_debt,
@@ -226,15 +200,8 @@ impl ValidationLogic {
             }
         }
 
-        if total_debt != Nat::from(ZERO_VALUE) {
-            let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-                Ok(price) => price,
-                Err(e) => {
-                    ic_cdk::println!("Failed to fetch exchange rate");
-                    return Err(e);
-                }
-            };
-            ic_cdk::println!("asset price = {}",rate);
+        if total_debt != Nat::from(0u128) {
+            let rate = get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
 
             ic_cdk::println!("rate = {:?}", rate);
 
@@ -242,9 +209,10 @@ impl ValidationLogic {
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
 
             // Calculate Adjusted Collateral
-            let mut adjusted_collateral = Nat::from(ZERO_VALUE);
+            let mut adjusted_collateral = Nat::from(0u128);
+
             if adjusted_collateral < usd_withdrawl.clone() {
-                adjusted_collateral = Nat::from(ZERO_VALUE);
+                adjusted_collateral = Nat::from(0u128);
             } else if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
             } else {
@@ -254,7 +222,8 @@ impl ValidationLogic {
 
             let mut ltv = Nat::from(ZERO_VALUE);
             // Calculate new ratio (Adjusted Collateral / Total Debt)
-            if adjusted_collateral != Nat::from(ZERO_VALUE) {
+
+            if adjusted_collateral != Nat::from(0u128) {
                 ltv = total_debt.scaled_div(adjusted_collateral);
                 ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
                 println!("New ltv: {}", ltv);
@@ -264,13 +233,14 @@ impl ValidationLogic {
                 return Err(Error::LTVGreaterThanThreshold);
             }
         }
-        if health_factor < Nat::from(ONE_VALUE) {
+
+        if health_factor < Nat::from(1u128) {
             return Err(Error::HealthFactorLess);
         }
         Ok(())
     }
 
-   /*
+    /*
      * @title Validate Borrow
      * @notice Ensures a user can borrow a specified amount from the reserve.
      *
@@ -304,19 +274,14 @@ impl ValidationLogic {
 
         ic_cdk::println!("amount in borrow ={}", amount);
 
-        let balance_result = get_balance(ledger_canister, platform_principal).await;
-
-        let platform_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let platform_balance = get_balance(ledger_canister, platform_principal).await?;
         ic_cdk::println!("User balance: {:?}", platform_balance);
 
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
+        // validating reserve states
+        guard_validate_reserve_status(&reserve)?;
 
         if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
@@ -328,10 +293,10 @@ impl ValidationLogic {
         let mut health_factor = Nat::from(ZERO_VALUE);
         let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            calculate_user_account_data(None).await;
+        // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
+        //     calculate_user_account_data(None).await;
 
-        match user_data_result {
+        match calculate_user_account_data(None).await {
             Ok((
                 t_collateral,
                 t_debt,
@@ -358,14 +323,10 @@ impl ValidationLogic {
                 return Err(e);
             }
         }
-        let rate = match get_cached_exchange_rate(reserve.asset_name.clone().unwrap()) {
-            Ok(price) => price,
-            Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
-        ic_cdk::println!("asset price = {}",rate);
+
+        let rate = get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+
+        ic_cdk::println!("asset price = {}", rate);
 
         ic_cdk::println!("rate = {:?}", rate);
 
@@ -403,7 +364,7 @@ impl ValidationLogic {
         };
         Ok(())
     }
-/*
+    /*
      * @title Validate Repay
      * @notice Ensures a user can repay a specified amount of borrowed assets.
      *
@@ -421,7 +382,7 @@ impl ValidationLogic {
      *
      * @return Returns `Ok(())` if validation is successful.
      * @functionality Validates repayment conditions by ensuring that the user or liquidator has sufficient balance,
-     * checks if the reserve is active and not paused or frozen, verifies the repayment amount is correct, 
+     * checks if the reserve is active and not paused or frozen, verifies the repayment amount is correct,
      * and ensures the user's outstanding debt allows for repayment.
      */
     pub async fn validate_repay(
@@ -432,17 +393,14 @@ impl ValidationLogic {
         ledger_canister: Principal,
     ) -> Result<(), Error> {
         let mut balance_result = get_balance(ledger_canister, user.clone()).await;
+
         if !liquidator.is_none() {
             balance_result = get_balance(ledger_canister, liquidator.unwrap().clone()).await;
         }
 
-        let user_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let user_balance = balance_result?;
         ic_cdk::println!("User balance: {:?}", user_balance);
+
         if amount > user_balance {
             return Err(Error::LowWalletBalance);
         }
@@ -450,18 +408,7 @@ impl ValidationLogic {
         let final_amount = amount;
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        // Fetch user data
-        let user_data_result = user_data(user);
-
-        let mut user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found");
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let mut user_data = user_data(user)?;
 
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
@@ -469,10 +416,13 @@ impl ValidationLogic {
                 .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
             None => None,
         };
+
+        guard_validate_reserve_status(&reserve)?;
+
         Ok(())
     }
 
-   /*
+    /*
      * @title Validate Liquidation
      * @notice Ensures a liquidator can liquidate a borrower's collateral.
      *
@@ -490,8 +440,8 @@ impl ValidationLogic {
      * @param repay_reserve_data The reserve data associated with the asset.
      *
      * @return Returns `Ok(())` if liquidation validation passes.
-     * @functionality Validates that a liquidation can occur by checking various conditions such as ensuring 
-     * the liquidator has enough balance to repay, the borrower’s collateral is sufficient, 
+     * @functionality Validates that a liquidation can occur by checking various conditions such as ensuring
+     * the liquidator has enough balance to repay, the borrower’s collateral is sufficient,
      * and that the borrower is eligible for liquidation based on the health factor and debt amount.
      */
     pub async fn validate_liquidation(
@@ -507,16 +457,11 @@ impl ValidationLogic {
                 Ok(principal) => principal,
                 Err(_) => return Err(Error::NoCanisterIdFound),
             };
-        let balance_result = get_balance(repay_asset_principal, user.clone()).await;
 
-        let debt_amount = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
 
-        let normalized_debt_amount  = debt_amount.clone()
+        let normalized_debt_amount = debt_amount
+            .clone()
             .scaled_mul(user_normalized_debt(repay_reserve_data.clone()).unwrap());
 
         ic_cdk::println!("normalizesd {:?}", normalized_debt_amount);
@@ -529,20 +474,15 @@ impl ValidationLogic {
         }
 
         let repay_ledger_canister_id = read_state(|state| {
-            let reserve_list = &state.reserve_list;
-            reserve_list
-                .get(&repay_asset.to_string().clone())
-                .map(|principal| principal.clone())
+            state
+                .reserve_list
+                .get(&repay_asset.to_string())
+                .map(|principal| principal)
                 .ok_or_else(|| Error::NoCanisterIdFound)
         })?;
 
-        let balance_result = get_balance(repay_ledger_canister_id, liquidator.clone()).await;
-        let liquidator_wallet_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let liquidator_wallet_balance =
+            get_balance(repay_ledger_canister_id, liquidator.clone()).await?;
 
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::LowWalletBalance);
@@ -551,10 +491,7 @@ impl ValidationLogic {
         let mut total_collateral = Nat::from(ZERO_VALUE);
         let mut health_factor = Nat::from(ZERO_VALUE);
 
-        let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-            calculate_user_account_data(Some(user)).await;
-
-        match user_data_result {
+        match calculate_user_account_data(Some(user)).await {
             Ok((
                 t_collateral,
                 _t_debt,
@@ -583,59 +520,8 @@ impl ValidationLogic {
             return Err(Error::USERCANNOTBELIQUIDATED);
         }
 
+        // validating reserve states
+        guard_validate_reserve_status(&repay_reserve_data)?;
         Ok(())
     }
-
-/**
- * @title Validate Input Parameters
- * @notice Ensures the asset and amount parameters for an operation (e.g., supply) are valid.
- *
- * @dev Performs basic validation checks on the asset name and amount:
- * - Asset name cannot be empty or only whitespace.
- * - Asset name must have a maximum length of 7 characters.
- * - Amount must be greater than zero.
- *
- * @param params The parameters for the operation, containing the asset name and amount to validate.
- * The struct is taken by value and potentially mutated (though not in this specific validation logic).
- *
- * @return Returns `Ok(())` if all validation checks pass.
- * Returns `Err(Error::EmptyAsset)` if the asset name is invalid (empty/whitespace).
- * Returns `Err(Error::InvalidAssetLength)` if the asset name exceeds the maximum length.
- * Returns `Err(Error::InvalidAmount)` if the amount is zero or less.
- */
-pub fn validate_input_params(
-    asset: &str,
-    amount: &Nat,
-    on_behalf_of: Option<Principal>, 
-) -> Result<(), Error> {
-    //Asset name should not be empty or just whitespace
-    if asset.trim().is_empty() {
-        ic_cdk::println!("Validation Error: Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
-
-    //Asset length constraint
-    if asset.len() > MAX_ASSET_LENGTH {
-        ic_cdk::println!(
-            "Validation Error: Asset must have a maximum length of 7 characters"
-        );
-        return Err(Error::InvalidAssetLength);
-    }
-
-    //Amount must be greater than zero
-    if *amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Validation Error: Amount cannot be zero or less.");
-        return Err(Error::InvalidAmount);
-    }
-
-    if let Some(principal_ref) = on_behalf_of { 
-        if principal_ref == Principal::anonymous() { // Dereference principal_ref with *
-            ic_cdk::println!("Validation Error: on_behalf_of cannot be anonymous");
-            return Err(Error::AnonymousPrincipal); // Return the specific error
-        }
-    }
-    // All checks passed
-    Ok(())
 }
-}
-

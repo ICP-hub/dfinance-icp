@@ -1,10 +1,9 @@
-use crate::api::functions::request_limiter;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::constants::constant_variables::constants::ZERO_VALUE;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
-use crate::guards::{check_is_tester, to_check_controller};
+use crate::guards::{check_is_tester, guard_prevent_anonymous,to_check_controller};
 use crate::protocol::libraries::types::datatypes::{CachedPrice, PriceCache};
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
@@ -55,51 +54,23 @@ impl PriceCache {
  */
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
-    let user_principal = ic_cdk::caller();
+    // prevent anonymous access
+    guard_prevent_anonymous()?;
+    //TODO: add controller access not controller not allowed
 
-    if user_principal == Principal::anonymous()
-        || !to_check_controller()
-    {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-
-    if let Err(e) = request_limiter("update_reserves_price") {
-        ic_cdk::println!("Error limiting error: {:?}", e);
-        return Err(e);
-    }
     // Fetch all the keys (asset names) from the reserve list
-    let keys: Vec<String> = read_state(|state| {
-        let reserve_list = &state.reserve_list;
-        reserve_list
+    let keys: Vec<String> = read_state(|state| 
+        state.reserve_list
             .iter()
-            .map(|(key, _value)| key.clone())
+            .map(|(key, _value)| key)
             .collect()
-    });
+    );
 
     ic_cdk::println!("Keys (assets) = {:?}", keys);
 
     for asset_name in keys {
         ic_cdk::println!("Updating price for asset: {}", asset_name);
-
-        match get_exchange_rates(asset_name.clone(), None, Nat::from(ZERO_VALUE)).await {
-            Ok((exchange_rate, timestamp)) => {
-                ic_cdk::println!(
-                    "Successfully updated exchange rate for {}: {} at {}",
-                    asset_name,
-                    exchange_rate,
-                    timestamp
-                );
-            }
-            Err(err) => {
-                ic_cdk::println!(
-                    "Failed to update exchange rate for {}: {:?}",
-                    asset_name,
-                    err
-                );
-                return Err(Error::ExchangeRateError);
-            }
-        }
+         get_exchange_rates(asset_name.clone(), None, Nat::from(0u128)).await?;
     }
     Ok(())
 }
@@ -127,13 +98,13 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
  */
 #[query]
 pub fn queary_reserve_price() -> Vec<PriceCache> {
-    let tokens = read_state(|state| {
-        let cache_list = &state.price_cache_list;
-        cache_list
+    let tokens = read_state(|state| 
+        // let cache_list = &state.price_cache_list;
+        state.price_cache_list
             .iter()
             .map(|(_, price_cache)| price_cache.0)
             .collect::<Vec<PriceCache>>()
-    });
+    );
 
     ic_cdk::println!("all tokens are = {:?}", tokens);
     tokens

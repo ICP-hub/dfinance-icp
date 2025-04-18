@@ -1,51 +1,37 @@
-use ic_cdk::api::time;
-use ic_cdk::update;
-use candid::{Nat, Principal};
 use crate::constants::errors::Error;
 use crate::stable_storage::storable::Candid;
 use crate::declarations::structs::ReserveData;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
+use crate::guards::guard_admin_only;
 use crate::guards::to_check_controller;
+use candid::{Nat, Principal};
+use ic_cdk::api::time;
+use ic_cdk::update;
 
-/*  
- * @title Reserve Initialization 
- * @notice Provides functionalities for initializing reserves, modifying reserve configurations,  
- *         and verifying controller permissions.  
- * @dev This module handles the creation of token canisters, updating reserve parameters,  
- *      and ensures only controllers can execute certain operations.  
- *  
- * # Parameters  
- * @param token_name The name of the token to be initialized.  
- * @param reserve_data The reserve data structure containing metadata and token-related details.  
- *  
- * # Returns  
- * @return `Ok(())` on success.  
- * 
+/*
+ * @title Reserve Initialization
+ * @notice Provides functionalities for initializing reserves, modifying reserve configurations,
+ *         and verifying controller permissions.
+ * @dev This module handles the creation of token canisters, updating reserve parameters,
+ *      and ensures only controllers can execute certain operations.
+ *
+ * # Parameters
+ * @param token_name The name of the token to be initialized.
+ * @param reserve_data The reserve data structure containing metadata and token-related details.
+ *
+ * # Returns
+ * @return `Ok(())` on success.
+ *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
 #[update]
 pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Result<(), Error> {
-    let user_principal = ic_cdk::caller();
+    // admin only access check
+    guard_admin_only()?;
 
-    if user_principal == Principal::anonymous()
-        || !to_check_controller()
-    {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-
-    let result = read_state(|state| {
-        if state.reserve_list.contains_key(&token_name) {
-            ic_cdk::println!("Token exists");
-            return Err(Error::TokenAlreadyExist);
-        }
-        Ok(())
-    });
-
-    if let Err(e) = result {
-        ic_cdk::println!("Error: {:?}", e);
-        return Err(e);
+    if read_state(|state| state.reserve_list.contains_key(&token_name)) {
+        return Err(Error::TokenAlreadyExist);
     }
 
     let token_canister_id =
@@ -53,6 +39,7 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
             Ok(principal) => principal,
             Err(e) => return Err(e),
         };
+
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
 
@@ -83,19 +70,19 @@ pub async fn initialize(token_name: String, mut reserve_data: ReserveData) -> Re
     Ok(())
 }
 
-/*  
- * @title Reset Reserve Value  
- * @notice Resets a specific variable in the reserve configuration.  
- * @dev This function allows only the controller to modify key reserve parameters.  
- *  
- * # Parameters  
- * @param asset_name The name of the asset whose reserve data is to be modified.  
- * @param variable_name The specific variable to reset (e.g., "liquidity_index", "ltv").  
- * @param reset_value The new value to set for the specified variable.  
- *  
- * # Returns  
- * @return `Ok(())` on success.  
- * 
+/*
+ * @title Reset Reserve Value
+ * @notice Resets a specific variable in the reserve configuration.
+ * @dev This function allows only the controller to modify key reserve parameters.
+ *
+ * # Parameters
+ * @param asset_name The name of the asset whose reserve data is to be modified.
+ * @param variable_name The specific variable to reset (e.g., "liquidity_index", "ltv").
+ * @param reset_value The new value to set for the specified variable.
+ *
+ * # Returns
+ * @return `Ok(())` on success.
+ *
  * @functionality Modifies a specific parameter of an existing reserve configuration.
  */
 #[update]
@@ -106,30 +93,18 @@ pub async fn reset_reserve_value(
 ) -> Result<(), Error> {
     let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous()
-        || !to_check_controller()
-    {
+    if user_principal == Principal::anonymous() || !to_check_controller() {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
 
-    let reserve_data_result = mutate_state(|state| {
+    let mut reserve_data = mutate_state(|state| {
         let asset_index = &mut state.asset_index;
         asset_index
             .get(&asset_name)
             .map(|reserve| reserve.0.clone())
             .ok_or_else(|| Error::NoReserveDataFound)
-    });
-
-    let mut reserve_data = match reserve_data_result {
-        Ok(data) => {
-            ic_cdk::println!("Reserve data found for asset: {:?}", data);
-            data
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    };
+    })?;
 
     match variable_name.as_str() {
         "liquidity_index" => reserve_data.liquidity_index = reset_value,
@@ -139,7 +114,9 @@ pub async fn reset_reserve_value(
         "borrow_cap" => reserve_data.configuration.borrow_cap = reset_value,
         "supply_cap" => reserve_data.configuration.supply_cap = reset_value,
         "reserve_factor" => reserve_data.configuration.reserve_factor = reset_value,
-        "liquidation_protocol_fee" => reserve_data.configuration.liquidation_protocol_fee = reset_value,
+        "liquidation_protocol_fee" => {
+            reserve_data.configuration.liquidation_protocol_fee = reset_value
+        }
         _ => return Err(Error::InvalidVariableName),
     }
 

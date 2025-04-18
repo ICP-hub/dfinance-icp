@@ -1,23 +1,23 @@
 use candid::Principal;
-use ic_cdk::{caller, query};
-use crate::{api::state_handler::{mutate_state, read_state}, constants::errors::Error, dynamic_canister::InitArgs};
+use ic_cdk::query;
+use crate::{
+    stable_storage::state_handler::{mutate_state, read_state}, 
+    constants::errors::Error
+};
 
 /*
  * @title Caller Identity Validation
  * @dev Ensures that the caller is authenticated and not an anonymous principal.
  *      This function is used to restrict access to authorized users only.
  *
- * @returns `Ok(())` if the caller is authenticated.
+ * @returns `true` if the caller is authenticated.
+ * @returns `false` if the caller is not authenticated.
  * 
  * @functionality Caller Identity Validation
  */
 
-pub fn caller_is_not_anonymous() -> Result<(), Error> {
-    if caller() == Principal::anonymous() {
-        Err(Error::AnonymousPrincipal)
-    } else {
-        Ok(())
-    }
+pub fn check_anonymous() -> bool {
+    ic_cdk::caller() == Principal::anonymous()
 }
 
 /*  

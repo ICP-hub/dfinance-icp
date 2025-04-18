@@ -1,10 +1,9 @@
 use crate::api::functions::{get_balance, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::read_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
-use crate::declarations::assets::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
-use crate::declarations::storable::Candid;
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
+use crate::stable_storage::storable::Candid;
 use crate::protocol::libraries::logic::borrow::execute_repay;
 use crate::protocol::libraries::logic::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
@@ -12,8 +11,8 @@ use crate::protocol::libraries::logic::validation::ValidationLogic;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::protocol::libraries::types::datatypes::UserReserveData;
 use crate::{
-    api::state_handler::mutate_state,
-    declarations::assets::ExecuteSupplyParams,
+    stable_storage::state_handler::{read_state, mutate_state},
+    declarations::structs::ExecuteSupplyParams,
     protocol::libraries::logic::update::UpdateLogic,
 };
 use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
@@ -62,19 +61,13 @@ use crate::constants::constant_variables::constants::{
 
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
-    if params.debt_asset.trim().is_empty() && params.collateral_asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
 
-    if params.debt_asset.len() > 7 && params.collateral_asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-    if params.amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    //validating Input parameters
+    ValidationLogic::validate_input_params(&params.debt_asset, &params.amount, Some(params.on_behalf_of.clone()))?;
+
+    //validating Input parameters
+    ValidationLogic::validate_input_params(&params.collateral_asset, &params.reward_amount , None)?;
+
 
     if params.on_behalf_of == Principal::anonymous() {
         ic_cdk::println!("Anonymous principals are not allowed");
@@ -90,11 +83,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let liquidator_principal = api::caller();
     ic_cdk::println!("Liquidator Principal: {}", liquidator_principal);
-
-    if liquidator_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
 
     if let Err(e) = request_limiter("execute_liquidation") {
         ic_cdk::println!("Error limiting error: {:?}", e);

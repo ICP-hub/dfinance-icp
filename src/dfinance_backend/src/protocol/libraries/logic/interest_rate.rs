@@ -23,21 +23,12 @@ use crate::{
     get_reserve_data,
     protocol::libraries::math::math_utils::ScalingMath, user_normalized_supply,
 };
-use candid::{CandidType, Deserialize, Nat};
+use candid::Nat;
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
-use serde::Serialize;
 use crate::constants::constant_variables::constants::{
     ZERO_VALUE, PERCENTAGE_FACTOR
 };
-
-#[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
-pub struct InterestRateParams {
-    pub optimal_usage_ratio: Nat,
-    pub max_excess_usage_ratio: Nat,
-    pub base_variable_borrow_rate: Nat,
-    pub variable_rate_slope1: Nat,
-    pub variable_rate_slope2: Nat,
-}
+use crate::declarations::structs::InterestRateParams;
 
 /* 
  * @title Interest Rate Parameter Initialization

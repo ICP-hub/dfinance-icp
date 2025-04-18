@@ -2,9 +2,9 @@ use crate::api::functions::asset_transfer;
 use crate::api::functions::get_balance;
 use crate::api::functions::get_total_supply;
 use crate::constants::errors::Error;
-use crate::declarations::assets::ReserveCache;
-use crate::declarations::assets::ReserveData;
-use crate::declarations::assets::AccrueToTreasuryLocalVars;
+use crate::declarations::structs::ReserveCache;
+use crate::declarations::structs::ReserveData;
+use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::protocol::libraries::logic::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };

@@ -1,4 +1,3 @@
-use crate::constants::asset_address::default;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
@@ -9,83 +8,18 @@ use crate::constants::interest_variables::constants::{
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
-use crate::constants::constant_variables::constants::{
-    INITIAL_TEST_TOKEN_BALANCE
-};
+use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::guards::to_check_controller;
-use candid::{CandidType, Encode, Nat, Principal};
+use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
 };
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
-use serde::Deserialize;
 use std::borrow::Cow;
-
-/*
- * @title Initialization Arguments for Token Canister
- * @dev Structure containing necessary parameters for initializing a token canister.
- */
-#[derive(Debug, CandidType, Deserialize)]
-pub struct InitArgs {
-    pub minting_account: Account,
-    pub fee_collector_account: Option<Account>,
-    pub initial_balances: Vec<(Account, Nat)>,
-    pub transfer_fee: Nat,
-    pub decimals: Option<u8>,
-    pub token_name: String,
-    pub token_symbol: String,
-    pub metadata: Vec<(String, Value)>,
-    pub archive_options: ArchiveOptions,
-    pub max_memo_length: Option<u16>,
-    pub feature_flags: Option<FeatureFlags>,
-    pub maximum_number_of_accounts: Option<u64>,
-    pub accounts_overflow_trim_quantity: Option<u64>,
-}
-
-/*
- * @title Archive Options
- * @dev Configuration parameters for transaction archival.
- */
-#[derive(Debug, CandidType, Deserialize)]
-pub struct ArchiveOptions {
-    pub trigger_threshold: usize,
-    pub num_blocks_to_archive: usize,
-    pub node_max_memory_size_bytes: Option<u64>,
-    pub max_message_size_bytes: Option<u64>,
-    pub controller_id: Principal,
-    #[serde(default)]
-    pub more_controller_ids: Option<Vec<Principal>>,
-    #[serde(default)]
-    pub cycles_for_archive_creation: Option<u64>,
-    #[serde(default)]
-    pub max_transactions_per_response: Option<u64>,
-}
-
-#[derive(Debug, Deserialize, CandidType)]
-
-pub struct UpgradeArgs {}
-
-/*
- * @title Ledger Arguments
- * @dev Enum defining initialization and upgrade options for the ledger canister.
- */
-#[derive(Debug, Deserialize, CandidType)]
-pub enum LedgerArg {
-    Init(InitArgs),
-    Upgrade(Option<UpgradeArgs>),
-}
-
-/*
- * @title Feature Flags
- * @dev Enables or disables token features like ICRC2.
- */
-#[derive(Debug, CandidType, Deserialize)]
-pub struct FeatureFlags {
-    icrc2: bool,
-}
-
+use crate::declarations::structs::{DynamicCanisterInitArgs, LedgerArg, ArchiveOptions, FeatureFlags};
+use crate::get_controller;
 /*
  * @title Load Token Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the token ledger.
@@ -104,6 +38,17 @@ fn test_ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
         "../../../target/wasm32-unknown-unknown/release/token_ledger.wasm"
     ))
+}
+
+fn default() -> Result<Principal, Error> {
+    let default_var = match get_controller() {
+        Ok(init_args) => init_args.controller_id,
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    Ok(default_var)
 }
 
 /*
@@ -165,7 +110,7 @@ pub async fn create_token_canister(
         more_controller_ids: Some(vec![default().unwrap()]),
     };
 
-    let init_args = InitArgs {
+    let init_args = DynamicCanisterInitArgs {
         minting_account,
         fee_collector_account,
         transfer_fee,
@@ -282,7 +227,7 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
         more_controller_ids: Some(vec![default().unwrap()]),
     };
 
-    let init_args = InitArgs {
+    let init_args = DynamicCanisterInitArgs {
         minting_account,
         fee_collector_account,
         transfer_fee,

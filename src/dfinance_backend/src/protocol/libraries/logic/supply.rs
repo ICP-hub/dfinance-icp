@@ -1,14 +1,14 @@
 use crate::api::functions::{asset_transfer_from, request_limiter};
 use crate::api::resource_manager::{acquire_lock, release_lock};
-use crate::api::state_handler::mutate_state;
+use crate::stable_storage::state_handler::mutate_state;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
-use crate::declarations::assets::{ExecuteSupplyParams, ExecuteWithdrawParams};
-use crate::declarations::storable::Candid;
+use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
+use crate::stable_storage::storable::Candid;
 use crate::protocol::libraries::logic::reserve::{self};
 use crate::protocol::libraries::logic::update::UpdateLogic;
 use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::calculate::update_token_price;
+use crate::protocol::libraries::math::price::update_token_price;
 use crate::protocol::libraries::math::math_utils::ScalingMath;
 use crate::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
@@ -46,20 +46,8 @@ use crate::constants::constant_variables::constants::{
  */
 #[update]
 pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Error> {
-    if params.asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
-
-    if params.asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-
-    if params.amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
+    //validating Input parameters
+    ValidationLogic::validate_input_params(&params.asset, &params.amount, None)?;
 
     let user_principal = ic_cdk::caller();
 
@@ -207,10 +195,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         }
         ic_cdk::println!("User data supply updated");
 
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+       
 
         // Transfers the asset from the user to our backend cansiter
         match asset_transfer_from(
@@ -223,6 +208,10 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         {
             Ok(new_balance) => {
                 println!("Asset transfer from user to backend canister executed successfully");
+                mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                });
                 Ok(new_balance)
             }
             Err(_) => {
@@ -299,27 +288,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
  */
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
-    if params.asset.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
-
-    if params.asset.len() > 7 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::InvalidAssetLength);
-    }
-
-    if params.amount <= Nat::from(ZERO_VALUE) {
-        ic_cdk::println!("Amount cannot be zero");
-        return Err(Error::InvalidAmount);
-    }
-
-    if let Some(principal) = params.on_behalf_of {
-        if principal == Principal::anonymous() {
-            ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::AnonymousPrincipal);
-        }
-    }
+        //validating Input parameters
+    ValidationLogic::validate_input_params(&params.asset, &params.amount , params.on_behalf_of.clone())?;
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -465,10 +435,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             return Err(e);
         }
 
-        mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-        });
+        
         // Transfers the asset from the user to our backend cansiter
         match asset_transfer_from(
             ledger_canister_id,
@@ -480,7 +447,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         {
             Ok(new_balance) => {
                 println!("Asset transfer from backend to user executed successfully");
-
+                mutate_state(|state| {
+                    let asset_index = &mut state.asset_index;
+                    asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+                });
                 return Ok(new_balance);
             }
             Err(_) => {

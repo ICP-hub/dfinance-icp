@@ -149,7 +149,9 @@ pub async fn calculate_interest_rates(
 
     // let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
 
-    let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
+    let user_normalized_supply = user_normalized_supply(reserve.clone())?;
+    
+    let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply);
 
     ic_cdk::println!("Total Supply: {:?}", total_supply);
     ic_cdk::println!("Liquidity in reserve: {:?}", reserve.asset_supply);
@@ -159,12 +161,12 @@ pub async fn calculate_interest_rates(
     
     ic_cdk::println!("Available Liquidity: {:?}", available_liq);
 
-    if total_debt.clone() != zero_nat_value() {
+    if total_debt != zero_nat_value() {
         let utilization_ratio = total_debt.clone().scaled_div(total_debt.clone() + available_liq.clone());
         ic_cdk::println!("Utilization Ratio: {:?}", utilization_ratio);
         ic_cdk::println!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
         
-        if utilization_ratio > params.optimal_usage_ratio.clone() {
+        if utilization_ratio > params.optimal_usage_ratio {
             let excess_ratio = utilization_ratio.clone() - params.optimal_usage_ratio.clone();
             let excess_usage_scaled = excess_ratio.clone().scaled_div(params.max_excess_usage_ratio.clone());
             

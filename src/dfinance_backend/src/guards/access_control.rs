@@ -17,6 +17,14 @@ pub fn guard_controller_only() -> Result<(), Error>
     }
 }
 
+pub fn guard_principal_not_anonymous(principal: &Principal) -> Result<(), Error> {
+    if principal == &Principal::anonymous() {
+        return Err(Error::AnonymousPrincipal);
+    }
+    Ok(())
+}
+
+
 pub fn guard_validate_reserve_status(reserve: &ReserveData) -> Result<(), Error> {
     if !reserve.configuration.active {
         return Err(Error::ReserveInactive);

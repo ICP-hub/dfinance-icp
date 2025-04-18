@@ -15,6 +15,8 @@ use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::guards::locks::CallerGuard;
+use crate::guards::api_limitor::request_limiter;
 
 /*
 -------------------------------------
@@ -45,12 +47,13 @@ use ic_cdk::update;
  */
 #[update]
 pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Error> {
+    request_limiter()?;
     // prevent anonymous call
     guard_prevent_anonymous()?;
+    let user_principal = ic_cdk::caller();
+    let _guard = CallerGuard::lock_principal(user_principal.clone())?;
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
-
-    let user_principal = ic_cdk::caller();
 
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
@@ -189,10 +192,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
  */
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
+    request_limiter()?;
     // prevent anonymous for caller
     guard_prevent_anonymous()?;
-    validate_asset_name(&params.asset)?;
-    validate_zero_value(&params.amount)?;
 
     // prevent anonymous on behalf of
     if params.on_behalf_of == Some(Principal::anonymous()) {
@@ -209,6 +211,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             (user_principal, None)
         };
 
+    let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    validate_asset_name(&params.asset)?;
+    validate_zero_value(&params.amount)?;
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
     let transfer_to_principal: Principal = liquidator_principal.unwrap_or(user_principal);
@@ -223,7 +228,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
-    // ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
 
@@ -273,10 +278,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     {
         Ok(new_balance) => {
             println!("Asset transfer from backend to user executed successfully");
-            mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
+            // mutate_state(|state| {
+            //     let asset_index = &mut state.asset_index;
+            //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            // });
             return Ok(new_balance);
         }
         Err(_) => {

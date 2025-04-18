@@ -18,6 +18,8 @@ use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData, U
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::declarations::structs::ReserveData;
 use crate::stable_storage::storable::Candid;
+use crate::guards::access_control::to_check_controller;
+use ic_cdk::api;
 
 /*
  * @title Get Reserve Data
@@ -623,4 +625,23 @@ pub async fn get_asset_debt(
         (normalized_debt_data.scaled_div(user_reserve.variable_borrow_index.clone()))
             .scaled_mul(get_balance_value),
     )
+}
+
+/*
+ * @title Cycle Checker
+ * @notice Retrieves the current cycle balance of the canister.
+ * @dev Uses `canister_balance128` API to fetch the balance and return it as a `Nat`.
+ * @functionality Canister monitoring functionality that allows checking the remaining computational resources
+ *
+ * # Returns
+ * - `Nat` - The current cycle balance of the canister.
+ */
+#[query]
+pub async fn cycle_checker() -> Result<Nat, Error> {
+    let caller = ic_cdk::caller();
+    if caller == Principal::anonymous() || !to_check_controller() {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
+    Ok(Nat::from(api::canister_balance128()))
 }

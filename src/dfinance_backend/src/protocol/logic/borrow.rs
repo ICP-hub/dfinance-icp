@@ -17,6 +17,8 @@ use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
+use crate::guards::locks::CallerGuard;
+use crate::guards::api_limitor::request_limiter;
 
 /*
 -------------------------------------
@@ -62,16 +64,16 @@ use ic_cdk::update;
  */
 #[update]
 pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
+    request_limiter()?;
     // prevent anonymous access
     guard_prevent_anonymous()?;
+    let user_principal = ic_cdk::caller();
+    let _guard = CallerGuard::lock_principal(user_principal.clone())?;
 
     // input validations
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
-    //TODO : apply this validate
-    // ValidationLogic::validate_input_params(&params.asset, &params.amount, None)?;
 
-    let user_principal = ic_cdk::caller();
     ic_cdk::println!("User principal: {:?}", user_principal);
 
     let borrow_amount = params.amount.clone();
@@ -150,10 +152,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                 "Asset transfer from backend to user executed successfully. New balance: {:?}",
                 new_balance
             );
-            mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
+            // mutate_state(|state| {
+            //     let asset_index = &mut state.asset_index;
+            //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            // });
             Ok(new_balance)
         }
         Err(_) => {
@@ -222,6 +224,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
 #[update]
 pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
+    request_limiter()?;
     // guard to prevent anonymous access
     guard_prevent_anonymous()?;
 
@@ -230,8 +233,6 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         return Err(Error::AnonymousPrincipal);
     }
 
-    validate_asset_name(&params.asset)?;
-    validate_zero_value(&params.amount)?;
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -241,9 +242,12 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             (ic_cdk::caller(), None)
         };
 
+    let _guard;
     if params.on_behalf_of.is_none() {
-        ic_cdk::println!("inside the on behalf");
+        _guard = CallerGuard::lock_principal(user_principal.clone())?;
     }
+    validate_asset_name(&params.asset)?;
+    validate_zero_value(&params.amount)?;
 
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
@@ -360,10 +364,10 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                 "Asset transfer from user to backend executed successfully, new balance: {:?}",
                 new_balance
             );
-            mutate_state(|state| {
-                let asset_index = &mut state.asset_index;
-                asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
+            // mutate_state(|state| {
+            //     let asset_index = &mut state.asset_index;
+            //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
+            // });
             Ok(new_balance)
         }
         Err(_) => {

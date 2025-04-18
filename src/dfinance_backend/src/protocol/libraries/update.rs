@@ -19,6 +19,7 @@ use crate::stable_storage::{
 use candid::{Nat, Principal};
 use crate::protocol::utils::price::get_exchange_rates;
 use ic_cdk::update;
+use crate::guards::api_limitor::request_limiter;
 
 pub struct UpdateLogic;
 
@@ -456,6 +457,7 @@ impl UpdateLogic {
  */
 #[update]
 pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) -> Result<(), Error> {
+    request_limiter()?;
     // prevent anonymous access
     guard_prevent_anonymous()?;
     validate_asset_name(&asset)?;

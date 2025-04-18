@@ -11,6 +11,8 @@ use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
+use crate::guards::locks::CallerGuard;
+use crate::guards::api_limitor::request_limiter;
 
 pub struct ValidationLogic;
 

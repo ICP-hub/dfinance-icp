@@ -12,6 +12,9 @@ use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{
     ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKUSDC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDT_PRICE,TEST_ICP_PRICE
 };
+use crate::guards::locks::CallerGuard;
+use candid::Principal;
+use crate::guards::api_limitor::request_limiter;
 
 /*
  * @title Price Cache Management
@@ -53,9 +56,15 @@ impl PriceCache {
  */
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
-    // prevent anonymous access
-    guard_prevent_anonymous()?;
-    //TODO: add controller access not controller not allowed
+    request_limiter()?;
+    let user_principal = ic_cdk::caller();
+
+    if user_principal == Principal::anonymous()
+        || !ic_cdk::api::is_controller(&ic_cdk::api::caller())
+    {
+        ic_cdk::println!("principals are not allowed");
+        return Err(Error::InvalidPrincipal);
+    }
 
     // Fetch all the keys (asset names) from the reserve list
     let keys: Vec<String> = read_state(|state| 

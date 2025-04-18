@@ -473,7 +473,7 @@ pub async fn mint_scaled(
 ) -> Result<(), Error> {
 
     let mut is_supply = true;
-    let adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
+    let mut adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
         && amount.clone() < Nat::from(10u128)
     {
         amount.clone().scaled_div(index.clone()) + Nat::from(ONE_VALUE) // Round up if there's a remainder

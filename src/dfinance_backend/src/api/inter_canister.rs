@@ -5,10 +5,10 @@ use crate::guards::access_control::to_check_controller;
 use crate::protocol::utils::math_utils::current_timestamp;
 use candid::{decode_one, encode_args};
 use candid::{Nat, Principal};
-use ic_cdk::api;
 use ic_cdk::{call, query};
 use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs};
+
 
 /*
  * @title Asset Transfer From Function
@@ -214,64 +214,3 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     }
 }
 
-/*
- * @title Cycle Checker
- * @notice Retrieves the current cycle balance of the canister.
- * @dev Uses `canister_balance128` API to fetch the balance and return it as a `Nat`.
- * @functionality Canister monitoring functionality that allows checking the remaining computational resources
- *
- * # Returns
- * - `Nat` - The current cycle balance of the canister.
- */
-#[query]
-pub async fn cycle_checker() -> Result<Nat, Error> {
-    let caller = ic_cdk::caller();
-    if caller == Principal::anonymous() || !to_check_controller() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-    Ok(Nat::from(api::canister_balance128()))
-}
-
-/*
- * @title Check Function Block Status
- * @notice Checks if the caller is blocked from using a specific function.
- * @dev Compares current timestamp with block expiration time to determine if block is active.
- * @functionality User verification functionality that allows users to check if they're currently blocked from using specific functions
- *
- * # Parameters
- * - `function_name` - The name of the function to check.
- *
- * # Returns
- * - `Ok(bool)` - True if blocked, false otherwise.
- * - `Err(Error)` - If the caller is an anonymous principal.
- */
-#[query]
-pub fn is_function_blocked(function_name: String) -> Result<bool, Error> {
-    let caller_id = ic_cdk::caller();
-    let current_time_stamp = current_timestamp();
-
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-
-    Ok(read_state(|state| {
-        state
-            .restrict_users
-            .get(&caller_id)
-            .and_then(|candid| candid.0.get(&function_name).cloned())
-            .map(|details| details.blocked_time > current_time_stamp)
-            .unwrap_or(false)
-    }))
-}
-/*
- * @title Inspect Incoming Messages
- * @notice Inspects incoming messages to check if the caller is blocked from using the requested function.
- * @dev Executed before message processing to reject blocked requests early in the execution flow.
- * @functionality Security pre-processing functionality that validates all incoming calls before execution to enforce rate limiting
- *
- * # Note
- * This function is called by the Internet Computer before processing each incoming message,
- * allowing early rejection of requests from blocked users.
- */

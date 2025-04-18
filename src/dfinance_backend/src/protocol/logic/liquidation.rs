@@ -6,7 +6,7 @@ use crate::constants::interest_variables::constants::{MAX_ASSET_LENGTH, TOKEN_TR
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::stable_storage::storable::Candid;
-use crate::guards::access_control::guard_prevent_anonymous;
+use crate::guards::access_control::{guard_prevent_anonymous,guard_principal_not_anonymous};
 use crate::protocol::logic::borrow::execute_repay;
 use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::update::{user_data, user_reserve};
@@ -21,6 +21,8 @@ use crate::{
 use crate::api::query::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
+use crate::guards::locks::CallerGuard;
+use crate::guards::api_limitor::request_limiter;
 
 /*
 -------------------------------------
@@ -61,8 +63,13 @@ use ic_cdk::{api, update};
 
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
-    // guard anonymous user
+    request_limiter()?;
+    // guard anonymous caller
     guard_prevent_anonymous()?;
+    let liquidator_principal = api::caller();
+    let _liquidator_guard = CallerGuard::lock_principal(liquidator_principal.clone())?;
+    // guard for user
+    guard_principal_not_anonymous(&params.on_behalf_of)?;
 
     // validations
     validate_asset_name(&params.debt_asset)?;
@@ -70,11 +77,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     validate_zero_value(&params.amount)?;
     validate_zero_value(&params.reward_amount)?;
 
-    //TODO: for this make a common guard function.
-    if params.on_behalf_of == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
     let platform_principal = ic_cdk::api::id();
 
     ic_cdk::println!("amount liq = {}", params.amount.clone());
@@ -82,8 +84,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let user_principal = params.on_behalf_of;
     ic_cdk::println!("User Principal (Debt User): {}", user_principal);
-
-    let liquidator_principal = api::caller();
 
     ic_cdk::println!(
         "params debt_asset and collateral_asset {:?} {:?}",
@@ -98,23 +98,17 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         state
             .asset_index
             .get(&params.collateral_asset.to_string())
-            .map(|reserve| reserve.0.clone())
+            .map(|reserve| reserve.0)
     })
     .ok_or_else(|| Error::NoReserveDataFound)?;
 
     let mut user_account_data = user_data(user_principal)?;
 
     // Check if the user has a reserve for the asset
-    let mut user_reserve_data = {
-        let mut user_reserve_result =
-            user_reserve(&mut user_account_data, &params.collateral_asset);
-        match user_reserve_result.as_mut() {
-            Some((_, reserve_data)) => reserve_data.clone(),
-            None => {
-                return Err(Error::NoUserReserveDataFound);
-            }
-        }
-    };
+    let mut user_reserve_data = user_reserve(&mut user_account_data, &params.collateral_asset)
+    .and_then(|(_, reserve_data)| Some(reserve_data.clone()))
+    .ok_or(Error::NoUserReserveDataFound)?;
+
 
     let debt_asset_price = get_cached_exchange_rate(params.debt_asset.clone())?;
 
@@ -191,6 +185,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     )
     .await?;
 
+    let _user_guard = CallerGuard::lock_principal(user_principal.clone())?;
+
     ic_cdk::println!("liquidation validation successful");
 
     ic_cdk::println!("burn reward amount: {:?}", reward_amount);
@@ -226,20 +222,43 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         is_collateral: true,
     };
 
-    let liquidator_mint_result = UpdateLogic::update_user_data_supply(
+    // let liquidator_mint_result = UpdateLogic::update_user_data_supply(
+    //     liquidator_principal,
+    //     &collateral_reserve_cache,
+    //     supply_param,
+    //     &mut collateral_reserve_data,
+    // )
+    // .await;
+    // match liquidator_mint_result {
+    //     Ok(()) => {
+    //         ic_cdk::println!("Minting dtokens successfully");
+    //     }
+    //     Err(e) => {
+    //         ic_cdk::println!("{:?}", e);
+
+    //         mint_scaled(
+    //             &mut collateral_reserve_data,
+    //             &mut user_reserve_data,
+    //             reward_amount,
+    //             collateral_reserve_cache.next_liquidity_index,
+    //             user_principal,
+    //             collateral_dtoken_principal,
+    //             platform_principal,
+    //             true,
+    //         )
+    //         .await?;
+    //         return Err(e);
+    //     }
+    // }
+
+     if let Err(err) = UpdateLogic::update_user_data_supply(
         liquidator_principal,
         &collateral_reserve_cache,
         supply_param,
         &mut collateral_reserve_data,
     )
-    .await;
-    match liquidator_mint_result {
-        Ok(()) => {
-            ic_cdk::println!("Minting dtokens successfully");
-        }
-        Err(e) => {
-            ic_cdk::println!("{:?}", e);
-
+    .await {
+        // bhanu yaha pe error pe hi hona chahiye mint scaled ?
             mint_scaled(
                 &mut collateral_reserve_data,
                 &mut user_reserve_data,
@@ -251,8 +270,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 true,
             )
             .await?;
-            return Err(e);
-        }
+
+
+        return Err(err);
     }
 
     mutate_state(|state| {
@@ -262,20 +282,38 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         )
     });
 
-    if let Some(ref mut reserves) = user_account_data.reserves {
-        if let Some(reserve) = reserves
-            .iter_mut()
-            .find(|(asset, _)| asset == &params.collateral_asset)
-        {
-            reserve.1 = user_reserve_data.clone();
-        } else {
-            reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
+
+    // if let Some(ref mut reserves) = user_account_data.reserves {
+    //     if let Some(reserve) = reserves
+    //         .iter_mut()
+    //         .find(|(asset, _)| asset == &params.collateral_asset)
+    //     {
+    //         reserve.1 = user_reserve_data.clone();
+    //     } else {
+    //         reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
+    //     }
+    // } else {
+    //     user_account_data.reserves = Some(vec![(
+    //         params.collateral_asset.clone(),
+    //         user_reserve_data.clone(),
+    //     )]);
+    // }
+
+    match user_account_data.reserves.as_mut() {
+        Some(reserves) => {
+            if let Some((_, reserve_data)) = reserves.iter_mut()
+                .find(|(asset, _)| asset == &params.collateral_asset) {
+                    *reserve_data = user_reserve_data.clone();
+            } else {
+                reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
+            }
         }
-    } else {
-        user_account_data.reserves = Some(vec![(
-            params.collateral_asset.clone(),
-            user_reserve_data.clone(),
-        )]);
+        None => {
+            user_account_data.reserves = Some(vec![(
+                params.collateral_asset.clone(),
+                user_reserve_data.clone(),
+            )]);
+        }
     }
 
     mutate_state(|state| {
@@ -292,14 +330,18 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let repay_response = execute_repay(params_repay).await;
 
+    
+
     match repay_response {
         Ok(_) => {
             ic_cdk::println!("Repayment successful");
             Ok(params.amount)
         }
         Err(e) => {
+
             let mut liquidator_collateral_reserve =
                 user_reserve(&mut liquidator_data, &params.collateral_asset);
+                
             let mut liquidator_reserve_data = match liquidator_collateral_reserve.as_mut() {
                 Some((_, reserve_data)) => reserve_data,
                 None => {
@@ -314,14 +356,29 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                         liquidator_data.reserves =
                             Some(vec![(params.collateral_asset.clone(), new_reserve)]);
                     }
-                    &mut liquidator_data
-                        .reserves
-                        .as_mut()
-                        .unwrap()
-                        .iter_mut()
-                        .find(|(asset, _)| asset == &params.collateral_asset)
-                        .unwrap()
-                        .1
+                    // &mut liquidator_data
+                    //     .reserves
+                    //     .as_mut()
+                    //     .unwrap()
+                    //     .iter_mut()
+                    //     .find(|(asset, _)| asset == &params.collateral_asset)
+                    //     .unwrap()
+                    //     .1
+
+                    // bhanu handle unwrap
+                    match liquidator_data.reserves.as_mut() {
+                        Some(reserves) => match reserves.iter_mut().find(|(asset, _)| asset == &params.collateral_asset) {
+                            Some((_, reserve_data)) => reserve_data,
+                            None => {
+                                ic_cdk::println!("Failed to find the collateral asset after insertion.");
+                                return Err(e);
+                            }
+                        },
+                        None => {
+                            ic_cdk::println!("Reserves are unexpectedly None after insertion.");
+                            return Err(e);
+                        }
+                    }
                 }
             };
 
@@ -355,6 +412,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                     Candid(collateral_reserve_data.clone()),
                 )
             });
+
             return Err(e);
         }
     }
@@ -438,7 +496,6 @@ pub async fn to_get_reward_amount(
     ic_cdk::println!("Initial collateral amount: {:?}", collateral_amount);
 
     if collateral_asset != debt_asset {
-
         if debt_price == zero_nat_value() || collateral_price == zero_nat_value() {
             ic_cdk::println!("Invalid exchange rate for either collateral_asset or debt asset");
             return Err(Error::ErrorPriceCache);
@@ -454,7 +511,7 @@ pub async fn to_get_reward_amount(
             / Nat::from(PERCENTAGE_FACTOR),
     );
 
-    let final_collateral_amount = collateral_amount.clone() + liquidation_bonus_amount.clone();
+    let final_collateral_amount = collateral_amount + liquidation_bonus_amount.clone();
 
     ic_cdk::println!("Calculated final collateral: {:?}", final_collateral_amount);
 

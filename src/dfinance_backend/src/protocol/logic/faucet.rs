@@ -12,6 +12,8 @@ use candid::{Nat, Principal};
 use ic_cdk_macros::update;
 use crate::api::inter_canister::get_balance;
 use crate::api::inter_canister::asset_transfer_from;
+use crate::guards::locks::CallerGuard;
+use crate::guards::api_limitor::request_limiter;
 
 /*
  * @title Token Faucet
@@ -28,13 +30,14 @@ use crate::api::inter_canister::asset_transfer_from;
  */
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
+    request_limiter()?;
     guard_prevent_anonymous()?;
+    let user_principal = ic_cdk::caller();
+    let _guard = CallerGuard::lock_principal(user_principal.clone())?;
 
     // input asset validator
     validate_asset_name(&asset)?;
     validate_zero_value(&amount)?;
-
-    let user_principal = ic_cdk::caller();
 
     let mut user_data = user_data(user_principal)?;
 

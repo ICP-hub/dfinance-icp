@@ -74,7 +74,8 @@ pub enum Error {
     BLOCKEDFORONEHOUR,
     USERCANNOTBELIQUIDATED,
     FeeExceedsAmount ,
-    LiquidationProtocolfeeIsHigher
+    LiquidationProtocolfeeIsHigher,
+    RateLimitExceeded,
 }
 
 impl Error {
@@ -152,6 +153,7 @@ impl Error {
             Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
             Error::LiquidationProtocolfeeIsHigher => "Liquidation protocol fee is higher",
+            Error::RateLimitExceeded => "Too many requests. Please wait and try again.",
         }
     }
 }

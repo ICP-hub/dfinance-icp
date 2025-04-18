@@ -1,4 +1,4 @@
-use crate::api::functions::{get_balance};
+use crate::api::inter_canister::get_balance;
 use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
@@ -6,19 +6,19 @@ use crate::constants::interest_variables::constants::{MAX_ASSET_LENGTH, TOKEN_TR
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::stable_storage::storable::Candid;
-use crate::guards::guard_prevent_anonymous;
-use crate::protocol::libraries::logic::borrow::execute_repay;
-use crate::protocol::libraries::logic::reserve::{self, burn_scaled, mint_scaled};
-use crate::protocol::libraries::logic::update::{user_data, user_reserve};
-use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::protocol::libraries::types::datatypes::UserReserveData;
+use crate::guards::access_control::guard_prevent_anonymous;
+use crate::protocol::logic::borrow::execute_repay;
+use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
+use crate::protocol::libraries::update::{user_data, user_reserve};
+use crate::protocol::logic::validation::ValidationLogic;
+use crate::protocol::utils::math_utils::ScalingMath;
+use crate::declarations::datatypes::UserReserveData;
 use crate::{
     stable_storage::state_handler::{read_state, mutate_state},
     declarations::structs::ExecuteSupplyParams,
-    protocol::libraries::logic::update::UpdateLogic,
+    protocol::libraries::update::UpdateLogic,
 };
-use crate::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
+use crate::api::query::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
 

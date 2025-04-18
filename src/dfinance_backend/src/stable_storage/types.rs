@@ -4,10 +4,8 @@ use std::collections::BTreeMap;
 
 use crate::declarations::structs::InitArgs;
 use crate::declarations::structs::ReserveData;
-use crate::protocol::libraries::types::datatypes::UserData;
 use crate::stable_storage::storable::Candid;
-
-use crate::protocol::libraries::types::datatypes::{BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData};
+use crate::declarations::datatypes::{BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData, UserData};
 
 
 use ic_stable_structures::{memory_manager::VirtualMemory, DefaultMemoryImpl};

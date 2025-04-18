@@ -1,16 +1,15 @@
-use crate::api::functions::{get_balance, get_total_supply};
+use crate::api::inter_canister::{get_balance, get_total_supply};
 use crate::stable_storage::state_handler::read_state;
-use crate::constants::constant_variables::constants::MAX_ASSET_LENGTH;
-use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR, ZERO_VALUE};
+use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::structs::ReserveData;
-use crate::guards::guard_validate_reserve_status;
-use crate::protocol::libraries::logic::update::user_data;
-use crate::protocol::libraries::logic::user::calculate_user_account_data;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::protocol::libraries::math::price::update_token_price;
-use crate::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
+use crate::guards::access_control::guard_validate_reserve_status;
+use crate::protocol::libraries::update::user_data;
+use crate::protocol::libraries::user::calculate_user_account_data;
+use crate::protocol::utils::math_utils::ScalingMath;
+use crate::protocol::utils::price::update_token_price;
+use crate::api::query::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
 
 pub struct ValidationLogic;

@@ -1,15 +1,14 @@
 use crate::stable_storage::state_handler::{mutate_state, read_state};
-use crate::constants::constant_variables::constants::ZERO_VALUE;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
-use crate::guards::{check_is_tester, guard_prevent_anonymous,to_check_controller};
-use crate::protocol::libraries::types::datatypes::{CachedPrice, PriceCache};
-use candid::{Nat, Principal};
+use crate::guards::access_control::{check_is_tester, guard_prevent_anonymous};
+use crate::declarations::datatypes::{CachedPrice, PriceCache};
+use candid::Nat;
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
-use crate::get_canister_id_by_name;
+use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{
     ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKUSDC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDT_PRICE,TEST_ICP_PRICE
 };

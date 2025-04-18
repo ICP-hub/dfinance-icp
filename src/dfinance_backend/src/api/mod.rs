@@ -1,2 +1,3 @@
-pub mod functions;
-pub mod resource_manager;
+pub mod inter_canister;
+pub mod update;
+pub mod query;

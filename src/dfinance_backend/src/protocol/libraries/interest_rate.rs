@@ -19,14 +19,12 @@ use crate::{
             },
         }
     },
-    get_reserve_data,
-    protocol::libraries::math::math_utils::ScalingMath, user_normalized_supply,
+    protocol::utils::math_utils::ScalingMath,
 };
+use crate::api::query::{get_reserve_data,user_normalized_supply};
 use candid::Nat;
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
-use crate::constants::constant_variables::constants::{
-    ZERO_VALUE, PERCENTAGE_FACTOR
-};
+use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::declarations::structs::InterestRateParams;
 
 /* 

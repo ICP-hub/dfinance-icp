@@ -1,24 +1,20 @@
-use crate::api::functions::{asset_transfer_from};
-// use crate::api::resource_manager::{
-//     acquire_lock, is_amount_locked, release_amount, release_lock, repay_release_amount,
-// };
+use crate::api::inter_canister::asset_transfer_from;
 use crate::stable_storage::state_handler::*;
-use crate::constants::constant_variables::constants::ZERO_VALUE;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
-    INITIAL_DEBT_INDEX, MAX_ASSET_LENGTH, TOKEN_TRANSFER_FEE,
+    INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE,
 };
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::stable_storage::storable::Candid;
 use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::guards::guard_prevent_anonymous;
-use crate::protocol::libraries::logic::reserve::{self};
-use crate::protocol::libraries::logic::update::UpdateLogic;
-use crate::protocol::libraries::logic::validation::ValidationLogic;
-use crate::protocol::libraries::math::math_utils::ScalingMath;
-use crate::protocol::libraries::math::price::update_token_price;
-use crate::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
+use crate::guards::access_control::guard_prevent_anonymous;
+use crate::protocol::libraries::reserve::{self};
+use crate::protocol::libraries::update::UpdateLogic;
+use crate::protocol::logic::validation::ValidationLogic;
+use crate::protocol::utils::math_utils::ScalingMath;
+use crate::protocol::utils::price::update_token_price;
+use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
 

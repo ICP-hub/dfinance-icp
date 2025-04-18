@@ -1,7 +1,7 @@
 use super::update::user_data;
-use crate::api::functions::{asset_transfer, asset_transfer_from, get_balance};
+use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
 use crate::constants::constant_variables::constants::{
-    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR, ZERO_VALUE,
+    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR
 };
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
@@ -9,19 +9,18 @@ use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::structs::AssetData;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::stable_storage::storable::Candid;
-use crate::guards::{
+use crate::guards::access_control::{
     to_check_controller, {check_is_tester, guard_prevent_anonymous},
 };
-use crate::protocol::libraries::logic::update::user_reserve;
-use crate::protocol::libraries::math::math_utils::get_max_value;
-use crate::protocol::libraries::types::datatypes::{UserAccountData, UserData};
+use crate::protocol::libraries::update::user_reserve;
+use crate::protocol::utils::math_utils::get_max_value;
+use crate::declarations::datatypes::{UserAccountData, UserData, UserReserveData};
 use crate::{
     stable_storage::state_handler::{mutate_state,read_state},
-    get_cached_exchange_rate, get_reserve_data,
-    protocol::libraries::{math::math_utils::ScalingMath, types::datatypes::UserReserveData},
-    user_normalized_debt, user_normalized_supply,
+    protocol::utils::math_utils::ScalingMath,
 };
-use crate::{get_all_users, reserve_ledger_canister_id};
+use crate::api::query::{get_cached_exchange_rate, get_reserve_data,};
+use crate::api::query::{get_all_users, reserve_ledger_canister_id, user_normalized_debt, user_normalized_supply,};
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};

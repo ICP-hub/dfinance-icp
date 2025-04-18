@@ -9,7 +9,7 @@ use crate::constants::interest_variables::constants::{
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
 use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
-use crate::guards::to_check_controller;
+use crate::guards::access_control::to_check_controller;
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
@@ -19,7 +19,7 @@ use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
 use crate::declarations::structs::{DynamicCanisterInitArgs, LedgerArg, ArchiveOptions, FeatureFlags};
-use crate::get_controller;
+use crate::api::query::get_controller;
 /*
  * @title Load Token Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the token ledger.

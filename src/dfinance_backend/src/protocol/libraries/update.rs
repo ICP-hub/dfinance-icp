@@ -1,23 +1,23 @@
-use crate::api::functions::{get_balance};
-use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
+use crate::api::inter_canister::get_balance;
+use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{
     ReserveCache, ReserveData, ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
-use crate::guards::guard_prevent_anonymous;
-use crate::protocol::libraries::logic::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::logic::user::calculate_user_account_data;
-use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
-use crate::protocol::libraries::types::datatypes::{UserData,UserReserveData};
+use crate::guards::access_control::guard_prevent_anonymous;
+use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
+use crate::protocol::libraries::user::calculate_user_account_data;
+use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
+use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::stable_storage::{
         state_handler::{mutate_state,read_state},
         storable::Candid,
     };
 
 use candid::{Nat, Principal};
-use crate::protocol::libraries::math::price::get_exchange_rates;
+use crate::protocol::utils::price::get_exchange_rates;
 use ic_cdk::update;
 
 pub struct UpdateLogic;

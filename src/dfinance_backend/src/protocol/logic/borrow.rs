@@ -375,7 +375,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
             //Rollback user state
             let borrow_param = ExecuteBorrowParams {
                 asset: params.asset.clone(),
-                amount: repay_amount.clone(),
+                amount: params.amount.clone(),
             };
 
             UpdateLogic::update_user_data_borrow(

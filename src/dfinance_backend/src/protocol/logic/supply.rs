@@ -141,7 +141,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                 asset: params.asset.clone(),
                 is_collateral: params.is_collateral,
                 on_behalf_of: None,
-                amount: amount_nat.clone(),
+                amount: params.amount.clone(),
             };
 
             UpdateLogic::update_user_data_withdraw(

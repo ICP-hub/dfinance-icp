@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {  useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
-import DebtStatus from "./DebtStatus";
+import DebtStatus from "./LiquidationList";
 import WalletModal from "../Dashboard/WalletModal";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";

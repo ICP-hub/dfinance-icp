@@ -14,7 +14,7 @@ const DashboardCards = lazy(() => import("../pages/info/info"));
 const HealthFactorList = lazy(() =>
   import("../components/Dashboard/HealthFactorLIst")
 );
-const DebtStatus = lazy(() => import("../components/Liquidate/DebtStatus"));
+const DebtStatus = lazy(() => import("../components/Liquidate/LiquidationList"));
 
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;

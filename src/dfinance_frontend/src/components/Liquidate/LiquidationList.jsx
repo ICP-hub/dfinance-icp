@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
-import Button from "../../components/Common/Button";
+import Button from "../Common/Button";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
-import Pagination from "../../components/Common/pagination";
+import Pagination from "../Common/pagination";
 import UserInformationPopup from "./userInformation";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
 import ckETH from "../../../public/assests-icon/cketh.png";

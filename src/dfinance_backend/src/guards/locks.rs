@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use candid::Principal;
-use ic_cdk::query;
 use crate::constants::errors::Error;
 
 thread_local! {

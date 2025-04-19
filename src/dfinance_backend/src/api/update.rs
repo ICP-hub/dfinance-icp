@@ -2,10 +2,10 @@ use crate::constants::errors::Error;
 use candid::Nat;
 use candid::Principal;
 use crate::constants::validators::validate_zero_value;
-use crate::guards::access_control::{guard_prevent_anonymous,to_check_controller};
+use crate::guards::access_control::to_check_controller;
 use ic_cdk::update;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
-use crate::declarations::datatypes::{ SessionStorageData, PriceCache};
+use crate::stable_storage::state_handler::mutate_state;
+use crate::declarations::datatypes::SessionStorageData;
 use crate::stable_storage::storable::Candid;
 
 

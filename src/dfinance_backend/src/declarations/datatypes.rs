@@ -65,8 +65,6 @@ pub struct UserReserveData {
     pub last_update_timestamp: u64,
     pub liquidity_index: Nat,
     pub variable_borrow_index: Nat, 
-    pub asset_supply: Nat,
-    pub asset_borrow: Nat, 
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
@@ -81,8 +79,6 @@ impl Default for UserReserveData {
             reserve: Default::default(),
             last_update_timestamp: Default::default(),
             liquidity_index: Default::default(),
-            asset_supply: Default::default(),
-            asset_borrow: Default::default(),
             variable_borrow_index: Default::default(),
             is_using_as_collateral_or_borrow: Default::default(),
             is_collateral: true,
@@ -113,30 +109,6 @@ impl Default for UserState {
             index: Default::default(),
         }
     }
-}
-
-/* 
- * @title Reserve Initialization Parameters
- * @dev Parameters required for initializing a reserve.
- * @functionality Contains all necessary configuration parameters to initialize a new reserve in the lending protocol, including token implementations and naming.
- */
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct InitReserveInput {
-    pub d_token_impl: Principal,
-    pub stable_debt_token_impl: Principal,
-    pub variable_debt_token_impl: Principal,
-    pub underlying_asset_decimals: u8,
-    pub interest_rate_strategy_address: Principal,
-    pub underlying_asset: Principal,
-    pub treasury: Principal,
-    pub incentives_controller: Principal,
-    pub d_token_name: String,
-    pub d_token_symbol: String,
-    pub variable_debt_token_name: String,
-    pub variable_debt_token_symbol: String,
-    pub stable_debt_token_name: String,
-    pub stable_debt_token_symbol: String,
-    pub params: Vec<u8>,
 }
 
 

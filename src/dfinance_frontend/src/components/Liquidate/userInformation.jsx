@@ -91,7 +91,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
    *                                  MEMOIZATION
    * =================================================================================== */
 
- 
+
   const transferFeRetrive = useTransferFee(selectedDebtAsset);
   const transferFee = transferFeRetrive?.transferFee;
   const transferfee = Number(transferFee);
@@ -100,6 +100,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Fetch asset supply and borrow data
   const getAssetSupplyValue = (asset, principal) => {
     if (assetSupply[asset] !== undefined) {
       const supplyValue = Number(assetSupply[asset]);
@@ -116,6 +117,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     return;
   };
 
+
+  //Function to calculate health factor 
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -177,8 +180,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     return result;
   };
 
- 
 
+  // Function to get balance for principal and asset
   const getBalanceForPrincipalAndAsset = (
     principal,
     assetName,
@@ -240,12 +243,15 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     );
   };
 
+
+  //Function to close popup on clicking outisde 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
       onClose();
     }
   };
 
+  //Function to handle next click
   const handleNextClick = () => {
     if (isDebtInfo) {
       setIsCollateralOverlay(true);
@@ -254,7 +260,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     }
   };
 
-  
+  //Function to handle debt asset selection
   const handleDebtAssetSelection = (
     asset,
     assetBorrowAmount,
@@ -279,7 +285,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     assetSupply,
     collateralAmount
   ) => {
-   
+
 
     setIsCollateralAssetSelected(true);
     setSelectedAsset(asset);
@@ -323,7 +329,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
     const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
     const totalAmount = supplyAmount + BigInt(Math.round(transferFee * 1e8));
-    
+
     try {
       setIsLoading(true);
 
@@ -382,7 +388,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
         "Invalid input parameters. All parameters must be numbers."
       );
     }
-   
+
 
 
     const assetRates = {
@@ -411,7 +417,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
 
     const truncateToEightDecimals = (value) => Math.floor(value * 1e8) / 1e8;
-  
+
     const truncatedCollateral = truncateToEightDecimals(collateralAmount);
     const truncatedCollateralBalance =
       truncateToEightDecimals(collateralBalance);
@@ -448,6 +454,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     };
   }
 
+  //Function to calculate max collateral
   const handleMaxCollateral = async () => {
     try {
       const supplyAmount = Math.trunc(amountToRepay * 100000000);
@@ -539,7 +546,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        amount: supplyAmount+transferfee*1e8,
+        amount: supplyAmount + transferfee * 1e8,
         on_behalf_of: mappedItem?.principal?._arr,
         reward_amount: Math.trunc(rewardAmount * 1e8),
       };
@@ -579,7 +586,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             draggable: true,
             progress: undefined,
           });
-          return; 
+          return;
         }
 
         if (errorKey?.ExchangeRateError === null) {
@@ -737,20 +744,27 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     }
   };
 
+
+  //Function to handle wanring popup close
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
   };
 
+
+  //Function to show warnning popup
   const handleCallLiquidation = () => {
     setShowWarningPopup(true);
   };
 
+  //Function to handle popup close
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
     dispatch(toggleRefreshLiquidate());
   };
 
+
+  //Function to render Asset details
   const renderDebtAssetDetails = (asset) => {
     const assetBalances = {
       ckETH: ckETHBalance,
@@ -768,12 +782,12 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
           Wallet Balance
         </p>
         <div className=" flex items-center space-x-2">
-          
+
           <p className="text-xs font-normal text-[#2A1F9D] dark:text-darkText mt-1 ">
             {balance}
           </p>
 
-       
+
           <img
             src={
               asset === "ckBTC"
@@ -822,11 +836,11 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     };
 
     const usdRate = assetRates[asset] ? assetRates[asset] / 1e8 : null;
-    const DebtusdRate = assetRates[selectedDebtAsset] ?assetRates[selectedDebtAsset] /1e8 : 0;
-    const DebtAmount = selectedAsset == selectedDebtAsset 
-                            ? calculatedData?.maxDebtToLiq
-                            : Math.trunc((calculatedData?.maxDebtToLiq *DebtusdRate)/usdRate);
-    const bonusValue =((DebtAmount / 1e8) * liquidation_bonus) / 100;
+    const DebtusdRate = assetRates[selectedDebtAsset] ? assetRates[selectedDebtAsset] / 1e8 : 0;
+    const DebtAmount = selectedAsset == selectedDebtAsset
+      ? calculatedData?.maxDebtToLiq
+      : Math.trunc((calculatedData?.maxDebtToLiq * DebtusdRate) / usdRate);
+    const bonusValue = ((DebtAmount / 1e8) * liquidation_bonus) / 100;
 
     return (
       <div className="mt-4">
@@ -834,7 +848,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
           Reward Amount
         </p>
         <div className="bg-gray-100 dark:bg-darkBackground/30 rounded-md p-2 text-sm mt-1 flex justify-between items-center">
-          
+
           <div>
             {(() => {
               const assetRates = {
@@ -897,7 +911,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             })()}
           </div>
 
-         
+
           <div className="flex flex-col items-end">
             <p className="text-xs font-normal text-[#2A1F9D]  dark:text-darkText opacity-50">
               Including Bonus:
@@ -987,7 +1001,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       Number(item?.configuration?.liquidation_bonus || "0") / 100000000;
   }
 
-  const truncateToSevenDecimals = (value) => {
+  // Function to truncate value to 8 decimals
+  const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
@@ -1040,7 +1055,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     const liquidationThreshold =
       Number(mappedItem.liquidationThreshold) / 1e8 || 0;
 
-    
+
     const assetLiquidationThresholds = Array.isArray(
       mappedItem.userData?.reserves?.[0]
     )
@@ -1342,8 +1357,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             "?{" "}
             <strong className="font-bold text-red-500">
               {amountToRepay === calculatedData.maxDebtToLiq / 1e8
-                ? truncateToSevenDecimals(amountToRepay)
-                : truncateToSevenDecimals(
+                ? truncateToEightDecimals(amountToRepay)
+                : truncateToEightDecimals(
                   calculatedData.maxDebtToLiq / 1e8
                 )}{" "}
             </strong>
@@ -1351,8 +1366,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             <strong className="underline">deducted</strong> from your account &{" "}
             <strong className="font-bold text-green-500">
               {rewardAmount === calculatedData?.maxCollateral / 1e8
-                ? truncateToSevenDecimals(rewardAmount)
-                : truncateToSevenDecimals(
+                ? truncateToEightDecimals(rewardAmount)
+                : truncateToEightDecimals(
                   calculatedData?.maxCollateral / 1e8
                 )}{" "}
             </strong>
@@ -1421,40 +1436,40 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             </button>
           </div>
           {showPanicPopup && (
-                 <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                   <div className="w-full flex flex-col items-center ">
-                     <div className="w-full flex items-center justify-between  ">
-                       <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
-                       <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
-                         <X size={22} />
-                       </button>
-                     </div>
-         
-                     <div
-                       className="dark:bg-gradient 
+            <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+              <div className="w-full flex flex-col items-center ">
+                <div className="w-full flex items-center justify-between  ">
+                  <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
+                  <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                    <X size={22} />
+                  </button>
+                </div>
+
+                <div
+                  className="dark:bg-gradient 
                          dark:from-darkGradientStart 
                          dark:to-darkGradientEnd 
                          dark:text-darkText p-2 "
-                     >
-         
-                       <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                         Thanks for helping us improve DFinance! <br></br> You’ve
-                         uncovered a bug, and our dev team is on it.
-                       </p>
-         
-                       <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                         Your account is temporarily locked while we investigate and fix
-                         the issue. <br />
-                       </p>
-                       <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                         We appreciate your contribution and have logged your ID—testers
-                         like you are key to making DFinance better! <br />
-                         If you have any questions, feel free to reach out.
-                       </p>
-                     </div>
-                   </div>
-                 </div>
-               )}
+                >
+
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Thanks for helping us improve DFinance! <br></br> You’ve
+                    uncovered a bug, and our dev team is on it.
+                  </p>
+
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Your account is temporarily locked while we investigate and fix
+                    the issue. <br />
+                  </p>
+                  <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    We appreciate your contribution and have logged your ID—testers
+                    like you are key to making DFinance better! <br />
+                    If you have any questions, feel free to reach out.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           {isDebtInfo ? (
             <div>
               <div className="mb-6">
@@ -1573,7 +1588,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                             ? assetRates[selectedDebtAsset] / 1e8
                             : null;
 
-                            const adjustedAmountToRepay =
+                          const adjustedAmountToRepay =
                             calculatedData?.maxDebtToLiq > 0
                               ? calculatedData.maxDebtToLiq / 1e8
                               : amountToRepay;
@@ -1758,7 +1773,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                     </div>
                   </div>
                 )}
-              
+
               <div className="flex justify-between mt-4">
                 <button
                   title="Back"

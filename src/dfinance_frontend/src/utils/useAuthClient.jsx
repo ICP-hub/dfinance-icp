@@ -119,6 +119,7 @@ export const useAuthClient = (options = defaultOptions) => {
     localStorage.setItem("sessionStart", Date.now());
   };
 
+  // Function to get login options based on the provider
   const getLoginOptions = (provider) => {
     switch (provider) {
       case "ii":
@@ -156,13 +157,14 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  // function to check sessionstart
   const checkSession = () => {
     const sessionStart = localStorage.getItem("sessionStart");
     if (sessionStart) {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
-        
+
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }
@@ -213,15 +215,17 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   }, []);
 
+  // Function to create a ledger actor
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => {});
+      agent.fetchRootKey().catch((err) => { });
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-  
+
+  // Function to reload login
   const reloadLogin = async () => {
     try {
       if (
@@ -230,7 +234,7 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   // Registers user
@@ -262,6 +266,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  // Check if user is registered
   useEffect(() => {
     const runCheckUser = async () => {
       try {
@@ -273,7 +278,7 @@ export const useAuthClient = (options = defaultOptions) => {
         console.error("Error in checkUser:", error);
       }
     };
-  
+
     if (isAuthenticated) {
       const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
       if (!hasCheckedUser) {
@@ -281,8 +286,8 @@ export const useAuthClient = (options = defaultOptions) => {
       }
     }
   }, [backendActor, isAuthenticated]);
-  
-  
+
+
 
   // Fetches reserve data for a specific asset
   const fetchReserveData = async (asset) => {

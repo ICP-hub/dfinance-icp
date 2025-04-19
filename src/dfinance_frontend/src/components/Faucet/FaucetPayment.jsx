@@ -14,10 +14,12 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  // Close the modal when the user presses the Escape key
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); 
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -36,6 +38,7 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
     };
   }, []);
 
+  // Close the modal when the user clicks outside of it
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -50,6 +53,7 @@ const FaucetPayment = ({ asset, amount, onClose }) => {
     };
   }, []);
 
+  // Close the modal when the user clicks the close button
   const handleClose = () => {
     setIsVisible(false);
     onClose();

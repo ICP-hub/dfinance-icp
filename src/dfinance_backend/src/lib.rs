@@ -1,4 +1,5 @@
 use crate::constants::errors::Error;
+use api::functions::Challenge;
 use api::functions::get_balance;
 use api::functions::reset_faucet_usage;
 use api::resource_manager::LOCKS;

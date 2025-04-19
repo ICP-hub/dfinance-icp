@@ -1,5 +1,9 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use crate::api::resource_manager::{acquire_lock, release_lock};
 use crate::api::state_handler::{mutate_state, read_state};
+use crate::constants::constant_variables::constants::{BLOCK_DURATION, REQUEST_LIMIT, TIME_WINDOW};
 use crate::constants::errors::Error;
 use crate::declarations::storable::Candid;
 use crate::declarations::transfer::*;
@@ -7,17 +11,35 @@ use crate::get_cached_exchange_rate;
 use crate::guards::to_check_controller;
 use crate::protocol::libraries::logic::update::{user_data, user_reserve};
 use crate::protocol::libraries::math::math_utils::{current_timestamp, ScalingMath};
-use crate::protocol::libraries::types::datatypes::{RequestTracker,BlockedUserDetails, UserReserveData};
+use crate::protocol::libraries::types::datatypes::{
+    BlockedUserDetails, RequestTracker, UserReserveData,
+};
 use candid::{decode_one, encode_args, CandidType, Deserialize};
 use candid::{Nat, Principal};
+use ic_captcha::CaptchaBuilder;
 use ic_cdk::api;
 use ic_cdk::{call, query};
 use ic_cdk_macros::update;
 use serde::Serialize;
-use crate::constants::constant_variables::constants::{
-    REQUEST_LIMIT, TIME_WINDOW, BLOCK_DURATION,
-};
+thread_local! {
+    // static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
+    static CAPTCHA_STATE: RefCell<HashMap<Principal, CaptchaEntry>> = RefCell::new(HashMap::new());
 
+}
+const CAPTCHA_LIFETIME: u64 = 1 * 60 * 1_000_000_000; // 1 minutes in nanoseconds
+const CAPTCHA_THRESHOLD: usize = 5;
+const CAPTCHA_HARDNESS: u8 = 32;
+
+#[derive(Debug, Clone)]
+pub struct CaptchaEntry {
+    pub data: String,
+    pub created_at: u64,
+}
+
+#[derive(candid::CandidType, serde::Serialize)]
+pub struct Challenge {
+    pub base64_img: String,
+}
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 struct Account {
     owner: Principal,
@@ -242,8 +264,7 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
  */
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
-    ic_cdk::println!("Starting faucet with params: {:?} {:?}", asset, amount);
-
+    
     if asset.trim().is_empty() {
         ic_cdk::println!("Asset cannot be an empty string");
         return Err(Error::EmptyAsset);
@@ -328,15 +349,11 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
                 return Err(e);
             }
         };
-        ic_cdk::println!("asset price = {}",asset_price);
+        ic_cdk::println!("asset price = {}", asset_price);
 
-        let usd_amount = ScalingMath::scaled_mul(amount.clone(),asset_price.clone());
+        let usd_amount = ScalingMath::scaled_mul(amount.clone(), asset_price.clone());
 
-        ic_cdk::println!(
-            "usd amount of the facut = {}, {}",
-            usd_amount,
-            asset_price
-        );
+        ic_cdk::println!("usd amount of the facut = {}, {}", usd_amount, asset_price);
 
         let user_reserve = user_reserve(&mut user_data, &asset);
         ic_cdk::println!("user reserve = {:?}", user_reserve);
@@ -504,7 +521,6 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
     }
     Ok(Nat::from(api::canister_balance128()))
 }
-
 
 /*
  * @title Request Rate Limiter
@@ -708,7 +724,6 @@ pub fn retrieve_request_info(caller_id: Principal) -> Result<Vec<(String, u32)>,
  */
 #[query]
 pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>, Error> {
-
     if caller_id == Principal::anonymous() {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
@@ -749,7 +764,6 @@ pub fn retrieve_blocked_users(caller_id: Principal) -> Result<Vec<(String, u64)>
  */
 #[update]
 pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> Result<(), Error> {
-
     if caller_id == Principal::anonymous() {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
@@ -806,7 +820,7 @@ pub fn remove_blocked_function(caller_id: Principal, function_name: String) -> R
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
 #[query]
-pub fn is_function_blocked(function_name: String) ->Result<bool,Error> {
+pub fn is_function_blocked(function_name: String) -> Result<bool, Error> {
     let caller_id = ic_cdk::caller();
     let current_time_stamp = current_timestamp();
 
@@ -872,4 +886,125 @@ pub fn inspect_message() {
 
     ic_cdk::println!("[InspectMessage] Execution allowed for {}", method_name);
     ic_cdk::api::call::accept_message(); // Explicitly allow the request
+}
+#[update]
+async fn create_captcha() -> Result<Challenge, Error> {
+    // request_limiter()?;
+    // guard_prevent_anonymous()?;
+    let caller_id = ic_cdk::api::caller();
+    let now = ic_cdk::api::time();
+
+    // Apply CAPTCHA filtering before creating a new CAPTCHA
+    CAPTCHA_STATE.with(|state| {
+        let mut state = state.borrow_mut();
+        ic_cdk::println!("length of the state = {:?}", state.len());
+
+        // Apply filtering based on time and user
+        captcha_filter(&mut state, true, false); // Filter expired CAPTCHAs and retain others
+
+        // Check if the caller already has a valid CAPTCHA
+        if let Some(existing) = state.get(&caller_id) {
+            if existing.created_at + CAPTCHA_LIFETIME > now {
+                return Err(Error::CaptchaAlreadyExists);
+            }
+        }
+
+        // Check threshold limit
+        if state.len() >= CAPTCHA_THRESHOLD {
+            return Err(Error::CaptchaLimitReached);
+        }
+
+        Ok(())
+    })?;
+
+    // Generate CAPTCHA
+    let (seed,) = ic_cdk::api::management_canister::main::raw_rand()
+        .await
+        .unwrap();
+    let captcha = CaptchaBuilder::new().generate(&seed, None);
+    let solution_text = captcha.text();
+    ic_cdk::println!("solution test = {}", solution_text);
+
+    // Store CAPTCHA solution with user principal
+    CAPTCHA_STATE.with(|state| {
+        state.borrow_mut().insert(
+            caller_id,
+            CaptchaEntry {
+                data: solution_text.clone(),
+                created_at: now,
+            },
+        );
+    });
+
+    // Optionally: log the solution for debugging (disable in prod)
+    ic_cdk::println!("CAPTCHA solution for {:?}: {}", caller_id, solution_text);
+
+    Ok(Challenge {
+        base64_img: captcha.to_base64(CAPTCHA_HARDNESS),
+    })
+}
+
+#[update]
+fn verify_captcha(user_input: String) -> Result<(), Error> {
+    let caller_id = ic_cdk::api::caller();
+    let now = ic_cdk::api::time();
+
+    // Debugging print to check caller ID and time
+    ic_cdk::println!("Caller ID: {:?}", caller_id);
+    ic_cdk::println!("Current time: {}", now);
+
+    // Log the user input to console
+    ic_cdk::println!("User input: {:?}", user_input); // This will log the input from the user
+
+    CAPTCHA_STATE.with(|state| {
+        let mut state = state.borrow_mut();
+
+        // Apply CAPTCHA filtering before verifying
+        ic_cdk::println!("Filtering CAPTCHA states...");
+        captcha_filter(&mut state, true, false); // Filter expired CAPTCHAs and retain others
+
+        // Check if CAPTCHA exists for this user
+        if let Some(entry) = state.get(&caller_id) {
+            ic_cdk::println!("Captcha found for caller: {:?}", caller_id);
+
+            // Check if CAPTCHA has expired
+            if entry.created_at + CAPTCHA_LIFETIME <= now {
+                ic_cdk::println!("Captcha expired for caller: {:?}", caller_id);
+                state.remove(&caller_id); // Clean up expired CAPTCHA
+                return Err(Error::CaptchaExpired);
+            }
+
+            // Compare solution text
+            if entry.data == user_input {
+                ic_cdk::println!("Captcha verified successfully for caller: {:?}", caller_id);
+                state.remove(&caller_id); // Clean up on success
+                return Ok(());
+            } else {
+                ic_cdk::println!("Invalid captcha input for caller: {:?}", caller_id);
+                return Err(Error::InvalidCaptcha);
+            }
+        }
+
+        ic_cdk::println!("Captcha not found for caller: {:?}", caller_id);
+        Err(Error::CaptchaNotFound)
+    })
+}
+
+// Function to filter out expired and user-specific CAPTCHA
+pub fn captcha_filter(
+    state: &mut std::collections::HashMap<Principal, CaptchaEntry>,
+    time_based: bool,
+    usr_based: bool,
+) {
+    let now = ic_cdk::api::time();
+
+    if time_based {
+        // Retain only those CAPTCHAs that are still valid (not expired)
+        state.retain(|_, entry| entry.created_at + CAPTCHA_LIFETIME > now);
+    }
+
+    if usr_based {
+        // Remove CAPTCHAs created by the current user (caller)
+        state.retain(|principal, _| *principal != ic_cdk::api::caller());
+    }
 }

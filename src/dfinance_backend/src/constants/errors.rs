@@ -1,7 +1,6 @@
 use candid::CandidType;
 
-#[derive(Debug ,CandidType)]
-#[derive(Clone)]
+#[derive(Debug, CandidType, Clone)]
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,
@@ -42,7 +41,7 @@ pub enum Error {
     NoPriceCache,
     EmptyAsset,
     LowWalletBalance,
-    AmountExceedsLimit, 
+    AmountExceedsLimit,
     ExceedsRemainingLimit,
     AmountTooMuch,
     InvalidAssetLength,
@@ -73,13 +72,24 @@ pub enum Error {
     TOOMANYREQUESTS,
     BLOCKEDFORONEHOUR,
     USERCANNOTBELIQUIDATED,
-    FeeExceedsAmount ,
-    LiquidationProtocolfeeIsHigher
+    FeeExceedsAmount,
+    LiquidationProtocolfeeIsHigher,
+    RateLimitExceeded,
+    CaptchaLimitReached,
+    CaptchaAlreadyExists,
+    CaptchaExpired,
+    CaptchaMismatch,
+    CaptchaNotFound,
+    InvalidCaptcha
 }
 
 impl Error {
     pub fn message(&self) -> &str {
         match self {
+            Error::CaptchaLimitReached => "CAPTCHA limit reached. Try again later",
+            Error::CaptchaAlreadyExists => "You already have a valid CAPTCHA",
+            Error::CaptchaExpired => "CAPTCHA has expired. Please request a new one",
+            Error::CaptchaMismatch => "CAPTCHA did not match. Please try again",
             Error::MaxAmountPlatform => "Platform is unable to pay right now! Try Again Later",
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
@@ -145,13 +155,23 @@ impl Error {
             Error::TokenAlreadyExist => "Token already exist - try again with different token",
             Error::FailedToReleaseLock => "Failed to release lock",
             Error::LockOperationInProgess => "Another operation is already in progress for user",
-            Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
-            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
-            Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible",
+            Error::ErrorDTokenBalanceLessThan => {
+                "d token balance is less than the adjusted balance"
+            }
+            Error::AmountSubtractionError => {
+                "The current locked amount is less than the amount you are trying to subtract"
+            }
+            Error::USERCANNOTBELIQUIDATED => {
+                "user health factor is greater than the one so liquidation is not possible"
+            }
             Error::TOOMANYREQUESTS => "You are temporarily blocked",
             Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
             Error::LiquidationProtocolfeeIsHigher => "Liquidation protocol fee is higher",
+            Error::RateLimitExceeded => "Too many requests. Please wait and try again.",
+            Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
+            Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",            
+
         }
     }
 }

@@ -4,17 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
-  /* ===================================================================================
-   *                                  FUNCTION
-   * =================================================================================== */
 
-  const handleDisableTestnetClick = () => {
-    handleTestnetModeToggle(false);
-    localStorage.removeItem("isTestnetMode");
-    onClose();
-    toast.dismiss();
-    toast.info("Testnet mode disabled successfully!");
-  };
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -61,7 +51,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
               provide feedback.
             </p>
           </div>
-          {}
+          { }
         </div>
         <ToastContainer />
       </div>

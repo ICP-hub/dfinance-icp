@@ -12,14 +12,16 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
   const { isAuthenticated } = useAuth();
   const { loading } = useAssetData();
   const isLoading = usePageLoading();
+  const [isLoadingPage, setIsLoadingPage] = useState(
+    isAuthenticated ? loading : isLoading
+  );
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const [isLoadingPage, setIsLoadingPage] = useState(
-    isAuthenticated ? loading : isLoading
-  );
+
 
   useEffect(() => {
     const timeout = setTimeout(() => {

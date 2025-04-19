@@ -75,8 +75,7 @@ const DashboardCards = () => {
   const radioRefs = {};
   const [filteredData, setFilteredData] = useState(null);
   const [userAccountData, setUserAccountData] = useState({});
-  const [userData, setUserData] = useState({});
-  const [assetBalance, setAssetBalances] = useState([]);
+
   const [healthFactors, setHealthFactors] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const { isSwitchingWallet } = useSelector((state) => state.utility);
@@ -135,6 +134,7 @@ const DashboardCards = () => {
 
   const { filteredItems, interestAccure, assets } = useAssetData(searchQuery);
 
+  // Fetches the total number of users from the backend.
   const getTotalUser = async () => {
     if (!backendActor) {
       console.error("Error: Backend actor is not initialized.");
@@ -149,6 +149,7 @@ const DashboardCards = () => {
     }
   };
 
+  //Pool assets 
   const poolAssets = [
     { name: "ckBTC", imageUrl: ckBTC },
     { name: "ckETH", imageUrl: ckETH },
@@ -156,6 +157,7 @@ const DashboardCards = () => {
     { name: "ckUSDT", imageUrl: ckUSDT },
     { name: "ICP", imageUrl: icp },
   ];
+
 
   const [cardData, setCardData] = useState([
     {
@@ -181,6 +183,7 @@ const DashboardCards = () => {
     });
   };
 
+  // Function to fetch all users from the backend
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
       const result = await backendActor.get_all_user_list(totalPages, pageSize);
@@ -303,7 +306,7 @@ const DashboardCards = () => {
    Threshold : ${formatNumber(threshold + 2000000000000)}
     `;
       try {
-       
+
         await sendEmailNotification("Cycle Warning", htmlMessage);
         lastWarningEmailTimestamp = Date.now();
       } catch (error) {
@@ -407,6 +410,8 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
+
+  // Function to format numbers with commas
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -424,6 +429,8 @@ const DashboardCards = () => {
     return num.toFixed(2);
   };
 
+
+  // Function to manage color and theme 
   const theme = useSelector((state) => state.theme.theme);
   const borderColor = theme === "dark" ? "#0F172A" : "#D379AB66";
   const validValues = [
@@ -436,6 +443,8 @@ const DashboardCards = () => {
 
   const normalize = (value) => (value > 0 ? (value / total) * 100 : 0);
 
+
+  // Create the pie chart data
   const pieData = {
     labels: ["<1", ">1", "Infinity"],
     datasets: [
@@ -484,10 +493,14 @@ const DashboardCards = () => {
     },
   };
 
+
+  // Function to handle token updates and notifications
   const onTokenUpdate = (newBalance) => {
     handleTokenNotification(newBalance);
   };
 
+
+  // Function to handle token balances and send notifications
   const handleTokenBalances = async () => {
     for (const asset of poolAssets) {
       const assetBalance = assetBalances[asset.name];
@@ -623,6 +636,7 @@ const DashboardCards = () => {
       }
     });
   };
+
   useEffect(() => {
     if (isFreezePopupVisible) {
       document.body.style.overflow = "hidden"; // Disable scrolling
@@ -634,6 +648,7 @@ const DashboardCards = () => {
       document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
+
   useEffect(() => {
     const fetchCycles = async () => {
       try {
@@ -677,7 +692,7 @@ const DashboardCards = () => {
       }
     })();
   }, []);
-  
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -863,11 +878,10 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
-                  }`}
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -959,7 +973,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -975,7 +989,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

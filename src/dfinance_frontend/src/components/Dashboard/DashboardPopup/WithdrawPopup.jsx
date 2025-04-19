@@ -94,15 +94,7 @@ const WithdrawPopup = ({
    *                                  HELPERS
    * =================================================================================== */
 
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
-
-  const numericBalance = parseFloat(balance);
-  const transferFee = fees[normalizedAsset] || fees.default;
-  const transferfee = Number(transferFee);
-
-
+  // This function truncates a number to seven decimal places and returns it as a string.
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 7);
     const truncated = Math.floor(value * multiplier) / multiplier;
@@ -115,7 +107,7 @@ const WithdrawPopup = ({
   const paymentModalRef = useRef(null);
 
 
-
+  //   This function handles the change in the withdrawal amount input field. It validates the input, formats it, and updates the state.
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
@@ -381,11 +373,13 @@ const WithdrawPopup = ({
     }
   };
 
+  // This function handles the closing of the payment popup. It resets the payment state and closes the modal.
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
+  // This function calculates the health factor based on the total collateral, total debt, liquidation threshold, and reserve liquidation threshold.
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -426,6 +420,7 @@ const WithdrawPopup = ({
     return result;
   };
 
+  // This function calculates the Loan-to-Value (LTV) ratio based on the total collateral value and total debt value.
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
       return "0.00000000";
@@ -439,6 +434,7 @@ const WithdrawPopup = ({
     return truncatedLTV.toFixed(8);
   };
 
+  // This function handles the click event for the "Max" button. It sets the maximum amount to withdraw based on the asset supply and updates the USD value accordingly.
   const handleMaxClick = () => {
     const truncateToSevenDecimals = (value) => {
       const multiplier = Math.pow(10, 8);
@@ -460,7 +456,7 @@ const WithdrawPopup = ({
     updateAmountAndUsdValue(assetSupply);
   };
 
-
+  // This function handles the click event for the close button. It resets the payment state and closes the modal.
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -727,14 +723,14 @@ const WithdrawPopup = ({
                   <p>
                     <span
                       className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : truncatedValue <= 1
+                          ? "text-red-500"
+                          : truncatedValue <= 1.5
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -742,14 +738,14 @@ const WithdrawPopup = ({
                     <span className="text-gray-500 mx-1">→</span>
                     <span
                       className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : currentHealthFactor <= 1
+                          ? "text-red-500"
+                          : currentHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {currentHealthFactor}
@@ -794,8 +790,8 @@ const WithdrawPopup = ({
                   : handleWithdraw
               }
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
             >
               Withdraw

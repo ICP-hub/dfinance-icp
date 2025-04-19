@@ -74,7 +74,7 @@ const Borrow = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [amount, setAmount] = useState(null);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] =useState(false);
+  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -112,7 +112,7 @@ const Borrow = ({
    * =================================================================================== */
   const paymentModalRef = useRef(null);
 
-  
+
 
   // Fetches asset data and updates supply/borrow values.
   const fetchAssetData = () => {
@@ -216,12 +216,10 @@ const Borrow = ({
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${
-            scaledAmount / 100000000
+          `Borrow,${asset},${scaledAmount / 100000000
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${
-            scaledAmount / 100000000
+          `Borrow,${asset},${scaledAmount / 100000000
           }, ${principalObj.toString()}`
         );
 
@@ -380,6 +378,7 @@ const Borrow = ({
     }
   };
 
+  // Handles the close action of the payment popup.
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -388,6 +387,7 @@ const Borrow = ({
   const numericBalance = parseFloat(balance);
   const supplyBalance = numericBalance;
 
+  // Calculates the health factor based on collateral and debt values.
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -455,8 +455,8 @@ const Borrow = ({
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
-  
 
+  //   Updates the amount and USD value based on the input.
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
     if (inputAmount === "") {
@@ -468,14 +468,13 @@ const Borrow = ({
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(7));
-    } else if (inputAmount.length > 8) {
-      console.error("Amount exceeds the maximum allowed digits.");
     } else {
       console.error("Amount must be a positive number.");
       setUsdValue(0);
     }
   };
 
+  // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
     const maxAmount = parseFloat(borrowableValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
@@ -533,7 +532,7 @@ const Borrow = ({
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); 
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -570,9 +569,6 @@ const Borrow = ({
       } finally {
       }
     };
-    // setTimeout(() => {
-    //   setLoading(false);
-    // }, 400);
     updateValues();
   }, [
     asset,
@@ -716,9 +712,9 @@ const Borrow = ({
                   <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -732,11 +728,10 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                      }`}
                     onClick={() => {
                       if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();
@@ -744,7 +739,7 @@ const Borrow = ({
                     }}
                   >
                     {loading &&
-                    (borrowableValue == null || borrowableValue === "0") ? (
+                      (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
                     ) : parseFloat(borrowableValue) === 0 ? (
                       "0 Max"
@@ -774,17 +769,16 @@ const Borrow = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
+                        className={`${truncatedValue > 3
                             ? "text-green-500"
                             : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
                           truncatedValue > 100 ? "Infinity" : truncatedValue
@@ -792,17 +786,16 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
+                        className={`${currentHealthFactor > 3
                             ? "text-green-500"
                             : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -874,11 +867,10 @@ const Borrow = ({
               <button
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -923,8 +915,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -936,8 +928,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

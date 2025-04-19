@@ -66,26 +66,31 @@ const FaucetDetails = () => {
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-  
+
   const [hasLoaded, setHasLoaded] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
+  // Redux selector for faucetUpdate, triggers refresh when data is updated
   const refreshTrigger = useSelector(
     (state) => state.faucetUpdate.refreshTrigger
   );
+
+  // Redux selector for wallet switching status
   const { isSwitchingWallet } = useSelector((state) => state.utility);
+
 
   /* ===================================================================================
    *                                  FUNCTION
    * =================================================================================== */
 
-  
 
+  // This function is called when the user clicks on the "Faucet" button for a specific asset.
   const handleFaucetClick = (asset) => {
     let assetImage;
+    // Switch case to determine which asset image to display
     switch (asset) {
       case "ckBTC":
         assetImage = ckBTC;
@@ -105,16 +110,19 @@ const FaucetDetails = () => {
       default:
         assetImage = null;
     }
-    setSelectedAsset({ asset, assetImage });
-    setShowPopup(true);
+    setSelectedAsset({ asset, assetImage }); // Set the selected asset and image for popup
+    setShowPopup(true); // Display the faucet popup
   };
 
+  // This function is for closing the popup
   const closePopup = () => {
-    setShowPopup(false);
+    setShowPopup(false); // Hide the faucet popup
   };
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  // This helps for pagination: calculating the items for the current page
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE; // Get the index of the last item
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE; // Get the index of the first item
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem); // Get the items for the current page
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -197,8 +205,6 @@ const FaucetDetails = () => {
           fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-        const allAssets = await backendActor.getAllAssets();
-        setAssets(allAssets);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -256,9 +262,8 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
-                          index === 1 ? "text-center" : ""
-                        }`}
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${index === 1 ? "text-center" : ""
+                          }`}
                       >
                         {item.header}
                       </td>
@@ -270,13 +275,13 @@ const FaucetDetails = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => (
+
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
-                        index !== currentItems.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
-                      }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${index !== currentItems.length - 1
+                        ? "gradient-line-bottom"
+                        : ""
+                        }`}
                     >
                       <td className="py-[1.5rem]">
                         <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
@@ -372,13 +377,13 @@ const FaucetDetails = () => {
                                   displayedBalance =
                                     balance >= 1
                                       ? balance.toLocaleString(undefined, {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })
                                       : balance.toLocaleString(undefined, {
-                                          minimumFractionDigits: 7,
-                                          maximumFractionDigits: 7,
-                                        });
+                                        minimumFractionDigits: 7,
+                                        maximumFractionDigits: 7,
+                                      });
                                 }
                                 return (
                                   <>
@@ -387,8 +392,8 @@ const FaucetDetails = () => {
                                       {calculatedUsdValue === 0
                                         ? "$0.00"
                                         : calculatedUsdValue < 0.01
-                                        ? "<0.01$"
-                                        : `$${calculatedUsdValue.toLocaleString(
+                                          ? "<0.01$"
+                                          : `$${calculatedUsdValue.toLocaleString(
                                             undefined,
                                             {
                                               minimumFractionDigits: 2,
@@ -443,7 +448,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            {}
+            { }
           </>
         )}
 

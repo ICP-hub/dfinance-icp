@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Button from "../Common/Button";
 import { useNavigate } from "react-router-dom";
-import {  useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import DebtStatus from "./DebtStatus";
@@ -53,28 +53,30 @@ const Liquidate = () => {
     }
   }, [isWalletCreated, isAuthenticated]);
 
+  // Function to handle the click event for the "Get Debt Status" button
   const handleLiquidateClick = () => {
     if (!isAuthenticated) {
       setShowWarning(true);
     } else {
-      navigate("/Liquidate/debt-users-list"); 
+      navigate("/Liquidate/debt-users-list");
     }
-    
+
   };
 
+  // Function to handle the back button click in the DebtStatus component
   const handleBackClick = () => {
     setShowDebtStatus(false);
   };
 
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; 
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; 
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; 
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 
@@ -114,7 +116,7 @@ const Liquidate = () => {
               Check Users in Debt
             </h1>
 
-            {}
+            { }
             {showWarning && (
               <div className="text-red-500 font-bold mb-4">
                 Please connect your wallet to check the debt status.

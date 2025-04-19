@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_CARD_DATA } from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
-import { X } from "lucide-react";
+import { Infinity, X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
@@ -83,6 +83,8 @@ const DashboardNav = () => {
     return `${num.toFixed(2)}%`;
   };
 
+
+  //update wallet detail tab
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -104,8 +106,8 @@ const DashboardNav = () => {
           ? netApy === "<0.01%"
             ? "<0.01%"
             : !isNaN(parseFloat(netApy))
-            ? `${formatNetApy(netApy)}`
-            : "-"
+              ? `${formatNetApy(netApy)}`
+              : "-"
           : "-",
     },
     {
@@ -115,6 +117,7 @@ const DashboardNav = () => {
     },
   ]);
 
+  //update wallet details tab
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 },
     { id: 1, title: "Total Available", count: 0 },
@@ -141,6 +144,7 @@ const DashboardNav = () => {
   /* ===================================================================================
    *                    Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
+  // Check if the current route is "/dashboard" or "/market"
   const shouldRenderRiskDetailsButton =
     !pathname.includes("/market") &&
     !pathname.includes("/governance") &&
@@ -169,6 +173,8 @@ const DashboardNav = () => {
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+
+  // Function to fetch asset data
   const fetchAssetData = async () => {
     const balances = [];
 
@@ -222,6 +228,7 @@ const DashboardNav = () => {
     setAssetBalances(balances);
   };
 
+  //calculate asset supply and borrow value
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -238,8 +245,8 @@ const DashboardNav = () => {
     return `noBorrow`;
   };
 
-  
 
+  //get conversion rate for assets
   const getConversionRate = (asset) => {
     switch (asset) {
       case "ckBTC":
@@ -261,6 +268,7 @@ const DashboardNav = () => {
     setIsTooltipVisible((prev) => !prev);
   };
 
+  // Function to calculate net supply APY
   const calculateNetSupplyApy = useCallback(
     (reserves, reserveData) => {
       let totalSuppliedInUSD = 0;
@@ -293,7 +301,7 @@ const DashboardNav = () => {
             ?.dtokenBalance || 0;
         const assetSupply =
           (Number(assetBalance) * Number(getAssetSupplyValue(assetKey) || 0)) /
-            Number(currentLiquidity) || 0;
+          Number(currentLiquidity) || 0;
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
@@ -306,7 +314,7 @@ const DashboardNav = () => {
         const assetBorrowed =
           (Number(assetBorrowBalance) *
             Number(getAssetBorrowValue(assetKey) || 0)) /
-            Number(DebtIndex) || 0;
+          Number(DebtIndex) || 0;
 
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD += assetBorrowedInUSD;
@@ -358,7 +366,7 @@ const DashboardNav = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
- 
+
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -368,7 +376,7 @@ const DashboardNav = () => {
       prevTab.map((item) => (item.id === 1 ? { ...item, count: netApy } : item))
     );
   }, [netApy]);
-  
+
   useEffect(() => {
     if (
       typeof totalUsdValueSupply === "number" &&
@@ -383,17 +391,17 @@ const DashboardNav = () => {
         prevTab.map((item) =>
           item.id === 0
             ? {
-                ...item,
-                count:
-                  newValue === "-" ? (
-                    newValue
-                  ) : (
-                    <>
-                      <span style={{ fontWeight: "lighter" }}>$</span>
-                      {formatNumber(newValue, 2)}
-                    </>
-                  ),
-              }
+              ...item,
+              count:
+                newValue === "-" ? (
+                  newValue
+                ) : (
+                  <>
+                    <span style={{ fontWeight: "lighter" }}>$</span>
+                    {formatNumber(newValue, 2)}
+                  </>
+                ),
+            }
             : item
         )
       );
@@ -404,13 +412,13 @@ const DashboardNav = () => {
     dashboardRefreshTrigger,
     principal,
   ]);
-  
+
   useEffect(() => {
     if (userAccountData?.Ok?.[4] !== undefined && principal) {
       const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
       const calculatedHealthFactor =
         Number(healthFactorBackend) > 100
-          ? "♾️"
+          ? <Infinity className=" dark:text-darkText text-[#2A1F9D]" />
           : parseFloat(Number(truncatedValue));
 
       setHealthFactor((prev) => {
@@ -427,9 +435,9 @@ const DashboardNav = () => {
         prevTab.map((item) =>
           item.id === 2
             ? {
-                ...item,
-                count: calculatedHealthFactor,
-              }
+              ...item,
+              count: calculatedHealthFactor,
+            }
             : item
         )
       );
@@ -505,7 +513,7 @@ const DashboardNav = () => {
               ?.dtokenBalance || 0;
           const supply =
             (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-              Number(currentLiquidity) || 0;
+            Number(currentLiquidity) || 0;
 
           if (supply) {
             setAssetSupply(supply);
@@ -519,9 +527,9 @@ const DashboardNav = () => {
               ?.debtTokenBalance || 0;
           const borrow =
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-              Number(DebtIndex) || 0;
+            Number(DebtIndex) || 0;
 
-         
+
 
           if (borrow > 0) {
             totalBorrow += borrow;
@@ -688,9 +696,8 @@ const DashboardNav = () => {
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${
-            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-          }`}
+          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+            }`}
         >
           {(isMarketRoute || (isDashboardRoute && isAuthenticated)) && (
             <button onClick={toggleMenu} className="rounded-md button1 z-10">
@@ -704,9 +711,8 @@ const DashboardNav = () => {
         <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -771,23 +777,22 @@ const DashboardNav = () => {
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                             <span
-                              className={`font-bold text-[20px] ${
-                                data.title === "Health Factor"
+                              className={`font-bold text-[20px] ${data.title === "Health Factor"
                                   ? data.count === 0
                                     ? "text-red-500"
                                     : data.count > 3
-                                    ? "text-green-500"
-                                    : data.count <= 1
-                                    ? "text-red-500"
-                                    : data.count <= 1.5
-                                    ? "text-orange-600"
-                                    : data.count <= 2
-                                    ? "text-orange-400"
-                                    : "text-orange-300"
+                                      ? "text-green-500"
+                                      : data.count <= 1
+                                        ? "text-red-500"
+                                        : data.count <= 1.5
+                                          ? "text-orange-600"
+                                          : data.count <= 2
+                                            ? "text-orange-400"
+                                            : "text-orange-300"
                                   : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue"
-                                  : "text-[#2A1F9D] dark:text-darkBlue"
-                              }`}
+                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                    : "text-[#2A1F9D] dark:text-darkBlue"
+                                }`}
                             >
                               {data.count !== null ? data.count : "\u00A0"}
                             </span>
@@ -865,21 +870,20 @@ const DashboardNav = () => {
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                     <span
-                      className={`font-bold text-[20px] ${
-                        data.title === "Health Factor"
+                      className={`font-bold text-[20px] ${data.title === "Health Factor"
                           ? data.count === 0 && assetSupply === 0
                             ? "text-[#2A1F9D] dark:text-darkBlue"
                             : data.count > 3
-                            ? "text-green-500"
-                            : data.count <= 1
-                            ? "text-red-500"
-                            : data.count <= 1.5
-                            ? "text-orange-600"
-                            : data.count <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
+                              ? "text-green-500"
+                              : data.count <= 1
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                  ? "text-orange-600"
+                                  : data.count <= 2
+                                    ? "text-orange-400"
+                                    : "text-orange-300"
                           : "text-[#2A1F9D] dark:text-darkBlue"
-                      }`}
+                        }`}
                     >
                       {data.count !== null ? data.count : "\u00A0"}
                     </span>

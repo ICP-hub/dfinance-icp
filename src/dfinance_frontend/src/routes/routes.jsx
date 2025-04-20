@@ -12,9 +12,9 @@ const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
 const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
 const DashboardCards = lazy(() => import("../pages/info/info"));
 const HealthFactorList = lazy(() =>
-  import("../components/Dashboard/HealthFactorLIst")
+  import("../components/Dashboard/HealthFactorList")
 );
-const DebtStatus = lazy(() => import("../components/Liquidate/LiquidationList"));
+const LiquidationList = lazy(() => import("../components/Liquidate/LiquidationList"));
 
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;
@@ -160,7 +160,7 @@ export default [
               </div>
             }
           >
-            <DebtStatus />
+            <LiquidationList />
           </Suspense>
         ),
       },

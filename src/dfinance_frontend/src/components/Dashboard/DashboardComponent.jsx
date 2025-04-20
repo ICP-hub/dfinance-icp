@@ -36,13 +36,13 @@ import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 /**
- * MySupply Component
+ * DashboardComponent Component
  *
  * This component displays the user's supply, borrow, withdraw and repay information for various assets.
- * @returns {JSX.Element} - Returns the MySupply component displaying assets, balances, and user actions.
+ * @returns {JSX.Element} - Returns the DashboardComponent component displaying assets, balances, and user actions.
  */
 
-const MySupply = () => {
+const DashboardComponent = () => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -3258,4 +3258,4 @@ const MySupply = () => {
   );
 };
 
-export default MySupply;
+export default DashboardComponent;

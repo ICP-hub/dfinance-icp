@@ -16,7 +16,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import MiniLoader from "../Common/MiniLoader";
-import WalletModal from "../../components/Dashboard/WalletModal";
+import WalletModal from "../Dashboard/WalletModal";
 import Lottie from "../Common/Lottie";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";

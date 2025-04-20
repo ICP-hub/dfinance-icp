@@ -28,7 +28,7 @@ const ITEMS_PER_PAGE = 8;
  *
  * @returns {JSX.Element} - Returns the component.
  */
-const WalletDetails = () => {
+const Market = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -304,6 +304,7 @@ const WalletDetails = () => {
         </div>
         <svg
           onClick={showSearchBar}
+          data-testid="search-icon"
           className="cursor-pointer button"
           width="25"
           height="25"
@@ -334,8 +335,8 @@ const WalletDetails = () => {
               y2="14"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2E28A5" />
-              <stop offset="1" stop-color="#FAAA98" />
+              <stop stopColor="#2E28A5" />
+              <stop offset="1" stopColor="#FAAA98" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_293_865"
@@ -345,7 +346,7 @@ const WalletDetails = () => {
               y2="13.75"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#C88A9B" />
+              <stop stopColor="#C88A9B" />
             </linearGradient>
           </defs>
         </svg>
@@ -559,6 +560,7 @@ const WalletDetails = () => {
                             <ChevronRight
                               size={22}
                               color={chevronColor}
+                              data-testid="chevron-right"
                               className="cursor-pointer"
                             />
                           </div>
@@ -705,7 +707,7 @@ const WalletDetails = () => {
                     className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                     onClick={closePopup}
                   >
-                    <X size={30} />
+                    <X size={30} data-testid="x-icon"/>
                   </button>
                   <div>
                     <div className="flex gap-2 justify-start items-center ">
@@ -866,4 +868,4 @@ const WalletDetails = () => {
   );
 };
 
-export default WalletDetails;
+export default Market;

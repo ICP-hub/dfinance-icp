@@ -175,3 +175,5 @@ pub struct CachedPrice {
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
+
+//TODO ask vicky: i told him to seperate the structs with are like for storage (reserve data, user data) and all in one file and other in annother file so why they are not been seperated out, it still contain mixed datastructures

@@ -647,3 +647,5 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
     }
     Ok(Nat::from(api::canister_balance128()))
 }
+
+//ask vicky isme saare query function toh nhi h kuch internal functions bhi pade hai

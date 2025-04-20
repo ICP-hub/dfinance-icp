@@ -1,4 +1,10 @@
 type AssetData = record { balance : nat; name : text };
+type AssetInfo = record {
+  asset_name : text;
+  image : blob;
+  principal_id : principal;
+  symbol : text;
+};
 type CachedPrice = record { price : nat };
 type Error = variant {
   NormalizedSupply;
@@ -196,7 +202,7 @@ service : (principal) -> {
   execute_supply : (ExecuteSupplyParams) -> (Result_4);
   execute_withdraw : (ExecuteWithdrawParams) -> (Result_4);
   faucet : (text, nat) -> (Result_4);
-  get_all_assets : () -> (vec text) query;
+  get_all_assets : () -> (vec AssetInfo) query;
   get_all_user_list : (nat64, nat64) -> (Result_5);
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_6) query;
@@ -218,7 +224,8 @@ service : (principal) -> {
     ) -> (Result_10) query;
   get_user_data : (principal) -> (Result_3) query;
   get_user_guide : () -> (Result_11) query;
-  initialize : (text, ReserveData) -> (Result_1);
+  image_function : (text) -> ();
+  initialize : (text, ReserveData, blob) -> (Result_1);
   is_function_blocked : (text) -> (Result_11) query;
   is_user_blocked : () -> (Result_11) query;
   queary_reserve_price : () -> (vec PriceCache) query;

@@ -1,4 +1,5 @@
 use crate::constants::errors::Error;
+use crate::declarations::structs::AssetInfo;
 use super::inter_canister::get_balance;
 use candid::Nat;
 use candid::Principal;
@@ -73,16 +74,15 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
  * @functionality Retrieve a List of All Available Assets in the Reserve
  */
 #[query]
-pub fn get_all_assets() -> Vec<String> {
+pub fn get_all_assets() -> Vec<AssetInfo> {
     read_state(|state| {
-        let mut asset_names = Vec::new();
-        let iter = state.reserve_list.iter();
-        for (key, _) in iter {
-            asset_names.push(key.clone());
-        }
-        asset_names
+        state.asset_records
+            .iter()
+            .map(|(_, asset)| asset.0.clone()) // .0 to unwrap Candid<AssetInfo>
+            .collect()
     })
 }
+
 
 
 /*

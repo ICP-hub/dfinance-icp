@@ -18,7 +18,7 @@ use crate::stable_storage::state_handler::mutate_state;
 use crate::declarations::structs::ReserveData;
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
-    ExecuteWithdrawParams,
+    ExecuteWithdrawParams, AssetInfo
 };
 use crate::stable_storage::storable::Candid;
 use ic_cdk_timers::{set_timer_interval, set_timer};

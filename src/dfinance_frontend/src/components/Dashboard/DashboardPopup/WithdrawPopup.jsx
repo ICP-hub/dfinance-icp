@@ -45,7 +45,7 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_withdraw");
+  const { isBlocked } = useFunctionBlockStatus();
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();

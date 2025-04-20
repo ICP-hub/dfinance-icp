@@ -24,7 +24,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("faucet");
+  const { isBlocked } = useFunctionBlockStatus();
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor } = useAuth();

@@ -103,15 +103,12 @@ type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
   liquidation_protocol_fee : nat;
-  active : bool;
   supply_cap : nat;
   borrow_cap : nat;
   reserve_factor : nat;
   borrowing_enabled : bool;
-  frozen : bool;
   liquidation_bonus : nat;
   liquidation_threshold : nat;
-  paused : bool;
 };
 type ReserveData = record {
   id : nat16;
@@ -168,7 +165,6 @@ type UserData = record {
   user_id : opt text;
 };
 type UserReserveData = record {
-  asset_borrow : nat;
   last_update_timestamp : nat64;
   d_token_balance : nat;
   is_collateral : bool;
@@ -176,7 +172,6 @@ type UserReserveData = record {
   faucet_limit : nat;
   variable_borrow_index : nat;
   reserve : text;
-  asset_supply : nat;
   faucet_usage : nat;
   debt_token_blance : nat;
   is_using_as_collateral_or_borrow : bool;

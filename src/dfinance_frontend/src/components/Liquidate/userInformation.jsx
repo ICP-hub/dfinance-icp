@@ -24,7 +24,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_liquidation");
+  const { isBlocked } = useFunctionBlockStatus();
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,

@@ -86,6 +86,7 @@ const Borrow = ({
   const [borrowableValue, setBorrowableValue] = useState("0.00000000");
   const [borrowableAssetValue, setBorrowableAssetValue] = useState("0.0000");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
   /* ===================================================================================
@@ -240,7 +241,7 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-
+        setSuccessMessage("Borrow successful!");
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
@@ -874,7 +875,7 @@ const Borrow = ({
               <button
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
+                className={`borrow-button  bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
                   isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""

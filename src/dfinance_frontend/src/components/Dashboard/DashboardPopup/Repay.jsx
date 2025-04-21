@@ -705,7 +705,7 @@ const Repay = ({
   return (
     <>
       {isVisible && (
-        <div className="repay-popup" ref={modalRef}>
+        <div className="repay-popup"role="dialog" ref={modalRef}>
           <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
           <div className="flex flex-col gap-2 mt-5 text-sm">

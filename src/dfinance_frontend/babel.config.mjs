@@ -1,7 +1,10 @@
 export default {
-    presets: [
-      '@babel/preset-env',    // To transform modern JS
-      '@babel/preset-react',  // To handle JSX
-    ],
+  presets: [
+    "@babel/preset-env",
+    "@babel/preset-react",
+  ],
+  plugins: [
+    "@babel/plugin-transform-runtime",
+  ],
   };
   

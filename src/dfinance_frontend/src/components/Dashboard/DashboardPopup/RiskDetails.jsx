@@ -189,6 +189,7 @@ const RiskPopup = ({ onClose, userAccountData }) => {
       >
         <div
           className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer button1"
+          role="button" 
           onClick={onClose}
         >
           <X className="text-black dark:text-darkText w-6 h-6" />

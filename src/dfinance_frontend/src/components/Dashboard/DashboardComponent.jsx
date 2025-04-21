@@ -3076,7 +3076,7 @@ const DashboardComponent = () => {
                                     handleAssetAction("borrow", item[0]);
                                   }}
                                   disabled={isTableDisabled || isButtonDisabled}
-                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-7 py-2 shadow-md shadow-[#00000040] font-semibold text-[14px] w-1/2 font-semibold"
+                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-7 py-2 shadow-md shadow-[#00000040] font-semibold text-[14px] w-1/2 "
                                 />
                                 <Button
                                   title={"Details"}

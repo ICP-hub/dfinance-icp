@@ -6,8 +6,10 @@ export default {
   },
   moduleNameMapper: {
     '\\.css$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.mjs'
+    '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.mjs',
+    '\\.mp3$': '<rootDir>/__mocks__/fileMock.mjs',
   },
+  maxWorkers: 2,
   transformIgnorePatterns: [
     "/node_modules/(?!some-esm-package|other-esm-package)"  // Allow specific node_modules packages
   ],

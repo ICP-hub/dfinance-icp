@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use crate::declarations::datatypes::{
     BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData, UserData,
 };
-use crate::declarations::structs::{AssetInfo, InitArgs};
+use crate::declarations::structs::InitArgs;
 use crate::declarations::structs::ReserveData;
 use crate::stable_storage::storable::Candid;
 
@@ -26,4 +26,3 @@ pub type BlockedUsersFunction =
     StableBTreeMap<Principal, Candid<BTreeMap<String, BlockedUserDetails>>, VMem>;
 pub type SessionDetails = StableBTreeMap<Principal, Candid<SessionStorageData>, VMem>;
 pub type UserGuideData = StableBTreeMap<Principal, bool, VMem>;
-pub type AssetRecords = StableBTreeMap<String, Candid<AssetInfo>, VMem>;

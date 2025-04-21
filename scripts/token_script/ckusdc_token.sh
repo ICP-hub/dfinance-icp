@@ -61,16 +61,5 @@ RESERVE_DATA="(
   }
 )"
 
-
-# Get script directory (token_script/)
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Correct path (note: 'assests-icon' not 'assets-icon')
-IMAGE_PATH="$SCRIPT_DIR/../../src/dfinance_frontend/public/assests-icon/ckusdc.svg"
-
-# Base64 encode it
-BASE64_ENCODED=$(base64 -w 0 "$IMAGE_PATH")
-
-# Prepare the final dfx call
-dfx canister call "$CANISTER_NAME" initialize \
-"(\"$TOKEN_NAME\", $RESERVE_DATA, blob \"$BASE64_ENCODED\")"
+# Call the initialize function on the canister with the serialized ReserveData
+dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" 

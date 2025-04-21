@@ -6,7 +6,6 @@ use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
-use crate::declarations::structs::AssetInfo;
 use crate::declarations::structs::ReserveCache;
 use crate::declarations::structs::ReserveData;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
@@ -660,7 +659,6 @@ pub fn accrue_to_treasury(
 pub async fn initialize(
     token_name: String,
     mut reserve_data: ReserveData,
-    asset_image: Vec<u8>,
 ) -> Result<(), Error> {
     // admin only access check
     guard_admin_only()?;
@@ -677,13 +675,6 @@ pub async fn initialize(
 
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
-
-    let asset_info = AssetInfo {
-        asset_name: token_name.clone(),
-        principal_id: token_canister_id,
-        symbol: token_name.clone(),
-        image: asset_image,
-    };
 
     reserve_data.asset_name = Some(token_name.clone());
     reserve_data.d_token_canister =
@@ -703,10 +694,6 @@ pub async fn initialize(
         state
             .reserve_list
             .insert(token_name.clone(), token_canister_id);
-
-        state
-            .asset_records
-            .insert(token_name.clone(), Candid(asset_info));
 
         let reserve_data_e = &mut state.asset_index;
 

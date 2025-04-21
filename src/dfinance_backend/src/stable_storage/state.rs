@@ -4,9 +4,6 @@ use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 use crate::stable_storage::memory::{ASSET_INDEX_MEMORY_ID, BLOCKED_USERS_FUNCTION, CANISTER_MEMORY_ID, FUNCTION_REQUESTS, META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST, USER_GUIDE_DATA, USER_PROFILE_MEMORY_ID};
 use crate::stable_storage::types::{AssetIndex, BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList, ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile};
 
-use super::memory::ASSET_RECORDS_MEMORY_ID;
-use super::types::AssetRecords;
-
 
 pub struct State {
     pub asset_index: AssetIndex,
@@ -20,7 +17,6 @@ pub struct State {
     pub restrict_users:BlockedUsersFunction,
     pub session_details:SessionDetails,
     pub user_guide_data:UserGuideData,
-    pub asset_records:AssetRecords,
 }
 /* 
  * @title State 
@@ -43,7 +39,6 @@ impl State {
             restrict_users: BlockedUsersFunction::init(memory_manager.get(BLOCKED_USERS_FUNCTION)),
             session_details: SessionDetails::init(memory_manager.get(SESSION_DETAILS)),
             user_guide_data: UserGuideData::init(memory_manager.get(USER_GUIDE_DATA)),
-            asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID))
         }
     }
 }

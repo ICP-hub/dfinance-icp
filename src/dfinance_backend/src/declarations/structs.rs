@@ -120,15 +120,6 @@ pub struct ReserveConfiguration {
     pub paused: bool,
     pub reserve_factor: Nat,
 }
-
-#[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
-pub struct AssetInfo {
-    pub asset_name: String,
-    pub principal_id: Principal,
-    pub symbol: String,
-    pub image: Vec<u8>, // Storing image as binary blob
-}
-
 /* 
  * @title Execute Supply Parameters
  * @notice Defines parameters required to execute a supply transaction.

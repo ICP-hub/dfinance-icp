@@ -76,6 +76,18 @@ pub enum Error {
     FeeExceedsAmount ,
     LiquidationProtocolfeeIsHigher,
     RateLimitExceeded,
+    AdminAlreadyExists,
+    DeveloperAlreadyExists,
+    SupportAlreadyExists,
+    AuditorAlreadyExists,
+    DeveloperNotFound,
+    SupportNotFound,
+    AuditorNotFound,
+    NotADeveloper,
+    NotASupport,
+    NotAnAuditor,
+    AdminNotFound
+
 }
 
 impl Error {
@@ -154,6 +166,17 @@ impl Error {
             Error::FeeExceedsAmount => "Fee exceeds the amount",
             Error::LiquidationProtocolfeeIsHigher => "Liquidation protocol fee is higher",
             Error::RateLimitExceeded => "Too many requests. Please wait and try again.",
+            Error::AdminAlreadyExists => "Admin already exists!",
+            Error::DeveloperAlreadyExists => "Developer already exists!",
+            Error::SupportAlreadyExists => "Support user already exists!",
+            Error::AuditorAlreadyExists => "Auditor already exists!",
+            Error::DeveloperNotFound => "Developer not found!",
+            Error::AdminNotFound => "Admin not found!",
+            Error::SupportNotFound => "Support user not found!",
+            Error::AuditorNotFound => "Auditor not found!",
+            Error::NotADeveloper => "Caller is not a developer!",
+            Error::NotASupport => "Caller is not a support user!",
+            Error::NotAnAuditor => "Caller is not an auditor!",
         }
     }
 }

@@ -1,4 +1,6 @@
 use crate::constants::errors::Error;
+use crate::declarations::structs::AssetInfo;
+use crate::guards::access_control::guard_admin_only;
 use super::inter_canister::get_balance;
 use candid::Nat;
 use candid::Principal;
@@ -14,11 +16,11 @@ use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::libraries::user::calculate_user_asset_data;
 use crate::protocol::utils::math_utils;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData, UserAccountData};
-use crate::stable_storage::state_handler::{mutate_state, read_state};
+use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData};
+use crate::stable_storage::state_handler::read_state;
 use crate::declarations::structs::ReserveData;
 use crate::stable_storage::storable::Candid;
-use crate::guards::access_control::to_check_controller;
+// use crate::guards::access_control::to_check_controller;
 use ic_cdk::api;
 
 /*
@@ -73,15 +75,13 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
  * @functionality Retrieve a List of All Available Assets in the Reserve
  */
 #[query]
-pub fn get_all_assets() -> Vec<String> {
+pub fn get_all_assets() -> Vec<AssetInfo> {
     read_state(|state| {
-        let mut asset_names = Vec::new();
-        let iter = state.reserve_list.iter();
-        for (key, _) in iter {
-            asset_names.push(key.clone());
-        }
-        asset_names
-    })
+        state.asset_records
+             .iter()
+             .map(|(_, asset)| asset.0.clone()) // .0 to unwrap Candid<AssetInfo>
+             .collect()
+     })
 }
 
 
@@ -420,6 +420,7 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  * @returns The total asset supply as `Nat`.
  * @functionality This function fetches the total supply of a given asset and handles calculations related to user reserves and balance.
  */
+//TODO check if this func needed
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -531,6 +532,7 @@ pub async fn get_asset_supply(
  * @returns The total debt as `Nat`.
  * @functionality This function calculates and returns the total debt for a given asset, taking into account the user’s borrow status and balance.
  */
+
 pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -639,10 +641,13 @@ pub async fn get_asset_debt(
  */
 #[query]
 pub async fn cycle_checker() -> Result<Nat, Error> {
-    let caller = ic_cdk::caller();
-    if caller == Principal::anonymous() || !to_check_controller() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    guard_admin_only()?;
+    // let caller = ic_cdk::caller();
+    // if caller == Principal::anonymous() || !to_check_controller() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
     Ok(Nat::from(api::canister_balance128()))
 }
+
+//ask vicky isme saare query function toh nhi h kuch internal functions bhi pade hai

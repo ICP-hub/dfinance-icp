@@ -1,4 +1,10 @@
 type AssetData = record { balance : nat; name : text };
+type AssetInfo = record {
+  asset_name : text;
+  image : text;
+  principal_id : principal;
+  symbol : text;
+};
 type CachedPrice = record { price : nat };
 type Error = variant {
   NormalizedSupply;
@@ -114,15 +120,12 @@ type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
   liquidation_protocol_fee : nat;
-  active : bool;
   supply_cap : nat;
   borrow_cap : nat;
   reserve_factor : nat;
   borrowing_enabled : bool;
-  frozen : bool;
   liquidation_bonus : nat;
   liquidation_threshold : nat;
-  paused : bool;
 };
 type ReserveData = record {
   id : nat16;
@@ -140,25 +143,24 @@ type ReserveData = record {
   accure_to_platform : nat;
   debt_index : nat;
 };
-type Result = variant { Ok; Err : Error };
-type Result_1 = variant { Ok : text; Err : Error };
-type Result_10 = variant { Ok : ReserveData; Err : Error };
-type Result_11 = variant {
+type Result = variant { Ok : text; Err : Error };
+type Result_1 = variant { Ok; Err : Error };
+type Result_10 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
-type Result_12 = variant { Ok : bool; Err : Error };
-type Result_2 = variant { Ok : text; Err : text };
-type Result_3 = variant { Ok : nat64; Err : Error };
-type Result_4 = variant { Ok : UserData; Err : Error };
-type Result_5 = variant { Ok : nat; Err : Error };
-type Result_6 = variant {
+type Result_11 = variant { Ok : bool; Err : Error };
+type Result_2 = variant { Ok : nat64; Err : Error };
+type Result_3 = variant { Ok : UserData; Err : Error };
+type Result_4 = variant { Ok : nat; Err : Error };
+type Result_5 = variant {
   Ok : vec record { principal; UserAccountData; UserData };
   Err : Error;
 };
-type Result_7 = variant { Ok : principal; Err : Error };
-type Result_8 = variant { Ok : SessionStorageData; Err : Error };
-type Result_9 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_6 = variant { Ok : principal; Err : Error };
+type Result_7 = variant { Ok : SessionStorageData; Err : Error };
+type Result_8 = variant { Ok : record { nat; nat64 }; Err : Error };
+type Result_9 = variant { Ok : ReserveData; Err : Error };
 type SessionStorageData = record {
   session_start : nat;
   connected_wallet : text;
@@ -179,7 +181,6 @@ type UserData = record {
   user_id : opt text;
 };
 type UserReserveData = record {
-  asset_borrow : nat;
   last_update_timestamp : nat64;
   d_token_balance : nat;
   is_collateral : bool;
@@ -187,73 +188,67 @@ type UserReserveData = record {
   faucet_limit : nat;
   variable_borrow_index : nat;
   reserve : text;
-  asset_supply : nat;
   faucet_usage : nat;
   debt_token_blance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
 service : (principal) -> {
-  add_admin : (principal) -> (Result);
-  add_auditor : (text, principal) -> (Result_1);
-  add_controllers : (principal, principal) -> (Result_2);
-  add_developer : (text, principal) -> (Result_1);
-  add_support : (text, principal) -> (Result_1);
-  add_tester : (text, principal) -> (Result);
-  admin_restart_reset_task : () -> (Result);
-  call_tracker : (principal) -> (Result_3) query;
+  add_admin : (text, principal) -> (Result);
+  add_admin_test : (text, principal) -> (Result);
+  add_controllers : (principal, principal) -> (Result);
+  add_developer : (text, principal) -> (Result);
+  add_tester : (text, principal) -> (Result_1);
+  admin_restart_reset_task : () -> (Result_1);
+  call_tracker : (principal) -> (Result_2) query;
   check_is_tester : () -> (bool) query;
-  create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_4);
-  cycle_checker : () -> (Result_5) query;
-  execute_borrow : (ExecuteBorrowParams) -> (Result_5);
-  execute_liquidation : (ExecuteLiquidationParams) -> (Result_5);
-  execute_repay : (ExecuteRepayParams) -> (Result_5);
-  execute_supply : (ExecuteSupplyParams) -> (Result_5);
-  execute_withdraw : (ExecuteWithdrawParams) -> (Result_5);
-  faucet : (text, nat) -> (Result_5);
-  get_all_assets : () -> (vec text) query;
-  get_all_user_list : (nat64, nat64) -> (Result_6);
+  create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_3);
+  cycle_checker : () -> (Result_4) query;
+  execute_borrow : (ExecuteBorrowParams) -> (Result_4);
+  execute_liquidation : (ExecuteLiquidationParams) -> (Result_4);
+  execute_repay : (ExecuteRepayParams) -> (Result_4);
+  execute_supply : (ExecuteSupplyParams) -> (Result_4);
+  execute_withdraw : (ExecuteWithdrawParams) -> (Result_4);
+  faucet : (text, nat) -> (Result_4);
+  get_all_assets : () -> (vec AssetInfo) query;
+  get_all_user_list : (nat64, nat64) -> (Result_5);
   get_all_users : () -> (vec record { principal; UserData }) query;
-  get_asset_principal : (text) -> (Result_7) query;
-  get_cached_exchange_rate : (text) -> (Result_5) query;
-  get_caller_session : () -> (Result_8) query;
-  get_canister_id_by_name : (text) -> (Result_7) query;
-  get_exchange_rates : (text, opt text, nat) -> (Result_9);
+  get_asset_principal : (text) -> (Result_6) query;
+  get_cached_exchange_rate : (text) -> (Result_4) query;
+  get_caller_session : () -> (Result_7) query;
+  get_canister_id_by_name : (text) -> (Result_6) query;
+  get_exchange_rates : (text, opt text, nat) -> (Result_8);
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     );
-  get_reserve_data : (text) -> (Result_10) query;
-  get_total_supply : (principal) -> (Result_5) query;
+  get_reserve_data : (text) -> (Result_9) query;
+  get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
-  get_transfer_fee : (text) -> (Result_5) query;
+  get_transfer_fee : (text) -> (Result_4) query;
   get_user_account_data : (
       opt principal,
       opt vec AssetData,
       opt vec AssetData,
-    ) -> (Result_11) query;
-  get_user_data : (principal) -> (Result_4) query;
-  get_user_guide : () -> (Result_12) query;
-  initialize : (text, ReserveData) -> (Result);
-  is_auditor : () -> (Result_12) query;
-  is_developer : () -> (Result_12) query;
-  is_function_blocked : (text) -> (Result_12) query;
-  is_support : () -> (Result_12) query;
-  is_user_blocked : () -> (Result_12) query;
+    ) -> (Result_10) query;
+  get_user_data : (principal) -> (Result_3) query;
+  get_user_guide : () -> (Result_11) query;
+  guard_admin_only : () -> (Result_1) query;
+  guard_developer_only : () -> (Result_1) query;
+  initialize : (text, ReserveData, text) -> (Result_1);
+  is_function_blocked : (text) -> (Result_11) query;
+  is_user_blocked : () -> (Result_11) query;
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result_1);
+  register_user : () -> (Result);
   remove_admin : (principal) -> (Result);
-  remove_auditor : (principal) -> (Result_1);
-  remove_developer : (principal) -> (Result_1);
-  remove_support : (principal) -> (Result_1);
-  request_limiter : () -> (Result);
-  reset_reserve_value : (text, text, nat) -> (Result);
-  set_canister_id : (text, principal) -> (Result);
-  store_session_data : (text, nat) -> (Result);
-  store_user_guide : () -> (Result);
-  to_check_controller : () -> (bool) query;
-  toggle_collateral : (text, nat, nat) -> (Result);
-  update_reserve_price_test : () -> (Result);
-  update_reserves_price : () -> (Result);
-  user_normalized_debt : (ReserveData) -> (Result_5) query;
-  user_normalized_supply : (ReserveData) -> (Result_5) query;
+  remove_developer : (principal) -> (Result);
+  request_limiter : () -> (Result_1);
+  reset_reserve_value : (text, text, nat) -> (Result_1);
+  set_canister_id : (text, principal) -> (Result_1);
+  store_session_data : (text, nat) -> (Result_1);
+  store_user_guide : () -> (Result_1);
+  toggle_collateral : (text, nat, nat) -> (Result_1);
+  update_reserve_price_test : () -> (Result_1);
+  update_reserves_price : () -> (Result_1);
+  user_normalized_debt : (ReserveData) -> (Result_4) query;
+  user_normalized_supply : (ReserveData) -> (Result_4) query;
 }

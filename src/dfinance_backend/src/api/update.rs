@@ -1,11 +1,12 @@
 use crate::constants::errors::Error;
+use crate::guards::access_control::guard_admin_only;
 use candid::Nat;
 use candid::Principal;
 use crate::constants::validators::validate_zero_value;
-use crate::guards::access_control::{guard_prevent_anonymous,to_check_controller};
+// use crate::guards::access_control::{guard_prevent_anonymous,to_check_controller};
 use ic_cdk::update;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
-use crate::declarations::datatypes::{ SessionStorageData, PriceCache};
+use crate::stable_storage::state_handler::mutate_state;
+use crate::declarations::datatypes::SessionStorageData;
 use crate::stable_storage::storable::Candid;
 
 
@@ -19,14 +20,15 @@ use crate::stable_storage::storable::Candid;
  */
 #[update]
 pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
-    let user_principal = ic_cdk::caller();
+    guard_admin_only()?;
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous()
-        || !to_check_controller()
-    {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    // if user_principal == Principal::anonymous()
+    //     || !to_check_controller()
+    // {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
 
     mutate_state(|state| {
         state.canister_list.insert(canister_name, canister_id);

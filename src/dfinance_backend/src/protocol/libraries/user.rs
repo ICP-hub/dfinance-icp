@@ -8,9 +8,10 @@ use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::declarations::structs::AssetData;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::guards::access_control::guard_admin_only;
 use crate::stable_storage::storable::Candid;
 use crate::guards::access_control::{
-    to_check_controller, {check_is_tester, guard_prevent_anonymous},
+ {check_is_tester, guard_prevent_anonymous},
 };
 use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::utils::math_utils::get_max_value;
@@ -24,7 +25,7 @@ use crate::api::query::{get_all_users, reserve_ledger_canister_id, user_normaliz
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};
-
+//TODO once the certified query or update usage decided, remove extra functions from this file
 /*
  * @title User Account Data Calculation
  * @functionality User account metric calculation logic.
@@ -859,6 +860,7 @@ pub async fn get_liquidation_users_concurrent(
  *
  * @returns A string message indicating success or failure.
  */
+//TODO remove register user, create user state when he supply something, infact inside update_user_supply(change these functions name as well in update.rs) , in faucet use seperate memory for storing user_faucet_detail(only for testnet)
 #[update]
 fn register_user() -> Result<String, Error> {
     // prevent anonymous registrations
@@ -1140,12 +1142,13 @@ pub async fn get_all_user_list(
     total_pages: usize,
     page_size: usize,
 ) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
-    let user_principal = ic_cdk::caller();
+    guard_admin_only()?;
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous() || !to_check_controller() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::ErrorNotController);
-    }
+    // if user_principal == Principal::anonymous() || !to_check_controller() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::ErrorNotController);
+    // }
 
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
     let total_users = vector_user_data.len();

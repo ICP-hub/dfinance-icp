@@ -1,47 +1,50 @@
 use crate::constants::errors::Error;
-use protocol::logic::faucet::reset_faucet_usage;
+use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserAccountData, UserData};
 use candid::Nat;
 use candid::Principal;
 use declarations::structs::AssetData;
 use declarations::structs::InitArgs;
+use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
-use crate::declarations::datatypes::{PriceCache,SessionStorageData,UserData, UserAccountData};
+use protocol::logic::faucet::reset_faucet_usage;
 mod api;
 mod constants;
 pub mod declarations;
 mod dynamic_canister;
 mod guards;
-mod stable_storage;
 mod protocol;
-use crate::stable_storage::state_handler::mutate_state;
+mod stable_storage;
 use crate::declarations::structs::ReserveData;
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
-    ExecuteWithdrawParams,
+    ExecuteWithdrawParams,AssetInfo
 };
+// use crate::guards::access_control::to_check_controller;
+// use crate::guards::access_control::ADMINS;
+use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
-use ic_cdk_timers::{set_timer_interval, set_timer};
-use std::time::Duration;
-use constants::constant_variables::constants::SECOND_PER_DAY;
 use api::query::get_all_users;
-use crate::guards::access_control::to_check_controller;
-
-
+use constants::constant_variables::constants::{MAIN_ADMIN, SECOND_PER_DAY};
+use ic_cdk_timers::{set_timer, set_timer_interval};
+use std::time::Duration;
 
 /*
  * @title Initialization Function
  * @dev Initializes the contract by setting the controller and scheduling a task.
  * @param args The principal ID of the controller.
  * @returns None
- * 
+ *
  * @functionality Initialize Contract and Schedule Task
  */
+// TODO: check why this function is async function.
 #[init]
 pub async fn init(args: Principal) {
-    ic_cdk::println!("init function = {:?}", args);
+    ic_cdk::println!("init function = {:?}", args.to_text());
 
     mutate_state(|state| {
+        state.admin_data.insert(args, MAIN_ADMIN.to_string());
+
         state.meta_data.insert(
             0,
             Candid(InitArgs {
@@ -62,13 +65,11 @@ pub async fn init(args: Principal) {
  */
 pub async fn schedule_midnight_task() {
     let initial_delay = time_until_midnight();
-    
-    
+
     set_timer(initial_delay, || {
         ic_cdk::spawn(async {
-
             run_midnight_reset().await;
-    
+
             set_timer_interval(SECOND_PER_DAY, || {
                 ic_cdk::spawn(async {
                     run_midnight_reset().await;
@@ -82,8 +83,8 @@ pub async fn schedule_midnight_task() {
  * @title Run Midnight Reset
  * @dev Resets faucet usage for all registered users at midnight (UTC).
  * @returns None
- * 
- * This function retrieves all user data and calls `reset_faucet_usage` for each user. 
+ *
+ * This function retrieves all user data and calls `reset_faucet_usage` for each user.
  * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.
  * @functionality Resets faucet usage for all users at midnight.
  */
@@ -126,10 +127,10 @@ fn time_until_midnight() -> Duration {
  */
 #[update]
 pub async fn admin_restart_reset_task() -> Result<(), Error> {
-   
-    if !to_check_controller() {
-        return Err(Error::ErrorNotController);
-    }
+    guard_admin_only()?;
+    // if !to_check_controller() {
+    //     return Err(Error::ErrorNotController);
+    // }
     schedule_midnight_task().await;
     return Ok(());
 }

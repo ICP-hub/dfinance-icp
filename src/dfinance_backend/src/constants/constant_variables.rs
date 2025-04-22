@@ -22,4 +22,5 @@ pub mod constants {
     pub const FAUCET_LIMIT : u128 = 50_000_000_000u128;
     pub const SECOND_PER_DAY: Duration = Duration::from_secs(86_400);
     pub const MAX_ASSET_LENGTH: usize = 7;
+    pub const MAIN_ADMIN: &str = "main_admin";
 }

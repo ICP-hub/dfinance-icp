@@ -9,7 +9,8 @@ use crate::constants::interest_variables::constants::{
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
 use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
-use crate::guards::access_control::to_check_controller;
+use crate::guards::access_control::guard_admin_only;
+// use crate::guards::access_control::to_check_controller;
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
@@ -293,11 +294,12 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
  * @functionality Adds a new user as a controller of the specified canister.
  */
 #[update]
-pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, String> {
-    if !to_check_controller() {
-        ic_cdk::println!("principals are not allowed");
-        return Ok("principals are not allowed".to_string());
-    }
+pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, Error> {
+    guard_admin_only()?;
+    // if !to_check_controller() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Ok("principals are not allowed".to_string());
+    // }
 
     let update_canister_args = ic_cdk::api::management_canister::main::UpdateSettingsArgument {
         canister_id,

@@ -11,4 +11,6 @@ pub const FUNCTION_REQUESTS: MemoryId = MemoryId::new(9);
 pub const BLOCKED_USERS_FUNCTION: MemoryId = MemoryId::new(10);
 pub const SESSION_DETAILS: MemoryId = MemoryId::new(11);
 pub const USER_GUIDE_DATA: MemoryId = MemoryId::new(12);
-
+pub const ADMIN_DATA: MemoryId = MemoryId::new(13);
+pub const DEVELOPER_DATA: MemoryId = MemoryId::new(14);
+pub const ASSET_RECORDS_MEMORY_ID: MemoryId = MemoryId::new(15);

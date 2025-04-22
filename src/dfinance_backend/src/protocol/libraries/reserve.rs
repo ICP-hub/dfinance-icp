@@ -4,12 +4,15 @@ use crate::api::inter_canister::get_total_supply;
 use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
+use crate::constants::validators::validate_asset_name;
+use crate::constants::validators::validate_zero_value;
 use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
+use crate::declarations::structs::AssetInfo;
 use crate::declarations::structs::ReserveCache;
 use crate::declarations::structs::ReserveData;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
-use crate::guards::access_control::{guard_admin_only, to_check_controller};
+use crate::guards::access_control::guard_admin_only;
 use crate::protocol::libraries::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -638,7 +641,6 @@ pub fn accrue_to_treasury(
     Ok(())
 }
 
-
 /*
  * @title Reserve Initialization
  * @notice Provides functionalities for initializing reserves, modifying reserve configurations,
@@ -659,6 +661,7 @@ pub fn accrue_to_treasury(
 pub async fn initialize(
     token_name: String,
     mut reserve_data: ReserveData,
+    asset_image: String,
 ) -> Result<(), Error> {
     // admin only access check
     guard_admin_only()?;
@@ -675,6 +678,12 @@ pub async fn initialize(
 
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
+    let asset_info = AssetInfo {
+        asset_name: token_name.clone(),
+        principal_id: token_canister_id,
+        symbol: token_name.clone(),
+        image: asset_image,
+    };
 
     reserve_data.asset_name = Some(token_name.clone());
     reserve_data.d_token_canister =
@@ -694,6 +703,10 @@ pub async fn initialize(
         state
             .reserve_list
             .insert(token_name.clone(), token_canister_id);
+
+        state
+            .asset_records
+            .insert(token_name.clone(), Candid(asset_info));
 
         let reserve_data_e = &mut state.asset_index;
 
@@ -725,12 +738,17 @@ pub async fn reset_reserve_value(
     variable_name: String,
     reset_value: Nat,
 ) -> Result<(), Error> {
-    let user_principal = ic_cdk::caller();
+    guard_admin_only()?;
+    validate_asset_name(&asset_name.clone())?;
+    validate_asset_name(&variable_name.clone())?;
+    //TODO: make a different function for validating the reset value because it can be zero.
+    // validate_zero_value(&reset_value)?;
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous() || !to_check_controller() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    // if user_principal == Principal::anonymous() || !to_check_controller() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
 
     let mut reserve_data = mutate_state(|state| {
         let asset_index = &mut state.asset_index;

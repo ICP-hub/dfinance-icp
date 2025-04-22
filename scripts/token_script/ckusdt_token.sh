@@ -61,5 +61,7 @@ RESERVE_DATA="(
   }
 )"
 
-# Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" 
+ASSET_IMAGE_URL="https://storage.googleapis.com/dfinance/ckUSDT.svg"
+
+dfx canister call $CANISTER_NAME initialize \
+  "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")"

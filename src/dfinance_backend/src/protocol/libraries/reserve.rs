@@ -741,8 +741,9 @@ pub async fn reset_reserve_value(
     guard_admin_only()?;
     validate_asset_name(&asset_name.clone())?;
     validate_asset_name(&variable_name.clone())?;
-    //TODO: make a different function for validating the reset value because it can be zero.
-    // validate_zero_value(&reset_value)?;
+    if reset_value < zero_nat_value(){
+        return Err(Error::InvalidValue)
+    }
     // let user_principal = ic_cdk::caller();
 
     // if user_principal == Principal::anonymous() || !to_check_controller() {

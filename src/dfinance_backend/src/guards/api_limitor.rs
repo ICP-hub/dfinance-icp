@@ -150,38 +150,3 @@ pub fn request_limiter() -> Result<(), Error> {
         return Err(Error::RateLimitExceeded);
     }
 }
-
-/*
- * @title Check Function Block Status
- * @notice Checks if the caller is blocked from using a specific function.
- * @dev Compares current timestamp with block expiration time to determine if block is active.
- * @functionality User verification functionality that allows users to check if they're currently blocked from using specific functions
- *
- * # Parameters
- * - `function_name` - The name of the function to check.
- *
- * # Returns
- * - `Ok(bool)` - True if blocked, false otherwise.
- * - `Err(Error)` - If the caller is an anonymous principal.
- */
-//TODO: we are still using this function instead we need is_user_blocked function to call from the frontend
-//TODO: need to remove this function.
-#[query]
-pub fn is_function_blocked(function_name: String) -> Result<bool, Error> {
-    let caller_id = ic_cdk::caller();
-    let current_time_stamp = current_timestamp();
-
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
-
-    Ok(read_state(|state| {
-        state
-            .restrict_users
-            .get(&caller_id)
-            .and_then(|candid| candid.0.get(&function_name).cloned())
-            .map(|details| details.blocked_time > current_time_stamp)
-            .unwrap_or(false)
-    }))
-}

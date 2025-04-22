@@ -228,7 +228,6 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     // guard to prevent anonymous access
     guard_prevent_anonymous()?;
 
-    // for user. TODO: we can put this one as well as in guard file as function.
     if params.on_behalf_of == Some(Principal::anonymous()) {
         return Err(Error::AnonymousPrincipal);
     }

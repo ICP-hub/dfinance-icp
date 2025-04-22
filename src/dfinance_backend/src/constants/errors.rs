@@ -88,7 +88,7 @@ pub enum Error {
     NotAnAuditor,
     AdminNotFound,
     ControllerNotFound,
-
+    InvalidValue,
 }
 
 impl Error {
@@ -179,6 +179,7 @@ impl Error {
             Error::NotASupport => "Caller is not a support user!",
             Error::NotAnAuditor => "Caller is not an auditor!",
             Error::ControllerNotFound => "Controller not found!",
+            Error::InvalidValue => "Enter value is invalid"
         }
     }
 }

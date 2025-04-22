@@ -426,110 +426,110 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  * @returns The total asset supply as `Nat`.
  * @functionality This function fetches the total supply of a given asset and handles calculations related to user reserves and balance.
  */
-//TODO check if this func needed
+//TODO i had commented out this code logic as it was not being called, we will check its usecase later
 //response (jyotirmay): i think we can check this function when we will be dealing with the logic it can happen that we need it somehow.
-pub async fn get_asset_supply(
-    asset_name: String,
-    on_behalf: Option<Principal>,
-) -> Result<Nat, Error> {
-    guard_prevent_anonymous()?;
-    validate_asset_name(&asset_name)?;
+// pub async fn get_asset_supply(
+//     asset_name: String,
+//     on_behalf: Option<Principal>,
+// ) -> Result<Nat, Error> {
+//     guard_prevent_anonymous()?;
+//     validate_asset_name(&asset_name)?;
 
-    if on_behalf == Some(Principal::anonymous()) {
-        return Err(Error::AnonymousPrincipal);
-    }
+//     if on_behalf == Some(Principal::anonymous()) {
+//         return Err(Error::AnonymousPrincipal);
+//     }
 
-    let user_principal = match on_behalf {
-        Some(principal_str) => principal_str,
-        None => ic_cdk::caller(),
-    };
-    ic_cdk::println!("User principal: {:?}", user_principal.to_string());
+//     let user_principal = match on_behalf {
+//         Some(principal_str) => principal_str,
+//         None => ic_cdk::caller(),
+//     };
+//     ic_cdk::println!("User principal: {:?}", user_principal.to_string());
 
-    let user_data_result = user_data(user_principal);
+//     let user_data_result = user_data(user_principal);
 
-    let mut user_data = match user_data_result {
-        Ok(data) => data,
-        Err(e) => {
-            ic_cdk::println!("Error fetching user data: {:?}", e);
-            return Err(e);
-        }
-    };
+//     let mut user_data = match user_data_result {
+//         Ok(data) => data,
+//         Err(e) => {
+//             ic_cdk::println!("Error fetching user data: {:?}", e);
+//             return Err(e);
+//         }
+//     };
 
-    ic_cdk::println!("Fetching user reserve data for asset: {}", asset_name);
-    let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
-        Some(data) => data,
-        None => {
-            ic_cdk::println!(
-                "Error: User reserve data not found for asset while get asset supply returing 0: {}",
-                asset_name
-            );
-            return Ok(zero_nat_value());
-        }
-    };
+//     ic_cdk::println!("Fetching user reserve data for asset: {}", asset_name);
+//     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
+//         Some(data) => data,
+//         None => {
+//             ic_cdk::println!(
+//                 "Error: User reserve data not found for asset while get asset supply returing 0: {}",
+//                 asset_name
+//             );
+//             return Ok(zero_nat_value());
+//         }
+//     };
 
-    let asset_reserve = match get_reserve_data(asset_name.clone()) {
-        Ok(data) => data,
-        Err(e) => {
-            ic_cdk::println!("Error fetching asset reserve data: {:?}", e);
-            return Err(e);
-        }
-    };
+//     let asset_reserve = match get_reserve_data(asset_name.clone()) {
+//         Ok(data) => data,
+//         Err(e) => {
+//             ic_cdk::println!("Error fetching asset reserve data: {:?}", e);
+//             return Err(e);
+//         }
+//     };
 
-    ic_cdk::println!("Asset reserve data fetched successfully");
+//     ic_cdk::println!("Asset reserve data fetched successfully");
 
-    let d_token_canister_principal =
-        match Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()) {
-            Ok(principal) => principal,
-            Err(e) => {
-                ic_cdk::println!("Error parsing DToken canister principal: {}", e);
-                return Err(Error::ErrorParsingPrincipal);
-            }
-        };
+//     let d_token_canister_principal =
+//         match Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()) {
+//             Ok(principal) => principal,
+//             Err(e) => {
+//                 ic_cdk::println!("Error parsing DToken canister principal: {}", e);
+//                 return Err(Error::ErrorParsingPrincipal);
+//             }
+//         };
 
-    let balance_result = get_balance(d_token_canister_principal, user_principal).await;
-    let get_balance_value = match balance_result {
-        Ok(bal) => bal,
-        Err(e) => {
-            return Err(e);
-        }
-    };
+//     let balance_result = get_balance(d_token_canister_principal, user_principal).await;
+//     let get_balance_value = match balance_result {
+//         Ok(bal) => bal,
+//         Err(e) => {
+//             return Err(e);
+//         }
+//     };
 
-    ic_cdk::println!(
-        "Fetched balance from DToken canister: {:?}",
-        get_balance_value
-    );
+//     ic_cdk::println!(
+//         "Fetched balance from DToken canister: {:?}",
+//         get_balance_value
+//     );
 
-    if get_balance_value == zero_nat_value() {
-        ic_cdk::println!("balance 0, returnin....");
-        return Ok(zero_nat_value());
-    }
+//     if get_balance_value == zero_nat_value() {
+//         ic_cdk::println!("balance 0, returnin....");
+//         return Ok(zero_nat_value());
+//     }
 
-    let (_, user_reserve) = user_reserve_data;
+//     let (_, user_reserve) = user_reserve_data;
 
-    let normalized_supply_data = match user_normalized_supply(asset_reserve) {
-        Ok(data) => {
-            ic_cdk::println!("Successfully fetched normalized supply data: {:?}", data);
-            data
-        }
-        Err(e) => {
-            ic_cdk::println!("Error from the normalized supply function: {:?}", e);
-            return Err(e);
-        }
-    };
-    ic_cdk::println!(
-        "result in asset supply {} {} {}",
-        normalized_supply_data,
-        user_reserve.liquidity_index,
-        get_balance_value
-    );
-    let result = (normalized_supply_data
-        .clone()
-        .scaled_div(user_reserve.liquidity_index.clone()))
-    .scaled_mul(get_balance_value.clone());
-    ic_cdk::println!("Final calculated asset supply: {}", result);
+//     let normalized_supply_data = match user_normalized_supply(asset_reserve) {
+//         Ok(data) => {
+//             ic_cdk::println!("Successfully fetched normalized supply data: {:?}", data);
+//             data
+//         }
+//         Err(e) => {
+//             ic_cdk::println!("Error from the normalized supply function: {:?}", e);
+//             return Err(e);
+//         }
+//     };
+//     ic_cdk::println!(
+//         "result in asset supply {} {} {}",
+//         normalized_supply_data,
+//         user_reserve.liquidity_index,
+//         get_balance_value
+//     );
+//     let result = (normalized_supply_data
+//         .clone()
+//         .scaled_div(user_reserve.liquidity_index.clone()))
+//     .scaled_mul(get_balance_value.clone());
+//     ic_cdk::println!("Final calculated asset supply: {}", result);
 
-    Ok(result)
-}
+//     Ok(result)
+// }
 
 /*
  * @title Get Asset Debt

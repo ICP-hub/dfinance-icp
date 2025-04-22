@@ -62,7 +62,7 @@ export default function Navbar({ isHomeNav }) {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_supply");
+  const { isBlocked } = useFunctionBlockStatus();
   const navigate = useNavigate();
   const location = useLocation();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);

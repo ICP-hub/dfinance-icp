@@ -55,7 +55,7 @@ const Borrow = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
-  const { isBlocked } = useFunctionBlockStatus("execute_borrow");
+  const { isBlocked } = useFunctionBlockStatus();
   const borrowButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { filteredItems } = useAssetData();

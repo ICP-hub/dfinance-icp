@@ -42,7 +42,7 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_supply");
+  const { isBlocked } = useFunctionBlockStatus();
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();

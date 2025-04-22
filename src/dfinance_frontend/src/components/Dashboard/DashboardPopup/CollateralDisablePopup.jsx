@@ -23,7 +23,7 @@ const ColateralPopup = ({asset, image, supplyRateAPR, balance, liquidationThresh
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("toggle_collateral");
+  const { isBlocked } = useFunctionBlockStatus();
   const { healthFactorBackend } = useUserData();
   const { backendActor } = useAuth();
   const { conversionRate, error: conversionError } =

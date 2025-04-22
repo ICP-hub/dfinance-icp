@@ -49,7 +49,7 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_supply");
+  const { isBlocked } = useFunctionBlockStatus();
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
   const approveButtonRef = useRef(null);

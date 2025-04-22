@@ -9,7 +9,7 @@ const useFunctionBlockStatus = (functionName) => {
   useEffect(() => {
     const checkBlockStatus = async () => {
       try {
-        const response = await backendActor.is_function_blocked(functionName);
+        const response = await backendActor.is_user_blocked();
         if ("Ok" in response) {
           setIsBlocked(response.Ok);
         } else {

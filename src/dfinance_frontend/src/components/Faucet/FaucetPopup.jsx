@@ -323,9 +323,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     onClose();
   };
 
-  const fees = useSelector((state) => state.fees.fees);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-  const transferFee = fees[normalizedAsset] || fees.default;
 
  
   /* ===================================================================================

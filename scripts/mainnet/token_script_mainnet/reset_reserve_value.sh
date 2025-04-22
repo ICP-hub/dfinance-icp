@@ -1,7 +1,7 @@
 #!/bin/bash
+set -e
 
-# Prompt the user to enter the asset name
-read -p "Enter the asset name: " ASSET_NAME
+read -p "Enter the asset name (e.g., ICP, ckBTC): " ASSET_NAME
 
 # Validate the asset name
 if [ -z "$ASSET_NAME" ]; then
@@ -9,7 +9,17 @@ if [ -z "$ASSET_NAME" ]; then
     exit 1
 fi
 
-# Prompt the user to enter the variable name
+ASSET_NAME_LENGTH=${#ASSET_NAME}
+
+# Compare the length
+if [ "$ASSET_NAME_LENGTH" -gt 7 ]; then
+    printf "Error: Asset name '%s' is too long (%d characters).\n" "$ASSET_NAME" "$ASSET_NAME_LENGTH"
+    printf "Maximum allowed length is %d characters.\n" "$MAX_LENGTH"
+    exit 1
+fi
+
+
+
 read -p "Enter the variable name: " VARIABLE_NAME
 
 # Validate the variable name
@@ -18,13 +28,18 @@ if [ -z "$VARIABLE_NAME" ]; then
     exit 1
 fi
 
-# Prompt the user to enter the reset value
+
 read -p "Enter the reset value: " RESET_VALUE
 
 # Validate the reset value
 if [ -z "$RESET_VALUE" ]; then
     echo "Error: Reset value is required."
     exit 1
+fi
+# Check if the reset value is a valid non-negative number
+if ! [[ "$RESET_VALUE" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+   echo "Error: Reset value '$RESET_VALUE' must be a valid non-negative number."
+   exit 1
 fi
 
 # Set the canister name
@@ -36,7 +51,7 @@ ESCAPED_ASSET_NAME=$(printf '%s' "$ASSET_NAME" | jq -sR .)
 ESCAPED_VARIABLE_NAME=$(printf '%s' "$VARIABLE_NAME" | jq -sR .)
 
 # Calculate the reset value using awk and multiply by scaling factor
-ESCAPED_RESET_VALUE=$(awk -v data=$RESET_VALUE -v scale=${SCALING_FACTOR//_/} 'BEGIN { printf "%.0f", data * scale }')
+ESCAPED_RESET_VALUE=$(awk -v data="$RESET_VALUE" -v scale="${SCALING_FACTOR//_/}" 'BEGIN { printf "%.0f", data * scale }')
 
 # Call the reset_reserve_value function on the canister with the provided parameters
-dfx canister call $CANISTER_NAME reset_reserve_value "($ESCAPED_ASSET_NAME, $ESCAPED_VARIABLE_NAME, $ESCAPED_RESET_VALUE)" --ic
+dfx canister call $CANISTER_NAME reset_reserve_value "("$ESCAPED_ASSET_NAME", "$ESCAPED_VARIABLE_NAME", $ESCAPED_RESET_VALUE)"

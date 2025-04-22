@@ -6,7 +6,7 @@ TOKEN_NAME="ICP"
 CANISTER_NAME="dfinance_backend"
 SCALING_FACTOR=100_000_000
 
-# Escape the TOKEN_NAME for use in the ReserveData
+# Escape the TOKEN_NAME for use in the ReserveData --
 ESCAPED_TOKEN_NAME=$(printf '%s' "$TOKEN_NAME" | jq -sR .)
 
 # Set the ReserveData values
@@ -43,7 +43,7 @@ RESERVE_DATA="(
     \"liquidity_index\" = $liquidity_index;
     \"debt_index\" = 0;
     \"configuration\" = record {
-      \"ltv\" = $ltv;
+      \"ltv\" = "$ltv";
       \"liquidation_threshold\" = $liquidation_threshold;
       \"liquidation_bonus\" = $liquidation_bonus;
       \"borrowing_enabled\" = true;
@@ -62,4 +62,4 @@ RESERVE_DATA="(
 )"
 
 # Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" --ic  --ic
+dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" 

@@ -1,8 +1,10 @@
 #!/bin/bash
+set -e
+
 
 # Call each script sequentially
-# dfx ledger fabricate-cycles --canister dfinance_backend
-# dfx ledger fabricate-cycles --canister dfinance_backend
+dfx ledger fabricate-cycles --canister dfinance_backend
+dfx ledger fabricate-cycles --canister dfinance_backend
 
 ./ckbtc_token.sh
 if [ $? -ne 0 ]; then
@@ -33,4 +35,5 @@ if [ $? -ne 0 ]; then
   echo "ckusdt_token.sh failed. Exiting."
   exit 1
 fi
- dfx canister call dfinance_backend update_reserves_price
+
+dfx canister call dfinance_backend update_reserves_price

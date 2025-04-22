@@ -40,10 +40,12 @@ use crate::guards::access_control::to_check_controller;
 #[init]
 pub async fn init(args: Principal) {
     ic_cdk::println!("init function = {:?}", args);
-
-    mutate_state(|state| {
+    // This controller ID will be used for setting the controller 
+    // of other canisters (e.g., asset reserves) dynamically created 
+    // by the admin during initialization.
+    mutate_state(|state| { 
         state.meta_data.insert(
-            0,
+            "controller_1".to_string(),
             Candid(InitArgs {
                 controller_id: args,
             }),

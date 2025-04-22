@@ -26,6 +26,7 @@ const useAssetData = (searchQuery = "") => {
   } = useAuth();
 
   const [assets, setAssets] = useState([]);
+  const [AssetImages, setAssetImages] = useState([]);
   const [reserveData, setReserveData] = useState(null);
   const [totalMarketSize, setTotalMarketSize] = useState(0);
   const [totalSupplySize, setTotalSupplySize] = useState(0);
@@ -53,17 +54,26 @@ const useAssetData = (searchQuery = "") => {
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
-
+  
       try {
-        const assetNames = await backendActor.get_all_assets();
-        setAssets(assetNames);
+        const assetData = await backendActor.get_all_assets();
+        console.log("Assets:", assetData);
+  
+        const names = assetData.map(asset => asset.asset_name);
+        const images = assetData.map(asset => asset.image); // Already URL strings
+  
+        setAssets(names);
+        setAssetImages(images);
       } catch (error) {
-        setError(error.message);
+        console.error("Failed to fetch assets:", error.message);
       }
     };
-
+  
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
+  
+  // Helper function to check if the image is an SVG
+ 
 
  /**
    * Fetches the total supply of a specific asset.
@@ -220,6 +230,7 @@ const useAssetData = (searchQuery = "") => {
     fetchData();
   }, [
     assets,
+    AssetImages,
     fetchReserveData,
     principal,
     ckUSDTUsdRate,
@@ -248,6 +259,7 @@ const useAssetData = (searchQuery = "") => {
 
   return {
     assets,
+    AssetImages,
     reserveData,
     filteredItems,
     totalMarketSize,

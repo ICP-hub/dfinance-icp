@@ -35,7 +35,9 @@ const FaucetDetails = () => {
    *                                  HOOKS
    * =================================================================================== */
 
-  const { filteredItems, loading } = useAssetData();
+  const { filteredItems, loading, assets, AssetImages } = useAssetData();
+  console.log("Assets:", assets);
+  console.log("assetImages", AssetImages)
   const { isAuthenticated, backendActor } = useAuth();
   const {
     ckBTCUsdRate,
@@ -269,9 +271,8 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
-                          index === 1 ? "text-center" : ""
-                        }`}
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${index === 1 ? "text-center" : ""
+                          }`}
                       >
                         {item.header}
                       </td>
@@ -285,52 +286,25 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
-                        index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                      }`}
+                        }`}
                     >
                       <td className="py-[1.5rem]">
                         <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
-                          {item[0] === "ckBTC" && (
+                          {assets.includes(item[0]) && (
                             <img
-                              src={ckBTC}
-                              alt="ckbtc logo"
-                              className="w-8 h-8 rounded-full mr-2"
-                            />
-                          )}
-                          {item[0] === "ckETH" && (
-                            <img
-                              src={cekTH}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full mr-2"
-                            />
-                          )}
-                          {item[0] === "ckUSDC" && (
-                            <img
-                              src={ckUSDC}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full mr-2"
-                            />
-                          )}
-                          {item[0] === "ICP" && (
-                            <img
-                              src={icp}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full mr-2"
-                            />
-                          )}
-                          {item[0] === "ckUSDT" && (
-                            <img
-                              src={ckUSDT}
-                              alt="ckusdt logo"
+                              src={AssetImages[assets.indexOf(item[0])]}
+                              alt={`${item[0]} logo`}
                               className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
                           {item[0]}
                         </div>
                       </td>
+
+
                       <td>
                         <div className="p-3">
                           <div>
@@ -385,13 +359,13 @@ const FaucetDetails = () => {
                                   displayedBalance =
                                     balance >= 1
                                       ? balance.toLocaleString(undefined, {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })
                                       : balance.toLocaleString(undefined, {
-                                          minimumFractionDigits: 7,
-                                          maximumFractionDigits: 7,
-                                        });
+                                        minimumFractionDigits: 7,
+                                        maximumFractionDigits: 7,
+                                      });
                                 }
                                 return (
                                   <>
@@ -400,8 +374,8 @@ const FaucetDetails = () => {
                                       {calculatedUsdValue === 0
                                         ? "$0.00"
                                         : calculatedUsdValue < 0.01
-                                        ? "<0.01$"
-                                        : `$${calculatedUsdValue.toLocaleString(
+                                          ? "<0.01$"
+                                          : `$${calculatedUsdValue.toLocaleString(
                                             undefined,
                                             {
                                               minimumFractionDigits: 2,
@@ -456,7 +430,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            {}
+            { }
           </>
         )}
 

@@ -507,8 +507,8 @@ const DebtStatus = () => {
                       <tr
                         key={index}
                         className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
-                            ? "gradient-line-bottom"
-                            : ""
+                          ? "gradient-line-bottom"
+                          : ""
                           }`}
                       >
                         <td className="p-2 align-top py-8 ">

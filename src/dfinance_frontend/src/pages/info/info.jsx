@@ -64,9 +64,6 @@ const DashboardCards = () => {
   const [error, setError] = useState("");
   const [threshold] = useState(5000000000000);
   const [tokenThreshold] = useState(10000);
-  const [users, setUsers] = useState([]);
-  const [lastEmailDate, setLastEmailDate] = useState(null);
-  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -75,8 +72,7 @@ const DashboardCards = () => {
   const radioRefs = {};
   const [filteredData, setFilteredData] = useState(null);
   const [userAccountData, setUserAccountData] = useState({});
-  const [userData, setUserData] = useState({});
-  const [assetBalance, setAssetBalances] = useState([]);
+
   const [healthFactors, setHealthFactors] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const { isSwitchingWallet } = useSelector((state) => state.utility);
@@ -303,7 +299,7 @@ const DashboardCards = () => {
    Threshold : ${formatNumber(threshold + 2000000000000)}
     `;
       try {
-       
+
         await sendEmailNotification("Cycle Warning", htmlMessage);
         lastWarningEmailTimestamp = Date.now();
       } catch (error) {
@@ -677,7 +673,7 @@ const DashboardCards = () => {
       }
     })();
   }, []);
-  
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -863,11 +859,10 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
-                  }`}
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -959,7 +954,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -975,7 +970,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

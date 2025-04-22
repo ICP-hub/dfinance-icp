@@ -19,7 +19,6 @@ import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
-import { trackEvent } from "../../utils/googleAnalytics";
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -36,7 +35,6 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import { X } from 'lucide-react';
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
@@ -536,7 +534,7 @@ export default function Navbar({ isHomeNav }) {
   };
 
   const handleClickAway = () => {
-    
+
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setDropdownVisible(false);

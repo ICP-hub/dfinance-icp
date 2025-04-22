@@ -163,7 +163,7 @@ export default function App() {
    */
   const handleJoyrideCallback = (data) => {
     const { status } = data;
-    
+
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
         const storedData = localStorage.getItem("userGuideData");

@@ -33,7 +33,7 @@ jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
 test("renders UserInformationPopup component", () => {
   render(
     <Provider store={store}>
-      <UserInformationPopup onClose={() => {}} mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }} />
+      <UserInformationPopup onClose={() => { }} mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }} />
     </Provider>
   );
 
@@ -44,7 +44,7 @@ test("renders UserInformationPopup component", () => {
 test("renders user principal", () => {
   render(
     <Provider store={store}>
-      <UserInformationPopup onClose={() => {}} mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }} />
+      <UserInformationPopup onClose={() => { }} mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }} />
     </Provider>
   );
 
@@ -52,15 +52,14 @@ test("renders user principal", () => {
 });
 
 test("clicking the Next button", () => {
-    render(
-      <Provider store={store}>
-        <UserInformationPopup onClose={() => {}} mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }} />
-      </Provider>
-    );
-  
-    // Use getByText if the button's text is static and exactly known
-    const nextButton = screen.getByText("NEXT");
-    fireEvent.click(nextButton);
-    // expect(nextButton).toBeInTheDocument();
-  });
-  
+  render(
+    <Provider store={store}>
+      <UserInformationPopup onClose={() => { }} mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }} />
+    </Provider>
+  );
+
+  // Use getByText if the button's text is static and exactly known
+  const nextButton = screen.getByText("NEXT");
+  fireEvent.click(nextButton);
+  // expect(nextButton).toBeInTheDocument();
+});

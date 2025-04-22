@@ -5,7 +5,7 @@ import { createStore } from "redux";
 import "@testing-library/jest-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import useAssetData from "../../components/customHooks/useAssets";
-import {  MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import MainDashboard from "../../pages/Dashboard/MainDashboard";
 
 // Mock necessary modules
@@ -73,7 +73,7 @@ jest.mock("../../components/customHooks/useUserData", () => ({
 jest.mock("../../components/customHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    loading: false, 
+    loading: false,
     filteredItems: [["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }]],
   })
 }));
@@ -118,7 +118,7 @@ describe("DashboardCards Component", () => {
     // Mock the necessary hooks to simulate loading
     useAuth.mockReturnValue({ isAuthenticated: true });
     useAssetData.mockReturnValue({ loading: true });
-  
+
     await act(async () => {
       render(
         <Provider store={mockStore}>
@@ -130,7 +130,7 @@ describe("DashboardCards Component", () => {
         </Provider>
       );
     });
-  
+
     // Check if loading state is displayed
     expect(screen.getByText("Loading...")).toBeInTheDocument();
   });

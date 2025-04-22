@@ -388,8 +388,8 @@ const HealthFactorList = () => {
           : "0",
         "Health Factor":
           user.healthFactor &&
-          (Number(user.healthFactor) >= 3.4028236692093848e28 ||
-            healthFactor > 100)
+            (Number(user.healthFactor) >= 3.4028236692093848e28 ||
+              healthFactor > 100)
             ? "Infinity"
             : healthFactor,
       };
@@ -788,11 +788,10 @@ const HealthFactorList = () => {
                 name="search"
                 id="search"
                 placeholder="Search assets"
-                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${
-                  showSearch
+                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${showSearch
                     ? "animate-fade-left flex"
                     : "animate-fade-right hidden"
-                }`}
+                  }`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -932,21 +931,20 @@ const HealthFactorList = () => {
                         </td>
                         <td className="px-3 py-6 text-center">
                           <span
-                            className={`flex items-center justify-center gap-1 ${
-                              healthFactor > 100
+                            className={`flex items-center justify-center gap-1 ${healthFactor > 100
                                 ? "text-yellow-500"
                                 : healthFactor === 0
-                                ? "text-red-500"
-                                : healthFactor > 3
-                                ? "text-green-500"
-                                : healthFactor <= 1
-                                ? "text-red-500"
-                                : healthFactor <= 1.5
-                                ? "text-orange-600"
-                                : healthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                            }`}
+                                  ? "text-red-500"
+                                  : healthFactor > 3
+                                    ? "text-green-500"
+                                    : healthFactor <= 1
+                                      ? "text-red-500"
+                                      : healthFactor <= 1.5
+                                        ? "text-orange-600"
+                                        : healthFactor <= 2
+                                          ? "text-orange-400"
+                                          : "text-orange-300"
+                              }`}
                           >
                             {healthFactor > 100 ? (
                               <>
@@ -1055,7 +1053,7 @@ const HealthFactorList = () => {
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /
-                          (currentLiquidity * 1e8)
+                        (currentLiquidity * 1e8)
                         : 0;
 
                     const assetBorrow =
@@ -1071,14 +1069,14 @@ const HealthFactorList = () => {
                             asset === "ckBTC"
                               ? ckBTC
                               : asset === "ckETH"
-                              ? ckETH
-                              : asset === "ckUSDC"
-                              ? ckUSDC
-                              : asset === "ICP"
-                              ? icp
-                              : asset === "ckUSDT"
-                              ? ckUSDT
-                              : undefined
+                                ? ckETH
+                                : asset === "ckUSDC"
+                                  ? ckUSDC
+                                  : asset === "ICP"
+                                    ? icp
+                                    : asset === "ckUSDT"
+                                      ? ckUSDT
+                                      : undefined
                           }
                           alt={asset}
                           className="w-8 h-8 rounded-full"

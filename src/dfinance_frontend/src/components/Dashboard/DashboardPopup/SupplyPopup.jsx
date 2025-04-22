@@ -127,11 +127,7 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
- 
 
-
-
- 
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
@@ -181,31 +177,31 @@ const SupplyPopup = ({
     updateAmountAndUsdValue(inputAmount);
   };
 
- 
+
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
-    
+
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
-  
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount+transferFee <= supplyBalance) {
+      if (numericAmount + transferFee <= supplyBalance) {
         const adjustedConversionRate = Number(conversionRate) / 1e8;
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(convertedValue.toFixed(8));
       } else {
-       
+
       }
     } else {
       console.error("Amount must be a positive number");
     }
   };
-  
 
- 
+
+
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -766,8 +762,8 @@ const SupplyPopup = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
@@ -797,8 +793,8 @@ const SupplyPopup = ({
                   <p>Collateralization</p>
                   <p
                     className={`font-semibold ${currentCollateralStatus
-                        ? "text-green-500"
-                        : "text-red-500"
+                      ? "text-green-500"
+                      : "text-red-500"
                       }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
@@ -811,14 +807,14 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -826,14 +822,14 @@ const SupplyPopup = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                            ? "text-green-500"
-                            : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -912,12 +908,12 @@ const SupplyPopup = ({
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                  isLoading ||
-                  !hasEnoughBalance ||
-                  amount <= 0
+                isLoading ||
+                !hasEnoughBalance ||
+                amount <= 0
 
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               disabled={
                 isApproved || isLoading || amount <= 0 || !hasEnoughBalance
@@ -931,12 +927,12 @@ const SupplyPopup = ({
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                  isLoading ||
-                  amount <= 0 ||
-                  !hasEnoughBalance
+                isLoading ||
+                amount <= 0 ||
+                !hasEnoughBalance
 
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance

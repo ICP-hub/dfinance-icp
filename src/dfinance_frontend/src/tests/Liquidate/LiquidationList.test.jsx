@@ -44,7 +44,7 @@ describe("DebtStatus Component", () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Setup default mock returns
     useSelector.mockReturnValue(false);
     useAuth.mockReturnValue({
@@ -79,14 +79,14 @@ describe("DebtStatus Component", () => {
     expect(screen.getByText("Debt users list")).toBeInTheDocument();
   });
 
-// Replace the failing test with this one:
-test("renders with the correct structure", () => {
+  // Replace the failing test with this one:
+  test("renders with the correct structure", () => {
     render(<DebtStatus />);
-    
+
     // Check for the container div that always exists
     const container = document.querySelector(".w-full");
     expect(container).toBeInTheDocument();
-    
+
     // Or check for the title which should always be present
     const title = screen.getByText("Debt users list");
     expect(title).toBeInTheDocument();
@@ -101,15 +101,15 @@ test("renders with the correct structure", () => {
   test("handles empty liquidation users state", () => {
     // Set liquidationLoading to false to bypass the loading state
     const { rerender } = render(<DebtStatus />);
-    
+
     // Manually trigger state update by using a side effect
     // This is a simplified approach since we can't directly manipulate component state in tests
     jest.useFakeTimers();
-    setTimeout(() => {}, 1300); // Just past the 1200ms timeout in the component
+    setTimeout(() => { }, 1300); // Just past the 1200ms timeout in the component
     jest.runAllTimers();
-    
+
     rerender(<DebtStatus />);
-    
+
     // The test passes as long as the component doesn't crash
     expect(document.body).toBeTruthy();
   });

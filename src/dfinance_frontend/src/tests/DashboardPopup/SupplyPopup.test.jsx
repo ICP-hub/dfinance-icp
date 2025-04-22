@@ -17,7 +17,7 @@ jest.mock("react-toastify", () => ({
 jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    conversionRate: 50000 * Math.pow(10, 8), 
+    conversionRate: 50000 * Math.pow(10, 8),
     error: null
   })
 }));
@@ -25,7 +25,7 @@ jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn().mockReturnValue({
     backendActor: {
-      execute_supply: jest.fn().mockResolvedValue({ Ok: true }),  
+      execute_supply: jest.fn().mockResolvedValue({ Ok: true }),
     },
     principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
   })
@@ -34,7 +34,7 @@ jest.mock("../../utils/useAuthClient", () => ({
 jest.mock("../../components/customHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    userData: {}, 
+    userData: {},
     healthFactorBackend: 2.5,
     refetchUserData: jest.fn()
   })
@@ -103,7 +103,7 @@ jest.mock("react-redux", () => ({
 
 describe("SupplyPopup Component", () => {
   window.HTMLMediaElement.prototype.play = jest.fn();
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -138,18 +138,18 @@ describe("SupplyPopup Component", () => {
         </Provider>
       );
     });
-  
+
     const inputElement = await screen.findByPlaceholderText("Enter ckBTC Amount");
     expect(inputElement).toBeInTheDocument();
-  
+
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
-    expect(healthFactorElements.length).toBeGreaterThan(0); 
-  
+    expect(healthFactorElements.length).toBeGreaterThan(0);
+
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
   });
-  
 
-  
+
+
 
   test("disables approval button when amount is 0", async () => {
     await act(async () => {
@@ -176,19 +176,19 @@ describe("SupplyPopup Component", () => {
         </Provider>
       );
     });
-  
-     const amountInput = await screen.findByPlaceholderText("Enter ckBTC Amount");
 
-    
+    const amountInput = await screen.findByPlaceholderText("Enter ckBTC Amount");
+
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '10' } });
     });
-    
+
     expect(amountInput.value).toBe('10');
   });
 
-  
-  
+
+
 
   test("displays correct transaction overview information", async () => {
     await act(async () => {
@@ -200,19 +200,19 @@ describe("SupplyPopup Component", () => {
         </Provider>
       );
     });
-  
+
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
-  
+
     expect(screen.getByText(/Supply APY/i)).toBeInTheDocument();
     expect(screen.getByText(/Collateralization/i)).toBeInTheDocument();
     expect(screen.getByText(/Health Factor/i)).toBeInTheDocument();
     expect(screen.getByText(/Transaction Fee/i)).toBeInTheDocument();
     expect(screen.getByText(/Final amount/i)).toBeInTheDocument();
-    
-    expect(screen.getByText(/2.50/i)).toBeInTheDocument();  
-    expect(screen.getByText(/5.00%/i)).toBeInTheDocument();  
-    expect(screen.getByText(/0.0001/i)).toBeInTheDocument();  
-    expect(screen.getByText(/0.00000000/i)).toBeInTheDocument();  
+
+    expect(screen.getByText(/2.50/i)).toBeInTheDocument();
+    expect(screen.getByText(/5.00%/i)).toBeInTheDocument();
+    expect(screen.getByText(/0.0001/i)).toBeInTheDocument();
+    expect(screen.getByText(/0.00000000/i)).toBeInTheDocument();
   });
 
   test("displays USD value for amount input", async () => {
@@ -225,16 +225,16 @@ describe("SupplyPopup Component", () => {
         </Provider>
       );
     });
-    
-    expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
-    
-     const amountInput = await screen.findByPlaceholderText("Enter ckBTC Amount");
 
-    
+    expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
+
+    const amountInput = await screen.findByPlaceholderText("Enter ckBTC Amount");
+
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '10' } });
     });
-    
+
     await waitFor(() => {
       expect(screen.queryByText("$0.00 USD")).not.toBeInTheDocument();
       const usdTexts = screen.getAllByText(/\$.*USD/);
@@ -242,7 +242,7 @@ describe("SupplyPopup Component", () => {
     });
   });
 
-  
+
 
   test("displays health factor calculation correctly", async () => {
     await act(async () => {
@@ -254,16 +254,16 @@ describe("SupplyPopup Component", () => {
         </Provider>
       );
     });
-    
-    expect(screen.getByText(/2.50/)).toBeInTheDocument();
-    
-     const amountInput = await screen.findByPlaceholderText("Enter ckBTC Amount");
 
-    
+    expect(screen.getByText(/2.50/)).toBeInTheDocument();
+
+    const amountInput = await screen.findByPlaceholderText("Enter ckBTC Amount");
+
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '10' } });
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText(/→/)).toBeInTheDocument();
     });

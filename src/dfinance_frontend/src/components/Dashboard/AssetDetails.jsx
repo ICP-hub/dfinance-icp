@@ -325,14 +325,14 @@ const AssetDetails = () => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-      ? ckETHBalance
-      : id === "ckUSDC"
-      ? ckUSDCBalance
-      : id === "ICP"
-      ? ckICPBalance
-      : id === "ckUSDT"
-      ? ckUSDTBalance
-      : null;
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : id === "ckUSDT"
+              ? ckUSDTBalance
+              : null;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -475,7 +475,7 @@ const AssetDetails = () => {
           for (const asset of assets) {
             const result = await getAssetPrinciple(asset);
           }
-        } catch (error) {}
+        } catch (error) { }
       } else {
       }
     };
@@ -932,13 +932,13 @@ const AssetDetails = () => {
                           displayedBalance =
                             balance >= 1
                               ? balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
                               : balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 7,
-                                  maximumFractionDigits: 7,
-                                });
+                                minimumFractionDigits: 7,
+                                maximumFractionDigits: 7,
+                              });
                         }
 
                         return (
@@ -948,8 +948,8 @@ const AssetDetails = () => {
                               {calculatedUsdValue === 0
                                 ? "$0.00"
                                 : calculatedUsdValue < 0.01
-                                ? "<0.01$"
-                                : `$${calculatedUsdValue.toLocaleString(
+                                  ? "<0.01$"
+                                  : `$${calculatedUsdValue.toLocaleString(
                                     undefined,
                                     {
                                       minimumFractionDigits: 2,
@@ -1014,7 +1014,7 @@ const AssetDetails = () => {
 
                         const supplyRateAPR =
                           Number(filteredData[1]?.Ok.current_liquidity_rate) /
-                            100000000 || 0;
+                          100000000 || 0;
 
                         const liquidationThreshold =
                           Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
@@ -1028,14 +1028,14 @@ const AssetDetails = () => {
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                            ? ckETHBalance
-                            : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                            ? ckICPBalance
-                            : id === "ckUSDT"
-                            ? ckUSDTBalance
-                            : null;
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : id === "ckUSDT"
+                                    ? ckUSDTBalance
+                                    : null;
                         if (ckBalance === 0) {
                           toast.info(
                             "You cannot supply because your balance is 0."
@@ -1046,10 +1046,10 @@ const AssetDetails = () => {
                           "supply",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                            (id === "ckETH" && cketh) ||
-                            (id === "ckUSDC" && ckUSDC) ||
-                            (id === "ICP" && icp) ||
-                            (id === "ckUSDT" && ckUSDT),
+                          (id === "ckETH" && cketh) ||
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp) ||
+                          (id === "ckUSDT" && ckUSDT),
                           supplyRateAPR,
                           ckBalance,
                           liquidationThreshold,
@@ -1148,13 +1148,13 @@ const AssetDetails = () => {
                           displayedBalance =
                             balance >= 1
                               ? balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
                               : balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 7,
-                                  maximumFractionDigits: 7,
-                                });
+                                minimumFractionDigits: 7,
+                                maximumFractionDigits: 7,
+                              });
                         }
 
                         return (
@@ -1164,8 +1164,8 @@ const AssetDetails = () => {
                               {calculatedUsdValue === 0
                                 ? "$0.00"
                                 : calculatedUsdValue < 0.01
-                                ? "<0.01$"
-                                : `$${calculatedUsdValue.toLocaleString(
+                                  ? "<0.01$"
+                                  : `$${calculatedUsdValue.toLocaleString(
                                     undefined,
                                     {
                                       minimumFractionDigits: 2,
@@ -1259,22 +1259,22 @@ const AssetDetails = () => {
                           "borrow",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                            (id === "ckETH" && cketh) ||
-                            (id === "ckUSDC" && ckUSDC) ||
-                            (id === "ICP" && icp) ||
-                            (id === "ckUSDT" && ckUSDT),
+                          (id === "ckETH" && cketh) ||
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp) ||
+                          (id === "ckUSDT" && ckUSDT),
                           Number(assetData?.Ok.borrow_rate) / 100000000,
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                            ? ckETHBalance
-                            : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                            ? ckICPBalance
-                            : id === "ckUSDT"
-                            ? ckUSDTBalance
-                            : null,
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : id === "ckUSDT"
+                                    ? ckUSDTBalance
+                                    : null,
                           LiquidationThreshold,
                           Number(
                             assetData?.Ok?.configuration.liquidation_threshold

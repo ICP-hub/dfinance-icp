@@ -58,7 +58,7 @@ const useUserData = () => {
     () => Principal.fromText(principal),
     [principal]
   );
-  
+
   const fetchAssetData = async () => {
     const balances = [];
 
@@ -134,7 +134,7 @@ const useUserData = () => {
         let borrowBalancesObj = [];
 
         reserves.forEach((reserveGroup) => {
-          const asset = reserveGroup[0]; 
+          const asset = reserveGroup[0];
 
           const assetBalance =
             assetBalances.find((balance) => balance.asset === asset)
@@ -143,7 +143,7 @@ const useUserData = () => {
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
 
-        
+
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -158,7 +158,7 @@ const useUserData = () => {
           }
         });
 
-       
+
 
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];

@@ -16,7 +16,7 @@ import { Info } from "lucide-react";
  * @param {number} props.reserveFactor - Reserve factor percentage.
  */
 
-const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reserveFactor}) => {
+const BorrowInfo = ({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR, reserveFactor }) => {
 
   /* 
   ============================
@@ -24,7 +24,7 @@ const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reser
   ============================
   */
   const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] = useState(false);
-   
+
 
   // Calculate borrowing percentages
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
@@ -74,7 +74,7 @@ const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reser
 
   const totalBorrowedAsset = assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
   const totalBorrowedCap = assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
-   
+
 
   // Format numerical values
   const formatValue = (value) => {

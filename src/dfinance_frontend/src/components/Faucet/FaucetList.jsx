@@ -66,7 +66,7 @@ const FaucetDetails = () => {
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-  
+
   const [hasLoaded, setHasLoaded] = useState(false);
 
   /* ===================================================================================
@@ -82,7 +82,7 @@ const FaucetDetails = () => {
    *                                  FUNCTION
    * =================================================================================== */
 
-  
+
 
   const handleFaucetClick = (asset) => {
     let assetImage;
@@ -254,9 +254,8 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
-                          index === 1 ? "text-center" : ""
-                        }`}
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${index === 1 ? "text-center" : ""
+                          }`}
                       >
                         {item.header}
                       </td>
@@ -270,11 +269,10 @@ const FaucetDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
-                        index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                      }`}
+                        }`}
                     >
                       <td className="py-[1.5rem]">
                         <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
@@ -370,13 +368,13 @@ const FaucetDetails = () => {
                                   displayedBalance =
                                     balance >= 1
                                       ? balance.toLocaleString(undefined, {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })
                                       : balance.toLocaleString(undefined, {
-                                          minimumFractionDigits: 7,
-                                          maximumFractionDigits: 7,
-                                        });
+                                        minimumFractionDigits: 7,
+                                        maximumFractionDigits: 7,
+                                      });
                                 }
                                 return (
                                   <>
@@ -385,8 +383,8 @@ const FaucetDetails = () => {
                                       {calculatedUsdValue === 0
                                         ? "$0.00"
                                         : calculatedUsdValue < 0.01
-                                        ? "<0.01$"
-                                        : `$${calculatedUsdValue.toLocaleString(
+                                          ? "<0.01$"
+                                          : `$${calculatedUsdValue.toLocaleString(
                                             undefined,
                                             {
                                               minimumFractionDigits: 2,
@@ -441,7 +439,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            {}
+            { }
           </>
         )}
 

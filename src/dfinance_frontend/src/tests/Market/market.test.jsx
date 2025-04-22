@@ -109,14 +109,14 @@ describe("Market Component", () => {
 
   test("renders component with asset data", async () => {
     render(<Market />);
-    
+
     // Check that the component renders the main title
     expect(screen.getByText("ICP Assets")).toBeInTheDocument();
-    
+
     // Check that assets are rendered
     expect(screen.getByText("ckBTC")).toBeInTheDocument();
     expect(screen.getByText("ckETH")).toBeInTheDocument();
-    
+
     // Check that buttons are rendered
     const detailsButtons = screen.getAllByText("Details");
     expect(detailsButtons.length).toBe(2); // One for each asset
@@ -132,9 +132,9 @@ describe("Market Component", () => {
       totalReserveFactor: "0",
       interestAccure: "0"
     });
-    
+
     render(<Market />);
-    
+
     expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 
@@ -148,9 +148,9 @@ describe("Market Component", () => {
       totalReserveFactor: "0",
       interestAccure: "0"
     });
-    
+
     render(<Market />);
-    
+
     expect(screen.getByText("NO ASSETS FOUND!")).toBeInTheDocument();
   });
 
@@ -165,26 +165,26 @@ describe("Market Component", () => {
       totalReserveFactor: "0.1",
       interestAccure: "0.05"
     }));
-    
+
     render(<Market />);
-    
+
     // Click search icon to show search input
-   fireEvent.click(screen.getByTestId("search-icon"));
-    
-   const searchInputs = screen.getAllByPlaceholderText("Search assets");
-   const searchInput = searchInputs[0]; // Select the first one
-   fireEvent.change(searchInput, { target: { value: "ckBTC" } });
-    
+    fireEvent.click(screen.getByTestId("search-icon"));
+
+    const searchInputs = screen.getAllByPlaceholderText("Search assets");
+    const searchInput = searchInputs[0]; // Select the first one
+    fireEvent.change(searchInput, { target: { value: "ckBTC" } });
+
     // Check if the search query state is updated
     expect(searchInput.value).toBe("ckBTC");
   });
 
   test("details button navigates to asset details page", () => {
     render(<Market />);
-    
+
     const detailsButtons = screen.getAllByText("Details");
     fireEvent.click(detailsButtons[0]); // Click first Details button
-    
+
     expect(mockNavigate).toHaveBeenCalledWith(
       "/market/asset-details/ckBTC",
       { state: { assetData: mockFilteredItems[0][1] } }
@@ -193,10 +193,10 @@ describe("Market Component", () => {
 
   test("chevron icon opens asset modal on mobile", () => {
     render(<Market />);
-    
+
     const chevronIcons = screen.getAllByTestId("chevron-right");
     fireEvent.click(chevronIcons[0]); // Click first chevron
-    
+
     // Check if modal appears with asset details
     expect(screen.getByText("Total Supplied:")).toBeInTheDocument();
     expect(screen.getByText("Supply APY:")).toBeInTheDocument();
@@ -205,27 +205,27 @@ describe("Market Component", () => {
   });
 
   test("freeze canister popup shows when isFreezePopupVisible is true", () => {
-    useUserData.mockReturnValue({ 
-      isFreezePopupVisible: true, 
-      setIsFreezePopupVisible: jest.fn() 
+    useUserData.mockReturnValue({
+      isFreezePopupVisible: true,
+      setIsFreezePopupVisible: jest.fn()
     });
-    
+
     render(<Market />);
-    
+
     expect(screen.getByText("Freeze Canister Popup")).toBeInTheDocument();
   });
 
   test("closes asset modal when clicking the X button", () => {
     render(<Market />);
-    
+
     // Open the modal first
     const chevronIcons = screen.getAllByTestId("chevron-right");
     fireEvent.click(chevronIcons[0]);
-    
+
     // Find and click the close button
     const closeButton = screen.getByTestId("x-icon");
     fireEvent.click(closeButton);
-    
+
     // Modal should be closed (elements no longer in document)
     expect(screen.queryByText("Total Supplied:")).not.toBeInTheDocument();
   });

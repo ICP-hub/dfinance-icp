@@ -72,7 +72,7 @@ describe('Liquidate Component', () => {
     jest.spyOn(require('react-router-dom'), 'useLocation').mockReturnValue({
       pathname
     });
-    
+
     return render(
       <MemoryRouter>
         <Liquidate />
@@ -82,21 +82,21 @@ describe('Liquidate Component', () => {
 
   test('renders the Liquidate component header correctly', () => {
     renderLiquidate();
-    
+
     const header = screen.getByText('Liquidation');
     expect(header).toBeInTheDocument();
   });
 
   test('displays the "Check Users in Debt" title', () => {
     renderLiquidate();
-    
+
     const title = screen.getByText('Check Users in Debt');
     expect(title).toBeInTheDocument();
   });
 
   test('displays the "Get Debt Status" button', () => {
     renderLiquidate();
-    
+
     const button = screen.getByTestId('button-get-debt-status');
     expect(button).toBeInTheDocument();
     expect(button).toHaveTextContent('Get Debt Status');
@@ -104,11 +104,11 @@ describe('Liquidate Component', () => {
 
   test('shows warning message when unauthenticated user clicks the button', () => {
     renderLiquidate();
-    
+
     // Click the button
     const button = screen.getByTestId('button-get-debt-status');
     fireEvent.click(button);
-    
+
     // Check if warning message appears
     const warning = screen.getByText('Please connect your wallet to check the debt status.');
     expect(warning).toBeInTheDocument();
@@ -119,9 +119,9 @@ describe('Liquidate Component', () => {
     jest.spyOn(require('../../utils/useAuthClient'), 'useAuth').mockReturnValue({
       isAuthenticated: false
     });
-    
+
     renderLiquidate();
-    
+
     const walletModal = screen.getByTestId('wallet-modal');
     expect(walletModal).toBeInTheDocument();
   });
@@ -131,18 +131,18 @@ describe('Liquidate Component', () => {
     jest.spyOn(require('../../utils/useAuthClient'), 'useAuth').mockReturnValue({
       isAuthenticated: true
     });
-    
+
     renderLiquidate();
-    
+
     expect(screen.queryByTestId('wallet-modal')).not.toBeInTheDocument();
   });
 
   test('renders DebtStatus component on debt-users-list route', () => {
     renderLiquidate('/Liquidate/debt-users-list');
-    
+
     const debtStatus = screen.getByTestId('debt-status');
     expect(debtStatus).toBeInTheDocument();
-    
+
     // Main page elements should not be shown
     expect(screen.queryByText('Check Users in Debt')).not.toBeInTheDocument();
     expect(screen.queryByTestId('button-get-debt-status')).not.toBeInTheDocument();
@@ -154,9 +154,9 @@ describe('Liquidate Component', () => {
       isFreezePopupVisible: true,
       setIsFreezePopupVisible: jest.fn()
     });
-    
+
     renderLiquidate();
-    
+
     const freezePopup = screen.getByTestId('freeze-popup');
     expect(freezePopup).toBeInTheDocument();
   });

@@ -83,13 +83,13 @@ const mockStore = createStore(() => ({
 describe("FaucetDetails Component", () => {
   // Default mock values
   const defaultMocks = () => {
-    useSelector.mockImplementation((selector) => 
+    useSelector.mockImplementation((selector) =>
       selector({
         faucetUpdate: { refreshTrigger: false },
         utility: { isSwitchingWallet: false }
       })
     );
-    
+
     useAssetData.mockReturnValue({
       filteredItems: [
         ["ckBTC"],
@@ -100,12 +100,12 @@ describe("FaucetDetails Component", () => {
       ],
       loading: false
     });
-    
+
     useAuth.mockReturnValue({
       isAuthenticated: true,
       backendActor: {}
     });
-    
+
     useFetchConversionRate.mockReturnValue({
       ckBTCUsdRate: 40000 * 1e8,
       ckETHUsdRate: 2500 * 1e8,
@@ -120,7 +120,7 @@ describe("FaucetDetails Component", () => {
       ckUSDTBalance: 100,
       fetchBalance: jest.fn(),
     });
-    
+
     useUserData.mockReturnValue({
       isFreezePopupVisible: false,
       setIsFreezePopupVisible: jest.fn()
@@ -145,7 +145,7 @@ describe("FaucetDetails Component", () => {
       filteredItems: [],
       loading: true
     });
-    
+
     render(<FaucetDetails />);
     expect(screen.getByTestId("faucet-list")).toBeInTheDocument();
     expect(screen.getByTestId("mini-loader")).toBeInTheDocument();
@@ -156,7 +156,7 @@ describe("FaucetDetails Component", () => {
       filteredItems: [],
       loading: false
     });
-    
+
     render(<FaucetDetails />);
     expect(screen.getByText("NO ASSETS FOUND!")).toBeInTheDocument();
     expect(screen.getByTestId("lottie-animation")).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("FaucetDetails Component", () => {
 
   test("renders all asset rows", () => {
     render(<FaucetDetails />);
-    
+
     // Check for all asset types
     expect(screen.getByText("ckBTC")).toBeInTheDocument();
     expect(screen.getByText("ckETH")).toBeInTheDocument();
@@ -175,17 +175,17 @@ describe("FaucetDetails Component", () => {
 
   test("displays asset images for each asset", () => {
     render(<FaucetDetails />);
-    
+
     const images = screen.getAllByRole("img");
     expect(images.length).toBe(5); // One image for each asset
-    
+
     expect(screen.getByAltText("ckbtc logo")).toBeInTheDocument();
     expect(screen.getByAltText("ckusdt logo")).toBeInTheDocument();
   });
 
   test("shows faucet buttons for each asset", () => {
     render(<FaucetDetails />);
-    
+
     // Check for faucet text in desktop view
     const faucetTexts = screen.getAllByText("Faucet");
     expect(faucetTexts.length).toBe(5); // One faucet button for each asset
@@ -193,11 +193,11 @@ describe("FaucetDetails Component", () => {
 
   test("opens faucet popup when faucet button is clicked", () => {
     render(<FaucetDetails />);
-    
+
     // Click the first faucet button
     const faucetButtons = screen.getAllByText("Faucet");
     fireEvent.click(faucetButtons[0]);
-    
+
     // Check if popup appears with asset name
     expect(screen.getByTestId("faucet-popup")).toBeInTheDocument();
     expect(screen.getByText("Faucet Popup for ckBTC")).toBeInTheDocument();
@@ -205,15 +205,15 @@ describe("FaucetDetails Component", () => {
 
   test("closes faucet popup when close button is clicked", async () => {
     render(<FaucetDetails />);
-    
+
     // First open the popup
     const faucetButtons = screen.getAllByText("Faucet");
     fireEvent.click(faucetButtons[0]);
-    
+
     // Now find and click the close button
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
-    
+
     // Now we should check if the popup is gone
     await waitFor(() => {
       expect(screen.queryByTestId("faucet-popup")).not.toBeInTheDocument();
@@ -225,19 +225,19 @@ describe("FaucetDetails Component", () => {
       isAuthenticated: false,
       backendActor: {}
     });
-    
+
     render(<FaucetDetails />);
     expect(screen.getByTestId("wallet-modal")).toBeInTheDocument();
   });
 
   test("shows wallet modal when switching wallet", () => {
-    useSelector.mockImplementation((selector) => 
+    useSelector.mockImplementation((selector) =>
       selector({
         faucetUpdate: { refreshTrigger: false },
         utility: { isSwitchingWallet: true }
       })
     );
-    
+
     render(<FaucetDetails />);
     expect(screen.getByTestId("wallet-modal")).toBeInTheDocument();
   });
@@ -247,7 +247,7 @@ describe("FaucetDetails Component", () => {
       ...useFetchConversionRate(),
       ckUSDCBalance: 1000,
     });
-    
+
     render(<FaucetDetails />);
     expect(screen.getByText("1,000.00")).toBeInTheDocument();
   });
@@ -258,14 +258,14 @@ describe("FaucetDetails Component", () => {
       ckBTCBalance: 0.0012345,
       ckBTCUsdRate: 40000 * 1e8,
     });
-    
+
     render(<FaucetDetails />);
     expect(screen.getByText("0.0012345")).toBeInTheDocument();
   });
 
   test("displays USD value for each asset", () => {
     render(<FaucetDetails />);
-    
+
     // Check USD values for different assets based on the mock data
     expect(screen.getByText("$2,000.00")).toBeInTheDocument(); // ckBTC: 0.05 * 40000
     expect(screen.getByText("$1,250.00")).toBeInTheDocument(); // ckETH: 0.5 * 2500
@@ -277,7 +277,7 @@ describe("FaucetDetails Component", () => {
       isFreezePopupVisible: true,
       setIsFreezePopupVisible: jest.fn()
     });
-    
+
     render(<FaucetDetails />);
     expect(screen.getByTestId("freeze-canister-popup")).toBeInTheDocument();
   });
@@ -288,27 +288,27 @@ describe("FaucetDetails Component", () => {
       isFreezePopupVisible: true,
       setIsFreezePopupVisible
     });
-    
+
     render(<FaucetDetails />);
-    
+
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
-    
+
     expect(setIsFreezePopupVisible).toHaveBeenCalledWith(false);
   });
 
   test("fetches asset data on component mount", () => {
     const fetchBalance = jest.fn();
     const fetchConversionRate = jest.fn();
-    
+
     useFetchConversionRate.mockReturnValue({
       ...useFetchConversionRate(),
       fetchBalance,
       fetchConversionRate
     });
-    
+
     render(<FaucetDetails />);
-    
+
     expect(fetchBalance).toHaveBeenCalledWith("ckBTC");
     expect(fetchBalance).toHaveBeenCalledWith("ckETH");
     expect(fetchBalance).toHaveBeenCalledWith("ckUSDC");
@@ -323,9 +323,9 @@ describe("FaucetDetails Component", () => {
       ckBTCBalance: 0,
       ckBTCUsdRate: 40000 * 1e8,
     });
-    
+
     render(<FaucetDetails />);
-    
+
     // Check for the $0.00 display for ckBTC
     const zeroBalances = screen.getAllByText("$0.00");
     expect(zeroBalances.length).toBeGreaterThan(0);
@@ -336,19 +336,19 @@ describe("FaucetDetails Component", () => {
       isFreezePopupVisible: true,
       setIsFreezePopupVisible: jest.fn()
     });
-    
+
     render(<FaucetDetails />);
-    
+
     expect(document.body.style.overflow).toBe("hidden");
-    
+
     // Cleanup
     useUserData.mockReturnValue({
       isFreezePopupVisible: false,
       setIsFreezePopupVisible: jest.fn()
     });
-    
+
     render(<FaucetDetails />);
-    
+
     expect(document.body.style.overflow).toBe("auto");
   });
 });

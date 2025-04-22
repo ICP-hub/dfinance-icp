@@ -14,11 +14,11 @@ const CreateWallet = () => {
   const dispatch = useDispatch();
   const { isWalletModalOpen, isSwitchingWallet } = useSelector((state) => state.utility);
   const { isAuthenticated } = useAuth();
-  const handleWalletConnect = () => {dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })); };
+  const handleWalletConnect = () => { dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })); };
 
-   /* ===================================================================================
-   *                                  RENDER COMPONENT
-   * =================================================================================== */
+  /* ===================================================================================
+  *                                  RENDER COMPONENT
+  * =================================================================================== */
   return (
     <>
       {isAuthenticated ? (

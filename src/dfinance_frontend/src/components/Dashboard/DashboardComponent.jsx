@@ -742,7 +742,7 @@ const DashboardComponent = () => {
         const total_borrow = Number(assetData.asset_borrow || 0) / 100000000;
         const availableBorrowNumber = Number(availableBorrow || 0);
 
-        
+
         const isBorrowAvailable = availableBorrowNumber > 0.01;
 
         if (!showAllAssets) {
@@ -1261,7 +1261,7 @@ const DashboardComponent = () => {
                       return null;
                     })}
 
-                   
+
                     <div className="hidden md:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
                       <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                         Total
@@ -1869,7 +1869,7 @@ const DashboardComponent = () => {
                                   </div>
 
                                   <div className="p-3 align-top flex gap-2 pt-2">
-                                   
+
                                     <Button
                                       title={"Supply"}
                                       onClickHandler={() => {
@@ -1894,7 +1894,7 @@ const DashboardComponent = () => {
                                       className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
                                     />
 
-                                    
+
                                     <Button
                                       title={"Withdraw"}
                                       onClickHandler={() => {
@@ -2076,7 +2076,7 @@ const DashboardComponent = () => {
                                   onClickHandler={() => {
                                     fetchAssetSupply(item[0]);
 
-                                    handleAssetAction("supply", item[0]); 
+                                    handleAssetAction("supply", item[0]);
                                   }}
 
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -2150,7 +2150,7 @@ const DashboardComponent = () => {
                                 className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs ${isZeroBalance ? "opacity-50 pointer-events-none" : ""}`}
                               >
                                 <div className="p-3 pl-4 align-top flex items-center gap-2">
-                                
+
                                   {item[0] === "ckBTC" && (
                                     <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />
                                   )}
@@ -2195,7 +2195,7 @@ const DashboardComponent = () => {
                                     onClickHandler={() => {
                                       fetchAssetSupply(item[0]);
 
-                                      handleAssetAction("supply", item[0]); 
+                                      handleAssetAction("supply", item[0]);
                                     }}
 
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
@@ -2219,7 +2219,7 @@ const DashboardComponent = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="w-full lg:w-6/12 md:-mt-6 lg:mt-20">
         <div
           className={`${activeSection === "borrow" ? "block" : "hidden"
@@ -2274,7 +2274,7 @@ const DashboardComponent = () => {
                       return null;
                     })}
 
-                    
+
                     <div className="flex gap-2">
                       <div className="hidden dxl:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 place-content-center rounded-md">
                         <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
@@ -2716,7 +2716,7 @@ const DashboardComponent = () => {
                               return (
                                 getAssetBorrowValue(reserveGroup[0]) > 0n &&
                                 assetBalance > 0
-                              ); 
+                              );
                             })
                             .map((reserveGroup, index) => {
                               const asset = reserveGroup[0];
@@ -2724,7 +2724,7 @@ const DashboardComponent = () => {
                                 (item) => item[0] === asset
                               );
                               const DebtIndex = userData?.Ok?.reserves[0]?.find(
-                                (reserveGroup) => reserveGroup[0] === asset 
+                                (reserveGroup) => reserveGroup[0] === asset
                               )?.[1]?.variable_borrow_index;
 
                               const assetBorrowBalance =
@@ -2734,7 +2734,7 @@ const DashboardComponent = () => {
 
                               const currentLiquidity =
                                 userData?.Ok?.reserves[0]?.find(
-                                  (reserveGroup) => reserveGroup[0] === asset 
+                                  (reserveGroup) => reserveGroup[0] === asset
                                 )?.[1]?.liquidity_index;
                               const assetBalance =
                                 assetBalances.find(
@@ -3174,29 +3174,29 @@ const DashboardComponent = () => {
                         </div>
 
                         <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
-                        {getFilteredAndSortedItems().map((item, index) => {
-                          const reserveData = userData?.Ok?.reserves[0]?.find(
-                            (reserveGroup) => reserveGroup[0] === item[0]
-                          );
-                          const assetData = item[1].Ok;
-                          const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-                          const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
-                          const availableBorrowNumber = Number(availableBorrow || 0);
-                          const { displayedAsset, usdFormatted } = calculateAssetValue(
-                            item,
-                            total_supply,
-                            total_borrow,
-                            availableBorrow
-                          );
-                          const isEligible = (total_supply * 0.85).toFixed(8) > total_borrow;
-                          const itemClass =
-                            (showAllAssets && !isEligible) || availableBorrowNumber === 0
-                              ? "opacity-50 pointer-events-none"
-                              : "";
+                          {getFilteredAndSortedItems().map((item, index) => {
+                            const reserveData = userData?.Ok?.reserves[0]?.find(
+                              (reserveGroup) => reserveGroup[0] === item[0]
+                            );
+                            const assetData = item[1].Ok;
+                            const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
+                            const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+                            const availableBorrowNumber = Number(availableBorrow || 0);
+                            const { displayedAsset, usdFormatted } = calculateAssetValue(
+                              item,
+                              total_supply,
+                              total_borrow,
+                              availableBorrow
+                            );
+                            const isEligible = (total_supply * 0.85).toFixed(8) > total_borrow;
+                            const itemClass =
+                              (showAllAssets && !isEligible) || availableBorrowNumber === 0
+                                ? "opacity-50 pointer-events-none"
+                                : "";
                             return (
                               <div
                                 key={index}
-                                className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${isTableDisabled  ? "opacity-50 pointer-events-none" : ""}`}
+                                className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${isTableDisabled ? "opacity-50 pointer-events-none" : ""}`}
                               >
                                 <div className="flex items-center gap-3">
                                   {item[0] === "ckBTC" && <img src={ckBTC} alt="ckbtc logo" className="w-8 h-8 rounded-full" />}

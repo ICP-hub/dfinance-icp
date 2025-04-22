@@ -51,7 +51,7 @@ jest.mock("../../components/Faucet/FaucetPayment", () => ({
 describe("FaucetPopup Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Set up mocks for each test
     const { useAuth } = require("../../utils/useAuthClient");
     useAuth.mockReturnValue({
@@ -60,7 +60,7 @@ describe("FaucetPopup Component", () => {
       },
       principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
     });
-    
+
     const useFetchConversionRate = require("../../components/customHooks/useFetchConversionRate").default;
     useFetchConversionRate.mockReturnValue({
       ckBTCUsdRate: 50000,
@@ -71,52 +71,52 @@ describe("FaucetPopup Component", () => {
       fetchConversionRate: jest.fn().mockResolvedValue({}),
       fetchBalance: jest.fn().mockResolvedValue({}),
     });
-    
+
     const useUserData = require("../../components/customHooks/useUserData").default;
     useUserData.mockReturnValue({
       userData: {
         Ok: {
           reserves: [[
             [
-              "ckBTC", 
-              { 
-                faucet_limit: 50000000000, 
-                faucet_usage: 10000000000 
+              "ckBTC",
+              {
+                faucet_limit: 50000000000,
+                faucet_usage: 10000000000
               }
             ],
             [
-              "ckETH", 
-              { 
-                faucet_limit: 50000000000, 
-                faucet_usage: 5000000000 
+              "ckETH",
+              {
+                faucet_limit: 50000000000,
+                faucet_usage: 5000000000
               }
             ],
             [
-              "ckUSDC", 
-              { 
-                faucet_limit: 50000000000, 
-                faucet_usage: 20000000000 
+              "ckUSDC",
+              {
+                faucet_limit: 50000000000,
+                faucet_usage: 20000000000
               }
             ],
             [
-              "ICP", 
-              { 
-                faucet_limit: 50000000000, 
-                faucet_usage: 15000000000 
+              "ICP",
+              {
+                faucet_limit: 50000000000,
+                faucet_usage: 15000000000
               }
             ],
             [
-              "ckUSDT", 
-              { 
-                faucet_limit: 50000000000, 
-                faucet_usage: 25000000000 
+              "ckUSDT",
+              {
+                faucet_limit: 50000000000,
+                faucet_usage: 25000000000
               }
             ]
           ]]
         }
       }
     });
-    
+
     const useFunctionBlockStatus = require("../../components/customHooks/useFunctionBlockStatus").default;
     useFunctionBlockStatus.mockReturnValue({
       isBlocked: false,
@@ -159,13 +159,13 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-  
+
     const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
-    
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '0.5' } });
     });
-    
+
     expect(amountInput.value).toBe('0.5');
   });
 
@@ -180,14 +180,14 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-  
+
     const maxButton = screen.getByText(/Max$/i);
     const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
-    
+
     await act(async () => {
       fireEvent.click(maxButton);
     });
-    
+
     // Input should now have a value (the exact format depends on your implementation)
     expect(amountInput.value).not.toBe('');
   });
@@ -203,13 +203,13 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-  
+
     const closeButton = screen.getByRole('button', { name: '' }); // X button has no text
-    
+
     await act(async () => {
       fireEvent.click(closeButton);
     });
-    
+
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
@@ -223,7 +223,7 @@ describe("FaucetPopup Component", () => {
       },
       principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
     });
-    
+
     await act(async () => {
       render(
         <Provider store={store}>
@@ -233,20 +233,20 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-    
+
     // Set an amount
     const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
     const faucetButton = screen.getByRole('button', { name: /Faucet ckBTC/i });
-    
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '0.5' } });
     });
-    
+
     // Now execute the faucet action which should error
     await act(async () => {
       fireEvent.click(faucetButton);
     });
-    
+
     // Check if toast error was called
     expect(toast.error).toHaveBeenCalled();
   });
@@ -258,7 +258,7 @@ describe("FaucetPopup Component", () => {
     useFunctionBlockStatus.mockReturnValue({
       isBlocked: true,
     });
-    
+
     await act(async () => {
       render(
         <Provider store={store}>
@@ -268,27 +268,27 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-    
+
     // Set an amount
     const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
     const faucetButton = screen.getByRole('button', { name: /Faucet ckBTC/i });
-    
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '0.5' } });
     });
-    
+
     // Now execute the faucet action which should be blocked
     await act(async () => {
       fireEvent.click(faucetButton);
     });
-    
+
     // Should show blocked message
     expect(toast.error).toHaveBeenCalledWith(
       "You are temporarily blocked from using this function",
       expect.any(Object)
     );
   });
-  
+
   // Test: Handling of faucet limit
   test("displays warning when faucet limit is exceeded", async () => {
     // Override the userData mock for this specific test
@@ -298,9 +298,9 @@ describe("FaucetPopup Component", () => {
         Ok: {
           reserves: [[
             [
-              "ckBTC", 
-              { 
-                faucet_limit: 50000000000, 
+              "ckBTC",
+              {
+                faucet_limit: 50000000000,
                 faucet_usage: 50000000000 // Usage equals limit, so it's exceeded
               }
             ]
@@ -308,7 +308,7 @@ describe("FaucetPopup Component", () => {
         }
       }
     });
-    
+
     await act(async () => {
       render(
         <Provider store={store}>
@@ -318,12 +318,12 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-    
+
     // Check if warning message is displayed
     expect(screen.getByText(/Faucet limit has been exceeded/i)).toBeInTheDocument();
   });
-  
-  
+
+
   // Test: Handles out of cycles error
   test("displays proper message for out of cycles error", async () => {
     // Override the mock for this specific test
@@ -334,7 +334,7 @@ describe("FaucetPopup Component", () => {
       },
       principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
     });
-    
+
     await act(async () => {
       render(
         <Provider store={store}>
@@ -344,22 +344,22 @@ describe("FaucetPopup Component", () => {
         </Provider>
       );
     });
-    
+
     // Set an amount
     const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
     const faucetButton = screen.getByRole('button', { name: /Faucet ckBTC/i });
-    
+
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '0.5' } });
       fireEvent.click(faucetButton);
     });
-    
+
     // Should show out of cycles message
     expect(toast.error).toHaveBeenCalledWith(
       "Canister is out of cycles. Please wait, the admin has been notified.",
       expect.any(Object)
     );
   });
-  
+
 
 });

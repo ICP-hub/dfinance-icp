@@ -34,22 +34,22 @@ describe('MySupplyModal Component', () => {
   });
 
   test('does not render when isModalOpen is false', () => {
-    render(<MySupplyModal {...{...defaultProps, isModalOpen: false}} />);
+    render(<MySupplyModal {...{ ...defaultProps, isModalOpen: false }} />);
     expect(screen.queryByTestId('modal')).not.toBeInTheDocument();
   });
 
   test('shows loading indicator when isLoading is true', () => {
-    render(<MySupplyModal {...{...defaultProps, isLoading: true}} />);
-    
+    render(<MySupplyModal {...{ ...defaultProps, isLoading: true }} />);
+
     const modalContent = screen.getByText('Test Content').parentElement;
     expect(modalContent).toHaveClass('opacity-50');
-    
+
     const loader = document.querySelector('.loader');
     expect(loader).toBeInTheDocument();
   });
 
   test('does not close modal on backdrop click when isLoading is true', () => {
-    render(<MySupplyModal {...{...defaultProps, isLoading: true}} />);
+    render(<MySupplyModal {...{ ...defaultProps, isLoading: true }} />);
     fireEvent.click(screen.getByTestId('modal'));
     expect(mockSetIsModalOpen).not.toHaveBeenCalled();
   });
@@ -70,7 +70,7 @@ describe('MySupplyModal Component', () => {
   });
 
   test('applies additional opacity class when loading', () => {
-    render(<MySupplyModal {...{...defaultProps, isLoading: true}} />);
+    render(<MySupplyModal {...{ ...defaultProps, isLoading: true }} />);
     const modalContent = screen.getByText('Test Content').parentElement;
     expect(modalContent).toHaveClass('opacity-50');
     expect(modalContent).toHaveClass('pointer-events-none');
@@ -78,7 +78,7 @@ describe('MySupplyModal Component', () => {
 
   test('passes children correctly', () => {
     const customChildren = <div data-testid="custom-child">Custom Child</div>;
-    render(<MySupplyModal {...{...defaultProps, children: customChildren}} />);
+    render(<MySupplyModal {...{ ...defaultProps, children: customChildren }} />);
     expect(screen.getByTestId('custom-child')).toBeInTheDocument();
     expect(screen.getByText('Custom Child')).toBeInTheDocument();
   });

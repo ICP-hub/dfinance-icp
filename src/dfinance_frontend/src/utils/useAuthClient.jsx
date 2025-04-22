@@ -162,7 +162,7 @@ export const useAuthClient = (options = defaultOptions) => {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
-        
+
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }
@@ -217,11 +217,11 @@ export const useAuthClient = (options = defaultOptions) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => {});
+      agent.fetchRootKey().catch((err) => { });
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-  
+
   const reloadLogin = async () => {
     try {
       if (
@@ -230,7 +230,7 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   // Registers user
@@ -273,7 +273,7 @@ export const useAuthClient = (options = defaultOptions) => {
         console.error("Error in checkUser:", error);
       }
     };
-  
+
     if (isAuthenticated) {
       const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
       if (!hasCheckedUser) {
@@ -281,8 +281,8 @@ export const useAuthClient = (options = defaultOptions) => {
       }
     }
   }, [backendActor, isAuthenticated]);
-  
-  
+
+
 
   // Fetches reserve data for a specific asset
   const fetchReserveData = async (asset) => {

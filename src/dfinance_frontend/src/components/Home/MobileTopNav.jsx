@@ -500,7 +500,7 @@ const MobileTopNav = ({
   };
 
   const handleTour = () => {
-   
+
     dispatch(joyRideTrigger());
     handleClose();
     navigate("/dashboard");

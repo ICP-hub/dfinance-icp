@@ -29,10 +29,10 @@ use icrc_ledger_types::icrc2::approve::ApproveError;
  */
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
-    pub asset_name: Option<String>,
+    pub asset_name: String,
     pub id: u16,
-    pub d_token_canister: Option<String>,
-    pub debt_token_canister: Option<String>,
+    pub d_token_canister: Option<Principal>,
+    pub debt_token_canister: Option<Principal>,
     pub borrow_rate: Nat, 
     pub current_liquidity_rate: Nat,
     pub asset_supply: Nat,

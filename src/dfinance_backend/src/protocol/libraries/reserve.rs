@@ -12,7 +12,7 @@ use crate::declarations::structs::AssetInfo;
 use crate::declarations::structs::ReserveCache;
 use crate::declarations::structs::ReserveData;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
-use crate::guards::access_control::guard_admin_only;
+use crate::guards::access_control::{guard_admin_only, to_check_controller};
 use crate::protocol::libraries::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -186,10 +186,7 @@ pub async fn update_interest_rates(
     ic_cdk::println!("curr debt {}", reserve_cache.curr_debt);
     ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
 
-    let asset = reserve_data
-        .asset_name
-        .clone()
-        .unwrap_or("no token".to_string());
+    let asset = reserve_data.asset_name.clone();
     let interest_rate_params = initialize_interest_rate_params(&asset);
     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
     ic_cdk::println!("total debt: {:?}", total_debt);
@@ -200,7 +197,7 @@ pub async fn update_interest_rates(
         total_debt,
         &interest_rate_params,
         reserve_cache.reserve_factor.clone(),
-        reserve_data.asset_name.clone().expect("no name"),
+        reserve_data.asset_name.clone(),
     )
     .await?;
 
@@ -685,15 +682,15 @@ pub async fn initialize(
         image: asset_image,
     };
 
-    reserve_data.asset_name = Some(token_name.clone());
+    reserve_data.asset_name = token_name.clone();
     reserve_data.d_token_canister =
         match create_token_canister(d_token_name.clone(), d_token_name).await {
-            Ok(principal) => Some(principal.to_string()),
+            Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
     reserve_data.debt_token_canister =
         match create_token_canister(debt_token_name.clone(), debt_token_name).await {
-            Ok(principal) => Some(principal.to_string()),
+            Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
 

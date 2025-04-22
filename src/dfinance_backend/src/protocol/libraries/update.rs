@@ -3,23 +3,24 @@ use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
-    ReserveCache, ReserveData, ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+    ReserveCache, ReserveData,
 };
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::stable_storage::{
-        state_handler::{mutate_state,read_state},
-        storable::Candid,
-    };
+    state_handler::{mutate_state, read_state},
+    storable::Candid,
+};
 
-use candid::{Nat, Principal};
-use crate::protocol::utils::price::get_exchange_rates;
-use ic_cdk::update;
 use crate::guards::api_limitor::request_limiter;
+use crate::protocol::utils::price::get_exchange_rates;
+use candid::{Nat, Principal};
+use ic_cdk::update;
 
 pub struct UpdateLogic;
 
@@ -108,7 +109,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_liquidity_index.clone(),
             user_principal,
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            reserve.d_token_canister.clone().unwrap(),
             platform_principal,
             true,
         )
@@ -217,7 +218,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_debt_index.clone(),
             user_principal,
-            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
+            reserve.debt_token_canister.clone().unwrap(),
             platform_principal,
             false,
         )
@@ -280,7 +281,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_liquidity_index.clone(),
             user_principal,
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            reserve.d_token_canister.clone().unwrap(),
             platform_principal,
             true,
         )
@@ -305,11 +306,8 @@ impl UpdateLogic {
             }
         }
 
-        let dtoken_balance = get_balance(
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
-            user_principal,
-        )
-        .await?;
+        let dtoken_balance =
+            get_balance(reserve.d_token_canister.clone().unwrap(), user_principal).await?;
 
         if params.is_collateral == false && dtoken_balance == zero_nat_value() {
             if let Some((_, reserve_data)) = user_reserve {
@@ -388,7 +386,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_debt_index.clone(),
             user_principal,
-            Principal::from_text(debt_token).unwrap(),
+            debt_token,
             platform_principal,
             false,
         )
@@ -402,11 +400,8 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        let balance_result = get_balance(
-            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
-            user_principal,
-        )
-        .await;
+        let balance_result =
+            get_balance(reserve.debt_token_canister.clone().unwrap(), user_principal).await;
 
         let debttoken_balance = match balance_result {
             Ok(bal) => bal,

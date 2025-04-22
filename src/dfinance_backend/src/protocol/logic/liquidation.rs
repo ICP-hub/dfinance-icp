@@ -1,28 +1,28 @@
 use crate::api::inter_canister::get_balance;
+use crate::api::query::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
-use crate::stable_storage::storable::Candid;
-use crate::guards::access_control::{guard_prevent_anonymous,guard_principal_not_anonymous};
-use crate::protocol::logic::borrow::execute_repay;
+use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
+use crate::guards::api_limitor::request_limiter;
+use crate::guards::locks::CallerGuard;
 use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::update::{user_data, user_reserve};
+use crate::protocol::logic::borrow::execute_repay;
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::declarations::datatypes::UserReserveData;
+use crate::stable_storage::storable::Candid;
 use crate::{
-    stable_storage::state_handler::{read_state, mutate_state},
     declarations::structs::ExecuteSupplyParams,
     protocol::libraries::update::UpdateLogic,
+    stable_storage::state_handler::{mutate_state, read_state},
 };
-use crate::api::query::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::guards::locks::CallerGuard;
-use crate::guards::api_limitor::request_limiter;
 
 /*
 -------------------------------------
@@ -106,9 +106,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     // Check if the user has a reserve for the asset
     let mut user_reserve_data = user_reserve(&mut user_account_data, &params.collateral_asset)
-    .and_then(|(_, reserve_data)| Some(reserve_data.clone()))
-    .ok_or(Error::NoUserReserveDataFound)?;
-
+        .and_then(|(_, reserve_data)| Some(reserve_data.clone()))
+        .ok_or(Error::NoUserReserveDataFound)?;
 
     let debt_asset_price = get_cached_exchange_rate(params.debt_asset.clone())?;
 
@@ -154,9 +153,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     })
     .ok_or_else(|| Error::NoCanisterIdFound)?;
 
-    // why this
-    let collateral_dtoken_principal = Principal::from_text(dtoken_canister)
-        .map_err(|_| Error::ConversionErrorFromTextToPrincipal)?;
+    let collateral_dtoken_principal = dtoken_canister;
 
     let reward_amount: Nat = params.reward_amount.clone();
     ic_cdk::println!("reward_amount: {}", reward_amount);
@@ -251,26 +248,26 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     //     }
     // }
 
-     if let Err(err) = UpdateLogic::update_user_data_supply(
+    if let Err(err) = UpdateLogic::update_user_data_supply(
         liquidator_principal,
         &collateral_reserve_cache,
         supply_param,
         &mut collateral_reserve_data,
     )
-    .await {
+    .await
+    {
         // bhanu yaha pe error pe hi hona chahiye mint scaled ?
-            mint_scaled(
-                &mut collateral_reserve_data,
-                &mut user_reserve_data,
-                reward_amount,
-                collateral_reserve_cache.next_liquidity_index,
-                user_principal,
-                collateral_dtoken_principal,
-                platform_principal,
-                true,
-            )
-            .await?;
-
+        mint_scaled(
+            &mut collateral_reserve_data,
+            &mut user_reserve_data,
+            reward_amount,
+            collateral_reserve_cache.next_liquidity_index,
+            user_principal,
+            collateral_dtoken_principal,
+            platform_principal,
+            true,
+        )
+        .await?;
 
         return Err(err);
     }
@@ -281,7 +278,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             Candid(collateral_reserve_data.clone()),
         )
     });
-
 
     // if let Some(ref mut reserves) = user_account_data.reserves {
     //     if let Some(reserve) = reserves
@@ -301,9 +297,11 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     match user_account_data.reserves.as_mut() {
         Some(reserves) => {
-            if let Some((_, reserve_data)) = reserves.iter_mut()
-                .find(|(asset, _)| asset == &params.collateral_asset) {
-                    *reserve_data = user_reserve_data.clone();
+            if let Some((_, reserve_data)) = reserves
+                .iter_mut()
+                .find(|(asset, _)| asset == &params.collateral_asset)
+            {
+                *reserve_data = user_reserve_data.clone();
             } else {
                 reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
             }
@@ -330,18 +328,15 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let repay_response = execute_repay(params_repay).await;
 
-    
-
     match repay_response {
         Ok(_) => {
             ic_cdk::println!("Repayment successful");
             Ok(params.amount)
         }
         Err(e) => {
-
             let mut liquidator_collateral_reserve =
                 user_reserve(&mut liquidator_data, &params.collateral_asset);
-                
+
             let mut liquidator_reserve_data = match liquidator_collateral_reserve.as_mut() {
                 Some((_, reserve_data)) => reserve_data,
                 None => {
@@ -367,10 +362,15 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
                     // bhanu handle unwrap
                     match liquidator_data.reserves.as_mut() {
-                        Some(reserves) => match reserves.iter_mut().find(|(asset, _)| asset == &params.collateral_asset) {
+                        Some(reserves) => match reserves
+                            .iter_mut()
+                            .find(|(asset, _)| asset == &params.collateral_asset)
+                        {
                             Some((_, reserve_data)) => reserve_data,
                             None => {
-                                ic_cdk::println!("Failed to find the collateral asset after insertion.");
+                                ic_cdk::println!(
+                                    "Failed to find the collateral asset after insertion."
+                                );
                                 return Err(e);
                             }
                         },
@@ -463,17 +463,15 @@ pub async fn to_get_reward_amount(
     ic_cdk::println!("Starting to_get_reward_amount function");
     ic_cdk::println!("Received parameters: amount = {:?}, collateral_asset = {:?}, debt_asset = {:?}, user_principal = {:?}", amount, collateral_asset, debt_asset, user_principal);
 
-    let d_token_canister =
-        match Principal::from_text(collateral_reserve_data.d_token_canister.clone().unwrap()) {
-            Ok(canister) => {
-                ic_cdk::println!("Parsed d_token_canister: {:?}", canister);
-                canister
-            }
-            Err(e) => {
-                ic_cdk::println!("Error converting text to principal: {:?}", e);
-                return Err(Error::ConversionErrorFromTextToPrincipal);
-            }
-        };
+    let d_token_canister = match collateral_reserve_data.d_token_canister.clone() {
+        Some(canister) => {
+            ic_cdk::println!("Parsed d_token_canister: {:?}", canister);
+            canister
+        }
+        None => {
+            return Err(Error::ConversionErrorFromTextToPrincipal);
+        }
+    };
 
     let mut collateral_balance = get_balance(d_token_canister, user_principal).await?;
 

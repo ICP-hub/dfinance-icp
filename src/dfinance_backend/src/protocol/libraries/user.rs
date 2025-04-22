@@ -1,27 +1,29 @@
 use super::update::user_data;
 use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
+use crate::api::query::{
+    get_all_users, reserve_ledger_canister_id, user_normalized_debt, user_normalized_supply,
+};
+use crate::api::query::{get_cached_exchange_rate, get_reserve_data};
 use crate::constants::constant_variables::constants::{
-    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR
+    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
 };
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
-use crate::declarations::structs::AssetData;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::guards::access_control::guard_admin_only;
-use crate::stable_storage::storable::Candid;
+use crate::declarations::datatypes::{UserAccountData, UserData, UserReserveData};
+use crate::declarations::structs::AssetData;
 use crate::guards::access_control::{
  {check_is_tester, guard_prevent_anonymous},
 };
 use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::utils::math_utils::get_max_value;
-use crate::declarations::datatypes::{UserAccountData, UserData, UserReserveData};
+use crate::stable_storage::storable::Candid;
 use crate::{
-    stable_storage::state_handler::{mutate_state,read_state},
     protocol::utils::math_utils::ScalingMath,
+    stable_storage::state_handler::{mutate_state, read_state},
 };
-use crate::api::query::{get_cached_exchange_rate, get_reserve_data,};
-use crate::api::query::{get_all_users, reserve_ledger_canister_id, user_normalized_debt, user_normalized_supply,};
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};
@@ -578,8 +580,7 @@ pub async fn get_user_balance_in_base_currency(
 
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let d_token_canister_principal: Principal =
-        Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
+    let d_token_canister_principal: Principal = asset_reserve.d_token_canister.clone().unwrap();
 
     let user_scaled_balance = get_balance(d_token_canister_principal, user_principal).await?;
 
@@ -675,8 +676,7 @@ pub async fn get_user_debt_in_base_currency(
 ) -> Result<Nat, Error> {
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let debt_token_canister_principal =
-        Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
+    let debt_token_canister_principal = asset_reserve.debt_token_canister.clone().unwrap();
 
     let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await?;
 
@@ -1014,10 +1014,8 @@ pub async fn create_user_reserve_with_low_health(
         };
     };
 
-    let dtoken_principal =
-        Principal::from_text(supply_reserve_data.d_token_canister.clone().unwrap()).unwrap();
-    let debt_token_principal =
-        Principal::from_text(borrow_reserve_data.debt_token_canister.clone().unwrap()).unwrap();
+    let dtoken_principal = supply_reserve_data.d_token_canister.clone().unwrap();
+    let debt_token_principal = borrow_reserve_data.debt_token_canister.clone().unwrap();
 
     match asset_transfer(
         user_principal,

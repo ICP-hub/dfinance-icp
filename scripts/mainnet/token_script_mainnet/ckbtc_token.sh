@@ -35,7 +35,7 @@ reserve_factor=$(awk -v data=$reserve_factor -v scale=${SCALING_FACTOR//_/} 'BEG
 # Set the RESERVE_DATA
 RESERVE_DATA="(
   record {
-    asset_name = null; 
+    asset_name = $ESCAPED_TOKEN_NAME;  
     id = 1;
     \"d_token_canister\" = null;
     \"debt_token_canister\" = null;
@@ -53,9 +53,6 @@ RESERVE_DATA="(
       \"borrow_cap\" = $borrow_cap;
       \"supply_cap\" = $supply_cap;
       \"liquidation_protocol_fee\" = 0;
-      \"frozen\" = false;
-      \"active\" = true;
-      \"paused\" = false;
       \"reserve_factor\" = $reserve_factor;
     };
     \"can_be_collateral\" = opt true;

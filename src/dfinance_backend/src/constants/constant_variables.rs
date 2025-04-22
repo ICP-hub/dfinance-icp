@@ -23,4 +23,6 @@ pub mod constants {
     pub const SECOND_PER_DAY: Duration = Duration::from_secs(86_400);
     pub const MAX_ASSET_LENGTH: usize = 7;
     pub const MAIN_ADMIN: &str = "main_admin";
+    pub const XRC_CYCLES_FEE: u128 = 1_000_000_000u128;
+    pub const MAIN_CONTROLLER: &str = "main_controller";
 }

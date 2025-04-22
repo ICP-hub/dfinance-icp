@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 
 # Call each script sequentially
 dfx ledger fabricate-cycles --canister dfinance_backend

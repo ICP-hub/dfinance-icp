@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 
 TOKEN_NAME="ckUSDT"
 
@@ -62,4 +64,4 @@ RESERVE_DATA="(
 )"
 
 # Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" --ic  --ic
+dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" 

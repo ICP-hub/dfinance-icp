@@ -1,10 +1,12 @@
 #!/bin/bash
+set -e
+
 
 TOKEN_NAME="ckBTC"
 
 # Set the canister name
 CANISTER_NAME="dfinance_backend"
-SCALING_FACTOR=100_000_000
+SCALING_FACTOR=100_000_000   #100 million
 
 # Escape the TOKEN_NAME for use in the ReserveData
 ESCAPED_TOKEN_NAME=$(printf '%s' "$TOKEN_NAME" | jq -sR .)
@@ -16,8 +18,9 @@ liquidation_threshold=78
 liquidation_bonus=5
 #10 Billion for borrow_cap and supply_cap
 # The values will multiplied by SCALING_FACTOR to avoid floating point issues
-borrow_cap=10_000_000_000
-supply_cap=10_000_000_000
+borrow_cap=10_000_000_000     
+supply_cap=10_000_000_000     
+
 reserve_factor=15
 
 # Perform the multiplication using bash arithmetic
@@ -62,4 +65,4 @@ RESERVE_DATA="(
 )"
 
 # Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" --ic  --ic
+dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" 

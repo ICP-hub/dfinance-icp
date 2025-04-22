@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 TOKEN_NAME="ckUSDC"
 

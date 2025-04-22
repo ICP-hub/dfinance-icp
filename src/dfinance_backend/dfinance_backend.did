@@ -89,6 +89,7 @@ type Error = variant {
   TOOMANYREQUESTS;
   UserNotFound;
   CalculateUserAccountDataError;
+  ControllerNotFound;
   AdminAlreadyExists;
   NormalizedDebt;
 };
@@ -216,7 +217,6 @@ service : (principal) -> {
   get_asset_principal : (text) -> (Result_6) query;
   get_cached_exchange_rate : (text) -> (Result_4) query;
   get_caller_session : () -> (Result_7) query;
-  get_canister_id_by_name : (text) -> (Result_6) query;
   get_exchange_rates : (text, opt text, nat) -> (Result_8);
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
@@ -246,6 +246,7 @@ service : (principal) -> {
   set_canister_id : (text, principal) -> (Result_1);
   store_session_data : (text, nat) -> (Result_1);
   store_user_guide : () -> (Result_1);
+  to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);
   update_reserves_price : () -> (Result_1);

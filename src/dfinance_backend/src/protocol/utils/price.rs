@@ -10,7 +10,7 @@ use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateRes
 use std::collections::HashMap;
 use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{
-    ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKUSDC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDT_PRICE,TEST_ICP_PRICE
+    ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
 };
 use candid::Principal;
 use crate::guards::api_limitor::request_limiter;
@@ -205,7 +205,7 @@ pub async fn get_exchange_rates(
             xrc_canister_id,
             "get_exchange_rate",
             (args,),
-            1_000_000_000, //TODO : use constant variable xrc_cycles_fee
+            XRC_CYCLES_FEE,
         )
         .await;
 

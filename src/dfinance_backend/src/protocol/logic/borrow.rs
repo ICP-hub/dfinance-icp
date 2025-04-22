@@ -8,7 +8,7 @@ use crate::constants::interest_variables::constants::{
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::stable_storage::storable::Candid;
 use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::guards::access_control::guard_prevent_anonymous;
+use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
 use crate::protocol::libraries::reserve::{self};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;

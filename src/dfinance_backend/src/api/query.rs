@@ -1,3 +1,4 @@
+use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
 use crate::constants::errors::Error;
 use crate::declarations::structs::AssetInfo;
 use crate::guards::access_control::guard_admin_only;
@@ -312,7 +313,6 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
  * @returns The principal ID of the canister or an error.
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
-#[query] //TODO: remove this later.
 pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
     read_state(|state| {
         state
@@ -386,11 +386,16 @@ pub fn get_user_guide() -> Result<bool, Error> {
  * @functionality Retrieve Controller Information
  */
 pub fn get_controller() -> Result<InitArgs, Error> {
-    match read_state(|state| state.meta_data.get(&0).ok_or_else(|| Error::UserNotFound)) {
-        Ok(va) => Ok(va.0),
-        Err(_) => return Err(Error::ErrorNotController),
-    }
+    read_state(|state| {
+        state
+            .meta_data
+            .get(&MAIN_CONTROLLER.to_string()) // use the appropriate string key
+            .map(|candid_val| candid_val.0.clone()) // extract InitArgs from Candid wrapper
+            .ok_or(Error::ControllerNotFound)
+    })
+    .map_err(|_| Error::ErrorNotController)
 }
+
 
 
 
@@ -422,6 +427,7 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  * @functionality This function fetches the total supply of a given asset and handles calculations related to user reserves and balance.
  */
 //TODO check if this func needed
+//response (jyotirmay): i think we can check this function when we will be dealing with the logic it can happen that we need it somehow.
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,

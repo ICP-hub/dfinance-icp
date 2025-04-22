@@ -7,7 +7,6 @@ use crate::{
 };
 use candid::Principal;
 use ic_cdk::{caller, query, update};
-//TODO: need to add comments better in the new function like add, remove and guard.
 
 // guard to allow only app level controller
 pub fn guard_controller_only() -> Result<(), Error> {
@@ -188,8 +187,8 @@ pub fn check_is_tester() -> bool {
  * @title Add Admin to the Canister
  * @dev This function adds a new admin to the state if they do not already exist. Only existing admins can perform this action.
  *      It prevents anonymous calls, checks if the caller and new admin are not anonymous, and verifies the caller is an admin.
- *      A unique key is assigned to the new admin, and the state is updated.
  *
+ * @param name The name of the new admin to be added.
  * @param new_admin The `Principal` of the user to be added as an admin.
  *
  * @returns
@@ -258,7 +257,21 @@ pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
     })
 }
 
+/*
+ * @title Admin Access Guard
+ * @notice Ensures that the caller is an authenticated and authorized admin.
+ * @dev Verifies that the caller is not anonymous and exists in the admin data store.
+ * @functionality Access control mechanism to restrict certain operations to admin users only.
+ *
+ * # Parameters
+ * - None
+ *
+ * # Returns
+ * - `Ok(())` - If the caller is a valid admin.
+ * - `Err(Error)` - If the caller is anonymous or not listed as an admin.
+ */
 //TODO: if we dont need it in the frontend then remove macro.
+//TODO: shift this code into the guard file.
 #[query]
 pub fn guard_admin_only() -> Result<(), Error> {
     guard_prevent_anonymous()?;
@@ -303,6 +316,19 @@ pub fn add_developer(name: String, developer_id: Principal) -> Result<String, Er
     })
 }
 
+/*
+ * @title Remove Developer from the Project
+ * @dev Removes a developer from the developer map based on their `Principal` ID. Only admins can remove developers.
+ *      It checks if the caller is authorized and not anonymous. If the developer exists, they are removed from the state.
+ *
+ * @param developer_to_remove The `Principal` of the developer to be removed.
+ *
+ * @returns
+ *      - `Ok("Remove developer successfully")`: If the developer is removed successfully.
+ *      - `Err(Error::DeveloperNotFound)`: If the developer does not exist.
+ *
+ * @functionality Developer Role Management - Remove Developer
+ */
 #[update]
 pub fn remove_developer(developer_to_remove: Principal) -> Result<String, Error> {
     guard_prevent_anonymous()?;
@@ -318,7 +344,21 @@ pub fn remove_developer(developer_to_remove: Principal) -> Result<String, Error>
     })
 }
 
+/*
+ * @title Developer Access Guard
+ * @notice Ensures that the caller is an authenticated and authorized developer.
+ * @dev Verifies that the caller is not anonymous and exists in the developer data store.
+ * @functionality Access control mechanism to restrict certain operations to developer users only.
+ *
+ * # Parameters
+ * - None
+ *
+ * # Returns
+ * - `Ok(())` - If the caller is a valid developer.
+ * - `Err(Error)` - If the caller is anonymous or not listed as a developer.
+ */
 //TODO: if we dont need it in the frontend then remove macro.
+//TODO: shift this code into the guard file.
 #[query]
 pub fn guard_developer_only() -> Result<(), Error> {
     guard_prevent_anonymous()?;

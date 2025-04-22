@@ -42,18 +42,17 @@ pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
     Ok(is_blocked)
 }
 
-// TODO: need to chaange this comments a bit later.
 /*
- * @title Check Function Block Status
- * @notice Checks if the caller is blocked from using a specific function.
- * @dev Compares current timestamp with block expiration time to determine if block is active.
- * @functionality User verification functionality that allows users to check if they're currently blocked from using specific functions
+ * @title Check User Rate Limit Status
+ * @notice Determines whether the caller has exceeded the allowed number of function calls within a specific time window.
+ * @dev Counts the number of valid timestamps in the rate-limiting queue and compares it with the predefined limit.
+ * @functionality User rate-limiting mechanism to restrict excessive usage of functions.
  *
  * # Parameters
- * - `function_name` - The name of the function to check.
+ * - `function_name` - The name of the function to check. *(Currently unused, can be integrated for per-function limits.)*
  *
  * # Returns
- * - `Ok(bool)` - True if blocked, false otherwise.
+ * - `Ok(bool)` - True if the user is currently rate-limited (blocked), false otherwise.
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
 #[query]
@@ -165,6 +164,8 @@ pub fn request_limiter() -> Result<(), Error> {
  * - `Ok(bool)` - True if blocked, false otherwise.
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
+//TODO: we are still using this function instead we need is_user_blocked function to call from the frontend
+//TODO: need to remove this function.
 #[query]
 pub fn is_function_blocked(function_name: String) -> Result<bool, Error> {
     let caller_id = ic_cdk::caller();

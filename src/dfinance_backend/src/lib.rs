@@ -25,7 +25,7 @@ use crate::declarations::structs::{
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
 use api::query::get_all_users;
-use constants::constant_variables::constants::{MAIN_ADMIN, SECOND_PER_DAY};
+use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
 
@@ -48,7 +48,7 @@ pub async fn init(args: Principal) {
         state.admin_data.insert(args, MAIN_ADMIN.to_string());
 
         state.meta_data.insert(
-            "controller_1".to_string(),
+            MAIN_CONTROLLER.to_string(),
             Candid(InitArgs {
                 controller_id: args,
             }),

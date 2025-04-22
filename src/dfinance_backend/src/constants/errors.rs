@@ -86,7 +86,8 @@ pub enum Error {
     NotADeveloper,
     NotASupport,
     NotAnAuditor,
-    AdminNotFound
+    AdminNotFound,
+    ControllerNotFound,
 
 }
 
@@ -177,6 +178,7 @@ impl Error {
             Error::NotADeveloper => "Caller is not a developer!",
             Error::NotASupport => "Caller is not a support user!",
             Error::NotAnAuditor => "Caller is not an auditor!",
+            Error::ControllerNotFound => "Controller not found!",
         }
     }
 }

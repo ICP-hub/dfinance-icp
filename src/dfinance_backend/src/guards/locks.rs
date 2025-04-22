@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use candid::Principal;
-use ic_cdk::query;
 use crate::constants::errors::Error;
 
+//TODO: need to shift this into the stable memory
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State{pending_requests: BTreeSet::new()});
 }

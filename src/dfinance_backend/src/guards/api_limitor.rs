@@ -3,16 +3,16 @@ use crate::constants::errors::Error;
 use crate::protocol::utils::math_utils::current_timestamp;
 use candid::Principal;
 use ic_cdk::{query, update};
+use crate::guards::access_control::guard_prevent_anonymous;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 
-use super::access_control::guard_prevent_anonymous;
 
 thread_local! {
     static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
 }
 
-
+//TODO: remove this function later at the time of deployment, just to check number of calls by the user.
 #[query]
 pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
     // let caller = ic_cdk::api::caller();

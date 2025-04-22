@@ -1,8 +1,8 @@
 use crate::api::inter_canister::get_balance;
-use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR, ZERO_VALUE};
+use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::{MAX_ASSET_LENGTH, TOKEN_TRANSFER_FEE};
+use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
 use crate::stable_storage::storable::Candid;

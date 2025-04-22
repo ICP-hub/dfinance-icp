@@ -32,6 +32,7 @@ pub fn call_test_function() {
 pub fn setup() -> (PocketIc, Principal) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
+    ic_cdk::println!("User principal: {}", user_principal.to_text());
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
@@ -51,6 +52,31 @@ pub fn setup() -> (PocketIc, Principal) {
         Some(Principal::anonymous()),
         vec![user_principal],
     );
+
+    let result = pic.update_call(
+        backend_canister,
+        user_principal,
+        "add_admin_test",
+        encode_args(("new_admin".to_string(), user_principal)).unwrap(),
+    );
+    
+    match result {
+        Ok(wasm_result) => match wasm_result {
+            WasmResult::Reply(bytes) => {
+                println!("Call succeeded. Reply bytes: {:?}", bytes);
+                // Optionally, decode bytes if you know the return type
+                // e.g., let decoded: YourType = decode(&bytes).unwrap();
+            }
+            WasmResult::Reject(reason) => {
+                println!("Call rejected: {}", reason);
+            }
+        },
+        Err(user_error) => {
+            println!("Call failed with user error: {:?}", user_error);
+        }
+    }
+    
+    test_add_tester(&pic, backend_canister, user_principal, user_principal);
 
     // 🔹 Define test input (token name + reserve data)
     let ICP_token_name = "ICP".to_string();
@@ -221,7 +247,7 @@ pub fn setup() -> (PocketIc, Principal) {
             backend_canister,
             user_principal,
             "initialize",
-            encode_args((token_name, reserve_data)).unwrap(),
+            encode_args((token_name, reserve_data, "")).unwrap(),
         );
 
         match result {
@@ -271,7 +297,7 @@ pub fn setup() -> (PocketIc, Principal) {
      * @notice Registers testers to validate liquidation scenarios.
      * @dev Adds the primary user and test users (1 to 5).
      */
-    test_add_tester(&pic, backend_canister, user_principal, user_principal);
+    // test_add_tester(&pic, backend_canister, user_principal, user_principal);
     for num in 1..=5 {
         let index: u32 = num as u32;
         test_add_tester(

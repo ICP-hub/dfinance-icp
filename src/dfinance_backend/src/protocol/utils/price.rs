@@ -2,7 +2,7 @@ use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
-use crate::guards::access_control::{check_is_tester, guard_prevent_anonymous};
+use crate::guards::access_control::check_is_tester;
 use crate::declarations::datatypes::{CachedPrice, PriceCache};
 use candid::Nat;
 use ic_cdk::{query, update};
@@ -12,7 +12,6 @@ use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{
     ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKUSDC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDT_PRICE,TEST_ICP_PRICE
 };
-use crate::guards::locks::CallerGuard;
 use candid::Principal;
 use crate::guards::api_limitor::request_limiter;
 
@@ -54,6 +53,7 @@ impl PriceCache {
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
  */
+//TODO: i think we can remove this function as we are only using it in the script we can replace this with individual update reserve price.
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
     request_limiter()?;

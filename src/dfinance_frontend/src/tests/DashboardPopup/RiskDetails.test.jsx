@@ -4,17 +4,16 @@ import RiskPopup from '../../components/Dashboard/DashboardPopup/RiskDetails';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 
-// Mocking Redux Store
 const mockReducer = (state = { theme: { theme: 'light' } }, action) => state;
 const mockStore = createStore(mockReducer);
 
 const mockUserAccountData = {
   Ok: [
-    1000000000, // collateral
-    200000000,  // debt
-    300000000,  // max LTV
-    400000000,  // liquidation threshold
-    500000000,  // health factor
+    1000000000, 
+    200000000,  
+    300000000,  
+    400000000, 
+    500000000,  
   ],
 };
 
@@ -26,7 +25,6 @@ describe('RiskPopup Component', () => {
       </Provider>
     );
 
-    // Use getAllByText if multiple elements with the same text
     const liquidationThresholds = screen.getAllByText(/4.00/);
     expect(liquidationThresholds.length).toBeGreaterThan(0);
   });

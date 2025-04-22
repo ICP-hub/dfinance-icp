@@ -13,15 +13,12 @@ describe("FreezeCanisterPopup", () => {
           </Router>
         );
       
-        // Check if the popup content is displayed
         expect(screen.getByText(/Canister Out of Cycles/i)).toBeInTheDocument();
         expect(screen.getByText(/The canister is out of cycles./i)).toBeInTheDocument();
         expect(screen.getByText(/Your funds are safe./i)).toBeInTheDocument();
       
-        // Click the close button
         fireEvent.click(screen.getByText("Close"));
       
-        // Ensure onClose is called
         expect(onCloseMock).toHaveBeenCalledTimes(1);
       });
       

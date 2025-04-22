@@ -5,7 +5,6 @@ import TestnetModePopup from "../../components/Dashboard/DashboardPopup/testnetm
 import { ToastContainer } from "react-toastify";
 import '@testing-library/jest-dom/extend-expect';
 
-// Mocking the toast container to prevent actual toasts in the tests
 jest.mock("react-toastify", () => ({
     ...jest.requireActual("react-toastify"),
     toast: {

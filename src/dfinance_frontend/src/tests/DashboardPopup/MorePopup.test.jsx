@@ -14,7 +14,6 @@ describe('Popup Component', () => {
   test('renders popup with correct links', () => {
     render(<Popup position={mockPosition} onClose={mockOnClose} />);
     
-    // Check if links exist with correct text
     expect(screen.getByText('Doc')).toBeInTheDocument();
     expect(screen.getByText("FAQ's")).toBeInTheDocument();
   });
@@ -22,10 +21,8 @@ describe('Popup Component', () => {
   test('positions popup correctly based on provided position', () => {
     render(<Popup position={mockPosition} onClose={mockOnClose} />);
     
-    // Get the main popup container
     const popupContainer = screen.getByText('Doc').closest('div').parentElement.parentElement;
     
-    // Check if positioning styles are correctly applied
     expect(popupContainer).toHaveStyle({
       position: 'absolute',
       top: `${mockPosition.top + 100}px`,
@@ -37,12 +34,10 @@ describe('Popup Component', () => {
   test('links have correct attributes', () => {
     render(<Popup position={mockPosition} onClose={mockOnClose} />);
     
-    // Check if Doc link has correct href and target attributes
     const docLink = screen.getByText('Doc').closest('a');
     expect(docLink).toHaveAttribute('href', 'https://dfinance.notion.site/bbe01eaf7d414148bc4b9843675a532f?v=8b792ba254da44ecab1c0c016331c8af&pvs=4');
     expect(docLink).toHaveAttribute('target', 'blank');
     
-    // Check if FAQ link has correct href attribute
     const faqLink = screen.getByText("FAQ's").closest('a');
     expect(faqLink).toHaveAttribute('href', '/#faq');
   });

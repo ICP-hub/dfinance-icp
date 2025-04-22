@@ -224,7 +224,7 @@ const FaucetDetails = () => {
    * =================================================================================== */
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-testid="faucet-list">
       <div className="w-full flex items-center px-1">
         <h1 className="text-[#2A1F9D] font-bold text-lg dark:text-darkText">
           Test Assets

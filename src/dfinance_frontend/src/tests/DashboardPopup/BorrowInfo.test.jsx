@@ -4,7 +4,6 @@ import BorrowInfo from '../../components/Dashboard/DashboardPopup/BorrowInfo';
 import { useParams } from 'react-router-dom';
 import useFetchConversionRate from '../../components/customHooks/useFetchConversionRate';
 
-// Mock the dependencies
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
@@ -44,16 +43,12 @@ describe('BorrowInfo Component', () => {
   test('displays correct total borrowed and cap values', () => {
     render(<BorrowInfo {...mockProps} />);
     
-    // Check if '200.00' (total borrowed) is in the document
     expect(screen.getByText('200.00')).toBeInTheDocument();
   
-    // Use getAllByText to handle multiple occurrences of the text 'of'
     const ofElements = screen.getAllByText('of');
     
-    // Ensure that we have two 'of' elements
     expect(ofElements).toHaveLength(2);
   
-    // Verify the second 'of' text is correctly placed (for cap value)
     expect(ofElements[1]).toBeInTheDocument();
   });
   

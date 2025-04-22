@@ -7,7 +7,6 @@ import { store } from "../../redux/store";
 import { MemoryRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 
-// Mock toast notifications
 jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
@@ -15,11 +14,10 @@ jest.mock("react-toastify", () => ({
   }
 }));
 
-// Mock required modules
 jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    conversionRate: 50000 * Math.pow(10, 8), // Return rates in correct format for the component
+    conversionRate: 50000 * Math.pow(10, 8), 
     error: null
   })
 }));
@@ -27,7 +25,7 @@ jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn().mockReturnValue({
     backendActor: {
-      execute_supply: jest.fn().mockResolvedValue({ Ok: true }),  // Success mock
+      execute_supply: jest.fn().mockResolvedValue({ Ok: true }),  
     },
     principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
   })
@@ -65,7 +63,6 @@ jest.mock("@dfinity/principal", () => ({
   }
 }));
 
-// Mock redux state
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
   useSelector: jest.fn().mockImplementation(callback => {
@@ -105,7 +102,6 @@ jest.mock("react-redux", () => ({
 }));
 
 describe("SupplyPopup Component", () => {
-  // Mock HTML media element
   window.HTMLMediaElement.prototype.play = jest.fn();
   
   beforeEach(() => {
@@ -132,7 +128,6 @@ describe("SupplyPopup Component", () => {
     onLoadingChange: jest.fn(),
   };
 
-  // Test: Render Supply component
   test("renders Supply component", async () => {
     await act(async () => {
       render(
@@ -144,13 +139,11 @@ describe("SupplyPopup Component", () => {
       );
     });
   
-    // Correct usage: await findByPlaceholderText
     const inputElement = await screen.findByPlaceholderText("Enter ckBTC Amount");
     expect(inputElement).toBeInTheDocument();
   
-    // Use getAllByText to find all instances of the "Health Factor" text
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
-    expect(healthFactorElements.length).toBeGreaterThan(0);  // Expect at least one element to be present
+    expect(healthFactorElements.length).toBeGreaterThan(0); 
   
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
   });
@@ -158,7 +151,6 @@ describe("SupplyPopup Component", () => {
 
   
 
-  // Test: Disable approval button when amount is 0
   test("disables approval button when amount is 0", async () => {
     await act(async () => {
       render(
@@ -174,7 +166,6 @@ describe("SupplyPopup Component", () => {
     expect(approveButton.closest('button')).toBeDisabled();
   });
 
-  // Test: Verify amount input handling
   test("handles amount input change correctly", async () => {
     await act(async () => {
       render(
@@ -196,11 +187,9 @@ describe("SupplyPopup Component", () => {
     expect(amountInput.value).toBe('10');
   });
 
-  // Test: Verify Max button functionality
   
   
 
-  // Test: Verify transaction overview displays correct information
   test("displays correct transaction overview information", async () => {
     await act(async () => {
       render(
@@ -212,24 +201,20 @@ describe("SupplyPopup Component", () => {
       );
     });
   
-    // Check for the "Transaction overview" section
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
   
-    // Check that each part of the transaction overview is displayed correctly
     expect(screen.getByText(/Supply APY/i)).toBeInTheDocument();
     expect(screen.getByText(/Collateralization/i)).toBeInTheDocument();
     expect(screen.getByText(/Health Factor/i)).toBeInTheDocument();
     expect(screen.getByText(/Transaction Fee/i)).toBeInTheDocument();
     expect(screen.getByText(/Final amount/i)).toBeInTheDocument();
     
-    // Health Factor and other numeric values should be rendered
-    expect(screen.getByText(/2.50/i)).toBeInTheDocument();  // Health factor
-    expect(screen.getByText(/5.00%/i)).toBeInTheDocument();  // Supply APY
-    expect(screen.getByText(/0.0001/i)).toBeInTheDocument();  // Transaction Fee
-    expect(screen.getByText(/0.00000000/i)).toBeInTheDocument();  // Final amount
+    expect(screen.getByText(/2.50/i)).toBeInTheDocument();  
+    expect(screen.getByText(/5.00%/i)).toBeInTheDocument();  
+    expect(screen.getByText(/0.0001/i)).toBeInTheDocument();  
+    expect(screen.getByText(/0.00000000/i)).toBeInTheDocument();  
   });
 
-  // Test: Verify USD value calculation
   test("displays USD value for amount input", async () => {
     await act(async () => {
       render(
@@ -257,10 +242,8 @@ describe("SupplyPopup Component", () => {
     });
   });
 
-  // Test: Verify remaining debt calculation
   
 
-  // Test: Verify health factor calculation and display
   test("displays health factor calculation correctly", async () => {
     await act(async () => {
       render(

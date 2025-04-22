@@ -8,14 +8,12 @@ import * as useFunctionBlockStatusModule from "../../components/customHooks/useF
 import * as useUserDataModule from "../../components/customHooks/useUserData";
 import * as useRealTimeConversionRateModule from "../../components/customHooks/useRealTimeConversionRate";
 
-// Mock the store
 const mockStore = {
   getState: jest.fn(),
   subscribe: jest.fn(),
   dispatch: jest.fn(),
 };
 
-// Mock the required hooks and modules
 jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
@@ -37,7 +35,7 @@ describe("ColateralPopup Component", () => {
     assetBorrow: "1.0",
     totalCollateral: "5000",
     totalDebt: "2000",
-    currentCollateralStatus: true, // Asset is currently used as collateral
+    currentCollateralStatus: true, 
     Ltv: 40,
     borrowableValue: "3000",
     borrowableAssetValue: "3000",
@@ -50,7 +48,6 @@ describe("ColateralPopup Component", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Mock hook implementations
     jest.spyOn(useFunctionBlockStatusModule, 'default').mockReturnValue({
       isBlocked: false
     });
@@ -66,7 +63,7 @@ describe("ColateralPopup Component", () => {
     });
     
     jest.spyOn(useRealTimeConversionRateModule, 'default').mockReturnValue({
-      conversionRate: "5000000000", // 50 USD in 1e8 format
+      conversionRate: "5000000000", 
       error: null
     });
   });
@@ -78,23 +75,17 @@ describe("ColateralPopup Component", () => {
       </Provider>
     );
     
-    // Check for asset name in heading
     expect(screen.getByText(/Review ckBTC/i)).toBeInTheDocument();
     
-    // Check for warning about disabling collateral
     expect(screen.getByText(/Disabling ckBTC as collateral affects your borrowing power and Health Factor./i)).toBeInTheDocument();
     
-    // Check for transaction overview section
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
     
-    // Check for supply balance display
     expect(screen.getByText(/Supply Balance/i)).toBeInTheDocument();
     
-    // Check for health factor display
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
   expect(healthFactorElements.length).toBeGreaterThan(0);
     
-    // Check for button text when disabling collateral
     expect(screen.getByRole('button', { name: /Disable ckBTC as collateral/i })).toBeInTheDocument();
   });
 
@@ -108,7 +99,6 @@ describe("ColateralPopup Component", () => {
     expect(screen.getByText(/Enabling ckBTC as collateral increases your borrowing power and Health Factor/i)).toBeInTheDocument();
     expect(screen.getByText(/it can get liquidated if your health factor drops below 1/i)).toBeInTheDocument();
     
-    // Check for button text when enabling collateral
     expect(screen.getByRole('button', { name: /Enable ckBTC as collateral/i })).toBeInTheDocument();
   });
 
@@ -126,30 +116,25 @@ describe("ColateralPopup Component", () => {
       </Provider>
     );
     
-    // Click the toggle button
     const toggleButton = screen.getByRole('button', { name: /Disable ckBTC as collateral/i });
     await act(async () => {
       fireEvent.click(toggleButton);
     });
     
-    // Check if the toggle_collateral function was called with correct parameters
     expect(mockToggleCollateral).toHaveBeenCalledWith(
       "ckBTC",
       expect.any(Number),
       expect.any(BigInt)
     );
     
-    // Check if success toast was shown
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith("Collateral updated successfully!");
     });
     
-    // Check if dispatch was called to refresh dashboard
     expect(mockStore.dispatch).toHaveBeenCalled();
   });
 
   test("displays error toast when user is blocked from using function", async () => {
-    // Mock the user being blocked
     jest.spyOn(useFunctionBlockStatusModule, 'default').mockReturnValue({
       isBlocked: true
     });
@@ -172,7 +157,6 @@ describe("ColateralPopup Component", () => {
   });
 
   test("shows warning when health factor is less than or equal to 1", async () => {
-    // Mock health factor calculation to return a value <= 1
     const lowHealthFactorProps = {
       ...defaultProps,
       totalCollateral: "1000", 
@@ -191,18 +175,15 @@ describe("ColateralPopup Component", () => {
       </Provider>
     );
     
-    // Check for the warning icon and message
     await waitFor(() => {
       expect(screen.getByText(/Switching collateral may trigger a liquidation call/i)).toBeInTheDocument();
     });
     
-    // Verify the toast warning was shown
     expect(toast.info).toHaveBeenCalledWith(
       "Health Factor Less than 1",
       expect.any(Object)
     );
     
-    // Check that the button is disabled
     const toggleButton = screen.getByRole('button', { name: /Disable ckBTC as collateral/i });
     expect(toggleButton).toHaveAttribute('disabled');
   });

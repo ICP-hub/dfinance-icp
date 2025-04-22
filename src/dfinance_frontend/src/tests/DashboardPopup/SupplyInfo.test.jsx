@@ -1,11 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { createStore } from 'redux'; // You can also use `configureStore` if you're using @reduxjs/toolkit
+import { createStore } from 'redux'; 
 import SupplyInfo from '../../components/Dashboard/DashboardPopup/SupplyInfo';
 import { useParams } from 'react-router-dom';
 import useFetchConversionRate from '../../components/customHooks/useFetchConversionRate';
-// Mock the dependencies
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
@@ -17,7 +16,6 @@ jest.mock('../../components/Common/CircularProgressbar', () => ({
   default: () => <div data-testid="circular-progress">Mock Circular Progress</div>,
 }));
 
-// Create a mock store
 const mockStore = createStore((state = { dashboardUpdate: { refreshDashboardTrigger: true } }) => state);
 
 describe('SupplyInfo Component', () => {
@@ -60,10 +58,8 @@ describe('SupplyInfo Component', () => {
       </Provider>
     );
   
-    // Check if the '200.00' (total supplied) is in the document
     expect(screen.getByText('200.00')).toBeInTheDocument();
     
-    // Use a regular expression to handle the text for '1000.00' in case it's split across multiple elements
     expect(screen.getByText(/1000\.00/)).toBeInTheDocument();
   });
   

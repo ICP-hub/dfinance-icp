@@ -12,7 +12,7 @@ const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
 const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
 const DashboardCards = lazy(() => import("../pages/info/info"));
 const HealthFactorList = lazy(() =>
-  import("../components/Dashboard/HealthFactorList")
+  import("../components/Dashboard/HealthFactorLIst")
 );
 const LiquidationList = lazy(() => import("../components/Liquidate/LiquidationList"));
 

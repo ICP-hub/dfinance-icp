@@ -4,9 +4,7 @@ import WithdrawPopup from '../../components/Dashboard/DashboardPopup/WithdrawPop
 import { Provider } from "react-redux";
 import { store } from "../../redux/store";
 import { MemoryRouter } from "react-router-dom";
-import { toast } from "react-toastify";
 
-// Mock toast notifications
 jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
@@ -15,11 +13,10 @@ jest.mock("react-toastify", () => ({
   }
 }));
 
-// Mock required modules
 jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    conversionRate: 50000 * Math.pow(10, 8), // Return rates in correct format for the component
+    conversionRate: 50000 * Math.pow(10, 8), 
     error: null
   })
 }));
@@ -27,7 +24,7 @@ jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn().mockReturnValue({
     backendActor: {
-      execute_withdraw: jest.fn().mockResolvedValue({ Ok: true }),  // Success mock
+      execute_withdraw: jest.fn().mockResolvedValue({ Ok: true }),  
     },
     principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
   })
@@ -49,7 +46,6 @@ jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
   })
 }));
 
-// Mock redux state
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
   useSelector: jest.fn().mockImplementation(callback => {
@@ -113,7 +109,6 @@ describe("WithdrawPopup Component", () => {
     onLoadingChange: jest.fn(),
   };
 
-  // Test: Render Withdraw component
   test("renders Withdraw component", async () => {
     await act(async () => {
       render(
@@ -130,12 +125,11 @@ describe("WithdrawPopup Component", () => {
     expect(inputElement).toBeInTheDocument();
 
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
-    expect(healthFactorElements.length).toBeGreaterThan(0);  // Expect at least one element to be present
+    expect(healthFactorElements.length).toBeGreaterThan(0);  
 
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
   });
 
-  // Test: Disable approval button when amount is 0
   test("disables approval button when amount is 0", async () => {
     await act(async () => {
       render(
@@ -156,7 +150,6 @@ describe("WithdrawPopup Component", () => {
   
   
 
-  // Test: Verify amount input handling
   test("handles amount input change correctly", async () => {
     await act(async () => {
       render(
@@ -178,7 +171,6 @@ describe("WithdrawPopup Component", () => {
     expect(amountInput.value).toBe('10');
   });
 
-  // Test: Verify transaction overview displays correct information
   test("displays correct transaction overview information", async () => {
     await act(async () => {
       render(
@@ -190,20 +182,16 @@ describe("WithdrawPopup Component", () => {
       );
     });
 
-    // Check for the "Transaction overview" section
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
 
-    // Check that each part of the transaction overview is displayed correctly
     expect(screen.getByText(/Supply APY/i)).toBeInTheDocument();
     expect(screen.getByText(/Collateralization/i)).toBeInTheDocument();
     expect(screen.getByText(/Health Factor/i)).toBeInTheDocument();
 
-    // Health Factor and other numeric values should be rendered
-    expect(screen.getByText(/2.50/i)).toBeInTheDocument();  // Health factor
-    expect(screen.getByText(/5.00%/i)).toBeInTheDocument();  // Supply APY
+    expect(screen.getByText(/2.50/i)).toBeInTheDocument();  
+    expect(screen.getByText(/5.00%/i)).toBeInTheDocument();  
   });
 
-  // Test: Verify USD value calculation
   test("displays USD value for amount input", async () => {
     await act(async () => {
       render(
@@ -231,6 +219,5 @@ describe("WithdrawPopup Component", () => {
     });
   });
 
-  // Test: Verify withdraw button click
  
 });

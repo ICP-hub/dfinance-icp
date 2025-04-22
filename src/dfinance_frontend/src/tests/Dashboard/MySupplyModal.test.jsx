@@ -1,9 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MySupplyModal from '../../components/Dashboard/MySupplyModal';
-import { Modal, Fade, Grow } from "@mui/material";
 
-// Mock Material UI components
 jest.mock('@mui/material', () => ({
   Modal: ({ children, open, onClose, ...props }) => (
     open ? <div data-testid="modal" onClick={(e) => onClose(e, 'backdropClick')} {...props}>{children}</div> : null
@@ -43,11 +41,9 @@ describe('MySupplyModal Component', () => {
   test('shows loading indicator when isLoading is true', () => {
     render(<MySupplyModal {...{...defaultProps, isLoading: true}} />);
     
-    // Get the inner div that contains the opacity-50 class
     const modalContent = screen.getByText('Test Content').parentElement;
     expect(modalContent).toHaveClass('opacity-50');
     
-    // Use querySelector to find element with loader class
     const loader = document.querySelector('.loader');
     expect(loader).toBeInTheDocument();
   });
@@ -61,9 +57,6 @@ describe('MySupplyModal Component', () => {
   test('closes modal on backdrop click when isLoading is false', () => {
     render(<MySupplyModal {...defaultProps} />);
     fireEvent.click(screen.getByTestId('modal'));
-    // Note: In actual implementation, the Modal component would call onClose with reason="backdropClick",
-    // which we're simulating in our mock. Since our component prevents closing on "backdropClick",
-    // the setIsModalOpen function should not be called.
     expect(mockSetIsModalOpen).not.toHaveBeenCalled();
   });
 

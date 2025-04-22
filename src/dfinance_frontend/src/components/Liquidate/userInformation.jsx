@@ -24,7 +24,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus();
+  const { isBlocked } = useFunctionBlockStatus("execute_liquidation");
   const { backendActor, principal: currentUserPrincipal } = useAuth();
 
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
@@ -974,7 +974,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
   let liquidation_bonus = "";
 
-  const selectedItem = filteredItems.find((item) => {
+  const selectedItem = filteredItems?.find((item) => {
     const assetName = item[1].Ok.asset_name
       ? item[1].Ok.asset_name[0]
       : "Unknown";
@@ -1047,7 +1047,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       ? mappedItem.userData?.reserves?.[0].map((mappedItem) => {
         const assetName = mappedItem?.[0];
 
-        const item1 = filteredItems.find((item) => item[0] === assetName);
+        const item1 = filteredItems?.find((item) => item[0] === assetName);
 
         const liquidationThreshold =
           Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /

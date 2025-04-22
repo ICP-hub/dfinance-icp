@@ -4,9 +4,7 @@ import Repay from "../../components/Dashboard/DashboardPopup/Repay";
 import { Provider } from "react-redux";
 import { store } from "../../redux/store";
 import { MemoryRouter } from "react-router-dom";
-import { toast } from "react-toastify";
 
-// Mock toast notifications
 jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
@@ -27,7 +25,6 @@ jest.mock('react-router-dom', () => ({
   }));
   
 
-// Mock required modules
 jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
@@ -77,7 +74,6 @@ jest.mock("@dfinity/principal", () => ({
   }
 }));
 
-// Mock redux state
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
   useSelector: jest.fn().mockImplementation(callback => {
@@ -117,7 +113,6 @@ jest.mock("react-redux", () => ({
 }));
 
 describe("Repay Component", () => {
-  // Mock HTML media element
   window.HTMLMediaElement.prototype.play = jest.fn();
   
   beforeEach(() => {
@@ -145,7 +140,6 @@ describe("Repay Component", () => {
     onLoadingChange: jest.fn(),
   };
 
-  // Test: Render Repay component
   test("renders Repay component", async () => {
     await act(async () => {
       render(
@@ -157,15 +151,12 @@ describe("Repay Component", () => {
       );
     });
   
-    // Use more specific selectors for elements that might appear multiple times
     expect(screen.getByRole('heading', { name: /Repay ckBTC/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Enter Amount ckBTC/i)).toBeInTheDocument();
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
     expect(screen.getByText(/Health Factor/i)).toBeInTheDocument();
-    // ...rest of your assertions
   });
 
-  // Test: Disable approval button when amount is 0
   test("disables approval button when amount is 0", async () => {
     await act(async () => {
       render(
@@ -181,7 +172,6 @@ describe("Repay Component", () => {
     expect(approveButton.closest('button')).toBeDisabled();
   });
 
-  // Test: Verify amount input handling
   test("handles amount input change correctly", async () => {
     await act(async () => {
       render(
@@ -202,7 +192,6 @@ describe("Repay Component", () => {
     expect(amountInput.value).toBe('10');
   });
 
-  // Test: Verify Max button functionality
   test("handles Max button click correctly", async () => {
     await act(async () => {
       render(
@@ -220,12 +209,10 @@ describe("Repay Component", () => {
       fireEvent.click(maxButton);
     });
     
-    // Update to match the actual format your component returns
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
     expect(amountInput.value).toBe('50.00000000');
   });
 
-  // Test: Verify transaction overview displays correct information
   test("displays correct transaction overview information", async () => {
     await act(async () => {
       render(
@@ -245,7 +232,6 @@ describe("Repay Component", () => {
     expect(screen.getByText(/liquidation at/i)).toBeInTheDocument();
   });
 
-  // Test: Verify USD value calculation
   test("displays USD value for amount input", async () => {
     await act(async () => {
       render(
@@ -257,7 +243,6 @@ describe("Repay Component", () => {
       );
     });
     
-    // Initial USD value should be $0.00 USD
     expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
     
     // Enter an amount 
@@ -267,17 +252,13 @@ describe("Repay Component", () => {
       fireEvent.change(amountInput, { target: { value: '10' } });
     });
     
-    // Wait for updates to propagate 
     await waitFor(() => {
-      // USD value should be updated
       expect(screen.queryByText("$0.00 USD")).not.toBeInTheDocument();
-      // Should find a dollar value that's not $0.00 USD
       const usdTexts = screen.getAllByText(/\$.*USD/);
       expect(usdTexts.length).toBeGreaterThan(0);
     });
   });
 
-  // Test: Verify remaining debt calculation
   test("calculates remaining debt correctly", async () => {
     await act(async () => {
       render(
@@ -295,13 +276,11 @@ describe("Repay Component", () => {
       fireEvent.change(amountInput, { target: { value: '10' } });
     });
     
-    // With assetBorrow = 50 and amount = 10, remaining debt should be 40
     await waitFor(() => {
       expect(screen.getByText(/40/)).toBeInTheDocument();
     });
   });
 
-  // Test: Verify health factor calculation and display
   test("displays health factor calculation correctly", async () => {
     await act(async () => {
       render(
@@ -313,21 +292,15 @@ describe("Repay Component", () => {
       );
     });
     
-    // Initial health factor should be displayed
     expect(screen.getByText(/2.50/)).toBeInTheDocument();
     
-    // Enter an amount to change health factor
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
     
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: '10' } });
     });
     
-    // Health factor should be recalculated and displayed
-    // It's difficult to predict the exact value without knowing the exact calculation
-    // but we can check that the display format is correct
     await waitFor(() => {
-      // Should find health factor with arrow symbol between values
       expect(screen.getByText(/→/)).toBeInTheDocument();
     });
   });

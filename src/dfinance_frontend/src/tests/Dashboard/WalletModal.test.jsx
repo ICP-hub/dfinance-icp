@@ -4,9 +4,7 @@ import WalletModal from '../../components/Dashboard/WalletModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../utils/useAuthClient';
-import { setConnectedWallet } from '../../redux/reducers/utilityReducer';
 
-// Mock dependencies
 jest.mock('react-redux', () => ({
   useDispatch: jest.fn(),
   useSelector: jest.fn()
@@ -26,11 +24,9 @@ jest.mock('@mui/material', () => ({
   )
 }));
 
-// Mock images
 jest.mock('../../../public/wallet/icp.png', () => 'icp-image-mock');
 jest.mock('../../../public/wallet/nfid.png', () => 'nfid-image-mock');
 
-// Mock action creators
 jest.mock('../../redux/reducers/utilityReducer', () => ({
   setIsWalletConnected: jest.fn(() => ({ type: 'utility/setIsWalletConnected' })),
   setWalletModalOpen: jest.fn(() => ({ type: 'utility/setWalletModalOpen' })),
@@ -38,7 +34,6 @@ jest.mock('../../redux/reducers/utilityReducer', () => ({
 }));
 
 describe('WalletModal Component', () => {
-  // Mock setup
   const mockDispatch = jest.fn();
   const mockNavigate = jest.fn();
   const mockLogin = jest.fn();
@@ -56,7 +51,6 @@ describe('WalletModal Component', () => {
       isAuthenticated: false
     });
     
-    // Mock localStorage
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: jest.fn(),
@@ -94,23 +88,17 @@ describe('WalletModal Component', () => {
     
     expect(screen.getByText('Switch wallet')).toBeInTheDocument();
     
-    // Check that "Internet Identity" appears in the wallet connected section
     const walletText = screen.getByText('Internet Identity');
     expect(walletText).toBeInTheDocument();
     
-    // Check that "is connected" text appears
     expect(screen.getByText('is connected')).toBeInTheDocument();
     
-    // Internet Identity option should not be visible as a clickable option
-    // Since there might be multiple elements with "Internet Identity" text,
-    // we need to check if there's one inside a div with cursor-pointer class
     const divElements = document.querySelectorAll('div.cursor-pointer');
     const iiOptionExists = Array.from(divElements).some(div => 
       div.textContent.includes('Internet Identity')
     );
     expect(iiOptionExists).toBe(false);
     
-    // NFID option should be there
     expect(screen.getByText('NFID')).toBeInTheDocument();
   });
   
@@ -128,21 +116,18 @@ describe('WalletModal Component', () => {
   });
   
   test('calls switch wallet handler when in switching mode', async () => {
-    // Mock the implementation of loginHandlerIsSwitch
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
-      isSwitchingWallet: true, // This triggers loginHandlerIsSwitch path
+      isSwitchingWallet: true, 
       connectedWallet: 'nfid',
       isWalletCreated: false
     });
     
-    // Make login/logout return resolved promises
     mockLogout.mockResolvedValue(undefined);
     mockLogin.mockResolvedValue(undefined);
     
     const { container } = render(<WalletModal />);
     
-    // Find the Internet Identity option by looking for the container with cursor-pointer
     const divElements = container.querySelectorAll('div.cursor-pointer');
     const iiOption = Array.from(divElements).find(el => 
       el.textContent.includes('Internet Identity')
@@ -151,16 +136,11 @@ describe('WalletModal Component', () => {
     expect(iiOption).toBeTruthy();
     fireEvent.click(iiOption);
     
-    // Wait for the async function to complete
     await Promise.resolve();
     
-    // Check that logout was called
     expect(mockLogout).toHaveBeenCalled();
     
-    // Check that login was called with "ii"
     expect(mockLogin).toHaveBeenCalled();
-    // Note: The test might still fail if the login happens in a way that Jest can't track
-    // For a robust test, we might need to mock the entire loginHandlerIsSwitch function
   });
   
   test('closes modal when user clicks outside', () => {
@@ -237,7 +217,6 @@ describe('WalletModal Component', () => {
     
     render(<WalletModal />);
     
-    // Find the connected wallet text - it should be NFID
     const connectedWalletTexts = screen.getAllByText('NFID');
     expect(connectedWalletTexts.length).toBeGreaterThan(0);
     expect(screen.getByText('is connected')).toBeInTheDocument();

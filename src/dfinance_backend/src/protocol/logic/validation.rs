@@ -4,15 +4,13 @@ use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VA
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::structs::ReserveData;
-use crate::guards::access_control::guard_validate_reserve_status;
 use crate::protocol::libraries::update::user_data;
 use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use candid::{Nat, Principal};
-use crate::guards::locks::CallerGuard;
-use crate::guards::api_limitor::request_limiter;
+
 
 pub struct ValidationLogic;
 
@@ -59,8 +57,7 @@ impl ValidationLogic {
             return Err(Error::MaxAmount);
         }
 
-        // validating reserve states
-        guard_validate_reserve_status(&reserve)?;
+    
 
         // Validating supply cap limit
         let supply_cap = reserve.configuration.supply_cap.clone();
@@ -162,11 +159,8 @@ impl ValidationLogic {
             return Err(Error::MaxAmountPlatform);
         }
 
-        // validating reserve states
-        guard_validate_reserve_status(&reserve)?;
-
         let _ = update_token_price(reserve.asset_name.clone().unwrap()).await;
-
+        //TODO check in rust-opt whether to remove this code or keep it
         let mut total_collateral = Nat::from(0u128);
         let mut total_debt = Nat::from(0u128);
         let mut avg_ltv = Nat::from(0u128);
@@ -281,8 +275,7 @@ impl ValidationLogic {
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
-        // validating reserve states
-        guard_validate_reserve_status(&reserve)?;
+
 
         if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
@@ -418,7 +411,7 @@ impl ValidationLogic {
             None => None,
         };
 
-        guard_validate_reserve_status(&reserve)?;
+    
 
         Ok(())
     }
@@ -520,9 +513,6 @@ impl ValidationLogic {
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             return Err(Error::USERCANNOTBELIQUIDATED);
         }
-
-        // validating reserve states
-        guard_validate_reserve_status(&repay_reserve_data)?;
         Ok(())
     }
 }

@@ -14,8 +14,8 @@ use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::libraries::user::calculate_user_asset_data;
 use crate::protocol::utils::math_utils;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData, UserAccountData};
-use crate::stable_storage::state_handler::{mutate_state, read_state};
+use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData};
+use crate::stable_storage::state_handler::read_state;
 use crate::declarations::structs::ReserveData;
 use crate::stable_storage::storable::Candid;
 use crate::guards::access_control::to_check_controller;
@@ -419,6 +419,7 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
  * @returns The total asset supply as `Nat`.
  * @functionality This function fetches the total supply of a given asset and handles calculations related to user reserves and balance.
  */
+//TODO check if this func needed
 pub async fn get_asset_supply(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -530,6 +531,7 @@ pub async fn get_asset_supply(
  * @returns The total debt as `Nat`.
  * @functionality This function calculates and returns the total debt for a given asset, taking into account the user’s borrow status and balance.
  */
+
 pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
@@ -645,3 +647,5 @@ pub async fn cycle_checker() -> Result<Nat, Error> {
     }
     Ok(Nat::from(api::canister_balance128()))
 }
+
+//ask vicky isme saare query function toh nhi h kuch internal functions bhi pade hai

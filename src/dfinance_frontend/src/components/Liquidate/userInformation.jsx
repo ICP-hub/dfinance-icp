@@ -792,7 +792,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
-    // dispatch(toggleRefreshLiquidate());
+    dispatch(toggleRefreshLiquidate());
   };
 
   const renderDebtAssetDetails = (asset) => {

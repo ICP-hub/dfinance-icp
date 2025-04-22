@@ -24,7 +24,7 @@ use crate::api::query::{get_all_users, reserve_ledger_canister_id, user_normaliz
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};
-
+//TODO once the certified query or update usage decided, remove extra functions from this file
 /*
  * @title User Account Data Calculation
  * @functionality User account metric calculation logic.
@@ -859,6 +859,7 @@ pub async fn get_liquidation_users_concurrent(
  *
  * @returns A string message indicating success or failure.
  */
+//TODO remove register user, create user state when he supply something, infact inside update_user_supply(change these functions name as well in update.rs) , in faucet use seperate memory for storing user_faucet_detail(only for testnet)
 #[update]
 fn register_user() -> Result<String, Error> {
     // prevent anonymous registrations

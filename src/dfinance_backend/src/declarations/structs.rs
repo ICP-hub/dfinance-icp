@@ -2,8 +2,6 @@ use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
-
-use icrc_ledger_types::icrc1::transfer::TransferError;
 use icrc_ledger_types::icrc2::transfer_from::TransferFromError;
 use icrc_ledger_types::icrc2::approve::ApproveError;
 
@@ -115,9 +113,6 @@ pub struct ReserveConfiguration {
     pub borrow_cap: Nat,   //TODO set it according to borrow
     pub supply_cap: Nat,   //set it according to supply     
     pub liquidation_protocol_fee: Nat, 
-    pub active: bool,
-    pub frozen: bool,
-    pub paused: bool,
     pub reserve_factor: Nat,
 }
 

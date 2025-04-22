@@ -5,7 +5,7 @@ use crate::{
     constants::errors::Error
 };
 use crate::declarations::structs::ReserveData;
-
+//TODO why this guard is not being used
 // guard to allow only app level controller
 pub fn guard_controller_only() -> Result<(), Error>
 {
@@ -24,19 +24,6 @@ pub fn guard_principal_not_anonymous(principal: &Principal) -> Result<(), Error>
     Ok(())
 }
 
-
-pub fn guard_validate_reserve_status(reserve: &ReserveData) -> Result<(), Error> {
-    if !reserve.configuration.active {
-        return Err(Error::ReserveInactive);
-    }
-    if reserve.configuration.paused {
-        return Err(Error::ReservePaused);
-    }
-    if reserve.configuration.frozen {
-        return Err(Error::ReserveFrozen);
-    }
-    Ok(())
-}
 
 
 pub fn guard_admin_only() -> Result<(), Error> {

@@ -1,18 +1,12 @@
 use crate::stable_storage::state_handler::read_state;
 use crate::constants::errors::Error;
-use crate::declarations::structs::TransferFromResult;
-use crate::guards::access_control::to_check_controller;
 use crate::protocol::utils::math_utils::current_timestamp;
-use candid::{decode_one, encode_args};
-use candid::{Nat, Principal};
-use ic_cdk::api;
+use candid::Principal;
 use ic_cdk::{query, update};
-use icrc_ledger_types::icrc1::account::Account;
-use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs};
-use crate::guards::access_control::{guard_prevent_anonymous,};
+use crate::guards::access_control::guard_prevent_anonymous;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
-use crate::guards::locks::CallerGuard;
+
 
 thread_local! {
     static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());

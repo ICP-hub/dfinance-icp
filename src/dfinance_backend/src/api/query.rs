@@ -1,6 +1,7 @@
 use crate::constants::errors::Error;
 use crate::declarations::structs::AssetInfo;
 use crate::guards::access_control::guard_admin_only;
+use crate::protocol::utils::math_utils::current_timestamp;
 use super::inter_canister::get_balance;
 use candid::Nat;
 use candid::Principal;
@@ -181,7 +182,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
-    let current_time = ic_cdk::api::time() / 1_000_000_000;
+    let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
@@ -217,7 +218,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
-    let current_time = ic_cdk::api::time() / 1_000_000_000;
+    let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {

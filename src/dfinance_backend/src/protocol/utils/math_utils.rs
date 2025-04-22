@@ -1,7 +1,7 @@
 use std::ops::Mul;
 use candid::Nat;
 use ic_cdk::api::time;
-use crate::constants::interest_variables::constants::{CURRENT_TIMESTAMP, MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR};
+use crate::constants::interest_variables::constants::{MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR};
 use crate::constants::constant_variables::constants::{
     ZERO_VALUE, TWO_VALUE, NANOS_PER_SECOND
 };
@@ -27,7 +27,7 @@ fn get_scaling_value() -> Nat {
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
     // let rate = rate_input/Nat::from(100u128);
         let rate = rate_input;
-    let current_timestamp = ic_cdk::api::time() / NANOS_PER_SECOND as u64; // Convert nanoseconds to seconds
+    let current_timestamp = current_timestamp(); // Convert nanoseconds to seconds
     ic_cdk::println!("current time in cal_linear function {} and seconds per year {} and last timestamp {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp);
     let time_delta = current_timestamp - last_update_timestamp;
     let result = rate.clone() * time_delta / SECONDS_PER_YEAR;
@@ -139,5 +139,5 @@ pub fn get_max_value() -> Nat {
  * @return `u64` The current timestamp.
  */
 pub fn current_timestamp() -> u64 {
-    time() / CURRENT_TIMESTAMP
+    time() / NANOS_PER_SECOND as u64
 }

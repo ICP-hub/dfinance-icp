@@ -505,7 +505,7 @@ pub async fn mint_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        println!("balance incr dtoken{}", balance_increase);
+        println!("balance incre dtoken{}", balance_increase);
         if user_state.liquidity_index == zero_nat_value() {
             user_state.d_token_balance = amount.clone();
         } else {
@@ -697,7 +697,7 @@ pub async fn initialize(
             Err(e) => return Err(e),
         };
 
-    reserve_data.last_update_timestamp = time();
+    reserve_data.last_update_timestamp = current_timestamp();
 
     mutate_state(|state| {
         state

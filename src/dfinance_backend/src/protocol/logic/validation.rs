@@ -205,10 +205,11 @@ impl ValidationLogic {
 
             // Calculate Adjusted Collateral
             let mut adjusted_collateral = Nat::from(0u128);
-
-            if adjusted_collateral < usd_withdrawl.clone() {
-                adjusted_collateral = Nat::from(0u128);
-            } else if total_collateral < usd_withdrawl {
+            //Jyotirmay yeh yaha kyu check lagaya tha?
+            // if adjusted_collateral < usd_withdrawl.clone() {
+            //     adjusted_collateral = Nat::from(0u128);
+            // } else 
+            if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();

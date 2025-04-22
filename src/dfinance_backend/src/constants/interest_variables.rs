@@ -76,8 +76,6 @@ pub mod constants {
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
 
-    // -------------------Timestamp Constants -------------------
-    pub const CURRENT_TIMESTAMP: u64 = 1_000_000_000;
 
     // -------------------Max Value Constants -------------------
     pub const MAX_VALUE: u128 = 340_282_366_920_938_463_463_374_607_431_768_211_455u128;

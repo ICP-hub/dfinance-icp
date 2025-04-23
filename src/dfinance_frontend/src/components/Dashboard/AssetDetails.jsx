@@ -173,7 +173,7 @@ const AssetDetails = () => {
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
-
+  // Memoize the principal object to avoid unnecessary re-renders
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -262,12 +262,14 @@ const AssetDetails = () => {
     return { borrowableValue, borrowableAssetValue };
   };
 
+   //wallet connection handler
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
 
+  // Fetches asset supply data
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]) / 1e8;
@@ -276,6 +278,7 @@ const AssetDetails = () => {
     return `noSupply`;
   };
 
+  // Fetches asset borrow data
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]) / 1e8;
@@ -284,11 +287,13 @@ const AssetDetails = () => {
     return `noBorrow`;
   };
 
+
   const handleFilter = (value) => {
     setIsFilter(false);
     dispatch(setAssetDetailFilter(value));
   };
 
+// Fetches asset principle
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -321,6 +326,7 @@ const AssetDetails = () => {
     }
   };
 
+  //balance fetcher
   const ckBalance =
     id === "ckBTC"
       ? ckBTCBalance

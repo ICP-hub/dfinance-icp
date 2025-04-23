@@ -110,6 +110,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       return;
     }
     const numericAmount = parseFloat(inputAmount);
+    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
     if (numericAmount > exchangeRate) {
       return;
     }
@@ -184,7 +185,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         draggable: true,
         progress: undefined,
       });
-      return;
+      return; // Prevent function execution
     }
 
     setLoading(true);
@@ -199,7 +200,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         }
 
         const natAmount = Math.round(numericAmount * Math.pow(10, 8));
-
+        console.log("natAmount", natAmount);
         const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
         if (numericAmount > availableAmount) {
           toast.error(`Faucet limit exceeded! `, {
@@ -277,10 +278,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     } catch (error) {
       console.error(error.message);
 
-
+      // ✅ **Check for "Out of Cycles" Error**
       if (
         error.message.includes("out of cycles") ||
-        error.message.includes("Reject text: Canister")
+        error.message.includes("Reject text: Canister") // Matches error pattern
       ) {
         toast.error(
           "Canister is out of cycles. Please wait, the admin has been notified.",
@@ -361,7 +362,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-      } catch (error) { }
+      } catch (error) { console.error(error.message)}
     };
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
@@ -370,9 +371,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
-
       const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
-
       setFaucetBTC(truncatedBtcAmount);
     }
 
@@ -455,7 +454,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   }, []);
 
 
-
+  
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
@@ -540,20 +539,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
                 return parseFloat(formattedAmount) <= 0;
               })() && (
-                  <div className="w-full flex flex-col my-3 space-y-2">
-                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-                      <div className="w-1/12 flex items-center justify-center">
-                        <div className="warning-icon-container">
-                          <TriangleAlert />
-                        </div>
-                      </div>
-                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                        Faucet limit has been exceeded. It will reset at 00:00
-                        (UTC).
+                <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <TriangleAlert />
                       </div>
                     </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      Faucet limit has been exceeded. It will reset at 00:00
+                      (UTC).
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
               <button
                 ref={faucetButtonRef}
@@ -563,11 +562,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   FaucetUsage[asset] >= FaucetLimit ||
                   loading
                 }
-                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount.replace(/,/g, "") > 0 &&
-                    FaucetUsage[asset] < FaucetLimit[asset]
+                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${
+                  amount.replace(/,/g, "") > 0 &&
+                  FaucetUsage[asset] < FaucetLimit[asset]
                     ? "opacity-100 cursor-pointer"
                     : "opacity-50 cursor-not-allowed"
-                  }`}
+                }`}
               >
                 {loading ? "Processing..." : `Faucet ${asset}`}
               </button>

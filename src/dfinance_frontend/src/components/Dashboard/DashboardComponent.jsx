@@ -169,6 +169,8 @@ const DashboardComponent = () => {
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
+ 
+  // Memoize the principal object to avoid unnecessary re-renders
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -248,6 +250,7 @@ const DashboardComponent = () => {
     borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0] : "0";
   }
 
+  // Calculate total asset supply and borrow values
   const hasVisibleAssets = filteredItems.some((item) => {
     const assetData = item[1].Ok;
     const total_supply = Number(assetData.asset_supply || 0) / 100000000;
@@ -256,6 +259,7 @@ const DashboardComponent = () => {
     return availableBorrowNumber > 0 && total_supply > total_borrow;
   });
 
+    //condition for showing the borrow table
   const isTableDisabled =
     !userData?.Ok?.reserves ||
     !userData?.Ok?.reserves[0] ||
@@ -412,6 +416,7 @@ const DashboardComponent = () => {
     return { borrowableValue, borrowableAssetValue };
   };
 
+  // Function to calculate the asset value based on the asset supply and borrow rates
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -420,6 +425,7 @@ const DashboardComponent = () => {
     return noSupplyMessage;
   };
 
+  // Function to calculate the asset borrow value based on the asset borrow rates
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
@@ -427,6 +433,8 @@ const DashboardComponent = () => {
     }
     return noBorrowMessage;
   };
+
+  // Function to handle the switch toggle for showing zero balance
   const calculatedItems = visibleItems.map((item) => {
     const balanceMap = {
       ckBTC: ckBTCBalance,
@@ -492,6 +500,7 @@ const DashboardComponent = () => {
     return 0;
   });
 
+  //calculate the asset value
   const formatAssetValue = (asset, assetSupply) => {
     const usdRateMap = {
       ckBTC: ckBTCUsdRate / 1e8,
@@ -522,6 +531,7 @@ const DashboardComponent = () => {
     return formattedValue;
   };
 
+   // Function to format the asset value in USD
   const formatUsdValue = (asset, assetSupply) => {
     const usdRateMap = {
       ckBTC: ckBTCUsdRate / 1e8,
@@ -540,6 +550,7 @@ const DashboardComponent = () => {
     return `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  // conditional rendering of jsx update model value for supply and borrow repay withdraw
   const handleAssetAction = (actionType, asset) => {
     const reserveData = userData?.Ok?.reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
@@ -641,6 +652,7 @@ const DashboardComponent = () => {
     );
   };
 
+   // Function to calculate the debt value based on the asset and debt amount
   const getDebtValue = (asset, debtAmount) => {
     let usdRate = 0;
 
@@ -686,6 +698,7 @@ const DashboardComponent = () => {
     return { debtFormatted, usdFormatted };
   };
 
+  // Function to calculate the asset value based on the  total_supply and total_borrow
   const calculateAssetValue = (item, total_supply, total_borrow, availableBorrow) => {
     const assetData = {
       ckBTC: { rate: ckBTCUsdRate },
@@ -730,6 +743,8 @@ const DashboardComponent = () => {
 
     return { displayedAsset, usdFormatted };
   };
+
+  //sorting the items 
   const getFilteredAndSortedItems = () => {
     return filteredItems
       .filter((item) => {

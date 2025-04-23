@@ -86,7 +86,6 @@ const Borrow = ({
   const [borrowableValue, setBorrowableValue] = useState("0.00000000");
   const [borrowableAssetValue, setBorrowableAssetValue] = useState("0.0000");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
   /* ===================================================================================
@@ -239,7 +238,7 @@ const Borrow = ({
           draggable: true,
           progress: undefined,
         });
-        setSuccessMessage("Borrow successful!");
+
         setIsPaymentDone(true);
         setIsVisible(false);
       } else if ("Err" in borrowResult) {
@@ -379,6 +378,7 @@ const Borrow = ({
     }
   };
 
+  // Handles the close action of the payment popup.
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
@@ -387,6 +387,7 @@ const Borrow = ({
   const numericBalance = parseFloat(balance);
   const supplyBalance = numericBalance;
 
+  // Calculates the health factor based on collateral and debt values.
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -455,7 +456,7 @@ const Borrow = ({
     updateAmountAndUsdValue(inputAmount);
   };
 
-
+  //   Updates the amount and USD value based on the input.
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
     if (inputAmount === "") {
@@ -467,14 +468,13 @@ const Borrow = ({
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(7));
-    } else if (inputAmount.length > 8) {
-      console.error("Amount exceeds the maximum allowed digits.");
     } else {
       console.error("Amount must be a positive number.");
       setUsdValue(0);
     }
   };
 
+  // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
     const maxAmount = parseFloat(borrowableValue).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
@@ -569,9 +569,6 @@ const Borrow = ({
       } finally {
       }
     };
-    // setTimeout(() => {
-    //   setLoading(false);
-    // }, 400);
     updateValues();
   }, [
     asset,
@@ -870,7 +867,7 @@ const Borrow = ({
               <button
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
-                className={`borrow-button  bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                   }`}

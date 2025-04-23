@@ -9,38 +9,54 @@ import { Plus, Minus, RefreshCw } from "lucide-react";
 import DFinance from "../../../public/home/favicon.png";
 
 const Footer = () => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
   const location = useLocation();
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
 
-  useEffect(() => {
-    const savedZoom = localStorage.getItem("zoomLevel");
-    if (savedZoom) {
-      setZoomLevel(parseInt(savedZoom));
-      document.documentElement.style.fontSize = `${savedZoom}%`;
-    }
-  }, []);
+  /* ===================================================================================
+  *                                 Redux Hooks
+  * =================================================================================== */
+  const ledgerActors = useSelector((state) => state.ledger);
 
+  /* ===================================================================================
+  *                                 STATE-MANAGEMENT
+  * =================================================================================== */
+  const [loading, setLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isTester, setIsTester] = useState(false);
+  const { backendActor } = useAuth();
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  // Function to update the zoom level
   const updateZoom = (newZoom) => {
     document.documentElement.style.fontSize = `${newZoom}%`;
     setZoomLevel(newZoom);
     localStorage.setItem("zoomLevel", newZoom);
   };
 
+  // Function to handle zoom in, zoom out, and reset
   const handleZoomIn = () => {
     if (zoomLevel < 150) updateZoom(zoomLevel + 10);
   };
 
+  // Function to handle zoom out
   const handleZoomOut = () => {
     if (zoomLevel > 80) updateZoom(zoomLevel - 10);
   };
 
+  // Function to reset zoom to 100%
   const handleReset = () => {
     updateZoom(100);
   };
 
-  const { backendActor } = useAuth();
 
+  //
   const handleLogoClick = () => {
     if (location.pathname === "/") {
       window.scrollTo(0, 0);
@@ -51,24 +67,10 @@ const Footer = () => {
       }, 100);
     }
   };
-  const ledgerActors = useSelector((state) => state.ledger);
-  const [loading, setLoading] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
-  const [isTester, setIsTester] = useState(false);
 
-  useEffect(() => {
-    const checkTesterStatus = async () => {
-      try {
-        const result = await backendActor.check_is_tester();
-        setIsTester(result);
-      } catch (error) {
-        console.error("Error checking tester status:", error);
-      }
-    };
 
-    checkTesterStatus();
-  }, [backendActor]);
 
+  //  // Function to handle approval
   const handleApprove = async () => {
     const ledgerActor = ledgerActors.ckUSDC;
     try {
@@ -101,6 +103,7 @@ const Footer = () => {
     }
   };
 
+  // Function to create a user reserve
   const handleCreateUserReserve = async () => {
     if (!isApproved) {
 
@@ -121,6 +124,34 @@ const Footer = () => {
       setLoading(false);
     }
   };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  // Load the zoom level from local storage on component mount
+  useEffect(() => {
+    const savedZoom = localStorage.getItem("zoomLevel");
+    if (savedZoom) {
+      setZoomLevel(parseInt(savedZoom));
+      document.documentElement.style.fontSize = `${savedZoom}%`;
+    }
+  }, []);
+
+  // Check if the user is a tester
+  useEffect(() => {
+    const checkTesterStatus = async () => {
+      try {
+        const result = await backendActor.check_is_tester();
+        setIsTester(result);
+      } catch (error) {
+        console.error("Error checking tester status:", error);
+      }
+    };
+
+    checkTesterStatus();
+  }, [backendActor]);
+
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { TAB_CARD_DATA } from "../../utils/constants";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
-import { X } from "lucide-react";
+import { Infinity, X } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
@@ -83,6 +83,8 @@ const DashboardNav = () => {
     return `${num.toFixed(2)}%`;
   };
 
+
+  //update wallet detail tab
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
       id: 0,
@@ -115,6 +117,7 @@ const DashboardNav = () => {
     },
   ]);
 
+  //update wallet details tab
   const [walletDetailTabs, setWalletDetailTabs] = useState([
     { id: 0, title: "Total Market Size", count: 0 },
     { id: 1, title: "Total Available", count: 0 },
@@ -141,6 +144,7 @@ const DashboardNav = () => {
   /* ===================================================================================
    *                    Derived State, UI Variables, and Route-Based Flags
    * =================================================================================== */
+  // Check if the current route is "/dashboard" or "/market"
   const shouldRenderRiskDetailsButton =
     !pathname.includes("/market") &&
     !pathname.includes("/governance") &&
@@ -169,6 +173,8 @@ const DashboardNav = () => {
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
+
+  // Function to fetch asset data
   const fetchAssetData = async () => {
     const balances = [];
 
@@ -222,6 +228,7 @@ const DashboardNav = () => {
     setAssetBalances(balances);
   };
 
+  //calculate asset supply and borrow value
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -239,7 +246,7 @@ const DashboardNav = () => {
   };
 
 
-
+  //get conversion rate for assets
   const getConversionRate = (asset) => {
     switch (asset) {
       case "ckBTC":
@@ -261,6 +268,7 @@ const DashboardNav = () => {
     setIsTooltipVisible((prev) => !prev);
   };
 
+  // Function to calculate net supply APY
   const calculateNetSupplyApy = useCallback(
     (reserves, reserveData) => {
       let totalSuppliedInUSD = 0;
@@ -410,7 +418,7 @@ const DashboardNav = () => {
       const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
       const calculatedHealthFactor =
         Number(healthFactorBackend) > 100
-          ? "♾️"
+          ? <Infinity className=" dark:text-darkText text-[#2A1F9D]" />
           : parseFloat(Number(truncatedValue));
 
       setHealthFactor((prev) => {

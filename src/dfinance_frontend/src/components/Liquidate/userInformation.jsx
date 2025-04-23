@@ -100,6 +100,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Fetch asset supply and borrow data
   const getAssetSupplyValue = (asset, principal) => {
     if (assetSupply[asset] !== undefined) {
       const supplyValue = Number(assetSupply[asset]);
@@ -116,6 +117,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     return;
   };
 
+
+  //Function to calculate health factor 
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -178,7 +181,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   };
 
 
-
+  // Function to get balance for principal and asset
   const getBalanceForPrincipalAndAsset = (
     principal,
     assetName,
@@ -240,12 +243,15 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     );
   };
 
+
+  //Function to close popup on clicking outisde 
   const handleClickOutside = (e) => {
     if (popupRef.current && !popupRef.current.contains(e.target)) {
       onClose();
     }
   };
 
+  //Function to handle next click
   const handleNextClick = () => {
     if (isDebtInfo) {
       setIsCollateralOverlay(true);
@@ -254,7 +260,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     }
   };
 
-
+  //Function to handle debt asset selection
   const handleDebtAssetSelection = (
     asset,
     assetBorrowAmount,
@@ -448,6 +454,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     };
   }
 
+  //Function to calculate max collateral
   const handleMaxCollateral = async () => {
     try {
       const supplyAmount = Math.trunc(amountToRepay * 100000000);
@@ -737,20 +744,27 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     }
   };
 
+
+  //Function to handle wanring popup close
   const handleCloseWarningPopup = () => {
     setShowWarningPopup(false);
   };
 
+
+  //Function to show warnning popup
   const handleCallLiquidation = () => {
     setShowWarningPopup(true);
   };
 
+  //Function to handle popup close
   const handleClosePopup = () => {
     setTransactionResult(null);
     onClose();
     dispatch(toggleRefreshLiquidate());
   };
 
+
+  //Function to render Asset details
   const renderDebtAssetDetails = (asset) => {
     const assetBalances = {
       ckETH: ckETHBalance,
@@ -987,7 +1001,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       Number(item?.configuration?.liquidation_bonus || "0") / 100000000;
   }
 
-  const truncateToSevenDecimals = (value) => {
+  // Function to truncate value to 8 decimals
+  const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
@@ -1342,8 +1357,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             "?{" "}
             <strong className="font-bold text-red-500">
               {amountToRepay === calculatedData.maxDebtToLiq / 1e8
-                ? truncateToSevenDecimals(amountToRepay)
-                : truncateToSevenDecimals(
+                ? truncateToEightDecimals(amountToRepay)
+                : truncateToEightDecimals(
                   calculatedData.maxDebtToLiq / 1e8
                 )}{" "}
             </strong>
@@ -1351,8 +1366,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             <strong className="underline">deducted</strong> from your account &{" "}
             <strong className="font-bold text-green-500">
               {rewardAmount === calculatedData?.maxCollateral / 1e8
-                ? truncateToSevenDecimals(rewardAmount)
-                : truncateToSevenDecimals(
+                ? truncateToEightDecimals(rewardAmount)
+                : truncateToEightDecimals(
                   calculatedData?.maxCollateral / 1e8
                 )}{" "}
             </strong>

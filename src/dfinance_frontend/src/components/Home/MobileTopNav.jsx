@@ -75,6 +75,7 @@ const MobileTopNav = ({
    * =================================================================================== */
   const isMobile2 = window.innerWidth <= 640;
 
+  // copy principal ID to clipboard
   const copyToClipboard = () => {
     if (principal) {
       navigator.clipboard
@@ -105,7 +106,7 @@ const MobileTopNav = ({
         });
     }
   };
-
+  //truncate principal ID
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
@@ -172,6 +173,8 @@ const MobileTopNav = ({
     ckUSDC: ckUSDCBalance,
   };
   const supplyBalance = assetBalances[asset] || 0;
+
+  // handle approve function
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -240,6 +243,7 @@ const MobileTopNav = ({
     }
   };
 
+  //transfer function
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -392,8 +396,9 @@ const MobileTopNav = ({
     }
   };
 
+  // Handle transfer exception
   const handleTransferException = (error) => {
-    const message = error.message || "Supply action failed!";
+    const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
 
     const msgLower = message.toLowerCase();
@@ -423,18 +428,6 @@ const MobileTopNav = ({
       message.includes("Reject text: Canister")
     ) {
       toast.error("Canister is out of cycles. Admin has been notified.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-
-    } else if (msgLower.includes("supplycapexceeded")) {
-      toast.error("Supply cap is exceeded.", {
         className: "custom-toast",
         position: "top-center",
         autoClose: 5000,

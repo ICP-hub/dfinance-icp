@@ -19,6 +19,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
+
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -35,6 +36,7 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
+import { X } from 'lucide-react';
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
@@ -111,6 +113,7 @@ export default function Navbar({ isHomeNav }) {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
@@ -127,9 +130,14 @@ export default function Navbar({ isHomeNav }) {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTransferDropdownOpen, setIsTransferDropDownOpen] = useState(false);
-  const [showTransferPopup, setShowTransferPopup] = useState(false);
   const [showDepositPopup, setShowDepositPopup] = useState(false);
+  const [receiverAddress, setReceiverAddress] = useState("");
 
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
+
+  // Function to handle the click event on the "Transfer" button
   const toggleDropdown = () => {
     setIsTransferDropDownOpen(!isTransferDropdownOpen);
     setSwitchWalletDrop(false);
@@ -138,6 +146,8 @@ export default function Navbar({ isHomeNav }) {
     setIsPopupVisible(false);
     setDropdownVisible(false);
   };
+
+  // Function to handle the click event on the "Deposit" button
   const toggleDepositDropdown = () => {
     setShowDepositPopup(!showDepositPopup);
     setSwitchWalletDrop(false);
@@ -147,14 +157,12 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   };
 
-  /* ===================================================================================
-   *                                  FUNCTIONS
-   * =================================================================================== */
-
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
   const hash = window.location.hash;
   const ledgerActors = useSelector((state) => state.ledger);
+
+  // Function to handle the click event on the "sound" toggle button
   const handleSoundToggle = () => {
     dispatch(toggleSound());
   };
@@ -170,6 +178,7 @@ export default function Navbar({ isHomeNav }) {
       setIsLoading(false);
     }
   };
+  //error messages
   const errorMessages = {
     NoReserveDataFound:
       "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
@@ -183,6 +192,7 @@ export default function Navbar({ isHomeNav }) {
       "Minting of tokens failed. Your account state has been rolled back. Try again later.",
     Default: "An unexpected error occurred. Please try again later.",
   };
+  // asset balances for retrieving the walet balance
   const assetBalances = {
     ICP: ckICPBalance,
     ckETH: ckETHBalance,
@@ -192,6 +202,7 @@ export default function Navbar({ isHomeNav }) {
   };
   const supplyBalance = assetBalances[asset] || 0;
 
+  // Function to handle the click event on the "Approve" button
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -261,6 +272,7 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
+  // Function to handle the transfer action
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -414,8 +426,9 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
+  // Function to handle transfer exceptions
   const handleTransferException = (error) => {
-    const message = error.message || "Supply action failed!";
+    const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
 
     const msgLower = message.toLowerCase();
@@ -455,18 +468,6 @@ export default function Navbar({ isHomeNav }) {
         progress: undefined,
       });
 
-    } else if (msgLower.includes("supplycapexceeded")) {
-      toast.error("Supply cap is exceeded.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-
     } else {
       toast.error(`Error: ${message}`, {
         className: "custom-toast",
@@ -481,20 +482,25 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
+  //funtion for handle amount change
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
     setMaxClicked(false);
   };
+
+  // Function to handle the click event on the "Max" button
   const handleMaxClick = () => {
     setAmount(supplyBalance.toString());
     setMaxClicked(true);
   };
 
+  // Function to handle the click event on the "Tour" button
   const handleTour = () => {
     dispatch(joyRideTrigger());
     navigate("/dashboard");
   };
 
+  // Function to handle the click event on the "Settings" button
   const handleCloseDropdownOnScroll = () => {
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
@@ -507,11 +513,13 @@ export default function Navbar({ isHomeNav }) {
     login();
   };
 
+  // Function to handle the click event on the "Logout" button
   const handleLogout = () => {
     dispatch(setUserData(null));
     logout();
   };
 
+  // Function to handle the click event on the "Testnet Mode" button
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
     setDropdownVisible(false);
@@ -525,6 +533,7 @@ export default function Navbar({ isHomeNav }) {
     setShowTestnetPopup(false);
   };
 
+  // Function to handle the click event on the "Switch Wallet" button
   const handleSwitchWallet = () => {
     setSwitchWalletDrop(!switchWalletDrop);
     setSwitchTokenDrop(false);
@@ -533,6 +542,7 @@ export default function Navbar({ isHomeNav }) {
     setShowTestnetPopup(false);
   };
 
+  //function to click outside the dropdown
   const handleClickAway = () => {
 
     setSwitchTokenDrop(false);
@@ -544,7 +554,7 @@ export default function Navbar({ isHomeNav }) {
     setIsTransferDropDownOpen(false);
   };
 
-
+  // Function to handle the click event on the "Copy" button
   const copyToClipboard = () => {
     if (principal) {
       navigator.clipboard
@@ -577,21 +587,25 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
+  // Function to handle the click event on the "Launch app" button
   const handleLaunchApp = () => {
     navigate("/dashboard");
   };
 
+  // Function to handle the click event on the "Wallet Connect" button
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
 
+  // Function to handle the click event on the "TestnetMode" button
   const handleTestnetModeToggle = () => {
     navigate("/dashboard");
     dispatch(toggleTestnetMode());
   };
 
+  // Function to handle the dropdown to open
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
     setSwitchTokenDrop(false);
@@ -600,10 +614,12 @@ export default function Navbar({ isHomeNav }) {
     setIsPopupVisible(false);
   };
 
+  // Function to handle the resize event
   const handleResize = () => {
     setWindowWidth(window.innerWidth);
   };
 
+  // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
     setSwitchWalletDrop(false);
@@ -611,6 +627,7 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   };
 
+  // Function to handle the click event on the "Settings" button
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
     setIsDarkMode((prevMode) => {
@@ -620,14 +637,17 @@ export default function Navbar({ isHomeNav }) {
     });
   };
 
+  //Function to truncate the string
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
 
+  // Function to handle the click event on the "Wallet" button
   const switchWallet = () => {
     dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
   };
 
+  // Function to handle the click event on the "Logo" button
   const handleLogoClick = () => {
     if (location.pathname === "/") {
       window.scrollTo(0, 0);
@@ -638,13 +658,15 @@ export default function Navbar({ isHomeNav }) {
       }, 100);
     }
   };
-  const truncateToSevenDecimals = (value) => {
+
+  //function to trunccate the decimals up to 8 digits 
+  const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
   };
-  const [receiverAddress, setReceiverAddress] = useState("");
 
+  // Function to validate the receiver address
   const validateReceiverAddress = (value) => {
     const trimmedValue = value?.trim();
 
@@ -672,6 +694,7 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
+  // Function to handle the change event on the receiver address input
   const handleReceiverChange = (e) => {
     const value = e.target.value.trim();
     setReceiverAddress(value);
@@ -682,12 +705,15 @@ export default function Navbar({ isHomeNav }) {
    *                                  EFFECTS
    * =================================================================================== */
 
+  // Close the dropdown when the user scrolls 
   useEffect(() => {
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
     return () => {
       window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
   }, []);
+
+  // when dropdown open scroll is locked 
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
 
@@ -703,6 +729,7 @@ export default function Navbar({ isHomeNav }) {
     };
   }, [showDepositPopup, isTransferDropdownOpen]);
 
+  // Fetch balance and conversion rate when the component mounts or when dependencies change
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -722,6 +749,7 @@ export default function Navbar({ isHomeNav }) {
     fetchAllData();
   }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger, toggleRefresh]);
 
+  // funtion for Closing the dropdown when the user change location 
   useEffect(() => {
     setSwitchWalletDrop(false);
     setSwitchTokenDrop(false);
@@ -1078,7 +1106,7 @@ export default function Navbar({ isHomeNav }) {
                                       </p>
                                       <div className="flex gap-1 items-center">
                                         <p className="text-[12px] text-gray-500 -mb-[3px]">
-                                          {truncateToSevenDecimals(supplyBalance)}
+                                          {truncateToEightDecimals(supplyBalance)}
                                         </p>
                                         <p
                                           className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved

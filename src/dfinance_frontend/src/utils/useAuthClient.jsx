@@ -119,6 +119,7 @@ export const useAuthClient = (options = defaultOptions) => {
     localStorage.setItem("sessionStart", Date.now());
   };
 
+  // Function to get login options based on the provider
   const getLoginOptions = (provider) => {
     switch (provider) {
       case "ii":
@@ -156,6 +157,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  // function to check sessionstart
   const checkSession = () => {
     const sessionStart = localStorage.getItem("sessionStart");
     if (sessionStart) {
@@ -213,6 +215,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   }, []);
 
+  // Function to create a ledger actor
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
@@ -222,6 +225,7 @@ export const useAuthClient = (options = defaultOptions) => {
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
 
+  // Function to reload login
   const reloadLogin = async () => {
     try {
       if (
@@ -262,6 +266,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  // Check if user is registered
   useEffect(() => {
     const runCheckUser = async () => {
       try {

@@ -91,6 +91,7 @@ const Market = () => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Function to convert string values to numbers
   const convertToNumber = (value) => {
     if (typeof value === "string") {
       const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
@@ -105,10 +106,12 @@ const Market = () => {
     return 0;
   };
 
+  // function to show search bar
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
 
+  // Function to handle the click event for the "Details" button
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
@@ -118,11 +121,13 @@ const Market = () => {
     setShowPopup(false);
   };
 
+  // function to handle search input change
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
+  // function to handle the click event for the chevron icon
   const handleChevronClick = (assetName) => {
     const selectedAssetData = currentItems.find(
       (item) => item[0] === assetName
@@ -135,12 +140,15 @@ const Market = () => {
 
   const popupRef = useRef(null);
 
+  // function to close the popup when clicking outside of it
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
     }
   };
 
+
+  // function to format value 
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -230,6 +238,7 @@ const Market = () => {
     dashboardRefreshTrigger,
   ]);
 
+  //function to show the wallet modal
   useEffect(() => {
     if (isWalletCreated) {
       navigate("/dashboard/wallet-details");
@@ -293,8 +302,8 @@ const Market = () => {
               placeholder="Search assets"
               style={{ fontSize: "0.75rem" }}
               className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
-                  ? "animate-fade-left flex"
-                  : "animate-fade-right hidden"
+                ? "animate-fade-left flex"
+                : "animate-fade-right hidden"
                 }`}
               value={searchQuery}
               onChange={handleSearchInputChange}
@@ -302,8 +311,7 @@ const Market = () => {
           )}
         </div>
         <svg
-          onClick={showSearchBar}
-          data-testid="search-icon"
+          onClick={showSearchBar} data-testid="search-icon"
           className="cursor-pointer button"
           width="25"
           height="25"
@@ -387,8 +395,8 @@ const Market = () => {
                       <td key={index} className=" whitespace-nowrap">
                         <div
                           className={`flex ${index === 0
-                              ? "justify-start sxs3:pl-2 md:pl-2"
-                              : "justify-center"
+                            ? "justify-start sxs3:pl-2 md:pl-2"
+                            : "justify-center"
                             }`}
                         >
                           {item.header}
@@ -422,8 +430,8 @@ const Market = () => {
                     <tr
                       key={index}
                       className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${index !== currentItems.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
+                        ? "gradient-line-bottom"
+                        : ""
                         }`}
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
@@ -555,8 +563,7 @@ const Market = () => {
                           >
                             <ChevronRight
                               size={22}
-                              color={chevronColor}
-                              data-testid="chevron-right"
+                              color={chevronColor}   data-testid="chevron-right"
                               className="cursor-pointer"
                             />
                           </div>

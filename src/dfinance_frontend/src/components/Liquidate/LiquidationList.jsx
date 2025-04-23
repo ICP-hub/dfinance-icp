@@ -35,12 +35,11 @@ const DebtStatus = () => {
   const liquidateTrigger = useSelector(
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
-
+  const popupRef = useRef(null);
   const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(true);
@@ -135,15 +134,18 @@ const DebtStatus = () => {
     }
   };
 
+  // Fetches the list of all users data from the backend
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
   };
 
+  //Function to close the popup
   const closePopup = () => {
     setShowPopup(false);
   };
 
+  //Function to filter the users based on the search query
   const relevantItems = liquidationUsers.filter((item) => {
 
     return (
@@ -153,12 +155,14 @@ const DebtStatus = () => {
     );
   });
 
+  //Function for pagination logic
   const ITEMS_PER_PAGE = 8;
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
 
+  // Function to fetch asset data for each user
   const fetchAssetData = async () => {
     const balances = {};
     await Promise.all(
@@ -228,6 +232,7 @@ const DebtStatus = () => {
     setAssetBalances(balances);
   };
 
+  //Function to get balance for a specific principal and asset
   const getBalanceForPrincipalAndAsset = (
     principal,
     assetName,
@@ -238,6 +243,7 @@ const DebtStatus = () => {
     return assetBalance ? assetBalance[balanceType] || 0 : 0;
   };
 
+  //function to get asset supply value
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -247,6 +253,7 @@ const DebtStatus = () => {
     return;
   };
 
+  //function to get asset borrow value
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
@@ -255,7 +262,7 @@ const DebtStatus = () => {
 
     return;
   };
-
+  // Function to calculate asset supply
   const calculateAssetSupply = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
 
@@ -282,6 +289,7 @@ const DebtStatus = () => {
     );
   };
 
+  //funxtion to calculate asset borrow
   const calculateAssetBorrow = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
 
@@ -308,27 +316,24 @@ const DebtStatus = () => {
     );
   };
 
+  //Function to handle pagination 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value);
-    setCurrentPage(1);
-  };
-
-  const popupRef = useRef(null);
-
+  //Function to handle search inputclose popup when click outside 
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
     }
   };
 
+  //Function to truncatetext
   const truncateText = (text, length) => {
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
 
+  //Function to format value
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {
@@ -357,6 +362,8 @@ const DebtStatus = () => {
     })();
   }, []);
 
+
+  //Function to fetch  each user
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -369,6 +376,7 @@ const DebtStatus = () => {
     fetchUsers();
   }, [getAllUsers, liquidateTrigger]);
 
+  //Function to fetch  data for each user
   useEffect(() => {
     const loadUsers = async () => {
       setLiquidationLoading(true);
@@ -398,6 +406,8 @@ const DebtStatus = () => {
     }
   }, [liquidationUsers, assets, users, liquidateTrigger]);
 
+
+  //Funtion to fetch asset supply and borrow data
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
@@ -433,6 +443,8 @@ const DebtStatus = () => {
     fetchBorrowData();
   }, [assets, liquidateTrigger]);
 
+
+  // useeffect for Closing popup when click outside
   useEffect(() => {
     if (showPopup) {
       document.addEventListener("mousedown", handleOutsideClick);

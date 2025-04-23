@@ -88,8 +88,9 @@ const Repay = ({
    *                                  MEMOIZATION
    * =================================================================================== */
 
+  // Memoize the principal object to prevent unnecessary re-renders
   const principalObj = useMemo(() => {
-    if (!principal) return null; // ✅ Prevent null values
+    if (!principal) return null;
     try {
       return Principal.fromText(principal);
     } catch (error) {
@@ -103,27 +104,8 @@ const Repay = ({
    * =================================================================================== */
   const paymentModalRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        paymentModalRef.current &&
-        !paymentModalRef.current.contains(event.target)
-      ) {
-        setIsPaymentDone(false);
-        setIsVisible(false);
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isPaymentDone) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isPaymentDone]);
-
-  const truncateToSevenDecimals = (value) => {
+  // Function to truncate a number to 8 decimal places
+  const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
@@ -201,18 +183,7 @@ const Repay = ({
     setError("");
   };
 
-  const formatAmountWithCommas = (amount) => {
-    if (!amount) return "0";
-    const parts = amount.toString().split(".");
-    parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
-    return parts.length > 1 ? parts.join(".") : parts[0];
-  };
 
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
 
   const numericBalance = balance;
   const supplyBalance = numericBalance;
@@ -493,11 +464,13 @@ const Repay = ({
     }
   };
 
+  // Function to close the payment popup
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
+  // Function to handle the click event for the repay button
   const handleClick = async () => {
     setIsLoading(true);
     try {
@@ -511,6 +484,7 @@ const Repay = ({
     }
   };
 
+  // Function to handle the click event for the close button
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -532,6 +506,7 @@ const Repay = ({
     );
   };
 
+  // Function to calculate the Loan-to-Value (LTV) ratio
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
       return 0;
@@ -539,8 +514,9 @@ const Repay = ({
     return totalDeptValue / totalCollateralValue;
   };
 
+  // Function to handle the click event for the Max button
   const handleMaxClick = () => {
-    const truncateToSevenDecimals = (value) => {
+    const truncateToEightDecimals = (value) => {
       const multiplier = Math.pow(10, 8);
       const truncated = Math.round(value * multiplier) / multiplier;
       return truncated.toFixed(8);
@@ -561,7 +537,7 @@ const Repay = ({
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
           ? Number(selectedBalance).toFixed(7)
-          : truncateToSevenDecimals(selectedBalance)
+          : truncateToEightDecimals(selectedBalance)
       : "0";
 
     setMaxAmount(displayBalance.toString());
@@ -569,13 +545,8 @@ const Repay = ({
     updateAmountAndUsdValue(displayBalance.toString());
   };
 
-  const formatValue = (value) => {
-    if (!value) return "0";
-    return Number(value)
-      .toFixed(8)
-      .replace(/\.?0+$/, "");
-  };
 
+  // Function to handle the click event for the close button
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -586,10 +557,32 @@ const Repay = ({
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
+
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -751,12 +744,12 @@ const Repay = ({
                     {/* Value and Max button in same line below on small screens */}
                     <div className="flex gap-1 items-center">
                       <p className="text-[12px] text-gray-500 -mb-[3px]">
-                        {truncateToSevenDecimals(supplyBalance)}
+                        {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
                         className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                           }`}
                         onClick={() => {
                           if (assetBorrow > 0 && !isApproved) {
@@ -798,14 +791,14 @@ const Repay = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -813,14 +806,14 @@ const Repay = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -904,13 +897,13 @@ const Repay = ({
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                      isLoading ||
-                      isButtonDisabled ||
-                      amount <= 0 ||
-                      supplyBalance <= 0 ||
-                      amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                    isLoading ||
+                    isButtonDisabled ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                     }`}
                   disabled={
                     isApproved ||
@@ -928,13 +921,13 @@ const Repay = ({
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                      isButtonDisabled ||
-                      isLoading ||
-                      amount <= 0 ||
-                      supplyBalance <= 0 ||
-                      amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                    isButtonDisabled ||
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                     }`}
                   disabled={
                     !isApproved ||
@@ -990,7 +983,7 @@ const Repay = ({
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
                         ? Number(assetBorrow).toFixed(7)
-                        : truncateToSevenDecimals(assetBorrow)
+                        : truncateToEightDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}

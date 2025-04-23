@@ -88,7 +88,7 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
-
+  // Memoize the principal object to avoid unnecessary re-renders
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -114,9 +114,7 @@ const SupplyPopup = ({
     Default: "An unexpected error occurred. Please try again later.",
   };
 
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
+
 
   const numericBalance = parseFloat(balance);
   const supplyBalance = Math.max(numericBalance - transferFee, 0);
@@ -128,6 +126,7 @@ const SupplyPopup = ({
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Function to handle the amount input change
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
@@ -177,7 +176,7 @@ const SupplyPopup = ({
     updateAmountAndUsdValue(inputAmount);
   };
 
-
+  // Function to update the amount and USD value based on the input
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
 
@@ -201,7 +200,7 @@ const SupplyPopup = ({
   };
 
 
-
+  // Function to handle the approval process
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -284,7 +283,7 @@ const SupplyPopup = ({
 
 
 
-  // Executes the supply transaction
+  // Function to handle the supply process
   const handleSupplyETH = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -508,11 +507,13 @@ const SupplyPopup = ({
     }
   };
 
+  // Function to handle the close action of the payment popup
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
+  // Function to handle the click action of the approve or supply button
   const handleClick = async () => {
     setIsLoading(true);
     try {
@@ -526,6 +527,7 @@ const SupplyPopup = ({
     }
   };
 
+  // Function to calculate the health factor
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -554,6 +556,7 @@ const SupplyPopup = ({
     return result;
   };
 
+  // Function to calculate the Loan-to-Value (LTV) ratio
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
       return 0;
@@ -561,6 +564,7 @@ const SupplyPopup = ({
     return (totalDeptValue / totalCollateralValue) * 100;
   };
 
+  // Function to handle the click action of the max button
   const handleMaxClick = () => {
     const maxAmount = formatValue(supplyBalance);
     const [integerPart, decimalPart] = maxAmount.split(".");
@@ -577,6 +581,7 @@ const SupplyPopup = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format

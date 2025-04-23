@@ -53,6 +53,7 @@ const Liquidate = () => {
     }
   }, [isWalletCreated, isAuthenticated]);
 
+  // Function to handle the click event for the "Get Debt Status" button
   const handleLiquidateClick = () => {
     if (!isAuthenticated) {
       setShowWarning(true);
@@ -62,6 +63,7 @@ const Liquidate = () => {
 
   };
 
+  // Function to handle the back button click in the DebtStatus component
   const handleBackClick = () => {
     setShowDebtStatus(false);
   };

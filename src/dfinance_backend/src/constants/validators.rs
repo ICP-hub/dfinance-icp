@@ -1,5 +1,5 @@
 
-use super::{data_types::zero_nat_value, interest_variables::constants::MAX_ASSET_LENGTH};
+use super::{constant_variables::constants::MAX_ASSET_LENGTH, data_types::zero_nat_value};
 use crate::constants::errors::Error;
 
 

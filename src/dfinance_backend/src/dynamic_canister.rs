@@ -1,3 +1,4 @@
+use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
@@ -8,9 +9,12 @@ use crate::constants::interest_variables::constants::{
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
-use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::guards::access_control::guard_admin_only;
 // use crate::guards::access_control::to_check_controller;
+use crate::api::query::get_controller;
+use crate::declarations::structs::{
+    ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg,
+};
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
@@ -19,15 +23,24 @@ use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
-use crate::declarations::structs::{DynamicCanisterInitArgs, LedgerArg, ArchiveOptions, FeatureFlags};
-use crate::api::query::get_controller;
+
 /*
- * @title Load Token Ledger WASM
- * @dev Loads the compiled WebAssembly binary for the token ledger.
+ * @title Load DToken Ledger WASM
+ * @dev Loads the compiled WebAssembly binary for the dtoken ledger.
  */
-fn ledger_wasm() -> Cow<'static, [u8]> {
+fn dtoken_ledger_wasm() -> Cow<'static, [u8]> {
     Cow::Borrowed(include_bytes!(
         "../../../target/wasm32-unknown-unknown/release/dtoken.wasm"
+    ))
+}
+
+/*
+ * @title Load DebtToken Ledger WASM
+ * @dev Loads the compiled WebAssembly binary for the debttoken ledger.
+ */
+fn debttoken_ledger_wasm() -> Cow<'static, [u8]> {
+    Cow::Borrowed(include_bytes!(
+        "../../../target/wasm32-unknown-unknown/release/debttoken.wasm"
     ))
 }
 
@@ -143,10 +156,17 @@ pub async fn create_token_canister(
         .0
         .canister_id;
 
+    // Choose the appropriate WASM file based on the token name
+    let wasm_module = if token_name.starts_with("debt") {
+        debttoken_ledger_wasm().to_vec()
+    } else {
+        dtoken_ledger_wasm().to_vec()
+    };
+
     let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
-        wasm_module: ledger_wasm().to_vec(),
+        wasm_module,
         arg: args,
     };
 
@@ -171,7 +191,10 @@ pub async fn create_token_canister(
  * @returns The `Principal` ID of the newly created test token canister.
  * @functionality Creates a test token canister with predefined configurations.
  */
-pub async fn create_testtoken_canister(token_name: String, token_symbol: String) -> Result<Principal,Error> {
+pub async fn create_testtoken_canister(
+    token_name: String,
+    token_symbol: String,
+) -> Result<Principal, Error> {
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
@@ -280,15 +303,15 @@ pub async fn create_testtoken_canister(token_name: String, token_symbol: String)
 
 /*
  * @title Add Controllers to Canister
- * @dev This function allows adding a user as a controller to a specific canister. 
- *      Only the current controller of the canister can invoke this function. 
+ * @dev This function allows adding a user as a controller to a specific canister.
+ *      Only the current controller of the canister can invoke this function.
  *      The function updates the canister settings to include the new user as a controller,
  *      alongside the caller.
- * 
+ *
  * @param canister_id The principal ID of the canister to which the controllers should be added.
  * @param user The principal ID of the user to be added as a controller.
- * 
- * @returns 
+ *
+ * @returns
  *      - `Ok("done")`: If the controllers were successfully added.
  *      - `Ok("principals are not allowed")`: If the caller is not a controller of the canister.
  * @functionality Adds a new user as a controller of the specified canister.

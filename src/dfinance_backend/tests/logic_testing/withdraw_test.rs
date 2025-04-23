@@ -56,7 +56,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             asset: "ICP".to_string(),
             amount: Nat::from(200_000_000u128), // 2.00 ICP
             on_behalf_of: None,
-            is_collateral: false,
+            is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
@@ -64,7 +64,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             asset: "ICP".to_string(),
             amount: Nat::from(100_000_000u128), // 1.00 ICP (with collateral)
             on_behalf_of: None,
-            is_collateral: true,
+            is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
@@ -72,7 +72,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             asset: "ckBTC".to_string(),
             amount: Nat::from(30_000u128), // 0.03 ckBTC
             on_behalf_of: None,
-            is_collateral: false,
+            is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },

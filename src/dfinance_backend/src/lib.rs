@@ -1,9 +1,9 @@
 use crate::constants::errors::Error;
-use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserAccountData, UserData};
+use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserData, AssetInfo, ReserveData};
 use candid::Nat;
 use candid::Principal;
+use declarations::datatypes::InitArgs;
 use declarations::structs::AssetData;
-use declarations::structs::InitArgs;
 use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
@@ -15,13 +15,10 @@ mod dynamic_canister;
 mod guards;
 mod protocol;
 mod stable_storage;
-use crate::declarations::structs::ReserveData;
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
-    ExecuteWithdrawParams,AssetInfo
+    ExecuteWithdrawParams, UserAccountData
 };
-// use crate::guards::access_control::to_check_controller;
-// use crate::guards::access_control::ADMINS;
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
 use api::query::get_all_users;

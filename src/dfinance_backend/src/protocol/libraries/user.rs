@@ -6,7 +6,7 @@ use crate::constants::constant_variables::constants::{
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::MIN_BORROW;
-use crate::declarations::structs::AssetData;
+use crate::declarations::structs::{AssetData, UserAccountData};
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::guards::access_control::guard_admin_only;
 use crate::stable_storage::storable::Candid;
@@ -15,7 +15,7 @@ use crate::guards::access_control::{
 };
 use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::utils::math_utils::get_max_value;
-use crate::declarations::datatypes::{UserAccountData, UserData, UserReserveData};
+use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::{
     stable_storage::state_handler::{mutate_state,read_state},
     protocol::utils::math_utils::ScalingMath,

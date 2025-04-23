@@ -5,12 +5,11 @@ use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTO
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::validate_asset_name;
-use crate::constants::validators::validate_zero_value;
+use crate::declarations::datatypes::AssetInfo;
+use crate::declarations::datatypes::ReserveCache;
+use crate::declarations::datatypes::ReserveData;
 use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
-use crate::declarations::structs::AssetInfo;
-use crate::declarations::structs::ReserveCache;
-use crate::declarations::structs::ReserveData;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use crate::guards::access_control::guard_admin_only;
 use crate::protocol::libraries::interest_rate::{
@@ -22,7 +21,6 @@ use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
-use ic_cdk::api::time;
 use ic_cdk::update;
 
 impl Default for AccrueToTreasuryLocalVars {
@@ -261,7 +259,7 @@ pub async fn burn_scaled(
 
     let balance = get_balance(token_canister_principal, user_principal).await?;
 
-    ic_cdk::println!("adjusted balance = {}", adjusted_amount);
+    ic_cdk::println!("user balance = {}", balance);
     let mut balance_increase = zero_nat_value();
     if burn_dtoken {
         is_withdraw = true;

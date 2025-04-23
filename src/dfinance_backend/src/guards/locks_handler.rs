@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use candid::Principal;
 use crate::constants::errors::Error;
 
-//TODO: need to shift this into the stable memory
+//TODO: shifting this into the stable, i dont think a good idea too many changes need to do then ask bhanu.
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State{pending_requests: BTreeSet::new()});
 }

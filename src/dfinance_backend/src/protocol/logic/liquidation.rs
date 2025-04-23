@@ -4,7 +4,7 @@ use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ReserveData};
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
 use crate::stable_storage::storable::Candid;
 use crate::guards::access_control::{guard_prevent_anonymous,guard_principal_not_anonymous};
 use crate::protocol::logic::borrow::execute_repay;
@@ -12,7 +12,7 @@ use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::update::{user_data, user_reserve};
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::declarations::datatypes::UserReserveData;
+use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::{
     stable_storage::state_handler::{read_state, mutate_state},
     declarations::structs::ExecuteSupplyParams,
@@ -21,8 +21,8 @@ use crate::{
 use crate::api::query::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::guards::locks::CallerGuard;
-use crate::guards::api_limitor::request_limiter;
+use crate::guards::locks_handler::CallerGuard;
+use crate::guards::api_limiter::request_limiter;
 
 /*
 -------------------------------------

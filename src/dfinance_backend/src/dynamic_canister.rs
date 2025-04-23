@@ -10,7 +10,6 @@ use crate::constants::interest_variables::constants::{
 };
 use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::guards::access_control::guard_admin_only;
-// use crate::guards::access_control::to_check_controller;
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,

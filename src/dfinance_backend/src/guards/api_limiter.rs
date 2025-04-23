@@ -1,4 +1,4 @@
-use crate::stable_storage::state_handler::read_state;
+use crate::constants::constant_variables::constants::{REQUEST_LIMIT, WINDOW_SIZE_VAR};
 use crate::constants::errors::Error;
 use crate::protocol::utils::math_utils::current_timestamp;
 use candid::Principal;
@@ -114,8 +114,8 @@ pub fn inspect_message() {
     }
 }
 
-const LIMIT: usize = 5; // Max requests allowed
-const WINDOW_SIZE: u64 = 60; // In seconds
+const LIMIT: usize = REQUEST_LIMIT; 
+const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
 
 #[update]
 pub fn request_limiter() -> Result<(), Error> {

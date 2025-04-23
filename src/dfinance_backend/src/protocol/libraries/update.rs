@@ -4,13 +4,13 @@ use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{
-    ReserveCache, ReserveData, ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::declarations::datatypes::{UserData, UserReserveData};
+use crate::declarations::datatypes::{ReserveCache, ReserveData, UserData, UserReserveData};
 use crate::stable_storage::{
         state_handler::{mutate_state,read_state},
         storable::Candid,
@@ -19,7 +19,7 @@ use crate::stable_storage::{
 use candid::{Nat, Principal};
 use crate::protocol::utils::price::get_exchange_rates;
 use ic_cdk::update;
-use crate::guards::api_limitor::request_limiter;
+use crate::guards::api_limiter::request_limiter;
 
 pub struct UpdateLogic;
 

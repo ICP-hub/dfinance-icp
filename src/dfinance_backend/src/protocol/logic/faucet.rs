@@ -12,8 +12,8 @@ use candid::{Nat, Principal};
 use ic_cdk_macros::update;
 use crate::api::inter_canister::get_balance;
 use crate::api::inter_canister::asset_transfer_from;
-use crate::guards::locks::CallerGuard;
-use crate::guards::api_limitor::request_limiter;
+use crate::guards::locks_handler::CallerGuard;
+use crate::guards::api_limiter::request_limiter;
 
 /*
  * @title Token Faucet

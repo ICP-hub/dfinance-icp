@@ -3,10 +3,8 @@ use ic_stable_structures::StableBTreeMap;
 use std::collections::BTreeMap;
 
 use crate::declarations::datatypes::{
-    BlockedUserDetails, PriceCache, RequestTracker, SessionStorageData, UserData,
+    AssetInfo, BlockedUserDetails, InitArgs, PriceCache, RequestTracker, ReserveData, SessionStorageData, UserData
 };
-use crate::declarations::structs::{AssetInfo, InitArgs};
-use crate::declarations::structs::ReserveData;
 use crate::stable_storage::storable::Candid;
 
 use ic_stable_structures::{memory_manager::VirtualMemory, DefaultMemoryImpl};

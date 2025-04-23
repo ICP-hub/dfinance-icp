@@ -1,6 +1,8 @@
 use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
+use crate::declarations::datatypes::AssetInfo;
+use crate::declarations::datatypes::InitArgs;
+use crate::declarations::datatypes::ReserveData;
 use crate::constants::errors::Error;
-use crate::declarations::structs::AssetInfo;
 use crate::guards::access_control::guard_admin_only;
 use crate::protocol::utils::math_utils::current_timestamp;
 use super::inter_canister::get_balance;
@@ -10,8 +12,6 @@ use crate::constants::data_types::zero_nat_value;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::validate_asset_name;
 use crate::declarations::structs::AssetData;
-use crate::declarations::structs::InitArgs;
-use crate::guards::access_control::guard_prevent_anonymous;
 use ic_cdk::query;
 use crate::protocol::libraries::update::user_data;
 use crate::protocol::libraries::update::user_reserve;
@@ -20,9 +20,7 @@ use crate::protocol::utils::math_utils;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData};
 use crate::stable_storage::state_handler::read_state;
-use crate::declarations::structs::ReserveData;
 use crate::stable_storage::storable::Candid;
-// use crate::guards::access_control::to_check_controller;
 use ic_cdk::api;
 
 /*

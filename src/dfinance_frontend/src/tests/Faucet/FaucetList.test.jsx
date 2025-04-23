@@ -69,7 +69,7 @@ jest.mock("../../components/customHooks/useUserData", () => jest.fn());
 
 // Mock images
 jest.mock("../../../public/assests-icon/ckBTC.png", () => "ckBTC.png");
-jest.mock("../../../public/assests-icon/cekTH.png", () => "cekTH.png");
+jest.mock("../../../public/assests-icon/CKETH.svg", () => "CKETH.svg");
 jest.mock("../../../public/assests-icon/ckusdc.svg", () => "ckUSDC.svg");
 jest.mock("../../../public/assests-icon/ckUSDT.svg", () => "ckUSDT.svg");
 jest.mock("../../../public/assests-icon/ICPMARKET.png", () => "icp.png");

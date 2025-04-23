@@ -1,7 +1,7 @@
 import ckBTC from "../../public/assests-icon/ckBTC.png";
-import cekTH from "../../public/assests-icon/cekTH.png";
+import cekTH from "../../public/assests-icon/CKETH.svg";
 
-import icp from "../../public/assests-icon/ICP.svg";
+import icp from "../../public/assests-icon/ICPMARKET.png";
 
 import ckusdc from "../../public/assests-icon/ckusdc.svg";
 import ckusdt from "../../public/assests-icon/ckUSDT.svg";

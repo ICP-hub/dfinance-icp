@@ -32,7 +32,7 @@ jest.mock("lucide-react", () => ({
 }));
 
 jest.mock("../../../public/assests-icon/ckBTC.png", () => "ckBTC.png");
-jest.mock("../../../public/assests-icon/cekTH.png", () => "cekTH.png");
+jest.mock("../../../public/assests-icon/CKETH.svg", () => "CKETH.svg");
 jest.mock("../../../public/assests-icon/ckusdc.svg", () => "ckusdc.svg");
 jest.mock("../../../public/assests-icon/ckUSDT.svg", () => "ckUSDT.svg");
 jest.mock("../../../public/assests-icon/ICPMARKET.png", () => "ICPMARKET.png");

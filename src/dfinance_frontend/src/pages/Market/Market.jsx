@@ -8,7 +8,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import cekTH from "../../../public/assests-icon/cekTH.png";
+import cekTH from "../../../public/assests-icon/CKETH.svg";
 import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
 import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import icp from "../../../public/assests-icon/ICPMARKET.png";

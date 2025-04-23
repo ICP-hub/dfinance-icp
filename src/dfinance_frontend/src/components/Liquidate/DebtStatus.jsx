@@ -60,6 +60,7 @@ const DebtStatus = () => {
 
   const {
     assets,
+    AssetImages,
     filteredItems,
     asset_supply,
     asset_borrow,
@@ -67,6 +68,7 @@ const DebtStatus = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
+  console.log("assetImages", AssetImages);
   const navigate = useNavigate();
   const {
     getAllUsers,
@@ -556,22 +558,12 @@ const DebtStatus = () => {
                                   );
 
                                   if (assetBorrow > 0) {
+                                    const assetIndex = assets.indexOf(assetName);
+
                                     return (
                                       <img
                                         key={index}
-                                        src={
-                                          assetName === "ckBTC"
-                                            ? ckBTC
-                                            : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
-                                        }
+                                        src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />
@@ -609,22 +601,12 @@ const DebtStatus = () => {
                                     reserveliquidationThreshold
                                   );
                                   if (assetSupply > 0) {
+                                    const assetIndex = assets.indexOf(assetName);
+
                                     return (
                                       <img
                                         key={index}
-                                        src={
-                                          assetName === "ckBTC"
-                                            ? ckBTC
-                                            : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
-                                        }
+                                        src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />

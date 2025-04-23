@@ -48,7 +48,7 @@ const MobileTopNav = ({
   const navigate = useNavigate();
   const {
     assets,
-
+    AssetImages
   } = useAssetData();
   const { isAuthenticated, principal, accountIdString } = useAuth();
   const ledgerActors = useSelector((state) => state.ledger);
@@ -530,10 +530,9 @@ const MobileTopNav = ({
     validateReceiverAddress(value);
   };
   const handleCloseDropdownOnScroll = () => {
-    setSwitchTokenDrop(false);
-    setSwitchWalletDrop(false);
-    setIsPopupVisible(false);
-    setDropdownVisible(false);
+   
+    setSwitchWalletDrop(false);(false);
+    
     
   };
   /* ===================================================================================
@@ -1000,11 +999,13 @@ useEffect(() => {
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="flex items-center gap-2 focus:outline-none"
                           >
-                            <img
-                              src={assetImages[asset]}
-                              alt="Asset Icon"
-                              className="object-fill w-6 h-6 rounded-full"
-                            />
+                            {asset && (
+                                            <img
+                                              src={AssetImages[assets.indexOf(asset)]} // Dynamically fetch image from AssetImages using assetIndex
+                                              alt={asset}
+                                              className="object-fill w-6 h-6 rounded-full"
+                                            />
+                                          )}
                             <span className="text-lg">{asset}</span>
                             <svg
                               className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
@@ -1029,30 +1030,39 @@ useEffect(() => {
                               }}
                             >
                               <div className="absolute right-[40px]  mt-20 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
-                                <div className="py-1">
-                                  {assets.map((a) => (
-                                    <button
-                                      key={a}
-                                      className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/30 "
-                                      onClick={() => {
+                              <div className="py-1">
+                                                {assets.map((a) => {
+                                                  const assetIndex = assets.indexOf(a); // Get the index of the asset in the assets array
 
-                                        if (a !== asset) {
-                                          setAmount("");
-                                          setMaxClicked(false);
-                                        }
-                                        setAsset(a);
-                                        setIsDropdownOpen(false);
-                                      }}
-                                    >
-                                      <img
-                                        src={assetImages[a]}
-                                        alt={a}
-                                        className="w-5 h-5 rounded-full"
-                                      />
-                                      <span>{a}</span>
-                                    </button>
-                                  ))}
-                                </div>
+                                                  return (
+                                                    <button
+                                                      key={a}
+                                                      className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
+                                                      onClick={() => {
+                                                        // Clear amount when selecting a different asset
+                                                        if (a !== asset) {
+                                                          setAmount("");
+                                                          setMaxClicked(false);
+                                                        }
+                                                        setAsset(a);
+                                                        setIsDropdownOpen(false);
+                                                      }}
+                                                    >
+                                                      {/* Conditionally render the image using assetIndex */}
+                                                      {assetIndex !== -1 && AssetImages[assetIndex] && (
+                                                        <img
+                                                          key={assetIndex}
+                                                          src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+                                                          alt={a || "asset"} // alt text should match the asset name
+                                                          className="rounded-full w-5 h-5 mt-1"
+                                                        />
+                                                      )}
+
+                                                      <span>{a}</span>
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
                               </div>
                             </div>
                           )}

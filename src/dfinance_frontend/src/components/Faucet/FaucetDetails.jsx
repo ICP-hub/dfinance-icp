@@ -8,11 +8,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import useAssetData from "../customHooks/useAssets";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import cekTH from "../../../public/assests-icon/cekTH.png";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
@@ -100,29 +95,14 @@ const FaucetDetails = () => {
   };
 
   const handleFaucetClick = (asset) => {
-    let assetImage;
-    switch (asset) {
-      case "ckBTC":
-        assetImage = ckBTC;
-        break;
-      case "ckETH":
-        assetImage = cekTH;
-        break;
-      case "ckUSDC":
-        assetImage = ckUSDC;
-        break;
-      case "ICP":
-        assetImage = icp;
-        break;
-      case "ckUSDT":
-        assetImage = ckUSDT;
-        break;
-      default:
-        assetImage = null;
-    }
-    setSelectedAsset({ asset, assetImage });
-    setShowPopup(true);
+    // Directly set the selected asset from the AssetImages array based on asset name
+    const assetIndex = assets.indexOf(asset); // Find the index of the asset in the assets array
+    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; // If asset exists, get the corresponding image
+  
+    setSelectedAsset({ asset, assetImage }); // Update the selected asset state
+    setShowPopup(true); // Show the popup
   };
+  
 
   const closePopup = () => {
     setShowPopup(false);

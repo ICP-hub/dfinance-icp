@@ -34,7 +34,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black opacity-40 z-40"
+        className="fixed inset-0 bg-black opacity-40 z-50"
         onClick={onClose}
       ></div>
       <div

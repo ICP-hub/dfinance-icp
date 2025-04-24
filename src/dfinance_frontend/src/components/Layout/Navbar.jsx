@@ -69,7 +69,7 @@ export default function Navbar({ isHomeNav }) {
   const theme = useSelector((state) => state.theme.theme);
   const {
     assets,
-
+    AssetImages
   } = useAssetData();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
@@ -1007,6 +1007,7 @@ export default function Navbar({ isHomeNav }) {
                                     <p className="text-[12px] text-gray-500 -mb-1">
                                     </p>
                                   </div>
+
                                   <div className="flex flex-col items-end gap-3">
                                     <div className="w-auto flex gap-2 items-center">
                                       {/* Replace image with dropdown */}
@@ -1015,11 +1016,14 @@ export default function Navbar({ isHomeNav }) {
                                           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                           className="flex items-center gap-2 focus:outline-none"
                                         >
-                                          <img
-                                            src={assetImages[asset]}
-                                            alt="Asset Icon"
-                                            className="object-fill w-6 h-6 rounded-full"
-                                          />
+
+                                          {asset && (
+                                            <img
+                                              src={AssetImages[assets.indexOf(asset)]} // Dynamically fetch image from AssetImages using assetIndex
+                                              alt={asset}
+                                              className="object-fill w-6 h-6 rounded-full"
+                                            />
+                                          )}
                                           <span className="text-lg">{asset}</span>
                                           <svg
                                             className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
@@ -1046,29 +1050,39 @@ export default function Navbar({ isHomeNav }) {
                                             <div className="absolute right-[40px] mt-2 w-48 origin-top-right bg-white dark:bg-darkOverlayBackground border dark:border-gray-600 border-gray-300 rounded-xl shadow-md z-10">
 
                                               <div className="py-1">
-                                                {assets.map((a) => (
-                                                  <button
-                                                    key={a}
-                                                    className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
-                                                    onClick={() => {
-                                                      // Clear amount when selecting a different asset
-                                                      if (a !== asset) {
-                                                        setAmount("");
-                                                        setMaxClicked(false);
-                                                      }
-                                                      setAsset(a);
-                                                      setIsDropdownOpen(false);
-                                                    }}
-                                                  >
-                                                    <img
-                                                      src={assetImages[a]}
-                                                      alt={a}
-                                                      className="w-5 h-5 rounded-full"
-                                                    />
-                                                    <span>{a}</span>
-                                                  </button>
-                                                ))}
+                                                {assets.map((a) => {
+                                                  const assetIndex = assets.indexOf(a); // Get the index of the asset in the assets array
+
+                                                  return (
+                                                    <button
+                                                      key={a}
+                                                      className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
+                                                      onClick={() => {
+                                                        // Clear amount when selecting a different asset
+                                                        if (a !== asset) {
+                                                          setAmount("");
+                                                          setMaxClicked(false);
+                                                        }
+                                                        setAsset(a);
+                                                        setIsDropdownOpen(false);
+                                                      }}
+                                                    >
+                                                      {/* Conditionally render the image using assetIndex */}
+                                                      {assetIndex !== -1 && AssetImages[assetIndex] && (
+                                                        <img
+                                                          key={assetIndex}
+                                                          src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+                                                          alt={a || "asset"} // alt text should match the asset name
+                                                          className="rounded-full w-5 h-5 mt-1"
+                                                        />
+                                                      )}
+
+                                                      <span>{a}</span>
+                                                    </button>
+                                                  );
+                                                })}
                                               </div>
+
                                             </div>
                                           </div>
                                         )}

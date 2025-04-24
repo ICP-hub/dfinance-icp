@@ -4,6 +4,7 @@ use crate::api::inter_canister::get_total_supply;
 use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
+use crate::constants::validators::validate_asset_image_url;
 use crate::constants::validators::validate_asset_name;
 use crate::declarations::datatypes::AssetInfo;
 use crate::declarations::datatypes::ReserveCache;
@@ -652,6 +653,7 @@ pub fn accrue_to_treasury(
  *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
+//TODO: add validation of the params.
 #[update]
 pub async fn initialize(
     token_name: String,
@@ -660,6 +662,8 @@ pub async fn initialize(
 ) -> Result<(), Error> {
     // admin only access check
     guard_admin_only()?;
+    validate_asset_name(&token_name)?;
+    validate_asset_image_url(&asset_image)?;
 
     if read_state(|state| state.reserve_list.contains_key(&token_name)) {
         return Err(Error::TokenAlreadyExist);

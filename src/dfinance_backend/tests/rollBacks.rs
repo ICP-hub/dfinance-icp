@@ -47,7 +47,7 @@ fn setup() -> (PocketIc, Principal) {
     // 🔹 Define test input (token name + reserve data)
     let ICP_token_name = "ICP".to_string();
     let ICP_reserve_data = ReserveData {
-        asset_name: Some(ICP_token_name.clone()),
+        asset_name: ICP_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -77,7 +77,7 @@ fn setup() -> (PocketIc, Principal) {
 
     let ckBTC_token_name = "ckBTC".to_string();
     let ckBTC_reserve_data = ReserveData {
-        asset_name: Some(ckBTC_token_name.clone()),
+        asset_name: ckBTC_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -107,7 +107,7 @@ fn setup() -> (PocketIc, Principal) {
 
     let ckETH_token_name = "ckETH".to_string();
     let ckETH_reserve_data = ReserveData {
-        asset_name: Some(ckETH_token_name.clone()),
+        asset_name: ckETH_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -137,7 +137,7 @@ fn setup() -> (PocketIc, Principal) {
 
     let ckUSDC_token_name = "ckUSDC".to_string();
     let ckUSDC_reserve_data = ReserveData {
-        asset_name: Some(ckUSDC_token_name.clone()),
+        asset_name: ckUSDC_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -167,7 +167,7 @@ fn setup() -> (PocketIc, Principal) {
 
     let ckUSDT_token_name = "ckUSDT".to_string();
     let ckUSDT_reserve_data = ReserveData {
-        asset_name: Some(ckUSDT_token_name.clone()),
+        asset_name: ckUSDT_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,

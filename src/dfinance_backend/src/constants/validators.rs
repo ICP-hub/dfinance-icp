@@ -21,7 +21,7 @@ pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
 // to validate zero value
 pub fn validate_zero_value(value: &candid::Nat) -> Result<(), Error> {
   if value <= &zero_nat_value() {
-      ic_cdk::println!("Asset cannot be an empty string");
+      ic_cdk::println!("Amount must be greater than 0");
       return Err(Error::InvalidAmount);
   }
 

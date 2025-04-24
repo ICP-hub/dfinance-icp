@@ -5,15 +5,10 @@ import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/Cross.png";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/cketh.png";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useAssetData from "../customHooks/useAssets";
 import { useDispatch, useSelector } from "react-redux";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
@@ -32,7 +27,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
   const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, fetchConversionRate, ckBTCBalance, ckETHBalance, ckUSDCBalance, ckICPBalance, ckUSDTBalance, fetchBalance,
   } = useFetchConversionRate();
   const {
-    assets, filteredItems, fetchAssetSupply, fetchAssetBorrow,
+    assets, filteredItems, fetchAssetSupply, fetchAssetBorrow, AssetImages
   } = useAssetData();
 
   /* ===================================================================================
@@ -344,7 +339,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
     const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
     const totalAmount = supplyAmount + BigInt(Math.round(transferFee * 1e8));
-    
+
 
     const totalAmountAsNumber = Number(totalAmount);
 
@@ -582,7 +577,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        amount: supplyAmount+transferfee*1e8,
+        amount: supplyAmount + transferfee * 1e8,
         on_behalf_of: mappedItem?.principal?._arr,
         reward_amount: Math.trunc(rewardAmount * 1e8),
       };
@@ -805,7 +800,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     };
 
     const balance = assetBalances[asset];
-
+    const assetIndex = assets.indexOf(asset);
     return (
       <div className="flex flex-col items-end">
         <p className="text-xs font-normal  text-[#2A1F9D] mb-1 dark:text-darkText opacity-50">
@@ -818,23 +813,14 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
           </p>
 
           {/* Asset Image */}
-          <img
-            src={
-              asset === "ckBTC"
-                ? ckBTC
-                : asset === "ckETH"
-                  ? ckETH
-                  : asset === "ckUSDC"
-                    ? ckUSDC
-                    : asset === "ICP"
-                      ? icp
-                      : asset === "ckUSDT"
-                        ? ckUSDT
-                        : undefined
-            }
-            alt={asset}
-            className="rounded-full w-4 h-4 mt-1"
-          />
+          {assetIndex !== -1 && AssetImages[assetIndex] && (
+            <img
+              key={assetIndex}
+              src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+              alt={asset || "asset"}
+              className="rounded-full w-5 h-5 mt-1"
+            />
+          )}
         </div>
       </div>
     );
@@ -854,6 +840,8 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     }
   };
 
+
+
   const renderAssetDetails = (asset) => {
     if (!asset) return null;
 
@@ -871,13 +859,15 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
         ? calculatedData?.maxCollateral / 1e8
         : rewardAmount;
     const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : null;
-    const DebtusdRate = assetRates[selectedDebtAsset] ?assetRates[selectedDebtAsset] /1e8 : 0;
-    const DebtAmount = selectedAsset == selectedDebtAsset 
-                            ? calculatedData?.maxDebtToLiq
-                            : Math.trunc((calculatedData?.maxDebtToLiq *DebtusdRate)/usdRate);
-    const bonusValue =
-      ((DebtAmount / 1e8) * liquidation_bonus) / 100;
+    const DebtusdRate = assetRates[selectedDebtAsset] ? assetRates[selectedDebtAsset] / 1e8 : 0;
+    const DebtAmount =
+      selectedAsset === selectedDebtAsset
+        ? calculatedData?.maxDebtToLiq
+        : Math.trunc((calculatedData?.maxDebtToLiq * DebtusdRate) / usdRate);
+    const bonusValue = ((DebtAmount / 1e8) * liquidation_bonus) / 100;
 
+    const assetIndex = assets.indexOf(asset); // Get the index of the asset name
+    const DebtassetIndex = assets.indexOf(selectedDebtAsset);
     return (
       <div className="mt-4">
         <p className="text-sm font-normal text-[#2A1F9D] opacity-80 dark:text-darkText dark:opacity-80">
@@ -887,49 +877,24 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
           {/* Reward Amount */}
           <div>
             {(() => {
-              const assetRates = {
-                ckETH: ckETHUsdRate,
-                ckBTC: ckBTCUsdRate,
-                ckUSDC: ckUSDCUsdRate,
-                ICP: ckICPUsdRate,
-                ckUSDT: ckUSDTUsdRate,
-              };
-
-              const usdRate = assetRates[asset]
-                ? assetRates[asset] / 1e8
-                : null;
-              const adjustedRewardAmount =
-                rewardAmount !== calculatedData?.maxCollateral / 1e8
-                  ? calculatedData?.maxCollateral / 1e8
-                  : rewardAmount;
-              const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : 0;
-
               let displayedReward;
               if (!isFinite(rewardInUSD) || rewardInUSD === 0) {
                 displayedReward = "0.00";
               } else if (rewardInUSD < 0.01) {
-                displayedReward = `<${(0.01 / usdRate).toLocaleString(
-                  undefined,
-                  {
-                    minimumFractionDigits: 8,
-                    maximumFractionDigits: 8,
-                  }
-                )}`;
+                displayedReward = `<${(0.01 / usdRate).toLocaleString(undefined, {
+                  minimumFractionDigits: 8,
+                  maximumFractionDigits: 8,
+                })}`;
               } else {
-                displayedReward = adjustedRewardAmount.toLocaleString(
-                  undefined,
-                  {
-                    minimumFractionDigits: 8,
-                    maximumFractionDigits: 8,
-                  }
-                );
+                displayedReward = adjustedRewardAmount.toLocaleString(undefined, {
+                  minimumFractionDigits: 8,
+                  maximumFractionDigits: 8,
+                });
               }
 
               return (
                 <>
-                  <p className="text-sm font-medium text-green-500">
-                    {displayedReward}
-                  </p>
+                  <p className="text-sm font-medium text-green-500">{displayedReward}</p>
                   {usdRate && (
                     <p className="text-xs font-normal text-gray-500 dark:text-darkTextSecondary mt-1">
                       {rewardInUSD === 0
@@ -949,45 +914,61 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
 
           {/* Including Bonus with Value and Image */}
           <div className="flex flex-col items-end">
-            <p className="text-xs font-normal text-[#2A1F9D]  dark:text-darkText opacity-50">
+            <p className="text-xs font-normal text-[#2A1F9D] dark:text-darkText opacity-50">
               Including Bonus:
             </p>
-            <div className="flex items-center space-x-2 ">
+            <div className="flex items-center space-x-2">
               <p className="text-xs font-normal text-green-500 mt-1">
                 {formatValue(bonusValue)}
               </p>
-              <img
-                src={
-                  asset === "ckBTC"
-                    ? ckBTC
-                    : asset === "ckETH"
-                      ? ckETH
-                      : asset === "ckUSDC"
-                        ? ckUSDC
-                        : asset === "ICP"
-                          ? icp
-                          : asset === "ckUSDT"
-                            ? ckUSDT
-                            : undefined
-                }
-                alt={asset}
-                className="rounded-full w-4 h-4 mt-1"
-              />
+
+              {/* Dynamically render the image based on the asset index */}
+              {assetIndex !== -1 && AssetImages[assetIndex] && (
+                <img
+                  key={assetIndex}
+                  src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+                  alt={asset || "asset"}
+                  className="rounded-full w-4 h-4 mt-1"
+                />
+              )}
             </div>
           </div>
         </div>
-        <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4 "></div>
+
+        <div className="w-full h-[0.8px] bg-gradient-to-r from-[#EB8863] to-[#81198E] my-4"></div>
 
         <div className="w-full text-[14px] mt-1">
           {/* First Line: User Health Factor */}
           <div className="flex justify-between items-center">
             <p className="opacity-80">User Health Factor:</p>
             <div className="flex items-center gap-1">
-              <span className={`${value > 3 ? "text-green-500" : value <= 1 ? "text-red-500" : value <= 1.5 ? "text-orange-600" : value <= 2 ? "text-orange-400" : "text-orange-300"}`}>
+              <span
+                className={`${value > 3
+                  ? "text-green-500"
+                  : value <= 1
+                    ? "text-red-500"
+                    : value <= 1.5
+                      ? "text-orange-600"
+                      : value <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
+                  }`}
+              >
                 {value > 100 ? "∞" : value.toFixed(2)}
               </span>
               <span className="text-gray-500">→</span>
-              <span className={`${currentHealthFactor > 3 ? "text-green-500" : currentHealthFactor <= 1 ? "text-red-500" : currentHealthFactor <= 1.5 ? "text-orange-600" : currentHealthFactor <= 2 ? "text-orange-400" : "text-orange-300"}`}>
+              <span
+                className={`${currentHealthFactor > 3
+                  ? "text-green-500"
+                  : currentHealthFactor <= 1
+                    ? "text-red-500"
+                    : currentHealthFactor <= 1.5
+                      ? "text-orange-600"
+                      : currentHealthFactor <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
+                  }`}
+              >
                 {currentHealthFactor}
               </span>
             </div>
@@ -998,20 +979,19 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             <p className="opacity-80">Transaction Fee:</p>
             <div className="flex items-center gap-1 mt-1 ml-1">
               <p className="font-medium">{transferFee}</p>
-              <img src={{ ckBTC, ckETH, ckUSDC, ICP: icp, ckUSDT }[selectedDebtAsset]} alt={selectedDebtAsset} className="w-3 h-3 rounded-full" />
+              {DebtassetIndex !== -1 && AssetImages[DebtassetIndex] && (
+                <img
+                  key={DebtassetIndex}
+                  src={AssetImages[DebtassetIndex]} // Get the image URL dynamically using DebtassetIndex
+                  alt={asset || "asset"}
+                  className="rounded-full w-4 h-4 mt-1"
+                />
+              )}
             </div>
           </div>
         </div>
 
-
-
-
-
-
-
-
-
-        {info == true && calculatedData?.maxDebtToLiq == 0 && (
+        {info === true && calculatedData?.maxDebtToLiq === 0 && (
           <div className="w-full flex flex-col my-3 space-y-2">
             <div className="w-full flex bg-[#6e3d17] p-2 rounded-md">
               <div className="w-1/12 flex items-center justify-center">
@@ -1029,6 +1009,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
       </div>
     );
   };
+
 
   const formatNumber = useFormatNumber();
   let liquidation_bonus = "";
@@ -1504,40 +1485,40 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
             </button>
           </div>
           {showPanicPopup && (
-                 <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                   <div className="w-full flex flex-col items-center ">
-                     <div className="w-full flex items-center justify-between  ">
-                       <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
-                       <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
-                         <X size={22} />
-                       </button>
-                     </div>
-         
-                     <div
-                       className="dark:bg-gradient 
+            <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+              <div className="w-full flex flex-col items-center ">
+                <div className="w-full flex items-center justify-between  ">
+                  <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
+                  <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                    <X size={22} />
+                  </button>
+                </div>
+
+                <div
+                  className="dark:bg-gradient 
                          dark:from-darkGradientStart 
                          dark:to-darkGradientEnd 
                          dark:text-darkText p-2 "
-                     >
-         
-                       <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                         Thanks for helping us improve DFinance! <br></br> You’ve
-                         uncovered a bug, and our dev team is on it.
-                       </p>
-         
-                       <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                         Your account is temporarily locked while we investigate and fix
-                         the issue. <br />
-                       </p>
-                       <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                         We appreciate your contribution and have logged your ID—testers
-                         like you are key to making DFinance better! <br />
-                         If you have any questions, feel free to reach out.
-                       </p>
-                     </div>
-                   </div>
-                 </div>
-               )}
+                >
+
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Thanks for helping us improve DFinance! <br></br> You’ve
+                    uncovered a bug, and our dev team is on it.
+                  </p>
+
+                  <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    Your account is temporarily locked while we investigate and fix
+                    the issue. <br />
+                  </p>
+                  <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
+                    We appreciate your contribution and have logged your ID—testers
+                    like you are key to making DFinance better! <br />
+                    If you have any questions, feel free to reach out.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           {isDebtInfo ? (
             <div>
               <div className="mb-6">
@@ -1580,6 +1561,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                         assetBorrowAmountInUSD =
                           assetBorrowAmount * (ckUSDTUsdRate / 1e8);
                       }
+                      const assetIndex = assets.indexOf(asset);
                       if (assetBorrow > 0) {
                         return (
                           <label
@@ -1599,24 +1581,14 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                                 );
                               }}
                             />
-
-                            <img
-                              src={
-                                asset === "ckBTC"
-                                  ? ckBTC
-                                  : asset === "ckETH"
-                                    ? ckETH
-                                    : asset === "ckUSDC"
-                                      ? ckUSDC
-                                      : asset === "ICP"
-                                        ? icp
-                                        : asset === "ckUSDT"
-                                          ? ckUSDT
-                                          : undefined
-                              }
-                              alt={asset}
-                              className="rounded-[50%] w-7"
-                            />
+                            {assetIndex !== -1 && AssetImages[assetIndex] && (
+                              <img
+                                key={assetIndex}
+                                src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+                                alt={asset || "asset"}
+                                className="rounded-full w-7 h-7 "
+                              />
+                            )}
                           </label>
                         );
                       }
@@ -1660,7 +1632,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                             ? assetRates[selectedDebtAsset] / 1e8
                             : null;
 
-                            const adjustedAmountToRepay =
+                          const adjustedAmountToRepay =
                             calculatedData?.maxDebtToLiq > 0
                               ? calculatedData.maxDebtToLiq / 1e8
                               : amountToRepay;
@@ -1771,7 +1743,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                             : assetName === "ckUSDT"
                               ? ckUSDTBalance
                               : 0;
-
+                  const assetIndex = assets.indexOf(assetName);
                   if (assetSupply > 0) {
                     return (
                       <label className="flex items-center space-x-2">
@@ -1790,24 +1762,14 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                             );
                           }}
                         />
-                        <img
-                          key={index}
-                          src={
-                            assetName === "ckBTC"
-                              ? ckBTC
-                              : assetName === "ckETH"
-                                ? ckETH
-                                : assetName === "ckUSDC"
-                                  ? ckUSDC
-                                  : assetName === "ICP"
-                                    ? icp
-                                    : assetName === "ckUSDT"
-                                      ? ckUSDT
-                                      : undefined
-                          }
-                          alt={assetName}
-                          className="rounded-[50%] w-7"
-                        />{" "}
+                        {assetIndex !== -1 && AssetImages[assetIndex] && (
+                          <img
+                            key={assetIndex}
+                            src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+                            alt={assetName || "asset"}
+                            className="rounded-full w-7 h-7 "
+                          />
+                        )}
                       </label>
                     );
                   }

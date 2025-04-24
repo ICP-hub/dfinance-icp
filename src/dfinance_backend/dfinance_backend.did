@@ -234,7 +234,8 @@ service : (principal) -> {
   guard_admin_only : () -> (Result_1) query;
   guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_user_blocked : () -> (Result_10) query;
+  is_function_blocked : (text) -> (Result_11) query;
+  is_user_blocked : () -> (Result_11) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   register_user : () -> (Result);
   remove_admin : (principal) -> (Result);

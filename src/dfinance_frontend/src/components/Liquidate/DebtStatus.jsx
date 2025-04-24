@@ -8,11 +8,6 @@ import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../../components/Common/pagination";
 import UserInformationPopup from "./userInformation";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/cketh.png";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssetData from "../customHooks/useAssets";
 import MiniLoader from "../Common/MiniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
@@ -60,6 +55,7 @@ const DebtStatus = () => {
 
   const {
     assets,
+    AssetImages,
     filteredItems,
     asset_supply,
     asset_borrow,
@@ -67,6 +63,7 @@ const DebtStatus = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
+  console.log("assetImages", AssetImages);
   const navigate = useNavigate();
   const {
     getAllUsers,
@@ -556,22 +553,12 @@ const DebtStatus = () => {
                                   );
 
                                   if (assetBorrow > 0) {
+                                    const assetIndex = assets.indexOf(assetName);
+
                                     return (
                                       <img
                                         key={index}
-                                        src={
-                                          assetName === "ckBTC"
-                                            ? ckBTC
-                                            : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
-                                        }
+                                        src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />
@@ -609,22 +596,12 @@ const DebtStatus = () => {
                                     reserveliquidationThreshold
                                   );
                                   if (assetSupply > 0) {
+                                    const assetIndex = assets.indexOf(assetName);
+
                                     return (
                                       <img
                                         key={index}
-                                        src={
-                                          assetName === "ckBTC"
-                                            ? ckBTC
-                                            : assetName === "ckETH"
-                                            ? ckETH
-                                            : assetName === "ckUSDC"
-                                            ? ckUSDC
-                                            : assetName === "ICP"
-                                            ? icp
-                                            : assetName === "ckUSDT"
-                                            ? ckUSDT
-                                            : undefined
-                                        }
+                                        src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />

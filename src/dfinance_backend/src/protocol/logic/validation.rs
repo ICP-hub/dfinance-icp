@@ -60,14 +60,12 @@ impl ValidationLogic {
         let supply_cap = reserve.configuration.supply_cap.clone();
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-        let d_token_canister_id: Result<Principal, candid::types::principal::PrincipalError> =
-            Principal::from_text(reserve.d_token_canister.clone().unwrap());
-        let d_token_canister_id_result = match d_token_canister_id {
-            Ok(id) => id,
-            Err(_) => return Err(Error::NoCanisterIdFound),
+        let d_token_canister_id = match reserve.d_token_canister.clone() {
+            Some(id) => id,
+            None => return Err(Error::NoCanisterIdFound),
         };
 
-        let total_supply = get_total_supply(d_token_canister_id_result).await?;
+        let total_supply = get_total_supply(d_token_canister_id).await?;
 
         ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
 
@@ -114,8 +112,7 @@ impl ValidationLogic {
         let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        let d_token_principal =
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap();
+        let d_token_principal = reserve.d_token_canister.clone().unwrap();
 
         let user_current_supply = get_balance(d_token_principal, user).await?;
 
@@ -156,7 +153,7 @@ impl ValidationLogic {
             return Err(Error::MaxAmountPlatform);
         }
 
-        let _ = update_token_price(reserve.asset_name.clone().unwrap()).await;
+        let _ = update_token_price(reserve.asset_name.clone()).await;
         //TODO check in rust-opt whether to remove this code or keep it
         // let mut total_collateral = Nat::from(0u128);
         // let mut total_debt = Nat::from(0u128);
@@ -214,7 +211,7 @@ impl ValidationLogic {
             };
 
         if total_debt != Nat::from(0u128) {
-            let rate = get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+            let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
             ic_cdk::println!("rate = {:?}", rate);
 
@@ -295,7 +292,7 @@ impl ValidationLogic {
             return Err(Error::MaxAmountPlatform);
         }
 
-        if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
+        if let Err(e) = update_token_price(reserve.asset_name.clone()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
         }
 
@@ -357,7 +354,7 @@ impl ValidationLogic {
                 Err(e) => return Err(e),
             };
 
-        let rate = get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+        let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
         ic_cdk::println!("asset price = {}", rate);
 
@@ -446,7 +443,7 @@ impl ValidationLogic {
         let user_reserve = match user_data.reserves {
             Some(ref mut reserves) => reserves
                 .iter_mut()
-                .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
+                .find(|(asset_name, _)| *asset_name == *reserve.asset_name),
             None => None,
         };
 
@@ -483,11 +480,10 @@ impl ValidationLogic {
         user: Principal,
         repay_reserve_data: ReserveData,
     ) -> Result<(), Error> {
-        let repay_asset_principal =
-            match Principal::from_text(repay_reserve_data.debt_token_canister.clone().unwrap()) {
-                Ok(principal) => principal,
-                Err(_) => return Err(Error::NoCanisterIdFound),
-            };
+        let repay_asset_principal = match repay_reserve_data.debt_token_canister.clone() {
+            Some(principal) => principal,
+            None => return Err(Error::NoCanisterIdFound),
+        };
 
         let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
 

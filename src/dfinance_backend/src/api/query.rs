@@ -7,11 +7,10 @@ use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
 use crate::protocol::utils::math_utils::current_timestamp;
 use super::inter_canister::get_balance;
-use candid::Nat;
-use candid::Principal;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::validate_asset_name;
+use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserData};
 use crate::declarations::structs::AssetData;
 use ic_cdk::query;
 use crate::protocol::libraries::update::user_data;
@@ -19,9 +18,10 @@ use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::libraries::user::calculate_user_asset_data;
 use crate::protocol::utils::math_utils;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::declarations::datatypes::{SessionStorageData, PriceCache, UserData};
 use crate::stable_storage::state_handler::read_state;
 use crate::stable_storage::storable::Candid;
+use candid::Nat;
+use candid::Principal;
 use ic_cdk::api;
 
 /*
@@ -41,7 +41,6 @@ pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
             .ok_or_else(|| Error::NoReserveDataFound)
     })
 }
-
 
 /*
  * @title Get User Data
@@ -67,7 +66,6 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
     })
 }
 
-//TODO: remove it later no use of it. just for testing for right now.
 #[query]
 fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
     if user == Principal::anonymous() {
@@ -102,8 +100,6 @@ pub fn get_all_assets() -> Vec<AssetInfo> {
      })
 }
 
-
-
 /*
  * @title Get Asset Principal
  * @dev Retrieves the principal ID associated with an asset.
@@ -123,7 +119,6 @@ pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
         }
     })
 }
-
 
 /*
  * @title Get All Users
@@ -193,7 +188,6 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
     })
 }
 
-
 /*
  * @title User Normalized Supply
  * @dev Calculates the normalized supply of a user for a given reserve.
@@ -228,7 +222,6 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
         return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
 }
-
 
 /*
  * @title User Normalized Debt
@@ -284,7 +277,6 @@ pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
 
-
 /*
  * @title Get User Account Data
  * @dev Fetches the user’s account data.
@@ -303,7 +295,6 @@ async fn get_user_account_data(
     result
 }
 
-
 /*
  * @title Get Transfer Fee
  * @dev Retrieves the transfer fee for an asset based on its exchange rate.
@@ -313,9 +304,8 @@ async fn get_user_account_data(
  */
 #[query]
 pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
+    let caller_id = ic_cdk::caller();
 
-    let caller_id = ic_cdk::caller(); 
-      
     if caller_id == Principal::anonymous() {
         ic_cdk::println!("principals are not allowed");
         return Err(Error::AnonymousPrincipal);
@@ -348,7 +338,6 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
     })
 }
-
 
 /*
  * @title Get Caller Session
@@ -444,7 +433,6 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
     })
 }
 
-
 /*
  * @title Get Asset Supply
  * @dev Fetches the total asset supply for a given asset.
@@ -504,14 +492,12 @@ pub fn reserve_ledger_canister_id(asset: String) -> Result<Principal, Error> {
 
 //     ic_cdk::println!("Asset reserve data fetched successfully");
 
-//     let d_token_canister_principal =
-//         match Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()) {
-//             Ok(principal) => principal,
-//             Err(e) => {
-//                 ic_cdk::println!("Error parsing DToken canister principal: {}", e);
-//                 return Err(Error::ErrorParsingPrincipal);
-//             }
-//         };
+    // let d_token_canister_principal = match asset_reserve.d_token_canister.clone() {
+    //     Some(principal) => principal,
+    //     None => {
+    //         return Err(Error::ErrorParsingPrincipal);
+    //     }
+    // };
 
 //     let balance_result = get_balance(d_token_canister_principal, user_principal).await;
 //     let get_balance_value = match balance_result {
@@ -624,14 +610,12 @@ pub async fn get_asset_debt(
         }
     };
 
-    let debt_token_canister_principal =
-        match Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()) {
-            Ok(principal) => principal,
-            Err(e) => {
-                ic_cdk::println!("Error parsing DebtToken canister principal: {}", e);
-                return Err(Error::ErrorParsingPrincipal);
-            }
-        };
+    let debt_token_canister_principal = match asset_reserve.debt_token_canister.clone() {
+        Some(principal) => principal,
+        None => {
+            return Err(Error::ErrorParsingPrincipal);
+        }
+    };
     ic_cdk::println!("Entering into get_balance function");
     let balance_result = get_balance(debt_token_canister_principal, user_principal).await;
     let get_balance_value = match balance_result {

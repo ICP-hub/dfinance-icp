@@ -137,13 +137,13 @@ type ReserveConfiguration = record {
 };
 type ReserveData = record {
   id : nat16;
-  asset_name : opt text;
+  asset_name : text;
   asset_borrow : nat;
   can_be_collateral : opt bool;
-  debt_token_canister : opt text;
+  debt_token_canister : opt principal;
   last_update_timestamp : nat64;
   liquidity_index : nat;
-  d_token_canister : opt text;
+  d_token_canister : opt principal;
   asset_supply : nat;
   current_liquidity_rate : nat;
   borrow_rate : nat;

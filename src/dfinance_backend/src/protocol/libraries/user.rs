@@ -14,8 +14,9 @@ use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
 use crate::guards::access_control::guard_admin_only;
-use crate::guards::access_control::{check_is_tester, guard_prevent_anonymous};
-use crate::protocol::libraries::update::user_reserve;
+use crate::guards::access_control::{
+ {check_is_tester, guard_prevent_anonymous},
+};
 use crate::protocol::utils::math_utils::{current_timestamp, get_max_value};
 use crate::stable_storage::storable::Candid;
 use crate::{
@@ -578,8 +579,7 @@ pub async fn get_user_balance_in_base_currency(
 
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let d_token_canister_principal: Principal =
-        Principal::from_text(asset_reserve.d_token_canister.clone().unwrap()).unwrap();
+    let d_token_canister_principal: Principal = asset_reserve.d_token_canister.clone().unwrap();
 
     let user_scaled_balance = get_balance(d_token_canister_principal, user_principal).await?;
 
@@ -675,8 +675,7 @@ pub async fn get_user_debt_in_base_currency(
 ) -> Result<Nat, Error> {
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let debt_token_canister_principal =
-        Principal::from_text(asset_reserve.debt_token_canister.clone().unwrap()).unwrap();
+    let debt_token_canister_principal = asset_reserve.debt_token_canister.clone().unwrap();
 
     let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await?;
 
@@ -1122,10 +1121,8 @@ pub async fn create_user_reserve_with_low_health(
     //     };
     // };
 
-    let dtoken_principal =
-        Principal::from_text(supply_reserve_data.d_token_canister.clone().unwrap()).unwrap();
-    let debt_token_principal =
-        Principal::from_text(borrow_reserve_data.debt_token_canister.clone().unwrap()).unwrap();
+    let dtoken_principal = supply_reserve_data.d_token_canister.clone().unwrap();
+    let debt_token_principal = borrow_reserve_data.debt_token_canister.clone().unwrap();
 
     match asset_transfer(
         user_principal,

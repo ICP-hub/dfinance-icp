@@ -76,7 +76,8 @@ pub enum Error {
     TOOMANYREQUESTS,
     BLOCKEDFORONEHOUR,
     FeeExceedsAmount ,
-    AmountLockAcquisitionFailed
+    AmountLockAcquisitionFailed,
+    ErrorCreatingCanister
 }
 
 impl Error {
@@ -154,6 +155,7 @@ impl Error {
             Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
             Error::AmountLockAcquisitionFailed => "amount lock acquisition failed",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
+            Error::ErrorCreatingCanister => "Error creating canister",
        
         }
     }

@@ -478,7 +478,7 @@ pub async fn to_get_reward_amount(
     let mut collateral_balance = get_balance(d_token_canister, user_principal).await?;
 
     collateral_balance = (collateral_balance
-        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))
+        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone())?))
     .scaled_div(user_reserve_data.liquidity_index);
 
     ic_cdk::println!("Collateral balance normalized: {:?}", collateral_balance);

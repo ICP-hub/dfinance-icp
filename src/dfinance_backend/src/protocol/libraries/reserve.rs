@@ -198,7 +198,7 @@ pub async fn update_interest_rates(
         total_debt,
         &interest_rate_params,
         reserve_cache.reserve_factor.clone(),
-        reserve_data.asset_name.clone().expect("no name"),
+        asset,
     )
     .await?;
 
@@ -374,10 +374,10 @@ pub async fn burn_scaled(
                 ic_cdk::println!("Burning successful");
                 if is_withdraw {
                     reserve.asset_supply =
-                        get_total_supply(token_canister_principal).await.unwrap();
+                        get_total_supply(token_canister_principal).await?;
                 } else {
                     reserve.asset_borrow =
-                        get_total_supply(token_canister_principal).await.unwrap();
+                        get_total_supply(token_canister_principal).await?;
                 }
                 Ok(())
             }
@@ -421,10 +421,10 @@ pub async fn burn_scaled(
                 ic_cdk::println!("Burning successful");
                 if is_withdraw {
                     reserve.asset_supply =
-                        get_total_supply(token_canister_principal).await.unwrap();
+                        get_total_supply(token_canister_principal).await?;
                 } else {
                     reserve.asset_borrow =
-                        get_total_supply(token_canister_principal).await.unwrap();
+                        get_total_supply(token_canister_principal).await?;
                 }
                 Ok(())
             }
@@ -554,9 +554,9 @@ pub async fn mint_scaled(
         Ok(_) => {
             ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
             if is_supply {
-                reserve.asset_supply = get_total_supply(token_canister_principal).await.unwrap();
+                reserve.asset_supply = get_total_supply(token_canister_principal).await?;
             } else {
-                reserve.asset_borrow = get_total_supply(token_canister_principal).await.unwrap();
+                reserve.asset_borrow = get_total_supply(token_canister_principal).await?;
             }
 
             Ok(())

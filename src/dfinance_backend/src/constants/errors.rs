@@ -89,6 +89,8 @@ pub enum Error {
     AdminNotFound,
     ControllerNotFound,
     InvalidValue,
+    ErrorCreatingCanister,
+    ErrorUpdateCanisterSetting
 }
 
 impl Error {
@@ -179,7 +181,9 @@ impl Error {
             Error::NotASupport => "Caller is not a support user!",
             Error::NotAnAuditor => "Caller is not an auditor!",
             Error::ControllerNotFound => "Controller not found!",
-            Error::InvalidValue => "Enter value is invalid"
+            Error::InvalidValue => "Enter value is invalid",
+            Error::ErrorCreatingCanister => "Error creating canister",
+            Error::ErrorUpdateCanisterSetting => "Error updating canister settings",
         }
     }
 }

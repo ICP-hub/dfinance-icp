@@ -206,7 +206,7 @@ pub async fn calculate_interest_rates(
     let total_supply = reserve
         .clone()
         .asset_supply
-        .scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
+        .scaled_mul(user_normalized_supply(reserve.clone())?);
     ic_cdk::println!("Total Supply: {:?}", total_supply);
     ic_cdk::println!("Liquidity in reserve: {:?}", reserve.asset_supply);
     // ic_cdk::println!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());

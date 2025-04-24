@@ -443,12 +443,12 @@ impl ValidationLogic {
 
         let mut user_data = user_data(user)?;
 
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
-            None => None,
-        };
+        // let user_reserve = match user_data.reserves {
+        //     Some(ref mut reserves) => reserves
+        //         .iter_mut()
+        //         .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
+        //     None => None,
+        // };
 
         Ok(())
     }

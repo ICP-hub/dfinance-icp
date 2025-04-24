@@ -431,9 +431,9 @@ const Market = () => {
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
-                        {assets.includes(item[0]) && (
+                        {assets?.includes(item[0]) && (
                             <img
-                              src={AssetImages[assets.indexOf(item[0])]}
+                              src={AssetImages[assets?.indexOf(item[0])]}
                               alt={`${item[0]} logo`}
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -681,7 +681,7 @@ const Market = () => {
                   </button>
                   <div>
                     <div className="flex gap-2 justify-start items-center ">
-                      {assets.includes(selectedAssetData[0]) && (
+                      {assets?.includes(selectedAssetData[0]) && (
                         <img
                           src={AssetImages[selectedAssetData[0]]} // Use the selected asset's image
                           alt={`${selectedAssetData[0]} logo`}

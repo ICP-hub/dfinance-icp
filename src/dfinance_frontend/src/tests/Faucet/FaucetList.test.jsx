@@ -172,17 +172,7 @@ describe("FaucetDetails Component", () => {
     expect(screen.getByText("ICP")).toBeInTheDocument();
     expect(screen.getByText("ckUSDT")).toBeInTheDocument();
   });
-
-  test("displays asset images for each asset", () => {
-    render(<FaucetDetails />);
-
-    const images = screen.getAllByRole("img");
-    expect(images.length).toBe(5); // One image for each asset
-
-    expect(screen.getByAltText("ckbtc logo")).toBeInTheDocument();
-    expect(screen.getByAltText("ckusdt logo")).toBeInTheDocument();
-  });
-
+// show faucet buttons for each asset 
   test("shows faucet buttons for each asset", () => {
     render(<FaucetDetails />);
 

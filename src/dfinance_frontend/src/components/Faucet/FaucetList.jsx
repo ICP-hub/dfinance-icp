@@ -85,7 +85,7 @@ const FaucetDetails = () => {
   // This function is called when the user clicks on the "Faucet" button for a specific asset.
   const handleFaucetClick = (asset) => {
     // Directly set the selected asset from the AssetImages array based on asset name
-    const assetIndex = assets.indexOf(asset); // Find the index of the asset in the assets array
+    const assetIndex = assets?.indexOf(asset); // Find the index of the asset in the assets array
     const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; // If asset exists, get the corresponding image
   
     setSelectedAsset({ asset, assetImage }); // Update the selected asset state
@@ -264,9 +264,9 @@ const FaucetDetails = () => {
                     >
                       <td className="py-[1.5rem]">
                         <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
-                          {assets.includes(item[0]) && (
+                          {assets?.includes(item[0]) && (
                             <img
-                              src={AssetImages[assets.indexOf(item[0])]}
+                              src={AssetImages[assets?.indexOf(item[0])]}
                               alt={`${item[0]} logo`}
                               className="w-8 h-8 rounded-full mr-2"
                             />

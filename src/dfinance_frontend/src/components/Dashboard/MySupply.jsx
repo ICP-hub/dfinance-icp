@@ -82,7 +82,9 @@ const MySupply = () => {
     fetchAssetSupply,
     fetchAssetBorrow,
     loading: filteredDataLoading,
+    AssetImages,
   } = useAssetData();
+
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const formatNumber = useFormatNumber();
 
@@ -1053,41 +1055,13 @@ const MySupply = () => {
                                   >
                                     {}
                                     <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                      {asset === "ckBTC" && (
-                                        <img
-                                          src={ckBTC}
-                                          alt="ckbtc logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ckETH" && (
-                                        <img
-                                          src={ckETH}
-                                          alt="cketh logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ckUSDC" && (
-                                        <img
-                                          src={ckUSDC}
-                                          alt="ckUSDC logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ICP" && (
-                                        <img
-                                          src={icp}
-                                          alt="ICP logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ckUSDT" && (
-                                        <img
-                                          src={ckUSDT}
-                                          alt="ckUSDT logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
+                                    {assets.includes(asset) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(asset)]}
+                                      alt={`${asset} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                       {asset}
                                     </div>
 
@@ -1307,12 +1281,7 @@ const MySupply = () => {
                                             handleModalOpen(
                                               "collateral",
                                               asset,
-                                              (asset === "ckBTC" && ckBTC) ||
-                                                (asset === "ckETH" && ckETH) ||
-                                                (asset === "ckUSDC" &&
-                                                  ckUSDC) ||
-                                                (asset === "ICP" && icp) ||
-                                                (asset === "ckUSDT" && ckUSDT),
+                                              AssetImages[assets.indexOf(asset)],
                                               supplyRateApr,
                                               ckBalance,
                                               liquidationThreshold,
@@ -1399,11 +1368,7 @@ const MySupply = () => {
                                           handleModalOpen(
                                             "supply",
                                             asset,
-                                            (asset === "ckBTC" && ckBTC) ||
-                                              (asset === "ckETH" && ckETH) ||
-                                              (asset === "ckUSDC" && ckUSDC) ||
-                                              (asset === "ICP" && icp) ||
-                                              (asset === "ckUSDT" && ckUSDT),
+                                            AssetImages[assets.indexOf(asset)],
                                             supplyRateApr,
                                             ckBalance,
                                             liquidationThreshold,
@@ -1480,11 +1445,7 @@ const MySupply = () => {
                                           handleModalOpen(
                                             "withdraw",
                                             asset,
-                                            (asset === "ckBTC" && ckBTC) ||
-                                              (asset === "ckETH" && ckETH) ||
-                                              (asset === "ckUSDC" && ckUSDC) ||
-                                              (asset === "ICP" && icp) ||
-                                              (asset === "ckUSDT" && ckUSDT),
+                                            AssetImages[assets.indexOf(asset)],
                                             supplyRateApr,
                                             ckBalance,
                                             liquidationThreshold,
@@ -1645,41 +1606,13 @@ const MySupply = () => {
                                     className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs"
                                   >
                                     <div className="p-3 pl-4 align-top flex items-center gap-2">
-                                      {asset === "ckBTC" && (
-                                        <img
-                                          src={ckBTC}
-                                          alt="ckbtc logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ckETH" && (
-                                        <img
-                                          src={ckETH}
-                                          alt="cketh logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ckUSDC" && (
-                                        <img
-                                          src={ckUSDC}
-                                          alt="cketh logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ICP" && (
-                                        <img
-                                          src={icp}
-                                          alt="ICP logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset === "ckUSDT" && (
-                                        <img
-                                          src={ckUSDT}
-                                          alt="ckUSDT logo"
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
+                                    {assets.includes(asset) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(asset)]}
+                                      alt={`${asset} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                       {asset}
                                     </div>
 
@@ -1863,11 +1796,7 @@ const MySupply = () => {
                                           handleModalOpen(
                                             "collateral",
                                             asset,
-                                            (asset === "ckBTC" && ckBTC) ||
-                                              (asset === "ckETH" && ckETH) ||
-                                              (asset === "ckUSDC" && ckUSDC) ||
-                                              (asset === "ICP" && icp) ||
-                                              (asset === "ckUSDT" && ckUSDT),
+                                            AssetImages[assets.indexOf(asset)],
                                             supplyRateApr,
                                             ckBalance,
                                             liquidationThreshold,
@@ -1951,11 +1880,7 @@ const MySupply = () => {
                                           handleModalOpen(
                                             "supply",
                                             asset,
-                                            (asset === "ckBTC" && ckBTC) ||
-                                              (asset === "ckETH" && ckETH) ||
-                                              (asset === "ckUSDC" && ckUSDC) ||
-                                              (asset === "ICP" && icp) ||
-                                              (asset === "ckUSDT" && ckUSDT),
+                                            AssetImages[assets.indexOf(asset)],
                                             supplyRateApr,
                                             ckBalance,
                                             liquidationThreshold,
@@ -2031,11 +1956,7 @@ const MySupply = () => {
                                           handleModalOpen(
                                             "withdraw",
                                             asset,
-                                            (asset === "ckBTC" && ckBTC) ||
-                                              (asset === "ckETH" && ckETH) ||
-                                              (asset === "ckUSDC" && ckUSDC) ||
-                                              (asset === "ICP" && icp) ||
-                                              (asset === "ckUSDT" && ckUSDT),
+                                            AssetImages[assets.indexOf(asset)],
                                             supplyRateApr,
                                             ckBalance,
                                             liquidationThreshold,
@@ -2172,38 +2093,10 @@ const MySupply = () => {
                                 className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass}`}
                               >
                                 <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                  {item[0] === "ckBTC" && (
+                                  {assets.includes(item[0]) && (
                                     <img
-                                      src={ckBTC}
-                                      alt="ckbtc logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckETH" && (
-                                    <img
-                                      src={ckETH}
-                                      alt="cketh logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckUSDC" && (
-                                    <img
-                                      src={ckUSDC}
-                                      alt="ckusdc logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ICP" && (
-                                    <img
-                                      src={icp}
-                                      alt="icp logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckUSDT" && (
-                                    <img
-                                      src={ckUSDT}
-                                      alt="ckUSDT logo"
+                                      src={AssetImages[assets.indexOf(item[0])]}
+                                      alt={`${item[0]} logo`}
                                       className="w-8 h-8 rounded-full"
                                     />
                                   )}
@@ -2413,11 +2306,7 @@ const MySupply = () => {
                                       handleModalOpen(
                                         "supply",
                                         item[0],
-                                        (item[0] === "ckBTC" && ckBTC) ||
-                                          (item[0] === "ckETH" && ckETH) ||
-                                          (item[0] === "ckUSDC" && ckUSDC) ||
-                                          (item[0] === "ICP" && icp) ||
-                                          (item[0] === "ckUSDT" && ckUSDT),
+                                        AssetImages[assets.indexOf(item[0])],
                                         (Number(
                                           item[1]?.Ok.current_liquidity_rate
                                         ) *
@@ -2558,41 +2447,13 @@ const MySupply = () => {
                                   className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs ${itemClass}`}
                                 >
                                   <div className="p-3 pl-4 align-top flex items-center gap-2">
-                                    {item[0] === "ckBTC" && (
-                                      <img
-                                        src={ckBTC}
-                                        alt="ckbtc logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ckETH" && (
-                                      <img
-                                        src={ckETH}
-                                        alt="cketh logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ckUSDC" && (
-                                      <img
-                                        src={ckUSDC}
-                                        alt="ckusdc logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ICP" && (
-                                      <img
-                                        src={icp}
-                                        alt="icp logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ckUSDT" && (
-                                      <img
-                                        src={ckUSDT}
-                                        alt="ckUSDT logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
+                                     {assets.includes(item[0]) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(item[0])]}
+                                      alt={`${item[0]} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                     {item[0]}
                                   </div>
 
@@ -2772,11 +2633,7 @@ const MySupply = () => {
                                         handleModalOpen(
                                           "supply",
                                           item[0],
-                                          (item[0] === "ckBTC" && ckBTC) ||
-                                            (item[0] === "ckETH" && ckETH) ||
-                                            (item[0] === "ckUSDC" && ckUSDC) ||
-                                            (item[0] === "ICP" && icp) ||
-                                            (item[0] === "ckUSDT" && ckUSDT),
+                                          AssetImages[assets.indexOf(item[0])],
                                           (Number(
                                             item[1]?.Ok.current_liquidity_rate
                                           ) *
@@ -3132,41 +2989,13 @@ const MySupply = () => {
                                     >
                                       <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                         {}
-                                        {asset === "ckBTC" && (
-                                          <img
-                                            src={ckBTC}
-                                            alt="ckbtc logo"
-                                            className="w-8 h-8 rounded-full"
-                                          />
-                                        )}
-                                        {asset === "ckETH" && (
-                                          <img
-                                            src={ckETH}
-                                            alt="cketh logo"
-                                            className="w-8 h-8 rounded-full"
-                                          />
-                                        )}
-                                        {asset === "ckUSDC" && (
-                                          <img
-                                            src={ckUSDC}
-                                            alt="ckUSDC logo"
-                                            className="w-8 h-8 rounded-full"
-                                          />
-                                        )}
-                                        {asset === "ICP" && (
-                                          <img
-                                            src={icp}
-                                            alt="ICP logo"
-                                            className="w-8 h-8 rounded-full"
-                                          />
-                                        )}
-                                        {asset === "ckUSDT" && (
-                                          <img
-                                            src={ckUSDT}
-                                            alt="ckUSDT logo"
-                                            className="w-8 h-8 rounded-full"
-                                          />
-                                        )}
+                                        {assets.includes(asset) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(asset)]}
+                                      alt={`${asset} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                         {asset}
                                       </div>
 
@@ -3496,12 +3325,7 @@ const MySupply = () => {
                                             handleModalOpen(
                                               "borrow",
                                               asset,
-                                              (asset === "ckBTC" && ckBTC) ||
-                                                (asset === "ckETH" && ckETH) ||
-                                                (asset === "ckUSDC" &&
-                                                  ckUSDC) ||
-                                                (asset === "ICP" && icp) ||
-                                                (asset === "ckUSDT" && ckUSDT),
+                                              AssetImages[assets.indexOf(asset)],
                                               borrowRateApr,
                                               ckBalance,
                                               liquidationThreshold,
@@ -3552,12 +3376,7 @@ const MySupply = () => {
                                             handleModalOpen(
                                               "repay",
                                               asset,
-                                              (asset === "ckBTC" && ckBTC) ||
-                                                (asset === "ckETH" && ckETH) ||
-                                                (asset === "ckUSDC" &&
-                                                  ckUSDC) ||
-                                                (asset === "ICP" && icp) ||
-                                                (asset === "ckUSDT" && ckUSDT),
+                                              AssetImages[assets.indexOf(asset)],
                                               borrowRateApr,
                                               ckBalance,
                                               liquidationThreshold,
@@ -3721,41 +3540,13 @@ const MySupply = () => {
                                   className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs mt-2"
                                 >
                                   <div className="p-3 pl-4 flex items-center gap-2">
-                                    {asset === "ckBTC" && (
-                                      <img
-                                        src={ckBTC}
-                                        alt="ckbtc logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset === "ckETH" && (
-                                      <img
-                                        src={ckETH}
-                                        alt="cketh logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset === "ckUSDC" && (
-                                      <img
-                                        src={ckUSDC}
-                                        alt="cketh logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset === "ICP" && (
-                                      <img
-                                        src={icp}
-                                        alt="ICP logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset === "ckUSDT" && (
-                                      <img
-                                        src={ckUSDT}
-                                        alt="ckUSDT logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
+                                  {assets.includes(asset) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(asset)]}
+                                      alt={`${asset} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                     {asset}
                                   </div>
                                   <div className="p-3">
@@ -4048,11 +3839,7 @@ const MySupply = () => {
                                         handleModalOpen(
                                           "borrow",
                                           asset,
-                                          (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp) ||
-                                            (asset === "ckUSDT" && ckUSDT),
+                                          AssetImages[assets.indexOf(asset)],
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -4100,11 +3887,7 @@ const MySupply = () => {
                                         handleModalOpen(
                                           "repay",
                                           asset,
-                                          (asset === "ckBTC" && ckBTC) ||
-                                            (asset === "ckETH" && ckETH) ||
-                                            (asset === "ckUSDC" && ckUSDC) ||
-                                            (asset === "ICP" && icp) ||
-                                            (asset === "ckUSDT" && ckUSDT),
+                                          AssetImages[assets.indexOf(asset)],
                                           borrowRateApr,
                                           ckBalance,
                                           liquidationThreshold,
@@ -4302,38 +4085,10 @@ const MySupply = () => {
                                 }`}
                               >
                                 <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                  {item[0] === "ckBTC" && (
+                                {assets.includes(item[0]) && (
                                     <img
-                                      src={ckBTC}
-                                      alt="ckbtc logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckETH" && (
-                                    <img
-                                      src={ckETH}
-                                      alt="cketh logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckUSDC" && (
-                                    <img
-                                      src={ckUSDC}
-                                      alt="ckusdc logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ICP" && (
-                                    <img
-                                      src={icp}
-                                      alt="icp logo"
-                                      className="w-8 h-8 rounded-full"
-                                    />
-                                  )}
-                                  {item[0] === "ckUSDT" && (
-                                    <img
-                                      src={ckUSDT}
-                                      alt="ckUSDT logo"
+                                      src={AssetImages[assets.indexOf(item[0])]}
+                                      alt={`${item[0]} logo`}
                                       className="w-8 h-8 rounded-full"
                                     />
                                   )}
@@ -4552,11 +4307,7 @@ const MySupply = () => {
                                       handleModalOpen(
                                         "borrow",
                                         item[0],
-                                        (item[0] === "ckBTC" && ckBTC) ||
-                                          (item[0] === "ckETH" && ckETH) ||
-                                          (item[0] === "ckUSDC" && ckUSDC) ||
-                                          (item[0] === "ICP" && icp) ||
-                                          (item[0] === "ckUSDT" && ckUSDT),
+                                        AssetImages[assets.indexOf(item[0])],
                                         (Number(item[1].Ok.borrow_rate) * 100) /
                                           100000000,
                                         item[0] === "ckBTC"
@@ -4812,41 +4563,13 @@ const MySupply = () => {
                                 >
                                   {}
                                   <div className="p-3 lgx:pl-4 align-top flex items-center min-w-[80px] gap-2 whitespace-nowrap mt-2">
-                                    {item[0] === "ckBTC" && (
-                                      <img
-                                        src={ckBTC}
-                                        alt="ckbtc logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ckETH" && (
-                                      <img
-                                        src={ckETH}
-                                        alt="cketh logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ckUSDC" && (
-                                      <img
-                                        src={ckUSDC}
-                                        alt="ckusdc logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ICP" && (
-                                      <img
-                                        src={icp}
-                                        alt="icp logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {item[0] === "ckUSDT" && (
-                                      <img
-                                        src={ckUSDT}
-                                        alt="ckUSDT logo"
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
+                                  {assets.includes(item[0]) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(item[0])]}
+                                      alt={`${item[0]} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
                                     <span>{item[0]}</span>
                                   </div>
 
@@ -5010,11 +4733,7 @@ const MySupply = () => {
                                         handleModalOpen(
                                           "borrow",
                                           item[0],
-                                          (item[0] === "ckBTC" && ckBTC) ||
-                                            (item[0] === "ckETH" && ckETH) ||
-                                            (item[0] === "ckUSDC" && ckUSDC) ||
-                                            (item[0] === "ICP" && icp) ||
-                                            (item[0] === "ckUSDT" && ckUSDT),
+                                          AssetImages[assets.indexOf(item[0])],
                                           (Number(item[1].Ok.borrow_rate) *
                                             100) /
                                             100000000,

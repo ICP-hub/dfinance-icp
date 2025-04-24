@@ -250,7 +250,6 @@ service : (principal) -> {
   set_canister_id : (text, principal) -> (Result_1);
   store_session_data : (text, nat) -> (Result_1);
   store_user_guide : () -> (Result_1);
-  test_register_user : () -> (Result);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

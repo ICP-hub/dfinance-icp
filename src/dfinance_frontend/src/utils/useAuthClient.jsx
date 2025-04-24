@@ -235,54 +235,54 @@ export const useAuthClient = (options = defaultOptions) => {
   };
 
   // Registers user
-  const checkUser = async () => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
+  // const checkUser = async () => {
+  //   if (!backendActor) {
+  //     throw new Error("Backend actor not initialized");
+  //   }
 
-    try {
-      const identity = authClient.getIdentity();
-      if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
-        const result = await backendActor.register_user();
-        console.log("result in check user", result);
-        if (result.Ok) {
-          if (result.Ok === "User available") {
-          } else if (result.Ok === "User added") {
-          }
-        } else if (result.Err) {
-          console.error("Error from backend:", result.Err);
-          throw new Error(result.Err);
-        }
-        return result;
-      } else {
-        console.error("Anonymous principals are not allowed.");
-        throw new Error("Anonymous principals are not allowed.");
-      }
-    } catch (error) {
-      console.error("Error in checkUser:", error.message);
-      throw error;
-    }
-  };
+  //   try {
+  //     const identity = authClient.getIdentity();
+  //     if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
+  //       const result = await backendActor.register_user();
+  //       console.log("result in check user", result);
+  //       if (result.Ok) {
+  //         if (result.Ok === "User available") {
+  //         } else if (result.Ok === "User added") {
+  //         }
+  //       } else if (result.Err) {
+  //         console.error("Error from backend:", result.Err);
+  //         throw new Error(result.Err);
+  //       }
+  //       return result;
+  //     } else {
+  //       console.error("Anonymous principals are not allowed.");
+  //       throw new Error("Anonymous principals are not allowed.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in checkUser:", error.message);
+  //     throw error;
+  //   }
+  // };
 
-  useEffect(() => {
-    const runCheckUser = async () => {
-      try {
-        if (backendActor && isAuthenticated) {
-          await checkUser();
-          sessionStorage.setItem("hasCheckedUser", "true"); // Persist flag
-        }
-      } catch (error) {
-        console.error("Error in checkUser:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const runCheckUser = async () => {
+  //     try {
+  //       if (backendActor && isAuthenticated) {
+  //         await checkUser();
+  //         sessionStorage.setItem("hasCheckedUser", "true"); // Persist flag
+  //       }
+  //     } catch (error) {
+  //       console.error("Error in checkUser:", error);
+  //     }
+  //   };
   
-    if (isAuthenticated) {
-      const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
-      if (!hasCheckedUser) {
-        runCheckUser();
-      }
-    }
-  }, [backendActor, isAuthenticated]);
+  //   if (isAuthenticated) {
+  //     const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
+  //     if (!hasCheckedUser) {
+  //       runCheckUser();
+  //     }
+  //   }
+  // }, [backendActor, isAuthenticated]);
   
   
 
@@ -327,7 +327,7 @@ export const useAuthClient = (options = defaultOptions) => {
     reloadLogin,
     accountIdString,
     fetchReserveData,
-    checkUser,
+    // checkUser,
     getAllUsers,
   };
 };

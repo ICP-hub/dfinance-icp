@@ -43,6 +43,7 @@ const HealthFactorList = () => {
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
   const {
     assets,
+    AssetImages,
     filteredItems,
     asset_supply,
     asset_borrow,
@@ -74,14 +75,30 @@ const HealthFactorList = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+
     try {
-      const result = await backendActor.to_check_controller();
-      setLike(result);
-    } catch (err) {
-      console.error("Error fetching controller status:", err);
-      setError("Failed to fetch controller status");
+      const result = await backendActor.guard_admin_only();
+      console.log("Controller Status:", result);
+
+      if ("Ok" in result) {
+        setLike(true); // Admin verified
+      } else {
+        console.warn("Not an admin:", result.Err);
+        setLike(false); // Not admin
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error.message);
+      setError(error.message);
+      setLike(false); // Fallback to false
+
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
     }
   };
+
+
+
 
   /**
    * This function retrieves the list of all users from the backend by calling `get_all_users` method.
@@ -388,8 +405,8 @@ const HealthFactorList = () => {
           : "0",
         "Health Factor":
           user.healthFactor &&
-          (Number(user.healthFactor) >= 3.4028236692093848e28 ||
-            healthFactor > 100)
+            (Number(user.healthFactor) >= 3.4028236692093848e28 ||
+              healthFactor > 100)
             ? "Infinity"
             : healthFactor,
       };
@@ -788,11 +805,10 @@ const HealthFactorList = () => {
                 name="search"
                 id="search"
                 placeholder="Search assets"
-                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${
-                  showSearch
+                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${showSearch
                     ? "animate-fade-left flex"
                     : "animate-fade-right hidden"
-                }`}
+                  }`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -932,21 +948,20 @@ const HealthFactorList = () => {
                         </td>
                         <td className="px-3 py-6 text-center">
                           <span
-                            className={`flex items-center justify-center gap-1 ${
-                              healthFactor > 100
+                            className={`flex items-center justify-center gap-1 ${healthFactor > 100
                                 ? "text-yellow-500"
                                 : healthFactor === 0
-                                ? "text-red-500"
-                                : healthFactor > 3
-                                ? "text-green-500"
-                                : healthFactor <= 1
-                                ? "text-red-500"
-                                : healthFactor <= 1.5
-                                ? "text-orange-600"
-                                : healthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                            }`}
+                                  ? "text-red-500"
+                                  : healthFactor > 3
+                                    ? "text-green-500"
+                                    : healthFactor <= 1
+                                      ? "text-red-500"
+                                      : healthFactor <= 1.5
+                                        ? "text-orange-600"
+                                        : healthFactor <= 2
+                                          ? "text-orange-400"
+                                          : "text-orange-300"
+                              }`}
                           >
                             {healthFactor > 100 ? (
                               <>
@@ -1055,33 +1070,22 @@ const HealthFactorList = () => {
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /
-                          (currentLiquidity * 1e8)
+                        (currentLiquidity * 1e8)
                         : 0;
 
                     const assetBorrow =
                       currentDebtIndex > 0
                         ? (debtBalance * borrowValue) / (currentDebtIndex * 1e8)
                         : 0;
-
+                    const assetIndex = assets.indexOf(asset);
                     return (
                       <div key={asset} className="relative group">
                         {/* 🌟 Asset Image */}
                         <img
-                          src={
-                            asset === "ckBTC"
-                              ? ckBTC
-                              : asset === "ckETH"
-                              ? ckETH
-                              : asset === "ckUSDC"
-                              ? ckUSDC
-                              : asset === "ICP"
-                              ? icp
-                              : asset === "ckUSDT"
-                              ? ckUSDT
-                              : undefined
-                          }
-                          alt={asset}
-                          className="w-8 h-8 rounded-full"
+                          key={assetInfo}
+                          src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  
+                          alt={asset || "asset"}
+                          className="rounded-[50%] w-7"
                         />
 
                         {/* ✨ Hover Effect to Show Supply & Borrow ✨ */}

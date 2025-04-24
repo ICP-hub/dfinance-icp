@@ -116,25 +116,43 @@ const DashboardCards = () => {
   /**
    * Checks the controller status from the backend.
    */
-  const checkControllerStatus = async () => {
+  const checkController = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+
     try {
-      const result = await backendActor.to_check_controller();
+      const result = await backendActor.guard_admin_only();
       console.log("Controller Status:", result);
-      setLike(result);
-    } catch (err) {
-      console.error("Error fetching controller status:", err);
-      setError("Failed to fetch controller status");
+
+      if ("Ok" in result) {
+        setLike(true); // Admin verified
+      } else {
+        console.warn("Not an admin:", result.Err);
+        setLike(false); // Not admin
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error.message);
+      setError(error.message);
+      setLike(false); // Fallback to false
+
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
     }
   };
 
+
   useEffect(() => {
-    checkControllerStatus();
+    checkController();
   }, [backendActor]);
 
-  const { filteredItems, interestAccure, assets } = useAssetData(searchQuery);
+  const { filteredItems, interestAccure, assets, AssetImages } = useAssetData(searchQuery);
+
+  const poolAssets = assets.map((name, index) => ({
+    name,
+    imageUrl: AssetImages[index],
+  }));
 
   const getTotalUser = async () => {
     if (!backendActor) {
@@ -151,13 +169,7 @@ const DashboardCards = () => {
     }
   };
 
-  const poolAssets = [
-    { name: "ckBTC", imageUrl: ckBTC },
-    { name: "ckETH", imageUrl: ckETH },
-    { name: "ckUSDC", imageUrl: ckUSDC },
-    { name: "ckUSDT", imageUrl: ckUSDT },
-    { name: "ICP", imageUrl: icp },
-  ];
+
 
   const [cardData, setCardData] = useState([
     {
@@ -709,7 +721,7 @@ const DashboardCards = () => {
       }
     })();
   }, []);
-  
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -734,7 +746,7 @@ const DashboardCards = () => {
                   {card.title}
                 </h3>
                 <p className="text-4xl font-bold px-6 py-1 mt-6  text-[#233D63] dark:text-darkText">
-                  {card.value.toString()}
+                  {card?.value?.toString()}
                 </p>
                 <a
                   href="https://analytics.google.com"
@@ -895,11 +907,10 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                  }`}
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -941,6 +952,7 @@ const DashboardCards = () => {
                     className="bg-white dark:bg-darkOverlayBackground shadow-xl ring-1 ring-black/10 dark:ring-white/20 flex flex-col text-white dark:text-darkText z-50 rounded-[20px] p-6 w-[325px] lg1:w-[350px]"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    {console.log("selectedAsset.imageUrl",selectedAsset.imageUrl)}
                     {/* Asset Header */}
                     <div className="flex items-center lg:gap-4 mb-3 gap-2 ">
                       <img
@@ -991,7 +1003,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -1007,7 +1019,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

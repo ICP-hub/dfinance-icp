@@ -47,7 +47,7 @@ const AssetDetails = () => {
   const formatNumber = useFormatNumber();
   const dispatch = useDispatch();
   const { userData, userAccountData } = useUserData();
-  const dashboardRefreshTrigger = useSelector( (state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
   const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow, loading: filteredDataLoading } = useAssetData();
   const { isAuthenticated, principal, backendActor, fetchReserveData, createLedgerActor } = useAuth();
   const location = useLocation();
@@ -94,9 +94,10 @@ const AssetDetails = () => {
   const [assetPrincipal, setAssetPrincipal] = useState({});
   const [isModalOpen, setIsModalOpen] = useState({ isOpen: false, type: "", asset: "", image: "", });
 
-  const handleModalOpen = ( type, asset, image, supplyRateAPR, ckBalance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, total_supply, total_borrow
+  const handleModalOpen = (type, asset, image, supplyRateAPR, ckBalance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, total_supply, total_borrow
   ) => {
-    setIsModalOpen({ isOpen: true, type: type, asset: asset, image: image, supplyRateAPR: supplyRateAPR, ckBalance: ckBalance, liquidationThreshold: liquidationThreshold, reserveliquidationThreshold: reserveliquidationThreshold, 
+    setIsModalOpen({
+      isOpen: true, type: type, asset: asset, image: image, supplyRateAPR: supplyRateAPR, ckBalance: ckBalance, liquidationThreshold: liquidationThreshold, reserveliquidationThreshold: reserveliquidationThreshold,
       assetSupply: assetSupply, assetBorrow: assetBorrow, totalCollateral: totalCollateral, totalDebt: totalDebt, currentCollateralStatus: currentCollateralStatus, Ltv: Ltv, borrowableValue: borrowableValue, borrowableAssetValue: borrowableAssetValue, total_supply: total_supply, total_borrow: total_borrow,
     });
   };
@@ -120,7 +121,7 @@ const AssetDetails = () => {
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-      const assetBalance = { asset, dtokenBalance: null, debtTokenBalance: null};
+      const assetBalance = { asset, dtokenBalance: null, debtTokenBalance: null };
 
       if (dtokenId) {
         const dtokenActor = createLedgerActor(dtokenId, idlFactory);
@@ -159,7 +160,7 @@ const AssetDetails = () => {
   };
 
   // Calculates borrowable value based on available assets
-  const calculateBorrowableValues = ( asset, availableBorrow, remainingBorrowable ) => {
+  const calculateBorrowableValues = (asset, availableBorrow, remainingBorrowable) => {
     let borrowableValue = null;
     let borrowableAssetValue = null;
     const assetRates = { ckBTC: ckBTCUsdRate, ckETH: ckETHUsdRate, ckUSDC: ckUSDCUsdRate, ICP: ckICPUsdRate, ckUSDT: ckUSDTUsdRate };
@@ -242,14 +243,14 @@ const AssetDetails = () => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-      ? ckETHBalance
-      : id === "ckUSDC"
-      ? ckUSDCBalance
-      : id === "ICP"
-      ? ckICPBalance
-      : id === "ckUSDT"
-      ? ckUSDTBalance
-      : null;
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : id === "ckUSDT"
+              ? ckUSDTBalance
+              : null;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -331,7 +332,7 @@ const AssetDetails = () => {
           setSupplyRate(supply_rate);
           setTotalSupply(total_supply);
           setTotalBorrow(total_borrow);
-          const remainingBorrowable = total_supply * 0.85 - total_borrow;
+          const remainingBorrowable = Number((total_supply * 0.85).toFixed(8)) - total_borrow;
           const assetRates = {
             ckBTC: ckBTCUsdRate,
             ckETH: ckETHUsdRate,
@@ -340,15 +341,23 @@ const AssetDetails = () => {
             ckUSDT: ckUSDTUsdRate,
           };
           const rate = assetRates[id] / 1e8;
+          console.log("Number(availableBorrow) / rate", Number(availableBorrow) / rate)
+          const formattedMaxBorrow =
+            Number((total_supply * 0.85).toFixed(8)) < Number(total_borrow)
+              ? 0
+              : Math.min(
+                Number(((total_supply * 0.85) - total_borrow).toFixed(8)),
+                Number(availableBorrow) / rate
+              );
+
           if (rate) {
-            setBorrowableValue(
-              Math.min(remainingBorrowable, Number(availableBorrow) / rate)
-            );
+            setBorrowableValue(formattedMaxBorrow); // USD value
 
             setBorrowableAssetValue(
-              Math.min(remainingBorrowable * rate, Number(availableBorrow))
+              Math.min(formattedMaxBorrow * rate, Number(availableBorrow)) // asset/token value
             );
           }
+
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -408,7 +417,7 @@ const AssetDetails = () => {
               [asset]: result,
             }));
           }
-        } catch (error) {}
+        } catch (error) { }
       } else {
       }
     };
@@ -475,7 +484,7 @@ const AssetDetails = () => {
   useEffect(() => {
     if (id) {
       fetchBalance(id);
-    } 
+    }
   }, [id, fetchBalance, dashboardRefreshTrigger]);
 
   useEffect(() => {
@@ -619,10 +628,10 @@ const AssetDetails = () => {
         return <SupplyInfo filteredItems={filteredItems} />;
     }
   };
-  
- /* ===================================================================================
-   *                                  RENDER COMPONENT
-   * =================================================================================== */
+
+  /* ===================================================================================
+    *                                  RENDER COMPONENT
+    * =================================================================================== */
   return (
     <div className="w-full flex flex-col lg1:flex-row mt-7 md:-mt-7 lg:mt-10 my-6 gap-6 mb-[5rem]">
       <div className="w-full lg1:w-9/12  p-6 bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 rounded-3xl dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
@@ -825,13 +834,13 @@ const AssetDetails = () => {
                           displayedBalance =
                             balance >= 1
                               ? balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
                               : balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 7,
-                                  maximumFractionDigits: 7,
-                                });
+                                minimumFractionDigits: 7,
+                                maximumFractionDigits: 7,
+                              });
                         }
 
                         return (
@@ -841,8 +850,8 @@ const AssetDetails = () => {
                               {calculatedUsdValue === 0
                                 ? "$0.00"
                                 : calculatedUsdValue < 0.01
-                                ? "<0.01$"
-                                : `$${calculatedUsdValue.toLocaleString(
+                                  ? "<0.01$"
+                                  : `$${calculatedUsdValue.toLocaleString(
                                     undefined,
                                     {
                                       minimumFractionDigits: 2,
@@ -907,7 +916,7 @@ const AssetDetails = () => {
 
                         const supplyRateAPR =
                           Number(filteredData[1]?.Ok.current_liquidity_rate) /
-                            100000000 || 0;
+                          100000000 || 0;
 
                         const liquidationThreshold =
                           Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
@@ -921,14 +930,14 @@ const AssetDetails = () => {
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                            ? ckETHBalance
-                            : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                            ? ckICPBalance
-                            : id === "ckUSDT"
-                            ? ckUSDTBalance
-                            : null;
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : id === "ckUSDT"
+                                    ? ckUSDTBalance
+                                    : null;
                         if (ckBalance === 0) {
                           toast.info(
                             "You cannot supply because your balance is 0."
@@ -939,10 +948,10 @@ const AssetDetails = () => {
                           "supply",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                            (id === "ckETH" && cketh) ||
-                            (id === "ckUSDC" && ckUSDC) ||
-                            (id === "ICP" && icp) ||
-                            (id === "ckUSDT" && ckUSDT),
+                          (id === "ckETH" && cketh) ||
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp) ||
+                          (id === "ckUSDT" && ckUSDT),
                           supplyRateAPR,
                           ckBalance,
                           liquidationThreshold,
@@ -1042,13 +1051,13 @@ const AssetDetails = () => {
                           displayedBalance =
                             balance >= 1
                               ? balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
                               : balance.toLocaleString(undefined, {
-                                  minimumFractionDigits: 7,
-                                  maximumFractionDigits: 7,
-                                });
+                                minimumFractionDigits: 7,
+                                maximumFractionDigits: 7,
+                              });
                         }
 
                         return (
@@ -1058,8 +1067,8 @@ const AssetDetails = () => {
                               {calculatedUsdValue === 0
                                 ? "$0.00"
                                 : calculatedUsdValue < 0.01
-                                ? "<0.01$"
-                                : `$${calculatedUsdValue.toLocaleString(
+                                  ? "<0.01$"
+                                  : `$${calculatedUsdValue.toLocaleString(
                                     undefined,
                                     {
                                       minimumFractionDigits: 2,
@@ -1133,11 +1142,13 @@ const AssetDetails = () => {
                           calculateBorrowableValues(
                             assetData,
                             availableBorrow,
-                            Number(total_supply) - Number(total_borrow)
+                            Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
+
                           );
 
                         // Check if borrowable value is zero and show toast notification
                         if (parseFloat(borrowableValue) <= 0) {
+                          toast.dismiss();
                           toast.info(
                             "Insufficient asset supply or balance to allow borrow request",
                             {
@@ -1154,7 +1165,7 @@ const AssetDetails = () => {
                           return; // Exit the function if borrowable value or ckBalance is 0
                         }
                         console.log(
-                          "borrowableValue",
+                          "borrowableValue in borrow popup",
                           borrowableValue,
                           borrowableAssetValue
                         );
@@ -1162,22 +1173,22 @@ const AssetDetails = () => {
                           "borrow",
                           id,
                           (id === "ckBTC" && ckbtc) ||
-                            (id === "ckETH" && cketh) ||
-                            (id === "ckUSDC" && ckUSDC) ||
-                            (id === "ICP" && icp) ||
-                            (id === "ckUSDT" && ckUSDT),
+                          (id === "ckETH" && cketh) ||
+                          (id === "ckUSDC" && ckUSDC) ||
+                          (id === "ICP" && icp) ||
+                          (id === "ckUSDT" && ckUSDT),
                           Number(assetData?.Ok.borrow_rate) / 100000000,
                           id === "ckBTC"
                             ? ckBTCBalance
                             : id === "ckETH"
-                            ? ckETHBalance
-                            : id === "ckUSDC"
-                            ? ckUSDCBalance
-                            : id === "ICP"
-                            ? ckICPBalance
-                            : id === "ckUSDT"
-                            ? ckUSDTBalance
-                            : null,
+                              ? ckETHBalance
+                              : id === "ckUSDC"
+                                ? ckUSDCBalance
+                                : id === "ICP"
+                                  ? ckICPBalance
+                                  : id === "ckUSDT"
+                                    ? ckUSDTBalance
+                                    : null,
                           LiquidationThreshold,
                           Number(
                             assetData?.Ok?.configuration.liquidation_threshold
@@ -1194,9 +1205,11 @@ const AssetDetails = () => {
                           total_borrow
                         );
                       }}
+                      
                       disabled={parseFloat(borrowableValue) <= 0}
-                      className="my-2 bg-gradient-to-r text-white from-[#EDD049] to-[#8CC0D7] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
-                    />
+                      className={
+                        "my-2 text-white bg-gradient-to-r from-[#CBA534] to-[#639AB5] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
+                      } />
                   </div>
                 </div>
               </div>

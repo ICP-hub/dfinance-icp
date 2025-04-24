@@ -265,7 +265,6 @@ pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
  * - `Ok(())` - If the caller is a valid admin.
  * - `Err(Error)` - If the caller is anonymous or not listed as an admin.
  */
-//TODO: if we dont need it in the frontend then remove macro.
 #[query]
 pub fn guard_admin_only() -> Result<(), Error> {
     guard_prevent_anonymous()?;

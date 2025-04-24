@@ -739,7 +739,6 @@ pub async fn reset_reserve_value(
 ) -> Result<(), Error> {
     guard_admin_only()?;
     validate_asset_name(&asset_name.clone())?;
-    validate_asset_name(&variable_name.clone())?;
     if reset_value < zero_nat_value(){
         return Err(Error::InvalidValue)
     }

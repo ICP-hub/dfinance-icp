@@ -10,6 +10,7 @@ type Error = variant {
   NormalizedSupply;
   ConversionErrorToU128;
   NoDebtToRepay;
+  NoFaucetReservesFound;
   SupportNotFound;
   FailedToReleaseLock;
   NoCanisterIdFound;
@@ -50,6 +51,7 @@ type Error = variant {
   InvalidBurnAmount;
   AnonymousPrincipal;
   InvalidUserId;
+  UserFaucetReserveNotFound;
   ErrorDTokenBalanceLessThan;
   EmailError;
   ErrorPriceCache;
@@ -118,6 +120,10 @@ type ExecuteWithdrawParams = record {
   on_behalf_of : opt principal;
   amount : nat;
 };
+type FaucetReserve = record { faucet_limit : nat; faucet_usage : nat };
+type FaucetReserves = record {
+  reserves : opt vec record { text; FaucetReserve };
+};
 type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
@@ -147,7 +153,8 @@ type ReserveData = record {
 };
 type Result = variant { Ok : text; Err : Error };
 type Result_1 = variant { Ok; Err : Error };
-type Result_10 = variant { Ok : bool; Err : Error };
+type Result_10 = variant { Ok : FaucetReserves; Err : Error };
+type Result_11 = variant { Ok : bool; Err : Error };
 type Result_2 = variant { Ok : nat64; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : nat; Err : Error };
@@ -186,10 +193,8 @@ type UserReserveData = record {
   d_token_balance : nat;
   is_collateral : bool;
   liquidity_index : nat;
-  faucet_limit : nat;
   variable_borrow_index : nat;
   reserve : text;
-  faucet_usage : nat;
   debt_token_blance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
@@ -212,6 +217,7 @@ service : (principal) -> {
   execute_withdraw : (ExecuteWithdrawParams) -> (Result_4);
   faucet : (text, nat) -> (Result_4);
   get_all_assets : () -> (vec AssetInfo) query;
+  get_all_faucet : () -> (vec record { principal; FaucetReserves }) query;
   get_all_user_list : (nat64, nat64) -> (Result_5);
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_6) query;
@@ -230,13 +236,13 @@ service : (principal) -> {
       opt vec AssetData,
     ) -> (Result_9) query;
   get_user_data : (principal) -> (Result_3) query;
-  get_user_guide : () -> (Result_10) query;
+  get_user_faucet_data : (principal) -> (Result_10) query;
+  get_user_guide : () -> (Result_11) query;
   guard_admin_only : () -> (Result_1) query;
   guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_user_blocked : () -> (Result_10) query;
+  is_user_blocked : () -> (Result_11) query;
   queary_reserve_price : () -> (vec PriceCache) query;
-  register_user : () -> (Result);
   remove_admin : (principal) -> (Result);
   remove_developer : (principal) -> (Result);
   request_limiter : () -> (Result_1);
@@ -244,6 +250,7 @@ service : (principal) -> {
   set_canister_id : (text, principal) -> (Result_1);
   store_session_data : (text, nat) -> (Result_1);
   store_user_guide : () -> (Result_1);
+  test_register_user : () -> (Result);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
   update_reserve_price_test : () -> (Result_1);

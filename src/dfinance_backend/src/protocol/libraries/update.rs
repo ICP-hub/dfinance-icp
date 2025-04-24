@@ -8,9 +8,9 @@ use crate::declarations::structs::{
 };
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::user::calculate_user_account_data;
+use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::declarations::datatypes::{ReserveCache, ReserveData, UserData, UserReserveData};
+use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData, UserData, UserReserveData};
 use crate::stable_storage::{
         state_handler::{mutate_state,read_state},
         storable::Candid,
@@ -48,6 +48,7 @@ impl UpdateLogic {
         params: ExecuteSupplyParams,
         reserve: &mut ReserveData,
     ) -> Result<(), Error> {
+        register_user()?;
         let mut user_data = user_data(user_principal)?;
 
         let user_reserve = user_reserve(&mut user_data, &params.asset);
@@ -574,6 +575,17 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
     .ok_or_else(|| Error::NoUserReserveDataFound)
 }
 
+pub fn get_user_faucet_reserves(user_principal: Principal) -> FaucetReserves {
+    read_state(|state| {
+        if let Some(reserves) = state.faucet_data.get(&user_principal) {
+            reserves.0.clone()
+        } else {
+            FaucetReserves::default()
+        }
+    })
+}
+
+
 /*
  * @functionality user-reserve-access
  * @title Fetch User Reserve Data
@@ -593,4 +605,15 @@ pub fn user_reserve<'a>(
         None => None,
     };
     user_reserve
+}
+
+pub fn get_faucet_reserve_for_asset<'a>(
+    faucet_data: &'a mut FaucetReserves,
+    asset_name: &'a String,
+) -> std::option::Option<&'a mut (std::string::String, FaucetReserve)> {
+    let user_faucet_reserve = match faucet_data.reserves {
+        Some(ref mut reserves) => reserves.iter_mut().find(|(name, _)| name == asset_name),
+        None => None,
+    };
+    user_faucet_reserve
 }

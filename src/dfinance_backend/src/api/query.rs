@@ -1,5 +1,6 @@
 use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
 use crate::declarations::datatypes::AssetInfo;
+use crate::declarations::datatypes::FaucetReserves;
 use crate::declarations::datatypes::InitArgs;
 use crate::declarations::datatypes::ReserveData;
 use crate::constants::errors::Error;
@@ -66,6 +67,23 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
     })
 }
 
+//TODO: remove it later no use of it. just for testing for right now.
+#[query]
+fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
+    if user == Principal::anonymous() {
+        ic_cdk::println!("Anonymous principals are not allowed");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    read_state(|state| {
+        state
+            .faucet_data
+            .get(&user)
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| Error::UserNotFound)
+    })
+}
+
 
 /*
  * @title Get All Assets
@@ -118,6 +136,17 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     read_state(|state| {
         state
             .user_profile
+            .iter()
+            .map(|(k, v)| (k.clone(), v.0.clone()))
+            .collect()
+    })
+}
+
+#[query]
+pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
+    read_state(|state| {
+        state
+            .faucet_data
             .iter()
             .map(|(k, v)| (k.clone(), v.0.clone()))
             .collect()

@@ -56,6 +56,7 @@ type Error = variant {
   EmailError;
   ErrorPriceCache;
   NotADeveloper;
+  InvalidAssetImageUrl;
   InvalidUser;
   EmptyAsset;
   InvalidValue;

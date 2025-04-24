@@ -8,11 +8,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import useAssetData from "../customHooks/useAssets";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import cekTH from "../../../public/assests-icon/cekTH.png";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";

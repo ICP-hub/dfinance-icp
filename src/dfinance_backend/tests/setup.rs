@@ -278,21 +278,6 @@ pub fn setup() -> (PocketIc, Principal) {
     }
 
     /*
-     * @title Register Users
-     * @notice Registers users to participate in liquidation testing.
-     * @dev Adds the primary user and test users (1 to 5).
-     */
-    test_register_user(&pic, backend_canister, user_principal);
-    for num in 1..=5 {
-        let index: u32 = num as u32;
-        test_register_user(
-            &pic,
-            backend_canister,
-            get_users_principal(Nat::from(index)).unwrap(),
-        );
-    }
-
-    /*
      * @title Add Testers
      * @notice Registers testers to validate liquidation scenarios.
      * @dev Adds the primary user and test users (1 to 5).
@@ -307,6 +292,21 @@ pub fn setup() -> (PocketIc, Principal) {
             get_users_principal(Nat::from(index)).unwrap(),
         );
     }
+
+    /*
+     * @title Register Users
+     * @notice Registers users to participate in liquidation testing.
+     * @dev Adds the primary user and test users (1 to 5).
+     */
+    // test_register_user(&pic, backend_canister, user_principal);
+    // for num in 1..=5 {
+    //     let index: u32 = num as u32;
+    //     test_register_user(
+    //         &pic,
+    //         backend_canister,
+    //         get_users_principal(Nat::from(index)).unwrap(),
+    //     );
+    // }
 
     /*
      * @title Update Reserve Price

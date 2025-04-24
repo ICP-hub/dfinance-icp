@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-import { idlFactory } from "../../../../declarations/dtoken";
-import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import { useDispatch, useSelector } from "react-redux";
+
+import { useSelector } from "react-redux";
 
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
@@ -13,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
  * @returns {Object} - Returns asset data and utility functions.
  */
 const useAssetData = (searchQuery = "") => {
-  const dispatch = useDispatch();
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
@@ -22,7 +21,7 @@ const useAssetData = (searchQuery = "") => {
     fetchReserveData,
     backendActor,
     isAuthenticated,
-    createLedgerActor,
+
   } = useAuth();
 
   const [assets, setAssets] = useState([]);
@@ -33,7 +32,6 @@ const useAssetData = (searchQuery = "") => {
   const [totalBorrowSize, setTotalBorrowSize] = useState(0);
   const [totalReserveFactor, setTotalReserveFactor] = useState(0);
   const [interestAccure, setInterestAccure] = useState(0);
-  const [error, setError] = useState(null);
   const [asset_supply, setAssetSupply] = useState({});
   const [asset_borrow, setAssetBorrow] = useState({});
   const [loading, setLoading] = useState(true);
@@ -50,14 +48,13 @@ const useAssetData = (searchQuery = "") => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
 
-  // Fetch list of all assets from the backend
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
   
       try {
         const assetData = await backendActor.get_all_assets();
-        console.log("Assets:", assetData);
+        
   
         const names = assetData.map(asset => asset.asset_name);
         const images = assetData.map(asset => asset.image); // Already URL strings
@@ -75,10 +72,10 @@ const useAssetData = (searchQuery = "") => {
   // Helper function to check if the image is an SVG
  
 
- /**
-   * Fetches the total supply of a specific asset.
-   * @param {string} asset - The asset.
-   */
+  /**
+    * Fetches the total supply of a specific asset.
+    * @param {string} asset - The asset.
+    */
   const fetchAssetSupply = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
@@ -189,15 +186,15 @@ const useAssetData = (searchQuery = "") => {
           );
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
-              100000000
+            100000000
           );
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
-              100000000
+            100000000
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
-              100000000
+            100000000
           );
           const interestAccure = parseFloat(
             Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
@@ -218,12 +215,10 @@ const useAssetData = (searchQuery = "") => {
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
 
-        console.log("Data successfully fetched and state updated.");
       } catch (err) {
         console.error("Error during fetch:", err.message);
-        setError(err.message);
+        console.error(err.message);
       } finally {
-        console.log("Fetch completed.");
         setLoading(false);
       }
     };
@@ -240,19 +235,18 @@ const useAssetData = (searchQuery = "") => {
     ckBTCUsdRate,
   ]);
 
-  // Filter assets based on search query
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(
-          ([asset, data]) =>
-            asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (data.asset_supply &&
-              data.asset_supply.toString().includes(searchQuery)) ||
-            (data.borrow_rate &&
-              data.borrow_rate.some((rate) =>
-                rate.toString().includes(searchQuery)
-              ))
-        )
+        ([asset, data]) =>
+          asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (data.asset_supply &&
+            data.asset_supply.toString().includes(searchQuery)) ||
+          (data.borrow_rate &&
+            data.borrow_rate.some((rate) =>
+              rate.toString().includes(searchQuery)
+            ))
+      )
       : [];
 
   const formatNumber = useFormatNumber();

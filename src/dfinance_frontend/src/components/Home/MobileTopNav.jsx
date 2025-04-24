@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Drawer, useMediaQuery } from "@mui/material";
+import { Drawer } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -75,6 +75,7 @@ const MobileTopNav = ({
    * =================================================================================== */
   const isMobile2 = window.innerWidth <= 640;
 
+  // copy principal ID to clipboard
   const copyToClipboard = () => {
     if (principal) {
       navigator.clipboard
@@ -105,7 +106,7 @@ const MobileTopNav = ({
         });
     }
   };
-
+  //truncate principal ID
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
@@ -125,7 +126,6 @@ const MobileTopNav = ({
   const [maxClicked, setMaxClicked] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const {
 
     fetchConversionRate,
@@ -173,6 +173,8 @@ const MobileTopNav = ({
     ckUSDC: ckUSDCBalance,
   };
   const supplyBalance = assetBalances[asset] || 0;
+
+  // handle approve function
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -241,6 +243,7 @@ const MobileTopNav = ({
     }
   };
 
+  //transfer function
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -393,8 +396,9 @@ const MobileTopNav = ({
     }
   };
 
+  // Handle transfer exception
   const handleTransferException = (error) => {
-    const message = error.message || "Supply action failed!";
+    const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
 
     const msgLower = message.toLowerCase();
@@ -424,18 +428,6 @@ const MobileTopNav = ({
       message.includes("Reject text: Canister")
     ) {
       toast.error("Canister is out of cycles. Admin has been notified.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-
-    } else if (msgLower.includes("supplycapexceeded")) {
-      toast.error("Supply cap is exceeded.", {
         className: "custom-toast",
         position: "top-center",
         autoClose: 5000,
@@ -501,7 +493,7 @@ const MobileTopNav = ({
   };
 
   const handleTour = () => {
-    console.log("button triggered");
+
     dispatch(joyRideTrigger());
     handleClose();
     navigate("/dashboard");
@@ -529,31 +521,21 @@ const MobileTopNav = ({
     setReceiverAddress(value);
     validateReceiverAddress(value);
   };
-  const handleCloseDropdownOnScroll = () => {
-   
-    setSwitchWalletDrop(false);(false);
-    
-    
-  };
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-useEffect(() => {
-    window.addEventListener("scroll", handleCloseDropdownOnScroll);
-    return () => {
-      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
-    };
-  }, []);
+
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
-  
+
     if (shouldLockScroll) {
-      document.body.style.overflow = "hidden"; 
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ""; 
+      document.body.style.overflow = "";
     }
-  
-   
+
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -1148,7 +1130,6 @@ useEffect(() => {
                       onClick={() => !isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                         isLoading ||
-                        isButtonDisabled ||
                         amount <= 0 ||
                         supplyBalance <= 0 ||
                         amount > supplyBalance
@@ -1170,7 +1151,6 @@ useEffect(() => {
                     <button
                       onClick={() => isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                        isButtonDisabled ||
                         isLoading ||
                         amount <= 0 ||
                         supplyBalance <= 0 ||

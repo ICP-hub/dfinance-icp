@@ -86,7 +86,6 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       });
 
       if (fetchedRates === assets.length) {
-        console.log("All conversion rates fetched. Stopping polling.");
         clearInterval(intervalIdRef.current);
       }
     } catch (error) {

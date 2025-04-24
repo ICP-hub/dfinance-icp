@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
  * @returns {JSX.Element} - Returns the RiskPopup component, displaying liquidation risk parameters.
  */
 
-const RiskPopup = ({ onClose, userData, userAccountData }) => {
+const RiskPopup = ({ onClose, userAccountData }) => {
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -163,19 +163,6 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       ? "#fa6e0d"
       : "#1e8b47";
 
-  const MaxltvColor =
-    theme === "dark"
-      ? Ltv_Value >= Max_Ltv
-        ? "#e67e22"
-        : Ltv_Value < Max_Ltv
-        ? "#008000"
-        : "#00FFFF"
-      : Ltv_Value >= Max_Ltv
-      ? "#fa6e0d"
-      : Ltv_Value < Max_Ltv
-      ? "#1e8b47"
-      : "#00FFFF";
-
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -198,10 +185,11 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       <div className="absolute inset-0 bg-black opacity-50"></div>
       <div
         ref={popupRef}
-        className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[95vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
+        className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[96vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
       >
         <div
           className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer button1"
+          role="button"
           onClick={onClose}
         >
           <X className="text-black dark:text-darkText w-6 h-6" />

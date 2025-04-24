@@ -3,11 +3,11 @@ import { createSlice } from "@reduxjs/toolkit";
 const dashboardDataUpdateReducer = createSlice({
   name: "dashboard",
   initialState: {
-    refreshDashboardTrigger: false, 
+    refreshDashboardTrigger: false,
   },
   reducers: {
     toggleDashboardRefresh: (state) => {
-      state.refreshDashboardTrigger = !state.refreshDashboardTrigger; 
+      state.refreshDashboardTrigger = !state.refreshDashboardTrigger;
     },
   },
 });

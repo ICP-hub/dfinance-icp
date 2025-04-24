@@ -3,11 +3,11 @@ import { createSlice } from "@reduxjs/toolkit";
 const borrowRefreshReducer = createSlice({
   name: "dashboard",
   initialState: {
-    borrowTrigger: false, 
+    borrowTrigger: false,
   },
   reducers: {
     toggleBorrowRefresh: (state) => {
-      state.borrowTrigger = !state.borrowTrigger; 
+      state.borrowTrigger = !state.borrowTrigger;
     },
   },
 });

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Button from "../Common/Button";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
-import DebtStatus from "./DebtStatus";
+import DebtStatus from "./LiquidationList";
 import WalletModal from "../Dashboard/WalletModal";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";
@@ -25,7 +25,6 @@ const Liquidate = () => {
    * =================================================================================== */
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const location = useLocation();
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
@@ -54,28 +53,30 @@ const Liquidate = () => {
     }
   }, [isWalletCreated, isAuthenticated]);
 
+  // Function to handle the click event for the "Get Debt Status" button
   const handleLiquidateClick = () => {
-    // if (!isAuthenticated) {
-    //   setShowWarning(true);
-    // } else {
-    //   setShowDebtStatus(true);
-    // }
-    navigate("/Liquidate/debt-users-list"); 
+    if (!isAuthenticated) {
+      setShowWarning(true);
+    } else {
+      navigate("/Liquidate/debt-users-list");
+    }
+
   };
 
+  // Function to handle the back button click in the DebtStatus component
   const handleBackClick = () => {
     setShowDebtStatus(false);
   };
 
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 
@@ -115,7 +116,7 @@ const Liquidate = () => {
               Check Users in Debt
             </h1>
 
-            {}
+            { }
             {showWarning && (
               <div className="text-red-500 font-bold mb-4">
                 Please connect your wallet to check the debt status.

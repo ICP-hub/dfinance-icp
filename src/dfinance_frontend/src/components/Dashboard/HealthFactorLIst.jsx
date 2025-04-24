@@ -78,7 +78,6 @@ const HealthFactorList = () => {
 
     try {
       const result = await backendActor.guard_admin_only();
-      console.log("Controller Status:", result);
 
       if ("Ok" in result) {
         setLike(true); // Admin verified
@@ -318,6 +317,8 @@ const HealthFactorList = () => {
 
     setSelectedUser(extractedData);
   };
+
+  // Function to get the asset supply value
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -326,6 +327,7 @@ const HealthFactorList = () => {
     return;
   };
 
+  // Function to get the asset borrow value
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
@@ -339,6 +341,7 @@ const HealthFactorList = () => {
   const usersPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Filter users based on search query and health factor
   const filteredUsers = Object.entries(userAccountData).filter(
     ([principal, data]) => {
       if (!data || !data.healthFactor) return false;
@@ -362,11 +365,7 @@ const HealthFactorList = () => {
     }
   );
 
-  useEffect(() => {
-    setCurrentPage((prevPage) =>
-      Math.min(prevPage, Math.ceil(filteredUsers.length / usersPerPage) || 1)
-    );
-  }, [filteredUsers]);
+  // Pagination logic
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
@@ -380,6 +379,7 @@ const HealthFactorList = () => {
     }
   };
 
+  // Function to download the Excel file
   const downloadExcel = () => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) {
       console.error("No data available to export.");
@@ -459,6 +459,7 @@ const HealthFactorList = () => {
     saveAs(dataBlob, fileName);
   };
 
+  // Function to download user data
   const downloadUserData = (selectedUser) => {
     if (!selectedUser) {
       console.error("No user selected.");
@@ -583,6 +584,7 @@ const HealthFactorList = () => {
     saveAs(dataBlob, `${selectedUser.principal}_data.xlsx`);
   };
 
+  // Function to format the value
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -602,6 +604,12 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    setCurrentPage((prevPage) =>
+      Math.min(prevPage, Math.ceil(filteredUsers.length / usersPerPage) || 1)
+    );
+  }, [filteredUsers]);
 
   useEffect(() => {
     checkControllerStatus();

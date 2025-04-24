@@ -16,25 +16,25 @@ import liquidateUpdateReducer from "./reducers/liquidateUpdateReducer"
 import borrowRefreshReducer from "./reducers/borrowRefreshReducer"
 
 export const store = configureStore({
-    reducer: {
-        user: userReducer,
-        utility:utilityReducer,
-        theme: themeReducer,
-        testnetMode: testnetReducer,
-        fees: feeReducer ,
-        ledger: ledgerReducer,
-        assets: assetReducer,  
-        toggle: toggleReducer,
-        sound: soundReducer,
-        borrowSupply: borrowSupplyReducer,
-        joyride: joyRideReducer,
-        faucetUpdate:faucetUpdateReducer,
-        dashboardUpdate: dashboardDataUpdateReducer,
-        liquidateUpdate: liquidateUpdateReducer,
-        borrowRefresh: borrowRefreshReducer,
-    },
-    middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware({
-          serializableCheck: false, 
-        }),
+  reducer: {
+    user: userReducer,
+    utility: utilityReducer,
+    theme: themeReducer,
+    testnetMode: testnetReducer,
+    fees: feeReducer,
+    ledger: ledgerReducer,
+    assets: assetReducer,
+    toggle: toggleReducer,
+    sound: soundReducer,
+    borrowSupply: borrowSupplyReducer,
+    joyride: joyRideReducer,
+    faucetUpdate: faucetUpdateReducer,
+    dashboardUpdate: dashboardDataUpdateReducer,
+    liquidateUpdate: liquidateUpdateReducer,
+    borrowRefresh: borrowRefreshReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });

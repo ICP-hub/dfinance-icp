@@ -17,7 +17,6 @@ const useFunctionBlockStatus = (functionName) => {
           setIsBlocked(false);
         }
       } catch (error) {
-        console.error("Failed to check block status:", error);
         setIsBlocked(false);
       }
       setLoading(false);

@@ -93,7 +93,9 @@ pub enum Error {
     NoFaucetReservesFound,
     InvalidAssetImageUrl,
     ErrorCreatingCanister,
-    ErrorUpdateCanisterSetting
+    ErrorUpdateCanisterSetting,
+    NoCollateralFound,
+    LowPlatformBalance
 }
 
 impl Error {
@@ -190,7 +192,8 @@ impl Error {
             Error::ErrorCreatingCanister => "Error creating canister",
             Error::ErrorUpdateCanisterSetting => "Error updating canister settings",
             Error::NoFaucetReservesFound => "No faucet reserves found",
-            
+            Error::NoCollateralFound => "No collateral found",
+            Error::LowPlatformBalance => "Platform balance is low"
         }
     }
 }

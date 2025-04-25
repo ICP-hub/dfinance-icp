@@ -118,7 +118,7 @@ impl ValidationLogic {
         ic_cdk::println!("interest rate = {}", supplied_interest_rate);  //debug
 
         ic_cdk::println!(
-            "to check the borrow = {}",
+            "to check the supply = {}",
             user_current_supply
                 .clone()
                 .scaled_mul(supplied_interest_rate.clone())
@@ -148,7 +148,7 @@ impl ValidationLogic {
 
         //checking if plaform has enough balance
         if amount > platform_balance {
-            return Err(Error::MaxAmountPlatform);
+            return Err(Error::LowPlatformBalance);
         }
 
         //updating token price and store latest price in price cache
@@ -166,48 +166,57 @@ impl ValidationLogic {
                     _a_borrow,
                     _zero_ltv_collateral,
                 )) => {
+                    ic_cdk::println!("total collateral = {}", t_collateral);  //debug
+                    ic_cdk::println!("total debt = {}", t_debt);  //debug
                     (t_collateral, t_debt, ltv, liquidation_threshold, h_factor)
                 }
                 Err(e) => return Err(e),
             };
 
-        if total_debt != Nat::from(0u128) {
+        if total_debt != Nat::from(0u128) || total_collateral != Nat::from(0u128) {
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
-            ic_cdk::println!("rate = {:?}", rate);   //debug
+            ic_cdk::println!("withdraw asset price = {:?}", rate);   //debug
 
             //calculating the amount in USD
             let usd_withdrawl = amount.clone().scaled_mul(rate);
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);   //debug
-
+            ic_cdk::println!("total collateral = {}", total_collateral);   //debug
             // Calculate Adjusted Collateral
             let mut adjusted_collateral: Nat = Nat::from(0u128);
             //checking for substration error
             if total_collateral < usd_withdrawl {
+
                 return Err(Error::AmountSubtractionError);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
             ic_cdk::println!("adjusted amount = {}", adjusted_collateral);   //debug
 
-            let mut ltv = Nat::from(ZERO_VALUE);
+            let mut new_ltv = Nat::from(ZERO_VALUE);
 
             //calculating the newe LTV wiht adjusted collateral
             if adjusted_collateral != Nat::from(0u128) {
-                ltv = total_debt.scaled_div(adjusted_collateral);
-                ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
-                println!("New ltv: {}", ltv);   //debug
+                new_ltv = total_debt.clone().scaled_div(adjusted_collateral.clone());
+                new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
+                println!("New ltv: {}", new_ltv);   //debug
             }
 
             //checking if the LTV is greater than the liquidation threshold
-            if ltv >= liquidation_threshold_var {
+            if new_ltv >= liquidation_threshold_var {
                 return Err(Error::LTVGreaterThanThreshold);
             }
 
-            //checking if the health factor
-            if health_factor < Nat::from(1u128) {
-                return Err(Error::HealthFactorLess);
+            if total_debt != Nat::from(0u128) {
+                let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold_var);
+                new_health_factor = health_factor.scaled_div(total_debt);
+                ic_cdk::println!("new health factor = {}", new_health_factor);   //debug
+                
+                //checking if the health factor
+                if new_health_factor < Nat::from(SCALING_FACTOR) {
+                    return Err(Error::HealthFactorLess);
+                }
             }
         }
 
@@ -237,7 +246,6 @@ impl ValidationLogic {
     pub async fn validate_borrow(
         reserve: &ReserveData,
         amount: Nat,
-        user_principal: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
         //checking if the borrowing is enabled or not
@@ -256,7 +264,7 @@ impl ValidationLogic {
 
         //checking if the platform has enough balance
         if amount > platform_balance {
-            return Err(Error::MaxAmountPlatform);
+            return Err(Error::LowPlatformBalance);
         }
 
         //updating token price and store latest price in price cache
@@ -279,7 +287,10 @@ impl ValidationLogic {
                 }
                 Err(e) => return Err(e),
             };
-
+        //checking if the user has some collateral
+        if total_collateral <= Nat::from(0u128) {
+            return Err(Error::NoCollateralFound);
+        }
         //fetching the exchange rate from cache
         let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
@@ -292,22 +303,27 @@ impl ValidationLogic {
         ic_cdk::println!("usd withdraw amount = {}", usd_borrow);  //debug
 
         //adjusted is the final amount after borrow amount is added
-        let adjusted_debt = total_debt + usd_borrow;
+        let adjusted_debt = total_debt.clone() + usd_borrow;
         ic_cdk::println!("adjusted amount = {}", adjusted_debt);  //debug
 
         //calculating the new LTV with adjusted debt
-        let mut ltv = Nat::from(ZERO_VALUE);
-        ltv = adjusted_debt.scaled_div(total_collateral);
-        ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
-        ic_cdk::println!("New ltv: {}", ltv);   //debug
+        let mut new_ltv = Nat::from(ZERO_VALUE);
+        new_ltv = adjusted_debt.clone().scaled_div(total_collateral.clone());
+        new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
+        ic_cdk::println!("New ltv: {}", new_ltv);   //debug
 
         //checking if the LTV is greater than the liquidation threshold
-        if ltv >= liquidation_threshold_var {
+        if new_ltv >= liquidation_threshold_var {
             return Err(Error::LTVGreaterThanThreshold);
         }
 
         //checking the health factor
-        if health_factor < Nat::from(SCALING_FACTOR) {
+        let mut new_health_factor = total_collateral.scaled_mul(liquidation_threshold_var);
+        new_health_factor = health_factor.scaled_div(adjusted_debt);
+        ic_cdk::println!("new health factor = {}", new_health_factor);   //debug
+
+        //checking if the health factor
+        if new_health_factor < Nat::from(SCALING_FACTOR) {
             return Err(Error::HealthFactorLess);
         }
 
@@ -369,14 +385,7 @@ impl ValidationLogic {
         //checking if the user has enough wallet balance
         if amount > user_balance {
             return Err(Error::LowWalletBalance);
-        }
-        // //fetching user current debt balance
-        // let debt_amount = get_balance(reserve.debt_token_canister.unwrap(), user.clone()).await?;
-
-        // //chekcing user have the debt amount for repay
-        // if amount > debt_amount {
-        //     return Err(Error::RepayMoreThanDebt);
-        // }
+        };
 
         Ok(())
     }
@@ -465,7 +474,7 @@ impl ValidationLogic {
             return Err(Error::RewardIsHigher);
         }
 
-        //checking if the user has enough health factor
+        //checking if the user health factor is less than 1 else can't be liquidated
         ic_cdk::println!("percentage factor {:?}",health_factor.clone() / Nat::from(PERCENTAGE_FACTOR));   //debug
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             return Err(Error::USERCANNOTBELIQUIDATED);

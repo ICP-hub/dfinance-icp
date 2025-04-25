@@ -7,7 +7,7 @@ export const initGA = (trackingId) => {
     gaOptions: {
       settings: {
         enhanced_measurement_settings: {
-          scrolls: false, 
+          scrolls: false,
           page_views: false,
         },
       },

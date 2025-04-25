@@ -23,7 +23,7 @@ const ITEMS_PER_PAGE = 8;
  *
  * @returns {JSX.Element} - Returns the component.
  */
-const WalletDetails = () => {
+const Market = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -78,8 +78,6 @@ const WalletDetails = () => {
    * =================================================================================== */
 
   const itemsPerPage = 8;
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const filteredReserveData = Object.fromEntries(filteredItems);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
@@ -88,6 +86,7 @@ const WalletDetails = () => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Function to convert string values to numbers
   const convertToNumber = (value) => {
     if (typeof value === "string") {
       const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
@@ -102,10 +101,12 @@ const WalletDetails = () => {
     return 0;
   };
 
+  // function to show search bar
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
 
+  // Function to handle the click event for the "Details" button
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
@@ -115,11 +116,13 @@ const WalletDetails = () => {
     setShowPopup(false);
   };
 
+  // function to handle search input change
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
+  // function to handle the click event for the chevron icon
   const handleChevronClick = (assetName) => {
     const selectedAssetData = currentItems.find(
       (item) => item[0] === assetName
@@ -132,12 +135,15 @@ const WalletDetails = () => {
 
   const popupRef = useRef(null);
 
+  // function to close the popup when clicking outside of it
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
     }
   };
 
+
+  // function to format value 
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -227,6 +233,7 @@ const WalletDetails = () => {
     dashboardRefreshTrigger,
   ]);
 
+  //function to show the wallet modal
   useEffect(() => {
     if (isWalletCreated) {
       navigate("/dashboard/wallet-details");
@@ -299,7 +306,7 @@ const WalletDetails = () => {
           )}
         </div>
         <svg
-          onClick={showSearchBar}
+          onClick={showSearchBar} data-testid="search-icon"
           className="cursor-pointer button"
           width="25"
           height="25"
@@ -330,8 +337,8 @@ const WalletDetails = () => {
               y2="14"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2E28A5" />
-              <stop offset="1" stop-color="#FAAA98" />
+              <stop stopColor="#2E28A5" />
+              <stop offset="1" stopColor="#FAAA98" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_293_865"
@@ -341,7 +348,7 @@ const WalletDetails = () => {
               y2="13.75"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#C88A9B" />
+              <stop stopColor="#C88A9B" />
             </linearGradient>
           </defs>
         </svg>
@@ -424,9 +431,9 @@ const WalletDetails = () => {
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
-                        {assets.includes(item[0]) && (
+                        {assets?.includes(item[0]) && (
                             <img
-                              src={AssetImages[assets.indexOf(item[0])]}
+                              src={AssetImages[assets?.indexOf(item[0])]}
                               alt={`${item[0]} logo`}
                               className="w-8 h-8 rounded-full mr-2"
                             />
@@ -523,7 +530,7 @@ const WalletDetails = () => {
                           >
                             <ChevronRight
                               size={22}
-                              color={chevronColor}
+                              color={chevronColor}   data-testid="chevron-right"
                               className="cursor-pointer"
                             />
                           </div>
@@ -670,11 +677,11 @@ const WalletDetails = () => {
                     className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                     onClick={closePopup}
                   >
-                    <X size={30} />
+                    <X size={30} data-testid="x-icon" />
                   </button>
                   <div>
                     <div className="flex gap-2 justify-start items-center ">
-                      {assets.includes(selectedAssetData[0]) && (
+                      {assets?.includes(selectedAssetData[0]) && (
                         <img
                           src={AssetImages[selectedAssetData[0]]} // Use the selected asset's image
                           alt={`${selectedAssetData[0]} logo`}
@@ -804,4 +811,4 @@ const WalletDetails = () => {
   );
 };
 
-export default WalletDetails;
+export default Market;

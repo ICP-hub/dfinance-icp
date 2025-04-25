@@ -64,11 +64,9 @@ const SupplyPopup = ({
    *                                 STATE MANAGEMENT
    * =================================================================================== */
 
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [collateral, setCollateral] = useState(currentCollateralStatus);
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -76,7 +74,6 @@ const SupplyPopup = ({
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
 
   /* ===================================================================================
@@ -91,18 +88,17 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
-
+  // Memoize the principal object to avoid unnecessary re-renders
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
   );
-
+  const paymentModalRef = useRef(null);
   /* ===================================================================================
    *                                  HELPERS
    * =================================================================================== */
 
-  const transactionFee = 0;
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
+
 
   const errorMessages = {
     NoReserveDataFound:
@@ -118,43 +114,19 @@ const SupplyPopup = ({
     Default: "An unexpected error occurred. Please try again later.",
   };
 
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
+
 
   const numericBalance = parseFloat(balance);
   const supplyBalance = Math.max(numericBalance - transferFee, 0);
 
-  console.log(numericBalance, "numericBalance");
   const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
 
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-  const paymentModalRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        paymentModalRef.current &&
-        !paymentModalRef.current.contains(event.target)
-      ) {
-        setIsPaymentDone(false);
-        setIsVisible(false);
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isPaymentDone) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isPaymentDone]);
-
-  // Handles user input for supply amount
+  // Function to handle the amount input change
   const handleAmountChange = (e) => {
     let inputAmount = e.target.value;
 
@@ -166,28 +138,28 @@ const SupplyPopup = ({
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
-      setError("");
+      ;
       return;
     }
 
     if (inputAmount === "." || inputAmount === "0.") {
       setAmount(inputAmount);
       updateAmountAndUsdValue(inputAmount);
-      setError("");
+      ;
       return;
     }
 
     // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
-      setError(
+      console.error(
         `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
           "en-US"
         )}`
       );
       return;
     } else {
-      setError("");
+      ;
     }
 
     let formattedAmount;
@@ -204,29 +176,31 @@ const SupplyPopup = ({
     updateAmountAndUsdValue(inputAmount);
   };
 
-  // Updates the USD equivalent of the supply amount
+  // Function to update the amount and USD value based on the input
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
+
     if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= supplyBalance) {
-        const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
+      if (numericAmount + transferFee <= supplyBalance) {
+        const adjustedConversionRate = Number(conversionRate) / 1e8;
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(convertedValue.toFixed(8));
-        setError("");
       } else {
-        setError("Amount exceeds the supply balance");
+
       }
     } else {
-      setError("Amount must be a positive number");
+      console.error("Amount must be a positive number");
     }
   };
 
-  // Approves the supply transaction
+
+  // Function to handle the approval process
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -253,7 +227,7 @@ const SupplyPopup = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
     const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -297,7 +271,7 @@ const SupplyPopup = ({
     }
   };
 
-  const isCollateral = true;
+
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -307,18 +281,9 @@ const SupplyPopup = ({
     ? scaledAmount + transferFeeBigInt
     : scaledAmount;
 
-  console.log(
-    "transacyionFee",
-    transferFee,
-    "transferFeeBigInt",
-    transferFeeBigInt,
-    "scaledAmount",
-    scaledAmount,
-    "totalAmount",
-    totalAmount
-  );
 
-  // Executes the supply transaction
+
+  // Function to handle the supply process
   const handleSupplyETH = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -331,7 +296,7 @@ const SupplyPopup = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     try {
@@ -359,12 +324,10 @@ const SupplyPopup = ({
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${
-            scaledAmount / 100000000
+          `Supply,${asset},${scaledAmount / 100000000
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${
-            scaledAmount / 100000000
+          `Supply,${asset},${scaledAmount / 100000000
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
@@ -544,11 +507,13 @@ const SupplyPopup = ({
     }
   };
 
+  // Function to handle the close action of the payment popup
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
+  // Function to handle the click action of the approve or supply button
   const handleClick = async () => {
     setIsLoading(true);
     try {
@@ -562,6 +527,7 @@ const SupplyPopup = ({
     }
   };
 
+  // Function to calculate the health factor
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -590,6 +556,7 @@ const SupplyPopup = ({
     return result;
   };
 
+  // Function to calculate the Loan-to-Value (LTV) ratio
   const calculateLTV = (totalCollateralValue, totalDeptValue) => {
     if (totalCollateralValue === 0) {
       return 0;
@@ -597,9 +564,9 @@ const SupplyPopup = ({
     return (totalDeptValue / totalCollateralValue) * 100;
   };
 
+  // Function to handle the click action of the max button
   const handleMaxClick = () => {
     const maxAmount = formatValue(supplyBalance);
-    console.log("type pf maxAmount", typeof maxAmount);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -614,6 +581,7 @@ const SupplyPopup = ({
       .toFixed(8)
       .replace(/\.?0+$/, "");
   };
+
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
@@ -625,9 +593,29 @@ const SupplyPopup = ({
    * =================================================================================== */
 
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
+
+  useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -690,7 +678,6 @@ const SupplyPopup = ({
     }
 
     const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-    setPrevHealthFactor(currentHealthFactor);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -720,16 +707,7 @@ const SupplyPopup = ({
     }
   }, [amount, conversionRate]);
 
-  useEffect(() => {
-    if (balance && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = balance * adjustedConversionRate;
 
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -772,9 +750,9 @@ const SupplyPopup = ({
                   <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -788,11 +766,10 @@ const SupplyPopup = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      supplyBalance === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
                         handleMaxClick();
@@ -820,11 +797,10 @@ const SupplyPopup = ({
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${
-                      currentCollateralStatus
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
+                    className={`font-semibold ${currentCollateralStatus
+                      ? "text-green-500"
+                      : "text-red-500"
+                      }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
@@ -835,33 +811,31 @@ const SupplyPopup = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          value > 3
-                            ? "text-green-500"
-                            : value <= 1
+                        className={`${value > 3
+                          ? "text-green-500"
+                          : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                            ? "text-orange-600"
-                            : value <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -923,9 +897,8 @@ const SupplyPopup = ({
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${
-                  isApproved ? "text-green-500" : "text-red-500"
-                }`}
+                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
+                  }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -939,15 +912,14 @@ const SupplyPopup = ({
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                isApproved ||
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                 isLoading ||
                 !hasEnoughBalance ||
-                amount <= 0 ||
-                isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+                amount <= 0
+
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
               disabled={
                 isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -959,15 +931,14 @@ const SupplyPopup = ({
             <button
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                !isApproved ||
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
                 isLoading ||
                 amount <= 0 ||
-                !hasEnoughBalance ||
-                isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+                !hasEnoughBalance
+
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -976,7 +947,7 @@ const SupplyPopup = ({
             </button>
           </div>
 
-          {}
+          { }
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
@@ -1017,8 +988,8 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                      ? Number(scaledAmount / 100000000).toFixed(7)
+                      : scaledAmount / 100000000
                   : "0"}{" "}
                 {asset}
               </strong>
@@ -1032,8 +1003,8 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+                      ? Number(scaledAmount / 100000000).toFixed(7)
+                      : scaledAmount / 100000000
                   : "0"}{" "}
                 d{asset}
               </strong>

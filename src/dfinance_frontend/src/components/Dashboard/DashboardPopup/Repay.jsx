@@ -539,8 +539,9 @@ const Repay = ({
           ? Number(selectedBalance).toFixed(7)
           : truncateToEightDecimals(selectedBalance)
       : "0";
-
+    ("displayBalance", displayBalance)
     setMaxAmount(displayBalance.toString());
+    setAmount(displayBalance)
     setMaxClicked(true);
     updateAmountAndUsdValue(displayBalance.toString());
   };
@@ -698,7 +699,7 @@ const Repay = ({
   return (
     <>
       {isVisible && (
-        <div className="repay-popup" ref={modalRef}>
+        <div className="repay-popup" role="dialog" ref={modalRef}>
           <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
           <div className="flex flex-col gap-2 mt-5 text-sm">
@@ -748,17 +749,14 @@ const Repay = ({
                       </p>
                       <p
                         className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                           }`}
-                        onClick={() => {
-                          if (assetBorrow > 0 && !isApproved) {
-                            handleMaxClick();
-                          }
-                        }}
+                        onClick={handleMaxClick}
                       >
                         Max
                       </p>
+
                     </div>
                   </div>
                 </div>
@@ -776,11 +774,13 @@ const Repay = ({
                     <div className="w-4/12 flex flex-col items-end text-nowrap">
                       <p className="text-[14px] mt-1">
                         {(
-                          assetBorrow - (amount?.replace(/,/g, "") || "")
+                          Number(assetBorrow).toFixed(8) -
+                          Number(amount?.replace(/,/g, "") || 0)
                         ).toLocaleString(undefined, {
                           minimumFractionDigits: 8,
                           maximumFractionDigits: 8,
                         })}{" "}
+
                         Max
                       </p>
                     </div>

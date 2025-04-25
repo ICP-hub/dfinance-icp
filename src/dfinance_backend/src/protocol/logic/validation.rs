@@ -183,6 +183,7 @@ impl ValidationLogic {
 
             // Calculate Adjusted Collateral
             let mut adjusted_collateral: Nat = Nat::from(0u128);
+            //checking for substration error
             if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
             } else {
@@ -363,20 +364,19 @@ impl ValidationLogic {
             user_balance = get_balance(ledger_canister, liquidator.unwrap().clone()).await?;
         }
 
-        //fetching user current debt balance
-        let debt_amount = get_balance(reserve.debt_token_canister.unwrap(), user.clone()).await?;
-
-        //chekcing user have the debt amount for repay
-        if amount > debt_amount {
-            return Err(Error::RepayMoreThanDebt);
-        }
-
         ic_cdk::println!("User balance: {:?}", user_balance);   //debug
 
         //checking if the user has enough wallet balance
         if amount > user_balance {
             return Err(Error::LowWalletBalance);
         }
+        // //fetching user current debt balance
+        // let debt_amount = get_balance(reserve.debt_token_canister.unwrap(), user.clone()).await?;
+
+        // //chekcing user have the debt amount for repay
+        // if amount > debt_amount {
+        //     return Err(Error::RepayMoreThanDebt);
+        // }
 
         Ok(())
     }

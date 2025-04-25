@@ -11,17 +11,17 @@ const testnetSlice = createSlice({
   reducers: {
 
     toggleTestnetMode: (state) => {
-      state.isTestnetMode = true; 
+      state.isTestnetMode = true;
       localStorage.setItem("isTestnetMode", JSON.stringify(true));
     },
 
     setTestnetMode: (state) => {
-      state.isTestnetMode = true; 
+      state.isTestnetMode = true;
       localStorage.setItem("isTestnetMode", JSON.stringify(true));
     },
 
     initializeTestnetMode: (state) => {
-      state.isTestnetMode = true; 
+      state.isTestnetMode = true;
       localStorage.setItem("isTestnetMode", JSON.stringify(true));
     },
   },

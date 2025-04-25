@@ -42,13 +42,13 @@ export default function CustomizedSwitches({ checked, onChange }) {
     <FormGroup>
       <FormControlLabel
         control={
-          <IOSSwitch 
-            sx={{ m: 1}} 
-            checked={checked} 
-            onChange={onChange} 
+          <IOSSwitch
+            sx={{ m: 1 }}
+            checked={checked}
+            onChange={onChange}
           />
         }
-        
+
       />
     </FormGroup>
   );

@@ -24,6 +24,7 @@ pub enum Error {
     LessRewardAmount,
     UnauthorizedAccess,
     UserNotFound,
+    UserFaucetReserveNotFound,
     BorrowingNotEnabled,
     NoDebtToRepay,
     NoCanisterIdFound,
@@ -89,6 +90,8 @@ pub enum Error {
     AdminNotFound,
     ControllerNotFound,
     InvalidValue,
+    NoFaucetReservesFound,
+    InvalidAssetImageUrl,
     ErrorCreatingCanister,
     ErrorUpdateCanisterSetting
 }
@@ -182,8 +185,12 @@ impl Error {
             Error::NotAnAuditor => "Caller is not an auditor!",
             Error::ControllerNotFound => "Controller not found!",
             Error::InvalidValue => "Enter value is invalid",
+            Error::UserFaucetReserveNotFound => "User faucet reserve not found",
+            Error::InvalidAssetImageUrl => "Invalid asset image URL",
             Error::ErrorCreatingCanister => "Error creating canister",
             Error::ErrorUpdateCanisterSetting => "Error updating canister settings",
+            Error::NoFaucetReservesFound => "No faucet reserves found",
+            
         }
     }
 }

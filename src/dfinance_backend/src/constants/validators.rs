@@ -18,6 +18,14 @@ pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
   Ok(())
 }
 
+pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
+  if !asset_image_url.starts_with("http://") && !asset_image_url.starts_with("https://") {
+    return Err(Error::InvalidAssetImageUrl);
+}
+
+  Ok(())
+}
+
 // to validate zero value
 pub fn validate_zero_value(value: &candid::Nat) -> Result<(), Error> {
   if value <= &zero_nat_value() {

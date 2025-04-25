@@ -4,6 +4,7 @@ use crate::api::inter_canister::get_total_supply;
 use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
+use crate::constants::validators::validate_asset_image_url;
 use crate::constants::validators::validate_asset_name;
 use crate::declarations::datatypes::AssetInfo;
 use crate::declarations::datatypes::ReserveCache;
@@ -11,7 +12,7 @@ use crate::declarations::datatypes::ReserveData;
 use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
-use crate::guards::access_control::guard_admin_only;
+use crate::guards::access_control::{guard_admin_only, to_check_controller};
 use crate::protocol::libraries::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -184,10 +185,7 @@ pub async fn update_interest_rates(
     ic_cdk::println!("curr debt {}", reserve_cache.curr_debt);
     ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
 
-    let asset = reserve_data
-        .asset_name
-        .clone()
-        .unwrap_or("no token".to_string());
+    let asset = reserve_data.asset_name.clone();
     let interest_rate_params = initialize_interest_rate_params(&asset);
     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
     ic_cdk::println!("total debt: {:?}", total_debt);
@@ -655,6 +653,7 @@ pub fn accrue_to_treasury(
  *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
+//TODO: add validation of the params.
 #[update]
 pub async fn initialize(
     token_name: String,
@@ -663,6 +662,8 @@ pub async fn initialize(
 ) -> Result<(), Error> {
     // admin only access check
     guard_admin_only()?;
+    validate_asset_name(&token_name)?;
+    validate_asset_image_url(&asset_image)?;
 
     if read_state(|state| state.reserve_list.contains_key(&token_name)) {
         return Err(Error::TokenAlreadyExist);
@@ -683,15 +684,15 @@ pub async fn initialize(
         image: asset_image,
     };
 
-    reserve_data.asset_name = Some(token_name.clone());
+    reserve_data.asset_name = token_name.clone();
     reserve_data.d_token_canister =
         match create_token_canister(d_token_name.clone(), d_token_name).await {
-            Ok(principal) => Some(principal.to_string()),
+            Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
     reserve_data.debt_token_canister =
         match create_token_canister(debt_token_name.clone(), debt_token_name).await {
-            Ok(principal) => Some(principal.to_string()),
+            Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
 

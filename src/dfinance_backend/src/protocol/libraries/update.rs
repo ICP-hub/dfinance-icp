@@ -3,21 +3,21 @@ use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
      ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::user::calculate_user_account_data;
+use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::declarations::datatypes::{ReserveCache, ReserveData, UserData, UserReserveData};
+use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData};
 use crate::stable_storage::{
-        state_handler::{mutate_state,read_state},
-        storable::Candid,
-    };
-
-use candid::{Nat, Principal};
+    state_handler::{mutate_state, read_state},
+    storable::Candid,
+};
 use crate::protocol::utils::price::get_exchange_rates;
+use candid::{Nat, Principal};
 use ic_cdk::update;
 use crate::guards::api_limiter::request_limiter;
 
@@ -48,6 +48,7 @@ impl UpdateLogic {
         params: ExecuteSupplyParams,
         reserve: &mut ReserveData,
     ) -> Result<(), Error> {
+        register_user()?;
         let mut user_data = user_data(user_principal)?;
 
         let user_reserve = user_reserve(&mut user_data, &params.asset);
@@ -108,7 +109,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_liquidity_index.clone(),
             user_principal,
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            reserve.d_token_canister.clone().unwrap(),
             platform_principal,
             true,
         )
@@ -217,7 +218,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_debt_index.clone(),
             user_principal,
-            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
+            reserve.debt_token_canister.clone().unwrap(),
             platform_principal,
             false,
         )
@@ -280,7 +281,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_liquidity_index.clone(),
             user_principal,
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
+            reserve.d_token_canister.clone().unwrap(),
             platform_principal,
             true,
         )
@@ -305,11 +306,8 @@ impl UpdateLogic {
             }
         }
 
-        let dtoken_balance = get_balance(
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap(),
-            user_principal,
-        )
-        .await?;
+        let dtoken_balance =
+            get_balance(reserve.d_token_canister.clone().unwrap(), user_principal).await?;
 
         if params.is_collateral == false && dtoken_balance == zero_nat_value() {
             if let Some((_, reserve_data)) = user_reserve {
@@ -388,7 +386,7 @@ impl UpdateLogic {
             params.amount.clone(),
             reserve_cache.next_debt_index.clone(),
             user_principal,
-            Principal::from_text(debt_token).unwrap(),
+            debt_token,
             platform_principal,
             false,
         )
@@ -402,11 +400,8 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        let balance_result = get_balance(
-            Principal::from_text(reserve.debt_token_canister.clone().unwrap()).unwrap(),
-            user_principal,
-        )
-        .await;
+        let balance_result =
+            get_balance(reserve.debt_token_canister.clone().unwrap(), user_principal).await;
 
         let debttoken_balance = match balance_result {
             Ok(bal) => bal,
@@ -574,6 +569,17 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
     .ok_or_else(|| Error::NoUserReserveDataFound)
 }
 
+pub fn get_user_faucet_reserves(user_principal: Principal) -> FaucetReserves {
+    read_state(|state| {
+        if let Some(reserves) = state.faucet_data.get(&user_principal) {
+            reserves.0.clone()
+        } else {
+            FaucetReserves::default()
+        }
+    })
+}
+
+
 /*
  * @functionality user-reserve-access
  * @title Fetch User Reserve Data
@@ -593,4 +599,15 @@ pub fn user_reserve<'a>(
         None => None,
     };
     user_reserve
+}
+
+pub fn get_faucet_reserve_for_asset<'a>(
+    faucet_data: &'a mut FaucetReserves,
+    asset_name: &'a String,
+) -> std::option::Option<&'a mut (std::string::String, FaucetReserve)> {
+    let user_faucet_reserve = match faucet_data.reserves {
+        Some(ref mut reserves) => reserves.iter_mut().find(|(name, _)| name == asset_name),
+        None => None,
+    };
+    user_faucet_reserve
 }

@@ -1,5 +1,5 @@
 use crate::constants::errors::Error;
-use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserData, AssetInfo, ReserveData};
+use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserData, AssetInfo, ReserveData, FaucetReserves};
 use candid::Nat;
 use candid::Principal;
 use declarations::datatypes::InitArgs;
@@ -21,7 +21,7 @@ use crate::declarations::structs::{
 };
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
-use api::query::get_all_users;
+use api::query::get_all_faucet;
 use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
@@ -88,8 +88,8 @@ pub async fn schedule_midnight_task() {
  * @functionality Resets faucet usage for all users at midnight.
  */
 async fn run_midnight_reset() {
-    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
-    for (user_principal, _) in vector_user_data {
+    let vector_faucet_data: Vec<(Principal, FaucetReserves)> = get_all_faucet().await;
+    for (user_principal, _) in vector_faucet_data {
         if let Err(_) = reset_faucet_usage(user_principal).await {
             ic_cdk::println!(
                 "Error resetting faucet usage for user: {}",

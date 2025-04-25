@@ -27,7 +27,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { isBlocked } = useFunctionBlockStatus();
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { backendActor } = useAuth();
+  const { backendActor ,user} = useAuth();
   const { userData } = useUserData();
   const {
     ckBTCUsdRate,
@@ -478,6 +478,52 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, [isOpen]);
 
+  const getUserFaucetData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_user_faucet_data(user);
+      if (result?.Ok?.reserves && result.Ok.reserves[0]?.length > 0) {
+        const updatedLimits = { ...initialLimits };
+        const updatedUsages = { ...initialUsages };
+  
+        result.Ok.reserves[0].forEach((reserveGroup) => {
+          const asset = reserveGroup[0];
+          if (!asset) return;
+          const faucetLimit = reserveGroup[1]?.faucet_limit
+            ? Number(reserveGroup[1].faucet_limit)
+            : initialLimits[asset];
+          const faucetUsage = reserveGroup[1]?.faucet_usage
+            ? Number(reserveGroup[1].faucet_usage)
+            : initialUsages[asset];
+  
+          updatedLimits[asset] = faucetLimit;
+          updatedUsages[asset] = faucetUsage;
+        });
+  
+        setFaucetLimit(updatedLimits);
+        setFaucetUsage(updatedUsages);
+      } else {
+        // Handle no data or fallback
+        setFaucetLimit(initialLimits);
+        setFaucetUsage(initialUsages);
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error(error.message);
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
+    }
+  };
+  
+  useEffect(() => {
+    if (user) {
+      getUserFaucetData(user);
+    }
+  }, [user]);
+  
   useEffect(() => {
     if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
       const updatedLimits = { ...initialLimits };

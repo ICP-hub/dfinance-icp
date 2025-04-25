@@ -818,7 +818,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
               key={assetIndex}
               src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
               alt={asset || "asset"}
-              className="rounded-full w-5 h-5 mt-1"
+              className="rounded-full w-4 h-4 mt-1"
             />
           )}
         </div>
@@ -984,7 +984,7 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
                   key={DebtassetIndex}
                   src={AssetImages[DebtassetIndex]} // Get the image URL dynamically using DebtassetIndex
                   alt={asset || "asset"}
-                  className="rounded-full w-4 h-4 mt-1"
+                  className="rounded-full w-4 h-4 "
                 />
               )}
             </div>

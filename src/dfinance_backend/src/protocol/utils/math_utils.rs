@@ -5,6 +5,7 @@ use crate::constants::interest_variables::constants::{MAX_VALUE, SCALING_FACTOR,
 use crate::constants::constant_variables::constants::{
     ZERO_VALUE, TWO_VALUE, NANOS_PER_SECOND
 };
+use crate::constants::errors::Error;
 
 /* 
  * @title Get Scaling Value
@@ -51,6 +52,11 @@ pub fn calculate_compounded_interest(
     current_timestamp: u64,
 ) -> Nat {
     ic_cdk::println!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
+    if last_update_timestamp > current_timestamp{
+        ic_cdk::println!("Exponential function underflow"); //error
+        return Nat::from(0u128); 
+       //error result
+    }
     let exp = current_timestamp - last_update_timestamp;
     ic_cdk::println!("exp (time difference): {}", exp);
     if exp == 0 {

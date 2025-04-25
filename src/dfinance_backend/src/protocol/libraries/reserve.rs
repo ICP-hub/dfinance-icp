@@ -48,7 +48,7 @@ impl Default for AccrueToTreasuryLocalVars {
  */
 pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     ReserveCache {
-        reserve_configuration: reserve_data.configuration.clone(),
+        reserve_configuration: reserve_data.configuration.clone(), //needed?
         reserve_last_update_timestamp: reserve_data.last_update_timestamp,
 
         curr_liquidity_index: reserve_data.liquidity_index.clone(),

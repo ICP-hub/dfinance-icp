@@ -7,6 +7,8 @@ use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
 
+use crate::declarations::structs::ReserveData;
+
 #[test]
 fn call_test_function() {
     test_calculate_linear_interest();
@@ -150,7 +152,7 @@ pub fn calculate_compounded_interest(
  * @functionality Updates liquidity index based on linear interest since last update.
  */
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::Error> {
-    let current_time = 1_700_000_000;
+    let current_time = 1_700_000_000; 
     ic_cdk::println!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {

@@ -51,17 +51,19 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     // prevent anonymous call
     guard_prevent_anonymous()?;
     let user_principal = ic_cdk::caller();
+    //todo- add comment here
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    //valid params
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
-
+    //fetch param.asset canister id
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
-
+    //fetch backend canister id
     let platform_principal = ic_cdk::api::id();
-    // ic_cdk::println!("Platform principal: {:?}", platform_principal);
+    
 
-    let amount_nat = params.amount.clone();
-
+    let amount_nat = params.amount.clone(); //check
+    //fetch reserve data for the asset
     let mut reserve_data = mutate_state(|state| {
         state
             .asset_index
@@ -70,11 +72,12 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             .ok_or_else(|| Error::NoReserveDataFound)
     })?;
 
+    //initialize a asset reserve cache for temp changes
     let mut reserve_cache = reserve::cache(&reserve_data);
-    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
-
+    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache); //info
+    //update the reserve cache state
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
-
+    //validat the supply request
     ValidationLogic::validate_supply(
         &reserve_data,
         params.amount.clone(),
@@ -83,31 +86,34 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     )
     .await?;
 
-    ic_cdk::println!("Supply validated successfully");
+    ic_cdk::println!("Supply validated successfully");//info
 
     // updating the price cached in the state
     let _ = update_token_price(params.asset.clone()).await;
-
+    //fetching the price of the asset in USD
     let asset_price = get_cached_exchange_rate(params.asset.clone())?;
-
+    
+    //TODO : 96 to 104 can be common
+    //Calculating Transfer fee in usd
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
-
+    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee); //debug
+    
     if params.amount.clone() < transfer_token_fee {
-        ic_cdk::println!("Amount is less than the transfer token fee");
+        ic_cdk::println!("Amount is less than the transfer token fee"); //error
         return Err(Error::FeeExceedsAmount);
     }
-
+    //updating params.amount with the actual amount of tokens to be supplied
     params.amount = params.amount.clone() - transfer_token_fee.clone();
+    
 
     let liq_added = params.amount.clone();
     let liq_taken = zero_nat_value();
-
+    //Updating the APYs
     reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
         .await?;
 
-    ic_cdk::println!("Interest rates updated successfully");
-
+    ic_cdk::println!("Interest rates updated successfully"); //info  
+    //intializing and updating user state and minting the dtokens to the user
     UpdateLogic::update_user_data_supply(
         user_principal,
         &reserve_cache,
@@ -115,7 +121,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
-
+    ic_cdk::println!("Dtoken Mint and user state updated successfully for supplied asset"); //info
+    //updating the reserve data in the state
     mutate_state(|state| {
         state
             .asset_index
@@ -136,14 +143,17 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             Ok(new_balance)
         }
         Err(_) => {
-            //Rollback user state
+            ic_cdk::println!("Error in asset transfer from user to backend canister"); //error
+            //Rollback user state and burning dtokens
+            //NOTE: transfer fee is not returned to the user
+            //TODO: ask from vinayak sir whether to keep the transfer fee or return it back to the user 
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
                 is_collateral: params.is_collateral,
                 on_behalf_of: None,
                 amount: params.amount.clone(),
             };
-
+            //for burning and reverting the supplied amount 
             UpdateLogic::update_user_data_withdraw(
                 user_principal,
                 &reserve_cache,
@@ -151,13 +161,18 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                 &mut reserve_data,
             )
             .await?;
-
+            ic_cdk::println!("Dtoken Burn and user state reverted successfully for supplied asset"); //info
+            //revert the reserve data changes 
+            //TODO: check if we need to revert the reserve data changes
             mutate_state(|state| {
                 state
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
-            return Err(Error::ErrorMintTokens);
+            ic_cdk::println!("Rollback successfull");//info
+
+            //return the error
+            return Err(Error::ErrorMintTokens); //TODO: jyotirmay change the error message it should be ErrorSupplyTokens
         }
     }
 }

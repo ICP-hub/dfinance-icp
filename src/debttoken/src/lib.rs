@@ -821,8 +821,6 @@ fn __get_candid_interface_tmp_hack() -> String {
     __export_service()
 }
 
-fn main() {}
-
 #[test]
 fn check_candid_interface() { 
     use candid_parser::utils::{service_equal, CandidSource};

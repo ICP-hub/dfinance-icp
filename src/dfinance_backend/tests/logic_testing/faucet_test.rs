@@ -1,9 +1,7 @@
 use pocket_ic::{PocketIc, WasmResult};
 use candid::Nat;
-use candid::{encode_args, encode_one, Principal};
-use crate::utils::constant_variables::*;
+use candid::{encode_args, Principal};
 use crate::utils::error as errors;
-use crate::utils::structs::*;
 use crate::utils::common_functions::*;
 /*
  * @title Faucet Functionality Test

@@ -4,13 +4,12 @@ use crate::api::query::get_cached_exchange_rate;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::datatypes::{FaucetReserve, UserReserveData};
+use crate::declarations::datatypes::FaucetReserve;
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve;
 use crate::protocol::libraries::update::{
-    get_faucet_reserve_for_asset, get_user_faucet_reserves, user_data,
+    get_faucet_reserve_for_asset, get_user_faucet_reserves,
 };
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::state_handler::mutate_state;

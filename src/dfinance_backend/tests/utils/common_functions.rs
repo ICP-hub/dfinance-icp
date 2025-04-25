@@ -12,6 +12,7 @@ use crate::utils::constant_variables::*;
  * @dev Converts a fixed text representation into a Principal type.
  * @functionality Returns a predefined principal for the user.
  */
+#[allow(dead_code)]
 pub fn get_user_principal() -> Principal {
     Principal::from_text(CONTROLLER_ID).unwrap()
 }
@@ -22,6 +23,7 @@ pub fn get_user_principal() -> Principal {
  * @dev Generates `count` principals using a sequential byte pattern.
  * @functionality Generates a list of unique Principal IDs based on a count.
  */
+#[allow(dead_code)]
 pub fn generate_principals(count: usize) -> Vec<Principal> {
     (1..=count)
         .map(|i| Principal::from_slice(&[i as u8; 29])) // 29-byte unique Principal
@@ -34,6 +36,7 @@ pub fn generate_principals(count: usize) -> Vec<Principal> {
  * @dev Returns an error if the index is out of the predefined range.
  * @functionality Retrieves a user principal based on an index value.
  */
+#[allow(dead_code)]
 pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
     if index == Nat::from(1u32) {
         Ok(
@@ -72,6 +75,7 @@ pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
  * @dev Filters out any invalid Principal conversions and collects valid ones into a vector.
  * @functionality Retrieves a vector of predefined user principals.
  */
+#[allow(dead_code)]
 pub fn get_users_principals_vector() -> Vec<Principal> {
     vec![
         TESTER_1,
@@ -95,6 +99,7 @@ pub fn get_users_principals_vector() -> Vec<Principal> {
  * @dev Handles multiple error cases including query rejection, decoding failure, and backend errors.
  * @functionality Queries the backend canister to get the principal of an asset.
  */
+#[allow(dead_code)]
 pub fn test_get_asset_principal(
     asset: String,
     pic: &PocketIc,
@@ -149,6 +154,7 @@ pub fn test_get_asset_principal(
  * @dev It handles multiple error scenarios such as rejection, decoding failure, and transaction errors.
  * @functionality Approves a backend canister to spend a specified amount of an asset on behalf of the user.
  */
+#[allow(dead_code)]
 pub fn test_icrc2_aprove(
     user_principal: Principal,
     asset_principal: Principal,
@@ -206,7 +212,6 @@ pub fn test_icrc2_aprove(
             return false;
         }
     }
-    return false;
 }
 
 /*
@@ -219,6 +224,7 @@ pub fn test_icrc2_aprove(
  * - The function also verifies the expected behavior and error handling in case of failures.
  * @functionality Tests creating a user reserve with a low health factor by simulating supply and borrow operations.
  */
+#[allow(dead_code)]
 pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, CandidType, Deserialize, Clone)]
     struct LowHealthUsersData {
@@ -313,7 +319,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
                         .expect("Failed to decode create_user_reserve_with_low_health response");
 
                 match create_user_response {
-                    Ok(data) => {
+                    Ok(_) => {
                         ic_cdk::println!(
                             "✅ Create_user_reserve_with_low_health function succeeded"
                         );
@@ -353,6 +359,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
  * @dev Handles errors and panics on failure to ensure test visibility.
  * @functionality Adds a new tester principal to the backend canister and verifies the operation.
  */
+#[allow(dead_code)]
 pub fn test_add_tester(
     pic: &PocketIc,
     backend_canister: Principal,
@@ -399,6 +406,7 @@ pub fn test_add_tester(
  * @dev Sends a query to fetch reserve metrics like supply, borrow, and indices.
  * @functionality Retrieves and logs current reserve state for a specified asset from the backend canister.
  */
+#[allow(dead_code)]
 pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &str) {
     let result = pic.query_call(
         backend_canister,
@@ -463,6 +471,7 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
  * @dev Retrieves user-specific reserve metrics like balances and indices.
  * @functionality Queries and logs user's asset-related reserve data from the backend canister.
  */
+#[allow(dead_code)]
 pub fn fetch_user_data(
     pic: &PocketIc,
     backend_canister: Principal,

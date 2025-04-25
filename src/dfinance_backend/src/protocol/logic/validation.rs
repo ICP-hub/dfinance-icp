@@ -4,7 +4,6 @@ use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VA
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::declarations::datatypes::ReserveData;
-use crate::protocol::libraries::update::user_data;
 use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
@@ -219,7 +218,7 @@ impl ValidationLogic {
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
 
             // Calculate Adjusted Collateral
-            let mut adjusted_collateral = Nat::from(0u128);
+            let adjusted_collateral: Nat;
             //Jyotirmay yeh yaha kyu check lagaya tha?
             // if adjusted_collateral < usd_withdrawl.clone() {
             //     adjusted_collateral = Nat::from(0u128);
@@ -296,43 +295,6 @@ impl ValidationLogic {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
         }
 
-        // let mut total_collateral = Nat::from(ZERO_VALUE);
-        // let mut total_debt = Nat::from(ZERO_VALUE);
-        // let mut avg_ltv = Nat::from(ZERO_VALUE);
-        // let mut health_factor = Nat::from(ZERO_VALUE);
-        // let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
-
-        // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-        //     calculate_user_account_data(None).await;
-
-        // match calculate_user_account_data(None).await {
-        //     Ok((
-        //         t_collateral,
-        //         t_debt,
-        //         ltv,
-        //         liquidation_threshold,
-        //         h_factor,
-        //         _a_borrow,
-        //         _zero_ltv_collateral,
-        //     )) => {
-        //         total_collateral = t_collateral;
-        //         total_debt = t_debt;
-        //         // available_borrow = a_borrow;
-        //         avg_ltv = ltv;
-        //         health_factor = h_factor;
-        //         liquidation_threshold_var = liquidation_threshold;
-        //         ic_cdk::println!("total collateral = {}", total_collateral);
-        //         ic_cdk::println!("total debt = {}", total_debt);
-        //         ic_cdk::println!("Average LTV: {}", avg_ltv);
-        //         ic_cdk::println!("Health Factor: {}", health_factor);
-        //         ic_cdk::println!("threshold: {}", liquidation_threshold_var);
-        //     }
-        //     Err(e) => {
-        //         // Handle the error case
-        //         return Err(e);
-        //     }
-        // }
-
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
@@ -366,7 +328,7 @@ impl ValidationLogic {
         let adjusted_debt = total_debt + usd_borrow;
         ic_cdk::println!("adjusted amount = {}", adjusted_debt);
 
-        let mut ltv = Nat::from(ZERO_VALUE);
+        let mut  ltv: Nat;
         ltv = adjusted_debt.scaled_div(total_collateral);
         ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", ltv);
@@ -437,15 +399,6 @@ impl ValidationLogic {
 
         let final_amount = amount;
         ic_cdk::println!("final_amount : {:?}", final_amount);
-
-        let mut user_data = user_data(user)?;
-
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == *reserve.asset_name),
-            None => None,
-        };
 
         Ok(())
     }

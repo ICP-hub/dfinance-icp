@@ -273,8 +273,6 @@ impl UpdateLogic {
 
         ic_cdk::println!("Update user state before burn: {:?}", user_reserve_data);
 
-        let is_borrowed = user_reserve_data.is_borrowed.clone();
-
         burn_scaled(
             reserve,
             &mut user_reserve_data,
@@ -463,13 +461,13 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 
     let mut user_data = user_data(user_principal)?;
 
-    let reserve_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&asset.to_string().clone())
-            .map(|reserve| reserve.0.clone())
-    })
-    .ok_or_else(|| Error::NoReserveDataFound)?;
+    // let reserve_data = read_state(|state| {
+    //     state
+    //         .asset_index
+    //         .get(&asset.to_string().clone())
+    //         .map(|reserve| reserve.0.clone())
+    // })
+    // .ok_or_else(|| Error::NoReserveDataFound)?;
 
     let (added_usd_amount, _) = get_exchange_rates(asset.clone(), None, added_amount).await?;
 
@@ -487,9 +485,9 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 
     if total_debt != zero_nat_value() {
         // bhanu should ltv and adjusted_collateral be same as the res from calculate_user_account_data ?
-        let mut ltv = zero_nat_value();
+        let mut ltv: Nat;
         if amount != zero_nat_value() {
-            let mut adjusted_collateral = zero_nat_value();
+            let adjusted_collateral: Nat;
             if total_collateral < usd_amount.clone() {
                 adjusted_collateral = zero_nat_value();
             } else {

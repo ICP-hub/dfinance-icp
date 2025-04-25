@@ -1,26 +1,27 @@
-use candid::{decode_one, encode_args, encode_one, Principal};
-use candid::{Nat};
+use candid::Nat;
+use candid::{encode_args, encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use serde::Serialize;
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 mod utils;
-use crate::utils::common_functions::*;
+use crate::utils::common_functions::{
+    fetch_reserve_data, generate_principals, get_user_principal, get_users_principal,
+    test_add_tester, test_create_user_reserve_with_low_health, test_get_asset_principal,
+    test_icrc2_aprove,
+};
+use crate::utils::constant_variables::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-use crate::utils::constant_variables::*;
-
-
 
 #[test]
 fn call_test_function() {
-    let (pic, backend_canister,random_users) = setup();
+    let (pic, backend_canister, random_users) = setup();
     test_register_user(&pic, backend_canister, random_users.clone());
-    test_faucet(&pic, backend_canister,random_users.clone());
-    test_supply(&pic, backend_canister,random_users.clone());
-    test_borrow(&pic, backend_canister,random_users.clone());
-    test_repay(&pic, backend_canister,random_users.clone());
-    test_withdraw(&pic, backend_canister,random_users.clone());
+    test_faucet(&pic, backend_canister, random_users.clone());
+    test_supply(&pic, backend_canister, random_users.clone());
+    test_borrow(&pic, backend_canister, random_users.clone());
+    test_repay(&pic, backend_canister, random_users.clone());
+    test_withdraw(&pic, backend_canister, random_users.clone());
     // test_liquidation(&pic, backend_canister,random_users.clone());
 }
 
@@ -55,9 +56,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     );
 
     // 🔹 Define test input (token name + reserve data)
-    let ICP_token_name = "ICP".to_string();
-    let ICP_reserve_data = ReserveData {
-        asset_name: ICP_token_name.clone(),
+    let icp_token_name = "ICP".to_string();
+    let icp_reserve_data = ReserveData {
+        asset_name: icp_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -85,9 +86,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckBTC_token_name = "ckBTC".to_string();
-    let ckBTC_reserve_data = ReserveData {
-        asset_name: ckBTC_token_name.clone(),
+    let ck_btc_token_name = "ckBTC".to_string();
+    let ck_btc_reserve_data = ReserveData {
+        asset_name: ck_btc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -115,9 +116,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckETH_token_name = "ckETH".to_string();
-    let ckETH_reserve_data = ReserveData {
-        asset_name: ckETH_token_name.clone(),
+    let ck_eth_token_name = "ckETH".to_string();
+    let ck_eth_reserve_data = ReserveData {
+        asset_name: ck_eth_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -145,9 +146,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDC_token_name = "ckUSDC".to_string();
-    let ckUSDC_reserve_data = ReserveData {
-        asset_name: ckUSDC_token_name.clone(),
+    let ck_usdc_token_name = "ckUSDC".to_string();
+    let ck_usdc_reserve_data = ReserveData {
+        asset_name: ck_usdc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -175,9 +176,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDT_token_name = "ckUSDT".to_string();
-    let ckUSDT_reserve_data = ReserveData {
-        asset_name: ckUSDT_token_name.clone(),
+    let ck_usdt_token_name = "ckUSDT".to_string();
+    let ck_usdt_reserve_data = ReserveData {
+        asset_name: ck_usdt_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -207,11 +208,11 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
     let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
 
-    reserve_tokens_map.insert(ICP_token_name, ICP_reserve_data);
-    reserve_tokens_map.insert(ckBTC_token_name, ckBTC_reserve_data);
-    reserve_tokens_map.insert(ckETH_token_name, ckETH_reserve_data);
-    reserve_tokens_map.insert(ckUSDC_token_name, ckUSDC_reserve_data);
-    reserve_tokens_map.insert(ckUSDT_token_name, ckUSDT_reserve_data);
+    reserve_tokens_map.insert(icp_token_name, icp_reserve_data);
+    reserve_tokens_map.insert(ck_btc_token_name, ck_btc_reserve_data);
+    reserve_tokens_map.insert(ck_eth_token_name, ck_eth_reserve_data);
+    reserve_tokens_map.insert(ck_usdc_token_name, ck_usdc_reserve_data);
+    reserve_tokens_map.insert(ck_usdt_token_name, ck_usdt_reserve_data);
 
     //================= Initialize ==================
     // 🔹 Call the `initialize` function
@@ -290,7 +291,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         }
     }
 
-    (pic, backend_canister,random_users)
+    (pic, backend_canister, random_users)
 }
 
 /*
@@ -299,16 +300,17 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
  * @dev Ensures that the "register_user" function works as expected for different users and handles both success and failure cases.
  * @functionality Confirms that users can be registered successfully and any errors during registration are properly handled.
  */
-fn test_register_user(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>){
-
+fn test_register_user(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
     for user_principal in random_users {
-        let msg = pic.submit_call(
-            backend_canister,
-            user_principal,
-            "register_user",
-            encode_one(()).unwrap(),
-        ).unwrap();
+        let msg = pic
+            .submit_call(
+                backend_canister,
+                user_principal,
+                "register_user",
+                encode_one(()).unwrap(),
+            )
+            .unwrap();
         msg_ids.push(msg); // Store the message ID in the vector
     }
     let mut results = Vec::new();
@@ -316,13 +318,13 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, random_users:
         let res = pic.await_call(msg_id).unwrap();
         results.push(res);
     }
-    for result in results{
+    for result in results {
         // 🔹 Decode the response
         match result {
             WasmResult::Reply(response) => {
                 let register_user_response: Result<String, errors::Error> =
                     candid::decode_one(&response).expect("Failed to decode register user response");
-    
+
                 match register_user_response {
                     Ok(_message) => {
                         ic_cdk::println!("✅ Register user function succeeded");
@@ -342,9 +344,6 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, random_users:
                     reject_message
                 );
             }
-            _ => {
-                panic!("🚨 Error calling register user function.");
-            }
         }
     }
 }
@@ -355,7 +354,7 @@ fn test_register_user(pic: &PocketIc, backend_canister: Principal, random_users:
  * @dev Ensures that the faucet function distributes assets (like ICP, ckBTC, etc.) correctly and handles both successful and failure cases based on the asset configuration.
  * @functionality Confirms that the faucet distributes the correct amount of assets and handles edge cases such as insufficient funds or asset type errors.
  */
-fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Principal>) {
+fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -398,7 +397,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Pri
         },
     ];
 
-    let user_principal = get_user_principal();
+    // let user_principal = get_user_principal();
     ic_cdk::println!(
         "\n======================== Starting IC Faucet Tests ========================\n"
     );
@@ -417,12 +416,14 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Pri
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for user_principal in random_users.clone() {
-            let msg = pic.submit_call(
-                backend_canister,
-                user_principal,
-                "faucet",
-                encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
-            ).unwrap();
+            let msg = pic
+                .submit_call(
+                    backend_canister,
+                    user_principal,
+                    "faucet",
+                    encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+                )
+                .unwrap();
             msg_ids.push(msg); // Store the message ID in the vector
         }
         let mut results = Vec::new();
@@ -430,13 +431,13 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Pri
             let res = pic.await_call(msg_id).unwrap();
             results.push(res);
         }
-        for result in results{
+        for result in results {
             match result {
                 WasmResult::Reply(reply) => {
                     // ic_cdk::println!("Raw response bytes: {:?}", candid::decode_one(&reply));
                     let faucet_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to decode faucet response");
-    
+
                     match faucet_response {
                         Ok(balance) => {
                             if !case.expect_success {
@@ -460,7 +461,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Pri
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                                         error.message()
-                                    );                            
+                                    );
                                     continue;
                                 }
                                 ic_cdk::println!(
@@ -480,13 +481,6 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Pri
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
-                    );
-                    continue;
-                }
-                _ => {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Error during faucet function call.",
-                        i + 1,
                     );
                     continue;
                 }
@@ -551,10 +545,8 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
         //     expect_success: true,
         //     expected_error_message: None,
         // },
-        
     ];
 
-    
     ic_cdk::println!(
         "\n======================== Starting IC Supply Tests ========================\n"
     );
@@ -592,8 +584,14 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                         continue;
                     }
                 };
-       
-            let approved = test_icrc2_aprove(user_principal, asset_principal, &pic, backend_canister,  case.amount.clone());
+
+            let approved = test_icrc2_aprove(
+                user_principal,
+                asset_principal,
+                &pic,
+                backend_canister,
+                case.amount.clone(),
+            );
             if !approved {
                 if !case.expect_success {
                     if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
@@ -601,7 +599,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
                             case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
-                        );                            
+                        );
                         continue;
                     }
                     ic_cdk::println!(
@@ -621,13 +619,15 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                 amount: case.amount.clone(),
                 is_collateral: case.is_collateral,
             };
-    
-            let msg = pic.submit_call(
-                backend_canister,
-                user_principal,
-                "execute_supply",
-                encode_one(supply_params).unwrap(),
-            ).unwrap();
+
+            let msg = pic
+                .submit_call(
+                    backend_canister,
+                    user_principal,
+                    "execute_supply",
+                    encode_one(supply_params).unwrap(),
+                )
+                .unwrap();
             msg_ids.push(msg);
         }
 
@@ -637,12 +637,12 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             results.push(res);
         }
 
-        for result in results{
+        for result in results {
             match result {
                 WasmResult::Reply(reply) => {
                     let supply_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to get supply response");
-    
+
                     match supply_response {
                         Ok(balance) => {
                             if !case.expect_success {
@@ -666,7 +666,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                                         error.message()
-                                    );                            
+                                    );
                                     continue;
                                 }
                                 ic_cdk::println!(
@@ -689,13 +689,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                     );
                     continue;
                 }
-                _ => {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Error during supply function call.",
-                        i + 1
-                    );
-                    continue;
-                }
             }
         }
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
@@ -711,7 +704,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
  * @dev Ensures that the borrow function handles different asset types and amounts correctly, checking both successful borrow operations and failure cases such as insufficient balance or invalid asset types.
  * @functionality Confirms that the borrow function processes requests successfully when expected and rejects invalid borrow requests with appropriate error messages.
  */
-fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Principal>) {
+fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -752,7 +745,6 @@ fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<P
         //     expect_success: true,
         //     expected_error_message: None,
         // },
-        
     ];
 
     // let user_principal = get_user_principal();
@@ -780,12 +772,14 @@ fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<P
                 amount: case.amount.clone(),
             };
 
-            let msg = pic.submit_call(
-                backend_canister,
-                user_principal,
-                "execute_borrow",
-                encode_one(borrow_params).unwrap(),
-            ).unwrap();
+            let msg = pic
+                .submit_call(
+                    backend_canister,
+                    user_principal,
+                    "execute_borrow",
+                    encode_one(borrow_params).unwrap(),
+                )
+                .unwrap();
             msg_ids.push(msg);
         }
 
@@ -794,12 +788,12 @@ fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<P
             let res = pic.await_call(msg_id).unwrap();
             results.push(res);
         }
-        for result in results{
+        for result in results {
             match result {
                 WasmResult::Reply(reply) => {
                     let borrow_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to get IC borrow response");
-    
+
                     match borrow_response {
                         Ok(balance) => {
                             if !case.expect_success {
@@ -823,7 +817,7 @@ fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<P
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                                         error.message()
-                                    );                            
+                                    );
                                     continue;
                                 }
                                 ic_cdk::println!(
@@ -843,13 +837,6 @@ fn test_borrow(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<P
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
-                    );
-                    continue;
-                }
-                _ => {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Error during borrow function call:",
-                        i + 1,
                     );
                     continue;
                 }
@@ -921,7 +908,6 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
         //     expect_success: true,
         //     expected_error_message: None,
         // },
-        
     ];
 
     ic_cdk::println!(
@@ -954,13 +940,15 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                 on_behalf_of: case.on_behalf_of,
                 is_collateral: case.is_collateral.clone(),
             };
-            // Now call the withdraw function 
-            let msg = pic.submit_call(
-                backend_canister,
-                user_principal,
-                "execute_withdraw",
-                encode_one(withdraw_params).unwrap(),
-            ).unwrap();
+            // Now call the withdraw function
+            let msg = pic
+                .submit_call(
+                    backend_canister,
+                    user_principal,
+                    "execute_withdraw",
+                    encode_one(withdraw_params).unwrap(),
+                )
+                .unwrap();
             msg_ids.push(msg);
         }
         let mut results = Vec::new();
@@ -969,12 +957,12 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
             results.push(res);
         }
 
-        for result in results{
+        for result in results {
             match result {
                 WasmResult::Reply(reply) => {
                     let withdraw_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to get IC withdraw response");
-    
+
                     match withdraw_response {
                         Ok(balance) => {
                             if !case.expect_success {
@@ -998,7 +986,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                                         error.message()
-                                    );                            
+                                    );
                                     continue;
                                 }
                                 ic_cdk::println!(
@@ -1021,13 +1009,6 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                     );
                     continue;
                 }
-                _ => {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Error during withdraw function call:",
-                        i + 1,
-                    );
-                    continue;
-                }
             }
         }
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
@@ -1044,7 +1025,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
  * @dev Ensures that the repay function handles different asset types and amounts correctly. It checks both successful repay operations and failure cases such as insufficient balance, invalid asset types, or non-approved asset transfers.
  * @functionality Confirms that the repay function processes requests successfully when expected and rejects invalid repay requests with appropriate error messages, ensuring that the balance is correctly updated after each repayment attempt.
  */
-fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Principal>) {
+fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -1091,10 +1072,9 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
         //     expect_success: true,
         //     expected_error_message: None,
         // },
-        
     ];
 
-    let user_principal = get_user_principal();
+    // let user_principal = get_user_principal();
 
     ic_cdk::println!(
         "\n======================== Starting IC Repay Tests ========================\n"
@@ -1118,7 +1098,6 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for user_principal in random_users.clone() {
-        
             let asset_principal =
                 match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
                     Some(principal) => principal,
@@ -1133,12 +1112,17 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
                                 "❌ IC Test Case {} Failed: Expected success but got rejection",
                                 i + 1
                             );
-                            
                         }
                         continue;
                     }
                 };
-            let approved = test_icrc2_aprove(user_principal, asset_principal, &pic, backend_canister, Nat::from(case.amount.clone()));
+            let approved = test_icrc2_aprove(
+                user_principal,
+                asset_principal,
+                &pic,
+                backend_canister,
+                Nat::from(case.amount.clone()),
+            );
             if !approved {
                 if !case.expect_success {
                     if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
@@ -1146,7 +1130,7 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
                             case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
-                        );                            
+                        );
                         continue;
                     }
                     ic_cdk::println!(
@@ -1166,14 +1150,16 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
                 amount: case.amount.clone(),
                 on_behalf_of: case.on_behalf_of.clone(),
             };
-    
+
             // Now call the repay function
-            let msg = pic.submit_call(
-                backend_canister,
-                user_principal,
-                "execute_repay",
-                encode_one(repay_params).unwrap(),
-            ).unwrap();
+            let msg = pic
+                .submit_call(
+                    backend_canister,
+                    user_principal,
+                    "execute_repay",
+                    encode_one(repay_params).unwrap(),
+                )
+                .unwrap();
             msg_ids.push(msg);
         }
 
@@ -1183,12 +1169,12 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
             results.push(res);
         }
 
-        for result in results{
+        for result in results {
             match result {
                 WasmResult::Reply(reply) => {
                     let repay_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to get IC repay response");
-    
+
                     match repay_response {
                         Ok(balance) => {
                             if !case.expect_success {
@@ -1212,7 +1198,7 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                                         error.message()
-                                    );                            
+                                    );
                                     continue;
                                 }
                                 ic_cdk::println!(
@@ -1239,13 +1225,6 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
                     );
                     continue;
                 }
-                _ => {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Error during repay function call:",
-                        i + 1,
-                    );
-                    continue;
-                }
             }
         }
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
@@ -1261,7 +1240,8 @@ fn test_repay(pic: &PocketIc,  backend_canister: Principal, random_users: Vec<Pr
  * @dev Ensures that the liquidation process is triggered correctly for assets like ICP, ckBTC, ckETH, etc., under various conditions, including valid and invalid scenarios.
  * @functionality Confirms that the liquidation function processes requests successfully when the borrower is eligible for liquidation and rejects invalid liquidation requests (e.g., if the health factor is above the threshold). Verifies if the correct asset is liquidated and if the borrower’s balance is updated appropriately.
  */
-fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Vec<Principal>) {
+#[allow(dead_code)]
+fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
         debt_asset: String,
@@ -1311,8 +1291,6 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
         //     expect_success: true,
         //     expected_error_message: None,
         // },
-        
-
     ];
 
     // let user_principal = get_user_principal();
@@ -1338,9 +1316,9 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
         ic_cdk::println!("------------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
-        for user_principal in random_users.clone() {
+        for _ in random_users.clone() {
             let asset_principal =
-                match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister){
+                match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
@@ -1357,8 +1335,8 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
                         continue;
                     }
                 };
-    
-            let approved =test_icrc2_aprove(
+
+            let approved = test_icrc2_aprove(
                 get_users_principal(Nat::from(1u128)).unwrap(),
                 asset_principal,
                 &pic,
@@ -1372,7 +1350,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
                             case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
-                        );                            
+                        );
                         continue;
                     }
                     ic_cdk::println!(
@@ -1387,7 +1365,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
                 }
                 continue;
             }
-    
+
             let liquidation_params = ExecuteLiquidationParams {
                 debt_asset: case.debt_asset.clone(),
                 collateral_asset: case.collateral_asset.clone(),
@@ -1395,13 +1373,15 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
                 on_behalf_of: case.on_behalf_of.clone(),
                 reward_amount: case.reward_amount.clone(),
             };
-    
-            let msg = pic.submit_call(
-                backend_canister,
-                get_users_principal(Nat::from(1u32)).unwrap(),
-                "execute_liquidation",
-                encode_one(liquidation_params).unwrap(),
-            ).unwrap();
+
+            let msg = pic
+                .submit_call(
+                    backend_canister,
+                    get_users_principal(Nat::from(1u32)).unwrap(),
+                    "execute_liquidation",
+                    encode_one(liquidation_params).unwrap(),
+                )
+                .unwrap();
             msg_ids.push(msg);
         }
         let mut results = Vec::new();
@@ -1410,12 +1390,13 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
             results.push(res);
         }
 
-        for result in results{
+        for result in results {
             match result {
                 WasmResult::Reply(response) => {
                     let liquidation_response: Result<Nat, errors::Error> =
-                        candid::decode_one(&response).expect("Failed to decode liquidation response");
-    
+                        candid::decode_one(&response)
+                            .expect("Failed to decode liquidation response");
+
                     match liquidation_response {
                         Ok(_) => {
                             if case.expect_success {
@@ -1438,7 +1419,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                                         e.message()
-                                    );                            
+                                    );
                                     continue;
                                 }
                                 ic_cdk::println!(
@@ -1461,16 +1442,8 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal,random_users: Ve
                     );
                     continue;
                 }
-                _ => {
-                    ic_cdk::println!(
-                        "❌ IC Test Case {} Failed: Error during liquidation function call:",
-                        i + 1,
-                    );
-                    continue;
-                }
             }
         }
-
     }
     ic_cdk::println!(
         "\n======================== IC Liquidation Tests Completed ========================\n"

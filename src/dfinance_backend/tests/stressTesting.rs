@@ -1,7 +1,6 @@
 use candid::{decode_one, encode_args, encode_one, Principal};
-use candid::{CandidType, Deserialize, Nat};
+use candid::Nat;
 use pocket_ic::{PocketIc, WasmResult};
-use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
 mod utils;
@@ -48,9 +47,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     );
 
     // 🔹 Define test input (token name + reserve data)
-    let ICP_token_name = "ICP".to_string();
-    let ICP_reserve_data = ReserveData {
-        asset_name: ICP_token_name.clone(),
+    let icp_token_name = "ICP".to_string();
+    let icp_reserve_data = ReserveData {
+        asset_name: icp_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -78,9 +77,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckBTC_token_name = "ckBTC".to_string();
-    let ckBTC_reserve_data = ReserveData {
-        asset_name: ckBTC_token_name.clone(),
+    let ck_btc_token_name = "ckBTC".to_string();
+    let ck_btc_reserve_data = ReserveData {
+        asset_name: ck_btc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -108,9 +107,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckETH_token_name = "ckETH".to_string();
-    let ckETH_reserve_data = ReserveData {
-        asset_name: ckETH_token_name.clone(),
+    let ck_eth_token_name = "ckETH".to_string();
+    let ck_eth_reserve_data = ReserveData {
+        asset_name: ck_eth_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -138,9 +137,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDC_token_name = "ckUSDC".to_string();
-    let ckUSDC_reserve_data = ReserveData {
-        asset_name: ckUSDC_token_name.clone(),
+    let ck_usdc_token_name = "ckUSDC".to_string();
+    let ck_usdc_reserve_data = ReserveData {
+        asset_name: ck_usdc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -168,9 +167,9 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDT_token_name = "ckUSDT".to_string();
-    let ckUSDT_reserve_data = ReserveData {
-        asset_name: ckUSDT_token_name.clone(),
+    let ck_usdt_token_name = "ckUSDT".to_string();
+    let ck_usdt_reserve_data = ReserveData {
+        asset_name: ck_usdt_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -200,11 +199,11 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
     let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
 
-    reserve_tokens_map.insert(ICP_token_name, ICP_reserve_data);
-    reserve_tokens_map.insert(ckBTC_token_name, ckBTC_reserve_data);
-    reserve_tokens_map.insert(ckETH_token_name, ckETH_reserve_data);
-    reserve_tokens_map.insert(ckUSDC_token_name, ckUSDC_reserve_data);
-    reserve_tokens_map.insert(ckUSDT_token_name, ckUSDT_reserve_data);
+    reserve_tokens_map.insert(icp_token_name, icp_reserve_data);
+    reserve_tokens_map.insert(ck_btc_token_name, ck_btc_reserve_data);
+    reserve_tokens_map.insert(ck_eth_token_name, ck_eth_reserve_data);
+    reserve_tokens_map.insert(ck_usdc_token_name, ck_usdc_reserve_data);
+    reserve_tokens_map.insert(ck_usdt_token_name, ck_usdt_reserve_data);
 
      /*
      * @title Initialize Tokens
@@ -496,7 +495,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                     let faucet_response: Result<Nat, errors::Error> =
                         decode_one(&reply).expect("Failed to decode faucet response");
                     match faucet_response {
-                        Ok(balance) => {
+                        Ok(_) => {
                             ic_cdk::println!(
                                 "✅ User {}: Faucet successful.",
                                 user_principal.to_text(),
@@ -560,7 +559,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                         candid::decode_one(&reply).expect("Failed to decode faucet response");
 
                     match faucet_response {
-                        Ok(balance) => {
+                        Ok(_) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",
@@ -796,7 +795,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             match result {
                 Ok(WasmResult::Reply(reply)) => {
                     match decode_one::<Result<Nat, errors::Error>>(&reply) {
-                        Ok(Ok(balance)) => {
+                        Ok(Ok(_)) => {
                             ic_cdk::println!(
                                 "✅ User {}: Supply Successful.",
                                 user_principal.to_text(),
@@ -984,7 +983,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                         candid::decode_one(&reply).expect("Failed to decode IC borrow response");
 
                     match borrow_response {
-                        Ok(balance) if case.expect_success => {
+                        Ok(_) if case.expect_success => {
                             ic_cdk::println!(
                                 "✅ User {}: Borrow successful.",
                                 user_principal.to_text(),
@@ -1208,7 +1207,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                         candid::decode_one(&reply).expect("Failed to decode withdraw response");
 
                     match withdraw_response {
-                        Ok(balance) => {
+                        Ok(_) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ Test Case {} Failed: Expected failure but got success.",
@@ -1600,7 +1599,7 @@ fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_users: V
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
-        for user_principal in random_users.clone() {
+        for _ in random_users.clone() {
             /* Get asset principal; handle missing cases  */
             let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {

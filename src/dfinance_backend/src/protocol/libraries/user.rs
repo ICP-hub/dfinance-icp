@@ -462,8 +462,14 @@ pub async fn calculate_user_asset_data(
                 .map(|asset| asset.balance.clone())
                 .unwrap_or(zero_nat_value());
 
+            // let user_debt_in_base_currency = get_user_asset_debt_in_base_currency(
+            //     user_principal,
+            //     &user_reserve_data,
+            //     balance.clone(),
+            //     asset_price.clone(),
+            // )
+            // .await;
             let user_debt_in_base_currency = get_user_asset_debt_in_base_currency(
-                user_principal,
                 &user_reserve_data,
                 balance.clone(),
                 asset_price.clone(),
@@ -722,7 +728,6 @@ pub async fn get_user_debt_in_base_currency(
  */
 
 pub async fn get_user_asset_debt_in_base_currency(
-    user_principal: Principal,
     reserve: &UserReserveData,
     user_balance: Nat,
     asset_price: Nat,
@@ -1133,7 +1138,7 @@ pub async fn create_user_reserve_with_low_health(
     .await
     {
         Ok(data) => {
-            ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+            ic_cdk::println!("Dtoken transfer from backend to user executed successfully = {:?}", data);
         }
         Err(err) => {
             ic_cdk::println!("Error: Minting failed. Error: {:?}", err);

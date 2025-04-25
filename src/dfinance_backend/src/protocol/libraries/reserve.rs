@@ -12,7 +12,7 @@ use crate::declarations::datatypes::ReserveData;
 use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
-use crate::guards::access_control::{guard_admin_only, to_check_controller};
+use crate::guards::access_control::guard_admin_only;
 use crate::protocol::libraries::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
@@ -258,7 +258,7 @@ pub async fn burn_scaled(
     let balance = get_balance(token_canister_principal, user_principal).await?;
 
     ic_cdk::println!("user balance = {}", balance);
-    let mut balance_increase = zero_nat_value();
+    let balance_increase: Nat;
     if burn_dtoken {
         is_withdraw = true;
         ic_cdk::println!("Processing DToken burn...");
@@ -468,7 +468,7 @@ pub async fn mint_scaled(
     minting_dtoken: bool,
 ) -> Result<(), Error> {
     let mut is_supply = true;
-    let mut adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
+    let adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
         && amount.clone() < Nat::from(10u128)
     {
         amount.clone().scaled_div(index.clone()) + Nat::from(ONE_VALUE) // Round up if there's a remainder
@@ -486,7 +486,7 @@ pub async fn mint_scaled(
     let balance = get_balance(token_canister_principal, user_principal).await?;
     ic_cdk::println!("Fetched balance in Nat: {:?}", balance);
 
-    let mut balance_increase = zero_nat_value();
+    let balance_increase: Nat;
     if minting_dtoken {
         println!("minting dtoken");
 

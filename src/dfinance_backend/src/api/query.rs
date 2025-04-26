@@ -66,6 +66,14 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
     })
 }
 
+/*
+ * @title Get User Faucet Data
+ * @dev Retrieves the faucet data for a given user.
+ * @param user The principal of the user.
+ * @returns The faucet reserves if found.
+ *
+ * @functionality Retrieve User Faucet Data for a Specified Principal
+ */
 #[query]
 fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
     if user == Principal::anonymous() {
@@ -137,6 +145,12 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     })
 }
 
+/*
+ * @title Get All Faucet
+ * @dev Retrieves a list of all users with their faucet reserves.
+ * @returns A vector of tuples containing user principals and their faucet reserves.
+ * @functionality This function returns a list of all users and their respective faucet reserves.
+ */
 #[query]
 pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
     read_state(|state| {
@@ -660,12 +674,7 @@ pub async fn get_asset_debt(
 #[query]
 pub async fn cycle_checker() -> Result<Nat, Error> {
     guard_admin_only()?;
-    // let caller = ic_cdk::caller();
-    // if caller == Principal::anonymous() || !to_check_controller() {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::InvalidPrincipal);
-    // }
     Ok(Nat::from(api::canister_balance128()))
 }
 
-//ask vicky isme saare query function toh nhi h kuch internal functions bhi pade hai
+//TODO: assigned to vicky isme saare query function toh nhi h kuch internal functions bhi pade hai

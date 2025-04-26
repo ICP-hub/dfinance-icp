@@ -224,35 +224,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         is_collateral: true,
     };
 
-    // let liquidator_mint_result = UpdateLogic::update_user_data_supply(
-    //     liquidator_principal,
-    //     &collateral_reserve_cache,
-    //     supply_param,
-    //     &mut collateral_reserve_data,
-    // )
-    // .await;
-    // match liquidator_mint_result {
-    //     Ok(()) => {
-    //         ic_cdk::println!("Minting dtokens successfully");
-    //     }
-    //     Err(e) => {
-    //         ic_cdk::println!("{:?}", e);
-
-    //         mint_scaled(
-    //             &mut collateral_reserve_data,
-    //             &mut user_reserve_data,
-    //             reward_amount,
-    //             collateral_reserve_cache.next_liquidity_index,
-    //             user_principal,
-    //             collateral_dtoken_principal,
-    //             platform_principal,
-    //             true,
-    //         )
-    //         .await?;
-    //         return Err(e);
-    //     }
-    // }
-
     if let Err(err) = UpdateLogic::update_user_data_supply(
         liquidator_principal,
         &collateral_reserve_cache,
@@ -356,14 +327,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                         liquidator_data.reserves =
                             Some(vec![(params.collateral_asset.clone(), new_reserve)]);
                     }
-                    // &mut liquidator_data
-                    //     .reserves
-                    //     .as_mut()
-                    //     .unwrap()
-                    //     .iter_mut()
-                    //     .find(|(asset, _)| asset == &params.collateral_asset)
-                    //     .unwrap()
-                    //     .1
 
                     // bhanu handle unwrap
                     match liquidator_data.reserves.as_mut() {

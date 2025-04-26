@@ -153,40 +153,7 @@ impl ValidationLogic {
         }
 
         let _ = update_token_price(reserve.asset_name.clone()).await;
-        //TODO check in rust-opt whether to remove this code or keep it
-        // let mut total_collateral = Nat::from(0u128);
-        // let mut total_debt = Nat::from(0u128);
-        // let mut avg_ltv = Nat::from(0u128);
-        // let mut health_factor = Nat::from(0u128);
-        // let mut liquidation_threshold_var = Nat::from(0u128);
-
-        // bhanu can we directly assign below things ?
-        // match calculate_user_account_data(None).await {
-        //     Ok((
-        //         t_collateral,
-        //         t_debt,
-        //         ltv,
-        //         liquidation_threshold,
-        //         h_factor,
-        //         _a_borrow,
-        //         _zero_ltv_collateral,
-        //     )) => {
-        //         total_collateral = t_collateral;
-        //         total_debt = t_debt;
-        //         avg_ltv = ltv;
-        //         health_factor = h_factor;
-        //         liquidation_threshold_var = liquidation_threshold;
-
-        //         ic_cdk::println!("total collateral = {}", total_collateral);
-        //         ic_cdk::println!("total debt = {}", total_debt);
-        //         ic_cdk::println!("Average LTV: {}", avg_ltv);
-        //         ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
-        //         ic_cdk::println!("Health Factor: {}", health_factor);
-        //     }
-        //     Err(e) => {
-        //         return Err(e);
-        //     }
-        // }
+        
         ic_cdk::println!("going inside calculate user account data");
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
             match calculate_user_account_data(None).await {
@@ -209,20 +176,17 @@ impl ValidationLogic {
                 Err(e) => return Err(e),
             };
 
-        if total_debt != Nat::from(0u128) {
+        if total_debt != Nat::from(0u128)  {
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
-            ic_cdk::println!("rate = {:?}", rate);
+            ic_cdk::println!("withdraw asset rate = {:?}", rate);
 
             let usd_withdrawl = amount.clone().scaled_mul(rate);
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
+            ic_cdk::println!("total collateral = {}", total_collateral);
 
             // Calculate Adjusted Collateral
             let adjusted_collateral: Nat;
-            //Jyotirmay yeh yaha kyu check lagaya tha?
-            // if adjusted_collateral < usd_withdrawl.clone() {
-            //     adjusted_collateral = Nat::from(0u128);
-            // } else
             if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
             } else {
@@ -467,30 +431,6 @@ impl ValidationLogic {
         if liquidator_wallet_balance < repay_amount {
             return Err(Error::LowWalletBalance);
         }
-
-        // let mut total_collateral = Nat::from(ZERO_VALUE);
-        // let mut health_factor = Nat::from(ZERO_VALUE);
-
-        // match calculate_user_account_data(Some(user)).await {
-        //     Ok((
-        //         t_collateral,
-        //         _t_debt,
-        //         _ltv,
-        //         _liquidation_threshold,
-        //         h_factor,
-        //         _a_borrow,
-        //         _zero_ltv_collateral,
-        //     )) => {
-        //         total_collateral = t_collateral;
-        //         health_factor = h_factor;
-
-        //         ic_cdk::println!("total collateral = {}", total_collateral);
-        //         ic_cdk::println!("Health Factor: {}", health_factor);
-        //     }
-        //     Err(e) => {
-        //         return Err(e);
-        //     }
-        // }
 
         let (total_collateral, health_factor) = match calculate_user_account_data(Some(user)).await {
             Ok((

@@ -1,6 +1,6 @@
-use candid::{decode_one, encode_args, encode_one, Principal};
-use candid::{CandidType, Deserialize, Nat};
-use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
+use candid::{encode_args, encode_one, Principal};
+use candid::Nat;
+use pocket_ic::{PocketIc, WasmResult};
 use std::collections::HashMap;
 use std::fs;
 mod utils;
@@ -45,9 +45,9 @@ fn setup() -> (PocketIc, Principal) {
     );
 
     // 🔹 Define test input (token name + reserve data)
-    let ICP_token_name = "ICP".to_string();
-    let ICP_reserve_data = ReserveData {
-        asset_name: ICP_token_name.clone(),
+    let icp_token_name = "ICP".to_string();
+    let icp_reserve_data = ReserveData {
+        asset_name: icp_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -75,9 +75,9 @@ fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckBTC_token_name = "ckBTC".to_string();
-    let ckBTC_reserve_data = ReserveData {
-        asset_name: ckBTC_token_name.clone(),
+    let ck_btc_token_name = "ckBTC".to_string();
+    let ck_btc_reserve_data = ReserveData {
+        asset_name: ck_btc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -105,9 +105,9 @@ fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckETH_token_name = "ckETH".to_string();
-    let ckETH_reserve_data = ReserveData {
-        asset_name: ckETH_token_name.clone(),
+    let ck_eth_token_name = "ckETH".to_string();
+    let ck_eth_reserve_data = ReserveData {
+        asset_name: ck_eth_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -135,9 +135,9 @@ fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDC_token_name = "ckUSDC".to_string();
-    let ckUSDC_reserve_data = ReserveData {
-        asset_name: ckUSDC_token_name.clone(),
+    let ck_usdc_token_name = "ckUSDC".to_string();
+    let ck_usdc_reserve_data = ReserveData {
+        asset_name: ck_usdc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -165,9 +165,9 @@ fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDT_token_name = "ckUSDT".to_string();
-    let ckUSDT_reserve_data = ReserveData {
-        asset_name: ckUSDT_token_name.clone(),
+    let ck_usdt_token_name = "ckUSDT".to_string();
+    let ck_usdt_reserve_data = ReserveData {
+        asset_name: ck_usdt_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -197,11 +197,11 @@ fn setup() -> (PocketIc, Principal) {
 
     let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
 
-    reserve_tokens_map.insert(ICP_token_name, ICP_reserve_data);
-    reserve_tokens_map.insert(ckBTC_token_name, ckBTC_reserve_data);
-    reserve_tokens_map.insert(ckETH_token_name, ckETH_reserve_data);
-    reserve_tokens_map.insert(ckUSDC_token_name, ckUSDC_reserve_data);
-    reserve_tokens_map.insert(ckUSDT_token_name, ckUSDT_reserve_data);
+    reserve_tokens_map.insert(icp_token_name, icp_reserve_data);
+    reserve_tokens_map.insert(ck_btc_token_name, ck_btc_reserve_data);
+    reserve_tokens_map.insert(ck_eth_token_name, ck_eth_reserve_data);
+    reserve_tokens_map.insert(ck_usdc_token_name, ck_usdc_reserve_data);
+    reserve_tokens_map.insert(ck_usdt_token_name, ck_usdt_reserve_data);
 
     /*
      * @title Initialize Tokens
@@ -681,8 +681,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     ];
 
     let user_principal = get_user_principal();
-    let mut passed_tests = 0;
-    let mut failed_tests = 0;
 
     ic_cdk::println!(
         "\n======================== Starting IC Supply Tests ========================\n"
@@ -799,14 +797,12 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 "❌ Test Case {} Failed: Expected failure but got success.",
                                 i + 1
                             );
-                            failed_tests += 1;
                         } else {
                             ic_cdk::println!(
                                 "✅ Test Case {} Passed: Supply successful. New Balance: {}",
                                 i + 1,
                                 balance
                             );
-                            passed_tests += 1;
                         }
                     }
                     Err(error) => {
@@ -835,8 +831,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 ic_cdk::println!(
                                     "============================================================\n"
                                 );
-
-                                failed_tests += 1;
                             }
                         } else if case.expected_error_message.as_deref() != Some(error.message()) {
                             ic_cdk::println!(
@@ -845,10 +839,8 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 case.expected_error_message.as_deref().unwrap_or("N/A"),
                                 error.message()
                             );
-                            failed_tests += 1;
                         } else {
                             ic_cdk::println!("✅ Test Case {} Passed: Supply rejected as expected with message: {:?}", i + 1, error);
-                            passed_tests += 1;
                         }
                     }
                 }
@@ -859,7 +851,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     i + 1,
                     reject_message
                 );
-                failed_tests += 1;
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -867,7 +858,6 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     i + 1,
                     e
                 );
-                failed_tests += 1;
             }
         }
         if i % 2 != Nat::from(0u128) {

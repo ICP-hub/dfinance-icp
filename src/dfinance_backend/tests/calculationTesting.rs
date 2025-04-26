@@ -1,9 +1,7 @@
 use candid::Principal;
-use candid::{CandidType, Deserialize, Nat};
-use serde::Serialize;
+use candid::Nat;
 use std::ops::Mul;
 mod utils;
-use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;

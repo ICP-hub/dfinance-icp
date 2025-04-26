@@ -273,8 +273,6 @@ impl UpdateLogic {
 
         ic_cdk::println!("Update user state before burn: {:?}", user_reserve_data);
 
-        let is_borrowed = user_reserve_data.is_borrowed.clone();
-
         burn_scaled(
             reserve,
             &mut user_reserve_data,
@@ -355,17 +353,7 @@ impl UpdateLogic {
             "Starting update_user_data_repay for user: {:?}",
             user_principal
         );
-        let user_data_result = user_data(user_principal);
-
-        let mut user_data = match user_data_result {
-            Ok(data) => {
-                ic_cdk::println!("User found: update_user_data_repay");
-                data
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        };
+        let mut user_data = user_data(user_principal)?;
 
         ic_cdk::println!("Repay user update initial data = {:?}", user_data);
 
@@ -463,16 +451,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 
     let mut user_data = user_data(user_principal)?;
 
-    let reserve_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&asset.to_string().clone())
-            .map(|reserve| reserve.0.clone())
-    })
-    .ok_or_else(|| Error::NoReserveDataFound)?;
-
     let (added_usd_amount, _) = get_exchange_rates(asset.clone(), None, added_amount).await?;
-
     let (usd_amount, _) = get_exchange_rates(asset.clone(), None, amount.clone()).await?;
 
     let (
@@ -487,9 +466,9 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
 
     if total_debt != zero_nat_value() {
         // bhanu should ltv and adjusted_collateral be same as the res from calculate_user_account_data ?
-        let mut ltv = zero_nat_value();
+        let mut ltv: Nat;
         if amount != zero_nat_value() {
-            let mut adjusted_collateral = zero_nat_value();
+            let adjusted_collateral: Nat;
             if total_collateral < usd_amount.clone() {
                 adjusted_collateral = zero_nat_value();
             } else {
@@ -569,6 +548,15 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
     .ok_or_else(|| Error::NoUserReserveDataFound)
 }
 
+/*
+ * @functionality user-faucet-access
+ * @title Fetch User Faucet Reserves
+ * @notice Retrieves the user's faucet reserves from state.
+ *
+ * @param user_principal The principal ID of the user.
+ *
+ * @return `FaucetReserves` if found, otherwise default reserves.
+ */
 pub fn get_user_faucet_reserves(user_principal: Principal) -> FaucetReserves {
     read_state(|state| {
         if let Some(reserves) = state.faucet_data.get(&user_principal) {
@@ -601,6 +589,17 @@ pub fn user_reserve<'a>(
     user_reserve
 }
 
+
+/*
+ * @functionality faucet-reserve-access
+ * @title Fetch Faucet Reserve Data
+ * @notice Retrieves reserve data for a specific asset from the faucet reserves.
+ *
+ * @param faucet_data A mutable reference to `FaucetReserves`.
+ * @param asset_name The asset name for which reserve data is required.
+ *
+ * @return `Option<&mut (String, FaucetReserve)>` containing the asset name and its reserve data.
+ */
 pub fn get_faucet_reserve_for_asset<'a>(
     faucet_data: &'a mut FaucetReserves,
     asset_name: &'a String,

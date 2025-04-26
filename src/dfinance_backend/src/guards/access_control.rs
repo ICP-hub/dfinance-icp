@@ -5,7 +5,16 @@ use crate::{
 use candid::Principal;
 use ic_cdk::{caller, query, update};
 
-// guard to allow only app level controller
+
+/*
+ * @title Guard Controller Only
+ * @dev Ensures that the caller is a controller of the canister.
+ *      This function is used to restrict access to authorized users only.
+ *
+ * @returns `Ok(())` if the caller is a controller, otherwise an error.
+ *
+ * @functionality Controller Permissions Check
+ */
 pub fn guard_controller_only() -> Result<(), Error> {
     if ic_cdk::caller() == Principal::anonymous() || !to_check_controller() {
         return Err(Error::ErrorNotController);
@@ -14,34 +23,23 @@ pub fn guard_controller_only() -> Result<(), Error> {
     }
 }
 
+/*
+ * @title Guard Principal Not Anonymous
+ * @dev Ensures that the principal is not anonymous.
+ *      This function is used to restrict access to authorized users only.
+ *
+ * @param principal The principal to check.
+ *
+ * @returns `Ok(())` if the principal is not anonymous, otherwise an error.
+ *
+ * @functionality Principal Check
+ */
 pub fn guard_principal_not_anonymous(principal: &Principal) -> Result<(), Error> {
     if principal == &Principal::anonymous() {
         return Err(Error::AnonymousPrincipal);
     }
     Ok(())
 }
-
-// pub fn guard_validate_reserve_status(reserve: &ReserveData) -> Result<(), Error> {
-//     if !reserve.configuration.active {
-//         return Err(Error::ReserveInactive);
-//     }
-//     if reserve.configuration.paused {
-//         return Err(Error::ReservePaused);
-//     }
-//     if reserve.configuration.frozen {
-//         return Err(Error::ReserveFrozen);
-//     }
-//     Ok(())
-// }
-
-// pub fn guard_admin_only() -> Result<(), Error> {
-//     if ic_cdk::caller() == Principal::anonymous() || !ic_cdk::api::is_controller(&ic_cdk::caller())
-//     {
-//         return Err(Error::UnauthorizedAccess);
-//     }
-
-//     Ok(())
-// }
 
 /*
  * @title Caller Identity Validation
@@ -53,21 +51,12 @@ pub fn guard_principal_not_anonymous(principal: &Principal) -> Result<(), Error>
  *
  * @functionality Caller Identity Validation
  */
-
 pub fn guard_prevent_anonymous() -> Result<(), Error> {
     if ic_cdk::caller() == Principal::anonymous() {
         return Err(Error::AnonymousPrincipal);
     }
     Ok(())
 }
-
-// pub fn caller_is_not_anonymous() -> Result<(), Error> {
-//     if caller() == Principal::anonymous() {
-//         Err(Error::AnonymousPrincipal)
-//     } else {
-//         Ok(())
-//     }
-// }
 
 /*
  * @title Check Controller Permissions
@@ -106,15 +95,7 @@ pub fn to_check_controller() -> bool {
 pub fn add_tester(username: String, principal: Principal) -> Result<(), Error> {
     guard_principal_not_anonymous(&principal)?;
     guard_admin_only()?;
-    // let user_principal = ic_cdk::caller();
-    // if user_principal == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
-    // if !to_check_controller() {
-    //     ic_cdk::println!("Only controller allowed");
-    //     return Err(Error::ErrorNotController);
-    // }
+    
     mutate_state(|state| state.tester_list.insert(username, principal));
     return Ok(());
 }

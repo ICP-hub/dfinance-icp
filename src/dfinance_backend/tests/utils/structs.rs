@@ -80,10 +80,10 @@ pub enum TransferFromError {
     InsufficientFunds { balance: Nat },
 }
 
-#[derive(CandidType)]
-pub enum LedgerArgument {
-    Init(InitArgs),
-}
+// #[derive(CandidType)]
+// pub enum LedgerArgument {
+//     Init(InitArgs),
+// }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct Account {
@@ -241,6 +241,7 @@ pub struct ReserveCache {
     pub curr_supply: Nat,
 }
 
+#[allow(dead_code)]
 pub struct AccrueToTreasuryLocalVars {
     pub prev_total_variable_debt: Nat,
     pub curr_total_variable_debt: Nat,

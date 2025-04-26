@@ -15,3 +15,4 @@ pub const ADMIN_DATA: MemoryId = MemoryId::new(13);
 pub const DEVELOPER_DATA: MemoryId = MemoryId::new(14);
 pub const ASSET_RECORDS_MEMORY_ID: MemoryId = MemoryId::new(15);
 pub const FAUCETDATA: MemoryId = MemoryId::new(16);
+pub const LOG_STORAGE: MemoryId = MemoryId::new(13);

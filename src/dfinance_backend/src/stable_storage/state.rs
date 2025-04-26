@@ -29,6 +29,7 @@ pub struct State {
     pub admin_data: AdminData,
     pub asset_records:AssetRecords,
     pub faucet_data: FaucetData,
+    pub log_storage:LogStorage
 }
 /*
  * @title State
@@ -55,6 +56,7 @@ impl State {
             developer_data: DeveloperData::init(memory_manager.get(DEVELOPER_DATA)),
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),
             faucet_data: FaucetData::init(memory_manager.get(FAUCETDATA)),
+            log_storage: LogStorage::init(memory_manager.get(LOG_STORAGE)),
         }
     }
 }

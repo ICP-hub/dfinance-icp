@@ -401,6 +401,7 @@ pub fn get_user_guide() -> Result<bool, Error> {
  *
  * @functionality Retrieve Controller Information
  */
+//Controller for creating dynamic dtoken and debt token canisters
 pub fn get_controller() -> Result<InitArgs, Error> {
     read_state(|state| {
         state

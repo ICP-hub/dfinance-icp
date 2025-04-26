@@ -87,6 +87,7 @@ pub async fn schedule_midnight_task() {
  * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.
  * @functionality Resets faucet usage for all users at midnight.
  */
+//TODO check faucet reset at midnight
 async fn run_midnight_reset() {
     let vector_faucet_data: Vec<(Principal, FaucetReserves)> = get_all_faucet().await;
     for (user_principal, _) in vector_faucet_data {

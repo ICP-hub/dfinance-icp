@@ -20,7 +20,7 @@ use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
-
+//TODO confirm all constants values of this file from Bhanu
 /*
  * @title Load DToken Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the dtoken ledger.

@@ -606,7 +606,7 @@ pub async fn get_user_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    // Ask : get normalize income function does not exist.
+    //TODO: Ask : get normalize income function does not exist.
     Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
 }
 
@@ -616,10 +616,11 @@ pub async fn get_user_asset_balance_in_base_currency(
     user_balance: Nat,
     asset_price: Nat,
 ) -> Result<Nat, Error> {
-    ic_cdk::println!("Calculating user balance in base currency...");
+    ic_cdk::println!("Calculating user asset balance in base currency...");
     ic_cdk::println!("User principal: {:?}", user_principal);
     ic_cdk::println!("Reserve: {:?}", reserve.reserve);
-    ic_cdk::println!("Asset price: {}", user_balance);
+    ic_cdk::println!("User balance: {}", user_balance);
+    ic_cdk::println!("Asset price : {}", asset_price);
 
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 

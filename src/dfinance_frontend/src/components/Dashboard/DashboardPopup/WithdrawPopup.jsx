@@ -245,7 +245,7 @@ const WithdrawPopup = ({
       const withdrawResult = await backendActor.execute_withdraw(
         withdrawParams
       );
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       if ("Ok" in withdrawResult) {
         trackEvent(

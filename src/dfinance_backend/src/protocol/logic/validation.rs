@@ -152,7 +152,7 @@ impl ValidationLogic {
         }
 
         //updating token price and store latest price in price cache
-        let _ = update_token_price(reserve.asset_name.clone()).await;
+        // let _ = update_token_price(reserve.asset_name.clone()).await;
         
         ic_cdk::println!("going inside calculate user account data"); //info
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =

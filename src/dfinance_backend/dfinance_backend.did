@@ -9,6 +9,7 @@ type CachedPrice = record { price : nat };
 type Error = variant {
   NormalizedSupply;
   ConversionErrorToU128;
+  NoCollateralFound;
   NoDebtToRepay;
   NoFaucetReservesFound;
   SupportNotFound;
@@ -72,6 +73,7 @@ type Error = variant {
   AmountExceedsLimit;
   ErrorBurnDTokens;
   NoPriceCache;
+  LowPlatformBalance;
   ConversionErrorFromTextToPrincipal;
   MaxAmountPlatform;
   NotFoundAssetPrincipal;
@@ -85,7 +87,9 @@ type Error = variant {
   ErrorEncoding;
   HealthFactorLess;
   UnauthorizedAccess;
+  ErrorCreatingCanister;
   ReservePaused;
+  ErrorUpdateCanisterSetting;
   ErrorBurnTokens;
   RepayMoreThanDebt;
   InvalidMintAmount;

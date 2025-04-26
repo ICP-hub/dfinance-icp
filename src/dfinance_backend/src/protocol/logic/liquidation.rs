@@ -189,7 +189,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let _user_guard = CallerGuard::lock_principal(user_principal.clone())?;
 
-    ic_cdk::println!("liquidation validation successful");
+    ic_cdk::println!("liquidation validation successful");  //info
 
     ic_cdk::println!("burn reward amount: {:?}", reward_amount);
 
@@ -481,7 +481,7 @@ pub async fn to_get_reward_amount(
     let mut collateral_balance = get_balance(d_token_canister, user_principal).await?;
 
     collateral_balance = (collateral_balance
-        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))
+        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone())?))
     .scaled_div(user_reserve_data.liquidity_index);
 
     ic_cdk::println!("Collateral balance normalized: {:?}", collateral_balance);

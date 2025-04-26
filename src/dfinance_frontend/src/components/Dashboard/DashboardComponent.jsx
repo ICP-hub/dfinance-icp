@@ -565,9 +565,9 @@ const DashboardComponent = () => {
     const assetBalance =
       assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
 
-    const assetSupply =
-      (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-      (Number(currentLiquidity) * 1e8);
+    const calculated_supply = Math.trunc((Number(assetBalance) / (Number(currentLiquidity) )) * 1e8);
+    const assetSupply = Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset)))/1e8)/1e8;
+    console.log("assetSupply by handle asset", assetSupply);
 
     const DebtIndex =
       userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)
@@ -1272,10 +1272,8 @@ const DashboardComponent = () => {
                       const assetBalance =
                         assetBalances.find((balance) => balance.asset === asset)
                           ?.dtokenBalance || 0;
-                      const assetSupply =
-                        (Number(assetBalance) *
-                          Number(getAssetSupplyValue(asset))) /
-                        (Number(currentLiquidity) * 1e8);
+                      const calculated_supply = Math.trunc((Number(assetBalance) / (Number(currentLiquidity) )) * 1e8);
+                      const assetSupply = Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset)))/1e8) / 1e8;
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {

@@ -34,7 +34,7 @@ reserve_factor=$(awk -v data=$reserve_factor -v scale=${SCALING_FACTOR//_/} 'BEG
 # Set the RESERVE_DATA
 RESERVE_DATA="(
   record {
-    asset_name = null; 
+    asset_name = $ESCAPED_TOKEN_NAME;  
     id = 4;
     \"d_token_canister\" = null;
     \"debt_token_canister\" = null;
@@ -52,9 +52,6 @@ RESERVE_DATA="(
       \"borrow_cap\" = $borrow_cap;
       \"supply_cap\" = $supply_cap;
       \"liquidation_protocol_fee\" = 0;
-      \"frozen\" = false;
-      \"active\" = true;
-      \"paused\" = false;
       \"reserve_factor\" = $reserve_factor;
     };
     \"can_be_collateral\" = opt true;
@@ -63,5 +60,7 @@ RESERVE_DATA="(
   }
 )"
 
-# Call the initialize function on the canister with the serialized ReserveData
-dfx canister call $CANISTER_NAME initialize "(\"$TOKEN_NAME\", $RESERVE_DATA)" 
+ASSET_IMAGE_URL="https://storage.googleapis.com/dfinance/ckUSDT.svg"
+
+dfx canister call $CANISTER_NAME initialize \
+  "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")"

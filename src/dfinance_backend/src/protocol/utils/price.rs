@@ -14,7 +14,7 @@ use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{
     ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
 };
-use crate::guards::api_limitor::request_limiter;
+use crate::guards::api_limiter::request_limiter;
 
 /*
  * @title Price Cache Management

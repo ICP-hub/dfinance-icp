@@ -1,6 +1,3 @@
-use crate::api::update;
-use crate::declarations::structs::{InitArgs, ReserveData};
-use crate::stable_storage::storable::Candid;
 use crate::{
     constants::errors::Error,
     stable_storage::state_handler::{mutate_state, read_state},
@@ -165,8 +162,6 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
  *
  * @functionality Check if Caller is Tester
  */
-
-//TODO: shift this code into the guard file.
 #[ic_cdk::query]
 pub fn check_is_tester() -> bool {
     let testers = match get_testers() {
@@ -270,8 +265,6 @@ pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
  * - `Ok(())` - If the caller is a valid admin.
  * - `Err(Error)` - If the caller is anonymous or not listed as an admin.
  */
-//TODO: if we dont need it in the frontend then remove macro.
-//TODO: shift this code into the guard file.
 #[query]
 pub fn guard_admin_only() -> Result<(), Error> {
     guard_prevent_anonymous()?;
@@ -358,7 +351,6 @@ pub fn remove_developer(developer_to_remove: Principal) -> Result<String, Error>
  * - `Err(Error)` - If the caller is anonymous or not listed as a developer.
  */
 //TODO: if we dont need it in the frontend then remove macro.
-//TODO: shift this code into the guard file.
 #[query]
 pub fn guard_developer_only() -> Result<(), Error> {
     guard_prevent_anonymous()?;

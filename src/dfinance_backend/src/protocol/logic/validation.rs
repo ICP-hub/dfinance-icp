@@ -1,16 +1,14 @@
 use crate::api::inter_canister::{get_balance, get_total_supply};
-use crate::stable_storage::state_handler::read_state;
+use crate::api::query::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
-use crate::declarations::structs::ReserveData;
-use crate::protocol::libraries::update::user_data;
+use crate::declarations::datatypes::ReserveData;
 use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
-use crate::api::query::{get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
+use crate::stable_storage::state_handler::read_state;
 use candid::{Nat, Principal};
-
 
 pub struct ValidationLogic;
 
@@ -57,20 +55,16 @@ impl ValidationLogic {
             return Err(Error::MaxAmount);
         }
 
-    
-
         // Validating supply cap limit
         let supply_cap = reserve.configuration.supply_cap.clone();
         ic_cdk::println!("supply_cap : {:?}", supply_cap);
 
-        let d_token_canister_id: Result<Principal, candid::types::principal::PrincipalError> =
-            Principal::from_text(reserve.d_token_canister.clone().unwrap());
-        let d_token_canister_id_result = match d_token_canister_id {
-            Ok(id) => id,
-            Err(_) => return Err(Error::NoCanisterIdFound),
+        let d_token_canister_id = match reserve.d_token_canister.clone() {
+            Some(id) => id,
+            None => return Err(Error::NoCanisterIdFound),
         };
 
-        let total_supply = get_total_supply(d_token_canister_id_result).await?;
+        let total_supply = get_total_supply(d_token_canister_id).await?;
 
         ic_cdk::println!("validation reserve accure = {}", reserve.accure_to_platform);
 
@@ -117,8 +111,7 @@ impl ValidationLogic {
         let final_amount = amount.clone();
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        let d_token_principal =
-            Principal::from_text(reserve.d_token_canister.clone().unwrap()).unwrap();
+        let d_token_principal = reserve.d_token_canister.clone().unwrap();
 
         let user_current_supply = get_balance(d_token_principal, user).await?;
 
@@ -153,50 +146,71 @@ impl ValidationLogic {
 
         let platform_balance = get_balance(ledger_canister, platform_principal).await?;
 
-        ic_cdk::println!("User balance: {:?}", platform_balance);
+        ic_cdk::println!("platform balance: {:?}", platform_balance);
 
         if amount > platform_balance {
             return Err(Error::MaxAmountPlatform);
         }
 
-        let _ = update_token_price(reserve.asset_name.clone().unwrap()).await;
+        let _ = update_token_price(reserve.asset_name.clone()).await;
         //TODO check in rust-opt whether to remove this code or keep it
-        let mut total_collateral = Nat::from(0u128);
-        let mut total_debt = Nat::from(0u128);
-        let mut avg_ltv = Nat::from(0u128);
-        let mut health_factor = Nat::from(0u128);
-        let mut liquidation_threshold_var = Nat::from(0u128);
+        // let mut total_collateral = Nat::from(0u128);
+        // let mut total_debt = Nat::from(0u128);
+        // let mut avg_ltv = Nat::from(0u128);
+        // let mut health_factor = Nat::from(0u128);
+        // let mut liquidation_threshold_var = Nat::from(0u128);
 
         // bhanu can we directly assign below things ?
-        match calculate_user_account_data(None).await {
-            Ok((
-                t_collateral,
-                t_debt,
-                ltv,
-                liquidation_threshold,
-                h_factor,
-                _a_borrow,
-                _zero_ltv_collateral,
-            )) => {
-                total_collateral = t_collateral;
-                total_debt = t_debt;
-                avg_ltv = ltv;
-                health_factor = h_factor;
-                liquidation_threshold_var = liquidation_threshold;
+        // match calculate_user_account_data(None).await {
+        //     Ok((
+        //         t_collateral,
+        //         t_debt,
+        //         ltv,
+        //         liquidation_threshold,
+        //         h_factor,
+        //         _a_borrow,
+        //         _zero_ltv_collateral,
+        //     )) => {
+        //         total_collateral = t_collateral;
+        //         total_debt = t_debt;
+        //         avg_ltv = ltv;
+        //         health_factor = h_factor;
+        //         liquidation_threshold_var = liquidation_threshold;
 
-                ic_cdk::println!("total collateral = {}", total_collateral);
-                ic_cdk::println!("total debt = {}", total_debt);
-                ic_cdk::println!("Average LTV: {}", avg_ltv);
-                ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
-                ic_cdk::println!("Health Factor: {}", health_factor);
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
+        //         ic_cdk::println!("total collateral = {}", total_collateral);
+        //         ic_cdk::println!("total debt = {}", total_debt);
+        //         ic_cdk::println!("Average LTV: {}", avg_ltv);
+        //         ic_cdk::println!("liqudation user = {}", liquidation_threshold_var);
+        //         ic_cdk::println!("Health Factor: {}", health_factor);
+        //     }
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // }
+        ic_cdk::println!("going inside calculate user account data");
+        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
+            match calculate_user_account_data(None).await {
+                Ok((
+                    t_collateral,
+                    t_debt,
+                    ltv,
+                    liquidation_threshold,
+                    h_factor,
+                    _a_borrow,
+                    _zero_ltv_collateral,
+                )) => {
+                    ic_cdk::println!("total collateral = {}", t_collateral);
+                    ic_cdk::println!("total debt = {}", t_debt);
+                    ic_cdk::println!("Average LTV: {}", ltv);
+                    ic_cdk::println!("liqudation user = {}", liquidation_threshold);
+                    ic_cdk::println!("Health Factor: {}", h_factor);
+                    (t_collateral, t_debt, ltv, liquidation_threshold, h_factor)
+                }
+                Err(e) => return Err(e),
+            };
 
         if total_debt != Nat::from(0u128) {
-            let rate = get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+            let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
             ic_cdk::println!("rate = {:?}", rate);
 
@@ -204,11 +218,11 @@ impl ValidationLogic {
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);
 
             // Calculate Adjusted Collateral
-            let mut adjusted_collateral = Nat::from(0u128);
+            let adjusted_collateral: Nat;
             //Jyotirmay yeh yaha kyu check lagaya tha?
             // if adjusted_collateral < usd_withdrawl.clone() {
             //     adjusted_collateral = Nat::from(0u128);
-            // } else 
+            // } else
             if total_collateral < usd_withdrawl {
                 return Err(Error::AmountSubtractionError);
             } else {
@@ -277,49 +291,32 @@ impl ValidationLogic {
             return Err(Error::MaxAmountPlatform);
         }
 
-
-        if let Err(e) = update_token_price(reserve.asset_name.clone().unwrap()).await {
+        if let Err(e) = update_token_price(reserve.asset_name.clone()).await {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);
         }
 
-        let mut total_collateral = Nat::from(ZERO_VALUE);
-        let mut total_debt = Nat::from(ZERO_VALUE);
-        let mut avg_ltv = Nat::from(ZERO_VALUE);
-        let mut health_factor = Nat::from(ZERO_VALUE);
-        let mut liquidation_threshold_var = Nat::from(ZERO_VALUE);
+        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
+            match calculate_user_account_data(None).await {
+                Ok((
+                    t_collateral,
+                    t_debt,
+                    ltv,
+                    liquidation_threshold,
+                    h_factor,
+                    _a_borrow,
+                    _zero_ltv_collateral,
+                )) => {
+                    ic_cdk::println!("total collateral = {}", t_collateral);
+                    ic_cdk::println!("total debt = {}", t_debt);
+                    ic_cdk::println!("Average LTV: {}", ltv);
+                    ic_cdk::println!("liqudation user = {}", liquidation_threshold);
+                    ic_cdk::println!("Health Factor: {}", h_factor);
+                    (t_collateral, t_debt, ltv, liquidation_threshold, h_factor)
+                }
+                Err(e) => return Err(e),
+            };
 
-        // let user_data_result: Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> =
-        //     calculate_user_account_data(None).await;
-
-        match calculate_user_account_data(None).await {
-            Ok((
-                t_collateral,
-                t_debt,
-                ltv,
-                liquidation_threshold,
-                h_factor,
-                _a_borrow,
-                _zero_ltv_collateral,
-            )) => {
-                total_collateral = t_collateral;
-                total_debt = t_debt;
-                // available_borrow = a_borrow;
-                avg_ltv = ltv;
-                health_factor = h_factor;
-                liquidation_threshold_var = liquidation_threshold;
-                ic_cdk::println!("total collateral = {}", total_collateral);
-                ic_cdk::println!("total debt = {}", total_debt);
-                ic_cdk::println!("Average LTV: {}", avg_ltv);
-                ic_cdk::println!("Health Factor: {}", health_factor);
-                ic_cdk::println!("threshold: {}", liquidation_threshold_var);
-            }
-            Err(e) => {
-                // Handle the error case
-                return Err(e);
-            }
-        }
-
-        let rate = get_cached_exchange_rate(reserve.asset_name.clone().unwrap())?;
+        let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
         ic_cdk::println!("asset price = {}", rate);
 
@@ -331,7 +328,7 @@ impl ValidationLogic {
         let adjusted_debt = total_debt + usd_borrow;
         ic_cdk::println!("adjusted amount = {}", adjusted_debt);
 
-        let mut ltv = Nat::from(ZERO_VALUE);
+        let mut  ltv: Nat;
         ltv = adjusted_debt.scaled_div(total_collateral);
         ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", ltv);
@@ -403,17 +400,6 @@ impl ValidationLogic {
         let final_amount = amount;
         ic_cdk::println!("final_amount : {:?}", final_amount);
 
-        let mut user_data = user_data(user)?;
-
-        let user_reserve = match user_data.reserves {
-            Some(ref mut reserves) => reserves
-                .iter_mut()
-                .find(|(asset_name, _)| *asset_name == *reserve.asset_name.as_ref().unwrap()),
-            None => None,
-        };
-
-    
-
         Ok(())
     }
 
@@ -447,11 +433,10 @@ impl ValidationLogic {
         user: Principal,
         repay_reserve_data: ReserveData,
     ) -> Result<(), Error> {
-        let repay_asset_principal =
-            match Principal::from_text(repay_reserve_data.debt_token_canister.clone().unwrap()) {
-                Ok(principal) => principal,
-                Err(_) => return Err(Error::NoCanisterIdFound),
-            };
+        let repay_asset_principal = match repay_reserve_data.debt_token_canister.clone() {
+            Some(principal) => principal,
+            None => return Err(Error::NoCanisterIdFound),
+        };
 
         let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
 
@@ -483,10 +468,31 @@ impl ValidationLogic {
             return Err(Error::LowWalletBalance);
         }
 
-        let mut total_collateral = Nat::from(ZERO_VALUE);
-        let mut health_factor = Nat::from(ZERO_VALUE);
+        // let mut total_collateral = Nat::from(ZERO_VALUE);
+        // let mut health_factor = Nat::from(ZERO_VALUE);
 
-        match calculate_user_account_data(Some(user)).await {
+        // match calculate_user_account_data(Some(user)).await {
+        //     Ok((
+        //         t_collateral,
+        //         _t_debt,
+        //         _ltv,
+        //         _liquidation_threshold,
+        //         h_factor,
+        //         _a_borrow,
+        //         _zero_ltv_collateral,
+        //     )) => {
+        //         total_collateral = t_collateral;
+        //         health_factor = h_factor;
+
+        //         ic_cdk::println!("total collateral = {}", total_collateral);
+        //         ic_cdk::println!("Health Factor: {}", health_factor);
+        //     }
+        //     Err(e) => {
+        //         return Err(e);
+        //     }
+        // }
+
+        let (total_collateral, health_factor) = match calculate_user_account_data(Some(user)).await {
             Ok((
                 t_collateral,
                 _t_debt,
@@ -496,21 +502,17 @@ impl ValidationLogic {
                 _a_borrow,
                 _zero_ltv_collateral,
             )) => {
-                total_collateral = t_collateral;
-                health_factor = h_factor;
-
-                ic_cdk::println!("total collateral = {}", total_collateral);
-                ic_cdk::println!("Health Factor: {}", health_factor);
+                ic_cdk::println!("total collateral = {}", t_collateral);
+                ic_cdk::println!("Health Factor: {}", h_factor);
+                (t_collateral, h_factor)
             }
-            Err(e) => {
-                return Err(e);
-            }
-        }
+            Err(e) => return Err(e),
+        };
 
         if total_collateral < reward_amount {
             return Err(Error::RewardIsHigher);
         }
-
+        ic_cdk::println!("percentage factor {:?}",health_factor.clone() / Nat::from(PERCENTAGE_FACTOR));
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             return Err(Error::USERCANNOTBELIQUIDATED);
         }

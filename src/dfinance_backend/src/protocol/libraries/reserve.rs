@@ -4,13 +4,13 @@ use crate::api::inter_canister::get_total_supply;
 use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
+use crate::constants::validators::validate_asset_image_url;
 use crate::constants::validators::validate_asset_name;
-use crate::constants::validators::validate_zero_value;
+use crate::declarations::datatypes::AssetInfo;
+use crate::declarations::datatypes::ReserveCache;
+use crate::declarations::datatypes::ReserveData;
 use crate::declarations::datatypes::UserReserveData;
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
-use crate::declarations::structs::AssetInfo;
-use crate::declarations::structs::ReserveCache;
-use crate::declarations::structs::ReserveData;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use crate::guards::access_control::guard_admin_only;
 use crate::protocol::libraries::interest_rate::{
@@ -22,7 +22,6 @@ use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
-use ic_cdk::api::time;
 use ic_cdk::update;
 
 impl Default for AccrueToTreasuryLocalVars {
@@ -186,10 +185,7 @@ pub async fn update_interest_rates(
     ic_cdk::println!("curr debt {}", reserve_cache.curr_debt);
     ic_cdk::println!("next debt index {}", reserve_cache.next_debt_index);
 
-    let asset = reserve_data
-        .asset_name
-        .clone()
-        .unwrap_or("no token".to_string());
+    let asset = reserve_data.asset_name.clone();
     let interest_rate_params = initialize_interest_rate_params(&asset);
     ic_cdk::println!("interest rate params {:?}", interest_rate_params);
     ic_cdk::println!("total debt: {:?}", total_debt);
@@ -200,7 +196,7 @@ pub async fn update_interest_rates(
         total_debt,
         &interest_rate_params,
         reserve_cache.reserve_factor.clone(),
-        reserve_data.asset_name.clone().expect("no name"),
+        reserve_data.asset_name.clone(),
     )
     .await?;
 
@@ -261,8 +257,8 @@ pub async fn burn_scaled(
 
     let balance = get_balance(token_canister_principal, user_principal).await?;
 
-    ic_cdk::println!("adjusted balance = {}", adjusted_amount);
-    let mut balance_increase = zero_nat_value();
+    ic_cdk::println!("user balance = {}", balance);
+    let balance_increase: Nat;
     if burn_dtoken {
         is_withdraw = true;
         ic_cdk::println!("Processing DToken burn...");
@@ -472,7 +468,7 @@ pub async fn mint_scaled(
     minting_dtoken: bool,
 ) -> Result<(), Error> {
     let mut is_supply = true;
-    let mut adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
+    let adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
         && amount.clone() < Nat::from(10u128)
     {
         amount.clone().scaled_div(index.clone()) + Nat::from(ONE_VALUE) // Round up if there's a remainder
@@ -490,7 +486,7 @@ pub async fn mint_scaled(
     let balance = get_balance(token_canister_principal, user_principal).await?;
     ic_cdk::println!("Fetched balance in Nat: {:?}", balance);
 
-    let mut balance_increase = zero_nat_value();
+    let balance_increase: Nat;
     if minting_dtoken {
         println!("minting dtoken");
 
@@ -657,6 +653,7 @@ pub fn accrue_to_treasury(
  *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
+//TODO: add validation of the params.
 #[update]
 pub async fn initialize(
     token_name: String,
@@ -665,6 +662,8 @@ pub async fn initialize(
 ) -> Result<(), Error> {
     // admin only access check
     guard_admin_only()?;
+    validate_asset_name(&token_name)?;
+    validate_asset_image_url(&asset_image)?;
 
     if read_state(|state| state.reserve_list.contains_key(&token_name)) {
         return Err(Error::TokenAlreadyExist);
@@ -685,15 +684,15 @@ pub async fn initialize(
         image: asset_image,
     };
 
-    reserve_data.asset_name = Some(token_name.clone());
+    reserve_data.asset_name = token_name.clone();
     reserve_data.d_token_canister =
         match create_token_canister(d_token_name.clone(), d_token_name).await {
-            Ok(principal) => Some(principal.to_string()),
+            Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
     reserve_data.debt_token_canister =
         match create_token_canister(debt_token_name.clone(), debt_token_name).await {
-            Ok(principal) => Some(principal.to_string()),
+            Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
 
@@ -740,9 +739,9 @@ pub async fn reset_reserve_value(
 ) -> Result<(), Error> {
     guard_admin_only()?;
     validate_asset_name(&asset_name.clone())?;
-    validate_asset_name(&variable_name.clone())?;
-    //TODO: make a different function for validating the reset value because it can be zero.
-    // validate_zero_value(&reset_value)?;
+    if reset_value < zero_nat_value(){
+        return Err(Error::InvalidValue)
+    }
     // let user_principal = ic_cdk::caller();
 
     // if user_principal == Principal::anonymous() || !to_check_controller() {

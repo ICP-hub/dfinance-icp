@@ -7,11 +7,6 @@ import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import cekTH from "../../../public/assests-icon/cekTH.png";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssetData from "../../components/customHooks/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
@@ -28,7 +23,7 @@ const ITEMS_PER_PAGE = 8;
  *
  * @returns {JSX.Element} - Returns the component.
  */
-const WalletDetails = () => {
+const Market = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -47,7 +42,7 @@ const WalletDetails = () => {
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-  const { filteredItems, loading } = useAssetData(searchQuery);
+  const { filteredItems, loading ,assets,AssetImages} = useAssetData(searchQuery);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -83,8 +78,6 @@ const WalletDetails = () => {
    * =================================================================================== */
 
   const itemsPerPage = 8;
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const filteredReserveData = Object.fromEntries(filteredItems);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
@@ -93,6 +86,7 @@ const WalletDetails = () => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Function to convert string values to numbers
   const convertToNumber = (value) => {
     if (typeof value === "string") {
       const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
@@ -107,10 +101,12 @@ const WalletDetails = () => {
     return 0;
   };
 
+  // function to show search bar
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
 
+  // Function to handle the click event for the "Details" button
   const handleDetailsClick = (asset, assetData) => {
     setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
@@ -120,11 +116,13 @@ const WalletDetails = () => {
     setShowPopup(false);
   };
 
+  // function to handle search input change
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
+  // function to handle the click event for the chevron icon
   const handleChevronClick = (assetName) => {
     const selectedAssetData = currentItems.find(
       (item) => item[0] === assetName
@@ -137,12 +135,15 @@ const WalletDetails = () => {
 
   const popupRef = useRef(null);
 
+  // function to close the popup when clicking outside of it
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
     }
   };
 
+
+  // function to format value 
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -232,6 +233,7 @@ const WalletDetails = () => {
     dashboardRefreshTrigger,
   ]);
 
+  //function to show the wallet modal
   useEffect(() => {
     if (isWalletCreated) {
       navigate("/dashboard/wallet-details");
@@ -294,18 +296,17 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search assets"
               style={{ fontSize: "0.75rem" }}
-              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${
-                Showsearch
+              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                   ? "animate-fade-left flex"
                   : "animate-fade-right hidden"
-              }`}
+                }`}
               value={searchQuery}
               onChange={handleSearchInputChange}
             />
           )}
         </div>
         <svg
-          onClick={showSearchBar}
+          onClick={showSearchBar} data-testid="search-icon"
           className="cursor-pointer button"
           width="25"
           height="25"
@@ -336,8 +337,8 @@ const WalletDetails = () => {
               y2="14"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2E28A5" />
-              <stop offset="1" stop-color="#FAAA98" />
+              <stop stopColor="#2E28A5" />
+              <stop offset="1" stopColor="#FAAA98" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_293_865"
@@ -347,7 +348,7 @@ const WalletDetails = () => {
               y2="13.75"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#C88A9B" />
+              <stop stopColor="#C88A9B" />
             </linearGradient>
           </defs>
         </svg>
@@ -358,9 +359,8 @@ const WalletDetails = () => {
           name="search"
           id="search"
           placeholder="Search assets"
-          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${
-            Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
-          }`}
+          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
+            }`}
           value={searchQuery}
           onChange={handleSearchInputChange}
         />
@@ -389,11 +389,10 @@ const WalletDetails = () => {
                     {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td key={index} className=" whitespace-nowrap">
                         <div
-                          className={`flex ${
-                            index === 0
+                          className={`flex ${index === 0
                               ? "justify-start sxs3:pl-2 md:pl-2"
                               : "justify-center"
-                          }`}
+                            }`}
                         >
                           {item.header}
                         </div>
@@ -425,47 +424,18 @@ const WalletDetails = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${
-                        index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                      }`}
+                        }`}
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
-                          {item[0] === "ckBTC" && (
+                        {assets?.includes(item[0]) && (
                             <img
-                              src={ckBTC}
-                              alt="ckbtc logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ckETH" && (
-                            <img
-                              src={cekTH}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ckUSDC" && (
-                            <img
-                              src={ckUSDC}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ICP" && (
-                            <img
-                              src={icp}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ckUSDT" && (
-                            <img
-                              src={ckUSDT}
-                              alt="ckusdt logo"
-                              className="w-8 h-8 rounded-full"
+                              src={AssetImages[assets?.indexOf(item[0])]}
+                              alt={`${item[0]} logo`}
+                              className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
                           {item[0]}
@@ -552,7 +522,7 @@ const WalletDetails = () => {
                               })()}
                             </p>
 
-                            {}
+                            { }
                           </div>
                           <div
                             className="lg:hidden justify-center ml-6"
@@ -560,7 +530,7 @@ const WalletDetails = () => {
                           >
                             <ChevronRight
                               size={22}
-                              color={chevronColor}
+                              color={chevronColor}   data-testid="chevron-right"
                               className="cursor-pointer"
                             />
                           </div>
@@ -572,13 +542,13 @@ const WalletDetails = () => {
                           {(Number(item?.[1]?.Ok?.current_liquidity_rate) *
                             100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(item?.[1]?.Ok?.current_liquidity_rate) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-2 align-center hidden lg:table-cell">
@@ -670,12 +640,12 @@ const WalletDetails = () => {
                           {" "}
                           {(Number(item?.[1]?.Ok?.borrow_rate) * 100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-3 align-center">
@@ -695,7 +665,7 @@ const WalletDetails = () => {
                 </tbody>
               </table>
             </div>
-            {}
+            { }
 
             {showPopup && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -707,45 +677,18 @@ const WalletDetails = () => {
                     className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                     onClick={closePopup}
                   >
-                    <X size={30} />
+                    <X size={30} data-testid="x-icon" />
                   </button>
                   <div>
                     <div className="flex gap-2 justify-start items-center ">
-                      {selectedAssetData[0] === "ckBTC" && (
+                      {assets?.includes(selectedAssetData[0]) && (
                         <img
-                          src={ckBTC}
-                          alt="ckBTC logo"
-                          className="w-8 h-8 rounded-full"
+                          src={AssetImages[selectedAssetData[0]]} // Use the selected asset's image
+                          alt={`${selectedAssetData[0]} logo`}
+                          className="w-8 h-8 rounded-full mr-2"
                         />
                       )}
-                      {selectedAssetData[0] === "ckETH" && (
-                        <img
-                          src={cekTH}
-                          alt="ckETH logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
-                      {selectedAssetData[0] === "ckUSDC" && (
-                        <img
-                          src={ckUSDC}
-                          alt="ckUSDC logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
-                      {selectedAssetData[0] === "ckUSDT" && (
-                        <img
-                          src={ckUSDT}
-                          alt="ckUSDT logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
-                      {selectedAssetData[0] === "ICP" && (
-                        <img
-                          src={icp}
-                          alt="ICP logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
+
                       <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">
                         {selectedAssetData[0]}
                       </p>
@@ -760,7 +703,7 @@ const WalletDetails = () => {
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
                               Number(selectedAssetData[1].Ok.asset_supply) /
-                                100000000
+                              100000000
                             )}
                           </p>
 
@@ -769,7 +712,7 @@ const WalletDetails = () => {
                             {formatValue(
                               (Number(selectedAssetData[1].Ok.asset_supply) /
                                 100000000) *
-                                getUsdRate(selectedAssetData[0])
+                              getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -785,15 +728,15 @@ const WalletDetails = () => {
                           ) *
                             100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(
-                                  selectedAssetData[1].Ok.current_liquidity_rate
-                                ) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(
+                                selectedAssetData[1].Ok.current_liquidity_rate
+                              ) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
 
@@ -805,7 +748,7 @@ const WalletDetails = () => {
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
                               Number(selectedAssetData[1].Ok.asset_borrow) /
-                                100000000
+                              100000000
                             )}
                           </p>
 
@@ -814,7 +757,7 @@ const WalletDetails = () => {
                             {formatValue(
                               (Number(selectedAssetData[1].Ok.asset_borrow) /
                                 100000000) *
-                                getUsdRate(selectedAssetData[0])
+                              getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -826,13 +769,13 @@ const WalletDetails = () => {
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {(Number(selectedAssetData[1].Ok.borrow_rate) * 100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(selectedAssetData[1].Ok.borrow_rate) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(selectedAssetData[1].Ok.borrow_rate) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
                     </div>
@@ -868,4 +811,4 @@ const WalletDetails = () => {
   );
 };
 
-export default WalletDetails;
+export default Market;

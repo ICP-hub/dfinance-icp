@@ -26,5 +26,5 @@
   },
   "include": [
     "src"
-, "src/pages/Governance/DFinanceGov.jsx"  ]
+, "src/pages/Governance/DFinanceGov.jsx", "jest.config.mjs", "jest.setup.mjs"  ]
 }

@@ -39,7 +39,8 @@
     "prebuild": "dfx generate",
     "setup": "npm i && dfx canister create dfinance_backend && dfx generate dfinance_backend && dfx deploy",
     "start": "vite --port 3000",
-    "test": "vitest run"
+    "test": "jest --config jest.config.mjs",
+"test:watch": "jest --watch --config jest.config.mjs"
   },
   "type": "module",
   "version": "0.0.0",

@@ -1,10 +1,6 @@
 use pocket_ic::{PocketIc, WasmResult};
-use candid::Nat;
-use candid::{encode_args, encode_one, Principal};
-use crate::utils::constant_variables::*;
+use candid::{encode_one, Principal};
 use crate::utils::error as errors;
-use crate::utils::structs::*;
-use crate::utils::common_functions::*;
 /*
  * @title Register User
  * @notice Calls `register_user` in the backend and logs the result.
@@ -18,6 +14,7 @@ use crate::utils::common_functions::*;
  * @param backend_canister Backend canister principal.
  * @param user_principal User principal.
  */
+#[allow(dead_code)]
 pub fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_principal: Principal) {
     let result = pic.update_call(
         backend_canister,

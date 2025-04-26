@@ -3,7 +3,6 @@ use crate::guards::access_control::guard_admin_only;
 use candid::Nat;
 use candid::Principal;
 use crate::constants::validators::validate_zero_value;
-// use crate::guards::access_control::{guard_prevent_anonymous,to_check_controller};
 use ic_cdk::update;
 use crate::stable_storage::state_handler::mutate_state;
 use crate::declarations::datatypes::SessionStorageData;

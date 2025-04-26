@@ -1,8 +1,7 @@
-use candid::{CandidType, Deserialize, Nat};
-use serde::Serialize;
+use candid::Principal;
+use candid::Nat;
 use std::ops::Mul;
 mod utils;
-use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
@@ -520,10 +519,10 @@ async fn test_calculate_interest_rates() {
             variable_rate_slope2: Nat::from(4u128),
         },
         reserve: ReserveData {
-            asset_name: Some("TestAsset".to_string()),
+            asset_name: "TestAsset".to_string(),
             id: 1,
-            d_token_canister: Some("canister1".to_string()),
-            debt_token_canister: Some("canister2".to_string()),
+            d_token_canister: Principal::from_text("canister1").ok(),
+            debt_token_canister: Principal::from_text("canister2").ok(),
             borrow_rate: Nat::from(5u128),
             current_liquidity_rate: Nat::from(2u128),
             asset_supply: Nat::from(10_000u128),
@@ -645,10 +644,10 @@ async fn test_accrue_to_treasury() {
 
     let test_cases = vec![TestCase {
         reserve_data: ReserveData {
-            asset_name: Some("TestAsset".to_string()),
+            asset_name: "TestAsset".to_string(),
             id: 1,
-            d_token_canister: Some("canister1".to_string()),
-            debt_token_canister: Some("canister2".to_string()),
+            d_token_canister: Principal::from_text("canister1").ok(),
+            debt_token_canister: Principal::from_text("canister2").ok(),
             borrow_rate: Nat::from(5u128),
             current_liquidity_rate: Nat::from(2u128),
             asset_supply: Nat::from(10_000u128),

@@ -1,5 +1,5 @@
 
-use super::{data_types::zero_nat_value, interest_variables::constants::MAX_ASSET_LENGTH};
+use super::{constant_variables::constants::MAX_ASSET_LENGTH, data_types::zero_nat_value};
 use crate::constants::errors::Error;
 
 
@@ -14,6 +14,14 @@ pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
       ic_cdk::println!("Asset must have a maximum length of {} characters", MAX_ASSET_LENGTH);
       return Err(Error::InvalidAssetLength);
   }
+
+  Ok(())
+}
+
+pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
+  if !asset_image_url.starts_with("http://") && !asset_image_url.starts_with("https://") {
+    return Err(Error::InvalidAssetImageUrl);
+}
 
   Ok(())
 }

@@ -1,7 +1,6 @@
 use pocket_ic::{PocketIc, WasmResult};
 use candid::Nat;
-use candid::{encode_args, encode_one, Principal};
-use crate::utils::constant_variables::*;
+use candid::{encode_one, Principal};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::common_functions::*;
@@ -148,7 +147,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-    let user_principal = get_user_principal();
+    // let user_principal = get_user_principal();
     ic_cdk::println!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );

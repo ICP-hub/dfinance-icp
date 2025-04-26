@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Drawer, useMediaQuery } from "@mui/material";
+import { Drawer } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -42,13 +42,13 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_supply");
+  const { isBlocked } = useFunctionBlockStatus();
   const theme = useSelector((state) => state.theme.theme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
     assets,
-
+    AssetImages
   } = useAssetData();
   const { isAuthenticated, principal, accountIdString } = useAuth();
   const ledgerActors = useSelector((state) => state.ledger);
@@ -75,6 +75,7 @@ const MobileTopNav = ({
    * =================================================================================== */
   const isMobile2 = window.innerWidth <= 640;
 
+  // copy principal ID to clipboard
   const copyToClipboard = () => {
     if (principal) {
       navigator.clipboard
@@ -105,7 +106,7 @@ const MobileTopNav = ({
         });
     }
   };
-
+  //truncate principal ID
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
@@ -125,7 +126,6 @@ const MobileTopNav = ({
   const [maxClicked, setMaxClicked] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const {
 
     fetchConversionRate,
@@ -173,6 +173,8 @@ const MobileTopNav = ({
     ckUSDC: ckUSDCBalance,
   };
   const supplyBalance = assetBalances[asset] || 0;
+
+  // handle approve function
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -241,6 +243,7 @@ const MobileTopNav = ({
     }
   };
 
+  //transfer function
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -393,8 +396,9 @@ const MobileTopNav = ({
     }
   };
 
+  // Handle transfer exception
   const handleTransferException = (error) => {
-    const message = error.message || "Supply action failed!";
+    const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
 
     const msgLower = message.toLowerCase();
@@ -424,18 +428,6 @@ const MobileTopNav = ({
       message.includes("Reject text: Canister")
     ) {
       toast.error("Canister is out of cycles. Admin has been notified.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-
-    } else if (msgLower.includes("supplycapexceeded")) {
-      toast.error("Supply cap is exceeded.", {
         className: "custom-toast",
         position: "top-center",
         autoClose: 5000,
@@ -501,7 +493,7 @@ const MobileTopNav = ({
   };
 
   const handleTour = () => {
-    console.log("button triggered");
+
     dispatch(joyRideTrigger());
     handleClose();
     navigate("/dashboard");
@@ -529,32 +521,21 @@ const MobileTopNav = ({
     setReceiverAddress(value);
     validateReceiverAddress(value);
   };
-  const handleCloseDropdownOnScroll = () => {
-    setSwitchTokenDrop(false);
-    setSwitchWalletDrop(false);
-    setIsPopupVisible(false);
-    setDropdownVisible(false);
-    
-  };
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-useEffect(() => {
-    window.addEventListener("scroll", handleCloseDropdownOnScroll);
-    return () => {
-      window.removeEventListener("scroll", handleCloseDropdownOnScroll);
-    };
-  }, []);
+
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
-  
+
     if (shouldLockScroll) {
-      document.body.style.overflow = "hidden"; 
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ""; 
+      document.body.style.overflow = "";
     }
-  
-   
+
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -1000,11 +981,13 @@ useEffect(() => {
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="flex items-center gap-2 focus:outline-none"
                           >
-                            <img
-                              src={assetImages[asset]}
-                              alt="Asset Icon"
-                              className="object-fill w-6 h-6 rounded-full"
-                            />
+                            {asset && (
+                                            <img
+                                              src={AssetImages[assets.indexOf(asset)]} // Dynamically fetch image from AssetImages using assetIndex
+                                              alt={asset}
+                                              className="object-fill w-6 h-6 rounded-full"
+                                            />
+                                          )}
                             <span className="text-lg">{asset}</span>
                             <svg
                               className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
@@ -1029,30 +1012,39 @@ useEffect(() => {
                               }}
                             >
                               <div className="absolute right-[40px]  mt-20 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
-                                <div className="py-1">
-                                  {assets.map((a) => (
-                                    <button
-                                      key={a}
-                                      className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/30 "
-                                      onClick={() => {
+                              <div className="py-1">
+                                                {assets.map((a) => {
+                                                  const assetIndex = assets.indexOf(a); // Get the index of the asset in the assets array
 
-                                        if (a !== asset) {
-                                          setAmount("");
-                                          setMaxClicked(false);
-                                        }
-                                        setAsset(a);
-                                        setIsDropdownOpen(false);
-                                      }}
-                                    >
-                                      <img
-                                        src={assetImages[a]}
-                                        alt={a}
-                                        className="w-5 h-5 rounded-full"
-                                      />
-                                      <span>{a}</span>
-                                    </button>
-                                  ))}
-                                </div>
+                                                  return (
+                                                    <button
+                                                      key={a}
+                                                      className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
+                                                      onClick={() => {
+                                                        // Clear amount when selecting a different asset
+                                                        if (a !== asset) {
+                                                          setAmount("");
+                                                          setMaxClicked(false);
+                                                        }
+                                                        setAsset(a);
+                                                        setIsDropdownOpen(false);
+                                                      }}
+                                                    >
+                                                      {/* Conditionally render the image using assetIndex */}
+                                                      {assetIndex !== -1 && AssetImages[assetIndex] && (
+                                                        <img
+                                                          key={assetIndex}
+                                                          src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
+                                                          alt={a || "asset"} // alt text should match the asset name
+                                                          className="rounded-full w-5 h-5 mt-1"
+                                                        />
+                                                      )}
+
+                                                      <span>{a}</span>
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
                               </div>
                             </div>
                           )}
@@ -1138,7 +1130,6 @@ useEffect(() => {
                       onClick={() => !isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                         isLoading ||
-                        isButtonDisabled ||
                         amount <= 0 ||
                         supplyBalance <= 0 ||
                         amount > supplyBalance
@@ -1160,7 +1151,6 @@ useEffect(() => {
                     <button
                       onClick={() => isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                        isButtonDisabled ||
                         isLoading ||
                         amount <= 0 ||
                         supplyBalance <= 0 ||

@@ -75,8 +75,7 @@ const DashboardCards = () => {
   const radioRefs = {};
   const [filteredData, setFilteredData] = useState(null);
   const [userAccountData, setUserAccountData] = useState({});
-  const [userData, setUserData] = useState({});
-  const [assetBalance, setAssetBalances] = useState([]);
+
   const [healthFactors, setHealthFactors] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const { isSwitchingWallet } = useSelector((state) => state.utility);
@@ -116,25 +115,42 @@ const DashboardCards = () => {
   /**
    * Checks the controller status from the backend.
    */
-  const checkControllerStatus = async () => {
+  const checkController = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+
     try {
-      const result = await backendActor.to_check_controller();
-      console.log("Controller Status:", result);
-      setLike(result);
-    } catch (err) {
-      console.error("Error fetching controller status:", err);
-      setError("Failed to fetch controller status");
+      const result = await backendActor.guard_admin_only();
+
+      if ("Ok" in result) {
+        setLike(true); // Admin verified
+      } else {
+        console.warn("Not an admin:", result.Err);
+        setLike(false); // Not admin
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error.message);
+      setError(error.message);
+      setLike(false); // Fallback to false
+
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
     }
   };
 
+
   useEffect(() => {
-    checkControllerStatus();
+    checkController();
   }, [backendActor]);
 
-  const { filteredItems, interestAccure, assets } = useAssetData(searchQuery);
+  const { filteredItems, interestAccure, assets, AssetImages } = useAssetData(searchQuery);
+
+  const poolAssets = assets.map((name, index) => ({
+    name,
+    imageUrl: AssetImages[index],
+  }));
 
   const getTotalUser = async () => {
     if (!backendActor) {
@@ -143,7 +159,6 @@ const DashboardCards = () => {
     }
     try {
       const totalUser = await backendActor.get_total_users();
-      console.log("gettotaluser", totalUser);
       setTotalUsers(totalUser);
     } catch (error) {
       console.error("Error fetching total users:", error);
@@ -151,13 +166,7 @@ const DashboardCards = () => {
     }
   };
 
-  const poolAssets = [
-    { name: "ckBTC", imageUrl: ckBTC },
-    { name: "ckETH", imageUrl: ckETH },
-    { name: "ckUSDC", imageUrl: ckUSDC },
-    { name: "ckUSDT", imageUrl: ckUSDT },
-    { name: "ICP", imageUrl: icp },
-  ];
+
 
   const [cardData, setCardData] = useState([
     {
@@ -183,10 +192,10 @@ const DashboardCards = () => {
     });
   };
 
+  // Function to fetch all users from the backend
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
       const result = await backendActor.get_all_user_list(totalPages, pageSize);
-      console.log("result:", result);
 
       if (!result.Ok || !Array.isArray(result.Ok)) {
         throw new Error("Unexpected response format");
@@ -205,8 +214,6 @@ const DashboardCards = () => {
           userData: userData,
         })
       );
-
-      console.log("parsedResult", parsedResult);
 
       const structuredData = parsedResult.reduce((acc, user) => {
         if (user.principal && user.principal !== "Unknown_Principal") {
@@ -244,10 +251,8 @@ const DashboardCards = () => {
     }
 
     const response = await backendActor.cycle_checker();
-    console.log("Raw response from cycle_checker:", response);
 
     const cycles = response.Ok ?? "Error retrieving cycles";
-    console.log("Extracted cycle value:", cycles);
 
     return cycles.toString();
   };
@@ -285,8 +290,6 @@ const DashboardCards = () => {
         templateParams,
         "uWDc83b20aMxTTyrz"
       );
-
-      console.log("Email sent successfully.");
     } catch (err) {
       console.error("Failed to send email:", err);
     }
@@ -302,7 +305,6 @@ const DashboardCards = () => {
    */
   const handleNotification = (currentCycles, assetBalance) => {
     const oneDay = 24 * 60 * 60 * 1000;
-    console.log("Handling notification for cycles:", currentCycles);
 
     const sendWarningEmail = async () => {
       const htmlMessage = `
@@ -311,7 +313,6 @@ const DashboardCards = () => {
    Threshold : ${formatNumber(threshold + 2000000000000)}
     `;
       try {
-        console.log("Sending warning email...");
         await sendEmailNotification("Cycle Warning", htmlMessage);
         lastWarningEmailTimestamp = Date.now();
       } catch (error) {
@@ -326,7 +327,6 @@ const DashboardCards = () => {
       Threshold: ${formatNumber(threshold)}
     `;
       try {
-        console.log("Sending exhausted email...");
         await sendEmailNotification("Cycle Exhausted", htmlMessage);
         lastExhaustedEmailTimestamp = Date.now();
       } catch (error) {
@@ -335,24 +335,16 @@ const DashboardCards = () => {
     };
 
     if (emailInterval) {
-      console.log("Clearing previous interval...");
       clearInterval(emailInterval);
     }
 
     emailInterval = setInterval(async () => {
-      console.log("Interval triggered. Checking conditions...");
-      console.log("currentCycles", currentCycles);
-      console.log("threshold", threshold);
       if (currentCycles <= threshold) {
-        console.log("Cycles are exhausted. Sending exhausted email...");
         await sendExhaustedEmail();
       } else if (
         currentCycles > threshold &&
         currentCycles < threshold + 2000000000000
       ) {
-        console.log(
-          "Cycles are nearing the safe threshold. Sending warning email..."
-        );
         await sendWarningEmail();
       }
     }, oneDay);
@@ -361,7 +353,6 @@ const DashboardCards = () => {
   const onCycleUpdate = async () => {
     try {
       const newCycles = await getCycles();
-      console.log("Cycle count updated:", newCycles);
 
       handleTokenNotification(newCycles);
     } catch (error) {
@@ -416,7 +407,6 @@ const DashboardCards = () => {
 
     emailInterval = setInterval(async () => {
       if (assetBalance <= tokenThreshold) {
-        console.log("Token balance is exhausted. Sending exhausted email...");
         await sendTokenExhaustedEmail();
       } else if (
         assetBalance > tokenThreshold &&
@@ -426,6 +416,8 @@ const DashboardCards = () => {
       }
     }, oneDay);
   };
+
+  // Function to format numbers with commas
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -443,6 +435,7 @@ const DashboardCards = () => {
     return num.toFixed(2);
   };
 
+  // Function to manage color and theme
   const theme = useSelector((state) => state.theme.theme);
   const borderColor = theme === "dark" ? "#0F172A" : "#D379AB66";
   const validValues = [
@@ -455,6 +448,7 @@ const DashboardCards = () => {
 
   const normalize = (value) => (value > 0 ? (value / total) * 100 : 0);
 
+  // Create the pie chart data
   const pieData = {
     labels: ["<1", ">1", "Infinity"],
     datasets: [
@@ -503,11 +497,12 @@ const DashboardCards = () => {
     },
   };
 
+  // Function to handle token updates and notifications
   const onTokenUpdate = (newBalance) => {
-    console.log("Balance count updated:", newBalance);
     handleTokenNotification(newBalance);
   };
 
+  // Function to handle token balances and send notifications
   const handleTokenBalances = async () => {
     for (const asset of poolAssets) {
       const assetBalance = assetBalances[asset.name];
@@ -524,28 +519,15 @@ const DashboardCards = () => {
   }, [assetBalances, tokenThreshold]);
 
   useEffect(() => {
-    console.log(
-      "Checking dependencies: totalUsers =",
-      totalUsers,
-      "interestAccure =",
-      interestAccure
-    );
-
     if (totalUsers === null || interestAccure === null) {
-      console.log("Values not available yet, skipping fetch.");
       return;
     }
 
     const fetchData = async () => {
-      console.log("Fetching data...");
-
       setLoading(true);
 
       try {
         const cycles = await getCycles();
-        console.log("totalUsers:", totalUsers);
-        console.log("Cycles:", cycles);
-        console.log("interestAccure:", interestAccure);
 
         const formattedData = [
           { title: "Users", value: totalUsers, link: "/users" },
@@ -654,6 +636,7 @@ const DashboardCards = () => {
       }
     });
   };
+
   useEffect(() => {
     if (isFreezePopupVisible) {
       document.body.style.overflow = "hidden"; // Disable scrolling
@@ -665,11 +648,11 @@ const DashboardCards = () => {
       document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
+
   useEffect(() => {
     const fetchCycles = async () => {
       try {
         const cycleValue = await getCycles();
-        console.log("cycleValue", cycleValue);
         setCycles(cycleValue);
       } catch (error) {
         console.error("Error fetching cycles:", error);
@@ -709,7 +692,7 @@ const DashboardCards = () => {
       }
     })();
   }, []);
-  
+
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -734,7 +717,7 @@ const DashboardCards = () => {
                   {card.title}
                 </h3>
                 <p className="text-4xl font-bold px-6 py-1 mt-6  text-[#233D63] dark:text-darkText">
-                  {card.value.toString()}
+                  {card?.value?.toString()}
                 </p>
                 <a
                   href="https://analytics.google.com"
@@ -895,11 +878,10 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                  }`}
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -942,11 +924,11 @@ const DashboardCards = () => {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Asset Header */}
-                    <div className="flex items-center lg:gap-4 mb-3 gap-2 ">
+                    <div className="flex items-center lg:gap-2 mb-3 gap-2 ">
                       <img
                         src={selectedAsset.imageUrl}
                         alt={selectedAsset.name}
-                        className=" w-8 h-8 lg:w-10 lg:h-10 object-contain rounded-full"
+                        className=" w-6 h-6 lg:w-8 lg:h-8 object-contain rounded-full"
                       />
                       <h3 className=" text-lg lg:text-xl font-bold">
                         {selectedAsset.name}
@@ -991,7 +973,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -1007,7 +989,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

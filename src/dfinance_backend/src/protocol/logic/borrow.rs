@@ -8,7 +8,7 @@ use crate::constants::interest_variables::constants::{
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::stable_storage::storable::Candid;
 use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
+use crate::guards::access_control::guard_prevent_anonymous;
 use crate::protocol::libraries::reserve::{self};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
@@ -17,8 +17,8 @@ use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::guards::locks::CallerGuard;
-use crate::guards::api_limitor::request_limiter;
+use crate::guards::locks_handler::CallerGuard;
+use crate::guards::api_limiter::request_limiter;
 
 /*
 -------------------------------------
@@ -228,7 +228,6 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     // guard to prevent anonymous access
     guard_prevent_anonymous()?;
 
-    // for user. TODO: we can put this one as well as in guard file as function.
     if params.on_behalf_of == Some(Principal::anonymous()) {
         return Err(Error::AnonymousPrincipal);
     }

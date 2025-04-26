@@ -4,10 +4,10 @@ use serde::Serialize;
 
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
-    pub asset_name: Option<String>,
+    pub asset_name: String,
     pub id: u16,
-    pub d_token_canister: Option<String>,
-    pub debt_token_canister: Option<String>,
+    pub d_token_canister: Option<Principal>,
+    pub debt_token_canister: Option<Principal>,
     pub borrow_rate: Nat,
     pub current_liquidity_rate: Nat,
     pub asset_supply: Nat,
@@ -80,10 +80,10 @@ pub enum TransferFromError {
     InsufficientFunds { balance: Nat },
 }
 
-#[derive(CandidType)]
-pub enum LedgerArgument {
-    Init(InitArgs),
-}
+// #[derive(CandidType)]
+// pub enum LedgerArgument {
+//     Init(InitArgs),
+// }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct Account {
@@ -241,6 +241,7 @@ pub struct ReserveCache {
     pub curr_supply: Nat,
 }
 
+#[allow(dead_code)]
 pub struct AccrueToTreasuryLocalVars {
     pub prev_total_variable_debt: Nat,
     pub curr_total_variable_debt: Nat,

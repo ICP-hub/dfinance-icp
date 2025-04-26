@@ -31,14 +31,14 @@ const ThemeToggle = () => {
       onClick={handleToggle}
       className="flex items-center p-1 rounded-md button1"
     >
-    
-        <div className="flex items-center justify-center p-[2px] rounded-lg w-[45px] h-[45px]">
-          {theme === 'dark' ? (
-            <img src={Sun} alt="Sun Icon" className="w-full h-full" />
-          ) : (
-            <img src={Moon} alt="Moon Icon" className="w-full h-full" />
-          )}
-        </div>
+
+      <div className="flex items-center justify-center p-[2px] rounded-lg w-[45px] h-[45px]">
+        {theme === 'dark' ? (
+          <img src={Sun} alt="Sun Icon" className="w-full h-full" />
+        ) : (
+          <img src={Moon} alt="Moon Icon" className="w-full h-full" />
+        )}
+      </div>
     </button>
   );
 };

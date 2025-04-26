@@ -24,8 +24,7 @@ const useRealTimeConversionRate = (asset) => {
           throw new Error("Backend actor is not available");
         }
         const result = await backendActor.get_cached_exchange_rate(asset);
-        console.log("result of exchange rate: ", result);
-        
+
         if (result?.Ok !== undefined) {
           setConversionRate(result.Ok);
         } else {

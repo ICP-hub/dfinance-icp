@@ -4,9 +4,9 @@ const initialState = {
   isWalletConnected: false,
   isWalletModalOpen: false,
   assetDetailFilter: "Supply Info",
-  isTestnetMode: false, 
+  isTestnetMode: false,
   connectedWallet: null,
-  isSwitchingWallet: false, 
+  isSwitchingWallet: false,
 }
 
 const utilitySlice = createSlice({
@@ -29,7 +29,7 @@ const utilitySlice = createSlice({
 
     setConnectedWallet: (state, action) => {
       state.connectedWallet = action.payload;
-      localStorage.setItem("connectedWallet", action.payload); 
+      localStorage.setItem("connectedWallet", action.payload);
     },
 
     disconnectWallet: (state) => {
@@ -43,13 +43,13 @@ const utilitySlice = createSlice({
   },
 })
 
-export const { 
-  setIsWalletConnected, 
-  setAssetDetailFilter, 
-  setWalletModalOpen, 
-  setConnectedWallet, 
-  disconnectWallet, 
-  setIsSwitchingWallet 
+export const {
+  setIsWalletConnected,
+  setAssetDetailFilter,
+  setWalletModalOpen,
+  setConnectedWallet,
+  disconnectWallet,
+  setIsSwitchingWallet
 } = utilitySlice.actions;
 
 export default utilitySlice.reducer;

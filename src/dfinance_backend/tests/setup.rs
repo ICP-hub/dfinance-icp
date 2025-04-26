@@ -9,7 +9,6 @@ use crate::logic_testing::supply_testing::test_supply;
 use crate::logic_testing::liquidation_test::test_liquidation;
 use crate::logic_testing::repay_test::test_repay;
 use crate::logic_testing::withdraw_test::test_withdraw;
-use crate::logic_testing::register_user::test_register_user;
 use crate::logic_testing::borrow_testing::test_borrow;
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
@@ -79,9 +78,9 @@ pub fn setup() -> (PocketIc, Principal) {
     test_add_tester(&pic, backend_canister, user_principal, user_principal);
 
     // 🔹 Define test input (token name + reserve data)
-    let ICP_token_name = "ICP".to_string();
-    let ICP_reserve_data = ReserveData {
-        asset_name: Some(ICP_token_name.clone()),
+    let icp_token_name = "ICP".to_string();
+    let icp_reserve_data = ReserveData {
+        asset_name: icp_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -109,9 +108,9 @@ pub fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckBTC_token_name = "ckBTC".to_string();
-    let ckBTC_reserve_data = ReserveData {
-        asset_name: Some(ckBTC_token_name.clone()),
+    let ck_btc_token_name = "ckBTC".to_string();
+    let ck_btc_reserve_data = ReserveData {
+        asset_name: ck_btc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -139,9 +138,9 @@ pub fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckETH_token_name = "ckETH".to_string();
-    let ckETH_reserve_data = ReserveData {
-        asset_name: Some(ckETH_token_name.clone()),
+    let ck_eth_token_name = "ckETH".to_string();
+    let ck_eth_reserve_data = ReserveData {
+        asset_name: ck_eth_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -169,9 +168,9 @@ pub fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDC_token_name = "ckUSDC".to_string();
-    let ckUSDC_reserve_data = ReserveData {
-        asset_name: Some(ckUSDC_token_name.clone()),
+    let ck_usdc_token_name = "ckUSDC".to_string();
+    let ck_usdc_reserve_data = ReserveData {
+        asset_name: ck_usdc_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -199,9 +198,9 @@ pub fn setup() -> (PocketIc, Principal) {
         accure_to_platform: Nat::from(ZERO_VALUE),
     };
 
-    let ckUSDT_token_name = "ckUSDT".to_string();
-    let ckUSDT_reserve_data = ReserveData {
-        asset_name: Some(ckUSDT_token_name.clone()),
+    let ck_usdt_token_name = "ckUSDT".to_string();
+    let ck_usdt_reserve_data = ReserveData {
+        asset_name: ck_usdt_token_name.clone(),
         id: 1,
         d_token_canister: None,
         debt_token_canister: None,
@@ -231,11 +230,11 @@ pub fn setup() -> (PocketIc, Principal) {
 
     let mut reserve_tokens_map: HashMap<String, ReserveData> = HashMap::new();
 
-    reserve_tokens_map.insert(ICP_token_name, ICP_reserve_data);
-    reserve_tokens_map.insert(ckBTC_token_name, ckBTC_reserve_data);
-    reserve_tokens_map.insert(ckETH_token_name, ckETH_reserve_data);
-    reserve_tokens_map.insert(ckUSDC_token_name, ckUSDC_reserve_data);
-    reserve_tokens_map.insert(ckUSDT_token_name, ckUSDT_reserve_data);
+    reserve_tokens_map.insert(icp_token_name, icp_reserve_data);
+    reserve_tokens_map.insert(ck_btc_token_name, ck_btc_reserve_data);
+    reserve_tokens_map.insert(ck_eth_token_name, ck_eth_reserve_data);
+    reserve_tokens_map.insert(ck_usdc_token_name, ck_usdc_reserve_data);
+    reserve_tokens_map.insert(ck_usdt_token_name, ck_usdt_reserve_data);
 
     /*
      * @title Initialize Tokens
@@ -247,7 +246,7 @@ pub fn setup() -> (PocketIc, Principal) {
             backend_canister,
             user_principal,
             "initialize",
-            encode_args((token_name, reserve_data, "")).unwrap(),
+            encode_args((token_name, reserve_data, "https://storage.googleapis.com/dfinance/ICPMARKET.png")).unwrap(),
         );
 
         match result {
@@ -278,21 +277,6 @@ pub fn setup() -> (PocketIc, Principal) {
     }
 
     /*
-     * @title Register Users
-     * @notice Registers users to participate in liquidation testing.
-     * @dev Adds the primary user and test users (1 to 5).
-     */
-    test_register_user(&pic, backend_canister, user_principal);
-    for num in 1..=5 {
-        let index: u32 = num as u32;
-        test_register_user(
-            &pic,
-            backend_canister,
-            get_users_principal(Nat::from(index)).unwrap(),
-        );
-    }
-
-    /*
      * @title Add Testers
      * @notice Registers testers to validate liquidation scenarios.
      * @dev Adds the primary user and test users (1 to 5).
@@ -307,6 +291,21 @@ pub fn setup() -> (PocketIc, Principal) {
             get_users_principal(Nat::from(index)).unwrap(),
         );
     }
+
+    /*
+     * @title Register Users
+     * @notice Registers users to participate in liquidation testing.
+     * @dev Adds the primary user and test users (1 to 5).
+     */
+    // test_register_user(&pic, backend_canister, user_principal);
+    // for num in 1..=5 {
+    //     let index: u32 = num as u32;
+    //     test_register_user(
+    //         &pic,
+    //         backend_canister,
+    //         get_users_principal(Nat::from(index)).unwrap(),
+    //     );
+    // }
 
     /*
      * @title Update Reserve Price

@@ -29,9 +29,8 @@ const MySupplyModal = ({
       >
         <Fade in={isModalOpen}>
           <div
-            className={`relative w-[325px] lg1:w-[420px] bg-white shadow-xl rounded-xl p-6 text-[#2A1F9D] dark:bg-darkOverlayBackground dark:text-darkText font-poppins ${
-              isLoading ? "pointer-events-none opacity-50" : ""
-            }`}
+            className={`relative w-[325px] lg1:w-[420px] bg-white shadow-xl rounded-xl p-6 text-[#2A1F9D] dark:bg-darkOverlayBackground dark:text-darkText font-poppins ${isLoading ? "pointer-events-none opacity-50" : ""
+              }`}
           >
             {children}
             {isLoading && (

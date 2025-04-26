@@ -76,7 +76,24 @@ pub enum Error {
     TOOMANYREQUESTS,
     BLOCKEDFORONEHOUR,
     FeeExceedsAmount ,
-    AmountLockAcquisitionFailed
+    LiquidationProtocolfeeIsHigher,
+    RateLimitExceeded,
+    AdminAlreadyExists,
+    DeveloperAlreadyExists,
+    SupportAlreadyExists,
+    AuditorAlreadyExists,
+    DeveloperNotFound,
+    SupportNotFound,
+    AuditorNotFound,
+    NotADeveloper,
+    NotASupport,
+    NotAnAuditor,
+    AdminNotFound,
+    ControllerNotFound,
+    InvalidValue,
+    NoFaucetReservesFound,
+    InvalidAssetImageUrl,
+    UserFaucetReserveNotFound
 }
 
 impl Error {
@@ -152,9 +169,25 @@ impl Error {
             Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible",
             Error::TOOMANYREQUESTS => "You are temporarily blocked",
             Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
-            Error::AmountLockAcquisitionFailed => "amount lock acquisition failed",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
-       
-        }
+            Error::LiquidationProtocolfeeIsHigher => "Liquidation protocol fee is higher",
+            Error::RateLimitExceeded => "Too many requests. Please wait and try again.",
+            Error::AdminAlreadyExists => "Admin already exists!",
+            Error::DeveloperAlreadyExists => "Developer already exists!",
+            Error::SupportAlreadyExists => "Support user already exists!",
+            Error::AuditorAlreadyExists => "Auditor already exists!",
+            Error::DeveloperNotFound => "Developer not found!",
+            Error::AdminNotFound => "Admin not found!",
+            Error::SupportNotFound => "Support user not found!",
+            Error::AuditorNotFound => "Auditor not found!",
+            Error::NotADeveloper => "Caller is not a developer!",
+            Error::NotASupport => "Caller is not a support user!",
+            Error::NotAnAuditor => "Caller is not an auditor!",
+            Error::ControllerNotFound => "Controller not found!",
+            Error::InvalidValue => "Enter value is invalid",
+            Error::NoFaucetReservesFound => "No faucet reserves found",
+            Error::UserFaucetReserveNotFound => "User faucet reserve not found",
+            Error::InvalidAssetImageUrl => "Invalid asset image URL",
+       }
     }
 }

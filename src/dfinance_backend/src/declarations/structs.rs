@@ -5,124 +5,7 @@ use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc2::transfer_from::TransferFromError;
 use icrc_ledger_types::icrc2::approve::ApproveError;
 
-/* 
- * @title Reserve Data
- * @notice Stores information about a reserve of an asset.
- * @dev This struct contains details about asset reserves, including borrowing and liquidity rates.
- * 
- * @param asset_name The name of the asset (e.g., "ICP", "BTC").
- * @param id Unique identifier for the reserve.
- * @param d_token_canister The principal ID of the dToken canister.
- * @param debt_token_canister The principal ID of the debt token canister.
- * @param borrow_rate The current borrow interest rate.
- * @param current_liquidity_rate The liquidity rate of the asset.
- * @param asset_supply The total supply of the asset in the reserve.
- * @param asset_borrow The total borrowed amount of the asset.
- * @param liquidity_index The latest liquidity index.
- * @param debt_index The latest debt index.
- * @param configuration The configuration settings for the reserve.
- * @param can_be_collateral Indicates if the asset can be used as collateral.
- * @param last_update_timestamp The last recorded update timestamp.
- * @param accure_to_platform The amount accrued to the platform.
- * 
- * @functionality Stores and tracks complete reserve metadata and on-chain accounting values.
- */
-#[derive(Debug, CandidType, Deserialize, Clone)]
-pub struct ReserveData {
-    pub asset_name: Option<String>,
-    pub id: u16,
-    pub d_token_canister: Option<String>,
-    pub debt_token_canister: Option<String>,
-    pub borrow_rate: Nat, 
-    pub current_liquidity_rate: Nat,
-    pub asset_supply: Nat,
-    pub asset_borrow: Nat,
-    pub liquidity_index: Nat,
-    pub debt_index: Nat,
-    pub configuration: ReserveConfiguration,
-    pub can_be_collateral: Option<bool>,
-    pub last_update_timestamp: u64,
-    pub accure_to_platform: Nat,
-}
 
-/* 
- * @title Reserve Cache
- * @notice Stores cached data related to a reserve of an asset.
- * @dev This struct caches important reserve data for faster access and calculations.
- * @functionality Provides temporary in-memory values used for computation and optimization.
- *
- * @param reserve_configuration The configuration details of the reserve.
- * @param curr_liquidity_index The current liquidity index.
- * @param next_liquidity_index The projected next liquidity index.
- * @param curr_liquidity_rate The current liquidity rate.
- * @param reserve_last_update_timestamp The last recorded update timestamp for the reserve.
- * @param curr_debt_index The current debt index.
- * @param next_debt_index The projected next debt index.
- * @param curr_debt_rate The current debt rate.
- * @param next_debt_rate The projected next debt rate.
- * @param debt_last_update_timestamp The last recorded update timestamp for the debt.
- * @param reserve_factor The reserve factor.
- * @param curr_debt The current total debt.
- * @param next_debt The projected next debt amount.
- * @param curr_supply The current total supply.
- */
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct ReserveCache {
-    pub reserve_configuration: ReserveConfiguration,
-    pub curr_liquidity_index: Nat,
-    pub next_liquidity_index: Nat,
-    pub curr_liquidity_rate: Nat,
-    pub reserve_last_update_timestamp: u64,
-    pub curr_debt_index: Nat,
-    pub next_debt_index: Nat,
-    pub curr_debt_rate: Nat,
-    pub next_debt_rate: Nat,
-    pub debt_last_update_timestamp: u64,
-    pub reserve_factor: Nat,
-
-    pub curr_debt: Nat,
-    pub next_debt: Nat,
-    pub curr_supply: Nat,
-   
-}
-
-/* 
- * @title Reserve Configuration
- * @notice Defines the configuration settings for a reserve of an asset.
- * @dev This struct includes parameters affecting borrowing, liquidation, and supply behavior.
- * @functionality Defines protocol-level rules and parameters for reserve behavior and risk control.
- * 
- * @param ltv The loan-to-value ratio.
- * @param liquidation_threshold The threshold for liquidation.
- * @param liquidation_bonus The penalty for liquidation.
- * @param borrowing_enabled Indicates if borrowing is enabled.
- * @param borrow_cap The maximum borrowable amount.
- * @param supply_cap The maximum supply limit.
- * @param liquidation_protocol_fee The fee charged on liquidation.
- * @param active Indicates if the reserve is currently active.
- * @param frozen Indicates if the reserve is frozen.
- * @param paused Indicates if transactions are paused.
- * @param reserve_factor The portion of interest that accrues to the protocol.
- */
-#[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
-pub struct ReserveConfiguration {
-    pub ltv: Nat,
-    pub liquidation_threshold: Nat,
-    pub liquidation_bonus: Nat,  
-    pub borrowing_enabled: bool, 
-    pub borrow_cap: Nat,   //TODO set it according to borrow
-    pub supply_cap: Nat,   //set it according to supply     
-    pub liquidation_protocol_fee: Nat, 
-    pub reserve_factor: Nat,
-}
-
-#[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
- pub struct AssetInfo {
-     pub asset_name: String,
-     pub principal_id: Principal,
-     pub symbol: String,
-     pub image:String, // Storing image as binary blob
- }
 /* 
  * @title Execute Supply Parameters
  * @notice Defines parameters required to execute a supply transaction.
@@ -189,18 +72,6 @@ pub struct ExecuteWithdrawParams {
 }
 
 /* 
- * @title Initialize Arguments
- * @notice Defines the arguments required to initialize the protocol.
- * @functionality Specifies initialization parameters when deploying the protocol canister.
- * 
- * @param controller_id The principal ID of the controller.
- */
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct InitArgs { 
-    pub controller_id: Principal   // for the test-token and dtoken cannisters which are going to be created dynamically
-}
-
-/* 
  * @title Execute Liquidation Parameters
  * @notice Defines parameters required to execute a liquidation transaction.
  * @functionality Facilitates partial liquidation of under-collateralized accounts.
@@ -239,7 +110,6 @@ pub struct AssetData{
  * @functionality Used for calculating and storing intermediate values in treasury accrual logic.
  */
 pub struct AccrueToTreasuryLocalVars {
-    //
     pub prev_total_variable_debt: Nat,
     pub curr_total_variable_debt: Nat,
     pub total_debt_accrued: Nat,
@@ -250,17 +120,17 @@ pub struct AccrueToTreasuryLocalVars {
  * @title Interest Rate Calculation Parameters
  * @dev Parameters required for calculating interest rates.
  * @functionality Provides the necessary data points to calculate dynamic interest rates based on liquidity utilization, total debt, and current borrowing rates.
- */
-#[derive(Debug, CandidType, Deserialize, Serialize)]
-pub struct CalculateInterestRatesParams {
-    pub liquidity_added: Nat,
-    pub liquidity_taken: Nat,
-    pub total_stable_debt: Nat,
-    pub total_variable_debt: Nat,
-    pub average_stable_borrow_rate: Nat,
-    pub reserve: String,
-    pub d_token: Option<String>,
-}
+//  */
+// #[derive(Debug, CandidType, Deserialize, Serialize)]
+// pub struct CalculateInterestRatesParams {
+//     pub liquidity_added: Nat,
+//     pub liquidity_taken: Nat,
+//     pub total_stable_debt: Nat,
+//     pub total_variable_debt: Nat,
+//     pub average_stable_borrow_rate: Nat,
+//     pub reserve: String,
+//     pub d_token: Option<String>,
+// }
 
 /* 
  * @title Interest Rate Parameters
@@ -367,4 +237,21 @@ pub enum ApproveResult {
 pub enum TransferFromResult {
     Ok(Nat),
     Err(TransferFromError),
+}
+
+/*
+ * @title User Account Data Structure
+ * @notice Stores financial data such as collateral, debt, and risk factors.
+ * @dev Tracks users' financial health and determines potential liquidation status.
+ * @functionality Provides comprehensive financial health metrics for a user account, including collateral-to-debt ratios, liquidation thresholds, and available borrowing capacity.
+ */
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct UserAccountData {
+    pub collateral: Nat,
+    pub debt: Nat,
+    pub ltv: Nat,
+    pub liquidation_threshold: Nat,
+    pub health_factor: Nat,
+    pub available_borrow: Nat,
+    pub has_zero_ltv_collateral: bool,
 }

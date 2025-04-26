@@ -119,6 +119,7 @@ export const useAuthClient = (options = defaultOptions) => {
     localStorage.setItem("sessionStart", Date.now());
   };
 
+  // Function to get login options based on the provider
   const getLoginOptions = (provider) => {
     switch (provider) {
       case "ii":
@@ -156,13 +157,14 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  // function to check sessionstart
   const checkSession = () => {
     const sessionStart = localStorage.getItem("sessionStart");
     if (sessionStart) {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
-        
+
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }
@@ -176,7 +178,6 @@ export const useAuthClient = (options = defaultOptions) => {
    * @param {AuthClient} client - AuthClient instance.
    */
   const updateClient = async (client) => {
-    console.log("client", client);
     try {
       const isAuthenticated = await client.isAuthenticated();
       setIsAuthenticated(isAuthenticated);
@@ -203,7 +204,7 @@ export const useAuthClient = (options = defaultOptions) => {
       );
       setBackendActor(backendActor);
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
     }
   };
 
@@ -214,15 +215,17 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   }, []);
 
+  // Function to create a ledger actor
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => {});
+      agent.fetchRootKey().catch((err) => { });
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-  
+
+  // Function to reload login
   const reloadLogin = async () => {
     try {
       if (
@@ -231,62 +234,9 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
-  // Registers user
-  const checkUser = async () => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-
-    try {
-      const identity = authClient.getIdentity();
-      if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
-        const result = await backendActor.register_user();
-        console.log("result in check user", result);
-        if (result.Ok) {
-          if (result.Ok === "User available") {
-          } else if (result.Ok === "User added") {
-          }
-        } else if (result.Err) {
-          console.error("Error from backend:", result.Err);
-          throw new Error(result.Err);
-        }
-        return result;
-      } else {
-        console.error("Anonymous principals are not allowed.");
-        throw new Error("Anonymous principals are not allowed.");
-      }
-    } catch (error) {
-      console.error("Error in checkUser:", error.message);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    const runCheckUser = async () => {
-      try {
-        if (backendActor && isAuthenticated) {
-          await checkUser();
-          sessionStorage.setItem("hasCheckedUser", "true"); // Persist flag
-        }
-      } catch (error) {
-        console.error("Error in checkUser:", error);
-      }
-    };
-  
-    if (isAuthenticated) {
-      const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
-      if (!hasCheckedUser) {
-        runCheckUser();
-      }
-    }
-  }, [backendActor, isAuthenticated]);
-  
-  
-
-  // Fetches reserve data for a specific asset
   const fetchReserveData = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -327,7 +277,6 @@ export const useAuthClient = (options = defaultOptions) => {
     reloadLogin,
     accountIdString,
     fetchReserveData,
-    checkUser,
     getAllUsers,
   };
 };

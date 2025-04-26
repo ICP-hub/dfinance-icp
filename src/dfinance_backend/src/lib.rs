@@ -128,9 +128,7 @@ fn time_until_midnight() -> Duration {
 #[update]
 pub async fn admin_restart_reset_task() -> Result<(), Error> {
     guard_admin_only()?;
-    // if !to_check_controller() {
-    //     return Err(Error::ErrorNotController);
-    // }
+    
     schedule_midnight_task().await;
     return Ok(());
 }

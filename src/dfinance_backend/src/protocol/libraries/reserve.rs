@@ -661,6 +661,7 @@ pub async fn initialize(
     asset_image: String,
 ) -> Result<(), Error> {
     // admin only access check
+    //TODO: add validation for the reserve data.
     guard_admin_only()?;
     validate_asset_name(&token_name)?;
     validate_asset_image_url(&asset_image)?;
@@ -742,12 +743,6 @@ pub async fn reset_reserve_value(
     if reset_value < zero_nat_value(){
         return Err(Error::InvalidValue)
     }
-    // let user_principal = ic_cdk::caller();
-
-    // if user_principal == Principal::anonymous() || !to_check_controller() {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::InvalidPrincipal);
-    // }
 
     let mut reserve_data = mutate_state(|state| {
         let asset_index = &mut state.asset_index;

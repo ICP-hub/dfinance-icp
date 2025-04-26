@@ -112,6 +112,17 @@ pub struct ReserveConfiguration {
     pub reserve_factor: Nat,
 }
 
+/*
+ * @title Asset Information
+ * @notice Contains metadata about an asset.
+ * @dev This struct includes the asset's name, symbol, and associated principal ID.
+ * @functionality Provides a simple representation of asset metadata for easy access and display.
+ *
+ * @param asset_name The name of the asset (e.g., "ICP", "BTC").
+ * @param principal_id The principal ID associated with the asset.
+ * @param symbol The symbol representing the asset (e.g., "ICP", "BTC").
+ * @param image The URL or path to the asset's image.
+ */
 #[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct AssetInfo {
     pub asset_name: String,
@@ -156,6 +167,14 @@ pub struct InitArgs {
 // #[derive(Debug)]
 // pub struct Candid<T>(pub T);
 
+
+/*
+ * @title Faucet Reserves
+ * @dev Represents the reserves available in the faucet.
+ * @functionality Provides a structure to manage and track the reserves available for distribution through the faucet.
+ *
+ * @param reserves A vector of tuples containing asset name and corresponding reserve data.
+ */
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct FaucetReserves {
     pub reserves: Option<Vec<(String, FaucetReserve)>>,
@@ -168,6 +187,15 @@ impl Default for FaucetReserves {
     }
 }
 
+
+/*
+ * @title Faucet Reserve
+ * @dev Represents the reserve data for a specific asset in the faucet.
+ * @functionality Provides a structure to manage and track the usage and limit of reserves available for distribution through the faucet.
+ *
+ * @param faucet_limit The maximum limit of the faucet reserve.
+ * @param faucet_usage The current usage of the faucet reserve.
+ */
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct FaucetReserve {
     pub faucet_limit: Nat,

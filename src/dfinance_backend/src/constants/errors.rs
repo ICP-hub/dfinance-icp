@@ -5,6 +5,7 @@ use candid::CandidType;
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,
+    NegativeAmount,
     RewardIsHigher,
     InvalidCanister,
     InvalidPrincipal,
@@ -186,6 +187,7 @@ impl Error {
             Error::NoFaucetReservesFound => "No faucet reserves found",
             Error::UserFaucetReserveNotFound => "User faucet reserve not found",
             Error::InvalidAssetImageUrl => "Invalid asset image URL",
+            Error::NegativeAmount => "amount must be a postive number"
         }
     }
 }

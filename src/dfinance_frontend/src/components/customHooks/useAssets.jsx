@@ -91,9 +91,7 @@ const useAssetData = (searchQuery = "") => {
       } catch (error) {
         console.error("Error fetching asset supply:", error.message);
       }
-    } else {
-      console.warn("Backend actor or authentication missing.");
-    }
+    } 
   };
 
   /**
@@ -115,9 +113,7 @@ const useAssetData = (searchQuery = "") => {
       } catch (error) {
         console.error("Error fetching asset borrow:", error.message);
       }
-    } else {
-      console.warn("Backend actor or authentication missing.");
-    }
+    } 
   };
 
   /**

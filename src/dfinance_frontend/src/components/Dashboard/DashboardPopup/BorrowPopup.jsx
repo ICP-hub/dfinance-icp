@@ -459,20 +459,30 @@ const Borrow = ({
   //   Updates the amount and USD value based on the input.
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+    
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
+    
+    if (numericAmount < 0) {
+      console.error("Amount must be a positive number.");
+      setUsdValue(0);
+      return;
+    }
+  
     if (numericAmount <= borrowableValue) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(7));
     } else {
-      console.error("Amount must be a positive number.");
+      // No need for an error here unless you specifically want to handle this case.
+      console.warn("Amount exceeds borrowable value.");
       setUsdValue(0);
     }
   };
+  
 
   // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
@@ -618,49 +628,72 @@ const Borrow = ({
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
   useEffect(() => {
+    const amountTaken = usdValue || 0;
+    const amountAdded = 0;
+  
+    const totalCollateralValue = parseFloat(totalCollateral) + parseFloat(amountAdded);
+    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
+  
     const healthFactor = calculateHealthFactor(
       totalCollateral,
       totalDebt,
       liquidationThreshold
     );
-    const amountTaken = usdValue || 0;
-    const amountAdded = 0;
-
-    const totalCollateralValue =
-      parseFloat(totalCollateral) + parseFloat(amountAdded);
-    const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
+  
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
-
+  
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
     };
-
+  
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
-
-    if (value < 2 && value > 1) {
-      setIsAcknowledgmentRequired(true);
-    } else {
-      setIsAcknowledgmentRequired(false);
+  
+    // Handle acknowledgment
+    const acknowledgmentRequired = value < 2 && value > 1;
+    setIsAcknowledgmentRequired(acknowledgmentRequired);
+    if (!acknowledgmentRequired) {
       setIsAcknowledged(false);
     }
-
-    if (ltv * 100 >= liquidationThreshold) {
-      toast.dismiss();
-      toast.info("LTV Exceeded!");
+  
+    // Prepare toast message
+    let toastMessage = "";
+  
+    const isLtvExceeded = ltv * 100 >= liquidationThreshold;
+    const isHealthFactorLow = healthFactor <= 1;
+    const needsAcknowledgment = acknowledgmentRequired && !isAcknowledged;
+  
+    if (isLtvExceeded && isHealthFactorLow) {
+      toastMessage = "LTV Exceeded & Health Factor Less than 1";
+    } else if (isLtvExceeded) {
+      toastMessage = "LTV Exceeded!";
+    } else if (isHealthFactorLow) {
+      toastMessage = "Health Factor Less than 1";
     }
-
-    if (
-      healthFactor <= 1 ||
-      ltv * 100 >= liquidationThreshold ||
-      (isAcknowledgmentRequired && !isAcknowledged)
-    ) {
+  
+    if (toastMessage) {
+      toast.dismiss();
+      toast.info(toastMessage, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  
+    // Handle button disabled
+    if (isHealthFactorLow || isLtvExceeded || needsAcknowledgment) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
     }
+  
   }, [
     asset,
     reserveliquidationThreshold,
@@ -671,9 +704,9 @@ const Borrow = ({
     usdValue,
     isAcknowledged,
     value,
-    isAcknowledgmentRequired,
     setIsAcknowledged,
   ]);
+  
 
   useEffect(() => {
     if (amount && conversionRate) {

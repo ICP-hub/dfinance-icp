@@ -2,7 +2,7 @@ use crate::api::inter_canister::get_balance;
 use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::constants::validators::{validate_asset_name, validate_negatige_value, validate_zero_value};
 use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
      ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
@@ -456,8 +456,8 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     // prevent anonymous access
     guard_prevent_anonymous()?;
     validate_asset_name(&asset)?;
-    validate_zero_value(&amount)?;
-    validate_zero_value(&added_amount)?;
+    validate_negatige_value(&amount)?;
+    validate_negatige_value(&added_amount)?;
 
     let user_principal = ic_cdk::caller();
 

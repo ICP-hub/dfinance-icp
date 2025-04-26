@@ -209,9 +209,11 @@ const UserInformationPopup = ({ onClose, mappedItem, userAccountData, assetSuppl
     if (!currentLiquidity) return 0;
 
     return Math.trunc(
-      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-      Number(currentLiquidity)
+      Math.trunc(Number(assetBalance) / Number(currentLiquidity)) * Number(getAssetSupplyValue(assetName))
     );
+
+
+
   };
   //asset borrow calculated
   const calculateAssetBorrow = (assetName, mappedItem) => {

@@ -299,9 +299,16 @@ const DashboardNav = () => {
         const assetBalance =
           assetBalances?.find((balance) => balance.asset === assetKey)
             ?.dtokenBalance || 0;
-        const assetSupply =
-          (Number(assetBalance) * Number(getAssetSupplyValue(assetKey) || 0)) /
-          Number(currentLiquidity) || 0;
+        const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
+        const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
+        const safeSupplyValue = typeof getAssetSupplyValue(assetKey) === "bigint" ? Number(getAssetSupplyValue(assetKey)) : getAssetSupplyValue(assetKey);
+
+
+        const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * 1e8);
+        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / 1e8);
+
+
+
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
@@ -778,20 +785,20 @@ const DashboardNav = () => {
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                             <span
                               className={`font-bold text-[20px] ${data.title === "Health Factor"
-                                  ? data.count === 0
-                                    ? "text-red-500"
-                                    : data.count > 3
-                                      ? "text-green-500"
-                                      : data.count <= 1
-                                        ? "text-red-500"
-                                        : data.count <= 1.5
-                                          ? "text-orange-600"
-                                          : data.count <= 2
-                                            ? "text-orange-400"
-                                            : "text-orange-300"
-                                  : data.title === "Total Borrows"
-                                    ? "text-[#2A1F9D] dark:text-darkBlue"
-                                    : "text-[#2A1F9D] dark:text-darkBlue"
+                                ? data.count === 0
+                                  ? "text-red-500"
+                                  : data.count > 3
+                                    ? "text-green-500"
+                                    : data.count <= 1
+                                      ? "text-red-500"
+                                      : data.count <= 1.5
+                                        ? "text-orange-600"
+                                        : data.count <= 2
+                                          ? "text-orange-400"
+                                          : "text-orange-300"
+                                : data.title === "Total Borrows"
+                                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                                  : "text-[#2A1F9D] dark:text-darkBlue"
                                 }`}
                             >
                               {data.count !== null ? data.count : "\u00A0"}
@@ -871,18 +878,18 @@ const DashboardNav = () => {
 
                     <span
                       className={`font-bold text-[20px] ${data.title === "Health Factor"
-                          ? data.count === 0 && assetSupply === 0
-                            ? "text-[#2A1F9D] dark:text-darkBlue"
-                            : data.count > 3
-                              ? "text-green-500"
-                              : data.count <= 1
-                                ? "text-red-500"
-                                : data.count <= 1.5
-                                  ? "text-orange-600"
-                                  : data.count <= 2
-                                    ? "text-orange-400"
-                                    : "text-orange-300"
-                          : "text-[#2A1F9D] dark:text-darkBlue"
+                        ? data.count === 0 && assetSupply === 0
+                          ? "text-[#2A1F9D] dark:text-darkBlue"
+                          : data.count > 3
+                            ? "text-green-500"
+                            : data.count <= 1
+                              ? "text-red-500"
+                              : data.count <= 1.5
+                                ? "text-orange-600"
+                                : data.count <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                        : "text-[#2A1F9D] dark:text-darkBlue"
                         }`}
                     >
                       {data.count !== null ? data.count : "\u00A0"}

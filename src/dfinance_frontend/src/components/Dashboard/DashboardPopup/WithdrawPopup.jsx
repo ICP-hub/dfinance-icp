@@ -149,8 +149,11 @@ const WithdrawPopup = ({
    * @returns {void}
    */
   const updateAmountAndUsdValue = (inputAmount) => {
-    const numericAmount = parseFloat(inputAmount.toString().replace(/,/g, ""));
-
+    const Amount = parseFloat(inputAmount.toString().replace(/,/g, ""));
+    const truncateTo8Decimals = (num) => {
+      return Math.trunc(num * 1e8) / 1e8;
+    };
+    const numericAmount =truncateTo8Decimals(Amount)
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -226,8 +229,7 @@ const WithdrawPopup = ({
     }
 
     try {
-      const safeAmount =
-        Number((amount.toString() || "").replace(/,/g, "")) || 0;
+      const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
 
@@ -283,7 +285,6 @@ const WithdrawPopup = ({
       } else if ("Err" in withdrawResult) {
         const errorObject = withdrawResult.Err;
         const errorKey = Object.keys(errorObject)[0];
-
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
@@ -316,6 +317,10 @@ const WithdrawPopup = ({
               break;
             case "AmountSubtractionError":
               userFriendlyMessage = "You cannot withdraw more than you owe.";
+              break;
+            case "LTVGreaterThanThreshold":
+              userFriendlyMessage =
+                "Collateral update failed: LTV exceeds the allowable threshold.";
               break;
             default:
               userFriendlyMessage =
@@ -373,66 +378,65 @@ const WithdrawPopup = ({
     }
   };
 
+
   // This function handles the closing of the payment popup. It resets the payment state and closes the modal.
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
-  // This function calculates the health factor based on the total collateral, total debt, liquidation threshold, and reserve liquidation threshold.
-  const calculateHealthFactor = (
+  // This function calculates the health factor and ltv based on the total collateral, total debt, liquidation threshold, and reserve liquidation threshold.
+  const calculatedValues = ({
     totalCollateral,
     totalDebt,
     liquidationThreshold,
-    reserveliquidationThreshold
-  ) => {
-    const amountTaken = collateral ? usdValue || 0 : 0;
-
-    let totalCollateralValue =
-      parseFloat(totalCollateral) - parseFloat(amountTaken);
-    if (totalCollateralValue < 0) {
+    reserveliquidationThreshold,
+    collateral,
+    usdValue,
+  }) => {
+    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
+    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+  
+    let totalCollateralValue = 0;
+    if (amountTaken > totalCollateral && parseFloat(amountTaken) - parseFloat(totalCollateral) === 0.0000001) {
       totalCollateralValue = 0;
+    } else {
+      totalCollateralValue = truncateTo8Decimals(parseFloat(totalCollateral) - parseFloat(amountTaken));
     }
-    let totalDeptValue = parseFloat(totalDebt);
-    if (totalDeptValue < 0) {
-      totalDeptValue = 0;
-    }
-
-    if (totalDeptValue === 0) {
-      return Infinity;
-    }
-
+  
     let avliq = liquidationThreshold * totalCollateral;
-    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
-
+    let truncatedVal = Math.trunc(amountTaken * reserveliquidationThreshold * 1e8) / 1e8;
+    let tempLiq = 0;
+    if (amountTaken > totalCollateral && parseFloat(amountTaken) - parseFloat(totalCollateral) === 0.0000001) {
+      tempLiq = 0;
+    } else {
+      tempLiq = avliq - truncatedVal
+    }
     if (totalCollateralValue > 0) {
-      tempLiq = tempLiq / totalCollateralValue;
-
-      const multiplier = Math.pow(10, 8);
-      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
+      tempLiq = Math.floor((tempLiq / totalCollateralValue) * 1e8) / 1e8;
     }
-    setTempLiq(tempLiq);
-
-
-    let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * 1e8) / 1e8;
-
-    return result;
+  
+    let totalDebtValue = parseFloat(totalDebt);
+    if (totalDebtValue < 0) totalDebtValue = 0;
+  
+    const healthFactor = totalDebtValue === 0
+      ? Infinity
+      : Math.round((totalCollateralValue * (tempLiq / 100)) / totalDebtValue * 1e8) / 1e8;
+  
+    const ltv = totalCollateralValue === 0
+      ? 0
+      : parseFloat(totalDebt) / totalCollateralValue;
+  
+    return {
+      amountTaken,
+      totalCollateralValue,
+      totalDebtValue,
+      tempLiq,
+      healthFactor,
+      ltv,
+    };
   };
-
-  // This function calculates the Loan-to-Value (LTV) ratio based on the total collateral value and total debt value.
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return "0.00000000";
-    }
-
-    const ltv = totalDeptValue / totalCollateralValue;
-
-    const multiplier = Math.pow(10, 8);
-    const truncatedLTV = Math.floor(ltv * multiplier) / multiplier;
-
-    return truncatedLTV.toFixed(8);
-  };
+  
 
   // This function handles the click event for the "Max" button. It sets the maximum amount to withdraw based on the asset supply and updates the USD value accordingly.
   const handleMaxClick = () => {
@@ -510,43 +514,49 @@ const WithdrawPopup = ({
   }, []);
 
   useEffect(() => {
-    const healthFactor = calculateHealthFactor(
+    const {
+      amountTaken,
+      totalCollateralValue,
+      totalDebtValue,
+      tempLiq,
+      healthFactor,
+      ltv,
+    } = calculatedValues({
       totalCollateral,
       totalDebt,
       liquidationThreshold,
-      reserveliquidationThreshold
-    );
-
-    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
-    const amountAdded = 0;
-    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
-    const totalCollateralValue = truncateTo8Decimals(
-      parseFloat(totalCollateral) - parseFloat(amountTaken)
-    );
-
-    const totalDeptValue = parseFloat(totalDebt) + parseFloat(amountAdded);
-    let avliq = liquidationThreshold * totalCollateral;
-    let tempLiq = avliq - amountTaken * reserveliquidationThreshold;
-
-    if (totalCollateralValue > 0) {
-      tempLiq = tempLiq / totalCollateralValue;
-      const multiplier = Math.pow(10, 8);
-      tempLiq = Math.floor(tempLiq * multiplier) / multiplier;
-    }
-
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
-
+      reserveliquidationThreshold,
+      collateral,
+      usdValue,
+    });
+  
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
     };
-
+  
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
-    if (assetBorrow > 0 && ltv * 100 >= tempLiq && currentCollateralStatus) {
+  
+    setTempLiq(tempLiq);
+  
+    let showToastMessage = "";
+  
+    const isLtvExceeded = assetBorrow > 0 && ltv * 100 > tempLiq && currentCollateralStatus;
+    const isHealthFactorLow = (healthFactor <= 1) && currentCollateralStatus;
+  
+    if (isLtvExceeded && isHealthFactorLow) {
+      showToastMessage = "LTV Exceeded & Health Factor is Less than 1";
+    } else if (isLtvExceeded) {
+      showToastMessage = "LTV Exceeded!";
+    } else if (isHealthFactorLow) {
+      showToastMessage = "Health Factor Less than 1";
+    }
+  
+    if (showToastMessage) {
       toast.dismiss();
-      toast.info("LTV Exceeded!", {
+      toast.info(showToastMessage, {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
@@ -557,16 +567,13 @@ const WithdrawPopup = ({
         progress: undefined,
       });
     }
-
-    if (
-      (healthFactor <= 1 || (assetBorrow > 0 && ltv * 100 >= tempLiq)) &&
-      currentCollateralStatus
-    ) {
+  
+    if (isLtvExceeded || isHealthFactorLow) {
       setIsButtonDisabled(true);
-
     } else {
       setIsButtonDisabled(false);
     }
+    
   }, [
     asset,
     liquidationThreshold,
@@ -577,6 +584,9 @@ const WithdrawPopup = ({
     usdValue,
     liq_thresh,
   ]);
+  
+  
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {

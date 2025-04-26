@@ -280,10 +280,14 @@ const DebtStatus = () => {
 
     if (!currentLiquidity) return 0;
 
+    const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
+    const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
+    const supplyValue = Number(getAssetSupplyValue(assetName));
+    
     return Math.trunc(
-      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-      Number(currentLiquidity)
+      Math.trunc(safeAssetBalance / safeCurrentLiquidity) * supplyValue
     );
+    
   };
 
   //funxtion to calculate asset borrow

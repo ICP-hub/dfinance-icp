@@ -189,7 +189,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let _user_guard = CallerGuard::lock_principal(user_principal.clone())?;
 
-    ic_cdk::println!("liquidation validation successful");
+    ic_cdk::println!("liquidation validation successful");  //info
 
     ic_cdk::println!("burn reward amount: {:?}", reward_amount);
 
@@ -223,35 +223,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         amount: reward_amount.clone() - protocol_fee_amount.clone(),
         is_collateral: true,
     };
-
-    // let liquidator_mint_result = UpdateLogic::update_user_data_supply(
-    //     liquidator_principal,
-    //     &collateral_reserve_cache,
-    //     supply_param,
-    //     &mut collateral_reserve_data,
-    // )
-    // .await;
-    // match liquidator_mint_result {
-    //     Ok(()) => {
-    //         ic_cdk::println!("Minting dtokens successfully");
-    //     }
-    //     Err(e) => {
-    //         ic_cdk::println!("{:?}", e);
-
-    //         mint_scaled(
-    //             &mut collateral_reserve_data,
-    //             &mut user_reserve_data,
-    //             reward_amount,
-    //             collateral_reserve_cache.next_liquidity_index,
-    //             user_principal,
-    //             collateral_dtoken_principal,
-    //             platform_principal,
-    //             true,
-    //         )
-    //         .await?;
-    //         return Err(e);
-    //     }
-    // }
 
     if let Err(err) = UpdateLogic::update_user_data_supply(
         liquidator_principal,
@@ -356,14 +327,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                         liquidator_data.reserves =
                             Some(vec![(params.collateral_asset.clone(), new_reserve)]);
                     }
-                    // &mut liquidator_data
-                    //     .reserves
-                    //     .as_mut()
-                    //     .unwrap()
-                    //     .iter_mut()
-                    //     .find(|(asset, _)| asset == &params.collateral_asset)
-                    //     .unwrap()
-                    //     .1
 
                     // bhanu handle unwrap
                     match liquidator_data.reserves.as_mut() {
@@ -481,7 +444,7 @@ pub async fn to_get_reward_amount(
     let mut collateral_balance = get_balance(d_token_canister, user_principal).await?;
 
     collateral_balance = (collateral_balance
-        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone()).unwrap()))
+        .scaled_mul(user_normalized_supply(collateral_reserve_data.clone())?))
     .scaled_div(user_reserve_data.liquidity_index);
 
     ic_cdk::println!("Collateral balance normalized: {:?}", collateral_balance);

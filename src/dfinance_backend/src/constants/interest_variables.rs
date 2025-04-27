@@ -72,6 +72,7 @@ pub mod constants {
     pub const SCALING_FACTOR: u128 = 100_000_000;
     pub const MIN_BORROW: u128 = 100;
 
+    //TODO: i think we should remove this from this file keep it in other file.
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
 

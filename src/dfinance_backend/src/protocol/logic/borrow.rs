@@ -105,7 +105,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     ValidationLogic::validate_borrow(
         &reserve_data,
         params.amount.clone(),
-        user_principal,
         ledger_canister_id,
     )
     .await?;
@@ -152,10 +151,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                 "Asset transfer from backend to user executed successfully. New balance: {:?}",
                 new_balance
             );
-            // mutate_state(|state| {
-            //     let asset_index = &mut state.asset_index;
-            //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            // });
             Ok(new_balance)
         }
         Err(_) => {
@@ -363,10 +358,6 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                 "Asset transfer from user to backend executed successfully, new balance: {:?}",
                 new_balance
             );
-            // mutate_state(|state| {
-            //     let asset_index = &mut state.asset_index;
-            //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            // });
             Ok(new_balance)
         }
         Err(_) => {

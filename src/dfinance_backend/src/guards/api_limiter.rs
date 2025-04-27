@@ -15,7 +15,6 @@ thread_local! {
 //TODO: remove this function later at the time of deployment, just to check number of calls by the user.
 #[query]
 pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
-    // let caller = ic_cdk::api::caller();
 
     if caller == Principal::anonymous() {
         ic_cdk::println!("principals are not allowed");

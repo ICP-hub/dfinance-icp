@@ -293,10 +293,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     {
         Ok(new_balance) => {
             println!("Asset transfer from backend to user executed successfully");
-            // mutate_state(|state| {
-            //     let asset_index = &mut state.asset_index;
-            //     asset_index.insert(params.asset.clone(), Candid(reserve_data.clone()));
-            // });
             return Ok(new_balance);
         }
         Err(_) => {

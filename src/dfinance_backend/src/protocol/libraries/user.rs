@@ -50,7 +50,6 @@ use ic_cdk::{api, update};
  *   - Has zero-LTV collateral (bool)
  * @functionality Returns all relevant account status metrics for lending/borrowing logic.
  */
-
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
@@ -469,22 +468,12 @@ pub async fn calculate_user_asset_data(
             //     asset_price.clone(),
             // )
             // .await;
-            let user_debt_in_base_currency = get_user_asset_debt_in_base_currency(
+            let user_debt = get_user_asset_debt_in_base_currency(
                 &user_reserve_data,
                 balance.clone(),
                 asset_price.clone(),
             )
-            .await;
-
-            let user_debt = match user_debt_in_base_currency {
-                Ok(data) => {
-                    ic_cdk::println!("user_debt_in_base_currency:{} : {:?}", reserve_name, data);
-                    data
-                }
-                Err(e) => {
-                    return Err(e);
-                }
-            };
+            .await?;
 
             total_debt += user_debt.clone();
             ic_cdk::println!("Total debt for borrowed reserves {}", total_debt.clone());
@@ -612,7 +601,7 @@ pub async fn get_user_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    // Ask : get normalize income function does not exist.
+    //TODO: Ask : get normalize income function does not exist.
     Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
 }
 
@@ -622,10 +611,11 @@ pub async fn get_user_asset_balance_in_base_currency(
     user_balance: Nat,
     asset_price: Nat,
 ) -> Result<Nat, Error> {
-    ic_cdk::println!("Calculating user balance in base currency...");
+    ic_cdk::println!("Calculating user asset balance in base currency...");
     ic_cdk::println!("User principal: {:?}", user_principal);
     ic_cdk::println!("Reserve: {:?}", reserve.reserve);
-    ic_cdk::println!("Asset price: {}", user_balance);
+    ic_cdk::println!("User balance: {}", user_balance);
+    ic_cdk::println!("Asset price : {}", asset_price);
 
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
@@ -1095,37 +1085,6 @@ pub async fn create_user_reserve_with_low_health(
         }
     }
 
-    // if asset_supply == asset_borrow {
-    //     let mut user_reserve = user_reserve(&mut user_data, &asset_supply);
-    //     let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
-    //         reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
-    //         reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
-    //         reserve_data.d_token_balance += supply_tokens.clone();
-    //         reserve_data.debt_token_blance += borrow_tokens.clone();
-    //         reserve_data.is_using_as_collateral_or_borrow = true;
-    //         reserve_data.is_collateral = true;
-    //         reserve_data.is_borrowed = true;
-    //     };
-    // } else {
-    //     let mut supply_user_reserve = user_reserve(&mut user_data, &asset_supply);
-    //     let mut user_reserve_data = if let Some((_, reserve_data)) = supply_user_reserve {
-    //         reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
-    //         reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
-    //         reserve_data.d_token_balance += supply_tokens.clone();
-    //         reserve_data.is_using_as_collateral_or_borrow = true;
-    //         reserve_data.is_collateral = true;
-    //     };
-
-    //     let mut borrow_user_reserve = user_reserve(&mut user_data, &asset_borrow);
-    //     let mut user_reserve_data = if let Some((_, reserve_data)) = borrow_user_reserve {
-    //         reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
-    //         reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
-    //         reserve_data.debt_token_blance += borrow_tokens.clone();
-    //         reserve_data.is_using_as_collateral_or_borrow = true;
-    //         reserve_data.is_borrowed = true;
-    //     };
-    // };
-
     let dtoken_principal = supply_reserve_data.d_token_canister.clone().unwrap();
     let debt_token_principal = borrow_reserve_data.debt_token_canister.clone().unwrap();
 
@@ -1253,12 +1212,6 @@ pub async fn get_all_user_list(
     page_size: usize,
 ) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
     guard_admin_only()?;
-    // let user_principal = ic_cdk::caller();
-
-    // if user_principal == Principal::anonymous() || !to_check_controller() {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::ErrorNotController);
-    // }
 
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
     let total_users = vector_user_data.len();

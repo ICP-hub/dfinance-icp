@@ -20,14 +20,6 @@ use crate::stable_storage::storable::Candid;
 #[update]
 pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
     guard_admin_only()?;
-    // let user_principal = ic_cdk::caller();
-
-    // if user_principal == Principal::anonymous()
-    //     || !to_check_controller()
-    // {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::InvalidPrincipal);
-    // }
 
     mutate_state(|state| {
         state.canister_list.insert(canister_name, canister_id);

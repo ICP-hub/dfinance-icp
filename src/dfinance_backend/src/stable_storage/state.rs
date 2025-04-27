@@ -1,5 +1,6 @@
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
-
+use crate::stable_storage::types::LogStorage;
+use crate::stable_storage::memory::LOG_STORAGE;
 use crate::stable_storage::memory::{
     ASSET_INDEX_MEMORY_ID, BLOCKED_USERS_FUNCTION, CANISTER_MEMORY_ID, FUNCTION_REQUESTS,
     META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST,

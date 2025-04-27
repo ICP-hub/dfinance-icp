@@ -494,19 +494,25 @@ fn test_calculate_compounded_interest() {
         TestCase {
             // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
             rate_input: Nat::from(1_000_000u128),
-            last_update_timestamp: 0u64, // 6 months ago
+            last_update_timestamp: 0u64, // time diff of 1year
             expected_output: get_scaling_value() + Nat::from(1_000_000u128), // Approximation
         },
         TestCase {
             // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
+            rate_input: Nat::from(10_000_000u128),
+            last_update_timestamp: 0u64, // time diff of 1year
+            expected_output: get_scaling_value() + Nat::from(10_000_000u128), // Approximation
+        },
+        TestCase {
+            // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
             rate_input: Nat::from(28_000_000u128),
-            last_update_timestamp: 0u64, // 6 months ago
+            last_update_timestamp: 0u64, // time diff of 1year
             expected_output: get_scaling_value() + Nat::from(28_000_000u128), // Approximation
         },
         TestCase {
             // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
             rate_input: Nat::from(28_000_000u128),
-            last_update_timestamp: 31525000u64, // 6 months ago
+            last_update_timestamp: 31525000u64, 
             expected_output: get_scaling_value() + Nat::from(9_766u128), // Approximation
         },
         TestCase {

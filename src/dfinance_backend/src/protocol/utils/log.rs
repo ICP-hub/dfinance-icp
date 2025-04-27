@@ -1,8 +1,11 @@
-
-use ic_cdk::api;
-use std::fmt;
+use crate::api::query::{self, get_canister_id_by_name};
+use crate::constants::errors::Error;
+use crate::stable_storage::state_handler::{mutate_state, read_state, STATE};
 use crate::stable_storage::storable::Candid;
-use crate::stable_storage::state_handler::STATE;
+use candid::Principal;
+use ic_cdk::{call, query};
+use ic_cdk::{api, update};
+use std::fmt;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum LogLevel {
@@ -25,234 +28,143 @@ impl fmt::Display for LogLevel {
     }
 }
 
-static mut CURRENT_LOG_LEVEL: LogLevel = LogLevel::INFO;
+const MAX_LOGS: u64 = 100; // Define maximum number of logs to store
 
-pub fn set_log_level(level: LogLevel) {
-    unsafe {
-        CURRENT_LOG_LEVEL = level;
-    }
-}
-
-pub fn get_log_level() -> LogLevel {
-    unsafe { CURRENT_LOG_LEVEL }
-}
-
-const MAX_LOGS: usize = 1000; // Define maximum number of logs to store
-
-pub fn store_log(level: LogLevel, file: &str, line: u32, message: String) {
+pub async fn store_log(
+    level: LogLevel,
+    file: &str,
+    line: u32,
+    message: String,
+) -> Result<(), Error> {
     let timestamp = api::time() / 1_000_000_000;
     let file_name = file.split('/').last().unwrap_or(file);
+    let logs_canister_id = get_canister_id_by_name("logs".to_string()).unwrap();
+    let mut oldest_log_to_send = Default::default();
+    let mut oldest_log_id: u32 = 0;
+    let mut call_inter_canister = false;
 
     let formatted_log = format!(
         "[{}] [{}] [{}:{}] {}",
         timestamp, level, file_name, line, message
     );
 
-    STATE.with(|state| {
-        let mut state_mut = state.borrow_mut();
-        let log_storage = &mut state_mut.log_storage;
-        
-        // Find the highest key
+    ic_cdk::println!("Storing log: {}", formatted_log);
+
+    mutate_state(|state| {
+        let log_storage = &mut state.log_storage;
+
+        ic_cdk::println!("Current log storage size: {}", log_storage.len());
+
         let mut highest_key = 0;
-        for key in log_storage.iter().map(|(k, _)| k) {
+        for (key, _) in log_storage.iter() {
+            ic_cdk::println!("Current log ID: {}", key);
             if key > highest_key {
                 highest_key = key;
             }
         }
-        
+        ic_cdk::println!("Highest log ID: {}", highest_key);
+
+        // Calculate the next log ID
         let next_id = highest_key + 1;
-        
+
         // If we've reached the maximum logs, remove the oldest one
-        if log_storage.len() >= MAX_LOGS as u64 {
-            // Find the smallest key
-            if let Some((oldest_id, _)) = log_storage.iter().next() {
+        if log_storage.len() >= MAX_LOGS {
+            // Remove the smallest key (oldest log)
+            if let Some((oldest_id, oldest_log)) = log_storage.iter().next() {
+                oldest_log_to_send = oldest_log.clone();
+                oldest_log_id = oldest_id;
+                call_inter_canister = true;
                 log_storage.remove(&oldest_id);
             }
         }
-        
-        // Store the log as a new entry
+
+        ic_cdk::println!("Next log ID: {}", next_id);
+
+        // Insert the new log entry into the storage
         log_storage.insert(next_id, Candid(vec![formatted_log]));
     });
+
+    if call_inter_canister {
+        send_log_to_logs_canister(logs_canister_id, oldest_log_id, oldest_log_to_send.clone())
+            .await?;
+    }
+    Ok(())
 }
 
 
-const LOG_RETENTION_DAYS: u64 = 7;
-const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
-
-pub fn process_log_heartbeat() {
-    let current_time = api::time() / 1_000_000_000;
-    let retention_cutoff = current_time.saturating_sub(LOG_RETENTION_DAYS * SECONDS_PER_DAY);
-    
-    // Only delete logs older than the retention period
-    clear_old_logs(retention_cutoff);
-    
-    log_internal(
-        LogLevel::DEBUG,
-        file!(),
-        line!(),
-        &format!("Log cleanup processed, removed logs older than {} seconds ago", 
-                LOG_RETENTION_DAYS * SECONDS_PER_DAY)
+pub async fn send_log_to_logs_canister(
+    logs_canister_id: Principal,
+    log_id: u32,
+    log: Candid<Vec<String>>,
+) -> Result<(), Error> {
+    ic_cdk::println!(
+        "Initiating log transfer to logs_canister_id {:?} with log ID {} and log data: {:?}",
+        logs_canister_id,
+        log_id,
+        log
     );
+
+    if log.0.is_empty() {
+        ic_cdk::println!("No log entries to send.");
+        return Err(Error::InvalidCanister);
+    }
+
+    let log_data: String = log.0[0].clone();
+    ic_cdk::println!("Sending log entry: ID = {}, Data = {:?}", log_id, log_data);
+
+    match call::<(u32, String), ()>(logs_canister_id, "receive_log", (log_id, log_data)).await {
+        Ok(()) => {
+            ic_cdk::println!("Log sent successfully to logs canister.");
+            Ok(())
+        }
+        Err(e) => {
+            ic_cdk::println!("Failed to send log to logs canister. Error: {:?}", e.1);
+            Err(Error::InvalidCanister)
+        }
+    }
 }
 
-pub fn clear_old_logs(retention_cutoff: u64) {
-    let removed_count = STATE.with(|state| {
-        let mut state_mut = state.borrow_mut();
-        let log_storage = &mut state_mut.log_storage;
-        
-        // Identify logs to remove based on timestamp
-        let logs_to_remove: Vec<u32> = log_storage
-            .iter()
-            .filter_map(|(key, Candid(logs))| {
-                // Parse the timestamp from the first log entry
-                if let Some(log_entry) = logs.first() {
-                    // Extract timestamp from log format: "[timestamp] [level] [file:line] message"
-                    if let Some(timestamp_str) = log_entry.split(']').next() {
-                        if let Ok(timestamp) = timestamp_str.trim_start_matches('[').parse::<u64>() {
-                            if timestamp < retention_cutoff {
-                                return Some(key);
-                            }
-                        }
-                    }
-                }
-                None
-            })
-            .collect();
-        
-        // Remove only the identified old logs
-        let count = logs_to_remove.len();
-        for key in logs_to_remove {
-            log_storage.remove(&key);
-        }
-        
-        count
-    });
+//TODO: can remove later.
+#[update]
+pub async fn insert_multiple_logs() -> Result<(), Error> {
+    for i in 0..1 {
+        let level = match i % 5 {
+            0 => LogLevel::ERROR,
+            1 => LogLevel::WARN,
+            2 => LogLevel::INFO,
+            3 => LogLevel::DEBUG,
+            _ => LogLevel::TRACE,
+        };
 
-    log_internal(
-        LogLevel::INFO, 
-        file!(), 
-        line!(), 
-        &format!("Removed {} old log entries older than retention period", removed_count)
-    );
+        let file = "example_file.rs"; // You can change this to simulate different files
+        let line = (i + 1) * 10; // Just a dummy line number
+        let message = format!("This is log number {}", i + 1); // Log message
+
+        store_log(level, file, line, message).await?;
+    }
+    Ok(())
 }
 
+//TODO: can remove later.
+#[query]
+pub fn get_all_logs() -> Vec<String> {
+    // Read-only access to the log storage
+    read_state(|state| {
+        let log_storage = &state.log_storage;
 
-pub fn get_stored_logs() -> Vec<String> {
-    STATE.with(|state| {
-        let state_ref = state.borrow();
-        let log_storage = &state_ref.log_storage;
-        
-        // Collect all logs in order
-        let mut all_logs = Vec::new();
-        for (_, Candid(logs)) in log_storage.iter() {
-            all_logs.extend(logs.clone());
+        let mut logs: Vec<(u32, String)> = Vec::new();
+
+        for (key, value) in log_storage.iter() {
+            // Assume value is a Candid(vec![formatted_log])
+            if let Some(log) = value.0.get(0) {
+                logs.push((key, log.clone()));
+            }
         }
-        all_logs
+
+        // Sort logs by key (optional, in case keys are not perfectly ordered)
+        logs.sort_by_key(|(key, _)| *key);
+
+        // Return just the logs (without the IDs)
+        logs.into_iter().map(|(_, log)| log).collect()
     })
-}
-
-pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
-    if level as usize > get_log_level() as usize {
-        return;
-    }
-
-    let file_name = file.split('/').last().unwrap_or(file);
-
-    let log_message = format!("[{}] [{}:{}] {}", level, file_name, line, msg);
-
-    ic_cdk::println!("{}", log_message);
-
-    // Only store logs at appropriate levels
-    if level <= LogLevel::TRACE || level <= get_log_level() {
-        store_log(level, file, line, msg.to_string());
-    }
-}
-
-#[macro_export]
-macro_rules! error {
-    ($($arg:tt)*) => {
-        $crate::utils::logging::log_internal(
-            $crate::utils::logging::LogLevel::ERROR,
-            file!(),
-            line!(),
-            &format!($($arg)*)
-        )
-    };
-}
-
-#[macro_export]
-macro_rules! warn {
-    ($($arg:tt)*) => {
-        $crate::utils::logging::log_internal(
-            $crate::utils::logging::LogLevel::WARN,
-            file!(),
-            line!(),
-            &format!($($arg)*)
-        )
-    };
-}
-
-#[macro_export]
-macro_rules! info {
-    ($($arg:tt)*) => {
-        $crate::utils::logging::log_internal(
-            $crate::utils::logging::LogLevel::INFO,
-            file!(),
-            line!(),
-            &format!($($arg)*)
-        )
-    };
-}
-
-#[macro_export]
-macro_rules! debug {
-    ($($arg:tt)*) => {
-        $crate::utils::logging::log_internal(
-            $crate::utils::logging::LogLevel::DEBUG,
-            file!(),
-            line!(),
-            &format!($($arg)*)
-        )
-    };
-}
-
-#[macro_export]
-macro_rules! trace {
-    ($($arg:tt)*) => {
-        $crate::utils::logging::log_internal(
-            $crate::utils::logging::LogLevel::TRACE,
-            file!(),
-            line!(),
-            &format!($($arg)*)
-        )
-    };
-}
-
-pub fn init_logging(is_production: bool) {
-    if is_production {
-        set_log_level(LogLevel::INFO);
-    } else {
-        set_log_level(LogLevel::DEBUG);
-    }
-    schedule_log_cleanup();
-    // init_log_clearing();
-}
-
-use std::time::Duration;
-
-pub fn schedule_log_cleanup() {
-    // Schedule the log cleanup to run once per day (86400 seconds)
-    let interval = Duration::from_secs(SECONDS_PER_DAY);
-    
-    // Set up a recurring timer that will call process_log_heartbeat
-    ic_cdk_timers::set_timer_interval(interval, || {
-        process_log_heartbeat();
-    });
-    
-    log_internal(
-        LogLevel::INFO,
-        file!(),
-        line!(),
-        "Log cleanup scheduled to run once per day"
-    );
 }

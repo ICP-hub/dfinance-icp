@@ -11,8 +11,8 @@ use crate::stable_storage::types::{
     ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile,
 };
 
-use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, DEVELOPER_DATA, FAUCETDATA};
-use super::types::{AdminData, AssetRecords, DeveloperData, FaucetData};
+use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, DEVELOPER_DATA, FAUCETDATA, LOG_STORAGE};
+use super::types::{AdminData, AssetRecords, DeveloperData, FaucetData, LogStorage};
 
 pub struct State {
     pub asset_index: AssetIndex,

@@ -681,13 +681,13 @@ const Market = () => {
                   </button>
                   <div>
                     <div className="flex gap-2 justify-start items-center ">
-                      {assets?.includes(selectedAssetData[0]) && (
-                        <img
-                          src={AssetImages[selectedAssetData[0]]} // Use the selected asset's image
-                          alt={`${selectedAssetData[0]} logo`}
-                          className="w-8 h-8 rounded-full mr-2"
-                        />
-                      )}
+                    {assets?.includes(selectedAssetData[0]) && (
+                            <img
+                              src={AssetImages[assets?.indexOf(selectedAssetData[0])]}
+                              alt={`${selectedAssetData[0]} logo`}
+                              className="w-8 h-8 rounded-full mr-2"
+                            />
+                          )}
 
                       <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">
                         {selectedAssetData[0]}
@@ -782,7 +782,7 @@ const Market = () => {
                   </div>
                   <div className="flex w-full justify-center">
                     <button
-                      className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
+                      className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg  shadow-xl"
                       onClick={() =>
                         handleDetailsClick(
                           selectedAssetData[0],

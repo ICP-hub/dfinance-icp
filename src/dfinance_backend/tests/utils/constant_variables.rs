@@ -1,4 +1,5 @@
 #[allow(dead_code)]
+// pub const SCALING_FACTOR: u128 = 10_000_000_000_000_000_000_000_000_00;
 pub const SCALING_FACTOR: u128 = 100_000_000;
 
 #[allow(dead_code)]

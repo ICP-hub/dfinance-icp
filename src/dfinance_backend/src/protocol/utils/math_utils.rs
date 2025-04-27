@@ -108,7 +108,7 @@ pub fn calculate_compounded_interest(
 
     // Result (Growth factor) scaled with 10^8
     let result = get_scaling_value() + scaled_rate.clone() + second_term.clone() + third_term.clone();
-    ic_cdk::println!("result {} and scaled_rate {} and second_term {} and third_term {}", result, scaled_rate, second_term, third_term); //debug
+    ic_cdk::println!("result {} and scaled_rate {} and second_term {} and third_term {}", result.clone(), scaled_rate, second_term, third_term); //debug
     result
 }
 

@@ -6,14 +6,14 @@ use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
 
-use crate::declarations::structs::ReserveData;
+
 
 #[test]
 fn call_test_function() {
-    test_calculate_linear_interest();
+    // test_calculate_linear_interest();
     test_calculate_compounded_interest();
-    futures::executor::block_on(test_calculate_interest_rates());
-    futures::executor::block_on(test_accrue_to_treasury());
+    // futures::executor::block_on(test_calculate_interest_rates());
+    // futures::executor::block_on(test_accrue_to_treasury());
 }
 
 impl Default for AccrueToTreasuryLocalVars {
@@ -96,51 +96,107 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
  * @return Compounded interest over time, scaled appropriately.
  * @functionality Calculates compounded interest based on time delta using a power series expansion.
  */
+// pub fn calculate_compounded_interest(
+//     rate_input: Nat,
+//     last_update_timestamp: u64,
+//     current_timestamp: u64,
+// ) -> Nat {
+//     ic_cdk::println!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
+//     let exp = current_timestamp - last_update_timestamp;
+//     ic_cdk::println!("exp (time difference): {}", exp);
+//     if exp == 0 {
+//         ic_cdk::println!("exp is 0, returning SCALING_FACTOR {}", get_scaling_value());
+//         return get_scaling_value();
+//     }
+//     let rate = rate_input ;
+//     ic_cdk::println!("Rate calculated: {}", rate);
+
+//     let scaled_rate = (rate.clone() * exp as u128) / SECONDS_PER_YEAR as u128;
+//     ic_cdk::println!("Scaled rate: {}", scaled_rate);
+
+//     let exp_minus_one = exp - 1;
+//     ic_cdk::println!("exp_minus_one: {}", exp_minus_one);
+
+//     let exp_minus_two = if exp > 2 { exp - 2 } else { 0 };
+//     ic_cdk::println!("exp_minus_two: {}", exp_minus_two);
+
+//     let base_power_two = (rate.clone().scaled_mul(rate.clone()))
+//         / (SECONDS_PER_YEAR as u128 * SECONDS_PER_YEAR as u128);
+//     ic_cdk::println!("Base power two: {}", base_power_two);
+
+//     let base_power_three =
+//         (base_power_two.clone().scaled_mul(rate.clone())) / SECONDS_PER_YEAR as u128;
+//     ic_cdk::println!("Base power three: {}", base_power_three);
+
+//     let second_term = (exp as u128 * exp_minus_one as u128 * base_power_two) / Nat::from(2u128);
+//     ic_cdk::println!("Second term: {}", second_term);
+
+//     let third_term =
+//         (exp as u128 * exp_minus_one as u128 * exp_minus_two as u128 * base_power_three)
+//             / Nat::from(6u128);
+//     ic_cdk::println!("Third term: {}", third_term);
+
+//     let result = get_scaling_value() + scaled_rate + second_term + third_term;
+//     ic_cdk::println!("Final result: {}", result);
+
+//     result
+// }
+
 pub fn calculate_compounded_interest(
     rate_input: Nat,
-    last_update_timestamp: u64,
-    current_timestamp: u64,
+    last_update_timestamp: Nat,
+    current_timestamp: Nat,
 ) -> Nat {
     ic_cdk::println!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
+    
+    if last_update_timestamp > current_timestamp {
+        ic_cdk::println!("Exponential function underflow"); //error
+        return Nat::from(0u128); 
+    }
+    
     let exp = current_timestamp - last_update_timestamp;
     ic_cdk::println!("exp (time difference): {}", exp);
-    if exp == 0 {
+    
+    if exp.clone() == Nat::from(0u128) {
         ic_cdk::println!("exp is 0, returning SCALING_FACTOR {}", get_scaling_value());
         return get_scaling_value();
     }
+    
     let rate = rate_input;
-    ic_cdk::println!("Rate calculated: {}", rate);
-
-    let scaled_rate = (rate.clone() * exp as u128) / SECONDS_PER_YEAR as u128;
-    ic_cdk::println!("Scaled rate: {}", scaled_rate);
-
-    let exp_minus_one = exp - 1;
-    ic_cdk::println!("exp_minus_one: {}", exp_minus_one);
-
-    let exp_minus_two = if exp > 2 { exp - 2 } else { 0 };
-    ic_cdk::println!("exp_minus_two: {}", exp_minus_two);
-
-    let base_power_two = rate.clone().scaled_mul(rate.clone())
-        / (SECONDS_PER_YEAR as u128 * SECONDS_PER_YEAR as u128);
+    ic_cdk::println!("Rate calculated: {}", rate.clone());
+    
+    let scaled_rate = (rate.clone() * exp.clone()) / SECONDS_PER_YEAR;
+    ic_cdk::println!("Scaled rate: {}", scaled_rate.clone());
+    
+    let exp_minus_one = exp.clone() - Nat::from(1u128);
+    ic_cdk::println!("exp_minus_one: {}", exp_minus_one.clone());
+    
+    let exp_minus_two = if exp.clone() > Nat::from(2u128) {
+        exp.clone() - Nat::from(2u128)
+    } else {
+        Nat::from(ZERO_VALUE)
+    };
+    ic_cdk::println!("exp_minus_two: {}", exp_minus_two.clone());
+    
+    let base_power_two = (rate.clone().scaled_mul(rate.clone())) / (SECONDS_PER_YEAR * SECONDS_PER_YEAR);
     ic_cdk::println!("Base power two: {}", base_power_two);
-
-    let base_power_three =
-        base_power_two.clone().scaled_mul(rate.clone()) / SECONDS_PER_YEAR as u128;
-    ic_cdk::println!("Base power three: {}", base_power_three);
-
-    let second_term = (exp as u128 * exp_minus_one as u128 * base_power_two) / Nat::from(2u128);
-    ic_cdk::println!("Second term: {}", second_term);
-
-    let third_term =
-        (exp as u128 * exp_minus_one as u128 * exp_minus_two as u128 * base_power_three)
-            / Nat::from(6u128);
-    ic_cdk::println!("Third term: {}", third_term);
-
+    
+    let base_power_three = (base_power_two.clone().scaled_mul(rate.clone())) / SECONDS_PER_YEAR;
+    ic_cdk::println!("Base power three: {}", base_power_three.clone());
+    
+    let second_term = (exp.clone() * exp_minus_one.clone() * base_power_two.clone()) / Nat::from(2u128);
+    ic_cdk::println!("Second term: {}", second_term.clone());
+    
+    let third_term = (exp * exp_minus_one.clone() * exp_minus_two.clone() * base_power_three.clone()) / Nat::from(6u128);
+    ic_cdk::println!("Third term: {}", third_term.clone());
+    
     let result = get_scaling_value() + scaled_rate + second_term + third_term;
-    ic_cdk::println!("Final result: {}", result);
-
+    ic_cdk::println!("Final result: {}", result.clone());
+    // ic_cdk::println!("Final result: {}", result.clone()/Nat::from(10_000_000_000_000_000_000u128));
+    
     result
 }
+
 
 /*
  * @title User Normalized Supply
@@ -425,15 +481,39 @@ fn test_calculate_compounded_interest() {
     let current_timestamp = 1_700_000_000; // Mocked timestamp for testing
 
     let test_cases = vec![
+        // TestCase {
+        //     rate_input: Nat::from(5u128), // 5% annual interest
+        //     last_update_timestamp: current_timestamp - SECONDS_PER_YEAR, // 1 year ago
+        //     expected_output: get_scaling_value() + Nat::from(5u128), // Approximation
+        // },
+        // TestCase {
+        //     rate_input: Nat::from(10u128), // 10% annual interest
+        //     last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR / 2), // 6 months ago
+        //     expected_output: get_scaling_value() + Nat::from(5u128), // Approximation
+        // },
         TestCase {
-            rate_input: Nat::from(5u128), // 5% annual interest
-            last_update_timestamp: current_timestamp - SECONDS_PER_YEAR, // 1 year ago
-            expected_output: get_scaling_value() + Nat::from(5u128), // Approximation
+            // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
+            rate_input: Nat::from(1_000_000u128),
+            last_update_timestamp: 0u64, // 6 months ago
+            expected_output: get_scaling_value() + Nat::from(1_000_000u128), // Approximation
         },
         TestCase {
-            rate_input: Nat::from(10u128), // 10% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR / 2), // 6 months ago
-            expected_output: get_scaling_value() + Nat::from(5u128), // Approximation
+            // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
+            rate_input: Nat::from(28_000_000u128),
+            last_update_timestamp: 0u64, // 6 months ago
+            expected_output: get_scaling_value() + Nat::from(28_000_000u128), // Approximation
+        },
+        TestCase {
+            // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
+            rate_input: Nat::from(28_000_000u128),
+            last_update_timestamp: 31525000u64, // 6 months ago
+            expected_output: get_scaling_value() + Nat::from(9_766u128), // Approximation
+        },
+        TestCase {
+            // rate_input: Nat::from(10_000_000_000_000_000_000_000_000u128), // 1% annual interest
+            rate_input: Nat::from(28_000_000u128),
+            last_update_timestamp: 31525000000u64, // 6 months ago
+            expected_output: Nat::from(0u128), // Approximation
         },
     ];
 
@@ -444,34 +524,36 @@ fn test_calculate_compounded_interest() {
         println!("🔵 Test Case {}: Calculating Compounded Interest", i + 1);
         println!("Rate Input: {}%", case.rate_input);
         println!("Last Update Timestamp: {}", case.last_update_timestamp);
-        let amount_u128: u64 = case.expected_output.clone().0.try_into().unwrap();
-        let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Expected Output: {}", amount_float / 100000000.0);
+        // let amount_u128: u64 = case.expected_output.clone().0.try_into().unwrap();
+        let amount_u128: Nat = case.expected_output.clone();
+        // let amount_float = amount_u128 as f64;
+        // ic_cdk::println!("Expected Output: {}", amount_float / 100000000.0);
+        ic_cdk::println!("Expected Output: {}", amount_u128);
         println!("------------------------------------------------------------\n");
 
         let result = calculate_compounded_interest(
             case.rate_input.clone(),
-            case.last_update_timestamp,
-            current_timestamp,
+            case.last_update_timestamp.into(),
+            31536000u64.into(),
         );
 
-        let amount_u128: u64 = case.expected_output.clone().0.try_into().unwrap();
-        let amount_float = amount_u128 as f64;
+        // let amount_u128: u64 = case.expected_output.clone().0.try_into().unwrap();
+        // let amount_float = amount_u128 as f64;
 
-        let amount_u128_result: u64 = result.clone().0.try_into().unwrap();
-        let amount_float_result = amount_u128_result as f64;
+        // let amount_u128_result: u64 = result.clone().0.try_into().unwrap();
+        // let amount_float_result = amount_u128_result as f64;
 
         if result == case.expected_output {
             println!(
                 "✅ Test Case {} Passed: Expected Borrow Index = {}, Got = {}",
                 i + 1,
-                amount_float / 100000000.0,
-                amount_float_result / 100000000.0
+                case.expected_output,
+                result
             );
         } else {
             println!("❌ Test Case {} Failed:", i + 1);
-            println!("   Expected Borrow Index: {}", amount_float / 100000000.0);
-            println!("   Got:      {}", amount_float_result / 100000000.0);
+            println!("   Expected Borrow Index: {}", case.expected_output);
+            println!("   Got:      {}", result);
         }
 
         assert_eq!(

@@ -26,9 +26,9 @@ fn get_scaling_value() -> Nat {
  * @returns The linear interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
-    // let rate = rate_input/Nat::from(100u128);
+   
         let rate = rate_input;
-    let current_timestamp = current_timestamp(); // Convert nanoseconds to seconds
+    let current_timestamp = current_timestamp(); 
     ic_cdk::println!("current time in cal_linear function {} and seconds per year {} and last timestamp {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp);
     let time_delta = current_timestamp - last_update_timestamp;
     let result = rate.clone() * time_delta / SECONDS_PER_YEAR;
@@ -37,60 +37,78 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
     get_scaling_value() + result
 }
 
-/* 
- * @title Calculate Compounded Interest
- * @functionality Calculates continuously compounded interest with high precision using Taylor series approximation
- * @dev Computes interest using a continuous compounding formula based on the provided interest rate.
- * @param rate_input The annual interest rate as a `Nat` (percentage basis).
+
+ /*
+    * @title Compounded Interest Calculation Inspired by Aave Protocol
+    * @dev This function calculates compounded interest using a 3rd-order Taylor expansion approximation.
+    *
+    * Inspired Formula (from Aave Solidity Code):
+    *
+    *   1 + (rate * t) + (rate^2 * t * (t-1)) / (2) + (rate^3 * t * (t-1) * (t-2)) / (6)
+    *
+    * Where:
+    *   - `rate` is the interest rate per second (scaled using SCALING_FACTOR, e.g., 1e27)
+    *   - `t` is the time difference in seconds (current_timestamp - last_update_timestamp)
+    *   - `SCALING_FACTOR` ensures precision for financial operations which is 10^8.
+    *
+    * This 3rd-order Taylor expansion is an efficient approximation for calculating compound interest 
+    * over small intervals without expensive exponential operations.
+     * @param rate_input The annual interest rate as a `Nat` (percentage basis). e.g (1% -> 0.01 * 10^8)
  * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.
- * @param current_timestamp The current timestamp (in seconds).
- * @returns The compounded interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
- */
+ * @param The current timestamp (in seconds).
+ * @returns The compounded interest(debt index) factor as a `Nat`, scaled using `SCALING_FACTOR`.
+*/
+
 pub fn calculate_compounded_interest(
     rate_input: Nat,
     last_update_timestamp: u64,
     current_timestamp: u64,
 ) -> Nat {
-    ic_cdk::println!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
-    if last_update_timestamp > current_timestamp{
-        ic_cdk::println!("Exponential function underflow"); //error
-        return Nat::from(0u128); 
-       //error result
+     // Ensure that timestamps are valid (underflow check)
+    if last_update_timestamp > current_timestamp {
+        return Nat::from(0u128); /
     }
-    let exp = current_timestamp - last_update_timestamp;
-    ic_cdk::println!("exp (time difference): {}", exp);
-    if exp == 0 {
-        ic_cdk::println!("exp is 0, returning SCALING_FACTOR {}",get_scaling_value());
+
+    let exp = Nat::from(current_timestamp - last_update_timestamp);
+    
+    //If no time has passed, interest(Debt index) is 1 (scaled with 10^8)
+    if exp == Nat::from(0u128) {
         return get_scaling_value();
     }
+
     let rate = rate_input;
-    ic_cdk::println!("Rate calculated: {}", rate);
     
-    let scaled_rate = (rate.clone() * exp as u128) / SECONDS_PER_YEAR as u128;
-    ic_cdk::println!("Scaled rate: {}", scaled_rate);
-    
-    let exp_minus_one = exp - 1;
-    ic_cdk::println!("exp_minus_one: {}", exp_minus_one);
-    
-    let exp_minus_two = if exp > TWO_VALUE as u64 { exp - TWO_VALUE as u64 } else { ZERO_VALUE as u64 };
-    ic_cdk::println!("exp_minus_two: {}", exp_minus_two);
-    
-    let base_power_two = rate.clone().scaled_mul(rate.clone()) / (SECONDS_PER_YEAR as u128 * SECONDS_PER_YEAR as u128) ;
-    ic_cdk::println!("Base power two: {}", base_power_two);
-    
-    let base_power_three = base_power_two.clone().scaled_mul(rate.clone()) / SECONDS_PER_YEAR as u128;
-    ic_cdk::println!("Base power three: {}", base_power_three);
-    
-    let second_term = (exp as u128 * exp_minus_one as u128 * base_power_two) / Nat::from(2u128);
-    ic_cdk::println!("Second term: {}", second_term);
-    
-    let third_term =
-        (exp as u128 * exp_minus_one as u128 * exp_minus_two as u128 * base_power_three) / Nat::from(6u128);
-    ic_cdk::println!("Third term: {}", third_term);
-    
+    //First Term: Linear interest (rate * t / SECONDS_PER_YEAR)
+    let scaled_rate = if exp > SECONDS_PER_YEAR {
+        Nat::from(0u128) // Prevent overflow
+    } else {
+        (rate.clone() * exp) / SECONDS_PER_YEAR
+    };
+
+    // Prepare (t-1) and (t-2) terms
+    let exp_minus_one = exp - Nat::from(1u128);
+    let exp_minus_two = if exp > Nat::from(TWO_VALUE) {
+        exp - Nat::from(TWO_VALUE)
+    } else {
+        Nat::from(ZERO_VALUE)
+    };
+
+    // Calculate basePowerTwo = (rate^2) / (SECONDS_PER_YEAR^2)
+    let base_power_two = (rate.clone().scaled_mul(rate.clone())) / (SECONDS_PER_YEAR * SECONDS_PER_YEAR);
+    // Calculate basePowerThree = (rate^3) / (SECONDS_PER_YEAR^3)
+    let base_power_three = if base_power_two > Nat::from(u128::MAX) {
+        Nat::from(0u128) // Prevent overflow in base_power_three
+    } else {
+        (base_power_two.clone().scaled_mul(rate)) / SECONDS_PER_YEAR
+    };
+    //Second Term: Quadratic interest (rate^2 * t * (t-1) / 2)
+    let second_term = (exp * exp_minus_one.clone() * base_power_two) / Nat::from(2u128);
+    //Third Term: Cubic interest (rate^3 * t * (t-1) * (t-2) / 6)
+    let third_term = (exp * exp_minus_one * exp_minus_two * base_power_three) / Nat::from(6u128);
+
+    // Result (Growth factor) scaled with 10^8
     let result = get_scaling_value() + scaled_rate + second_term + third_term;
-    ic_cdk::println!("Final result: {}", result);
-    
+    ic_cdk::println!("result {} and scaled_rate {} and second_term {} and third_term {}", result, scaled_rate, second_term, third_term); //debug
     result
 }
 

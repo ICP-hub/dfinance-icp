@@ -556,14 +556,6 @@ const SupplyPopup = ({
     return result;
   };
 
-  // Function to calculate the Loan-to-Value (LTV) ratio
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return (totalDeptValue / totalCollateralValue) * 100;
-  };
-
   // Function to handle the click action of the max button
   const handleMaxClick = () => {
     const maxAmount = formatValue(supplyBalance);
@@ -677,7 +669,7 @@ const SupplyPopup = ({
       totalDeptValue = 0;
     }
 
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
+   
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);

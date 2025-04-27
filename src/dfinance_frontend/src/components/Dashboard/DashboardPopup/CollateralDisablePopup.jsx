@@ -136,6 +136,23 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
           );
           throw new Error("ExchangeRateError: Price fetch failed.");
         }
+        if (errorMsg?.NegativeAmount === null) {
+          toast.error("Amount must be a positive number", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          SetError(
+            "Amount must be a positive number"
+          );
+          console.error("Amount must be a positive number");
+        }
         if (errorMsg?.LTVGreaterThanThreshold === null) {
           const errorText =
             "Collateral update failed: LTV exceeds the allowable threshold.";
@@ -389,15 +406,15 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
               </div>
               <div className="w-full bg-gray-100 cursor-pointer p-3  rounded-md text-xs sm:text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex justify-between items-center ">
-                  <p className="text-xs sm:text-sm">Supply Balance</p>
-                  <div className="w-auto flex items-center gap-2">
+                  <p className="text-xs sm:text-[13px]">Supply Balance</p>
+                  <div className="w-auto flex items-center gap-1">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-4 h-4 sm:w-6 sm:h-6 rounded-full"
+                      className="object-cover w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
-                    <span className="text-xs sm:text-lg">{formatValue(assetSupply)}</span>
-                    <span className="text-xs sm:text-lg">{asset}</span>
+                    <span className="text-xs sm:text-[14px]">{formatValue(assetSupply)}</span>
+                    <span className="text-xs sm:text-[13px]">{asset}</span>
                   </div>
                 </div>
 

@@ -56,3 +56,15 @@ pub fn validate_zero_value(value: &candid::Nat) -> Result<(), Error> {
 
   Ok(())
 }
+
+// to validate zero value
+pub fn validate_negatige_value(value: &candid::Nat) -> Result<(), Error> {
+  if value < &zero_nat_value() {
+      ic_cdk::println!("value must be positive");
+      return Err(Error::NegativeAmount);
+  }
+
+
+
+  Ok(())
+}

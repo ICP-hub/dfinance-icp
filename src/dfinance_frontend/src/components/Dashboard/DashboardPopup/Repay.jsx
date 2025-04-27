@@ -506,14 +506,6 @@ const Repay = ({
     );
   };
 
-  // Function to calculate the Loan-to-Value (LTV) ratio
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return totalDeptValue / totalCollateralValue;
-  };
-
   // Function to handle the click event for the Max button
   const handleMaxClick = () => {
     const truncateToEightDecimals = (value) => {
@@ -671,7 +663,6 @@ const Repay = ({
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
 
     setPrevHealthFactor(currentHealthFactor);
     const truncateToDecimals = (num, decimals) => {

@@ -51,7 +51,7 @@ const AssetDetails = () => {
   const dispatch = useDispatch();
   const { userData, userAccountData } = useUserData();
   const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
-  const { assets, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow, loading: filteredDataLoading } = useAssetData();
+  const { assets, AssetImages, reserveData, filteredItems, asset_supply, asset_borrow, fetchAssetSupply, fetchAssetBorrow, loading: filteredDataLoading } = useAssetData();
   const { isAuthenticated, principal, backendActor, fetchReserveData, createLedgerActor } = useAuth();
   const location = useLocation();
   const { assetData } = location.state || {};
@@ -204,7 +204,7 @@ const AssetDetails = () => {
     return { borrowableValue, borrowableAssetValue };
   };
 
-   //wallet connection handler
+  //wallet connection handler
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
@@ -235,7 +235,7 @@ const AssetDetails = () => {
     dispatch(setAssetDetailFilter(value));
   };
 
-// Fetches asset principle
+  // Fetches asset principle
   const getAssetPrinciple = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -296,6 +296,221 @@ const AssetDetails = () => {
     }
   };
 
+  const assetInfo = {
+    ckBTC: { balance: ckBTCBalance, usdBalance: ckBTCUsdBalance, rate: ckBTCUsdRate },
+    ckETH: { balance: ckETHBalance, usdBalance: ckETHUsdBalance, rate: ckETHUsdRate },
+    ckUSDC: { balance: ckUSDCBalance, usdBalance: ckUSDCUsdRate, rate: ckUSDCUsdRate },
+    ICP: { balance: ckICPBalance, usdBalance: ckICPUsdRate, rate: ckICPUsdRate },
+    ckUSDT: { balance: ckUSDTBalance, usdBalance: ckUSDTUsdRate, rate: ckUSDTUsdRate },
+  }[id];
+
+  const { calculatedBalance, calculatedUsdValueFormatted } = (() => {
+    if (!assetInfo) {
+      return {
+        calculatedBalance: "0.00",
+        calculatedUsdValueFormatted: "$0.00",
+      };
+    }
+
+    const { balance, rate } = assetInfo;
+    const usdRate = rate / 1e8;
+    const calculatedUsdValue = balance * usdRate;
+
+    let calculatedBalance, calculatedUsdValueFormatted;
+
+    if (!isFinite(calculatedUsdValue) || calculatedUsdValue === 0) {
+      calculatedBalance = "0.00";
+      calculatedUsdValueFormatted = "$0.00";
+    } else if (calculatedUsdValue < 0.01) {
+      calculatedBalance = `<${(0.01 / usdRate).toLocaleString(undefined, {
+        minimumFractionDigits: 7,
+        maximumFractionDigits: 7,
+      })}`;
+      calculatedUsdValueFormatted = "<$0.01";
+    } else {
+      calculatedBalance = balance >= 1
+        ? balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : balance.toLocaleString(undefined, { minimumFractionDigits: 7, maximumFractionDigits: 7 });
+      calculatedUsdValueFormatted = `$${calculatedUsdValue.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
+    return { calculatedBalance, calculatedUsdValueFormatted };
+  })();
+
+  // 👇 Create a function to get the display values
+  const getBorrowableDisplayValues = (id) => {
+    let balance = 0;
+    let usdBalance = 0;
+    let usdRate = 0;
+
+    // Set values based on asset id
+    switch (id) {
+      case "ckBTC":
+        balance = borrowableValue;
+        usdBalance = borrowableAssetValue;
+        usdRate = ckBTCUsdRate / 1e8;
+        break;
+      case "ckETH":
+        balance = borrowableValue;
+        usdBalance = borrowableAssetValue;
+        usdRate = ckETHUsdRate / 1e8;
+        break;
+      case "ckUSDC":
+        balance = borrowableValue;
+        usdBalance = borrowableAssetValue;
+        usdRate = ckUSDCUsdRate / 1e8;
+        break;
+      case "ICP":
+        balance = borrowableValue;
+        usdBalance = borrowableAssetValue;
+        usdRate = ckICPUsdRate / 1e8;
+        break;
+      case "ckUSDT":
+        balance = borrowableValue;
+        usdBalance = borrowableAssetValue;
+        usdRate = ckUSDTUsdRate / 1e8;
+        break;
+      default:
+        balance = 0;
+        usdBalance = 0;
+        usdRate = 0;
+    }
+
+    const calculatedUsdValue = balance * usdRate;
+
+    let displayedBalance;
+    if (!isFinite(calculatedUsdValue) || calculatedUsdValue === 0) {
+      displayedBalance = "0.00";
+    } else if (calculatedUsdValue < 0.01) {
+      displayedBalance = `<${(0.01 / usdRate).toLocaleString(undefined, {
+        minimumFractionDigits: 7,
+        maximumFractionDigits: 7,
+      })}`;
+    } else {
+      displayedBalance =
+        balance >= 1
+          ? balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : balance.toLocaleString(undefined, { minimumFractionDigits: 7, maximumFractionDigits: 7 });
+    }
+
+    let displayedUsd;
+    if (calculatedUsdValue === 0) {
+      displayedUsd = "$0.00";
+    } else if (calculatedUsdValue < 0.01) {
+      displayedUsd = "<0.01$";
+    } else {
+      displayedUsd = `$${calculatedUsdValue.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
+    return { displayedBalance, displayedUsd };
+  };
+
+  // Then, use it like this inside JSX:
+  const { displayedBalance, displayedUsd } = getBorrowableDisplayValues(id);
+
+
+  const handleAssetAction = (actionType, asset) => {
+    const reserveData = userData?.Ok?.reserves[0]?.find(
+      (reserveGroup) => reserveGroup[0] === asset
+    );
+    const currentLiquidity =
+      userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)
+        ? userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)[1]
+          ?.liquidity_index
+        : 0;
+
+    const assetBalance =
+      assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
+
+    const calculated_supply = Math.trunc((Number(assetBalance) / (Number(currentLiquidity))) * 1e8);
+    const assetSupply = Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8) / 1e8;
+
+    const DebtIndex =
+      userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)
+        ? userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)[1]
+          ?.variable_borrow_index
+        : 0;
+
+    const assetBorrowBalance =
+      assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance || 0;
+
+    const assetBorrow =
+      (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
+      (Number(DebtIndex) * 1e8);
+
+    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+
+    const totalCollateral =
+      parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
+    const totalDebt = parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
+    const item = filteredItems.find(
+      (item) => item[0] === asset
+    );
+    const liquidationThreshold =
+      Number(userAccountData?.Ok?.[3]) /
+      100000000 || 0;
+    const reserveliquidationThreshold =
+      Number(
+        item?.[1]?.Ok.configuration
+          .liquidation_threshold
+      ) / 100000000;
+    const supplyRateApr =
+      (Number(
+        item?.[1]?.Ok?.current_liquidity_rate
+      ) *
+        100) /
+      100000000 || 0;
+    const ckBalance =
+      asset === "ckBTC"
+        ? ckBTCBalance
+        : asset === "ckETH"
+          ? ckETHBalance
+          : asset === "ckUSDC"
+            ? ckUSDCBalance
+            : asset === "ICP"
+              ? ckICPBalance
+              : asset === "ckUSDT"
+                ? ckUSDTBalance
+                : null;
+    const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
+    const assetData = item[1].Ok;
+
+    const total_supply =
+      Number(assetData?.asset_supply || 0) /
+      100000000;
+    const total_borrow =
+      Number(assetData?.asset_borrow || 0) /
+      100000000;
+
+    const { borrowableValue, borrowableAssetValue } = calculateBorrowableValues(
+      item,
+      availableBorrow,
+      Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
+    );
+    handleModalOpen(
+      actionType,
+      asset,
+      AssetImages[assets.indexOf(asset)],
+      supplyRateApr,
+      ckBalance,
+      liquidationThreshold,
+      reserveliquidationThreshold,
+      assetSupply,
+      assetBorrow,
+      totalCollateral,
+      totalDebt,
+      currentCollateralStatus,
+      Ltv,
+      borrowableValue,
+      borrowableAssetValue
+    );
+  };
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -832,197 +1047,37 @@ const AssetDetails = () => {
                   </p>
                 </div>
                 <div className="flex">
-                  <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
+                  <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1">
                     <div className="text-sm text-[#eeeef0] dark:text-darkText flex flex-col justify-center">
-                      {(() => {
-                        const assetData = {
-                          ckBTC: {
-                            balance: ckBTCBalance,
-                            usdBalance: ckBTCUsdBalance,
-                            rate: ckBTCUsdRate,
-                          },
-                          ckETH: {
-                            balance: ckETHBalance,
-                            usdBalance: ckETHUsdBalance,
-                            rate: ckETHUsdRate,
-                          },
-                          ckUSDC: {
-                            balance: ckUSDCBalance,
-                            usdBalance: ckUSDCUsdBalance,
-                            rate: ckUSDCUsdRate,
-                          },
-                          ICP: {
-                            balance: ckICPBalance,
-                            usdBalance: ckICPUsdBalance,
-                            rate: ckICPUsdRate,
-                          },
-                          ckUSDT: {
-                            balance: ckUSDTBalance,
-                            usdBalance: ckUSDTUsdBalance,
-                            rate: ckUSDTUsdRate,
-                          },
-                        }[id];
-
-                        if (!assetData) return null;
-
-                        const { balance, usdBalance, rate } = assetData;
-                        const usdRate = rate / 1e8;
-                        const calculatedUsdValue = balance * usdRate;
-
-                        // Determine how to display the balance
-                        let displayedBalance;
-                        if (
-                          !isFinite(calculatedUsdValue) ||
-                          calculatedUsdValue === 0
-                        ) {
-                          displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
-                        } else if (calculatedUsdValue < 0.01) {
-                          displayedBalance = `<${(
-                            0.01 / usdRate
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 7,
-                            maximumFractionDigits: 7,
-                          })}`; // Show "<" sign for small asset values
-                        } else {
-                          displayedBalance =
-                            balance >= 1
-                              ? balance.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                              : balance.toLocaleString(undefined, {
-                                minimumFractionDigits: 7,
-                                maximumFractionDigits: 7,
-                              });
-                        }
-
-                        return (
-                          <>
-                            <p>{displayedBalance}</p>
-                            <p className="font-light">
-                              {calculatedUsdValue === 0
-                                ? "$0.00"
-                                : calculatedUsdValue < 0.01
-                                  ? "<0.01$"
-                                  : `$${calculatedUsdValue.toLocaleString(
-                                    undefined,
-                                    {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    }
-                                  )}`}
-                            </p>
-                          </>
-                        );
-                      })()}
+                      <p>{calculatedBalance}</p>
+                      <p className="font-light">{calculatedUsdValueFormatted}</p>
                     </div>
                   </div>
+
                   <div className="ml-auto">
                     <Button
                       title={"Supply"}
                       onClickHandler={() => {
-                        const reserveData = userData?.Ok?.reserves[0]?.find(
-                          (reserveGroup) => reserveGroup[0] === id
-                        );
-
-                        const currentLiquidity =
-                          userData?.Ok?.reserves[0]?.find(
-                            (reserveGroup) => reserveGroup[0] === id // Check if the asset matches
-                          )?.[1]?.liquidity_index;
-                        const assetBalance =
-                          assetBalances.find((balance) => balance.asset === id)
-                            ?.dtokenBalance || 0;
-
-                        const assetSupply =
-                          (Number(assetBalance) *
-                            Number(getAssetSupplyValue(id))) /
-                          Number(currentLiquidity);
-
-                        const DebtIndex = userData?.Ok?.reserves[0]?.find(
-                          (reserveGroup) => reserveGroup[0] === id // Check if the asset matches
-                        )?.[1]?.variable_borrow_index;
-
-                        const assetBorrowBalance =
-                          assetBalances.find((balance) => balance.asset === id)
-                            ?.debtTokenBalance || 0;
-
-                        const assetBorrow =
-                          (Number(assetBorrowBalance) *
-                            Number(getAssetBorrowValue(id))) /
-                          Number(DebtIndex);
-
-                        const currentCollateralStatus =
-                          reserveData?.[1]?.is_collateral || true;
-
-                        const totalCollateral =
-                          parseFloat(
-                            Number(userAccountData?.Ok?.[0]) / 100000000
-                          ) || 0;
-                        const totalDebt =
-                          parseFloat(
-                            Number(userAccountData?.Ok?.[1]) / 100000000
-                          ) || 0;
-
-                        const filteredData = filteredItems?.find((item) => {
-                          return item[1]?.Ok;
-                        });
-
-                        const supplyRateAPR =
-                          Number(filteredData[1]?.Ok.current_liquidity_rate) /
-                          100000000 || 0;
-
-                        const liquidationThreshold =
-                          Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
-                        const reserveliquidationThreshold =
-                          Number(
-                            filteredData[1]?.Ok.configuration
-                              .liquidation_threshold
-                          ) / 100000000 || 0;
-
-                        const ckBalance =
-                          id === "ckBTC"
-                            ? ckBTCBalance
-                            : id === "ckETH"
-                              ? ckETHBalance
-                              : id === "ckUSDC"
-                                ? ckUSDCBalance
-                                : id === "ICP"
-                                  ? ckICPBalance
-                                  : id === "ckUSDT"
-                                    ? ckUSDTBalance
-                                    : null;
+                        fetchAssetSupply(id);
                         if (ckBalance === 0) {
-                          toast.info(
-                            "You cannot supply because your balance is 0."
-                          );
+                          toast.dismiss();
+                          toast.info(`You cannot supply because your balance is 0.`, {
+                            className: "custom-toast",
+                            position: "top-center",
+                            autoClose: 3000,
+                          });
                           return;
                         }
-                        handleModalOpen(
-                          "supply",
-                          id,
-                          (id === "ckBTC" && ckbtc) ||
-                          (id === "ckETH" && cketh) ||
-                          (id === "ckUSDC" && ckUSDC) ||
-                          (id === "ICP" && icp) ||
-                          (id === "ckUSDT" && ckUSDT),
-                          supplyRateAPR,
-                          ckBalance,
-                          liquidationThreshold,
-                          reserveliquidationThreshold,
-                          assetSupply,
-                          assetBorrow,
-                          totalCollateral,
-                          totalDebt,
-                          currentCollateralStatus
-                        );
+                        handleAssetAction("supply", id);
                       }}
                       disabled={ckBalance === 0}
                       className={
                         "my-2 text-white bg-gradient-to-r from-[#CBA534] to-[#639AB5] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
-                      }
-                    />
+                      } />
                   </div>
                 </div>
+
+
               </div>
 
               {ckBalance === "0" && (
@@ -1044,158 +1099,16 @@ const AssetDetails = () => {
                 <div className="flex">
                   <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-1 ">
                     <div className="text-sm text-[#eeeef0] dark:text-darkText flex flex-col justify-center">
-                      {(() => {
-                        let balance = 0;
-                        let usdBalance = 0;
-                        let usdRate = 0;
-
-                        // Assign borrowable values based on asset ID
-                        switch (id) {
-                          case "ckBTC":
-                            balance = borrowableValue;
-                            usdBalance = borrowableAssetValue;
-                            usdRate = ckBTCUsdRate / 1e8;
-                            break;
-                          case "ckETH":
-                            balance = borrowableValue;
-                            usdBalance = borrowableAssetValue;
-                            usdRate = ckETHUsdRate / 1e8;
-                            break;
-                          case "ckUSDC":
-                            balance = borrowableValue;
-                            usdBalance = borrowableAssetValue;
-                            usdRate = ckUSDCUsdRate / 1e8;
-                            break;
-                          case "ICP":
-                            balance = borrowableValue;
-                            usdBalance = borrowableAssetValue;
-                            usdRate = ckICPUsdRate / 1e8;
-                            break;
-                          case "ckUSDT":
-                            balance = borrowableValue;
-                            usdBalance = borrowableAssetValue;
-                            usdRate = ckUSDTUsdRate / 1e8;
-                            break;
-                          default:
-                            balance = 0;
-                            usdBalance = 0;
-                            usdRate = 0;
-                            break;
-                        }
-
-                        const calculatedUsdValue = balance * usdRate;
-
-                        // Determine how to display the borrowable balance
-                        let displayedBalance;
-                        if (
-                          !isFinite(calculatedUsdValue) ||
-                          calculatedUsdValue === 0
-                        ) {
-                          displayedBalance = "0.00"; // Show "0.00" if USD value is exactly 0
-                        } else if (calculatedUsdValue < 0.01) {
-                          displayedBalance = `<${(
-                            0.01 / usdRate
-                          ).toLocaleString(undefined, {
-                            minimumFractionDigits: 7,
-                            maximumFractionDigits: 7,
-                          })}`; // Show "<" sign for small asset values
-                        } else {
-                          displayedBalance =
-                            balance >= 1
-                              ? balance.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                              : balance.toLocaleString(undefined, {
-                                minimumFractionDigits: 7,
-                                maximumFractionDigits: 7,
-                              });
-                        }
-
-                        return (
-                          <>
-                            <p>{displayedBalance}</p>
-                            <p className="font-light">
-                              {calculatedUsdValue === 0
-                                ? "$0.00"
-                                : calculatedUsdValue < 0.01
-                                  ? "<0.01$"
-                                  : `$${calculatedUsdValue.toLocaleString(
-                                    undefined,
-                                    {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    }
-                                  )}`}
-                            </p>
-                          </>
-                        );
-                      })()}
+                      <p>{displayedBalance}</p>
+                      <p className="font-light">{displayedUsd}</p>
                     </div>
                   </div>
+
                   <div className="ml-auto">
                     <Button
                       title={"Borrow"}
-                      onClickHandler={async () => {
-                        dispatch(toggleDashboardRefresh());
-                        fetchAssetBorrow(id);
-                        const currentCollateralStatus =
-                          reserveData?.[1]?.is_collateral;
-
-                        const currentLiquidity =
-                          userData?.Ok?.reserves[0]?.find(
-                            (reserveGroup) => reserveGroup[0] === id // Check if the asset matches
-                          )?.[1]?.liquidity_index;
-                        const assetBalance =
-                          assetBalances.find((balance) => balance.asset === id)
-                            ?.dtokenBalance || 0;
-
-                        const assetSupply =
-                          (Number(assetBalance) *
-                            Number(getAssetSupplyValue(id))) /
-                          (Number(currentLiquidity) * 1e8);
-
-                        const DebtIndex = userData?.Ok?.reserves[0]?.find(
-                          (reserveGroup) => reserveGroup[0] === id // Check if the asset matches
-                        )?.[1]?.variable_borrow_index;
-
-                        const assetBorrowBalance =
-                          assetBalances.find((balance) => balance.asset === id)
-                            ?.debtTokenBalance || 0;
-
-                        const assetBorrow =
-                          (Number(assetBorrowBalance) *
-                            Number(getAssetBorrowValue(id))) /
-                          (Number(DebtIndex) * 1e8);
-
-                        const totalCollateral =
-                          parseFloat(
-                            Number(userAccountData?.Ok?.[0]) / 100000000
-                          ) || 0;
-                        const totalDebt =
-                          parseFloat(
-                            Number(userAccountData?.Ok?.[1]) / 100000000
-                          ) || 0;
-                        const LiquidationThreshold =
-                          Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
-                        const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
-                        const total_supply =
-                          Number(assetData?.Ok?.asset_supply || 0) / 100000000;
-                        const total_borrow =
-                          Number(assetData?.Ok?.asset_borrow || 0) / 100000000;
-                        const remainingBorrowable =
-                          Number(total_supply) - Number(total_borrow);
-
-                        const { borrowableValue, borrowableAssetValue } =
-                          calculateBorrowableValues(
-                            assetData,
-                            availableBorrow,
-                            Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
-
-                          );
-
-                        // Check if borrowable value is zero and show toast notification
-                        if (parseFloat(borrowableValue) <= 0) {
+                      onClickHandler={() => {
+                        if (parseFloat(displayedBalance) <= 0) {
                           toast.dismiss();
                           toast.info(
                             "Insufficient asset supply or balance to allow borrow request",
@@ -1210,51 +1123,18 @@ const AssetDetails = () => {
                               progress: undefined,
                             }
                           );
-                          return; // Exit the function if borrowable value or ckBalance is 0
+                          return;
                         }
-                        handleModalOpen(
-                          "borrow",
-                          id,
-                          (id === "ckBTC" && ckbtc) ||
-                          (id === "ckETH" && cketh) ||
-                          (id === "ckUSDC" && ckUSDC) ||
-                          (id === "ICP" && icp) ||
-                          (id === "ckUSDT" && ckUSDT),
-                          Number(assetData?.Ok.borrow_rate) / 100000000,
-                          id === "ckBTC"
-                            ? ckBTCBalance
-                            : id === "ckETH"
-                              ? ckETHBalance
-                              : id === "ckUSDC"
-                                ? ckUSDCBalance
-                                : id === "ICP"
-                                  ? ckICPBalance
-                                  : id === "ckUSDT"
-                                    ? ckUSDTBalance
-                                    : null,
-                          LiquidationThreshold,
-                          Number(
-                            assetData?.Ok?.configuration.liquidation_threshold
-                          ) / 100000000 || 0,
-                          assetSupply,
-                          assetBorrow,
-                          totalCollateral,
-                          totalDebt,
-                          currentCollateralStatus,
-                          Ltv,
-                          borrowableValue,
-                          borrowableAssetValue,
-                          total_supply,
-                          total_borrow
-                        );
+
+                        handleAssetAction("borrow", id);
                       }}
-                      
-                      disabled={parseFloat(borrowableValue) <= 0}
+                      disabled={parseFloat(displayedBalance) <= 0}
                       className={
                         "my-2 text-white bg-gradient-to-r from-[#CBA534] to-[#639AB5] rounded-xl p-2 px-8 shadow-lg font-semibold text-sm'"
                       } />
                   </div>
                 </div>
+
               </div>
             </div>
           </div>

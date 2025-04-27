@@ -66,7 +66,7 @@ pub fn calculate_compounded_interest(
 ) -> Nat {
      // Ensure that timestamps are valid (underflow check)
     if last_update_timestamp > current_timestamp {
-        return Nat::from(0u128); /
+        return Nat::from(0u128); 
     }
 
     let exp = Nat::from(current_timestamp - last_update_timestamp);
@@ -82,13 +82,13 @@ pub fn calculate_compounded_interest(
     let scaled_rate = if exp > SECONDS_PER_YEAR {
         Nat::from(0u128) // Prevent overflow
     } else {
-        (rate.clone() * exp) / SECONDS_PER_YEAR
+        (rate.clone() * exp.clone()) / SECONDS_PER_YEAR
     };
 
     // Prepare (t-1) and (t-2) terms
-    let exp_minus_one = exp - Nat::from(1u128);
+    let exp_minus_one = exp.clone() - Nat::from(1u128);
     let exp_minus_two = if exp > Nat::from(TWO_VALUE) {
-        exp - Nat::from(TWO_VALUE)
+        exp.clone() - Nat::from(TWO_VALUE)
     } else {
         Nat::from(ZERO_VALUE)
     };
@@ -102,12 +102,12 @@ pub fn calculate_compounded_interest(
         (base_power_two.clone().scaled_mul(rate)) / SECONDS_PER_YEAR
     };
     //Second Term: Quadratic interest (rate^2 * t * (t-1) / 2)
-    let second_term = (exp * exp_minus_one.clone() * base_power_two) / Nat::from(2u128);
+    let second_term = (exp.clone() * exp_minus_one.clone() * base_power_two) / Nat::from(2u128);
     //Third Term: Cubic interest (rate^3 * t * (t-1) * (t-2) / 6)
     let third_term = (exp * exp_minus_one * exp_minus_two * base_power_three) / Nat::from(6u128);
 
     // Result (Growth factor) scaled with 10^8
-    let result = get_scaling_value() + scaled_rate + second_term + third_term;
+    let result = get_scaling_value() + scaled_rate.clone() + second_term.clone() + third_term.clone();
     ic_cdk::println!("result {} and scaled_rate {} and second_term {} and third_term {}", result, scaled_rate, second_term, third_term); //debug
     result
 }

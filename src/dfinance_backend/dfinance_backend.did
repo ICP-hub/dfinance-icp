@@ -53,6 +53,7 @@ type Error = variant {
   InvalidUserId;
   UserFaucetReserveNotFound;
   ErrorDTokenBalanceLessThan;
+  NegativeAmount;
   EmailError;
   ErrorPriceCache;
   NotADeveloper;

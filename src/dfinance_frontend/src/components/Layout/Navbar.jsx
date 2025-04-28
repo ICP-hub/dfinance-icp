@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Info, User } from "lucide-react";
+import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuth } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
@@ -36,7 +36,7 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import { X } from 'lucide-react';
+
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";

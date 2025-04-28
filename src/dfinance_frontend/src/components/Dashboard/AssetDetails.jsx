@@ -133,13 +133,18 @@ const AssetDetails = () => {
    *                                  FUNCTIONS
    * =================================================================================== */
   // Fetches asset data including supply and borrow balances
-  const fetchAssetData = async () => {
+   const fetchAssetData = async () => {
     const balances = [];
+
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-      const assetBalance = { asset, dtokenBalance: null, debtTokenBalance: null };
+      const assetBalance = {
+        asset,
+        dtokenBalance: null,
+        debtTokenBalance: null,
+      };
 
       if (dtokenId) {
         const dtokenActor = createLedgerActor(dtokenId, idlFactory);
@@ -148,7 +153,7 @@ const AssetDetails = () => {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = formattedBalance;
+            assetBalance.dtokenBalance = balance;
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -163,7 +168,7 @@ const AssetDetails = () => {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await debtTokenActor.icrc1_balance_of(account);
             const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = formattedBalance;
+            assetBalance.debtTokenBalance = balance;
           } catch (error) {
             console.error(
               `Error fetching debt token balance for ${asset}:`,
@@ -304,6 +309,7 @@ const AssetDetails = () => {
     ckUSDT: { balance: ckUSDTBalance, usdBalance: ckUSDTUsdRate, rate: ckUSDTUsdRate },
   }[id];
 
+  // Function to calculate balance and usd value
   const { calculatedBalance, calculatedUsdValueFormatted } = (() => {
     if (!assetInfo) {
       return {
@@ -414,7 +420,7 @@ const AssetDetails = () => {
   // Then, use it like this inside JSX:
   const { displayedBalance, displayedUsd } = getBorrowableDisplayValues(id);
 
-
+  // Handle which popup to open and data per asset selected
   const handleAssetAction = (actionType, asset) => {
     const reserveData = userData?.Ok?.reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset

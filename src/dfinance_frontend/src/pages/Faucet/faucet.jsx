@@ -5,6 +5,8 @@ import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/MiniLoader";
+
+import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 const FaucetDetails = lazy(() =>
   import("../../components/Faucet/FaucetList")
 );
@@ -23,7 +25,7 @@ const Faucet = () => {
     (state) => state.utility
   );
   const { isAuthenticated } = useAuth();
-  const [isTestnetMode, setIsTestnetMode] = useState(true);
+  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
 
   const handleWalletConnect = () => {
     dispatch(
@@ -31,9 +33,6 @@ const Faucet = () => {
     );
   };
 
-  const handleTestnetModeToggle = () => {
-    setIsTestnetMode((prevMode) => !prevMode);
-  };
 
   return (
     <>

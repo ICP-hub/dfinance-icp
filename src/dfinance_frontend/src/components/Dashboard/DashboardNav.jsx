@@ -175,58 +175,54 @@ const DashboardNav = () => {
    * =================================================================================== */
 
   // Function to fetch asset data
-  const fetchAssetData = async () => {
-    const balances = [];
-
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
-
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = formattedBalance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+   const fetchAssetData = async () => {
+      const balances = [];
+  
+      for (const asset of assets) {
+        const reserveDataForAsset = await fetchReserveData(asset);
+        const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+        const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
+  
+        if (dtokenId) {
+          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          if (dtokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await dtokenActor.icrc1_balance_of(account);
+              const formattedBalance = Number(balance) / 100000000;
+              assetBalance.dtokenBalance = balance;
+            } catch (error) {
+              console.error(`Error fetching dtoken balance for ${asset}:`, error);
+            }
           }
         }
-      }
-
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            await new Promise((resolve) => setTimeout(resolve, 10));
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = formattedBalance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+  
+        if (debtTokenId) {
+          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+  
+          if (debtTokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await debtTokenActor.icrc1_balance_of(account);
+              const formattedBalance = Number(balance) / 100000000;
+              assetBalance.debtTokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching debt token balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
+        balances.push(assetBalance);
       }
-      balances.push(assetBalance);
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-
-    setAssetBalances(balances);
-  };
+      setAssetBalances(balances);
+    };
 
   //calculate asset supply and borrow value
   const getAssetSupplyValue = (asset) => {
@@ -296,18 +292,19 @@ const DashboardNav = () => {
             (reserveGroup) => reserveGroup[0] === assetKey
           )?.[1]?.liquidity_index || 1;
 
-        const assetBalance =
-          assetBalances?.find((balance) => balance.asset === assetKey)
-            ?.dtokenBalance || 0;
+          const assetBalance =
+          assetBalances.find((balance) => balance.asset === assetKey)?.dtokenBalance || 0;
+    console.log("assetBalance",assetBalance)
         const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
         const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
         const safeSupplyValue = typeof getAssetSupplyValue(assetKey) === "bigint" ? Number(getAssetSupplyValue(assetKey)) : getAssetSupplyValue(assetKey);
-
-
+console.log("safeAssetBalance",safeAssetBalance)
+console.log("safeCurrentLiquidity",safeCurrentLiquidity)
+console.log("safeSupplyValue",safeSupplyValue)
         const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * 1e8);
-        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / 1e8);
+        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / 1e8)/1e8;
 
-
+console.log("assetSupply",assetSupply)
 
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find(

@@ -49,7 +49,7 @@ const WithdrawPopup = ({
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =
+  const { conversionRate, } =
     useRealTimeConversionRate(asset);
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
@@ -60,10 +60,9 @@ const WithdrawPopup = ({
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [collateral, setCollateral] = useState(currentCollateralStatus);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
+
   const [amount, setAmount] = useState("");
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
+
   const [usdValue, setUsdValue] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +77,7 @@ const WithdrawPopup = ({
 
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
-  const fees = useSelector((state) => state.fees.fees);
+
   const ledgerActors = useSelector((state) => state.ledger);
 
   /* ===================================================================================
@@ -153,7 +152,7 @@ const WithdrawPopup = ({
     const truncateTo8Decimals = (num) => {
       return Math.trunc(num * 1e8) / 1e8;
     };
-    const numericAmount =truncateTo8Decimals(Amount)
+    const numericAmount = truncateTo8Decimals(Amount)
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount <= assetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -391,19 +390,19 @@ const WithdrawPopup = ({
     totalDebt,
     liquidationThreshold,
     reserveliquidationThreshold,
-    collateral,
+    currentCollateralStatus,
     usdValue,
   }) => {
-    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
+    const amountTaken = currentCollateralStatus ? (usdValue || 0).toFixed(8) : "0.00000000";
     const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
-  
+
     let totalCollateralValue = 0;
     if (amountTaken > totalCollateral && parseFloat(amountTaken) - parseFloat(totalCollateral) === 0.0000001) {
       totalCollateralValue = 0;
     } else {
       totalCollateralValue = truncateTo8Decimals(parseFloat(totalCollateral) - parseFloat(amountTaken));
     }
-  
+
     let avliq = liquidationThreshold * totalCollateral;
     let truncatedVal = Math.trunc(amountTaken * reserveliquidationThreshold * 1e8) / 1e8;
     let tempLiq = 0;
@@ -415,18 +414,18 @@ const WithdrawPopup = ({
     if (totalCollateralValue > 0) {
       tempLiq = Math.floor((tempLiq / totalCollateralValue) * 1e8) / 1e8;
     }
-  
+
     let totalDebtValue = parseFloat(totalDebt);
     if (totalDebtValue < 0) totalDebtValue = 0;
-  
+
     const healthFactor = totalDebtValue === 0
       ? Infinity
       : Math.round((totalCollateralValue * (tempLiq / 100)) / totalDebtValue * 1e8) / 1e8;
-  
+
     const ltv = totalCollateralValue === 0
       ? 0
       : parseFloat(totalDebt) / totalCollateralValue;
-  
+
     return {
       amountTaken,
       totalCollateralValue,
@@ -436,7 +435,7 @@ const WithdrawPopup = ({
       ltv,
     };
   };
-  
+
 
   // This function handles the click event for the "Max" button. It sets the maximum amount to withdraw based on the asset supply and updates the USD value accordingly.
   const handleMaxClick = () => {
@@ -515,9 +514,6 @@ const WithdrawPopup = ({
 
   useEffect(() => {
     const {
-      amountTaken,
-      totalCollateralValue,
-      totalDebtValue,
       tempLiq,
       healthFactor,
       ltv,
@@ -526,26 +522,26 @@ const WithdrawPopup = ({
       totalDebt,
       liquidationThreshold,
       reserveliquidationThreshold,
-      collateral,
+      currentCollateralStatus,
       usdValue,
     });
-  
+
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
     };
-  
+
     setCurrentHealthFactor(
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
-  
+
     setTempLiq(tempLiq);
-  
+
     let showToastMessage = "";
-  
+
     const isLtvExceeded = assetBorrow > 0 && ltv * 100 > tempLiq && currentCollateralStatus;
     const isHealthFactorLow = (healthFactor <= 1) && currentCollateralStatus;
-  
+
     if (isLtvExceeded && isHealthFactorLow) {
       showToastMessage = "LTV Exceeded & Health Factor is Less than 1";
     } else if (isLtvExceeded) {
@@ -553,7 +549,7 @@ const WithdrawPopup = ({
     } else if (isHealthFactorLow) {
       showToastMessage = "Health Factor Less than 1";
     }
-  
+
     if (showToastMessage) {
       toast.dismiss();
       toast.info(showToastMessage, {
@@ -567,13 +563,13 @@ const WithdrawPopup = ({
         progress: undefined,
       });
     }
-  
+
     if (isLtvExceeded || isHealthFactorLow) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
     }
-    
+
   }, [
     asset,
     liquidationThreshold,
@@ -584,9 +580,9 @@ const WithdrawPopup = ({
     usdValue,
     liq_thresh,
   ]);
-  
-  
-  
+
+
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -618,15 +614,7 @@ const WithdrawPopup = ({
     }
   }, [amount, conversionRate]);
 
-  useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = assetSupply * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+
 
   useEffect(() => {
     if (onLoadingChange) {

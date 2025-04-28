@@ -357,22 +357,6 @@ const DashboardComponent = () => {
     navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
   };
 
-  const formatConditional = (value) => {
-    const numericValue = parseFloat(value);
-
-    if (isNaN(numericValue)) {
-      return "0";
-    }
-
-    if (numericValue === 0) {
-      return "0";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
-  };
-
   /**
    * This function calculates the borrowable value and asset value based on the available borrow and asset rate.
    * It uses the provided asset supply rate and the available borrow to determine the borrowable amounts.
@@ -561,10 +545,11 @@ const DashboardComponent = () => {
         ? userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)[1]
           ?.liquidity_index
         : 0;
-
+console.log("currentliquidirty",currentLiquidity)
+console.log("assetBalances",assetBalances)
     const assetBalance =
       assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
-
+console.log("assetBalance",assetBalance)
     const calculated_supply = Math.trunc((Number(assetBalance) / (Number(currentLiquidity))) * 1e8);
     const assetSupply = Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8) / 1e8;
 
@@ -2064,7 +2049,7 @@ const DashboardComponent = () => {
                           } else {
                             return ratio.toFixed(2);
                           }
-                          
+
                         })()}
                         %
                         <span

@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
+
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
@@ -15,7 +11,7 @@ import useFetchConversionRate from "../../components/customHooks/useFetchConvers
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import Analytics from "../../../public/Helpers/AnalyticsIcon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
@@ -58,16 +54,11 @@ const DashboardCards = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const [searchQuery, setSearchQuery] = useState("");
+
   const [like, setLike] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [threshold] = useState(5000000000000);
   const [tokenThreshold] = useState(10000);
-  const [users, setUsers] = useState([]);
-  const [lastEmailDate, setLastEmailDate] = useState(null);
-  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
-  const [allUsers, setAllUsers] = useState([]);
+
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -131,7 +122,6 @@ const DashboardCards = () => {
       }
     } catch (error) {
       console.error("Error checking admin status:", error.message);
-      setError(error.message);
       setLike(false); // Fallback to false
 
       if (error.message.toLowerCase().includes("freeze canister")) {
@@ -145,7 +135,7 @@ const DashboardCards = () => {
     checkController();
   }, [backendActor]);
 
-  const { filteredItems, interestAccure, assets, AssetImages } = useAssetData(searchQuery);
+  const { filteredItems, interestAccure, assets, AssetImages } = useAssetData();
 
   const poolAssets = assets.map((name, index) => ({
     name,
@@ -296,8 +286,7 @@ const DashboardCards = () => {
   };
 
   let emailInterval;
-  let lastExhaustedEmailTimestamp = 0;
-  let lastWarningEmailTimestamp = 0;
+
 
   /**
    * Handles cycle-based notifications and sends warning or exhaustion emails.
@@ -360,8 +349,7 @@ const DashboardCards = () => {
     }
   };
 
-  let lastTokenExhaustedEmailTimestamp = 0;
-  let lastTokenWarningEmailTimestamp = 0;
+
   let emailinterval = null;
 
   /**
@@ -484,7 +472,7 @@ const DashboardCards = () => {
         callbacks: {
           label: function (tooltipItem) {
             const index = tooltipItem.dataIndex;
-            const categoryLabels = ["<1", ">1", "Infinity"];
+
             const rawValues = [
               healthStats.lessThanOne,
               healthStats.greaterThanOne,
@@ -524,7 +512,6 @@ const DashboardCards = () => {
     }
 
     const fetchData = async () => {
-      setLoading(true);
 
       try {
         const cycles = await getCycles();
@@ -541,14 +528,13 @@ const DashboardCards = () => {
         await onCycleUpdate(Number(cycles));
       } catch (err) {
         console.error("Error in fetchData:", err);
-        setError(err.message);
       }
     };
 
     fetchData();
   }, [totalUsers, interestAccure]);
 
-  const cachedData = useRef({});
+
 
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
@@ -585,9 +571,7 @@ const DashboardCards = () => {
     setHealthStats({ lessThanOne, greaterThanOne, infinity });
   }, [healthFactors]);
 
-  const handleNavigate = (path) => {
-    navigate(path);
-  };
+
 
   const getCycleColor = (value) => {
     const cycleValue = parseInt(value);
@@ -671,10 +655,9 @@ const DashboardCards = () => {
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
 
         const data = await fetchAllUsers(totalPages, usersPerPage);
-        setAllUsers(data);
+
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later.");
       } finally {
         setUsersLoading(false);
       }
@@ -879,8 +862,8 @@ const DashboardCards = () => {
                 {/* Value with Conditional Coloring */}
                 <p
                   className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
                     }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}

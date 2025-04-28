@@ -1,4 +1,5 @@
 use crate::api::query::{self, get_canister_id_by_name};
+use crate::constants::constant_variables::constants::MAX_LOG_ENTRIES;
 use crate::constants::errors::Error;
 use crate::stable_storage::state_handler::{mutate_state, read_state, STATE};
 use crate::stable_storage::storable::Candid;
@@ -28,7 +29,7 @@ impl fmt::Display for LogLevel {
     }
 }
 
-const MAX_LOGS: u64 = 100; // Define maximum number of logs to store
+const MAX_LOGS: u64 = MAX_LOG_ENTRIES; // Define maximum number of logs to store
 
 pub async fn store_log(
     level: LogLevel,
@@ -104,11 +105,6 @@ pub async fn send_log_to_logs_canister(
         log
     );
 
-    if log.0.is_empty() {
-        ic_cdk::println!("No log entries to send.");
-        return Err(Error::InvalidCanister);
-    }
-
     let log_data: String = log.0[0].clone();
     ic_cdk::println!("Sending log entry: ID = {}, Data = {:?}", log_id, log_data);
 
@@ -127,7 +123,7 @@ pub async fn send_log_to_logs_canister(
 //TODO: can remove later.
 #[update]
 pub async fn insert_multiple_logs() -> Result<(), Error> {
-    for i in 0..1 {
+    for i in 0..100 {
         let level = match i % 5 {
             0 => LogLevel::ERROR,
             1 => LogLevel::WARN,

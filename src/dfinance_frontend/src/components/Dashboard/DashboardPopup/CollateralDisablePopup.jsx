@@ -43,7 +43,7 @@ const ColateralPopup = ({
   const { isBlocked } = useFunctionBlockStatus();
   const { healthFactorBackend } = useUserData();
   const { backendActor } = useAuth();
-  const { conversionRate, error: conversionError } =
+  const { conversionRate } =
     useRealTimeConversionRate(asset);
 
   /* ===================================================================================
@@ -52,17 +52,14 @@ const ColateralPopup = ({
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const value = currentHealthFactor;
   const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState(null);
 
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, SetError] = useState(null);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -148,7 +145,7 @@ const ColateralPopup = ({
             progress: undefined,
           });
 
-          SetError(
+          console.error(
             "Price fetch failed: Your assets are safe, try again after some time."
           );
           throw new Error("ExchangeRateError: Price fetch failed.");
@@ -165,7 +162,7 @@ const ColateralPopup = ({
             progress: undefined,
           });
 
-          SetError("Amount must be a positive number");
+
           console.error("Amount must be a positive number");
         }
         if (errorMsg?.LTVGreaterThanThreshold === null) {
@@ -234,13 +231,7 @@ const ColateralPopup = ({
     setIsModalOpen(false);
   };
 
-  // Function to calculate LTV (Loan-to-Value)
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return (totalDeptValue / totalCollateralValue) * 100;
-  };
+
 
   // Function to format the value based on the conditions
   const formatValue = (value) => {
@@ -298,7 +289,7 @@ const ColateralPopup = ({
     } else {
       setUsdValue(0);
     }
-  }, [amount, conversionRate]);
+  }, [assetSupply, conversionRate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -343,8 +334,7 @@ const ColateralPopup = ({
     }
 
     const healthFactor = result;
-    const ltv = calculateLTV(adjustedCollateral, totalDebt);
-    setPrevHealthFactor(currentHealthFactor);
+
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -374,7 +364,6 @@ const ColateralPopup = ({
     reserveliquidationThreshold,
     assetSupply,
     assetBorrow,
-    amount,
     usdValue,
     currentCollateralStatus,
     totalCollateral,
@@ -439,33 +428,31 @@ const ColateralPopup = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          value > 3
-                            ? "text-green-500"
-                            : value <= 1
+                        className={`${value > 3
+                          ? "text-green-500"
+                          : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                            ? "text-orange-600"
-                            : value <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -497,11 +484,10 @@ const ColateralPopup = ({
 
           <button
             onClick={handleToggleCollateral}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-              isButtonDisabled || isLoading
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isButtonDisabled || isLoading
+              ? "opacity-50 cursor-not-allowed"
+              : ""
+              }`}
             disabled={isButtonDisabled || isLoading}
           >
             {currentCollateralStatus

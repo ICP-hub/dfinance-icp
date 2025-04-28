@@ -1334,10 +1334,8 @@ const DashboardComponent = () => {
                       const assetBalance =
                         assetBalances.find((balance) => balance.asset === asset)
                           ?.dtokenBalance || 0;
-                      const assetSupply =
-                        (Number(assetBalance) *
-                          Number(getAssetSupplyValue(asset))) /
-                        (Number(currentLiquidity) * 1e8);
+                      const calculated_supply = Math.trunc((Number(assetBalance) / (Number(currentLiquidity) )) * 1e8);
+                      const assetSupply = Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset)))/1e8) / 1e8;
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
@@ -2250,7 +2248,6 @@ const DashboardComponent = () => {
                   ) : !userData?.Ok?.reserves ||
                     !userData?.Ok?.reserves[0] ||
                     getFilteredBorrowReserves().length === 0 ? (
-                    // No Borrow Message or No Borrowable Assets
                     <div className="text-center text-gray-500">
                       {noBorrowMessage}
                     </div>

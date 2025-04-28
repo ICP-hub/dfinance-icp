@@ -3,7 +3,8 @@ members = [
     "src/dfinance_backend", 
     "src/dtoken", 
     "src/debttoken", 
-    "src/token_ledger"
+    "src/token_ledger",
+    "src/logs",
 ]
 resolver = "2"
 

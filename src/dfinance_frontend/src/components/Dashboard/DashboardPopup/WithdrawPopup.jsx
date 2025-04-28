@@ -156,7 +156,9 @@ const WithdrawPopup = ({
       if (numericAmount <= assetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
-
+        console.log("numericAmount",numericAmount,Amount)
+        console.log("usdValue",convertedValue)
+        console.log("usd rate",adjustedConversionRate)
         setUsdValue(parseFloat(convertedValue));
       } else {
         console.error("Amount exceeds the supply balance");
@@ -168,7 +170,6 @@ const WithdrawPopup = ({
       console.error("Amount must be a positive number");
     }
   };
-
   const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;

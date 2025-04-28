@@ -113,7 +113,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             amount: Nat::from(100_000_000_000_000_000u128),
             expect_success: false,
             expected_error_message: Some(
-                "Platform is unable to pay right now! Try Again Later".to_string(),
+                "Platform balance is low".to_string(),
             ),
         },
     ];

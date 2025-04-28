@@ -28,4 +28,5 @@ pub type UserGuideData = StableBTreeMap<Principal, bool, VMem>;
 pub type AdminData = StableBTreeMap<Principal, String, VMem>;
 pub type DeveloperData = StableBTreeMap<Principal, String, VMem>;
 pub type AssetRecords = StableBTreeMap<String, Candid<AssetInfo>, VMem>;
+pub type LogStorage = StableBTreeMap<u32, Candid<Vec<String>>, VMem>;
 

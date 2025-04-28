@@ -48,7 +48,7 @@ pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
  */
 pub fn validate_zero_value(value: &candid::Nat) -> Result<(), Error> {
   if value <= &zero_nat_value() {
-      ic_cdk::println!("Asset cannot be an empty string");
+      ic_cdk::println!("Amount must be greater than 0");
       return Err(Error::InvalidAmount);
   }
 

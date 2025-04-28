@@ -20,7 +20,7 @@ use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
-
+//TODO confirm all constants values of this file from Bhanu
 /*
  * @title Load DToken Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the dtoken ledger.
@@ -77,7 +77,7 @@ pub async fn create_token_canister(
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            controllers: Some(vec![ic_cdk::api::id(), default().unwrap()]),
+            controllers: Some(vec![ic_cdk::api::id(), default()?]),
             memory_allocation: None,
             reserved_cycles_limit: None,
             log_visibility: None,
@@ -118,7 +118,7 @@ pub async fn create_token_canister(
         cycles_for_archive_creation: Some(CYCLES_FOR_ARCHIVE_CREATION),
         node_max_memory_size_bytes: Some(NODE_MAX_MEMORY_SIZE_BYTES),
         controller_id: ic_cdk::api::id(),
-        more_controller_ids: Some(vec![default().unwrap()]),
+        more_controller_ids: Some(vec![default()?]),
     };
 
     let init_args = DynamicCanisterInitArgs {
@@ -147,11 +147,14 @@ pub async fn create_token_canister(
         }
     };
 
-    let canister_id = ic_cdk::api::management_canister::main::create_canister(arg, DEFAULT_CYCLES)
-        .await
-        .unwrap()
-        .0
-        .canister_id;
+    let canister_id = match ic_cdk::api::management_canister::main::create_canister(arg, DEFAULT_CYCLES).await {
+        Ok((record,)) => record.canister_id,
+        Err(e) => {
+            ic_cdk::println!("create_canister failed: {:?}", e);
+            return Err(Error::ErrorCreatingCanister); 
+        }
+    };
+    
 
     // Choose the appropriate WASM file based on the token name
     let wasm_module = if token_name.starts_with("debt") {
@@ -167,9 +170,15 @@ pub async fn create_token_canister(
         arg: args,
     };
 
-    ic_cdk::api::management_canister::main::install_code(install_config)
-        .await
-        .unwrap();
+    match ic_cdk::api::management_canister::main::install_code(install_config).await {
+        Ok(_) => {
+        },
+        Err(e) => {
+            ic_cdk::println!("install_code failed: {:?}", e);
+            return Err(Error::ErrorCreatingCanister);
+        }
+    }
+    
     ic_cdk::print(format!(
         "Created canister for token '{}' with canister ID: {}",
         token_name, canister_id
@@ -195,7 +204,7 @@ pub async fn create_testtoken_canister(
     let arg = ic_cdk::api::management_canister::main::CreateCanisterArgument {
         settings: Some(CanisterSettings {
             compute_allocation: None,
-            controllers: Some(vec![ic_cdk::api::id(), default().unwrap()]),
+            controllers: Some(vec![ic_cdk::api::id(), default()?]),
             memory_allocation: None,
             reserved_cycles_limit: None,
             log_visibility: None,
@@ -205,7 +214,7 @@ pub async fn create_testtoken_canister(
     };
 
     let minting_account = Account {
-        owner: default().unwrap(),
+        owner: default()?,
 
         subaccount: None,
     };
@@ -245,7 +254,7 @@ pub async fn create_testtoken_canister(
         node_max_memory_size_bytes: Some(TEST_NODE_MAX_MEMORY_SIZE_BYTES),
         controller_id: ic_cdk::api::id(),
 
-        more_controller_ids: Some(vec![default().unwrap()]),
+        more_controller_ids: Some(vec![default()?]),
     };
 
     let init_args = DynamicCanisterInitArgs {
@@ -274,12 +283,16 @@ pub async fn create_testtoken_canister(
         }
     };
 
-    let canister_id =
-        ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES)
-            .await
-            .unwrap()
-            .0
-            .canister_id;
+    let canister_id: Principal = match ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES).await {
+        Ok((res,)) => {
+            res.canister_id
+        },
+        Err(e) => {
+            ic_cdk::print(format!("Failed to create canister: {:?}", e));
+            return Err(Error::ErrorCreatingCanister);
+        }
+    };
+    
 
     let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
         mode: CanisterInstallMode::Install,
@@ -288,9 +301,15 @@ pub async fn create_testtoken_canister(
         arg: args,
     };
 
-    ic_cdk::api::management_canister::main::install_code(install_config)
-        .await
-        .unwrap();
+    match ic_cdk::api::management_canister::main::install_code(install_config).await {
+        Ok(_) => {
+        },
+        Err(e) => {
+            ic_cdk::println!("install_code failed: {:?}", e);
+            return Err(Error::ErrorCreatingCanister);
+        }
+    }
+
     ic_cdk::print(format!(
         "Created canister for token '{}' with canister ID: {}",
         token_name, canister_id
@@ -334,7 +353,14 @@ pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<
         },
     };
 
-    update_settings(update_canister_args).await.unwrap();
+    match update_settings(update_canister_args).await {
+        Ok(_) => {
+        },
+        Err(e) => {
+            ic_cdk::println!("update_settings failed: {:?}", e);
+            return Err(Error::ErrorUpdateCanisterSetting);
+        }
+    }
 
     Ok("done".to_string())
 }

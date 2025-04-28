@@ -8,6 +8,7 @@ use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use candid::{Nat, Principal};
+use futures::stream::Peek;
 
 pub struct ValidationLogic;
 
@@ -210,7 +211,7 @@ impl ValidationLogic {
 
             if total_debt != Nat::from(0u128) {
                 let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold_var);
-                new_health_factor = health_factor.scaled_div(total_debt);
+                new_health_factor = new_health_factor.scaled_div(total_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
                 ic_cdk::println!("new health factor = {}", new_health_factor);   //debug
                 
                 //checking if the health factor
@@ -319,7 +320,7 @@ impl ValidationLogic {
 
         //checking the health factor
         let mut new_health_factor = total_collateral.scaled_mul(liquidation_threshold_var);
-        new_health_factor = health_factor.scaled_div(adjusted_debt);
+        new_health_factor = new_health_factor.scaled_div(total_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
         ic_cdk::println!("new health factor = {}", new_health_factor);   //debug
 
         //checking if the health factor

@@ -138,14 +138,12 @@ const BorrowInfo = ({
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>
-              {" "}
               <span>{formatValue(totalBorrowed)}</span> of{" "}
               <span>
                 {borrowCap ? formatNumber(Number(totalBorrowedCap)) : "N/A"}
               </span>
             </p>
             <p className="text-[12px] -mt-3">
-              {" "}
               <span>${formatNumber(Number(totalBorrowedAsset))}</span> of{" "}
               <span>
                 $

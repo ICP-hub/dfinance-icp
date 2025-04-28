@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
+const TestnetModePopup = ({ onClose }) => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -50,7 +50,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
               provide feedback.
             </p>
           </div>
-          {}
+          { }
         </div>
         <ToastContainer />
       </div>

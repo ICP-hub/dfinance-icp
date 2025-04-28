@@ -322,7 +322,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     onClose();
   };
 
-  //Fetch faucet data limit and usage 
+  //Fetch faucet data limit and usage
   const getUserFaucetData = async (user) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -353,7 +353,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           // Truncate to 8 decimal places for each asset
           const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
           const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
-
 
           // Set values per asset
           updatedLimits[asset] = faucetLimit;
@@ -415,7 +414,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-      } catch (error) { console.error(error.message) }
+      } catch (error) {
+        console.error(error.message);
+      }
     };
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
@@ -470,16 +471,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, [isOpen]);
 
-
-
-
   useEffect(() => {
     if (user) {
       getUserFaucetData(user);
     }
   }, [user]);
-
-
 
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
@@ -492,8 +488,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -551,12 +545,25 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       <span className="text-lg">{asset}</span>
                     </div>
                     <div
-                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${isFaucetLoading || Math.floor(((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) * 100) / 100 <= 0
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                        }`}
+                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            100
+                        ) /
+                          100 <=
+                          0
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
                       onClick={
-                        isFaucetLoading || Math.floor(((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) * 100) / 100 <= 0
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            100
+                        ) /
+                          100 <=
+                          0
                           ? undefined
                           : handleMaxAmountClick
                       }
@@ -568,14 +575,15 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                         </div>
                       ) : (
                         <>
-                          ${((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8).toFixed(2)} Max
+                          $
+                          {(
+                            (FaucetLimit[asset] - FaucetUsage[asset]) /
+                            1e8
+                          ).toFixed(2)}{" "}
+                          Max
                         </>
                       )}
                     </div>
-
-
-
-
                   </div>
                 </div>
               </div>
@@ -594,20 +602,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
                 return parseFloat(formattedAmount) <= 0;
               })() && (
-                  <div className="w-full flex flex-col my-3 space-y-2">
-                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-                      <div className="w-1/12 flex items-center justify-center">
-                        <div className="warning-icon-container">
-                          <TriangleAlert />
-                        </div>
-                      </div>
-                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                        Faucet limit has been exceeded. It will reset at 00:00
-                        (UTC).
+                <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <TriangleAlert />
                       </div>
                     </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      Faucet limit has been exceeded. It will reset at 00:00
+                      (UTC).
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
               <button
                 ref={faucetButtonRef}
@@ -617,11 +625,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   FaucetUsage[asset] >= FaucetLimit ||
                   loading
                 }
-                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount.replace(/,/g, "") > 0 &&
+                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${
+                  amount.replace(/,/g, "") > 0 &&
                   FaucetUsage[asset] < FaucetLimit[asset]
-                  ? "opacity-100 cursor-pointer"
-                  : "opacity-50 cursor-not-allowed"
-                  }`}
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
               >
                 {loading ? "Processing..." : `Faucet ${asset}`}
               </button>

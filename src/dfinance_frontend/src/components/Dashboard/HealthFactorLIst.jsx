@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import { SlidersHorizontal } from "lucide-react";
 import { useSelector } from "react-redux";
-import WalletModal from "../../components/Dashboard/WalletModal";
-import Lottie from "../../components/Common/Lottie";
+import WalletModal from "./WalletModal";
+import Lottie from "../Common/Lottie";
 import useAssetData from "../customHooks/useAssets";
-import MiniLoader from "../../components/Common/MiniLoader";
+import MiniLoader from "../Common/MiniLoader";
 import Error from "../../pages/Error";
 import { Infinity, Download } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -95,9 +95,6 @@ const HealthFactorList = () => {
       }
     }
   };
-
-
-
 
   /**
    * This function retrieves the list of all users from the backend by calling `get_all_users` method.
@@ -405,8 +402,8 @@ const HealthFactorList = () => {
           : "0",
         "Health Factor":
           user.healthFactor &&
-            (Number(user.healthFactor) >= 3.4028236692093848e28 ||
-              healthFactor > 100)
+          (Number(user.healthFactor) >= 3.4028236692093848e28 ||
+            healthFactor > 100)
             ? "Infinity"
             : healthFactor,
       };
@@ -494,11 +491,14 @@ const HealthFactorList = () => {
       const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
       const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
 
-      const assetSupply = currentLiquidity > 0
-        ? Math.trunc((Math.trunc((assetBalance / currentLiquidity) * 1e8) * supplyValue) / 1e8)
-        : 0;
-
-
+      const assetSupply =
+        currentLiquidity > 0
+          ? Math.trunc(
+              (Math.trunc((assetBalance / currentLiquidity) * 1e8) *
+                supplyValue) /
+                1e8
+            )
+          : 0;
 
       const assetBorrow =
         currentDebtIndex > 0
@@ -814,10 +814,11 @@ const HealthFactorList = () => {
                 name="search"
                 id="search"
                 placeholder="Search assets"
-                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${showSearch
-                  ? "animate-fade-left flex"
-                  : "animate-fade-right hidden"
-                  }`}
+                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${
+                  showSearch
+                    ? "animate-fade-left flex"
+                    : "animate-fade-right hidden"
+                }`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -957,20 +958,21 @@ const HealthFactorList = () => {
                         </td>
                         <td className="px-3 py-6 text-center">
                           <span
-                            className={`flex items-center justify-center gap-1 ${healthFactor > 100
-                              ? "text-yellow-500"
-                              : healthFactor === 0
+                            className={`flex items-center justify-center gap-1 ${
+                              healthFactor > 100
+                                ? "text-yellow-500"
+                                : healthFactor === 0
                                 ? "text-red-500"
                                 : healthFactor > 3
-                                  ? "text-green-500"
-                                  : healthFactor <= 1
-                                    ? "text-red-500"
-                                    : healthFactor <= 1.5
-                                      ? "text-orange-600"
-                                      : healthFactor <= 2
-                                        ? "text-orange-400"
-                                        : "text-orange-300"
-                              }`}
+                                ? "text-green-500"
+                                : healthFactor <= 1
+                                ? "text-red-500"
+                                : healthFactor <= 1.5
+                                ? "text-orange-600"
+                                : healthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                            }`}
                           >
                             {healthFactor > 100 ? (
                               <>
@@ -1079,7 +1081,7 @@ const HealthFactorList = () => {
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /
-                        (currentLiquidity * 1e8)
+                          (currentLiquidity * 1e8)
                         : 0;
 
                     const assetBorrow =
@@ -1092,7 +1094,11 @@ const HealthFactorList = () => {
                         {/* 🌟 Asset Image */}
                         <img
                           key={assetInfo}
-                          src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}
+                          src={
+                            assetIndex !== -1
+                              ? AssetImages[assetIndex]
+                              : undefined
+                          }
                           alt={asset || "asset"}
                           className="rounded-[50%] w-7"
                         />

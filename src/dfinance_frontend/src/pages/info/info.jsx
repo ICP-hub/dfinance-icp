@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
-
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
@@ -130,7 +129,6 @@ const DashboardCards = () => {
     }
   };
 
-
   useEffect(() => {
     checkController();
   }, [backendActor]);
@@ -155,8 +153,6 @@ const DashboardCards = () => {
       throw error;
     }
   };
-
-
 
   const [cardData, setCardData] = useState([
     {
@@ -861,10 +857,11 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
-                    ? "text-[#233D63] dark:text-darkText"
-                    : getCycleColor(card.value)
-                    }`}
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
+                    usersLoading
+                      ? "text-[#233D63] dark:text-darkText"
+                      : getCycleColor(card.value)
+                  }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -956,7 +953,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -972,7 +969,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

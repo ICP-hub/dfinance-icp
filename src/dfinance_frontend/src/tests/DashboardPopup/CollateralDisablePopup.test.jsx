@@ -1,5 +1,11 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import ColateralPopup from "../../components/Dashboard/DashboardPopup/CollateralDisablePopup"; // Component to test
 import { Provider } from "react-redux"; // Redux provider for store integration in test
 import { toast } from "react-toastify"; // For simulating toast notifications
@@ -22,7 +28,7 @@ jest.mock("react-toastify", () => ({
     error: jest.fn(),
     info: jest.fn(),
     dismiss: jest.fn(),
-  }
+  },
 }));
 
 describe("ColateralPopup Component", () => {
@@ -53,26 +59,26 @@ describe("ColateralPopup Component", () => {
     jest.clearAllMocks();
 
     // Mocking the function block status to not be blocked
-    jest.spyOn(useFunctionBlockStatusModule, 'default').mockReturnValue({
-      isBlocked: false
+    jest.spyOn(useFunctionBlockStatusModule, "default").mockReturnValue({
+      isBlocked: false,
     });
 
     // Mocking user data, particularly health factor value
-    jest.spyOn(useUserDataModule, 'default').mockReturnValue({
-      healthFactorBackend: "3.5"
+    jest.spyOn(useUserDataModule, "default").mockReturnValue({
+      healthFactorBackend: "3.5",
     });
 
     // Mocking authentication logic, particularly backendActor's collateral toggle function
-    jest.spyOn(useAuthModule, 'useAuth').mockReturnValue({
+    jest.spyOn(useAuthModule, "useAuth").mockReturnValue({
       backendActor: {
-        toggle_collateral: jest.fn().mockResolvedValue({ Ok: true }) // Simulating successful collateral toggle
-      }
+        toggle_collateral: jest.fn().mockResolvedValue({ Ok: true }), // Simulating successful collateral toggle
+      },
     });
 
     // Mocking real-time conversion rate to return a sample conversion rate
-    jest.spyOn(useRealTimeConversionRateModule, 'default').mockReturnValue({
+    jest.spyOn(useRealTimeConversionRateModule, "default").mockReturnValue({
       conversionRate: "5000000000", // Mock conversion rate
-      error: null
+      error: null,
     });
   });
 
@@ -86,7 +92,11 @@ describe("ColateralPopup Component", () => {
 
     // Verifying that key text elements are displayed in the component
     expect(screen.getByText(/Review ckBTC/i)).toBeInTheDocument();
-    expect(screen.getByText(/Disabling ckBTC as collateral affects your borrowing power and Health Factor./i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Disabling ckBTC as collateral affects your borrowing power and Health Factor./i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
     expect(screen.getByText(/Supply Balance/i)).toBeInTheDocument();
 
@@ -95,7 +105,9 @@ describe("ColateralPopup Component", () => {
     expect(healthFactorElements.length).toBeGreaterThan(0);
 
     // Verifying that the button to disable collateral is rendered
-    expect(screen.getByRole('button', { name: /Disable ckBTC as collateral/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Disable ckBTC as collateral/i })
+    ).toBeInTheDocument();
   });
 
   // Test case 2: Verify the correct warning message is shown when enabling collateral
@@ -107,18 +119,28 @@ describe("ColateralPopup Component", () => {
     );
 
     // Verifying that enabling collateral triggers the correct warning message
-    expect(screen.getByText(/Enabling ckBTC as collateral increases your borrowing power and Health Factor/i)).toBeInTheDocument();
-    expect(screen.getByText(/it can get liquidated if your health factor drops below 1/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Enable ckBTC as collateral/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Enabling ckBTC as collateral increases your borrowing power and Health Factor/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /it can get liquidated if your health factor drops below 1/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Enable ckBTC as collateral/i })
+    ).toBeInTheDocument();
   });
 
   // Test case 3: Verify the collateral status toggles correctly when the button is clicked
   test("toggles collateral status when button is clicked", async () => {
     const mockToggleCollateral = jest.fn().mockResolvedValue({ Ok: true });
-    jest.spyOn(useAuthModule, 'useAuth').mockReturnValue({
+    jest.spyOn(useAuthModule, "useAuth").mockReturnValue({
       backendActor: {
-        toggle_collateral: mockToggleCollateral
-      }
+        toggle_collateral: mockToggleCollateral,
+      },
     });
 
     render(
@@ -127,8 +149,10 @@ describe("ColateralPopup Component", () => {
       </Provider>
     );
 
-    const toggleButton = screen.getByRole('button', { name: /Disable ckBTC as collateral/i });
-    
+    const toggleButton = screen.getByRole("button", {
+      name: /Disable ckBTC as collateral/i,
+    });
+
     // Simulating button click to toggle collateral status
     await act(async () => {
       fireEvent.click(toggleButton);
@@ -136,14 +160,16 @@ describe("ColateralPopup Component", () => {
 
     // Verifying that the toggle_collateral function is called with appropriate arguments
     expect(mockToggleCollateral).toHaveBeenCalledWith(
-      "ckBTC", 
-      expect.any(Number), 
+      "ckBTC",
+      expect.any(Number),
       expect.any(BigInt)
     );
 
     // Verifying the success toast message is shown
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith("Collateral updated successfully!");
+      expect(toast.success).toHaveBeenCalledWith(
+        "Collateral updated successfully!"
+      );
     });
 
     // Verifying that the mockStore dispatch function is called
@@ -152,8 +178,8 @@ describe("ColateralPopup Component", () => {
 
   // Test case 4: Verify error toast is shown when the user is blocked from using the function
   test("displays error toast when user is blocked from using function", async () => {
-    jest.spyOn(useFunctionBlockStatusModule, 'default').mockReturnValue({
-      isBlocked: true
+    jest.spyOn(useFunctionBlockStatusModule, "default").mockReturnValue({
+      isBlocked: true,
     });
 
     render(
@@ -162,7 +188,9 @@ describe("ColateralPopup Component", () => {
       </Provider>
     );
 
-    const toggleButton = screen.getByRole('button', { name: /Disable ckBTC as collateral/i });
+    const toggleButton = screen.getByRole("button", {
+      name: /Disable ckBTC as collateral/i,
+    });
     await act(async () => {
       fireEvent.click(toggleButton);
     });
@@ -181,11 +209,11 @@ describe("ColateralPopup Component", () => {
       totalCollateral: "1000",
       totalDebt: "1000",
       liquidationThreshold: 80,
-      assetSupply: "1.0"
+      assetSupply: "1.0",
     };
 
-    jest.spyOn(useUserDataModule, 'default').mockReturnValue({
-      healthFactorBackend: "0.9" // Mocked low health factor value
+    jest.spyOn(useUserDataModule, "default").mockReturnValue({
+      healthFactorBackend: "0.9", // Mocked low health factor value
     });
 
     render(
@@ -196,7 +224,9 @@ describe("ColateralPopup Component", () => {
 
     // Verifying that the liquidation warning is displayed
     await waitFor(() => {
-      expect(screen.getByText(/Switching collateral may trigger a liquidation call/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Switching collateral may trigger a liquidation call/i)
+      ).toBeInTheDocument();
     });
 
     // Verifying that an info toast is shown for low health factor
@@ -206,7 +236,9 @@ describe("ColateralPopup Component", () => {
     );
 
     // Verifying that the button is disabled when health factor is low
-    const toggleButton = screen.getByRole('button', { name: /Disable ckBTC as collateral/i });
-    expect(toggleButton).toHaveAttribute('disabled');
+    const toggleButton = screen.getByRole("button", {
+      name: /Disable ckBTC as collateral/i,
+    });
+    expect(toggleButton).toHaveAttribute("disabled");
   });
 });

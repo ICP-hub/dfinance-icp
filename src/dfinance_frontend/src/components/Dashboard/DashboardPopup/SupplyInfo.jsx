@@ -16,19 +16,36 @@ import { useSelector } from "react-redux";
  * @param {Object} props - The component props containing asset data and necessary functions.
  * @returns {JSX.Element} - The rendered SupplyInfo component displaying key supply and risk metrics.
  */
-const SupplyInfo = ({ formatNumber, supplyCap, totalSupplied, totalBorrowed, supplyRateAPR, ltv, canBeCollateral, liquidationBonus, liquidationThreshold, }) => {
-
+const SupplyInfo = ({
+  formatNumber,
+  supplyCap,
+  totalSupplied,
+  totalBorrowed,
+  supplyRateAPR,
+  ltv,
+  canBeCollateral,
+  liquidationBonus,
+  liquidationThreshold,
+}) => {
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
 
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, } = useFetchConversionRate();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
 
   const { id } = useParams();
   const tooltipRef = useRef(null);
@@ -40,15 +57,22 @@ const SupplyInfo = ({ formatNumber, supplyCap, totalSupplied, totalBorrowed, sup
   const [supplied, setSupplied] = useState(totalSupplied);
   
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
-  const [isLiquidationThresholdTooltipVisible, setLiquidationThresholdTooltipVisible] = useState(false);
-  const [isLiquidationPenaltyTooltipVisible, setLiquidationPenaltyTooltipVisible] = useState(false);
+  const [
+    isLiquidationThresholdTooltipVisible,
+    setLiquidationThresholdTooltipVisible,
+  ] = useState(false);
+  const [
+    isLiquidationPenaltyTooltipVisible,
+    setLiquidationPenaltyTooltipVisible,
+  ] = useState(false);
 
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
 
   const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
-  const totalSupplyPercentage = supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
+  const totalSupplyPercentage =
+    supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
 
   const getAssetRate = (assetName) => {
     switch (assetName) {
@@ -68,8 +92,10 @@ const SupplyInfo = ({ formatNumber, supplyCap, totalSupplied, totalBorrowed, sup
   };
 
   const assetRate = getAssetRate(id);
-  const totalSuppliedAsset = assetRate && supplied ? Number(supplied) * assetRate : 0;
-  const totalSuppliedCap = assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+  const totalSuppliedAsset =
+    assetRate && supplied ? Number(supplied) * assetRate : 0;
+  const totalSuppliedCap =
+    assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -82,8 +108,10 @@ const SupplyInfo = ({ formatNumber, supplyCap, totalSupplied, totalBorrowed, sup
   };
 
   const toggleLTVTooltip = () => setLTVTooltipVisible((prev) => !prev);
-  const toggleLiquidationThresholdTooltip = () => setLiquidationThresholdTooltipVisible((prev) => !prev);
-  const toggleLiquidationPenaltyTooltip = () => setLiquidationPenaltyTooltipVisible((prev) => !prev);
+  const toggleLiquidationThresholdTooltip = () =>
+    setLiquidationThresholdTooltipVisible((prev) => !prev);
+  const toggleLiquidationPenaltyTooltip = () =>
+    setLiquidationPenaltyTooltipVisible((prev) => !prev);
 
   /* ===================================================================================
    *                                  EFFECTS

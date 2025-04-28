@@ -60,7 +60,6 @@ const Liquidate = () => {
     } else {
       navigate("/Liquidate/debt-users-list");
     }
-
   };
 
   // Function to handle the back button click in the DebtStatus component
@@ -116,7 +115,7 @@ const Liquidate = () => {
               Check Users in Debt
             </h1>
 
-            { }
+            {}
             {showWarning && (
               <div className="text-red-500 font-bold mb-4">
                 Please connect your wallet to check the debt status.

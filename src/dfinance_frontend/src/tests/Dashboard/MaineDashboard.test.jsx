@@ -17,8 +17,10 @@ jest.mock("../../components/customHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     loading: false,
-    filteredItems: [["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }]], // Sample filtered asset data
-  })
+    filteredItems: [
+      ["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }],
+    ], // Sample filtered asset data
+  }),
 }));
 
 // Mocking the Loading component to display "Loading..." or "Not Loading" based on the loading state
@@ -37,15 +39,20 @@ jest.mock("../../components/Dashboard/DashboardNav", () => () => (
 ));
 
 describe("MainDashboard Component", () => {
-  
   // Test case 1: Ensure Navbar, Footer, and children are rendered
   test("renders Navbar, Footer, and children", () => {
     useAuth.mockReturnValue({ isAuthenticated: true }); // Mock authenticated state
 
     render(
-      <Provider store={store}> {/* Wrapping with Redux store */}
-        <Router> {/* Wrapping with Router for routing */}
-          <MainDashboard isDGov={false} includeDashboardNav={true}> {/* Rendering the MainDashboard component */}
+      <Provider store={store}>
+        {" "}
+        {/* Wrapping with Redux store */}
+        <Router>
+          {" "}
+          {/* Wrapping with Router for routing */}
+          <MainDashboard isDGov={false} includeDashboardNav={true}>
+            {" "}
+            {/* Rendering the MainDashboard component */}
             <div>Test Child</div> {/* Rendering a child element */}
           </MainDashboard>
         </Router>
@@ -64,9 +71,15 @@ describe("MainDashboard Component", () => {
     useAssetData.mockReturnValue({ loading: true }); // Simulate loading state for assets
 
     render(
-      <Provider store={store}> {/* Wrapping with Redux store */}
-        <Router> {/* Wrapping with Router for routing */}
-          <MainDashboard isDGov={false} includeDashboardNav={true}> {/* Rendering the MainDashboard component */}
+      <Provider store={store}>
+        {" "}
+        {/* Wrapping with Redux store */}
+        <Router>
+          {" "}
+          {/* Wrapping with Router for routing */}
+          <MainDashboard isDGov={false} includeDashboardNav={true}>
+            {" "}
+            {/* Rendering the MainDashboard component */}
             <div>Test Child</div> {/* Rendering a child element */}
           </MainDashboard>
         </Router>
@@ -83,9 +96,15 @@ describe("MainDashboard Component", () => {
     useAssetData.mockReturnValue({ loading: false }); // Simulate loading state as false
 
     render(
-      <Provider store={store}> {/* Wrapping with Redux store */}
-        <Router> {/* Wrapping with Router for routing */}
-          <MainDashboard isDGov={false} includeDashboardNav={true}> {/* Rendering the MainDashboard component */}
+      <Provider store={store}>
+        {" "}
+        {/* Wrapping with Redux store */}
+        <Router>
+          {" "}
+          {/* Wrapping with Router for routing */}
+          <MainDashboard isDGov={false} includeDashboardNav={true}>
+            {" "}
+            {/* Rendering the MainDashboard component */}
             <div>Test Child</div> {/* Rendering a child element */}
           </MainDashboard>
         </Router>
@@ -102,9 +121,15 @@ describe("MainDashboard Component", () => {
     useAssetData.mockReturnValue({ loading: false }); // Simulate loading state as false
 
     render(
-      <Provider store={store}> {/* Wrapping with Redux store */}
-        <Router> {/* Wrapping with Router for routing */}
-          <MainDashboard isDGov={false} includeDashboardNav={false}> {/* Rendering the MainDashboard component */}
+      <Provider store={store}>
+        {" "}
+        {/* Wrapping with Redux store */}
+        <Router>
+          {" "}
+          {/* Wrapping with Router for routing */}
+          <MainDashboard isDGov={false} includeDashboardNav={false}>
+            {" "}
+            {/* Rendering the MainDashboard component */}
             <div>Test Child</div> {/* Rendering a child element */}
           </MainDashboard>
         </Router>
@@ -121,9 +146,15 @@ describe("MainDashboard Component", () => {
     useAssetData.mockReturnValue({ loading: false }); // Simulate loading state as false
 
     render(
-      <Provider store={store}> {/* Wrapping with Redux store */}
-        <Router> {/* Wrapping with Router for routing */}
-          <MainDashboard isDGov={true} includeDashboardNav={true}> {/* Rendering the MainDashboard component */}
+      <Provider store={store}>
+        {" "}
+        {/* Wrapping with Redux store */}
+        <Router>
+          {" "}
+          {/* Wrapping with Router for routing */}
+          <MainDashboard isDGov={true} includeDashboardNav={true}>
+            {" "}
+            {/* Rendering the MainDashboard component */}
             <div>Test Child</div> {/* Rendering a child element */}
           </MainDashboard>
         </Router>

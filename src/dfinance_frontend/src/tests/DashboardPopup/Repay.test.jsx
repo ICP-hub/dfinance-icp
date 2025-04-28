@@ -1,5 +1,11 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import Repay from "../../components/Dashboard/DashboardPopup/Repay"; // Component to test
 import { Provider } from "react-redux"; // Redux provider for store integration
 import { store } from "../../redux/store"; // Importing the Redux store
@@ -10,21 +16,21 @@ jest.mock("react-toastify", () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
-  }
+  },
 }));
 
 // Mocking react-router's useLocation and useNavigate hooks for routing behavior
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
   useLocation: jest.fn().mockReturnValue({
-    pathname: '/repay',
-    search: '',
-    hash: '',
+    pathname: "/repay",
+    search: "",
+    hash: "",
     state: null,
-    key: 'default'
+    key: "default",
   }),
   useNavigate: jest.fn().mockReturnValue(jest.fn()), // Mocking navigation
-  MemoryRouter: jest.requireActual('react-router-dom').MemoryRouter
+  MemoryRouter: jest.requireActual("react-router-dom").MemoryRouter,
 }));
 
 // Mocking custom hook for real-time conversion rates
@@ -32,18 +38,18 @@ jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     conversionRate: 50000 * Math.pow(10, 8), // Returning mock conversion rate for ckBTC
-    error: null
-  })
+    error: null,
+  }),
 }));
 
 // Mocking authentication logic (backendActor)
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn().mockReturnValue({
     backendActor: {
-      execute_repay: jest.fn().mockResolvedValue({ Ok: true }),  // Mocked repay function (success)
+      execute_repay: jest.fn().mockResolvedValue({ Ok: true }), // Mocked repay function (success)
     },
-    principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
-  })
+    principal: "rrkah-fqaaa-aaaaa-aaaaq-cai",
+  }),
 }));
 
 // Mocking user data (health factor)
@@ -52,60 +58,60 @@ jest.mock("../../components/customHooks/useUserData", () => ({
   default: jest.fn().mockReturnValue({
     userData: {},
     healthFactorBackend: 2.5,
-    refetchUserData: jest.fn()
-  })
+    refetchUserData: jest.fn(),
+  }),
 }));
 
 // Mocking function block status to simulate an unblocked state
 jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    isBlocked: false
-  })
+    isBlocked: false,
+  }),
 }));
 
 // Mocking transfer fee
 jest.mock("../../components/customHooks/useTransferFee", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    transferFee: 0.0001
-  })
+    transferFee: 0.0001,
+  }),
 }));
 
 // Mocking Principal from @dfinity/principal
 jest.mock("@dfinity/principal", () => ({
   Principal: {
-    fromText: jest.fn().mockImplementation(text => ({
+    fromText: jest.fn().mockImplementation((text) => ({
       _arr: new Uint8Array(10),
-      toString: () => text
-    }))
-  }
+      toString: () => text,
+    })),
+  },
 }));
 
 // Mocking Redux's useSelector for store state and dispatch
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
-  useSelector: jest.fn().mockImplementation(callback => {
+  useSelector: jest.fn().mockImplementation((callback) => {
     return callback({
       ledger: {
         ckBTC: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ckETH: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ckUSDC: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ICP: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ckUSDT: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
-        }
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
+        },
       },
       sound: {
-        isSoundOn: true
+        isSoundOn: true,
       },
       fees: {
         fees: {
@@ -113,12 +119,12 @@ jest.mock("react-redux", () => ({
           ckETH: 0.0001,
           ckUSDC: 0.0001,
           ICP: 0.0001,
-          ckUSDT: 0.0001
-        }
-      }
+          ckUSDT: 0.0001,
+        },
+      },
     });
   }),
-  useDispatch: () => jest.fn()
+  useDispatch: () => jest.fn(),
 }));
 
 describe("Repay Component", () => {
@@ -165,8 +171,12 @@ describe("Repay Component", () => {
     });
 
     // Check for expected content in the document
-    expect(screen.getByRole('heading', { name: /Repay ckBTC/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Enter Amount ckBTC/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Repay ckBTC/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Enter Amount ckBTC/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
     expect(screen.getByText(/Health Factor/i)).toBeInTheDocument();
   });
@@ -184,7 +194,7 @@ describe("Repay Component", () => {
     });
 
     const approveButton = screen.getByText(/Approve ckBTC to continue/i);
-    expect(approveButton.closest('button')).toBeDisabled(); // Button should be disabled if the amount is 0
+    expect(approveButton.closest("button")).toBeDisabled(); // Button should be disabled if the amount is 0
   });
 
   // Test case 3: Verifying that the amount input field is handled correctly
@@ -202,10 +212,10 @@ describe("Repay Component", () => {
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
 
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '10' } }); // Simulating input change
+      fireEvent.change(amountInput, { target: { value: "10" } }); // Simulating input change
     });
 
-    expect(amountInput.value).toBe('10'); // Verify the value was correctly updated
+    expect(amountInput.value).toBe("10"); // Verify the value was correctly updated
   });
 
   // Test case 4: Verifying that the Max button works correctly
@@ -220,14 +230,14 @@ describe("Repay Component", () => {
       );
     });
 
-    const maxButton = screen.getByText('Max');
+    const maxButton = screen.getByText("Max");
 
     await act(async () => {
       fireEvent.click(maxButton); // Simulate clicking the Max button
     });
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
-    expect(amountInput.value).toBe('50.00000000'); // Check if the amount is set to the maximum borrowable value
+    expect(amountInput.value).toBe("50.00000000"); // Check if the amount is set to the maximum borrowable value
   });
 
   // Test case 5: Verifying that transaction overview information is displayed correctly
@@ -270,7 +280,7 @@ describe("Repay Component", () => {
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
 
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '10' } });
+      fireEvent.change(amountInput, { target: { value: "10" } });
     });
 
     await waitFor(() => {
@@ -295,7 +305,7 @@ describe("Repay Component", () => {
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
 
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '10' } }); // Enter an amount for repayment
+      fireEvent.change(amountInput, { target: { value: "10" } }); // Enter an amount for repayment
     });
 
     await waitFor(() => {
@@ -321,7 +331,7 @@ describe("Repay Component", () => {
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
 
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '10' } });
+      fireEvent.change(amountInput, { target: { value: "10" } });
     });
 
     await waitFor(() => {

@@ -72,8 +72,6 @@ const WalletModal = () => {
     logout();
   };
 
-
-
   // Function to display the wallet name based on the wallet type
   const walletDisplayName = (wallet) => {
     switch (wallet) {

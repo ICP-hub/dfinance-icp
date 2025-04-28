@@ -83,7 +83,6 @@ const DashboardNav = () => {
     return `${num.toFixed(2)}%`;
   };
 
-
   //update wallet detail tab
   const [walletDetailTab, setWalletDetailTab] = useState([
     {
@@ -106,8 +105,8 @@ const DashboardNav = () => {
           ? netApy === "<0.01%"
             ? "<0.01%"
             : !isNaN(parseFloat(netApy))
-              ? `${formatNetApy(netApy)}`
-              : "-"
+            ? `${formatNetApy(netApy)}`
+            : "-"
           : "-",
     },
     {
@@ -194,7 +193,6 @@ const DashboardNav = () => {
             try {
               const account = { owner: principalObj, subaccount: [] };
               const balance = await dtokenActor.icrc1_balance_of(account);
-              const formattedBalance = Number(balance) / 100000000;
               assetBalance.dtokenBalance = balance;
             } catch (error) {
               console.error(`Error fetching dtoken balance for ${asset}:`, error);
@@ -209,7 +207,6 @@ const DashboardNav = () => {
             try {
               const account = { owner: principalObj, subaccount: [] };
               const balance = await debtTokenActor.icrc1_balance_of(account);
-              const formattedBalance = Number(balance) / 100000000;
               assetBalance.debtTokenBalance = balance;
             } catch (error) {
               console.error(
@@ -240,7 +237,6 @@ const DashboardNav = () => {
     }
     return `noBorrow`;
   };
-
 
   //get conversion rate for assets
   const getConversionRate = (asset) => {
@@ -292,19 +288,28 @@ const DashboardNav = () => {
             (reserveGroup) => reserveGroup[0] === assetKey
           )?.[1]?.liquidity_index || 1;
 
-          const assetBalance =
-          assetBalances.find((balance) => balance.asset === assetKey)?.dtokenBalance || 0;
-    console.log("assetBalance",assetBalance)
-        const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
-        const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
-        const safeSupplyValue = typeof getAssetSupplyValue(assetKey) === "bigint" ? Number(getAssetSupplyValue(assetKey)) : getAssetSupplyValue(assetKey);
-console.log("safeAssetBalance",safeAssetBalance)
-console.log("safeCurrentLiquidity",safeCurrentLiquidity)
-console.log("safeSupplyValue",safeSupplyValue)
-        const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * 1e8);
-        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / 1e8)/1e8;
+        const assetBalance =
+          assetBalances?.find((balance) => balance.asset === assetKey)
+            ?.dtokenBalance || 0;
+        const safeAssetBalance =
+          typeof assetBalance === "bigint"
+            ? Number(assetBalance)
+            : assetBalance;
+        const safeCurrentLiquidity =
+          typeof currentLiquidity === "bigint"
+            ? Number(currentLiquidity)
+            : currentLiquidity;
+        const safeSupplyValue =
+          typeof getAssetSupplyValue(assetKey) === "bigint"
+            ? Number(getAssetSupplyValue(assetKey))
+            : getAssetSupplyValue(assetKey);
 
-console.log("assetSupply",assetSupply)
+        const calculated_supply = Math.trunc(
+          (safeAssetBalance / safeCurrentLiquidity) * 1e8
+        );
+        const assetSupply = Math.trunc(
+          (calculated_supply * safeSupplyValue) / 1e8
+        );
 
         const DebtIndex =
           userData?.Ok?.reserves[0]?.find(
@@ -318,7 +323,7 @@ console.log("assetSupply",assetSupply)
         const assetBorrowed =
           (Number(assetBorrowBalance) *
             Number(getAssetBorrowValue(assetKey) || 0)) /
-          Number(DebtIndex) || 0;
+            Number(DebtIndex) || 0;
 
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD += assetBorrowedInUSD;
@@ -370,8 +375,6 @@ console.log("assetSupply",assetSupply)
     setIsMenuOpen(!isMenuOpen);
   };
 
-
-
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -395,17 +398,17 @@ console.log("assetSupply",assetSupply)
         prevTab.map((item) =>
           item.id === 0
             ? {
-              ...item,
-              count:
-                newValue === "-" ? (
-                  newValue
-                ) : (
-                  <>
-                    <span style={{ fontWeight: "lighter" }}>$</span>
-                    {formatNumber(newValue, 2)}
-                  </>
-                ),
-            }
+                ...item,
+                count:
+                  newValue === "-" ? (
+                    newValue
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: "lighter" }}>$</span>
+                      {formatNumber(newValue, 2)}
+                    </>
+                  ),
+              }
             : item
         )
       );
@@ -421,9 +424,11 @@ console.log("assetSupply",assetSupply)
     if (userAccountData?.Ok?.[4] !== undefined && principal) {
       const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
       const calculatedHealthFactor =
-        Number(healthFactorBackend) > 100
-          ? <Infinity className=" dark:text-darkText text-[#2A1F9D]" />
-          : parseFloat(Number(truncatedValue));
+        Number(healthFactorBackend) > 100 ? (
+          <Infinity className=" dark:text-darkText text-[#2A1F9D]" />
+        ) : (
+          parseFloat(Number(truncatedValue))
+        );
 
       setHealthFactor((prev) => {
         const newValue =
@@ -439,9 +444,9 @@ console.log("assetSupply",assetSupply)
         prevTab.map((item) =>
           item.id === 2
             ? {
-              ...item,
-              count: calculatedHealthFactor,
-            }
+                ...item,
+                count: calculatedHealthFactor,
+              }
             : item
         )
       );
@@ -517,7 +522,7 @@ console.log("assetSupply",assetSupply)
               ?.dtokenBalance || 0;
           const supply =
             (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-            Number(currentLiquidity) || 0;
+              Number(currentLiquidity) || 0;
 
           if (supply) {
             setAssetSupply(supply);
@@ -531,9 +536,7 @@ console.log("assetSupply",assetSupply)
               ?.debtTokenBalance || 0;
           const borrow =
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-            Number(DebtIndex) || 0;
-
-
+              Number(DebtIndex) || 0;
 
           if (borrow > 0) {
             totalBorrow += borrow;
@@ -700,8 +703,9 @@ console.log("assetSupply",assetSupply)
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-            }`}
+          className={`md:hidden flex ml-auto ${
+            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+          }`}
         >
           {(isMarketRoute || (isDashboardRoute && isAuthenticated)) && (
             <button onClick={toggleMenu} className="rounded-md button1 z-10">
@@ -715,8 +719,9 @@ console.log("assetSupply",assetSupply)
         <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -781,22 +786,23 @@ console.log("assetSupply",assetSupply)
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                             <span
-                              className={`font-bold text-[20px] ${data.title === "Health Factor"
-                                ? data.count === 0
-                                  ? "text-red-500"
-                                  : data.count > 3
+                              className={`font-bold text-[20px] ${
+                                data.title === "Health Factor"
+                                  ? data.count === 0
+                                    ? "text-red-500"
+                                    : data.count > 3
                                     ? "text-green-500"
                                     : data.count <= 1
-                                      ? "text-red-500"
-                                      : data.count <= 1.5
-                                        ? "text-orange-600"
-                                        : data.count <= 2
-                                          ? "text-orange-400"
-                                          : "text-orange-300"
-                                : data.title === "Total Borrows"
+                                    ? "text-red-500"
+                                    : data.count <= 1.5
+                                    ? "text-orange-600"
+                                    : data.count <= 2
+                                    ? "text-orange-400"
+                                    : "text-orange-300"
+                                  : data.title === "Total Borrows"
                                   ? "text-[#2A1F9D] dark:text-darkBlue"
                                   : "text-[#2A1F9D] dark:text-darkBlue"
-                                }`}
+                              }`}
                             >
                               {data.count !== null ? data.count : "\u00A0"}
                             </span>
@@ -874,20 +880,21 @@ console.log("assetSupply",assetSupply)
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                     <span
-                      className={`font-bold text-[20px] ${data.title === "Health Factor"
-                        ? data.count === 0 && assetSupply === 0
-                          ? "text-[#2A1F9D] dark:text-darkBlue"
-                          : data.count > 3
+                      className={`font-bold text-[20px] ${
+                        data.title === "Health Factor"
+                          ? data.count === 0 && assetSupply === 0
+                            ? "text-[#2A1F9D] dark:text-darkBlue"
+                            : data.count > 3
                             ? "text-green-500"
                             : data.count <= 1
-                              ? "text-red-500"
-                              : data.count <= 1.5
-                                ? "text-orange-600"
-                                : data.count <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                        : "text-[#2A1F9D] dark:text-darkBlue"
-                        }`}
+                            ? "text-red-500"
+                            : data.count <= 1.5
+                            ? "text-orange-600"
+                            : data.count <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                          : "text-[#2A1F9D] dark:text-darkBlue"
+                      }`}
                     >
                       {data.count !== null ? data.count : "\u00A0"}
                     </span>

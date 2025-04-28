@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Check, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
@@ -18,8 +17,26 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
  * @param {Object} props - Component props
  * @returns {JSX.Element} - Returns the ColateralPopup component.
  */
-const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange, }) => {
-
+const ColateralPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
@@ -76,7 +93,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
           draggable: true,
           progress: undefined,
         });
-        setIsModalOpen(false)
+        setIsModalOpen(false);
         return;
       }
       const addedAmount = currentCollateralStatus
@@ -108,7 +125,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
             progress: undefined,
           });
           setIsModalOpen(false);
-          setIsLoading(false)
+          setIsLoading(false);
         }
         if (
           typeof errorMsg === "string" &&
@@ -148,9 +165,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
             progress: undefined,
           });
 
-          SetError(
-            "Amount must be a positive number"
-          );
+          SetError("Amount must be a positive number");
           console.error("Amount must be a positive number");
         }
         if (errorMsg?.LTVGreaterThanThreshold === null) {
@@ -172,8 +187,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
 
         throw new Error(JSON.stringify(errorMsg));
       }
-
-
     } catch (error) {
       console.error("Error in toggleCollateral:", error);
       throw error;
@@ -229,7 +242,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
     return (totalDeptValue / totalCollateralValue) * 100;
   };
 
-
   // Function to format the value based on the conditions
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -259,10 +271,13 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (paymentModalRef.current && !paymentModalRef.current.contains(event.target)) {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
         setIsPaymentDone(false);
-        setIsVisible(false)
-        setIsModalOpen(false)
+        setIsVisible(false);
+        setIsModalOpen(false);
       }
     };
 
@@ -273,7 +288,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
       };
     }
   }, [isPaymentDone]);
-
 
   useEffect(() => {
     if (assetSupply && conversionRate) {
@@ -413,7 +427,9 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
                       alt="connect_wallet_icon"
                       className="object-cover w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
-                    <span className="text-xs sm:text-[14px]">{formatValue(assetSupply)}</span>
+                    <span className="text-xs sm:text-[14px]">
+                      {formatValue(assetSupply)}
+                    </span>
                     <span className="text-xs sm:text-[13px]">{asset}</span>
                   </div>
                 </div>
@@ -423,33 +439,33 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${truncatedValue > 3
+                        className={`${
+                          truncatedValue > 3
                             ? "text-green-500"
                             : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                          }`}
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
-                        {truncatedValue > 100
-                          ? "Infinity"
-                          : (truncatedValue)}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${value > 3
+                        className={`${
+                          value > 3
                             ? "text-green-500"
                             : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
-                          }`}
+                            ? "text-red-500"
+                            : value <= 1.5
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -462,7 +478,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
               </div>
             </div>
           </div>
-
 
           {value <= 1 ? (
             <div className="w-full flex flex-col my-3 space-y-2">
@@ -482,17 +497,17 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
 
           <button
             onClick={handleToggleCollateral}
-            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isButtonDisabled || isLoading
+            className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+              isButtonDisabled || isLoading
                 ? "opacity-50 cursor-not-allowed"
                 : ""
-              }`}
+            }`}
             disabled={isButtonDisabled || isLoading}
           >
             {currentCollateralStatus
               ? `Disable ${asset} as collateral`
               : `Enable ${asset} as collateral`}
           </button>
-
 
           {isLoading && (
             <div
@@ -509,7 +524,10 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
       )}
 
       {isPaymentDone && (
-        <div ref={paymentModalRef} className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div
+          ref={paymentModalRef}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -537,8 +555,13 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
             <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
               <div className="w-full flex flex-col items-center ">
                 <div className="w-full flex items-center justify-between  ">
-                  <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
-                  <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                  <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                    Important Message
+                  </h1>
+                  <button
+                    onClick={handleClosePaymentPopup}
+                    className="text-gray-400 focus:outline-none mt-3 mr-4"
+                  >
                     <X size={22} />
                   </button>
                 </div>
@@ -549,19 +572,19 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
                           dark:to-darkGradientEnd 
                           dark:text-darkText p-2 "
                 >
-
                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                     Thanks for helping us improve DFinance! <br></br> You’ve
                     uncovered a bug, and our dev team is on it.
                   </p>
 
                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                    Your account is temporarily locked while we investigate and fix
-                    the issue. <br />
+                    Your account is temporarily locked while we investigate and
+                    fix the issue. <br />
                   </p>
                   <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                    We appreciate your contribution and have logged your ID—testers
-                    like you are key to making DFinance better! <br />
+                    We appreciate your contribution and have logged your
+                    ID—testers like you are key to making DFinance better!{" "}
+                    <br />
                     If you have any questions, feel free to reach out.
                   </p>
                 </div>

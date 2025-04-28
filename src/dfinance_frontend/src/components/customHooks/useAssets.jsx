@@ -12,17 +12,11 @@ import { useSelector } from "react-redux";
  * @returns {Object} - Returns asset data and utility functions.
  */
 const useAssetData = (searchQuery = "") => {
-
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const {
-    principal,
-    fetchReserveData,
-    backendActor,
-    isAuthenticated,
-
-  } = useAuth();
+  const { principal, fetchReserveData, backendActor, isAuthenticated } =
+    useAuth();
 
   const [assets, setAssets] = useState([]);
   const [AssetImages, setAssetImages] = useState([]);
@@ -51,31 +45,29 @@ const useAssetData = (searchQuery = "") => {
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
-  
+
       try {
         const assetData = await backendActor.get_all_assets();
-        
-  
-        const names = assetData.map(asset => asset.asset_name);
-        const images = assetData.map(asset => asset.image); // Already URL strings
-  
+
+        const names = assetData.map((asset) => asset.asset_name);
+        const images = assetData.map((asset) => asset.image); // Already URL strings
+
         setAssets(names);
         setAssetImages(images);
       } catch (error) {
         console.error("Failed to fetch assets:", error.message);
       }
     };
-  
+
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
-  
+
   // Helper function to check if the image is an SVG
- 
 
   /**
-    * Fetches the total supply of a specific asset.
-    * @param {string} asset - The asset.
-    */
+   * Fetches the total supply of a specific asset.
+   * @param {string} asset - The asset.
+   */
   const fetchAssetSupply = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
@@ -91,7 +83,7 @@ const useAssetData = (searchQuery = "") => {
       } catch (error) {
         console.error("Error fetching asset supply:", error.message);
       }
-    } 
+    }
   };
 
   /**
@@ -113,7 +105,7 @@ const useAssetData = (searchQuery = "") => {
       } catch (error) {
         console.error("Error fetching asset borrow:", error.message);
       }
-    } 
+    }
   };
 
   /**
@@ -182,15 +174,15 @@ const useAssetData = (searchQuery = "") => {
           );
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
-            100000000
+              100000000
           );
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
-            100000000
+              100000000
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
-            100000000
+              100000000
           );
           const interestAccure = parseFloat(
             Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
@@ -210,7 +202,6 @@ const useAssetData = (searchQuery = "") => {
         setTotalBorrowSize(formatNumber(totalBorrowes));
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
-
       } catch (err) {
         console.error("Error during fetch:", err.message);
         console.error(err.message);
@@ -234,15 +225,15 @@ const useAssetData = (searchQuery = "") => {
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(
-        ([asset, data]) =>
-          asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (data.asset_supply &&
-            data.asset_supply.toString().includes(searchQuery)) ||
-          (data.borrow_rate &&
-            data.borrow_rate.some((rate) =>
-              rate.toString().includes(searchQuery)
-            ))
-      )
+          ([asset, data]) =>
+            asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (data.asset_supply &&
+              data.asset_supply.toString().includes(searchQuery)) ||
+            (data.borrow_rate &&
+              data.borrow_rate.some((rate) =>
+                rate.toString().includes(searchQuery)
+              ))
+        )
       : [];
 
   const formatNumber = useFormatNumber();

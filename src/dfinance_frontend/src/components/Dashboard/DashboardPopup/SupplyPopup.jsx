@@ -64,7 +64,6 @@ const SupplyPopup = ({
    *                                 STATE MANAGEMENT
    * =================================================================================== */
 
-
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
@@ -97,8 +96,6 @@ const SupplyPopup = ({
    *                                  HELPERS
    * =================================================================================== */
 
-
-
   const errorMessages = {
     NoReserveDataFound:
       "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
@@ -112,8 +109,6 @@ const SupplyPopup = ({
       "Minting of tokens failed. Your account state has been rolled back. Try again later.",
     Default: "An unexpected error occurred. Please try again later.",
   };
-
-
 
   const numericBalance = parseFloat(balance);
   const supplyBalance = Math.max(numericBalance - transferFee, 0);
@@ -137,14 +132,12 @@ const SupplyPopup = ({
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
-      ;
       return;
     }
 
     if (inputAmount === "." || inputAmount === "0.") {
       setAmount(inputAmount);
       updateAmountAndUsdValue(inputAmount);
-      ;
       return;
     }
 
@@ -158,7 +151,6 @@ const SupplyPopup = ({
       );
       return;
     } else {
-      ;
     }
 
     let formattedAmount;
@@ -191,13 +183,11 @@ const SupplyPopup = ({
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(convertedValue.toFixed(8));
       } else {
-
       }
     } else {
       console.error("Amount must be a positive number");
     }
   };
-
 
   // Function to handle the approval process
   const handleApprove = async () => {
@@ -270,7 +260,6 @@ const SupplyPopup = ({
     }
   };
 
-
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -279,8 +268,6 @@ const SupplyPopup = ({
   const totalAmount = transferFeeBigInt
     ? scaledAmount + transferFeeBigInt
     : scaledAmount;
-
-
 
   // Function to handle the supply process
   const handleSupplyETH = async () => {
@@ -323,10 +310,12 @@ const SupplyPopup = ({
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${scaledAmount / 100000000
+          `Supply,${asset},${
+            scaledAmount / 100000000
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${scaledAmount / 100000000
+          `Supply,${asset},${
+            scaledAmount / 100000000
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
@@ -668,7 +657,6 @@ const SupplyPopup = ({
       totalDeptValue = 0;
     }
 
-
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -697,8 +685,6 @@ const SupplyPopup = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-
-
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -741,9 +727,9 @@ const SupplyPopup = ({
                   <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} USD`
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -757,10 +743,11 @@ const SupplyPopup = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                      }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
+                      supplyBalance === 0 || isApproved
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
                         handleMaxClick();
@@ -788,10 +775,11 @@ const SupplyPopup = ({
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${currentCollateralStatus
-                      ? "text-green-500"
-                      : "text-red-500"
-                      }`}
+                    className={`font-semibold ${
+                      currentCollateralStatus
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
@@ -802,31 +790,33 @@ const SupplyPopup = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
+                        className={`${
+                          truncatedValue > 3
+                            ? "text-green-500"
+                            : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${value > 3
-                          ? "text-green-500"
-                          : value <= 1
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                              ? "text-orange-600"
-                              : value <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -888,8 +878,9 @@ const SupplyPopup = ({
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`text-xs whitespace-nowrap ${
+                  isApproved ? "text-green-500" : "text-red-500"
+                }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -903,14 +894,11 @@ const SupplyPopup = ({
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                isLoading ||
-                !hasEnoughBalance ||
-                amount <= 0
-
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                isApproved || isLoading || !hasEnoughBalance || amount <= 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               disabled={
                 isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -922,14 +910,11 @@ const SupplyPopup = ({
             <button
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                isLoading ||
-                amount <= 0 ||
-                !hasEnoughBalance
-
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -938,7 +923,7 @@ const SupplyPopup = ({
             </button>
           </div>
 
-          { }
+          {}
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
@@ -979,8 +964,8 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                   : "0"}{" "}
                 {asset}
               </strong>
@@ -994,8 +979,8 @@ const SupplyPopup = ({
                     ? Number(scaledAmount / 100000000).toFixed(8)
                     : scaledAmount / 100000000 >= 1e-7 &&
                       scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                   : "0"}{" "}
                 d{asset}
               </strong>

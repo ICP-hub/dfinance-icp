@@ -72,7 +72,10 @@ const Faucet = () => {
               <p className="text-[#737373] my-2 font-medium text-center dark:text-darkTextSecondary">
                 Please connect your wallet to get free testnet assets
               </p>
-              <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
+              <Button
+                title="Connect Wallet"
+                onClickHandler={handleWalletConnect}
+              />
               <Suspense
                 fallback={
                   <div className="flex justify-center items-center min-h-[50vh]">
@@ -80,8 +83,9 @@ const Faucet = () => {
                   </div>
                 }
               >
-                {(isSwitchingWallet || !isAuthenticated) && <WalletModal data-testid="wallet-modal" />
-                }
+                {(isSwitchingWallet || !isAuthenticated) && (
+                  <WalletModal data-testid="wallet-modal" />
+                )}
               </Suspense>
             </div>
           )}

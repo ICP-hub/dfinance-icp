@@ -36,7 +36,7 @@ use std::time::Duration;
  */
 // TODO: check why this function is async function.
 #[init]
-pub async fn init(args: Principal) {
+pub fn init(args: Principal) {
     ic_cdk::println!("init function = {:?}", args.to_text());
     // This controller ID will be used for setting the controller 
     // of other canisters (e.g., asset reserves) dynamically created 
@@ -52,8 +52,7 @@ pub async fn init(args: Principal) {
         );
     });
 
-    ic_cdk::println!("function called");
-    schedule_midnight_task().await;
+    ic_cdk::println!("init function called");
 }
 
 /*

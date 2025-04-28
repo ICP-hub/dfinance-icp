@@ -36,7 +36,7 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import { X } from 'lucide-react';
+import { X } from "lucide-react";
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import ckBTC from "../../../public/assests-icon/ckBTC.png";
@@ -67,10 +67,7 @@ export default function Navbar({ isHomeNav }) {
   const location = useLocation();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const theme = useSelector((state) => state.theme.theme);
-  const {
-    assets,
-    AssetImages
-  } = useAssetData();
+  const { assets, AssetImages } = useAssetData();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
@@ -83,7 +80,8 @@ export default function Navbar({ isHomeNav }) {
 
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-  const { isAuthenticated, login, logout, principal, User, accountIdString } = useAuth();
+  const { isAuthenticated, login, logout, principal, User, accountIdString } =
+    useAuth();
   const [asset, setAsset] = useState("ICP"); // default asset
   const assetImages = {
     ckBTC: ckBTC,
@@ -106,9 +104,6 @@ export default function Navbar({ isHomeNav }) {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-
-
-
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -303,9 +298,10 @@ export default function Navbar({ isHomeNav }) {
       }
       const safeAmount = Number(amount.replace(/,/g, "")) || 0;
 
-      let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
+      let amountAsNat64 = Math.round(
+        amount.replace(/,/g, "") * Math.pow(10, 8)
+      );
       const scaledAmount = amountAsNat64;
-
 
       const transferFromArgs = {
         from: {
@@ -328,7 +324,6 @@ export default function Navbar({ isHomeNav }) {
       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in response) {
-
         setIsTransferDropDownOpen(false);
 
         if (isSoundOn) {
@@ -401,18 +396,22 @@ export default function Navbar({ isHomeNav }) {
         progress: undefined,
       });
     } else if (errorMsg.toLowerCase().includes("unauthorized access")) {
-      toast.error("Unauthorized access. Only platform or controllers can perform this action.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      toast.error(
+        "Unauthorized access. Only platform or controllers can perform this action.",
+        {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        }
+      );
     } else {
-      const userFriendlyMessage = errorMessages[errorKey] || errorMessages.Default;
+      const userFriendlyMessage =
+        errorMessages[errorKey] || errorMessages.Default;
       toast.error(`Supply failed: ${userFriendlyMessage}`, {
         className: "custom-toast",
         position: "top-center",
@@ -436,7 +435,6 @@ export default function Navbar({ isHomeNav }) {
     if (msgLower.includes("panic")) {
       setShowPanicPopup(true);
       setIsVisible(false);
-
     } else if (msgLower.includes("invalid character")) {
       // Principal ID has an invalid character
       const match = message.match(/"(.+?)"/);
@@ -452,7 +450,6 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-
     } else if (
       msgLower.includes("out of cycles") ||
       message.includes("Reject text: Canister")
@@ -467,7 +464,6 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-
     } else {
       toast.error(`Error: ${message}`, {
         className: "custom-toast",
@@ -506,7 +502,6 @@ export default function Navbar({ isHomeNav }) {
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-
   };
 
   const handleCreateInternetIdentity = () => {
@@ -544,7 +539,6 @@ export default function Navbar({ isHomeNav }) {
 
   //function to click outside the dropdown
   const handleClickAway = () => {
-
     setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setDropdownVisible(false);
@@ -659,7 +653,7 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-  //function to trunccate the decimals up to 8 digits 
+  //function to trunccate the decimals up to 8 digits
   const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
@@ -677,15 +671,15 @@ export default function Navbar({ isHomeNav }) {
 
     try {
       Principal.fromText(trimmedValue);
-      ;
     } catch (error) {
       const errorMsg = error.toString();
-
 
       if (errorMsg.toLowerCase().includes("invalid character")) {
         const match = errorMsg.match(/"(.+?)"/);
         const invalidChar = match ? match[1] : "?";
-        console.error(`Principal ID contains an invalid character: "${invalidChar}"`);
+        console.error(
+          `Principal ID contains an invalid character: "${invalidChar}"`
+        );
       } else {
         console.error("Invalid principal ID format.");
       }
@@ -705,7 +699,7 @@ export default function Navbar({ isHomeNav }) {
    *                                  EFFECTS
    * =================================================================================== */
 
-  // Close the dropdown when the user scrolls 
+  // Close the dropdown when the user scrolls
   useEffect(() => {
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
     return () => {
@@ -713,7 +707,7 @@ export default function Navbar({ isHomeNav }) {
     };
   }, []);
 
-  // when dropdown open scroll is locked 
+  // when dropdown open scroll is locked
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
 
@@ -747,9 +741,14 @@ export default function Navbar({ isHomeNav }) {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger, toggleRefresh]);
+  }, [
+    fetchBalance,
+    fetchConversionRate,
+    dashboardRefreshTrigger,
+    toggleRefresh,
+  ]);
 
-  // funtion for Closing the dropdown when the user change location 
+  // funtion for Closing the dropdown when the user change location
   useEffect(() => {
     setSwitchWalletDrop(false);
     setSwitchTokenDrop(false);
@@ -840,9 +839,13 @@ export default function Navbar({ isHomeNav }) {
                   onClick={handleLogoClick}
                   className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
                 />
-                <h1 className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer" onClick={handleLogoClick}>DFinance</h1>
+                <h1
+                  className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer"
+                  onClick={handleLogoClick}
+                >
+                  DFinance
+                </h1>
               </div>
-
 
               {!isHomeNav && isTestnetMode && (
                 <button
@@ -882,66 +885,66 @@ export default function Navbar({ isHomeNav }) {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                      if (link.alwaysPresent) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      } else if (isTestnetMode && link.testnet) {
-                        return (
-                          <React.Fragment key={index}>
+                        if (link.alwaysPresent) {
+                          return (
                             <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (isTestnetMode && link.testnet) {
+                          return (
+                            <React.Fragment key={index}>
+                              <NavLink
+                                to={link.route}
+                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                              >
+                                {link.title}
+                              </NavLink>
+                              {link.title === "Faucet" && (
+                                <>
+                                  <span
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
+                                    onClick={handlePopupToggle}
+                                  >
+                                    •••
+                                  </span>
+                                  {isPopupVisible && (
+                                    <Popup
+                                      position={popupPosition}
+                                      onClose={() => setIsPopupVisible(false)}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </React.Fragment>
+                          );
+                        } else if (!isTestnetMode && !link.testnet) {
+                          return (
+                            <NavLink
+                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                            {link.title === "Faucet" && (
-                              <>
-                                <span
-                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                  onClick={handlePopupToggle}
-                                >
-                                  •••
-                                </span>
-                                {isPopupVisible && (
-                                  <Popup
-                                    position={popupPosition}
-                                    onClose={() => setIsPopupVisible(false)}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </React.Fragment>
-                        );
-                      } else if (!isTestnetMode && !link.testnet) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      return null;
-                    })
+                          );
+                        }
+                        return null;
+                      })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                      <NavLink
-                        key={index}
-                        target={link.target}
-                        to={link.route}
-                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                      >
-                        {link.title}
-                      </NavLink>
-                    ))}
+                        <NavLink
+                          key={index}
+                          target={link.target}
+                          to={link.route}
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                 </div>
               </>
             )}
@@ -974,7 +977,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -983,7 +986,6 @@ export default function Navbar({ isHomeNav }) {
               <div className="flex items-center gap-2">
                 <div className="flex justify-end">
                   <div className="relative">
-
                     {isTransferDropdownOpen && (
                       <>
                         {/* Overlay that captures outside clicks */}
@@ -1004,13 +1006,24 @@ export default function Navbar({ isHomeNav }) {
                           <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
                             {/* Add close button (X) in the top-right corner */}
                             <div className="flex justify-between items-center">
-                              <h1 className="font-semibold text-xl">Transfer</h1>
+                              <h1 className="font-semibold text-xl">
+                                Transfer
+                              </h1>
                               <button
                                 onClick={() => setIsTransferDropDownOpen(false)}
                                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
                                 </svg>
                               </button>
                             </div>
@@ -1026,12 +1039,13 @@ export default function Navbar({ isHomeNav }) {
                                       type="text"
                                       value={amount}
                                       onChange={handleAmountChange}
-                                      disabled={supplyBalance === 0 || isApproved}
+                                      disabled={
+                                        supplyBalance === 0 || isApproved
+                                      }
                                       className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none px-2 py-1 bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                                       placeholder={`Enter Amount `}
                                     />
-                                    <p className="text-[12px] text-gray-500 -mb-1">
-                                    </p>
+                                    <p className="text-[12px] text-gray-500 -mb-1"></p>
                                   </div>
 
                                   <div className="flex flex-col items-end gap-3">
@@ -1039,26 +1053,40 @@ export default function Navbar({ isHomeNav }) {
                                       {/* Replace image with dropdown */}
                                       <div className="relative">
                                         <button
-                                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                          onClick={() =>
+                                            setIsDropdownOpen(!isDropdownOpen)
+                                          }
                                           className="flex items-center gap-2 focus:outline-none"
                                         >
-
                                           {asset && (
                                             <img
-                                              src={AssetImages[assets.indexOf(asset)]} // Dynamically fetch image from AssetImages using assetIndex
+                                              src={
+                                                AssetImages[
+                                                  assets.indexOf(asset)
+                                                ]
+                                              } // Dynamically fetch image from AssetImages using assetIndex
                                               alt={asset}
                                               className="object-fill w-6 h-6 rounded-full"
                                             />
                                           )}
-                                          <span className="text-lg">{asset}</span>
+                                          <span className="text-lg">
+                                            {asset}
+                                          </span>
                                           <svg
-                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                            className={`w-4 h-4 transition-transform ${
+                                              isDropdownOpen ? "rotate-180" : ""
+                                            }`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg"
                                           >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth="2"
+                                              d="M19 9l-7 7-7-7"
+                                            ></path>
                                           </svg>
                                         </button>
 
@@ -1068,16 +1096,18 @@ export default function Navbar({ isHomeNav }) {
                                             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                                             onClick={(e) => {
                                               // Close dropdown when clicking the overlay background
-                                              if (e.target === e.currentTarget) {
+                                              if (
+                                                e.target === e.currentTarget
+                                              ) {
                                                 setIsDropdownOpen(false);
                                               }
                                             }}
                                           >
                                             <div className="absolute right-[40px] mt-2 w-48 origin-top-right bg-white dark:bg-darkOverlayBackground border dark:border-gray-600 border-gray-300 rounded-xl shadow-md z-10">
-
                                               <div className="py-1">
                                                 {assets.map((a) => {
-                                                  const assetIndex = assets.indexOf(a); // Get the index of the asset in the assets array
+                                                  const assetIndex =
+                                                    assets.indexOf(a); // Get the index of the asset in the assets array
 
                                                   return (
                                                     <button
@@ -1090,25 +1120,33 @@ export default function Navbar({ isHomeNav }) {
                                                           setMaxClicked(false);
                                                         }
                                                         setAsset(a);
-                                                        setIsDropdownOpen(false);
+                                                        setIsDropdownOpen(
+                                                          false
+                                                        );
                                                       }}
                                                     >
                                                       {/* Conditionally render the image using assetIndex */}
-                                                      {assetIndex !== -1 && AssetImages[assetIndex] && (
-                                                        <img
-                                                          key={assetIndex}
-                                                          src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
-                                                          alt={a || "asset"} // alt text should match the asset name
-                                                          className="rounded-full w-5 h-5 mt-1"
-                                                        />
-                                                      )}
+                                                      {assetIndex !== -1 &&
+                                                        AssetImages[
+                                                          assetIndex
+                                                        ] && (
+                                                          <img
+                                                            key={assetIndex}
+                                                            src={
+                                                              AssetImages[
+                                                                assetIndex
+                                                              ]
+                                                            } // Get the image URL dynamically using assetIndex
+                                                            alt={a || "asset"} // alt text should match the asset name
+                                                            className="rounded-full w-5 h-5 mt-1"
+                                                          />
+                                                        )}
 
                                                       <span>{a}</span>
                                                     </button>
                                                   );
                                                 })}
                                               </div>
-
                                             </div>
                                           </div>
                                         )}
@@ -1120,22 +1158,27 @@ export default function Navbar({ isHomeNav }) {
                                       </p>
                                       <div className="flex gap-1 items-center">
                                         <p className="text-[12px] text-gray-500 -mb-[3px]">
-                                          {truncateToEightDecimals(supplyBalance)}
+                                          {truncateToEightDecimals(
+                                            supplyBalance
+                                          )}
                                         </p>
                                         <p
-                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                            ? "text-gray-400 cursor-not-allowed"
-                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                                            }`}
+                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${
+                                            supplyBalance === 0 || isApproved
+                                              ? "text-gray-400 cursor-not-allowed"
+                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                          }`}
                                           onClick={() => {
-                                            if (supplyBalance > 0 && !isApproved) {
+                                            if (
+                                              supplyBalance > 0 &&
+                                              !isApproved
+                                            ) {
                                               handleMaxClick();
                                             }
                                           }}
                                         >
                                           Max
                                         </p>
-
                                       </div>
                                     </div>
                                   </div>
@@ -1174,7 +1217,8 @@ export default function Navbar({ isHomeNav }) {
                                 {amount > 0 && amount > supplyBalance && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
-                                      Insufficient wallet balance to transfer {asset}.
+                                      Insufficient wallet balance to transfer{" "}
+                                      {asset}.
                                     </div>
                                   </div>
                                 )}
@@ -1182,8 +1226,9 @@ export default function Navbar({ isHomeNav }) {
                                 {supplyBalance <= 0 && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
-                                      You do not have any {asset} in your wallet for transferring.
-                                      Please deposit {asset} before attempting to transfer.
+                                      You do not have any {asset} in your wallet
+                                      for transferring. Please deposit {asset}{" "}
+                                      before attempting to transfer.
                                     </div>
                                   </div>
                                 )}
@@ -1192,15 +1237,16 @@ export default function Navbar({ isHomeNav }) {
                                   {/* Approve Button */}
                                   <button
                                     onClick={() => !isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                                      isApproved ||
                                       isLoading ||
                                       isButtonDisabled ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
                                       amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                      }`}
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                    }`}
                                     disabled={
                                       isApproved ||
                                       isLoading ||
@@ -1215,15 +1261,16 @@ export default function Navbar({ isHomeNav }) {
                                   {/* Repay Button */}
                                   <button
                                     onClick={() => isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                                      !isApproved ||
                                       isButtonDisabled ||
                                       isLoading ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
                                       amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                      }`}
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                    }`}
                                     disabled={
                                       !isApproved ||
                                       isLoading ||
@@ -1257,12 +1304,15 @@ export default function Navbar({ isHomeNav }) {
                     {/* Transfer Assets Popup */}
                     {showDepositPopup && (
                       <>
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
-                          // Close dropdown when clicking the overlay background
-                          if (e.target === e.currentTarget) {
-                            setShowDepositPopup(false);
-                          }
-                        }}>
+                        <div
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                          onClick={(e) => {
+                            // Close dropdown when clicking the overlay background
+                            if (e.target === e.currentTarget) {
+                              setShowDepositPopup(false);
+                            }
+                          }}
+                        >
                           <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
                             {/* Add close button (X) in the top-right corner */}
                             <div className="flex justify-between items-center">
@@ -1271,8 +1321,17 @@ export default function Navbar({ isHomeNav }) {
                                 onClick={() => setShowDepositPopup(false)}
                                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
                                 </svg>
                               </button>
                             </div>
@@ -1307,7 +1366,6 @@ export default function Navbar({ isHomeNav }) {
                                     }}
                                   />
                                 </div>
-
                               </div>
 
                               <div className="w-full">
@@ -1324,7 +1382,9 @@ export default function Navbar({ isHomeNav }) {
                                   <GrCopy
                                     className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
                                     onClick={() => {
-                                      navigator.clipboard.writeText(accountIdString);
+                                      navigator.clipboard.writeText(
+                                        accountIdString
+                                      );
                                       toast.dismiss();
                                       toast.success(`Account Id  Coppied !`, {
                                         className: "custom-toast",
@@ -1340,8 +1400,6 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </div>
                               </div>
-
-
                             </div>
                           </div>
                         </div>
@@ -1349,11 +1407,10 @@ export default function Navbar({ isHomeNav }) {
                     )}
 
                     {/* Deposit Assets Popup */}
-
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                  { }
+                  {}
                   <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                     {!isMobile2 && (
                       <div
@@ -1385,7 +1442,11 @@ export default function Navbar({ isHomeNav }) {
                           style={{ pointerEvents: "auto" }}
                         >
                           <div className="w-full flex items-center gap-2">
-                            <img src={loader} alt="square" className="w-8 h-8" />
+                            <img
+                              src={loader}
+                              alt="square"
+                              className="w-8 h-8"
+                            />
                             <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
                               {truncateString(principal, 20)}
                             </h1>
@@ -1424,10 +1485,8 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
 
-
-
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                              { }
+                              {}
                               <div className="hidden lg1:flex justify-center">
                                 <div
                                   className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -1473,7 +1532,7 @@ export default function Navbar({ isHomeNav }) {
                                   </div>
                                 </div>
                               </div>
-                              { }
+                              {}
                               <div className=" w-full flex justify-center">
                                 <div
                                   className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -1529,7 +1588,7 @@ export default function Navbar({ isHomeNav }) {
                               Settings
                             </h2>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around">
                                 <label
@@ -1550,7 +1609,7 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <label
@@ -1566,12 +1625,12 @@ export default function Navbar({ isHomeNav }) {
                                 </span>
                                 <CustomizedSwitches
                                   checked={isTestnetMode}
-                                // onChange={handleTestnetModeToggle}
+                                  // onChange={handleTestnetModeToggle}
                                 />
                               </div>
                             </div>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around relative group">
                                 <label
@@ -1585,11 +1644,11 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </label>
 
-                                { }
+                                {}
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
-                                  Enabling this will allow the user to hear sound
-                                  when supply, borrow, repay, or withdraw actions
-                                  are performed.
+                                  Enabling this will allow the user to hear
+                                  sound when supply, borrow, repay, or withdraw
+                                  actions are performed.
                                 </div>
                               </div>
 
@@ -1625,7 +1684,7 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setIsMobileNav(!isMobileNav)}
                         className="cursor-pointer"
                       >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                       </div>
                     </div>
                   )}
@@ -1659,7 +1718,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}
@@ -1669,7 +1728,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        { }
+                        {}
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -1690,7 +1749,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        { }
+                        {}
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label

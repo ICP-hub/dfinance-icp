@@ -1,5 +1,11 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { Provider } from "react-redux";
 import { createStore } from "redux";
 import "@testing-library/jest-dom";
@@ -74,8 +80,10 @@ jest.mock("../../components/customHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     loading: false,
-    filteredItems: [["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }]],
-  })
+    filteredItems: [
+      ["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }],
+    ],
+  }),
 }));
 
 jest.mock(

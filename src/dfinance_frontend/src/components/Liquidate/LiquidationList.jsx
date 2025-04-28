@@ -69,8 +69,6 @@ const DebtStatus = () => {
     createLedgerActor,
   } = useAuth();
 
-
-
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
@@ -144,7 +142,6 @@ const DebtStatus = () => {
 
   //Function to filter the users based on the search query
   const relevantItems = liquidationUsers.filter((item) => {
-
     return (
       item.principal?._arr.toText() !== user.toString() &&
       item.debt !== 0n &&
@@ -267,7 +264,6 @@ const DebtStatus = () => {
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
-
       }
     });
 
@@ -280,14 +276,17 @@ const DebtStatus = () => {
 
     if (!currentLiquidity) return 0;
 
-    const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
-    const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
+    const safeAssetBalance =
+      typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
+    const safeCurrentLiquidity =
+      typeof currentLiquidity === "bigint"
+        ? Number(currentLiquidity)
+        : currentLiquidity;
     const supplyValue = Number(getAssetSupplyValue(assetName));
-    
+
     return Math.trunc(
       Math.trunc(safeAssetBalance / safeCurrentLiquidity) * supplyValue
     );
-    
   };
 
   //funxtion to calculate asset borrow
@@ -298,7 +297,6 @@ const DebtStatus = () => {
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
-
       }
     });
 
@@ -313,16 +311,16 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-      Number(debtIndex)
+        Number(debtIndex)
     );
   };
 
-  //Function to handle pagination 
+  //Function to handle pagination
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  //Function to handle search inputclose popup when click outside 
+  //Function to handle search inputclose popup when click outside
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
@@ -362,7 +360,6 @@ const DebtStatus = () => {
       }
     })();
   }, []);
-
 
   //Function to fetch  each user
   useEffect(() => {
@@ -407,7 +404,6 @@ const DebtStatus = () => {
     }
   }, [liquidationUsers, assets, users, liquidateTrigger]);
 
-
   //Funtion to fetch asset supply and borrow data
   useEffect(() => {
     const fetchSupplyData = async () => {
@@ -444,7 +440,6 @@ const DebtStatus = () => {
     fetchBorrowData();
   }, [assets, liquidateTrigger]);
 
-
   // useeffect for Closing popup when click outside
   useEffect(() => {
     if (showPopup) {
@@ -454,8 +449,6 @@ const DebtStatus = () => {
       };
     }
   }, [showPopup]);
-
-
 
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -519,10 +512,11 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
-                          }`}
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
+                          index !== liquidationUsers.length - 1
+                            ? "gradient-line-bottom"
+                            : ""
+                        }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -559,12 +553,17 @@ const DebtStatus = () => {
                                   );
 
                                   if (assetBorrow > 0) {
-                                    const assetIndex = assets.indexOf(assetName);
+                                    const assetIndex =
+                                      assets.indexOf(assetName);
 
                                     return (
                                       <img
                                         key={index}
-                                        src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
+                                        src={
+                                          assetIndex !== -1
+                                            ? AssetImages[assetIndex]
+                                            : undefined
+                                        } // Get the image URL dynamically
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />
@@ -598,15 +597,20 @@ const DebtStatus = () => {
                                         .liquidation_threshold
                                     ) / 100000000 || 0;
                                   if (assetSupply > 0) {
-                                    const assetIndex = assets.indexOf(assetName);
+                                    const assetIndex =
+                                      assets.indexOf(assetName);
 
                                     return (
                                       <img
-                                      key={index}
-                                      src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
-                                      alt={assetName || "asset"}
-                                      className="rounded-[50%] w-7"
-                                    />
+                                        key={index}
+                                        src={
+                                          assetIndex !== -1
+                                            ? AssetImages[assetIndex]
+                                            : undefined
+                                        } // Get the image URL dynamically
+                                        alt={assetName || "asset"}
+                                        className="rounded-[50%] w-7"
+                                      />
                                     );
                                   }
                                   return null;
@@ -614,7 +618,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        { }
+                        {}
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

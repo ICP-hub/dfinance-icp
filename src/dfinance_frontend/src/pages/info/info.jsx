@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/customHooks/useFormatNumber";
@@ -140,12 +135,12 @@ const DashboardCards = () => {
     }
   };
 
-
   useEffect(() => {
     checkController();
   }, [backendActor]);
 
-  const { filteredItems, interestAccure, assets, AssetImages } = useAssetData(searchQuery);
+  const { filteredItems, interestAccure, assets, AssetImages } =
+    useAssetData(searchQuery);
 
   const poolAssets = assets.map((name, index) => ({
     name,
@@ -165,8 +160,6 @@ const DashboardCards = () => {
       throw error;
     }
   };
-
-
 
   const [cardData, setCardData] = useState([
     {
@@ -878,10 +871,11 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
+                    usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                    }`}
+                  }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -973,7 +967,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -989,7 +983,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

@@ -5,9 +5,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/Elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/MiniLoader";
-const FaucetDetails = lazy(() =>
-  import("../../components/Faucet/FaucetList")
-);
+const FaucetDetails = lazy(() => import("../../components/Faucet/FaucetList"));
 const WalletModal = lazy(() =>
   import("../../components/Dashboard/WalletModal")
 );
@@ -73,7 +71,10 @@ const Faucet = () => {
               <p className="text-[#737373] my-2 font-medium text-center dark:text-darkTextSecondary">
                 Please connect your wallet to get free testnet assets
               </p>
-              <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
+              <Button
+                title="Connect Wallet"
+                onClickHandler={handleWalletConnect}
+              />
               <Suspense
                 fallback={
                   <div className="flex justify-center items-center min-h-[50vh]">
@@ -81,8 +82,9 @@ const Faucet = () => {
                   </div>
                 }
               >
-                {(isSwitchingWallet || !isAuthenticated) && <WalletModal data-testid="wallet-modal" />
-                }
+                {(isSwitchingWallet || !isAuthenticated) && (
+                  <WalletModal data-testid="wallet-modal" />
+                )}
               </Suspense>
             </div>
           )}

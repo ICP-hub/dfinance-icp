@@ -10,12 +10,12 @@ const mockStore = configureStore([]);
 
 // Mock dependencies
 jest.mock("../../utils/useAuthClient", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 
 jest.mock("../../components/Faucet/FaucetList", () => ({
   __esModule: true,
-  default: () => <div data-testid="faucet-details">Faucet Details</div>
+  default: () => <div data-testid="faucet-details">Faucet Details</div>,
 }));
 
 jest.mock("../../components/Dashboard/WalletModal", () => () => (
@@ -28,7 +28,7 @@ jest.mock("../../components/Common/Button", () => ({
     <button onClick={onClickHandler} data-testid="connect-wallet-button">
       {title}
     </button>
-  )
+  ),
 }));
 
 jest.mock("../../components/Common/MiniLoader", () => () => (
@@ -45,8 +45,8 @@ describe("Faucet Component", () => {
     store = mockStore({
       utility: {
         isWalletModalOpen: false,
-        isSwitchingWallet: false
-      }
+        isSwitchingWallet: false,
+      },
     });
     store.dispatch = jest.fn();
   });
@@ -62,7 +62,9 @@ describe("Faucet Component", () => {
     );
 
     // Check if the "Please connect your wallet" text is rendered
-    expect(screen.getByText(/Please, connect your wallet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Please, connect your wallet/i)
+    ).toBeInTheDocument();
   });
 
   test("renders the testnet faucet explanation text", () => {
@@ -76,7 +78,9 @@ describe("Faucet Component", () => {
     );
 
     // Check if the explanation text is rendered
-    expect(screen.getByText(/With our testnet Faucet you can receive free assets/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/With our testnet Faucet you can receive free assets/i)
+    ).toBeInTheDocument();
   });
 
   test("renders Connect Wallet button and triggers modal on click", () => {
@@ -102,14 +106,13 @@ describe("Faucet Component", () => {
     );
   });
 
-
   test("renders WalletModal when isWalletModalOpen is true", () => {
     // Set up store with isWalletModalOpen as true
     store = mockStore({
       utility: {
         isWalletModalOpen: true,
-        isSwitchingWallet: false
-      }
+        isSwitchingWallet: false,
+      },
     });
 
     // Mock the isAuthenticated hook to be false
@@ -130,8 +133,8 @@ describe("Faucet Component", () => {
     store = mockStore({
       utility: {
         isWalletModalOpen: false,
-        isSwitchingWallet: true
-      }
+        isSwitchingWallet: true,
+      },
     });
 
     // Mock the isAuthenticated hook to be false
@@ -163,8 +166,6 @@ describe("Faucet Component", () => {
     expect(elementsImage).toHaveAttribute("src", "elements-image.svg");
   });
 
-
-
   test("renders gradient background in unauthenticated view", () => {
     // Mock the isAuthenticated hook to be false
     useAuth.mockReturnValue({ isAuthenticated: false });
@@ -176,7 +177,9 @@ describe("Faucet Component", () => {
     );
 
     // Check for the container with gradient background classes
-    const gradientContainer = screen.getByText(/Please, connect your wallet/i).closest("div");
+    const gradientContainer = screen
+      .getByText(/Please, connect your wallet/i)
+      .closest("div");
     expect(gradientContainer).toHaveClass("bg-gradient-to-r");
     expect(gradientContainer).toHaveClass("from-[#4659CF]/40");
     expect(gradientContainer).toHaveClass("via-[#D379AB]/40");
@@ -194,6 +197,8 @@ describe("Faucet Component", () => {
     );
 
     // Check if the information text is rendered
-    expect(screen.getByText(/Please connect your wallet to get free testnet assets/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Please connect your wallet to get free testnet assets/i)
+    ).toBeInTheDocument();
   });
 });

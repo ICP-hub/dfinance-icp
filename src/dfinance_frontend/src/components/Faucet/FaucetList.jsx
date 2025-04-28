@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
-import {
-  FAUCET_ASSETS_TABLE_COL,
-} from "../../utils/constants";
+import { FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import useAssetData from "../customHooks/useAssets";
@@ -76,22 +74,19 @@ const FaucetDetails = () => {
   // Redux selector for wallet switching status
   const { isSwitchingWallet } = useSelector((state) => state.utility);
 
-
   /* ===================================================================================
    *                                  FUNCTION
    * =================================================================================== */
-
 
   // This function is called when the user clicks on the "Faucet" button for a specific asset.
   const handleFaucetClick = (asset) => {
     // Directly set the selected asset from the AssetImages array based on asset name
     const assetIndex = assets?.indexOf(asset); // Find the index of the asset in the assets array
     const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; // If asset exists, get the corresponding image
-  
+
     setSelectedAsset({ asset, assetImage }); // Update the selected asset state
     setShowPopup(true); // Show the popup
   };
-  
 
   // This function is for closing the popup
   const closePopup = () => {
@@ -241,8 +236,9 @@ const FaucetDetails = () => {
                     {FAUCET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td
                         key={index}
-                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${index === 1 ? "text-center" : ""
-                          }`}
+                        className={`whitespace-nowrap pl-2 pb-3 font-semibold ${
+                          index === 1 ? "text-center" : ""
+                        }`}
                       >
                         {item.header}
                       </td>
@@ -254,13 +250,13 @@ const FaucetDetails = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => (
-
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${
+                        index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                        }`}
+                      }`}
                     >
                       <td className="py-[1.5rem]">
                         <div className="w-full flex items-center justify-start whitespace-nowrap pl-3">
@@ -274,7 +270,6 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-
 
                       <td>
                         <div className="p-3">
@@ -330,13 +325,13 @@ const FaucetDetails = () => {
                                   displayedBalance =
                                     balance >= 1
                                       ? balance.toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      })
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
                                       : balance.toLocaleString(undefined, {
-                                        minimumFractionDigits: 7,
-                                        maximumFractionDigits: 7,
-                                      });
+                                          minimumFractionDigits: 7,
+                                          maximumFractionDigits: 7,
+                                        });
                                 }
                                 return (
                                   <>
@@ -345,8 +340,8 @@ const FaucetDetails = () => {
                                       {calculatedUsdValue === 0
                                         ? "$0.00"
                                         : calculatedUsdValue < 0.01
-                                          ? "<0.01$"
-                                          : `$${calculatedUsdValue.toLocaleString(
+                                        ? "<0.01$"
+                                        : `$${calculatedUsdValue.toLocaleString(
                                             undefined,
                                             {
                                               minimumFractionDigits: 2,
@@ -401,7 +396,7 @@ const FaucetDetails = () => {
                 </tbody>
               </table>
             </div>
-            { }
+            {}
           </>
         )}
 

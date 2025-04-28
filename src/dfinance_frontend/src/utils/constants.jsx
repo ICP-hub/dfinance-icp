@@ -342,7 +342,6 @@ export const WALLET_ASSETS_TABLE_COL = [
   },
 ];
 
-
 export const LIQUIDATION_USERLIST_COL = [
   {
     col_id: 0,
@@ -362,9 +361,7 @@ export const LIQUIDATION_USERLIST_COL = [
   },
 ];
 
-
 export const ASSET_DETAILS = ["Supply Info", "Borrow Info"];
-
 
 export const TAB_CARD_DESCRIPTION_LENGTH = 300;
 
@@ -422,8 +419,6 @@ export const MY_SUPPLY_ASSET_TABLE_COL = [
   },
 ];
 
-
-
 export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
   {
     col_id: 0,
@@ -473,8 +468,6 @@ export const MY_BORROW_ASSET_TABLE_COL = [
   },
 ];
 
-
-
 export const healthFactorValue = 0.5;
 export const healthFactorCutOutPositions = {
   green: 10,
@@ -500,4 +493,3 @@ export const FAUCET_ASSETS_TABLE_COL = [
     header: "Wallet Balance",
   },
 ];
-

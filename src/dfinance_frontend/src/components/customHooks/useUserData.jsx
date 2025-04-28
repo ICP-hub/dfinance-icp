@@ -143,7 +143,6 @@ const useUserData = () => {
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
 
-
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -158,8 +157,6 @@ const useUserData = () => {
           }
         });
 
-
-
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
         const borrowBalancesParam =
@@ -170,7 +167,6 @@ const useUserData = () => {
           assetBalancesParam,
           borrowBalancesParam
         );
-
 
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");

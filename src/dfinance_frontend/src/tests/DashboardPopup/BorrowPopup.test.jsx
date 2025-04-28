@@ -1,9 +1,15 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import { Provider } from "react-redux";
 import { store } from "../../redux/store";
 import { MemoryRouter } from "react-router-dom";
-import Borrow from '../../components/Dashboard/DashboardPopup/BorrowPopup';
+import Borrow from "../../components/Dashboard/DashboardPopup/BorrowPopup";
 
 // Mocking custom hooks and components used in Borrow component for testing
 jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
@@ -14,41 +20,43 @@ jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
     ckUSDCUsdRate: 1,
     ckICPUsdRate: 5,
     ckUSDTUsdRate: 1,
-  })
+  }),
 }));
 
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn().mockReturnValue({
     backendActor: {
-      execute_borrow: jest.fn().mockResolvedValue({ Ok: true }),  // Mocked borrow function (successful)
+      execute_borrow: jest.fn().mockResolvedValue({ Ok: true }), // Mocked borrow function (successful)
       is_function_blocked: jest.fn().mockResolvedValue({ Ok: false }), // Mock function block check (not blocked)
     },
-    principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
-  })
+    principal: "rrkah-fqaaa-aaaaa-aaaaq-cai",
+  }),
 }));
 
 jest.mock("../../components/customHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     userData: {},
-    userAccountData: {}
-  })
+    userAccountData: {},
+  }),
 }));
 
 jest.mock("@dfinity/principal", () => ({
   Principal: {
-    fromText: jest.fn().mockImplementation(text => ({
+    fromText: jest.fn().mockImplementation((text) => ({
       _arr: new Uint8Array(10),
-      toString: () => text
-    }))
-  }
+      toString: () => text,
+    })),
+  },
 }));
 
 jest.mock("../../components/customHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    filteredItems: [["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }]], // Mocked asset data
-  })
+    filteredItems: [
+      ["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }],
+    ], // Mocked asset data
+  }),
 }));
 
 describe("Borrow Component", () => {
@@ -90,8 +98,12 @@ describe("Borrow Component", () => {
     });
 
     // Verify button and input field presence
-    expect(screen.getByRole('button', { name: /Borrow ckBTC/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Enter Amount ckBTC/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Borrow ckBTC/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Enter Amount ckBTC/i)
+    ).toBeInTheDocument();
 
     // Check if health factor elements and other transaction-related details are displayed
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
@@ -113,7 +125,7 @@ describe("Borrow Component", () => {
       );
     });
 
-    const borrowButton = screen.getByRole('button', { name: /Borrow ckBTC/i });
+    const borrowButton = screen.getByRole("button", { name: /Borrow ckBTC/i });
     expect(borrowButton).toBeDisabled(); // Button should be disabled if amount is 0
   });
 
@@ -131,10 +143,10 @@ describe("Borrow Component", () => {
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '0.5' } }); // Simulate input change
+      fireEvent.change(amountInput, { target: { value: "0.5" } }); // Simulate input change
     });
 
-    expect(amountInput.value).toBe('0.5'); // Ensure value is updated correctly
+    expect(amountInput.value).toBe("0.5"); // Ensure value is updated correctly
   });
 
   // Test case 4: Verify that transaction overview details are shown correctly
@@ -169,15 +181,17 @@ describe("Borrow Component", () => {
       );
     });
 
-    const borrowButton = screen.getByRole('button', { name: /Borrow ckBTC/i });
+    const borrowButton = screen.getByRole("button", { name: /Borrow ckBTC/i });
     expect(borrowButton).toBeDisabled(); // Initially, button is disabled
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
-    const riskCheckbox = screen.getByLabelText(/I acknowledge the risk involved/i);
+    const riskCheckbox = screen.getByLabelText(
+      /I acknowledge the risk involved/i
+    );
 
     // Simulate user entering amount and acknowledging risk
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '0.5' } });
+      fireEvent.change(amountInput, { target: { value: "0.5" } });
     });
 
     await act(async () => {
@@ -199,7 +213,9 @@ describe("Borrow Component", () => {
       );
     });
 
-    const warningMessage = screen.getByText(/Borrowing this amount will reduce your health factor and increase risk of liquidation/i);
+    const warningMessage = screen.getByText(
+      /Borrowing this amount will reduce your health factor and increase risk of liquidation/i
+    );
     expect(warningMessage).toBeInTheDocument();
   });
 
@@ -219,7 +235,7 @@ describe("Borrow Component", () => {
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '0.5' } }); // Enter value for conversion
+      fireEvent.change(amountInput, { target: { value: "0.5" } }); // Enter value for conversion
     });
 
     const usdValueAfterInput = screen.queryByText("$0.00 USD");
@@ -243,21 +259,22 @@ describe("Borrow Component", () => {
     });
 
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
-    const healthFactorRow = healthFactorElements[0].closest('div');
+    const healthFactorRow = healthFactorElements[0].closest("div");
     expect(healthFactorRow).toBeInTheDocument();
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
 
     // Simulate changing the borrow amount
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '0.1' } });
+      fireEvent.change(amountInput, { target: { value: "0.1" } });
     });
 
     await waitFor(() => {
       const updatedHealthFactorElements = screen.getAllByText(/Health Factor/i);
       expect(updatedHealthFactorElements.length).toBeGreaterThan(0);
 
-      const updatedHealthFactorRow = updatedHealthFactorElements[0].closest('div');
+      const updatedHealthFactorRow =
+        updatedHealthFactorElements[0].closest("div");
 
       // Verify that liquidation info is displayed correctly
       expect(screen.getByText(/liquidation at/i)).toBeInTheDocument();

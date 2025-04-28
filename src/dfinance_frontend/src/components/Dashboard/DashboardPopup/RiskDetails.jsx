@@ -17,7 +17,6 @@ import { useSelector } from "react-redux";
  */
 
 const RiskPopup = ({ onClose, userAccountData }) => {
-
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
@@ -28,15 +27,24 @@ const RiskPopup = ({ onClose, userAccountData }) => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
-  const totalCollateral =parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
-  const totalDebt = parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
-  const health_Factor_Value = Number(userAccountData?.Ok?.[4]) / 10000000000 > 100  
-  ? Infinity  
-  : Math.floor(Number(userAccountData?.Ok?.[4]) / 10000000000 * 100) / 100;
+  const totalCollateral =
+    parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
+  const totalDebt =
+    parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
+  const health_Factor_Value =
+    Number(userAccountData?.Ok?.[4]) / 10000000000 > 100
+      ? Infinity
+      : Math.floor((Number(userAccountData?.Ok?.[4]) / 10000000000) * 100) /
+        100;
   const Ltv_Value = (totalDebt / totalCollateral) * 100;
-  const liquidationThreshold_Value =Number(userAccountData?.Ok?.[3]) / 100000000 || 0  ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)  : "0.00";
+  const liquidationThreshold_Value =
+    Number(userAccountData?.Ok?.[3]) / 100000000 || 0
+      ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)
+      : "0.00";
   const healthFactorMinValue = 1;
-  const Max_Ltv = parseFloat(Number(userAccountData?.Ok?.[2]) / 100000000).toFixed(2);
+  const Max_Ltv = parseFloat(
+    Number(userAccountData?.Ok?.[2]) / 100000000
+  ).toFixed(2);
 
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -123,10 +131,16 @@ const RiskPopup = ({ onClose, userAccountData }) => {
 
   const thresholdValue = parseThreshold(liquidationThreshold_Value);
   const MaxLtvValue = parseThreshold(Max_Ltv);
-  const healthFactorPosition =calculateHealthFactorPosition(health_Factor_Value);
-  const healthFactorMinPosition =calculateHealthFactorPosition(healthFactorMinValue);
+  const healthFactorPosition =
+    calculateHealthFactorPosition(health_Factor_Value);
+  const healthFactorMinPosition =
+    calculateHealthFactorPosition(healthFactorMinValue);
   const currentLTVPosition = calculateLTVPosition(Ltv_Value, 0, 100);
-  const currentLTVThresholdPosition = calculateLTVPosition(thresholdValue,0,100);
+  const currentLTVThresholdPosition = calculateLTVPosition(
+    thresholdValue,
+    0,
+    100
+  );
   const currentMaxLtvPosition = calculateMaxLTVPosition(MaxLtvValue, 0, 100);
 
   const healthFactorColor =

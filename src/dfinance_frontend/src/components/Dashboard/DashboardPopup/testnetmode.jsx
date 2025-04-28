@@ -4,8 +4,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
-
-
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -35,7 +33,8 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
           className="bg-white rounded-lg shadow-lg p-6 relative w-80 flex flex-col justify-between dark:bg-darkOverlayBackground dark:text-darkText"
           onClick={(e) => e.stopPropagation()}
         >
-          <div data-testid="close-icon"
+          <div
+            data-testid="close-icon"
             className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6"
             onClick={onClose}
           >
@@ -51,7 +50,7 @@ const TestnetModePopup = ({ onClose, handleTestnetModeToggle }) => {
               provide feedback.
             </p>
           </div>
-          { }
+          {}
         </div>
         <ToastContainer />
       </div>

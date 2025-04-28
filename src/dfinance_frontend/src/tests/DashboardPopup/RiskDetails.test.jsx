@@ -1,11 +1,11 @@
 import React from "react";
-import { render, screen, fireEvent } from '@testing-library/react';
-import RiskPopup from '../../components/Dashboard/DashboardPopup/RiskDetails'; // Component to test
-import { Provider } from 'react-redux'; // Redux provider for store integration in test
-import { createStore } from 'redux'; // Create a mock Redux store for testing
+import { render, screen, fireEvent } from "@testing-library/react";
+import RiskPopup from "../../components/Dashboard/DashboardPopup/RiskDetails"; // Component to test
+import { Provider } from "react-redux"; // Redux provider for store integration in test
+import { createStore } from "redux"; // Create a mock Redux store for testing
 
 // Mock reducer for the Redux store
-const mockReducer = (state = { theme: { theme: 'light' } }, action) => state;
+const mockReducer = (state = { theme: { theme: "light" } }, action) => state;
 
 // Creating a mock store with the mockReducer
 const mockStore = createStore(mockReducer);
@@ -21,12 +21,14 @@ const mockUserAccountData = {
   ],
 };
 
-describe('RiskPopup Component', () => {
+describe("RiskPopup Component", () => {
   // Test case 1: Verifying that the liquidation threshold value is displayed correctly
-  test('displays correct liquidation threshold value', () => {
+  test("displays correct liquidation threshold value", () => {
     render(
-      <Provider store={mockStore}> {/* Wrapping the component with the mock store */}
-        <RiskPopup onClose={() => { }} userAccountData={mockUserAccountData} />
+      <Provider store={mockStore}>
+        {" "}
+        {/* Wrapping the component with the mock store */}
+        <RiskPopup onClose={() => {}} userAccountData={mockUserAccountData} />
       </Provider>
     );
 
@@ -36,20 +38,22 @@ describe('RiskPopup Component', () => {
   });
 
   // Test case 2: Verifying that the onClose function is called when the close button is clicked
-  test('calls onClose when clicking close button', () => {
+  test("calls onClose when clicking close button", () => {
     const onClose = jest.fn(); // Creating a mock function for onClose
     render(
-      <Provider store={mockStore}> {/* Wrapping the component with the mock store */}
+      <Provider store={mockStore}>
+        {" "}
+        {/* Wrapping the component with the mock store */}
         <RiskPopup onClose={onClose} userAccountData={mockUserAccountData} />
       </Provider>
     );
-    
+
     // Finding the close button by its role (button)
-    const closeButton = screen.getByRole('button');
-    
+    const closeButton = screen.getByRole("button");
+
     // Simulating a click event on the close button
     fireEvent.click(closeButton);
-    
+
     // Verifying that the onClose function is called exactly once
     expect(onClose).toHaveBeenCalledTimes(1);
   });

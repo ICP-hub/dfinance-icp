@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Info, User } from "lucide-react";
+import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuth } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
@@ -12,7 +12,7 @@ import Button from "../Common/Button";
 import { useRef } from "react";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import { FaWallet } from "react-icons/fa";
-import loader from "../../../public/Helpers/loader.svg";
+import loader from "../../../public/helper/loader.svg";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,7 +27,7 @@ import {
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import ThemeToggle from "../Common/ThemeToggle";
-import settingsIcon from "../../../public/Helpers/Settings.svg";
+import settingsIcon from "../../../public/helper/settings.svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/MaterialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
@@ -36,18 +36,13 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import { X } from "lucide-react";
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Principal } from "@dfinity/principal";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../customHooks/useTransferFee";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
+
 /**
  * Navbar Component
  *
@@ -77,24 +72,18 @@ export default function Navbar({ isHomeNav }) {
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
   const { isWalletModalOpen } = useSelector((state) => state.utility);
-
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-  const { isAuthenticated, login, logout, principal, User, accountIdString } =
+  const { isAuthenticated, login, logout, principal, accountIdString } =
     useAuth();
-  const [asset, setAsset] = useState("ICP"); // default asset
-  const assetImages = {
-    ckBTC: ckBTC,
-    ckETH: ckETH,
-    ckUSDC: ckUSDC,
-    ckUSDT: ckUSDT,
-    ICP: icp,
-  };
+  const [asset, setAsset] = useState("ICP");
   const [amount, setAmount] = useState("");
-  const [maxClicked, setMaxClicked] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // This variable is set to false for now; we might use useState later if needed
+  const isButtonDisabled = false;
+
   const {
     fetchConversionRate,
     ckBTCBalance,
@@ -117,16 +106,15 @@ export default function Navbar({ isHomeNav }) {
   );
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [isMobileNav, setIsMobileNav] = useState(false);
-  const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const [showTestnetPopup, setShowTestnetPopup] = useState(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTransferDropdownOpen, setIsTransferDropDownOpen] = useState(false);
   const [showDepositPopup, setShowDepositPopup] = useState(false);
   const [receiverAddress, setReceiverAddress] = useState("");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
+  const popupPosition = { top: 0, left: 0 };
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -136,7 +124,6 @@ export default function Navbar({ isHomeNav }) {
   const toggleDropdown = () => {
     setIsTransferDropDownOpen(!isTransferDropdownOpen);
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -146,14 +133,12 @@ export default function Navbar({ isHomeNav }) {
   const toggleDepositDropdown = () => {
     setShowDepositPopup(!showDepositPopup);
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
   };
 
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
   const hash = window.location.hash;
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -187,6 +172,7 @@ export default function Navbar({ isHomeNav }) {
       "Minting of tokens failed. Your account state has been rolled back. Try again later.",
     Default: "An unexpected error occurred. Please try again later.",
   };
+
   // asset balances for retrieving the walet balance
   const assetBalances = {
     ICP: ckICPBalance,
@@ -212,6 +198,7 @@ export default function Navbar({ isHomeNav }) {
       });
       return;
     }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -229,7 +216,7 @@ export default function Navbar({ isHomeNav }) {
     const scaledAmount = amountAsNat64;
 
     try {
-      const approval = await ledgerActor.icrc2_approve({
+      await ledgerActor.icrc2_approve({
         fee: [],
         memo: [],
         from_subaccount: [],
@@ -296,7 +283,6 @@ export default function Navbar({ isHomeNav }) {
       } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
 
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
@@ -438,7 +424,6 @@ export default function Navbar({ isHomeNav }) {
     } else if (msgLower.includes("invalid character")) {
       // Principal ID has an invalid character
       const match = message.match(/"(.+?)"/);
-      const invalidChar = match ? match[1] : "?";
 
       toast.error("Invalid principal ID format ", {
         className: "custom-toast",
@@ -481,13 +466,11 @@ export default function Navbar({ isHomeNav }) {
   //funtion for handle amount change
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
-    setMaxClicked(false);
   };
 
   // Function to handle the click event on the "Max" button
   const handleMaxClick = () => {
     setAmount(supplyBalance.toString());
-    setMaxClicked(true);
   };
 
   // Function to handle the click event on the "Tour" button
@@ -498,7 +481,6 @@ export default function Navbar({ isHomeNav }) {
 
   // Function to handle the click event on the "Settings" button
   const handleCloseDropdownOnScroll = () => {
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -518,7 +500,6 @@ export default function Navbar({ isHomeNav }) {
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
     setDropdownVisible(false);
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
 
     setIsPopupVisible(false);
@@ -531,7 +512,6 @@ export default function Navbar({ isHomeNav }) {
   // Function to handle the click event on the "Switch Wallet" button
   const handleSwitchWallet = () => {
     setSwitchWalletDrop(!switchWalletDrop);
-    setSwitchTokenDrop(false);
     setDropdownVisible(false);
     setIsPopupVisible(false);
     setShowTestnetPopup(false);
@@ -539,7 +519,6 @@ export default function Navbar({ isHomeNav }) {
 
   //function to click outside the dropdown
   const handleClickAway = () => {
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setDropdownVisible(false);
     setIsPopupVisible(false);
@@ -602,7 +581,6 @@ export default function Navbar({ isHomeNav }) {
   // Function to handle the dropdown to open
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
@@ -617,7 +595,6 @@ export default function Navbar({ isHomeNav }) {
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setDropdownVisible(false);
   };
 
@@ -751,7 +728,6 @@ export default function Navbar({ isHomeNav }) {
   // funtion for Closing the dropdown when the user change location
   useEffect(() => {
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -998,7 +974,6 @@ export default function Navbar({ isHomeNav }) {
                               setIsDropdownOpen(false);
                               setReceiverAddress("");
                               setAmount("");
-                              setMaxClicked(false);
                               setIsApproved(false);
                             }
                           }}
@@ -1117,7 +1092,6 @@ export default function Navbar({ isHomeNav }) {
                                                         // Clear amount when selecting a different asset
                                                         if (a !== asset) {
                                                           setAmount("");
-                                                          setMaxClicked(false);
                                                         }
                                                         setAsset(a);
                                                         setIsDropdownOpen(

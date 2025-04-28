@@ -11,10 +11,9 @@ import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
 import { getSteps, getStyles } from "../src/components/Common/joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
 import MiniLoader from "./components/Common/MiniLoader";
 
-const RoutesComponent = lazy(() => import("./routes/routes"));
 export default function App() {
   /* ===================================================================================
    *                                  HOOKS

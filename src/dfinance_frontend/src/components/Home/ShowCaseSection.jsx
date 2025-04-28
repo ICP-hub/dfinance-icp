@@ -49,7 +49,7 @@ const ShowCaseSection = ({ data }) => {
       ) : (
         <div className="w-full flex justify-center mt-8">
           <img
-            src="./Group-company.svg"
+            src="./group-company.svg"
             alt="as"
             className="w-full h-full object-contain"
           />

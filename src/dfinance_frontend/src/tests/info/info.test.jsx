@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { createStore } from "redux";
 import "@testing-library/jest-dom";

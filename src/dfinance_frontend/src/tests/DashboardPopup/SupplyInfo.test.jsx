@@ -1,10 +1,10 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { Provider } from "react-redux"; // Redux provider for store integration
-import { createStore } from "redux"; // To create a mock store for testing
-import SupplyInfo from "../../components/Dashboard/DashboardPopup/SupplyInfo"; // Component to test
-import { useParams } from "react-router-dom"; // Mocking useParams for routing behavior
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate"; // Mocking conversion rates
+import { render, screen } from "@testing-library/react";
+import { Provider } from "react-redux"; 
+import { createStore } from "redux"; 
+import SupplyInfo from "../../components/Dashboard/DashboardPopup/SupplyInfo"; 
+import { useParams } from "react-router-dom"; 
+import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 
 // Mocking react-router's useParams hook for routing functionality
 jest.mock("react-router-dom", () => ({

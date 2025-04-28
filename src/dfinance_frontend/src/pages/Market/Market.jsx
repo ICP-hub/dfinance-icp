@@ -14,7 +14,6 @@ import MiniLoader from "../../components/Common/MiniLoader";
 import Lottie from "../../components/Common/Lottie";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
-const ITEMS_PER_PAGE = 8;
 
 /**
  *
@@ -29,7 +28,6 @@ const Market = () => {
    * =================================================================================== */
 
   const [Showsearch, setShowSearch] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -106,7 +104,6 @@ const Market = () => {
 
   // Function to handle the click event for the "Details" button
   const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
   };
 
@@ -265,13 +262,13 @@ const Market = () => {
   }, [loading]);
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 

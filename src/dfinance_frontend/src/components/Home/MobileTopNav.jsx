@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 import { Info } from "lucide-react";
-import loader from "../../../public/Helpers/loader.svg";
+import loader from "../../../public/helper/loader.svg";
 import { setUserData } from "../../redux/reducers/userReducer";
 import {
   DASHBOARD_TOP_NAV_LINK,

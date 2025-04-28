@@ -7,7 +7,6 @@ import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useUserData from "../../components/customHooks/useUserData";
-import { Provider } from "react-redux";
 import { createStore } from "redux";
 
 // Mock all the required dependencies

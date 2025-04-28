@@ -1,8 +1,8 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useLottie } from "lottie-react";
-import emptyAnimationDark from "../../../public/animations/Animation - 1737441133283.json";
-import emptyAnimationLight from "../../../public/animations/Animation - 1737440788189.json";
+import emptyAnimationDark from "../../../public/animations/empty-animation2.json";
+import emptyAnimationLight from "../../../public/animations/empty-animation1.json";
 
 const style = {
   height: 110,

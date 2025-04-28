@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import Market from "../../pages/Market/Market";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";

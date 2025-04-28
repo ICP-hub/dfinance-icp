@@ -1,8 +1,8 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
-import Sun from "../../../public/theme/Sun.svg";
-import Moon from "../../../public/theme/Moon.svg";
+import Sun from "../../../public/theme/sun.svg";
+import Moon from "../../../public/theme/moon.svg";
 
 const ThemeToggle = () => {
   const theme = useSelector((state) => state.theme.theme);

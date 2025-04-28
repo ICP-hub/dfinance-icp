@@ -1,8 +1,8 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import BorrowInfo from "../../components/Dashboard/DashboardPopup/BorrowInfo"; // Component to test
-import { useParams } from "react-router-dom"; // Mocked react-router's useParams
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate"; // Custom hook for fetching conversion rates
+import { render, screen } from "@testing-library/react";
+import BorrowInfo from "../../components/Dashboard/DashboardPopup/BorrowInfo"; 
+import { useParams } from "react-router-dom"; 
+import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 
 // Mocking react-router's useParams to return a fake ID
 jest.mock("react-router-dom", () => ({

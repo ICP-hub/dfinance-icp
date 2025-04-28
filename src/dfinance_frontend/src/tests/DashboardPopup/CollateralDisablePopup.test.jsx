@@ -6,13 +6,13 @@ import {
   waitFor,
   act,
 } from "@testing-library/react";
-import ColateralPopup from "../../components/Dashboard/DashboardPopup/CollateralDisablePopup"; // Component to test
-import { Provider } from "react-redux"; // Redux provider for store integration in test
-import { toast } from "react-toastify"; // For simulating toast notifications
-import * as useAuthModule from "../../utils/useAuthClient"; // Mocking authentication-related logic
-import * as useFunctionBlockStatusModule from "../../components/customHooks/useFunctionBlockStatus"; // Mocking function block status check
-import * as useUserDataModule from "../../components/customHooks/useUserData"; // Mocking user data hook
-import * as useRealTimeConversionRateModule from "../../components/customHooks/useRealTimeConversionRate"; // Mocking conversion rates
+import ColateralPopup from "../../components/Dashboard/DashboardPopup/CollateralDisablePopup"; 
+import { Provider } from "react-redux"; 
+import { toast } from "react-toastify"; 
+import * as useAuthModule from "../../utils/useAuthClient"; 
+import * as useFunctionBlockStatusModule from "../../components/customHooks/useFunctionBlockStatus"; 
+import * as useUserDataModule from "../../components/customHooks/useUserData"; 
+import * as useRealTimeConversionRateModule from "../../components/customHooks/useRealTimeConversionRate"; 
 
 // Mocking Redux store for the test
 const mockStore = {

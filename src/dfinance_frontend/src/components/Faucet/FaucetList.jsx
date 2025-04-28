@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Common/Button";
 import { FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
-import { useNavigate } from "react-router-dom";
 import FaucetPopup from "./FaucetPopup";
 import useAssetData from "../customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
@@ -28,7 +27,7 @@ const FaucetDetails = () => {
    * =================================================================================== */
 
   const { filteredItems, loading, assets, AssetImages } = useAssetData();
-  const { isAuthenticated, backendActor } = useAuth();
+  const { isAuthenticated } = useAuth();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -45,14 +44,14 @@ const FaucetDetails = () => {
   } = useFetchConversionRate();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
 
-  const navigate = useNavigate();
-
   /* ===================================================================================
    *                                  STATE-MANAGEMENT
    * =================================================================================== */
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+
+  //This state might be used later
   const [currentPage, setCurrentPage] = useState(1);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
@@ -80,12 +79,11 @@ const FaucetDetails = () => {
 
   // This function is called when the user clicks on the "Faucet" button for a specific asset.
   const handleFaucetClick = (asset) => {
-    // Directly set the selected asset from the AssetImages array based on asset name
-    const assetIndex = assets?.indexOf(asset); // Find the index of the asset in the assets array
-    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; // If asset exists, get the corresponding image
+    const assetIndex = assets?.indexOf(asset); 
+    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; 
 
-    setSelectedAsset({ asset, assetImage }); // Update the selected asset state
-    setShowPopup(true); // Show the popup
+    setSelectedAsset({ asset, assetImage }); 
+    setShowPopup(true); 
   };
 
   // This function is for closing the popup

@@ -15,10 +15,6 @@ const Footer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
-
-  /* ===================================================================================
-   *                                 Redux Hooks
-   * =================================================================================== */
   const ledgerActors = useSelector((state) => state.ledger);
 
   /* ===================================================================================
@@ -55,7 +51,6 @@ const Footer = () => {
     updateZoom(100);
   };
 
-  //
   const handleLogoClick = () => {
     if (location.pathname === "/") {
       window.scrollTo(0, 0);
@@ -67,7 +62,7 @@ const Footer = () => {
     }
   };
 
-  //  // Function to handle approval
+  // Function to handle approval
   const handleApprove = async () => {
     const ledgerActor = ledgerActors.ckUSDC;
     try {
@@ -77,7 +72,7 @@ const Footer = () => {
         memo: [],
         from_subaccount: [],
         created_at_time: [],
-        amount: 34000000000, // Adjust amount if needed
+        amount: 34000000000,
         expected_allowance: [],
         expires_at: [],
         spender: {
@@ -259,7 +254,7 @@ const Footer = () => {
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img
-                    src="./social/X.png"
+                    src="./social/x.png"
                     alt="X"
                     className="w-full h-full object-contain"
                   />

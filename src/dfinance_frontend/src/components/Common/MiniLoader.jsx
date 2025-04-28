@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
-import loader from "../../../public/helperss/loader.svg";
-import { useSelector } from "react-redux";
+import loader from "../../../public/helper/loader.svg";
 
 const MiniLoader = ({ isLoading }) => {
   useEffect(() => {

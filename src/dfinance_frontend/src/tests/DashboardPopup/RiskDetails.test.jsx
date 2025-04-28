@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import RiskPopup from "../../components/Dashboard/DashboardPopup/RiskDetails"; // Component to test
-import { Provider } from "react-redux"; // Redux provider for store integration in test
-import { createStore } from "redux"; // Create a mock Redux store for testing
+import RiskPopup from "../../components/Dashboard/DashboardPopup/RiskDetails"; 
+import { Provider } from "react-redux"; 
+import { createStore } from "redux"; 
 
 // Mock reducer for the Redux store
 const mockReducer = (state = { theme: { theme: "light" } }, action) => state;

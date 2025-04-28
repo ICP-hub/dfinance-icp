@@ -1,9 +1,9 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import WalletModal from "../../components/Dashboard/WalletModal"; // Component to test
-import { useDispatch, useSelector } from "react-redux"; // Redux hooks
-import { useNavigate } from "react-router-dom"; // To mock navigation
-import { useAuth } from "../../utils/useAuthClient"; // To mock authentication logic
+import WalletModal from "../../components/Dashboard/WalletModal"; 
+import { useDispatch, useSelector } from "react-redux"; 
+import { useNavigate } from "react-router-dom"; 
+import { useAuth } from "../../utils/useAuthClient"; 
 
 // Mocking necessary imports for the test environment
 jest.mock("react-redux", () => ({

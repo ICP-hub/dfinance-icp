@@ -11,11 +11,7 @@ import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
 import Loading from "../../components/Common/Loading";
-import {
-  MAIN_NAV_LINK,
-  FAQ_QUESTION,
-  TAB_CARD_DATA,
-} from "../../utils/constants";
+import { MAIN_NAV_LINK, FAQ_QUESTION } from "../../utils/constants";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 
 /**

@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
-import loader from "../../../public/Helpers/loader.svg";
+import loader from "../../../public/helper/loader.svg";
 import { useSelector } from "react-redux";
 
 const Loading = ({ isLoading }) => {
-  const theme = useSelector((state) => state.theme.theme);
   useEffect(() => {
     if (isLoading) {
       document.body.classList.add("no-scroll");

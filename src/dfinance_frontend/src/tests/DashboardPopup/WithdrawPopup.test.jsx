@@ -5,12 +5,11 @@ import {
   fireEvent,
   waitFor,
   act,
-} from "@testing-library/react"; // Import testing utilities
-import WithdrawPopup from "../../components/Dashboard/DashboardPopup/WithdrawPopup"; // Component to test
-import { Provider } from "react-redux"; // Redux provider for store integration in test
-import { store } from "../../redux/store"; // Import the Redux store for testing
-import { MemoryRouter } from "react-router-dom"; // For routing during tests
-import { toast } from "react-toastify"; // For mocking toast notifications
+} from "@testing-library/react"; 
+import WithdrawPopup from "../../components/Dashboard/DashboardPopup/WithdrawPopup"; 
+import { Provider } from "react-redux"; 
+import { store } from "../../redux/store"; 
+import { MemoryRouter } from "react-router-dom"; 
 
 // Mocking react-toastify to simulate toast notifications during tests
 jest.mock("react-toastify", () => ({

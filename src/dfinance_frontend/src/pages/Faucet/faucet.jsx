@@ -1,8 +1,8 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { lazy, Suspense } from "react";
 import Button from "../../components/Common/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
-import Element from "../../../public/element/Elements.svg";
+import Element from "../../../public/element/elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/MiniLoader";
 const FaucetDetails = lazy(() => import("../../components/Faucet/FaucetList"));
@@ -17,12 +17,12 @@ const WalletModal = lazy(() =>
  * @returns {JSX.Element} - Returns the Faucet component.
  */
 const Faucet = () => {
+  const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const dispatch = useDispatch();
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
   const { isAuthenticated } = useAuth();
-  const [isTestnetMode, setIsTestnetMode] = useState(true);
 
   const handleWalletConnect = () => {
     dispatch(

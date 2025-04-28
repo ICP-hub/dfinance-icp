@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
 import Button from "../Common/Button";
 import { useSelector } from "react-redux";
@@ -31,17 +31,13 @@ const DebtStatus = () => {
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
   const popupRef = useRef(null);
-  const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(true);
-  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
-  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
-  const [userLoadingStates, setUserLoadingStates] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -58,7 +54,6 @@ const DebtStatus = () => {
     asset_borrow,
     fetchAssetSupply,
     fetchAssetBorrow,
-    loading: filteredDataLoading,
   } = useAssetData();
 
   const {
@@ -382,7 +377,6 @@ const DebtStatus = () => {
       try {
         const usersPerPage = 10;
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-
         const data = await fetchLiquidationUsers(totalPages, usersPerPage);
         setLiquidationUsers(data);
       } catch (err) {
@@ -408,31 +402,23 @@ const DebtStatus = () => {
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
-      setSupplyDataLoading(true);
       try {
         for (const asset of assets) {
           await fetchAssetSupply(asset);
         }
       } catch (error) {
-        setSupplyDataLoading(false);
         console.error("Error fetching supply data:", error);
-      } finally {
-        setSupplyDataLoading(false);
       }
     };
 
     const fetchBorrowData = async () => {
       if (assets.length === 0) return;
-      setBorrowDataLoading(true);
       try {
         for (const asset of assets) {
           await fetchAssetBorrow(asset);
         }
       } catch (error) {
-        setBorrowDataLoading(false);
         console.error("Error fetching borrow data:", error);
-      } finally {
-        setBorrowDataLoading(false);
       }
     };
 
@@ -507,8 +493,6 @@ const DebtStatus = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => {
-                    const userLoading =
-                      userLoadingStates[item.principal?._arr.toText()];
                     return (
                       <tr
                         key={index}
@@ -543,10 +527,7 @@ const DebtStatus = () => {
                               item?.userData?.reserves?.[0].map(
                                 (mappedItem, index) => {
                                   const assetName = mappedItem?.[0];
-                                  const assetSupply = calculateAssetSupply(
-                                    assetName,
-                                    item
-                                  );
+
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
                                     item
@@ -563,7 +544,7 @@ const DebtStatus = () => {
                                           assetIndex !== -1
                                             ? AssetImages[assetIndex]
                                             : undefined
-                                        } // Get the image URL dynamically
+                                        }
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />
@@ -584,18 +565,7 @@ const DebtStatus = () => {
                                     assetName,
                                     item
                                   );
-                                  const assetBorrow = calculateAssetBorrow(
-                                    assetName,
-                                    item
-                                  );
-                                  const item1 = filteredItems.find(
-                                    (item) => item[0] === assetName
-                                  );
-                                  const reserveliquidationThreshold =
-                                    Number(
-                                      item1?.[1]?.Ok.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000 || 0;
+
                                   if (assetSupply > 0) {
                                     const assetIndex =
                                       assets.indexOf(assetName);
@@ -607,7 +577,7 @@ const DebtStatus = () => {
                                           assetIndex !== -1
                                             ? AssetImages[assetIndex]
                                             : undefined
-                                        } // Get the image URL dynamically
+                                        }
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />

@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import UserInformationPopup from "../../components/Liquidate/userInformation";
 import { Provider } from "react-redux";
-import { store } from "../../redux/store"; // Your store import path
+import { store } from "../../redux/store";
 
 // Mock necessary modules
 jest.mock("../../utils/useAuthClient", () => ({

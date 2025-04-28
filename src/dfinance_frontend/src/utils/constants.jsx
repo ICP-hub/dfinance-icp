@@ -1,40 +1,14 @@
 import ckBTC from "../../public/assests-icon/ckBTC.png";
 import cekTH from "../../public/assests-icon/CKETH.svg";
-
 import icp from "../../public/assests-icon/ICPMARKET.png";
-
 import ckusdc from "../../public/assests-icon/ckusdc.svg";
 import ckusdt from "../../public/assests-icon/ckUSDT.svg";
-
-import trailofbits from "../../public/assests-icon/trail-Of-Bits-svg-fill.png";
+import trailofbits from "../../public/assests-icon/trail-of-bits-svg-fill.png";
 import certora from "../../public/assests-icon/certora-svg-fill.png";
-import openZeppelinsvg from "../../public/assests-icon/open-Zeppelin-svg.png";
-import sigmaprime from "../../public/assests-icon/sigma-Prime-svg-fill.png";
+import openZeppelinsvg from "../../public/assests-icon/open-zeppelin-svg.png";
+import sigmaprime from "../../public/assests-icon/sigma-prime-svg-fill.png";
 import Peckshield from "../../public/assests-icon/peckshield-logo-svg.png";
-import abdk from "../../public/assests-icon/abdk-svg.png";
-
-const TabPanel = ({ items }) => {
-  return (
-    <div className="flex flex-wrap justify-center gap-4">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="max-w-xs w-full p-4 border rounded-lg shadow-md"
-        >
-          <img
-            src={item.image}
-            alt={item.title}
-            className="w-full h-48 object-cover rounded-md"
-          />
-          <h2 className="mt-4 text-lg font-semibold text-[#0C5A74]">
-            {item.title}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">{item.description}</p>
-        </div>
-      ))}
-    </div>
-  );
-};
+import abdk from "../../public/assests-icon/abdk.png";
 
 export const FOOTER_LINK_1 = [
   {

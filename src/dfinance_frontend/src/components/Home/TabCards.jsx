@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { TAB_CARD_DESCRIPTION_LENGTH } from "../../utils/constants";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import "./TabCards.css";
 
 const TabCards = ({ data }) => {
   const [gradientPosition, setGradientPosition] = useState("");

@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import PaymentDone from "../../components/Dashboard/DashboardPopup/PaymentDone"; // Component to test
+import PaymentDone from "../../components/Dashboard/DashboardPopup/PaymentDone"; 
 
 describe("PaymentDone Component", () => {
   // Default props to be used in the tests

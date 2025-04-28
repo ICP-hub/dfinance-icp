@@ -6,10 +6,10 @@ import {
   waitFor,
   act,
 } from "@testing-library/react";
-import Repay from "../../components/Dashboard/DashboardPopup/Repay"; // Component to test
-import { Provider } from "react-redux"; // Redux provider for store integration
-import { store } from "../../redux/store"; // Importing the Redux store
-import { MemoryRouter } from "react-router-dom"; // For routing in tests
+import Repay from "../../components/Dashboard/DashboardPopup/Repay"; 
+import { Provider } from "react-redux"; 
+import { store } from "../../redux/store"; 
+import { MemoryRouter } from "react-router-dom"; 
 
 // Mocking react-toastify to simulate toast notifications
 jest.mock("react-toastify", () => ({

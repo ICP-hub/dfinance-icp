@@ -11,7 +11,7 @@ import useFetchBalanceBackend from "../../components/customHooks/useFetchBalance
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
-import Analytics from "../../../public/Helpers/AnalyticsIcon.svg";
+import Analytics from "../../../public/Helpers/analytics-icon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import useUserData from "../../components/customHooks/useUserData";
@@ -53,16 +53,9 @@ const DashboardCards = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const [searchQuery, setSearchQuery] = useState("");
   const [like, setLike] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [threshold] = useState(5000000000000);
   const [tokenThreshold] = useState(10000);
-  const [users, setUsers] = useState([]);
-  const [lastEmailDate, setLastEmailDate] = useState(null);
-  const [lastExhaustedEmailDate, setLastExhaustedEmailDate] = useState(null);
-  const [allUsers, setAllUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -119,15 +112,14 @@ const DashboardCards = () => {
       const result = await backendActor.guard_admin_only();
 
       if ("Ok" in result) {
-        setLike(true); // Admin verified
+        setLike(true);
       } else {
         console.warn("Not an admin:", result.Err);
-        setLike(false); // Not admin
+        setLike(false);
       }
     } catch (error) {
       console.error("Error checking admin status:", error.message);
-      setError(error.message);
-      setLike(false); // Fallback to false
+      setLike(false);
 
       if (error.message.toLowerCase().includes("freeze canister")) {
         setIsFreezePopupVisible(true);
@@ -140,7 +132,7 @@ const DashboardCards = () => {
   }, [backendActor]);
 
   const { filteredItems, interestAccure, assets, AssetImages } =
-    useAssetData(searchQuery);
+    useAssetData("");
 
   const poolAssets = assets.map((name, index) => ({
     name,
@@ -242,11 +234,8 @@ const DashboardCards = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-
     const response = await backendActor.cycle_checker();
-
     const cycles = response.Ok ?? "Error retrieving cycles";
-
     return cycles.toString();
   };
 
@@ -289,8 +278,8 @@ const DashboardCards = () => {
   };
 
   let emailInterval;
-  let lastExhaustedEmailTimestamp = 0;
-  let lastWarningEmailTimestamp = 0;
+  let lastExhaustedEmailTimestamp;
+  let lastWarningEmailTimestamp;
 
   /**
    * Handles cycle-based notifications and sends warning or exhaustion emails.
@@ -346,7 +335,6 @@ const DashboardCards = () => {
   const onCycleUpdate = async () => {
     try {
       const newCycles = await getCycles();
-
       handleTokenNotification(newCycles);
     } catch (error) {
       console.error("Error fetching cycles:", error);
@@ -477,7 +465,6 @@ const DashboardCards = () => {
         callbacks: {
           label: function (tooltipItem) {
             const index = tooltipItem.dataIndex;
-            const categoryLabels = ["<1", ">1", "Infinity"];
             const rawValues = [
               healthStats.lessThanOne,
               healthStats.greaterThanOne,
@@ -517,8 +504,6 @@ const DashboardCards = () => {
     }
 
     const fetchData = async () => {
-      setLoading(true);
-
       try {
         const cycles = await getCycles();
 
@@ -534,14 +519,11 @@ const DashboardCards = () => {
         await onCycleUpdate(Number(cycles));
       } catch (err) {
         console.error("Error in fetchData:", err);
-        setError(err.message);
       }
     };
 
     fetchData();
   }, [totalUsers, interestAccure]);
-
-  const cachedData = useRef({});
 
   useEffect(() => {
     if (!userAccountData || Object.keys(userAccountData).length === 0) return;
@@ -577,10 +559,6 @@ const DashboardCards = () => {
 
     setHealthStats({ lessThanOne, greaterThanOne, infinity });
   }, [healthFactors]);
-
-  const handleNavigate = (path) => {
-    navigate(path);
-  };
 
   const getCycleColor = (value) => {
     const cycleValue = parseInt(value);
@@ -632,11 +610,10 @@ const DashboardCards = () => {
 
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto";
     }
-
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -664,10 +641,8 @@ const DashboardCards = () => {
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
 
         const data = await fetchAllUsers(totalPages, usersPerPage);
-        setAllUsers(data);
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
-        setError("Failed to fetch users. Please try again later.");
       } finally {
         setUsersLoading(false);
       }

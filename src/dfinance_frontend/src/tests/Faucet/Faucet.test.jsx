@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import { useAuth } from "../../utils/useAuthClient";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
-// Mock the Redux store
+
 const mockStore = configureStore([]);
 
 // Mock dependencies
@@ -36,7 +36,7 @@ jest.mock("../../components/Common/MiniLoader", () => () => (
 ));
 
 // Mock SVG import
-jest.mock("../../../public/element/Elements.svg", () => "elements-image.svg");
+jest.mock("../../../public/element/elements.svg", () => "elements-image.svg");
 
 describe("Faucet Component", () => {
   let store;

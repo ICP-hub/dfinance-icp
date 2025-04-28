@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react"; // Import testing utilities
-import TestnetModePopup from "../../components/Dashboard/DashboardPopup/testnetmode"; // Component to test
+import TestnetModePopup from "../../components/Dashboard/DashboardPopup/Testnetmode"; // Component to test
 import { ToastContainer } from "react-toastify"; // Toast notifications container
 import "@testing-library/jest-dom/extend-expect"; // To extend Jest matchers for DOM elements
 

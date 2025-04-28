@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
@@ -10,7 +10,7 @@ import useFetchConversionRate from "../../components/customHooks/useFetchConvers
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import Analytics from "../../../public/Helpers/AnalyticsIcon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";

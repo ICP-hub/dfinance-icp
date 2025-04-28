@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";

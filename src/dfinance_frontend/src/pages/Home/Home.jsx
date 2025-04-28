@@ -99,8 +99,6 @@ const Home = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const visibleCards = isMobile ? TAB_CARD_DATA.slice(0, 4) : TAB_CARD_DATA;
-
   if (isLoading) {
     return <Loading isLoading={isLoading} />;
   }

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import Aos from "aos";
 import "aos/dist/aos.css";
-import supply from "../../../public/Helpers/supply.png";
-import borrow from "../../../public/Helpers/borrow.png";
+import supply from "../../../public/helperss/supply.png";
+import borrow from "../../../public/helperss/borrow.png";
 import Max from "../../../public/Helpers/max.png";
 import Ltv from "../../../public/Helpers/Ltv.png";
 import Points from "../../../public/Helpers/points.png";

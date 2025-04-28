@@ -9,6 +9,7 @@ const FaucetDetails = lazy(() => import("../../components/Faucet/FaucetList"));
 const WalletModal = lazy(() =>
   import("../../components/Dashboard/WalletModal")
 );
+
 /**
  * Faucet component allows users to receive testnet assets for testing purposes.
  * Users must connect their wallet to receive assets.
@@ -27,10 +28,6 @@ const Faucet = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
-  };
-
-  const handleTestnetModeToggle = () => {
-    setIsTestnetMode((prevMode) => !prevMode);
   };
 
   return (

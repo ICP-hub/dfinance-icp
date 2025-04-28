@@ -33,6 +33,7 @@ import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Principal } from "@dfinity/principal";
 import useAssetData from "../customHooks/useAssets";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
+
 const MobileTopNav = ({
   isMobileNav,
   setIsMobileNav,

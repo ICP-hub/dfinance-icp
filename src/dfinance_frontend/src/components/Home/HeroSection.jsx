@@ -1,16 +1,8 @@
 import React from "react";
-import { useEffect, useState } from "react";
 import useAssetData from "../customHooks/useAssets";
 
 const HeroSection = () => {
   const { totalSupplySize } = useAssetData();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (totalSupplySize !== null && totalSupplySize !== undefined) {
-      setLoading(false);
-    }
-  }, [totalSupplySize]);
 
   return (
     <div

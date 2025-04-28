@@ -52,25 +52,22 @@ const FaucetDetails = () => {
   const [selectedAsset, setSelectedAsset] = useState(null);
 
   //This state might be used later
-  const [currentPage, setCurrentPage] = useState(1);
+  const currentPage = 1;
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-
   const [hasLoaded, setHasLoaded] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  // Redux selector for faucetUpdate, triggers refresh when data is updated
   const refreshTrigger = useSelector(
     (state) => state.faucetUpdate.refreshTrigger
   );
 
-  // Redux selector for wallet switching status
   const { isSwitchingWallet } = useSelector((state) => state.utility);
 
   /* ===================================================================================
@@ -79,22 +76,21 @@ const FaucetDetails = () => {
 
   // This function is called when the user clicks on the "Faucet" button for a specific asset.
   const handleFaucetClick = (asset) => {
-    const assetIndex = assets?.indexOf(asset); 
-    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; 
+    const assetIndex = assets?.indexOf(asset);
+    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null;
 
-    setSelectedAsset({ asset, assetImage }); 
-    setShowPopup(true); 
+    setSelectedAsset({ asset, assetImage });
+    setShowPopup(true);
   };
 
-  // This function is for closing the popup
   const closePopup = () => {
-    setShowPopup(false); // Hide the faucet popup
+    setShowPopup(false);
   };
 
   // This helps for pagination: calculating the items for the current page
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE; // Get the index of the last item
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE; // Get the index of the first item
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem); // Get the items for the current page
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE; 
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE; 
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem); 
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -102,13 +98,13 @@ const FaucetDetails = () => {
 
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden"; 
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto"; 
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 

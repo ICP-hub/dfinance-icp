@@ -47,6 +47,9 @@ describe("Faucet Component", () => {
         isWalletModalOpen: false,
         isSwitchingWallet: false,
       },
+      testnetMode: {
+        isTestnetMode: true,
+      }
     });
     store.dispatch = jest.fn();
   });
@@ -113,6 +116,9 @@ describe("Faucet Component", () => {
         isWalletModalOpen: true,
         isSwitchingWallet: false,
       },
+      testnetMode: {
+        isTestnetMode: true,
+      }
     });
 
     // Mock the isAuthenticated hook to be false
@@ -135,6 +141,9 @@ describe("Faucet Component", () => {
         isWalletModalOpen: false,
         isSwitchingWallet: true,
       },
+      testnetMode: {
+        isTestnetMode: true,
+      }
     });
 
     // Mock the isAuthenticated hook to be false
@@ -200,5 +209,34 @@ describe("Faucet Component", () => {
     expect(
       screen.getByText(/Please connect your wallet to get free testnet assets/i)
     ).toBeInTheDocument();
+  });
+  
+  test("does not render content when isTestnetMode is false", () => {
+    // Set up store with isTestnetMode as false
+    store = mockStore({
+      utility: {
+        isWalletModalOpen: false,
+        isSwitchingWallet: false,
+      },
+      testnetMode: {
+        isTestnetMode: false,
+      }
+    });
+
+    // Mock the isAuthenticated hook to be false
+    useAuth.mockReturnValue({ isAuthenticated: false });
+
+    render(
+      <Provider store={store}>
+        <Faucet />
+      </Provider>
+    );
+
+    // Check that neither the explanation text nor "Connect Wallet" button is rendered
+    expect(
+      screen.queryByText(/With our testnet Faucet you can receive free assets/i)
+    ).not.toBeInTheDocument();
+    
+    expect(screen.queryByTestId("connect-wallet-button")).not.toBeInTheDocument();
   });
 });

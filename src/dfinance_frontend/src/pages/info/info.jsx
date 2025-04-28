@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
@@ -11,7 +11,7 @@ import useFetchBalanceBackend from "../../components/customHooks/useFetchBalance
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
-import Analytics from "../../../public/helper/AnalyticsIcon.svg";
+import Analytics from "../../../public/helper/analytics-icon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import useUserData from "../../components/customHooks/useUserData";
@@ -280,6 +280,7 @@ const DashboardCards = () => {
   };
 
   let emailInterval;
+
   let lastExhaustedEmailTimestamp;
   let lastWarningEmailTimestamp;
 
@@ -343,9 +344,10 @@ const DashboardCards = () => {
     }
   };
 
-
   let emailinterval = null;
 
+  let lastTokenWarningEmailTimestamp;
+  let lastTokenExhaustedEmailTimestamp;
   /**
    * Handles token balance-based notifications and sends warning or exhaustion emails.
    * @param {string} assetName - Name of the asset.
@@ -641,7 +643,7 @@ const DashboardCards = () => {
         const usersPerPage = 10;
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
 
-        const data = await fetchAllUsers(totalPages, usersPerPage);
+        await fetchAllUsers(totalPages, usersPerPage);
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
       } finally {
@@ -878,7 +880,7 @@ const DashboardCards = () => {
                   const assetName = data[0];
                   if (assetBalances[assetName] !== undefined) {
                     assetBalance = assetBalances[assetName];
-                    break; // Stop after finding the first valid assetBalance
+                    break;
                   }
                 }
               }

@@ -60,10 +60,9 @@ const DashboardNav = () => {
     useAuth();
 
   const { id } = useParams();
-  const dropdownRef = useRef(null);
   const theme = useSelector((state) => state.theme.theme);
   const menuRef = useRef(null);
-  const { state, pathname } = useLocation();
+  const { pathname } = useLocation();
   const formatNumber = useFormatNumber();
 
   /* ===================================================================================
@@ -818,7 +817,7 @@ const DashboardNav = () => {
             )
               .filter(
                 (data) => !(data.title === "Health Factor" && assetBorrow === 0)
-              ) 
+              )
               .map((data, index) => (
                 <div key={index} className="relative group">
                   <button className="relative font-light text-[13px] text-left min-w-[80px] button1">

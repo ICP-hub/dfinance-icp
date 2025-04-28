@@ -25,14 +25,10 @@ import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Principal } from "@dfinity/principal";
 import useAssetData from "../customHooks/useAssets";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
+import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 
 const MobileTopNav = ({
   isMobileNav,
@@ -104,7 +100,7 @@ const MobileTopNav = ({
         });
     }
   };
-  //truncate principal ID
+
   const truncateString = (str, maxLength) => {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
@@ -112,18 +108,11 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-  const [asset, setAsset] = useState("ICP"); // default asset
-  const assetImages = {
-    ckBTC: ckBTC,
-    ckETH: ckETH,
-    ckUSDC: ckUSDC,
-    ckUSDT: ckUSDT,
-    ICP: icp,
-  };
+  const [asset, setAsset] = useState("ICP");
   const [amount, setAmount] = useState("");
-  const [maxClicked, setMaxClicked] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const {
     fetchConversionRate,
     ckBTCBalance,
@@ -149,6 +138,7 @@ const MobileTopNav = ({
       setIsLoading(false);
     }
   };
+
   const errorMessages = {
     NoReserveDataFound:
       "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
@@ -162,6 +152,7 @@ const MobileTopNav = ({
       "Minting of tokens failed. Your account state has been rolled back. Try again later.",
     Default: "An unexpected error occurred. Please try again later.",
   };
+
   const assetBalances = {
     ICP: ckICPBalance,
     ckETH: ckETHBalance,
@@ -169,6 +160,7 @@ const MobileTopNav = ({
     ckBTC: ckBTCBalance,
     ckUSDC: ckUSDCBalance,
   };
+
   const supplyBalance = assetBalances[asset] || 0;
 
   // handle approve function
@@ -215,17 +207,30 @@ const MobileTopNav = ({
           subaccount: [],
         },
       });
-      setIsApproved(true);
-      toast.success(`Approval successful!`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      if (approval?.Ok) {
+        setIsApproved(true);
+        toast.success(`Approval successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (approval?.Err) {
+        toast.error(`Error: ${approval.Err || "Approval failed!"}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
     } catch (error) {
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
         className: "custom-toast",
@@ -407,10 +412,6 @@ const MobileTopNav = ({
       setShowPanicPopup(true);
       setIsVisible(false);
     } else if (msgLower.includes("invalid character")) {
-      // Principal ID has an invalid character
-      const match = message.match(/"(.+?)"/);
-      const invalidChar = match ? match[1] : "?";
-
       toast.error("Invalid principal ID format ", {
         className: "custom-toast",
         position: "top-center",
@@ -450,11 +451,9 @@ const MobileTopNav = ({
   };
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
-    setMaxClicked(false);
   };
   const handleMaxClick = () => {
     setAmount(supplyBalance.toString());
-    setMaxClicked(true);
   };
   const handleDarkModeToggle = () => {
     dispatch(toggleTheme());
@@ -466,7 +465,6 @@ const MobileTopNav = ({
   };
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTransferDropdownOpen, setIsTransferDropDownOpen] = useState(false);
-  const [showTransferPopup, setShowTransferPopup] = useState(false);
   const [showDepositPopup, setShowDepositPopup] = useState(false);
 
   const toggleDropdown = () => {
@@ -498,16 +496,13 @@ const MobileTopNav = ({
     return truncated.toFixed(8);
   };
   const [receiverAddress, setReceiverAddress] = useState("");
-  const [receiverError, setReceiverError] = useState("");
   const validateReceiverAddress = (value) => {
     const regex = /^[a-z0-9-]{60,65}$/;
 
     if (!value) {
-      setReceiverError("Receiver address is required.");
+      console.error("Receiver address is required.");
     } else if (!regex.test(value)) {
-      setReceiverError("Invalid receiver address format.");
-    } else {
-      setReceiverError("");
+      console.error("Invalid receiver address format.");
     }
   };
   const handleReceiverChange = (e) => {
@@ -931,7 +926,6 @@ const MobileTopNav = ({
                 setIsDropdownOpen(false);
                 setReceiverAddress("");
                 setAmount("");
-                setMaxClicked(false);
                 setIsApproved(false);
               }
             }}
@@ -1032,7 +1026,6 @@ const MobileTopNav = ({
                                           // Clear amount when selecting a different asset
                                           if (a !== asset) {
                                             setAmount("");
-                                            setMaxClicked(false);
                                           }
                                           setAsset(a);
                                           setIsDropdownOpen(false);

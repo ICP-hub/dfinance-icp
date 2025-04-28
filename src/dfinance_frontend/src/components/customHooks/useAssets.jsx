@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-
 import { useSelector } from "react-redux";
 
 /**
@@ -62,7 +61,6 @@ const useAssetData = (searchQuery = "") => {
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
 
-  // Helper function to check if the image is an SVG
 
   /**
    * Fetches the total supply of a specific asset.

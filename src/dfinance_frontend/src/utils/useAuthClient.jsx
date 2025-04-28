@@ -53,10 +53,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [accountId, setAccountId] = useState(null);
 
   const {
-    isWalletCreated,
-    isWalletModalOpen,
     isSwitchingWallet,
-    connectedWallet,
   } = useSelector((state) => state.utility);
 
   useEffect(() => {

@@ -21,7 +21,6 @@ import { usePageLoading } from "../../components/customHooks/useLoading";
  */
 const Home = () => {
   const intervalRef = useRef();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const theme = useSelector((state) => state.theme.theme);
   const isLoading = usePageLoading();
   const [currentFAQ, setCurrentFAQ] = useState(0);
@@ -90,7 +89,7 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => window.innerWidth <= 768;
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);

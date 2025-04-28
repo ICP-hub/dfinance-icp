@@ -111,7 +111,7 @@ const DashboardComponent = () => {
   });
 
   // this variable for now set to false, we we might use usestate later in case of need
-  const isButtonDisabled = false
+  const isButtonDisabled = false;
 
   const handleModalOpen = (
     type,
@@ -233,10 +233,8 @@ const DashboardComponent = () => {
     </div>
   );
 
-
   let current_liquidity_rate = "0";
   let borrow_rate_apr = "0";
-
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
 
@@ -829,7 +827,6 @@ const DashboardComponent = () => {
         maximumFractionDigits: 8,
       })}`;
     } else {
-      // ✅ Show 2 decimals if > 1, else 8 decimals
       displayedAsset = formattedMaxBorrow.toLocaleString(undefined, {
         minimumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
         maximumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
@@ -921,7 +918,7 @@ const DashboardComponent = () => {
     if (!userData?.Ok?.reserves?.[0]?.length) return [];
 
     return userData.Ok.reserves[0].filter((reserveGroup) => {
-      const asset = reserveGroup[0]; 
+      const asset = reserveGroup[0];
 
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
@@ -1071,35 +1068,32 @@ const DashboardComponent = () => {
 
   useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
-      userData.Ok.reserves[0].map(
-        (reserveGroup) => {
-          const totalCollateralValue =
-            Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
-          const totalBorrowedValue =
-            Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
-          const liquidationThreshold =
-            Number(userData?.liquidation_threshold) / 100000000 || 0.8;
+      userData.Ok.reserves[0].map((reserveGroup) => {
+        const totalCollateralValue =
+          Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+        const totalBorrowedValue =
+          Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+        const liquidationThreshold =
+          Number(userData?.liquidation_threshold) / 100000000 || 0.8;
 
-          const ltv =
-            totalCollateralValue === 0
-              ? 0
-              : totalBorrowedValue / totalCollateralValue;
+        const ltv =
+          totalCollateralValue === 0
+            ? 0
+            : totalBorrowedValue / totalCollateralValue;
 
-          const healthFactor =
-            totalBorrowedValue === 0
-              ? Infinity
-              : (totalCollateralValue * liquidationThreshold) /
-                totalBorrowedValue;
+        const healthFactor =
+          totalBorrowedValue === 0
+            ? Infinity
+            : (totalCollateralValue * liquidationThreshold) /
+              totalBorrowedValue;
 
-          return {
-            ...reserveGroup,
-            ltv: ltv.toFixed(2),
-            healthFactor:
-              healthFactor === Infinity ? "∞" : healthFactor.toFixed(2),
-          };
-        }
-      );
-
+        return {
+          ...reserveGroup,
+          ltv: ltv.toFixed(2),
+          healthFactor:
+            healthFactor === Infinity ? "∞" : healthFactor.toFixed(2),
+        };
+      });
     }
   }, [userData, dashboardRefreshTrigger]);
 
@@ -2588,7 +2582,7 @@ const DashboardComponent = () => {
                                           progress: undefined,
                                         }
                                       );
-                                      return; 
+                                      return;
                                     }
 
                                     handleAssetAction(
@@ -2726,7 +2720,6 @@ const DashboardComponent = () => {
                       {}
                       <div className="w-full">
                         {getFilteredAndSortedItems().map((item, index) => {
-
                           const assetData = item[1].Ok;
                           const total_supply =
                             Number(assetData?.asset_supply || 0) / 100000000;
@@ -2877,7 +2870,6 @@ const DashboardComponent = () => {
               )}
             </div>
 
-            {}
             <div className="hidden xl:block mt-2">
               {isBorrowVisible && (
                 <>
@@ -2971,9 +2963,6 @@ const DashboardComponent = () => {
 
                         <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                           {getFilteredAndSortedItems().map((item, index) => {
-                            const reserveData = userData?.Ok?.reserves[0]?.find(
-                              (reserveGroup) => reserveGroup[0] === item[0]
-                            );
                             const assetData = item[1].Ok;
                             const total_supply =
                               Number(assetData?.asset_supply || 0) / 100000000;

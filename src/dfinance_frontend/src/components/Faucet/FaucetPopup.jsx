@@ -28,7 +28,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, user } = useAuth();
-  const { userData } = useUserData();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -110,7 +109,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       return;
     }
     const numericAmount = parseFloat(inputAmount);
-    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
     if (numericAmount > exchangeRate) {
       return;
     }
@@ -184,7 +182,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     setLoading(true);
@@ -328,13 +326,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       throw new Error("Backend actor not initialized");
     }
 
-    setIsFaucetLoading(true); // Start loading
+    setIsFaucetLoading(true);
 
     try {
       const result = await backendActor.get_user_faucet_data(user);
 
       if (result?.Ok?.reserves && result.Ok.reserves[0]?.length > 0) {
-        // Initializing separate objects to track individual asset limits and usages
         const updatedLimits = { ...initialLimits };
         const updatedUsages = { ...initialUsages };
 
@@ -342,7 +339,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           const asset = reserveGroup[0];
           if (!asset) return;
 
-          // Handling BigInt correctly and converting values to numbers
           const faucetLimitRaw = reserveGroup[1]?.faucet_limit
             ? Number(reserveGroup[1].faucet_limit)
             : initialLimits[asset];
@@ -350,20 +346,16 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             ? Number(reserveGroup[1].faucet_usage)
             : initialUsages[asset];
 
-          // Truncate to 8 decimal places for each asset
           const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
           const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
 
-          // Set values per asset
           updatedLimits[asset] = faucetLimit;
           updatedUsages[asset] = faucetUsage;
         });
 
-        // Set state for each asset separately
         setFaucetLimit(updatedLimits);
         setFaucetUsage(updatedUsages);
       } else {
-        // Handle no data or fallback
         setFaucetLimit(initialLimits);
         setFaucetUsage(initialUsages);
       }
@@ -492,7 +484,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        onClose(); // Call the function to close the modal
+        onClose();
       }
     };
 
@@ -500,7 +492,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]); // Dependency to ensure correct reference
+  }, [onClose]);
 
   /* ===================================================================================
    *                                  RENDER-COMPONENTS

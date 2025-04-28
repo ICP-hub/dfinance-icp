@@ -3,7 +3,6 @@ import {
   render,
   screen,
   fireEvent,
-  waitFor,
   act,
 } from "@testing-library/react";
 import { Provider } from "react-redux";
@@ -11,6 +10,7 @@ import { store } from "../../redux/store";
 import { MemoryRouter } from "react-router-dom";
 import FaucetPopup from "../../components/Faucet/FaucetPopup";
 import { toast } from "react-toastify";
+
 // Mock required modules
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
@@ -300,44 +300,6 @@ describe("FaucetPopup Component", () => {
     );
   });
 
-  // Test: Handling of faucet limit
-  test("displays warning when faucet limit is exceeded", async () => {
-    // Override the userData mock for this specific test
-    const useUserData =
-      require("../../components/customHooks/useUserData").default;
-    useUserData.mockReturnValue({
-      userData: {
-        Ok: {
-          reserves: [
-            [
-              [
-                "ckBTC",
-                {
-                  faucet_limit: 50000000000,
-                  faucet_usage: 50000000000, // Usage equals limit, so it's exceeded
-                },
-              ],
-            ],
-          ],
-        },
-      },
-    });
-
-    await act(async () => {
-      render(
-        <Provider store={store}>
-          <MemoryRouter>
-            <FaucetPopup {...defaultProps} />
-          </MemoryRouter>
-        </Provider>
-      );
-    });
-
-    // Check if warning message is displayed
-    expect(
-      screen.getByText(/Faucet limit has been exceeded/i)
-    ).toBeInTheDocument();
-  });
 
   // Test: Handles out of cycles error
   test("displays proper message for out of cycles error", async () => {

@@ -47,6 +47,7 @@ const AssetDetails = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
+
   const {
     assets,
     AssetImages,
@@ -56,6 +57,7 @@ const AssetDetails = () => {
     fetchAssetSupply,
     fetchAssetBorrow,
   } = useAssetData();
+
   const {
     isAuthenticated,
     principal,
@@ -63,12 +65,16 @@ const AssetDetails = () => {
     fetchReserveData,
     createLedgerActor,
   } = useAuth();
+
   const location = useLocation();
   const { assetData } = location.state || {};
+
   const { isWalletCreated, isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
+
   const { id } = useParams();
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -161,7 +167,6 @@ const AssetDetails = () => {
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
-  // Memoize the principal object to avoid unnecessary re-renders
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -676,7 +681,7 @@ const AssetDetails = () => {
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    availableBorrow,
+    availableBorrow
   ]);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const TestnetModePopup = ({ onClose }) => {

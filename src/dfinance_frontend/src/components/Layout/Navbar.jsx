@@ -40,7 +40,6 @@ import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { Principal } from "@dfinity/principal";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../customHooks/useTransferFee";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 
 /**
@@ -80,8 +79,6 @@ export default function Navbar({ isHomeNav }) {
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // This variable is set to false for now; we might use useState later if needed
   const isButtonDisabled = false;
 
   const {
@@ -210,7 +207,6 @@ export default function Navbar({ isHomeNav }) {
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
 
@@ -304,7 +300,6 @@ export default function Navbar({ isHomeNav }) {
         spender_subaccount: [],
       };
 
-      // Call the icrc2_transfer_from function
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
 
@@ -414,16 +409,12 @@ export default function Navbar({ isHomeNav }) {
   const handleTransferException = (error) => {
     const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
-
     const msgLower = message.toLowerCase();
 
     if (msgLower.includes("panic")) {
       setShowPanicPopup(true);
       setIsVisible(false);
     } else if (msgLower.includes("invalid character")) {
-      // Principal ID has an invalid character
-      const match = message.match(/"(.+?)"/);
-
       toast.error("Invalid principal ID format ", {
         className: "custom-toast",
         position: "top-center",
@@ -688,12 +679,11 @@ export default function Navbar({ isHomeNav }) {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
 
     if (shouldLockScroll) {
-      document.body.style.overflow = "hidden"; // Disable scroll
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ""; // Restore scroll
+      document.body.style.overflow = "";
     }
 
-    // Clean up on unmount (just in case)
     return () => {
       document.body.style.overflow = "";
     };
@@ -1038,7 +1028,7 @@ export default function Navbar({ isHomeNav }) {
                                                 AssetImages[
                                                   assets.indexOf(asset)
                                                 ]
-                                              } // Dynamically fetch image from AssetImages using assetIndex
+                                              } 
                                               alt={asset}
                                               className="object-fill w-6 h-6 rounded-full"
                                             />

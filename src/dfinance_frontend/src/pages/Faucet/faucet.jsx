@@ -6,7 +6,6 @@ import Element from "../../../public/element/elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/MiniLoader";
 
-import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 const FaucetDetails = lazy(() =>
   import("../../components/Faucet/FaucetList")
 );

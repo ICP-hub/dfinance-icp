@@ -9,7 +9,7 @@ import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
-import { getSteps, getStyles } from "../src/components/Common/joyrideConfig";
+import { getSteps, getStyles } from "./components/Common/JoyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
 import { Suspense } from "react";
 import MiniLoader from "./components/Common/MiniLoader";

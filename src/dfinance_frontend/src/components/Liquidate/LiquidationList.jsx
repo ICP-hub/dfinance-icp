@@ -311,7 +311,7 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-        Number(debtIndex)
+      Number(debtIndex)
     );
   };
 
@@ -408,31 +408,26 @@ const DebtStatus = () => {
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
-      setSupplyDataLoading(true);
       try {
         for (const asset of assets) {
           await fetchAssetSupply(asset);
         }
       } catch (error) {
-        setSupplyDataLoading(false);
         console.error("Error fetching supply data:", error);
       } finally {
-        setSupplyDataLoading(false);
       }
     };
 
     const fetchBorrowData = async () => {
       if (assets.length === 0) return;
-      setBorrowDataLoading(true);
+
       try {
         for (const asset of assets) {
           await fetchAssetBorrow(asset);
         }
       } catch (error) {
-        setBorrowDataLoading(false);
+
         console.error("Error fetching borrow data:", error);
-      } finally {
-        setBorrowDataLoading(false);
       }
     };
 
@@ -512,11 +507,10 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
-                          index !== liquidationUsers.length - 1
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
                             ? "gradient-line-bottom"
                             : ""
-                        }`}
+                          }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -618,7 +612,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        {}
+                        { }
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

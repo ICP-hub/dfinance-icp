@@ -55,7 +55,7 @@ const SupplyInfo = ({
    * =================================================================================== */
 
   const [supplied, setSupplied] = useState(totalSupplied);
-  const [borrowed, setBorrowed] = useState(totalBorrowed);
+  
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
   const [
     isLiquidationThresholdTooltipVisible,
@@ -134,7 +134,7 @@ const SupplyInfo = ({
 
   useEffect(() => {
     setSupplied(totalSupplied);
-    setBorrowed(totalBorrowed);
+    
   }, [dashboardRefreshTrigger, totalSupplied, totalBorrowed]);
 
   /* ===================================================================================

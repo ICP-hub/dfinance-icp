@@ -13,7 +13,6 @@ import { WalletMinimal } from "lucide-react";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { toast } from "react-toastify";
-import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import "react-toastify/dist/ReactToastify.css";
 import useAssetData from "../customHooks/useAssets";
 import { useMemo } from "react";
@@ -51,13 +50,11 @@ const AssetDetails = () => {
   const {
     assets,
     AssetImages,
-    reserveData,
     filteredItems,
     asset_supply,
     asset_borrow,
     fetchAssetSupply,
     fetchAssetBorrow,
-    loading: filteredDataLoading,
   } = useAssetData();
   const {
     isAuthenticated,
@@ -92,22 +89,16 @@ const AssetDetails = () => {
    * =================================================================================== */
 
   const [reserveFactor, setReserveFactor] = useState(null);
-
   const [totalBorrowed, setTotalBorrowed] = useState(null);
   const [totalSupplied, setTotalSupplied] = useState(null);
   const [assetBalances, setAssetBalances] = useState([]);
   const [borrowCap, setBorrowCap] = useState(null);
   const [supplyCap, setSupplyCap] = useState(null);
-
   const [canBeCollateral, setCanBeCollateral] = useState(null);
   const [isFilter, setIsFilter] = React.useState(false);
   const { assetDetailFilter } = useSelector((state) => state.utility);
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-  const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
-  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-
   const [totalSupply, setTotalSupply] = useState(0);
   const [totalBorrow, setTotalBorrow] = useState(0);
   const [supply_rate, setSupplyRate] = useState(0);
@@ -118,6 +109,7 @@ const AssetDetails = () => {
   const [borrowableValue, setBorrowableValue] = useState("0.00000000");
   const [borrowableAssetValue, setBorrowableAssetValue] = useState("0.0000");
   const [availableBorrow, setAvailableBorrow] = useState([]);
+
   const [isModalOpen, setIsModalOpen] = useState({
     isOpen: false,
     type: "",
@@ -181,10 +173,12 @@ const AssetDetails = () => {
   // Fetches asset data including supply and borrow balances
   const fetchAssetData = async () => {
     const balances = [];
+
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
       const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+
       const assetBalance = {
         asset,
         dtokenBalance: null,
@@ -197,8 +191,7 @@ const AssetDetails = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = formattedBalance;
+            assetBalance.dtokenBalance = balance;
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -212,8 +205,7 @@ const AssetDetails = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = formattedBalance;
+            assetBalance.debtTokenBalance = balance;
           } catch (error) {
             console.error(
               `Error fetching debt token balance for ${asset}:`,
@@ -377,6 +369,7 @@ const AssetDetails = () => {
     },
   }[id];
 
+  // Function to calculate balance and usd value
   const { calculatedBalance, calculatedUsdValueFormatted } = (() => {
     if (!assetInfo) {
       return {
@@ -500,9 +493,9 @@ const AssetDetails = () => {
     return { displayedBalance, displayedUsd };
   };
 
-  // Then, use it like this inside JSX:
   const { displayedBalance, displayedUsd } = getBorrowableDisplayValues(id);
 
+  // Handle which popup to open and data per asset selected
   const handleAssetAction = (actionType, asset) => {
     const reserveData = userData?.Ok?.reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
@@ -600,19 +593,10 @@ const AssetDetails = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-  useEffect(() => {
-    if (userData && userAccountData) {
-    }
-  }, [userData, userAccountData, dashboardRefreshTrigger]);
 
   useEffect(() => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
-
-  useEffect(() => {
-    if (userData && userAccountData) {
-    }
-  }, [userData, userAccountData, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (assetData?.Ok) {
@@ -652,8 +636,7 @@ const AssetDetails = () => {
           setSupplyRate(supply_rate);
           setTotalSupply(total_supply);
           setTotalBorrow(total_borrow);
-          const remainingBorrowable =
-            Number((total_supply * 0.85).toFixed(8)) - total_borrow;
+
           const assetRates = {
             ckBTC: ckBTCUsdRate,
             ckETH: ckETHUsdRate,
@@ -671,10 +654,10 @@ const AssetDetails = () => {
                 );
 
           if (rate) {
-            setBorrowableValue(formattedMaxBorrow); // USD value
+            setBorrowableValue(formattedMaxBorrow);
 
             setBorrowableAssetValue(
-              Math.min(formattedMaxBorrow * rate, Number(availableBorrow)) // asset/token value
+              Math.min(formattedMaxBorrow * rate, Number(availableBorrow))
             );
           }
         }
@@ -729,10 +712,11 @@ const AssetDetails = () => {
         try {
           const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
           for (const asset of assets) {
-            const result = await getAssetPrinciple(asset);
+            await getAssetPrinciple(asset);
           }
-        } catch (error) {}
-      } else {
+        } catch (error) {
+          console.error(error.message);
+        }
       }
     };
 
@@ -754,30 +738,6 @@ const AssetDetails = () => {
         (ckETHUsdRate / 1e8)
       ).toFixed(7);
       setCkETHUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (
-        (parseFloat(ckUSDCBalance) * ckUSDCUsdRate) /
-        1e8
-      ).toFixed(7);
-      setCkUSDCUsdBalance(balanceInUsd);
-    }
-
-    if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (
-        (parseFloat(ckICPBalance) * ckICPUsdRate) /
-        1e8
-      ).toFixed(7);
-      setCkICPUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckUSDTBalance) *
-        (ckUSDTUsdRate / 1e8)
-      ).toFixed(7);
-      setCkUSDTUsdBalance(balanceInUsd);
     }
   }, [
     ckBTCBalance,
@@ -1087,39 +1047,29 @@ const AssetDetails = () => {
                 <p className="text-gray-300 text-[12px] my-1">Wallet Balance</p>
                 <p className="text  font-semibold text-[#eeeef0] dark:text-darkText">
                   {id === "ckBTC" && (
-                    <>
-                      <p>
-                        {formatValue(ckBTCBalance)} {id}
-                      </p>
-                    </>
+                    <p>
+                      {formatValue(ckBTCBalance)} {id}
+                    </p>
                   )}
                   {id === "ckETH" && (
-                    <>
-                      <p>
-                        {formatValue(ckETHBalance)} {id}
-                      </p>
-                    </>
+                    <p>
+                      {formatValue(ckETHBalance)} {id}
+                    </p>
                   )}
                   {id === "ckUSDC" && (
-                    <>
-                      <p>
-                        {formatValue(ckUSDCBalance)} {id}
-                      </p>
-                    </>
+                    <p>
+                      {formatValue(ckUSDCBalance)} {id}
+                    </p>
                   )}
                   {id === "ICP" && (
-                    <>
-                      <p>
-                        {formatValue(ckICPBalance)} {id}
-                      </p>
-                    </>
+                    <p>
+                      {formatValue(ckICPBalance)} {id}
+                    </p>
                   )}
                   {id === "ckUSDT" && (
-                    <>
-                      <p>
-                        {formatValue(ckUSDTBalance)} {id}
-                      </p>
-                    </>
+                    <p>
+                      {formatValue(ckUSDTBalance)} {id}
+                    </p>
                   )}
                 </p>
               </div>

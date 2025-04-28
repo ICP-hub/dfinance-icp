@@ -5,7 +5,11 @@ import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/MiniLoader";
-const FaucetDetails = lazy(() => import("../../components/Faucet/FaucetList"));
+
+import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
+const FaucetDetails = lazy(() =>
+  import("../../components/Faucet/FaucetList")
+);
 const WalletModal = lazy(() =>
   import("../../components/Dashboard/WalletModal")
 );

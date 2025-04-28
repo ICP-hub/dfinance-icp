@@ -11,7 +11,7 @@ import useFetchBalanceBackend from "../../components/customHooks/useFetchBalance
 import MiniLoader from "../../components/Common/MiniLoader";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
-import Analytics from "../../../public/Helpers/analytics-icon.svg";
+import Analytics from "../../../public/helper/AnalyticsIcon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import useUserData from "../../components/customHooks/useUserData";
@@ -53,9 +53,11 @@ const DashboardCards = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
+
   const [like, setLike] = useState(false);
   const [threshold] = useState(5000000000000);
   const [tokenThreshold] = useState(10000);
+
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -341,8 +343,7 @@ const DashboardCards = () => {
     }
   };
 
-  let lastTokenExhaustedEmailTimestamp = 0;
-  let lastTokenWarningEmailTimestamp = 0;
+
   let emailinterval = null;
 
   /**

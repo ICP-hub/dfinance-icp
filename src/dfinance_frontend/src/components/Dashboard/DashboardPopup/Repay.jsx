@@ -52,8 +52,8 @@ const Repay = ({
   const approveButtonRef = useRef(null);
   const repayButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } =
+  const { healthFactorBackend } = useUserData();
+  const { conversionRate } =
     useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
   const transferFeRetrive = useTransferFee(asset);
@@ -63,17 +63,14 @@ const Repay = ({
   const modalRef = useRef(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
+
   const [maxAmount, setMaxAmount] = useState("0");
   const [maxClicked, setMaxClicked] = useState(false);
 
@@ -81,7 +78,7 @@ const Repay = ({
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  const fees = useSelector((state) => state.fees.fees);
+
   const dispatch = useDispatch();
 
   /* ===================================================================================
@@ -169,18 +166,18 @@ const Repay = ({
     if (isNaN(numericAmount) || numericAmount < 0) {
       setAmount("");
       setUsdValue("0.00"); // ✅ Always show 2 decimal places
-      setError("Amount must be a positive number");
+      console.error("Amount must be a positive number");
       return;
     }
     if (numericAmount > assetBorrow) {
-      setError("Amount exceeds the supply balance");
+      console.error("Amount exceeds the supply balance");
       return;
     }
     const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
     const convertedValue = numericAmount * adjustedConversionRate;
     setUsdValue(convertedValue.toFixed(7));
     setAmount(inputAmount);
-    setError("");
+
   };
 
   const numericBalance = balance;
@@ -220,7 +217,7 @@ const Repay = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
     const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -327,7 +324,7 @@ const Repay = ({
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
       const scaledAmount = amountAsNat64;
       const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
       const totalAmount = transferFeeBigInt
@@ -607,15 +604,7 @@ const Repay = ({
     }
   }, [amount, conversionRate]);
 
-  useEffect(() => {
-    if (assetBorrow && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -660,7 +649,7 @@ const Repay = ({
       totalDeptValue = 0;
     }
 
-    setPrevHealthFactor(currentHealthFactor);
+
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -887,7 +876,6 @@ const Repay = ({
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                     isApproved ||
                     isLoading ||
-                    isButtonDisabled ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
                     amount > supplyBalance
@@ -909,9 +897,7 @@ const Repay = ({
                 <button
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    !isApproved ||
-                    isButtonDisabled ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||

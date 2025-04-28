@@ -30,6 +30,7 @@ import { Check, Eye, EyeOff, Info } from "lucide-react";
 import MiniLoader from "../Common/MiniLoader";
 import Lottie from "../Common/Lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
+
 /**
  * DashboardComponent Component
  *
@@ -48,13 +49,16 @@ const DashboardComponent = () => {
   );
   const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor } = useAuth();
+
   const {
     userData,
     userAccountData,
     isFreezePopupVisible,
     setIsFreezePopupVisible,
   } = useUserData();
+
   const tooltipRef = useRef(null);
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -69,6 +73,7 @@ const DashboardComponent = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
+
   const {
     assets,
     AssetImages,
@@ -79,17 +84,13 @@ const DashboardComponent = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
+
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const formatNumber = useFormatNumber();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
-  const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-  const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
-  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [valueChanged, setValueChanged] = useState(false);
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [showAllAssets, setShowAllAssets] = useState(true);
@@ -108,7 +109,9 @@ const DashboardComponent = () => {
     image: "",
     balance: "",
   });
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // this variable for now set to false, we we might use usestate later in case of need
+  const isButtonDisabled = false
 
   const handleModalOpen = (
     type,
@@ -156,9 +159,6 @@ const DashboardComponent = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [calculatedReserves, setCalculatedReserves] = useState([]);
-  const [totalAssetSupply, setTotalAssetSupply] = useState(0);
   const [totalAssetBorrow, setTotalAssetBorrow] = useState(0);
   const toggleBorrowTooltip = () => setIsBorrowPowerTooltipVis((prev) => !prev);
 
@@ -233,8 +233,10 @@ const DashboardComponent = () => {
     </div>
   );
 
+
   let current_liquidity_rate = "0";
   let borrow_rate_apr = "0";
+
   let totalUsdValueSupply = 0;
   let totalUsdValueBorrow = 0;
 
@@ -301,7 +303,6 @@ const DashboardComponent = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
             assetBalance.dtokenBalance = balance;
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
@@ -316,7 +317,6 @@ const DashboardComponent = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
             assetBalance.debtTokenBalance = balance;
           } catch (error) {
             console.error(
@@ -348,24 +348,7 @@ const DashboardComponent = () => {
   };
 
   const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
     navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
-  };
-
-  const formatConditional = (value) => {
-    const numericValue = parseFloat(value);
-
-    if (isNaN(numericValue)) {
-      return "0";
-    }
-
-    if (numericValue === 0) {
-      return "0";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
   };
 
   /**
@@ -443,7 +426,6 @@ const DashboardComponent = () => {
     const balance = balanceMap[item[0]] || 0;
     const isZeroBalance = Number(balance) === 0;
 
-    const assetData = balanceMap[item[0]];
     const assetRate = {
       ckBTC: { rate: ckBTCUsdRate },
       ckETH: { rate: ckETHUsdRate },
@@ -678,6 +660,7 @@ const DashboardComponent = () => {
       const currentLiquidity = userData?.Ok?.reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )?.[1]?.liquidity_index;
+
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
@@ -685,6 +668,7 @@ const DashboardComponent = () => {
       const calculated_supply = Math.trunc(
         (Number(assetBalance) / Number(currentLiquidity)) * 1e8
       );
+
       const assetSupply =
         Math.trunc(
           (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
@@ -693,15 +677,18 @@ const DashboardComponent = () => {
       const assetBorrow =
         (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
         (Number(DebtIndex) * 1e8);
+
       const assetData = item[1].Ok;
       const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
       const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+
       const { borrowableValue, borrowableAssetValue } =
         calculateBorrowableValues(
           item,
           availableBorrow,
           Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
         );
+
       const ckBalance =
         asset === "ckBTC"
           ? ckBTCBalance
@@ -714,10 +701,13 @@ const DashboardComponent = () => {
           : asset === "ckUSDT"
           ? ckUSDTBalance
           : null;
+
       const borrowRateApr =
         (Number(item?.[1]?.Ok?.borrow_rate) * 100) / 100000000 || 0;
+
       const liquidationThreshold =
         Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
+
       const reserveliquidationThreshold =
         Number(item?.[1]?.Ok.configuration.liquidation_threshold) / 100000000 ||
         0;
@@ -863,7 +853,7 @@ const DashboardComponent = () => {
   const getFilteredAndSortedItems = () => {
     return filteredItems
       .filter((item) => {
-        const reserveData = userData?.Ok?.reserves[0]?.find(
+        userData?.Ok?.reserves[0]?.find(
           (reserveGroup) => reserveGroup[0] === item[0]
         );
 
@@ -931,7 +921,7 @@ const DashboardComponent = () => {
     if (!userData?.Ok?.reserves?.[0]?.length) return [];
 
     return userData.Ok.reserves[0].filter((reserveGroup) => {
-      const asset = reserveGroup[0]; // Get asset name
+      const asset = reserveGroup[0]; 
 
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
@@ -1045,60 +1035,6 @@ const DashboardComponent = () => {
   }, [filteredDataLoading]);
 
   useEffect(() => {
-    if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckBTCBalance) *
-        (ckBTCUsdRate / 1e8)
-      ).toFixed(2);
-      setCkBTCUsdBalance(balanceInUsd);
-    }
-
-    if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckETHBalance) *
-        (ckETHUsdRate / 1e8)
-      ).toFixed(2);
-      setCkETHUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckUSDCBalance) *
-        (ckUSDCUsdRate / 1e8)
-      ).toFixed(2);
-      setCkUSDCUsdBalance(balanceInUsd);
-    }
-
-    if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckICPBalance) *
-        (ckICPUsdRate / 1e8)
-      ).toFixed(2);
-      setCkICPUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckUSDTBalance) *
-        (ckUSDTUsdRate / 1e8)
-      ).toFixed(2);
-      setCkUSDTUsdBalance(balanceInUsd);
-    }
-  }, [
-    ckBTCBalance,
-    ckBTCUsdRate,
-    ckETHBalance,
-    ckETHUsdRate,
-    ckUSDCBalance,
-    ckUSDCUsdRate,
-    ckUSDTBalance,
-    ckUSDTUsdRate,
-    ckICPBalance,
-    ckICPUsdRate,
-    dashboardRefreshTrigger,
-  ]);
-
-  useEffect(() => {
     const fetchAllData = async () => {
       try {
         await Promise.all([
@@ -1135,7 +1071,7 @@ const DashboardComponent = () => {
 
   useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
-      const reservesWithCalculations = userData.Ok.reserves[0].map(
+      userData.Ok.reserves[0].map(
         (reserveGroup) => {
           const totalCollateralValue =
             Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
@@ -1164,7 +1100,6 @@ const DashboardComponent = () => {
         }
       );
 
-      setCalculatedReserves(reservesWithCalculations);
     }
   }, [userData, dashboardRefreshTrigger]);
 
@@ -1179,7 +1114,6 @@ const DashboardComponent = () => {
       totalBorrow += assetBorrow;
     });
 
-    setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, [dashboardRefreshTrigger]);
 
@@ -1637,7 +1571,6 @@ const DashboardComponent = () => {
               )}
             </div>
 
-            {}
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
@@ -2655,7 +2588,7 @@ const DashboardComponent = () => {
                                           progress: undefined,
                                         }
                                       );
-                                      return; // prevent further execution
+                                      return; 
                                     }
 
                                     handleAssetAction(
@@ -2771,7 +2704,6 @@ const DashboardComponent = () => {
                   )}
                 </div>
 
-                {}
                 <label
                   htmlFor="showZeroBalance"
                   className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer ml-2"
@@ -2794,9 +2726,6 @@ const DashboardComponent = () => {
                       {}
                       <div className="w-full">
                         {getFilteredAndSortedItems().map((item, index) => {
-                          const reserveData = userData?.Ok?.reserves[0]?.find(
-                            (reserveGroup) => reserveGroup[0] === item[0]
-                          );
 
                           const assetData = item[1].Ok;
                           const total_supply =

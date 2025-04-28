@@ -57,7 +57,7 @@ const SupplyPopup = ({
   const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =
+  const { conversionRate } =
     useRealTimeConversionRate(asset);
 
   /* ===================================================================================
@@ -65,7 +65,6 @@ const SupplyPopup = ({
    * =================================================================================== */
 
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [collateral, setCollateral] = useState(currentCollateralStatus);
   const [usdValue, setUsdValue] = useState(0);
   const [amount, setAmount] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -80,7 +79,7 @@ const SupplyPopup = ({
    * =================================================================================== */
 
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const fees = useSelector((state) => state.fees.fees);
+
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -523,7 +522,7 @@ const SupplyPopup = ({
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    const amountAdded = collateral ? usdValue || 0 : 0;
+    const amountAdded = currentCollateralStatus ? usdValue || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -647,7 +646,7 @@ const SupplyPopup = ({
       reserveliquidationThreshold
     );
 
-    const amountAdded = collateral ? usdValue || 0 : 0;
+    const amountAdded = currentCollateralStatus ? usdValue || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {

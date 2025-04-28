@@ -49,7 +49,7 @@ const WithdrawPopup = ({
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =
+  const { conversionRate, } =
     useRealTimeConversionRate(asset);
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
@@ -60,10 +60,9 @@ const WithdrawPopup = ({
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [collateral, setCollateral] = useState(currentCollateralStatus);
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
+
   const [amount, setAmount] = useState("");
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
+
   const [usdValue, setUsdValue] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +77,7 @@ const WithdrawPopup = ({
 
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
-  const fees = useSelector((state) => state.fees.fees);
+
   const ledgerActors = useSelector((state) => state.ledger);
 
   /* ===================================================================================
@@ -388,10 +387,10 @@ const WithdrawPopup = ({
     totalDebt,
     liquidationThreshold,
     reserveliquidationThreshold,
-    collateral,
+    currentCollateralStatus,
     usdValue,
   }) => {
-    const amountTaken = collateral ? (usdValue || 0).toFixed(8) : "0.00000000";
+    const amountTaken = currentCollateralStatus ? (usdValue || 0).toFixed(8) : "0.00000000";
     const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
 
     let totalCollateralValue = 0;
@@ -524,9 +523,6 @@ const WithdrawPopup = ({
 
   useEffect(() => {
     const {
-      amountTaken,
-      totalCollateralValue,
-      totalDebtValue,
       tempLiq,
       healthFactor,
       ltv,
@@ -535,7 +531,7 @@ const WithdrawPopup = ({
       totalDebt,
       liquidationThreshold,
       reserveliquidationThreshold,
-      collateral,
+      currentCollateralStatus,
       usdValue,
     });
 
@@ -624,15 +620,7 @@ const WithdrawPopup = ({
     }
   }, [amount, conversionRate]);
 
-  useEffect(() => {
-    if (assetSupply && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = assetSupply * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
-    }
-  }, [amount, conversionRate]);
+
 
   useEffect(() => {
     if (onLoadingChange) {

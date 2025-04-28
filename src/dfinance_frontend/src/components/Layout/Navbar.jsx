@@ -138,7 +138,6 @@ export default function Navbar({ isHomeNav }) {
     setDropdownVisible(false);
   };
 
-  const transferFeRetrive = useTransferFee(asset);
   const hash = window.location.hash;
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -1070,7 +1069,6 @@ export default function Navbar({ isHomeNav }) {
                                           <div
                                             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                                             onClick={(e) => {
-                                              // Close dropdown when clicking the overlay background
                                               if (
                                                 e.target === e.currentTarget
                                               ) {
@@ -1082,14 +1080,13 @@ export default function Navbar({ isHomeNav }) {
                                               <div className="py-1">
                                                 {assets.map((a) => {
                                                   const assetIndex =
-                                                    assets.indexOf(a); // Get the index of the asset in the assets array
+                                                    assets.indexOf(a);
 
                                                   return (
                                                     <button
                                                       key={a}
                                                       className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
                                                       onClick={() => {
-                                                        // Clear amount when selecting a different asset
                                                         if (a !== asset) {
                                                           setAmount("");
                                                         }
@@ -1110,8 +1107,8 @@ export default function Navbar({ isHomeNav }) {
                                                               AssetImages[
                                                                 assetIndex
                                                               ]
-                                                            } // Get the image URL dynamically using assetIndex
-                                                            alt={a || "asset"} // alt text should match the asset name
+                                                            }
+                                                            alt={a || "asset"}
                                                             className="rounded-full w-5 h-5 mt-1"
                                                           />
                                                         )}
@@ -1281,7 +1278,6 @@ export default function Navbar({ isHomeNav }) {
                         <div
                           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                           onClick={(e) => {
-                            // Close dropdown when clicking the overlay background
                             if (e.target === e.currentTarget) {
                               setShowDepositPopup(false);
                             }

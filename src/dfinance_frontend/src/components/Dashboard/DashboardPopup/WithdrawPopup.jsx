@@ -156,9 +156,6 @@ const WithdrawPopup = ({
       if (numericAmount <= assetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
-        console.log("numericAmount", numericAmount, Amount)
-        console.log("usdValue", convertedValue)
-        console.log("usd rate", adjustedConversionRate)
         setUsdValue(parseFloat(convertedValue));
       } else {
         console.error("Amount exceeds the supply balance");

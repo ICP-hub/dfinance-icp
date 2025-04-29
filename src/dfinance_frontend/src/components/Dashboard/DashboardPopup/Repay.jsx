@@ -366,8 +366,19 @@ const Repay = ({
           setIsModalOpen(false);
           return;
         }
-
-        if (errorMsg?.AmountSubtractionError === null) {
+        if (errorMsg?.RepayMoreThanDebt === null) {
+          toast.error("Repay failed: You cannot repay more than you owe.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+        else if (errorMsg?.AmountSubtractionError === null) {
           toast.error("Repay failed: You cannot repay more than you owe.", {
             className: "custom-toast",
             position: "top-center",
@@ -698,8 +709,8 @@ const Repay = ({
                       </p>
                       <p
                         className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                           }`}
                         onClick={handleMaxClick}
                       >
@@ -738,14 +749,14 @@ const Repay = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -753,14 +764,14 @@ const Repay = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -844,12 +855,12 @@ const Repay = ({
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                      isLoading ||
-                      amount <= 0 ||
-                      supplyBalance <= 0 ||
-                      amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                     }`}
                   disabled={
                     isApproved ||
@@ -867,12 +878,12 @@ const Repay = ({
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                      isLoading ||
-                      amount <= 0 ||
-                      supplyBalance <= 0 ||
-                      amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    amount > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                     }`}
                   disabled={
                     !isApproved ||

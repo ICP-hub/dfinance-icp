@@ -26,7 +26,6 @@ const useRealTimeConversionRate = (asset) => {
         const result = await backendActor.get_cached_exchange_rate(asset);
 
         if (result?.Ok !== undefined) {
-          console.log("Conversion rate fetched vvv:", result.Ok);
           setConversionRate(result.Ok);
         } else {
           setError("Invalid response from backend actor");

@@ -1,7 +1,7 @@
 import { ChevronRight, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
-import Button from "../../components/Common/Button";
+import Button from "../../components/Common/button";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
@@ -10,11 +10,10 @@ import { trackEvent } from "../../utils/googleAnalytics";
 import useAssetData from "../../components/customHooks/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import MiniLoader from "../../components/Common/MiniLoader";
-import Lottie from "../../components/Common/Lottie";
+import MiniLoader from "../../components/Common/miniLoader";
+import Lottie from "../../components/Common/lottie";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
-const ITEMS_PER_PAGE = 8;
 
 /**
  *
@@ -29,7 +28,6 @@ const Market = () => {
    * =================================================================================== */
 
   const [Showsearch, setShowSearch] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -42,7 +40,8 @@ const Market = () => {
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-  const { filteredItems, loading ,assets,AssetImages} = useAssetData(searchQuery);
+  const { filteredItems, loading, assets, AssetImages } =
+    useAssetData(searchQuery);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -61,10 +60,7 @@ const Market = () => {
   );
 
   const { isAuthenticated, principal } = useAuth();
-  const {
-    isFreezePopupVisible,
-    setIsFreezePopupVisible,
-  } = useUserData();
+  const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const {
     totalMarketSize,
     totalSupplySize,
@@ -108,7 +104,6 @@ const Market = () => {
 
   // Function to handle the click event for the "Details" button
   const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
   };
 
@@ -142,8 +137,7 @@ const Market = () => {
     }
   };
 
-
-  // function to format value 
+  // function to format value
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -268,13 +262,13 @@ const Market = () => {
   }, [loading]);
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 
@@ -306,7 +300,8 @@ const Market = () => {
           )}
         </div>
         <svg
-          onClick={showSearchBar} data-testid="search-icon"
+          onClick={showSearchBar}
+          data-testid="search-icon"
           className="cursor-pointer button"
           width="25"
           height="25"
@@ -431,7 +426,7 @@ const Market = () => {
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
-                        {assets?.includes(item[0]) && (
+                          {assets?.includes(item[0]) && (
                             <img
                               src={AssetImages[assets?.indexOf(item[0])]}
                               alt={`${item[0]} logo`}
@@ -530,7 +525,8 @@ const Market = () => {
                           >
                             <ChevronRight
                               size={22}
-                              color={chevronColor}   data-testid="chevron-right"
+                              color={chevronColor}
+                              data-testid="chevron-right"
                               className="cursor-pointer"
                             />
                           </div>
@@ -683,7 +679,9 @@ const Market = () => {
                     <div className="flex gap-2 justify-start items-center ">
                       {assets?.includes(selectedAssetData[0]) && (
                         <img
-                          src={AssetImages[selectedAssetData[0]]} // Use the selected asset's image
+                          src={
+                            AssetImages[assets?.indexOf(selectedAssetData[0])]
+                          }
                           alt={`${selectedAssetData[0]} logo`}
                           className="w-8 h-8 rounded-full mr-2"
                         />
@@ -782,7 +780,7 @@ const Market = () => {
                   </div>
                   <div className="flex w-full justify-center">
                     <button
-                      className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
+                      className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg  shadow-xl"
                       onClick={() =>
                         handleDetailsClick(
                           selectedAssetData[0],

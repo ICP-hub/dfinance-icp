@@ -20,12 +20,12 @@ jest.mock("../../components/customHooks/useAssets", () => ({
 }));
 
 // Mock the child components
-jest.mock("../../components/Common/MiniLoader", () => ({
+jest.mock("../../components/Common/miniLoader", () => ({
   __esModule: true,
   default: () => <div data-testid="mini-loader">Loading...</div>,
 }));
 
-jest.mock("../../components/Common/Lottie", () => ({
+jest.mock("../../components/Common/lottie", () => ({
   __esModule: true,
   default: () => <div data-testid="lottie-animation">Lottie Animation</div>,
 }));
@@ -35,7 +35,7 @@ jest.mock("../../components/Common/pagination", () => ({
   default: () => <div data-testid="pagination">Pagination Component</div>,
 }));
 
-jest.mock("../../components/Liquidate/userInformation", () => ({
+jest.mock("../../components/Liquidate/UserInformation", () => ({
   __esModule: true,
   default: () => <div data-testid="user-info-popup">User Info Popup</div>,
 }));

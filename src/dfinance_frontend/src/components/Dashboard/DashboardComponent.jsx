@@ -8,8 +8,8 @@ import { useAuth } from "../../utils/useAuthClient";
 import { MY_ASSET_TO_SUPPLY_TABLE_COL } from "../../utils/constants";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import CustomizedSwitches from "../Common/MaterialUISwitch";
-import Button from "../Common/Button";
+import CustomizedSwitches from "../Common/materialUISwitch";
+import Button from "../Common/button";
 import useAssetData from "../customHooks/useAssets";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
@@ -27,14 +27,10 @@ import Borrow from "./DashboardPopup/BorrowPopup";
 import Repay from "./DashboardPopup/Repay";
 import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
 import { Check, Eye, EyeOff, Info } from "lucide-react";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
-import MiniLoader from "../Common/MiniLoader";
-import Lottie from "../Common/Lottie";
+import MiniLoader from "../Common/miniLoader";
+import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
+
 /**
  * DashboardComponent Component
  *
@@ -53,13 +49,16 @@ const DashboardComponent = () => {
   );
   const theme = useSelector((state) => state.theme.theme);
   const { principal, fetchReserveData, createLedgerActor } = useAuth();
+
   const {
     userData,
     userAccountData,
     isFreezePopupVisible,
     setIsFreezePopupVisible,
   } = useUserData();
+
   const tooltipRef = useRef(null);
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -74,6 +73,7 @@ const DashboardComponent = () => {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
+
   const {
     assets,
     AssetImages,
@@ -84,17 +84,13 @@ const DashboardComponent = () => {
     fetchAssetBorrow,
     loading: filteredDataLoading,
   } = useAssetData();
+
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const formatNumber = useFormatNumber();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
-  const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
-  const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
-  const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
-  const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
   const [valueChanged, setValueChanged] = useState(false);
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [showAllAssets, setShowAllAssets] = useState(true);
@@ -113,7 +109,9 @@ const DashboardComponent = () => {
     image: "",
     balance: "",
   });
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  // this variable for now set to false, we we might use usestate later in case of need
+  const isButtonDisabled = false;
 
   const handleModalOpen = (
     type,
@@ -161,9 +159,6 @@ const DashboardComponent = () => {
   const [isBorrowVisible, setIsBorrowVisible] = useState(true);
   const [isborrowVisible, setIsborrowVisible] = useState(true);
   const [isSupplyVisible, setIsSupplyVisible] = useState(true);
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [calculatedReserves, setCalculatedReserves] = useState([]);
-  const [totalAssetSupply, setTotalAssetSupply] = useState(0);
   const [totalAssetBorrow, setTotalAssetBorrow] = useState(0);
   const toggleBorrowTooltip = () => setIsBorrowPowerTooltipVis((prev) => !prev);
 
@@ -306,7 +301,6 @@ const DashboardComponent = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
             assetBalance.dtokenBalance = balance;
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
@@ -321,7 +315,6 @@ const DashboardComponent = () => {
           try {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
             assetBalance.debtTokenBalance = balance;
           } catch (error) {
             console.error(
@@ -353,24 +346,7 @@ const DashboardComponent = () => {
   };
 
   const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
     navigate(`/dashboard/asset-details/${asset}`, { state: { assetData } });
-  };
-
-  const formatConditional = (value) => {
-    const numericValue = parseFloat(value);
-
-    if (isNaN(numericValue)) {
-      return "0";
-    }
-
-    if (numericValue === 0) {
-      return "0";
-    } else if (numericValue >= 1) {
-      return numericValue.toFixed(2);
-    } else {
-      return numericValue.toFixed(7);
-    }
   };
 
   /**
@@ -448,8 +424,6 @@ const DashboardComponent = () => {
     const balance = balanceMap[item[0]] || 0;
     const isZeroBalance = Number(balance) === 0;
 
-
-    const assetData = balanceMap[item[0]];
     const assetRate = {
       ckBTC: { rate: ckBTCUsdRate },
       ckETH: { rate: ckETHUsdRate },
@@ -518,14 +492,26 @@ const DashboardComponent = () => {
 
     if (isFinite(usdValue) && usdValue !== 0) {
       if (usdValue < 0.01) {
-        formattedValue = `<${(0.01 / usdRate).toLocaleString(undefined, { minimumFractionDigits: 7, maximumFractionDigits: 7 })}`;
+        formattedValue = `<${(0.01 / usdRate).toLocaleString(undefined, {
+          minimumFractionDigits: 7,
+          maximumFractionDigits: 7,
+        })}`;
       } else {
         formattedValue =
           assetSupply >= 1
-            ? assetSupply.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            ? assetSupply.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
             : assetSupply >= 1e-7
-              ? assetSupply.toLocaleString(undefined, { minimumFractionDigits: 7, maximumFractionDigits: 7 })
-              : assetSupply.toLocaleString(undefined, { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+              ? assetSupply.toLocaleString(undefined, {
+                minimumFractionDigits: 7,
+                maximumFractionDigits: 7,
+              })
+              : assetSupply.toLocaleString(undefined, {
+                minimumFractionDigits: 8,
+                maximumFractionDigits: 8,
+              });
       }
     }
 
@@ -548,7 +534,10 @@ const DashboardComponent = () => {
     if (!isFinite(usdValue) || usdValue === 0) return "$0.00";
     if (usdValue < 0.01) return "<0.01$";
 
-    return `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${usdValue.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   // conditional rendering of jsx update model value for supply and borrow repay withdraw
@@ -556,27 +545,37 @@ const DashboardComponent = () => {
     const reserveData = userData?.Ok?.reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
-    const currentLiquidity =
-      userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)
-        ? userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)[1]
-          ?.liquidity_index
-        : 0;
+    const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+      (reserveGroup) => reserveGroup[0] === asset
+    )
+      ? userData?.Ok?.reserves[0]?.find(
+        (reserveGroup) => reserveGroup[0] === asset
+      )[1]?.liquidity_index
+      : 0;
 
     const assetBalance =
-      assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance || 0;
+      assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance ||
+      0;
 
+    const calculated_supply = Math.trunc(
+      (Number(assetBalance) / Number(currentLiquidity)) * 1e8
+    );
     const assetSupply =
-      (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-      (Number(currentLiquidity) * 1e8);
+      Math.trunc(
+        (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
+      ) / 1e8;
 
-    const DebtIndex =
-      userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)
-        ? userData?.Ok?.reserves[0]?.find((reserveGroup) => reserveGroup[0] === asset)[1]
-          ?.variable_borrow_index
-        : 0;
+    const DebtIndex = userData?.Ok?.reserves[0]?.find(
+      (reserveGroup) => reserveGroup[0] === asset
+    )
+      ? userData?.Ok?.reserves[0]?.find(
+        (reserveGroup) => reserveGroup[0] === asset
+      )[1]?.variable_borrow_index
+      : 0;
 
     const assetBorrowBalance =
-      assetBalances.find((balance) => balance.asset === asset)?.debtTokenBalance || 0;
+      assetBalances.find((balance) => balance.asset === asset)
+        ?.debtTokenBalance || 0;
 
     const assetBorrow =
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
@@ -586,24 +585,15 @@ const DashboardComponent = () => {
 
     const totalCollateral =
       parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
-    const totalDebt = parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
-    const item = filteredItems.find(
-      (item) => item[0] === asset
-    );
+    const totalDebt =
+      parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
+    const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
-      Number(userAccountData?.Ok?.[3]) /
-      100000000 || 0;
+      Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
     const reserveliquidationThreshold =
-      Number(
-        item?.[1]?.Ok.configuration
-          .liquidation_threshold
-      ) / 100000000;
+      Number(item?.[1]?.Ok.configuration.liquidation_threshold) / 100000000;
     const supplyRateApr =
-      (Number(
-        item?.[1]?.Ok?.current_liquidity_rate
-      ) *
-        100) /
-      100000000 || 0;
+      (Number(item?.[1]?.Ok?.current_liquidity_rate) * 100) / 100000000 || 0;
     const ckBalance =
       asset === "ckBTC"
         ? ckBTCBalance
@@ -619,16 +609,13 @@ const DashboardComponent = () => {
     const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
     const assetData = item[1].Ok;
 
-    const total_supply =
-      Number(assetData?.asset_supply || 0) /
-      100000000;
-    const total_borrow =
-      Number(assetData?.asset_borrow || 0) /
-      100000000;
+    const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
+    const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+
     const { borrowableValue, borrowableAssetValue } = calculateBorrowableValues(
       item,
       availableBorrow,
-      Number(total_supply) * 0.85 - Number(total_borrow)
+      Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
     );
     handleModalOpen(
       actionType,
@@ -649,10 +636,98 @@ const DashboardComponent = () => {
     );
   };
 
+  const filteredReserves = userData?.Ok?.reserves[0]
+    ?.filter((reserveGroup) => {
+      const asset = reserveGroup[0];
+      const assetBalance =
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.debtTokenBalance || 0;
+      return getAssetBorrowValue(reserveGroup[0]) > 0n && assetBalance > 0;
+    })
+    .map((reserveGroup, index) => {
+      const asset = reserveGroup[0];
+      const item = filteredItems.find((item) => item[0] === asset);
+      const DebtIndex = userData?.Ok?.reserves[0]?.find(
+        (reserveGroup) => reserveGroup[0] === asset
+      )?.[1]?.variable_borrow_index;
+
+      const assetBorrowBalance =
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.debtTokenBalance || 0;
+
+      const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+        (reserveGroup) => reserveGroup[0] === asset
+      )?.[1]?.liquidity_index;
+
+      const assetBalance =
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.dtokenBalance || 0;
+
+      const calculated_supply = Math.trunc(
+        (Number(assetBalance) / Number(currentLiquidity)) * 1e8
+      );
+
+      const assetSupply =
+        Math.trunc(
+          (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
+        ) / 1e8;
+
+      const assetBorrow =
+        (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
+        (Number(DebtIndex) * 1e8);
+
+      const assetData = item[1].Ok;
+      const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
+      const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+
+      const { borrowableValue, borrowableAssetValue } =
+        calculateBorrowableValues(
+          item,
+          availableBorrow,
+          Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
+        );
+
+      const ckBalance =
+        asset === "ckBTC"
+          ? ckBTCBalance
+          : asset === "ckETH"
+            ? ckETHBalance
+            : asset === "ckUSDC"
+              ? ckUSDCBalance
+              : asset === "ICP"
+                ? ckICPBalance
+                : asset === "ckUSDT"
+                  ? ckUSDTBalance
+                  : null;
+
+      const borrowRateApr =
+        (Number(item?.[1]?.Ok?.borrow_rate) * 100) / 100000000 || 0;
+
+      const liquidationThreshold =
+        Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
+
+      const reserveliquidationThreshold =
+        Number(item?.[1]?.Ok.configuration.liquidation_threshold) / 100000000 ||
+        0;
+
+      return {
+        asset,
+        item,
+        borrowableValue,
+        ckBalance,
+        borrowRateApr,
+        liquidationThreshold,
+        reserveliquidationThreshold,
+        assetSupply,
+        assetBorrow,
+        DebtIndex,
+      };
+    });
+
   // Function to calculate the debt value based on the asset and debt amount
   const getDebtValue = (asset, debtAmount) => {
     let usdRate = 0;
-  
+
     switch (asset) {
       case "ckBTC":
         usdRate = ckBTCUsdRate / 1e8;
@@ -672,12 +747,12 @@ const DashboardComponent = () => {
       default:
         return { debtFormatted: "0.00", usdFormatted: "$0.00" };
     }
-  
+
     const usdValue = debtAmount * usdRate;
-  
+
     let debtFormatted;
     let usdFormatted;
-  
+
     if (usdValue < 0.01) {
       const minAssetToEqual001 = 0.01 / usdRate;
       debtFormatted = `<${minAssetToEqual001.toLocaleString(undefined, {
@@ -686,34 +761,40 @@ const DashboardComponent = () => {
       })}`;
       usdFormatted = "<$0.01";
     } else {
-      debtFormatted = debtAmount >= 1
-        ? debtAmount.toLocaleString(undefined, {
+      debtFormatted =
+        debtAmount >= 1
+          ? debtAmount.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })
-        : debtAmount >= 1e-7
-        ? debtAmount.toLocaleString(undefined, {
-            minimumFractionDigits: 7,
-            maximumFractionDigits: 7,
-          })
-        : debtAmount.toLocaleString(undefined, {
-            minimumFractionDigits: 7,
-            maximumFractionDigits: 7,
-          });
-  
-      usdFormatted = "$" + usdValue.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+          : debtAmount >= 1e-7
+            ? debtAmount.toLocaleString(undefined, {
+              minimumFractionDigits: 7,
+              maximumFractionDigits: 7,
+            })
+            : debtAmount.toLocaleString(undefined, {
+              minimumFractionDigits: 7,
+              maximumFractionDigits: 7,
+            });
+
+      usdFormatted =
+        "$" +
+        usdValue.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
     }
-  
+
     return { debtFormatted, usdFormatted };
   };
-  
-  
 
   // Function to calculate the asset value based on the  total_supply and total_borrow
-  const calculateAssetValue = (item, total_supply, total_borrow, availableBorrow) => {
+  const calculateAssetValue = (
+    item,
+    total_supply,
+    total_borrow,
+    availableBorrow
+  ) => {
     const assetData = {
       ckBTC: { rate: ckBTCUsdRate },
       ckETH: { rate: ckETHUsdRate },
@@ -722,7 +803,8 @@ const DashboardComponent = () => {
       ckUSDT: { rate: ckUSDTUsdRate },
     }[item[0]];
 
-    if (!assetData) return { displayedAsset: "0.00000000", usdFormatted: "$0.00" };
+    if (!assetData)
+      return { displayedAsset: "0.00000000", usdFormatted: "$0.00" };
 
     const usdRate = assetData.rate / 1e8;
     const maxLendable = Number((Number(total_supply) * 0.85).toFixed(8));
@@ -745,7 +827,6 @@ const DashboardComponent = () => {
         maximumFractionDigits: 8,
       })}`;
     } else {
-      // ✅ Show 2 decimals if > 1, else 8 decimals
       displayedAsset = formattedMaxBorrow.toLocaleString(undefined, {
         minimumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
         maximumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
@@ -765,12 +846,11 @@ const DashboardComponent = () => {
     return { displayedAsset, usdFormatted };
   };
 
-
-  //sorting the items 
+  //sorting the items
   const getFilteredAndSortedItems = () => {
     return filteredItems
       .filter((item) => {
-        const reserveData = userData?.Ok?.reserves[0]?.find(
+        userData?.Ok?.reserves[0]?.find(
           (reserveGroup) => reserveGroup[0] === item[0]
         );
 
@@ -779,14 +859,15 @@ const DashboardComponent = () => {
         const total_borrow = Number(assetData.asset_borrow || 0) / 100000000;
         const availableBorrowNumber = Number(availableBorrow || 0);
 
-
         const isBorrowAvailable = availableBorrowNumber > 0.01;
 
         if (!showAllAssets) {
           const formattedTotalSupply = (total_supply * 0.85).toFixed(8);
           const formattedTotalBorrow = total_borrow.toFixed(8);
 
-          return formattedTotalSupply > formattedTotalBorrow && isBorrowAvailable;
+          return (
+            formattedTotalSupply > formattedTotalBorrow && isBorrowAvailable
+          );
         }
 
         return true;
@@ -796,13 +877,19 @@ const DashboardComponent = () => {
           const assetDataA = a[1].Ok;
           const assetDataB = b[1].Ok;
 
-          const total_supply_A = Number(assetDataA.asset_supply || 0) / 100000000;
-          const total_borrow_A = Number(assetDataA.asset_borrow || 0) / 100000000;
-          const total_supply_B = Number(assetDataB.asset_supply || 0) / 100000000;
-          const total_borrow_B = Number(assetDataB.asset_borrow || 0) / 100000000;
+          const total_supply_A =
+            Number(assetDataA.asset_supply || 0) / 100000000;
+          const total_borrow_A =
+            Number(assetDataA.asset_borrow || 0) / 100000000;
+          const total_supply_B =
+            Number(assetDataB.asset_supply || 0) / 100000000;
+          const total_borrow_B =
+            Number(assetDataB.asset_borrow || 0) / 100000000;
 
-          const isEligibleA = (total_supply_A * 0.85).toFixed(8) > total_borrow_A.toFixed(8);
-          const isEligibleB = (total_supply_B * 0.85).toFixed(8) > total_borrow_B.toFixed(8);
+          const isEligibleA =
+            (total_supply_A * 0.85).toFixed(8) > total_borrow_A.toFixed(8);
+          const isEligibleB =
+            (total_supply_B * 0.85).toFixed(8) > total_borrow_B.toFixed(8);
 
           if (isEligibleA && !isEligibleB) return -1;
           if (!isEligibleA && isEligibleB) return 1;
@@ -811,6 +898,38 @@ const DashboardComponent = () => {
         return 0;
       });
   };
+
+  const getFilteredSupplyReserves = () => {
+    if (!userData?.Ok?.reserves?.[0]?.length) return [];
+
+    return userData.Ok.reserves[0].filter((reserveGroup) => {
+      const asset = reserveGroup[0];
+
+      const assetBalance =
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.dtokenBalance || 0;
+
+      const assetSupplyValue = getAssetSupplyValue(asset);
+
+      return assetBalance > 0 && assetSupplyValue > 0n;
+    });
+  };
+  const getFilteredBorrowReserves = () => {
+    if (!userData?.Ok?.reserves?.[0]?.length) return [];
+
+    return userData.Ok.reserves[0].filter((reserveGroup) => {
+      const asset = reserveGroup[0];
+
+      const assetBalance =
+        assetBalances.find((balance) => balance.asset === asset)
+          ?.debtTokenBalance || 0;
+
+      const assetBorrowValue = getAssetBorrowValue(asset);
+
+      return assetBalance > 0 && assetBorrowValue > 0n;
+    });
+  };
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -835,7 +954,6 @@ const DashboardComponent = () => {
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           updatedAvailableBorrow = isCollateral ? borrowValue : 0;
         } else {
-
           updatedAvailableBorrow = 0;
         }
       }
@@ -884,7 +1002,6 @@ const DashboardComponent = () => {
       } catch (error) {
         console.error("Error fetching supply data:", error);
       } finally {
-
         setTimeout(() => setSupplyDataLoading(false), 1500);
       }
     };
@@ -913,60 +1030,6 @@ const DashboardComponent = () => {
       setHasLoaded(true);
     }
   }, [filteredDataLoading]);
-
-  useEffect(() => {
-    if (ckBTCBalance && ckBTCUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckBTCBalance) *
-        (ckBTCUsdRate / 1e8)
-      ).toFixed(2);
-      setCkBTCUsdBalance(balanceInUsd);
-    }
-
-    if (ckETHBalance && ckETHUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckETHBalance) *
-        (ckETHUsdRate / 1e8)
-      ).toFixed(2);
-      setCkETHUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDCBalance && ckUSDCUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckUSDCBalance) *
-        (ckUSDCUsdRate / 1e8)
-      ).toFixed(2);
-      setCkUSDCUsdBalance(balanceInUsd);
-    }
-
-    if (ckICPBalance && ckICPUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckICPBalance) *
-        (ckICPUsdRate / 1e8)
-      ).toFixed(2);
-      setCkICPUsdBalance(balanceInUsd);
-    }
-
-    if (ckUSDTBalance && ckUSDTUsdRate) {
-      const balanceInUsd = (
-        parseFloat(ckUSDTBalance) *
-        (ckUSDTUsdRate / 1e8)
-      ).toFixed(2);
-      setCkUSDTUsdBalance(balanceInUsd);
-    }
-  }, [
-    ckBTCBalance,
-    ckBTCUsdRate,
-    ckETHBalance,
-    ckETHUsdRate,
-    ckUSDCBalance,
-    ckUSDCUsdRate,
-    ckUSDTBalance,
-    ckUSDTUsdRate,
-    ckICPBalance,
-    ckICPUsdRate,
-    dashboardRefreshTrigger,
-  ]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -1005,36 +1068,32 @@ const DashboardComponent = () => {
 
   useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
-      const reservesWithCalculations = userData.Ok.reserves[0].map(
-        (reserveGroup) => {
-          const totalCollateralValue =
-            Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
-          const totalBorrowedValue =
-            Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
-          const liquidationThreshold =
-            Number(userData?.liquidation_threshold) / 100000000 || 0.8;
+      userData.Ok.reserves[0].map((reserveGroup) => {
+        const totalCollateralValue =
+          Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+        const totalBorrowedValue =
+          Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+        const liquidationThreshold =
+          Number(userData?.liquidation_threshold) / 100000000 || 0.8;
 
-          const ltv =
-            totalCollateralValue === 0
-              ? 0
-              : totalBorrowedValue / totalCollateralValue;
+        const ltv =
+          totalCollateralValue === 0
+            ? 0
+            : totalBorrowedValue / totalCollateralValue;
 
-          const healthFactor =
-            totalBorrowedValue === 0
-              ? Infinity
-              : (totalCollateralValue * liquidationThreshold) /
-              totalBorrowedValue;
+        const healthFactor =
+          totalBorrowedValue === 0
+            ? Infinity
+            : (totalCollateralValue * liquidationThreshold) /
+            totalBorrowedValue;
 
-          return {
-            ...reserveGroup,
-            ltv: ltv.toFixed(2),
-            healthFactor:
-              healthFactor === Infinity ? "∞" : healthFactor.toFixed(2),
-          };
-        }
-      );
-
-      setCalculatedReserves(reservesWithCalculations);
+        return {
+          ...reserveGroup,
+          ltv: ltv.toFixed(2),
+          healthFactor:
+            healthFactor === Infinity ? "∞" : healthFactor.toFixed(2),
+        };
+      });
     }
   }, [userData, dashboardRefreshTrigger]);
 
@@ -1049,7 +1108,6 @@ const DashboardComponent = () => {
       totalBorrow += assetBorrow;
     });
 
-    setTotalAssetSupply(totalSupply);
     setTotalAssetBorrow(totalBorrow);
   }, [dashboardRefreshTrigger]);
 
@@ -1230,8 +1288,8 @@ const DashboardComponent = () => {
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "supply"
-            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
+              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
             }`}
           onClick={() => setActiveSection("supply")}
         >
@@ -1239,8 +1297,8 @@ const DashboardComponent = () => {
         </button>
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "borrow"
-            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
+              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
             }`}
           onClick={() => setActiveSection("borrow")}
         >
@@ -1272,10 +1330,8 @@ const DashboardComponent = () => {
                       const assetBalance =
                         assetBalances.find((balance) => balance.asset === asset)
                           ?.dtokenBalance || 0;
-                      const assetSupply =
-                        (Number(assetBalance) *
-                          Number(getAssetSupplyValue(asset))) /
-                        (Number(currentLiquidity) * 1e8);
+                      const calculated_supply = Math.trunc((Number(assetBalance) / (Number(currentLiquidity))) * 1e8);
+                      const assetSupply = Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8) / 1e8;
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
@@ -1297,7 +1353,6 @@ const DashboardComponent = () => {
 
                       return null;
                     })}
-
 
                     <div className="hidden md:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
                       <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
@@ -1335,271 +1390,168 @@ const DashboardComponent = () => {
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
-                  ) : !userData?.Ok?.reserves ||
-                    !userData?.Ok?.reserves[0] ||
-                    userData?.Ok?.reserves[0].filter((reserveGroup) => {
-                      const asset = reserveGroup[0];
-                      const assetBalance = assetBalances.find(
-                        (balance) => balance.asset === asset
-                      )?.dtokenBalance;
-                      return (
-                        (assetBalance > 0 || assetBalance === undefined) &&
-                        getAssetSupplyValue(reserveGroup[0]) >= 0n
-                      ); // Check both conditions
-                    }).length === 0 ? (
+                  ) : getFilteredSupplyReserves().length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px] scrollbar-none">
                       <div className="w-full">
-                        {userData?.Ok?.reserves[0]?.length === 0
-                          ? noSupplyMessage
-                          : userData?.Ok?.reserves[0]
-                            ?.filter((reserveGroup) => {
-                              const asset = reserveGroup[0];
-                              const assetBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.dtokenBalance || 0;
-                              return (
-                                assetBalance > 0 &&
-                                getAssetSupplyValue(reserveGroup[0]) > 0n
-                              );
-                            })
-                            .map((reserveGroup, index, filteredReserves) => {
-                              const asset = reserveGroup[0];
-                              const currentLiquidity =
-                                userData?.Ok?.reserves[0]?.find(
-                                  (reserveGroup) => reserveGroup[0] === asset
-                                )?.[1]?.liquidity_index;
-                              const assetBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.dtokenBalance || 0;
-                              const assetSupply =
-                                (Number(assetBalance) *
+                        {getFilteredSupplyReserves().map(
+                          (reserveGroup, index, arr) => {
+                            const asset = reserveGroup[0];
+                            const item = filteredItems.find(
+                              (i) => i[0] === asset
+                            );
+                            const currentLiquidity =
+                              reserveGroup?.[1]?.liquidity_index;
+                            const collateralStatus =
+                              reserveGroup?.[1]?.is_collateral;
+                            const assetBalance =
+                              assetBalances.find((bal) => bal.asset === asset)
+                                ?.dtokenBalance || 0;
+                            const supplyRateApr =
+                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                                100) /
+                              100000000 || 0;
+
+                            const calculated_supply = Math.trunc(
+                              (Number(assetBalance) /
+                                Number(currentLiquidity)) *
+                              1e8
+                            );
+                            const assetSupply =
+                              Math.trunc(
+                                (calculated_supply *
                                   Number(getAssetSupplyValue(asset))) /
-                                (Number(currentLiquidity) * 1e8);
+                                1e8
+                              ) / 1e8;
 
-                              const item = filteredItems.find(
-                                (item) => item[0] === asset
-                              );
+                            const ckBalance =
+                              asset === "ckBTC"
+                                ? ckBTCBalance
+                                : asset === "ckETH"
+                                  ? ckETHBalance
+                                  : asset === "ckUSDC"
+                                    ? ckUSDCBalance
+                                    : asset === "ICP"
+                                      ? ckICPBalance
+                                      : asset === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null;
 
-                              const collateralStatus =
-                                reserveGroup[1]?.is_collateral;
+                            return (
+                              <div
+                                key={index}
+                                className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
+                              >
+                                {/* Header */}
+                                <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
+                                  {assets.includes(asset) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(asset)]}
+                                      alt={`${asset} logo`}
+                                      className="w-8 h-8 rounded-full"
+                                    />
+                                  )}
+                                  {asset}
+                                </div>
 
-                              const supplyRateApr =
-                                (Number(
-                                  item?.[1]?.Ok?.current_liquidity_rate
-                                ) *
-                                  100) /
-                                100000000 || 0;
-                              const liquidationThreshold =
-                                Number(userAccountData?.Ok?.[3]) /
-                                100000000 || 0;
-                              const reserveliquidationThreshold =
-                                Number(
-                                  item?.[1]?.Ok.configuration
-                                    .liquidation_threshold
-                                ) / 100000000;
+                                {/* Asset Supply */}
+                                <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-4 mt-6">
+                                  <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                    Asset Supply:
+                                  </p>
+                                  <div className="text-right text-[#2A1F9D] dark:text-darkText">
+                                    <p>
+                                      {formatAssetValue(asset, assetSupply)}
+                                    </p>
+                                    <p className="font-light">
+                                      {formatUsdValue(asset, assetSupply)}
+                                    </p>
+                                  </div>
+                                </div>
 
-                              const ckBalance =
-                                asset === "ckBTC"
-                                  ? ckBTCBalance
-                                  : asset === "ckETH"
-                                    ? ckETHBalance
-                                    : asset === "ckUSDC"
-                                      ? ckUSDCBalance
-                                      : asset === "ICP"
-                                        ? ckICPBalance
-                                        : asset === "ckUSDT"
-                                          ? ckUSDTBalance
-                                          : null;
-
-                              return (
-                                <div
-                                  key={index}
-                                  className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
-                                >
-                                  { }
-                                  <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                    {assets.includes(asset) && (
-                                      <img
-                                        src={AssetImages[assets.indexOf(asset)]}
-                                        alt={`${asset} logo`}
-                                        className="w-8 h-8 rounded-full"
+                                {/* APY */}
+                                <div className="flex justify-between text-xs font-semibold">
+                                  <div className="flex relative group">
+                                    <p className="dark:text-darkText dark:opacity-50">
+                                      APY:
+                                    </p>
+                                    <span className="relative cursor-pointer group inline-flex ml-1">
+                                      <Info
+                                        size={14}
+                                        className="dark:text-darkText dark:opacity-50"
                                       />
-                                    )}
-                                    {asset}
+                                      <div className="absolute left-[85px] bottom-full mb-2 w-[15rem] bg-[#fcfafa] dark:bg-darkOverlayBackground dark:text-darkText px-4 py-2 rounded-xl shadow-xl text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        The supply rate APY may vary based on
+                                        utilization levels and incentive
+                                        structures.
+                                      </div>
+                                    </span>
                                   </div>
+                                  <p className="text-right dark:text-darkText mb-4">
+                                    {supplyRateApr < 0.01
+                                      ? "<0.01%"
+                                      : `${supplyRateApr.toFixed(2)}%`}
+                                  </p>
+                                </div>
 
-                                  <div className="flex justify-between text-xs text-[#233D63] font-semibold mb-4 mt-6">
-                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                      Asset Supply:
-                                    </p>
-                                    <div className="text-right text-[#2A1F9D] dark:text-darkText">
-                                      <p className="text-[#2A1F9D] dark:text-darkText">
-                                        {formatAssetValue(asset, assetSupply)}
-                                      </p>
-                                      <p className="font-light text-[#2A1F9D] dark:text-darkText">
-                                        {formatUsdValue(asset, assetSupply)}
-                                      </p>
-                                    </div>
+                                {/* Collateral Toggle */}
+                                <div className="flex justify-between text-xs font-semibold mt-3 mb-4">
+                                  <p className="dark:text-darkText dark:opacity-50">
+                                    Collateral
+                                  </p>
+                                  <div className="-mr-6 -mt-3">
+                                    <CustomizedSwitches
+                                      checked={collateralStatus}
+                                      onChange={() =>
+                                        handleAssetAction("collateral", item[0])
+                                      }
+                                    />
                                   </div>
+                                </div>
 
-                                  <div className="flex justify-between text-xs text-[#233D63] font-semibold">
-                                    <div className="flex relative group">
-                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
-                                        APY:
-                                      </p>
-                                      <span className="relative cursor-pointer">
-                                        <span className="group inline-flex ml-1">
-                                          <Info
-                                            size={14}
-                                            className="text-[#233D63] dark:text-darkText dark:opacity-50"
-                                          />
-                                          <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
-                                            The supply rate APY may vary based
-                                            on utilization levels and
-                                            incentive structures.
-                                          </div>
-                                        </span>
-                                      </span>
-                                    </div>
-                                    <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                      {supplyRateApr < 0.01
-                                        ? "<0.01%"
-                                        : `${supplyRateApr.toFixed(2)}%`}
-                                    </p>
-                                  </div>
-
-                                  { }
-                                  <div className="flex justify-between text-xs text-[#233D63] font-semibold mt-3 mb-4">
-                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                      Collateral
-                                    </p>
-                                    <div className="-mr-6 -mt-3">
-                                      <CustomizedSwitches
-                                        checked={collateralStatus}
-                                        onChange={() => {
-                                          const reserveData =
-                                            userData?.Ok?.reserves[0]?.find(
-                                              (reserveGroup) =>
-                                                reserveGroup[0] === item[0]
-                                            );
-                                          const currentLiquidity =
-                                            userData?.Ok?.reserves[0]?.find(
-                                              (reserveGroup) =>
-                                                reserveGroup[0] === item[0]
-                                            )?.[1]?.liquidity_index;
-                                          const assetBalance =
-                                            assetBalances.find(
-                                              (balance) =>
-                                                balance.asset === item[0]
-                                            )?.dtokenBalance || 0;
-
-                                          const assetSupply =
-                                            (Number(assetBalance) *
-                                              Number(
-                                                getAssetSupplyValue(asset)
-                                              )) /
-                                            (Number(currentLiquidity) * 1e8);
-
-                                          const DebtIndex =
-                                            userData?.Ok?.reserves[0]?.find(
-                                              (reserveGroup) =>
-                                                reserveGroup[0] === item[0]
-                                            )?.[1]?.variable_borrow_index;
-
-                                          const assetBorrowBalance =
-                                            assetBalances.find(
-                                              (balance) =>
-                                                balance.asset === item[0]
-                                            )?.debtTokenBalance || 0;
-
-                                          const assetBorrow =
-                                            (Number(assetBorrowBalance) *
-                                              Number(
-                                                getAssetBorrowValue(item[0])
-                                              )) /
-                                            (Number(DebtIndex) * 1e8);
-
-                                          const currentCollateralStatus =
-                                            reserveData?.[1]?.is_collateral;
-
-                                          const totalCollateral =
-                                            parseFloat(
-                                              Number(
-                                                userAccountData?.Ok?.[0]
-                                              ) / 100000000
-                                            ) || 0;
-                                          const totalDebt =
-                                            parseFloat(
-                                              Number(
-                                                userAccountData?.Ok?.[1]
-                                              ) / 100000000
-                                            ) || 0;
-                                          handleModalOpen(
-                                            "collateral",
-                                            asset,
-                                            AssetImages[assets.indexOf(asset)],
-                                            supplyRateApr,
-                                            ckBalance,
-                                            liquidationThreshold,
-                                            reserveliquidationThreshold,
-                                            assetSupply,
-                                            assetBorrow,
-                                            totalCollateral,
-                                            totalDebt,
-                                            currentCollateralStatus
-                                          );
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  { }
-                                  <div className="flex justify-between gap-4">
-                                    <Button
-                                      title={"Supply"}
-                                      onClickHandler={() => {
-                                        fetchAssetSupply(asset);
-                                        if (ckBalance === 0) {
-                                          toast.dismiss();
-                                          toast.info(`You cannot supply because your balance is 0.`, {
+                                {/* Buttons */}
+                                <div className="flex justify-between gap-4">
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() => {
+                                      fetchAssetSupply(asset);
+                                      if (ckBalance === 0) {
+                                        toast.dismiss();
+                                        toast.info(
+                                          `You cannot supply because your balance is 0.`,
+                                          {
                                             className: "custom-toast",
                                             position: "top-center",
                                             autoClose: 3000,
-                                            hideProgressBar: false,
-                                            closeOnClick: true,
-                                            pauseOnHover: true,
-                                            draggable: true,
-                                            progress: undefined,
-                                          });
-                                          return;
-                                        }
-                                        handleAssetAction("supply", asset);
-                                      }}
-                                      disabled={ckBalance === 0}
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-                                    />
+                                          }
+                                        );
+                                        return;
+                                      }
+                                      handleAssetAction("supply", asset);
+                                    }}
+                                    disabled={ckBalance === 0}
+                                    className="bg-gradient-to-tr from-[#4659CF] via-[#D379AB] to-[#FCBD78] text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                  />
 
-
-                                    <Button
-                                      title={"Withdraw"}
-                                      onClickHandler={() => {
-                                        fetchAssetSupply(asset);
-                                        handleAssetAction("withdraw", asset);
-                                      }}
-                                      className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                                    />
-                                  </div>
-
-                                  {index !== filteredReserves.length - 1 && (
-                                    <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                                  )}
+                                  <Button
+                                    title={"Withdraw"}
+                                    onClickHandler={() => {
+                                      fetchAssetSupply(asset);
+                                      handleAssetAction("withdraw", asset);
+                                    }}
+                                    className="box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                  />
                                 </div>
-                              );
-                            })}
+
+                                {/* Divider */}
+                                {index !== arr.length - 1 && (
+                                  <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                                )}
+                              </div>
+                            );
+                          }
+                        )}
                       </div>
                     </div>
                   )}
@@ -1607,7 +1559,6 @@ const DashboardComponent = () => {
               )}
             </div>
 
-            { }
             <div className="hidden xl:block">
               {isSupplyVisible && (
                 <>
@@ -1615,240 +1566,131 @@ const DashboardComponent = () => {
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
-                  ) : !userData?.Ok?.reserves ||
-                    !userData?.Ok?.reserves[0] ||
-                    userData?.Ok?.reserves[0].filter((reserveGroup) => {
-                      const asset = reserveGroup[0];
-                      const assetBalance = assetBalances.find(
-                        (balance) => balance.asset === asset
-                      )?.dtokenBalance;
-                      return (
-                        (assetBalance > 0 || assetBalance === undefined) &&
-                        getAssetSupplyValue(reserveGroup[0]) > 0n
-                      );
-                    }).length === 0 ? (
+                  ) : getFilteredSupplyReserves().length === 0 ? (
                     noSupplyMessage
                   ) : (
                     <div className="w-full h-auto mt-4 relative">
-                      { }
                       <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
-                        { }
-                        {userData?.Ok?.reserves[0]?.some((reserveGroup) => {
-                          const asset = reserveGroup[0];
-                          const assetBalance =
-                            assetBalances.find(
-                              (balance) => balance.asset === asset
-                            )?.dtokenBalance || 0;
-                          return (
-                            assetBalance > 0 &&
-                            getAssetSupplyValue(reserveGroup[0]) > 0n
-                          );
-                        }) && (
-                            <div className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-3 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500] mt-2">
-                              <div className="p-3 pl-4 inline-flex">Asset</div>
-                              <div className="p-3 inline-flex -ml-1">
-                                Asset Supply
-                              </div>
-                              <div className="p-3 inline-flex relative gap-1 -ml-2">
-                                <span>APY</span>
-                                <span className="relative cursor-pointer">
-                                  <span className="group inline-flex">
-                                    <Info size={14} />
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[20vw] pointer-events-none">
-                                      The supply rate APY may vary based on
-                                      utilization levels and incentive structures.
-                                    </div>
-                                  </span>
-                                </span>
-                              </div>
-                              <div className="p-3 inline-flex text-nowrap">
-                                Is Collateral
-                              </div>
-                              <div className="p-3 inline-flex"></div>
-                            </div>
-                          )}
+                        {/* Column headers */}
+                        <div className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-3 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500] mt-2">
+                          <div className="p-3 pl-4 inline-flex">Asset</div>
+                          <div className="p-3 inline-flex -ml-1">
+                            Asset Supply
+                          </div>
+                          <div className="p-3 inline-flex relative gap-1 -ml-2">
+                            <span>APY</span>
+                            <span className="relative cursor-pointer">
+                              <span className="group inline-flex">
+                                <Info size={14} />
+                                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs  w-[20vw] pointer-events-none">
+                                  The supply rate APY may vary based on
+                                  utilization levels and incentive structures.
+                                </div>
+                              </span>
+                            </span>
+                          </div>
+                          <div className="p-3 inline-flex text-nowrap">
+                            Is Collateral
+                          </div>
+                          <div className="p-3 inline-flex"></div>
+                        </div>
 
+                        {/* List of filtered reserves */}
+                        {getFilteredSupplyReserves().map(
+                          (reserveGroup, index) => {
+                            const asset = reserveGroup[0];
+                            const currentLiquidity =
+                              userData?.Ok?.reserves[0]?.find(
+                                (reserveGroup) => reserveGroup[0] === asset
+                              )?.[1]?.liquidity_index;
+                            const assetBalance =
+                              assetBalances.find(
+                                (balance) => balance.asset === asset
+                              )?.dtokenBalance || 0;
 
-                        {userData?.Ok?.reserves[0]?.length === 0
-                          ? noSupplyMessage
-                          : userData?.Ok?.reserves[0]
-                            ?.filter((reserveGroup) => {
-                              const asset = reserveGroup[0];
-                              const assetBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.dtokenBalance || 0;
-                              return (
-                                assetBalance > 0 &&
-                                getAssetSupplyValue(reserveGroup[0]) > 0n
-                              );
-                            })
-                            .map((reserveGroup, index, filteredReserves) => {
-                              const asset = reserveGroup[0];
-                              const currentLiquidity =
-                                userData?.Ok?.reserves[0]?.find(
-                                  (reserveGroup) => reserveGroup[0] === asset
-                                )?.[1]?.liquidity_index;
-                              const assetBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.dtokenBalance || 0;
-
-                              const assetSupply =
-                                (Number(assetBalance) *
+                            const calculated_supply = Math.trunc(
+                              (Number(assetBalance) /
+                                Number(currentLiquidity)) *
+                              1e8
+                            );
+                            const assetSupply =
+                              Math.trunc(
+                                (calculated_supply *
                                   Number(getAssetSupplyValue(asset))) /
-                                (Number(currentLiquidity) * 1e8);
+                                1e8
+                              ) / 1e8;
+                            const item = filteredItems.find(
+                              (item) => item[0] === asset
+                            );
+                            const collateralStatus =
+                              reserveGroup[1]?.is_collateral;
+                            const supplyRateApr =
+                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                                100) /
+                              100000000 || 0;
+                            const ckBalance =
+                              asset === "ckBTC"
+                                ? ckBTCBalance
+                                : asset === "ckETH"
+                                  ? ckETHBalance
+                                  : asset === "ckUSDC"
+                                    ? ckUSDCBalance
+                                    : asset === "ICP"
+                                      ? ckICPBalance
+                                      : asset === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null;
 
-                              const item = filteredItems.find(
-                                (item) => item[0] === asset
-                              );
-
-                              const collateralStatus =
-                                reserveGroup[1]?.is_collateral;
-                              const supplyRateApr =
-                                (Number(
-                                  item?.[1]?.Ok?.current_liquidity_rate
-                                ) *
-                                  100) /
-                                100000000 || 0;
-                              const liquidationThreshold =
-                                Number(userAccountData?.Ok?.[3]) /
-                                100000000 || 0;
-                              const reserveliquidationThreshold =
-                                Number(
-                                  item?.[1]?.Ok.configuration
-                                    .liquidation_threshold
-                                ) / 100000000 || 0;
-
-                              const ckBalance =
-                                asset === "ckBTC"
-                                  ? ckBTCBalance
-                                  : asset === "ckETH"
-                                    ? ckETHBalance
-                                    : asset === "ckUSDC"
-                                      ? ckUSDCBalance
-                                      : asset === "ICP"
-                                        ? ckICPBalance
-                                        : asset === "ckUSDT"
-                                          ? ckUSDTBalance
-                                          : null;
-
-                              return (
-                                <div
-                                  key={index}
-                                  className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs"
-                                >
-                                  <div className="p-3 pl-4 align-top flex items-center gap-2">
-                                    {assets.includes(asset) && (
-                                      <img
-                                        src={AssetImages[assets.indexOf(asset)]}
-                                        alt={`${asset} logo`}
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset}
-                                  </div>
-
-                                  <div className="p-3 align-top flex flex-col">
-
-                                    <p className="text-left min-w-[60px] text-[#2A1F9D] dark:text-darkText">
-                                      {formatAssetValue(asset, assetSupply)}
-                                    </p>
-                                    <p className="text-left min-w-[60px] text-[#2A1F9D] dark:text-darkText font-light">
-                                      {formatUsdValue(asset, assetSupply)}
-                                    </p>
-                                  </div>
-
-                                  <div className=" p-3  align-top text-left min-w-[60px] ">
-                                    {supplyRateApr < 0.01
-                                      ? "<0.01%"
-                                      : `${supplyRateApr.toFixed(2)}%`}
-                                  </div>
-
-                                  <div className="align-top flex items-center ml-0 mr-0 lg:ml-6 lg:-mr-7">
-                                    <CustomizedSwitches
-                                      checked={collateralStatus}
-                                      onChange={() => {
-                                        const reserveData =
-                                          userData?.Ok?.reserves[0]?.find(
-                                            (reserveGroup) =>
-                                              reserveGroup[0] === item[0]
-                                          );
-                                        const currentLiquidity =
-                                          userData?.Ok?.reserves[0]?.find(
-                                            (reserveGroup) =>
-                                              reserveGroup[0] === asset
-                                          )?.[1]?.liquidity_index;
-                                        const assetBalance =
-                                          assetBalances.find(
-                                            (balance) =>
-                                              balance.asset === asset
-                                          )?.dtokenBalance || 0;
-
-                                        const assetSupply =
-                                          (Number(assetBalance) *
-                                            Number(
-                                              getAssetSupplyValue(asset)
-                                            )) /
-                                          (Number(currentLiquidity) * 1e8);
-                                        const DebtIndex =
-                                          userData?.Ok?.reserves[0]?.find(
-                                            (reserveGroup) =>
-                                              reserveGroup[0] === asset
-                                          )?.[1]?.variable_borrow_index;
-
-                                        const assetBorrowBalance =
-                                          assetBalances.find(
-                                            (balance) =>
-                                              balance.asset === asset
-                                          )?.debtTokenBalance || 0;
-
-                                        const assetBorrow =
-                                          (Number(assetBorrowBalance) *
-                                            Number(
-                                              getAssetBorrowValue(asset)
-                                            )) /
-                                          (Number(DebtIndex) * 1e8);
-                                        const currentCollateralStatus =
-                                          reserveData?.[1]?.is_collateral;
-                                        const totalCollateral =
-                                          parseFloat(
-                                            Number(userAccountData?.Ok?.[0]) /
-                                            100000000
-                                          ) || 0;
-                                        const totalDebt =
-                                          parseFloat(
-                                            Number(userAccountData?.Ok?.[1]) /
-                                            100000000
-                                          ) || 0;
-
-                                        handleModalOpen(
-                                          "collateral",
-                                          asset,
-                                          AssetImages[assets.indexOf(asset)],
-                                          supplyRateApr,
-                                          ckBalance,
-                                          liquidationThreshold,
-                                          reserveliquidationThreshold,
-                                          assetSupply,
-                                          assetBorrow,
-                                          totalCollateral,
-                                          totalDebt,
-                                          currentCollateralStatus
-                                        );
-                                      }}
+                            return (
+                              <div
+                                key={index}
+                                className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs"
+                              >
+                                <div className="p-3 pl-4 align-top flex items-center gap-2">
+                                  {assets.includes(asset) && (
+                                    <img
+                                      src={AssetImages[assets.indexOf(asset)]}
+                                      alt={`${asset} logo`}
+                                      className="w-8 h-8 rounded-full"
                                     />
-                                  </div>
+                                  )}
+                                  {asset}
+                                </div>
 
-                                  <div className="p-3 align-top flex gap-2 pt-2">
+                                <div className="p-3 align-top flex flex-col">
+                                  <p className="text-left min-w-[60px] text-[#2A1F9D] dark:text-darkText">
+                                    {formatAssetValue(asset, assetSupply)}
+                                  </p>
+                                  <p className="text-left min-w-[60px] text-[#2A1F9D] dark:text-darkText font-light">
+                                    {formatUsdValue(asset, assetSupply)}
+                                  </p>
+                                </div>
 
-                                    <Button
-                                      title={"Supply"}
-                                      onClickHandler={() => {
-                                        fetchAssetSupply(asset);
-                                        if (ckBalance === 0) {
-                                          toast.dismiss()
-                                          toast.info(`You cannot supply because your balance is 0.`, {
+                                <div className="p-3 align-top text-left min-w-[60px]">
+                                  {supplyRateApr < 0.01
+                                    ? "<0.01%"
+                                    : `${supplyRateApr.toFixed(2)}%`}
+                                </div>
+
+                                <div className="align-top flex items-center ml-0 mr-0 lg:ml-6 lg:-mr-7">
+                                  <CustomizedSwitches
+                                    checked={collateralStatus}
+                                    onChange={() =>
+                                      handleAssetAction("collateral", item[0])
+                                    }
+                                  />
+                                </div>
+
+                                <div className="p-3 align-top flex gap-2 pt-2">
+                                  <Button
+                                    title={"Supply"}
+                                    onClickHandler={() => {
+                                      fetchAssetSupply(asset);
+                                      if (ckBalance === 0) {
+                                        toast.dismiss();
+                                        toast.info(
+                                          `You cannot supply because your balance is 0.`,
+                                          {
                                             className: "custom-toast",
                                             position: "top-center",
                                             autoClose: 3000,
@@ -1857,29 +1699,29 @@ const DashboardComponent = () => {
                                             pauseOnHover: true,
                                             draggable: true,
                                             progress: undefined,
-                                          });
-                                          return;
-                                        }
-                                        handleAssetAction("supply", asset);
-                                      }}
-                                      disabled={ckBalance === 0}
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
-                                    />
+                                          }
+                                        );
+                                        return;
+                                      }
+                                      handleAssetAction("supply", asset);
+                                    }}
+                                    disabled={ckBalance === 0}
+                                    className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
+                                  />
 
-
-                                    <Button
-                                      title={"Withdraw"}
-                                      onClickHandler={() => {
-                                        fetchAssetSupply(asset);
-                                        handleAssetAction("withdraw", asset);
-                                      }}
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
-                                    />
-                                  </div>
-
+                                  <Button
+                                    title={"Withdraw"}
+                                    onClickHandler={() => {
+                                      fetchAssetSupply(asset);
+                                      handleAssetAction("withdraw", asset);
+                                    }}
+                                    className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                  />
                                 </div>
-                              );
-                            })}
+                              </div>
+                            );
+                          }
+                        )}
                       </div>
                     </div>
                   )}
@@ -1961,13 +1803,23 @@ const DashboardComponent = () => {
                     noAssetsToSupplyMessage
                   ) : (
                     <div className="relative mt-4 max-h-[2250px] scrollbar-none">
-
                       <div className="w-full">
                         {sortedItems.map(
-                          ({ item, isZeroBalance, displayedBalance, calculatedUsdValue, apy }, index) => (
+                          (
+                            {
+                              item,
+                              isZeroBalance,
+                              displayedBalance,
+                              calculatedUsdValue,
+                              apy,
+                            },
+                            index
+                          ) => (
                             <div
                               key={index}
-                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isZeroBalance ? "opacity-50 pointer-events-none" : ""
+                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isZeroBalance
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
                                 }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
@@ -1998,10 +1850,13 @@ const DashboardComponent = () => {
                                     ? "$0.00"
                                     : calculatedUsdValue < 0.01
                                       ? "<0.01$"
-                                      : `$${calculatedUsdValue.toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      })}`}
+                                      : `$${calculatedUsdValue.toLocaleString(
+                                        undefined,
+                                        {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        }
+                                      )}`}
                                 </p>
                               </div>
 
@@ -2017,12 +1872,16 @@ const DashboardComponent = () => {
                                         className="text-[#233D63] dark:text-darkText dark:opacity-50"
                                       />
                                       <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
-                                        The supply rate APY may vary based on utilization levels and incentive structures.
+                                        The supply rate APY may vary based on
+                                        utilization levels and incentive
+                                        structures.
                                       </div>
                                     </span>
                                   </span>
                                 </div>
-                                <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">{apy}</p>
+                                <p className="text-right text-[#2A1F9D] mb-2 dark:text-darkText">
+                                  {apy}
+                                </p>
                               </div>
 
                               <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-4 mb-4">
@@ -2042,7 +1901,6 @@ const DashboardComponent = () => {
 
                                     handleAssetAction("supply", item[0]);
                                   }}
-
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
                                 <Button
@@ -2082,19 +1940,24 @@ const DashboardComponent = () => {
                       <div className="w-full z-10">
                         <div className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 font-[500]">
                           <div className="p-5 pl-4 inline-flex">Asset</div>
-                          <div className="p-5 inline-flex -ml-2">Wallet Balance</div>
+                          <div className="p-5 inline-flex -ml-2">
+                            Wallet Balance
+                          </div>
                           <div className="p-5 inline-flex gap-1 -ml-3">
                             <span>APY</span>
                             <span className="relative cursor-pointer">
                               <span className="group inline-flex ml-1">
                                 <Info size={14} />
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none">
-                                  The supply rate APY may vary based on utilization levels and incentive structures.
+                                  The supply rate APY may vary based on
+                                  utilization levels and incentive structures.
                                 </div>
                               </span>
                             </span>
                           </div>
-                          <div className="p-5 inline-flex -ml-2">Can be Collateral</div>
+                          <div className="p-5 inline-flex -ml-2">
+                            Can be Collateral
+                          </div>
                           <div className="p-5 inline-flex"></div>
                         </div>
                       </div>
@@ -2102,19 +1965,24 @@ const DashboardComponent = () => {
                       <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                         <div className="grid gap-2 text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText">
                           {sortedItems.map(
-                            ({
-                              item,
-                              isZeroBalance,
-                              displayedBalance,
-                              calculatedUsdValue,
-                              apy,
-                            }, index) => (
+                            (
+                              {
+                                item,
+                                isZeroBalance,
+                                displayedBalance,
+                                calculatedUsdValue,
+                                apy,
+                              },
+                              index
+                            ) => (
                               <div
                                 key={index}
-                                className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs ${isZeroBalance ? "opacity-50 pointer-events-none" : ""}`}
+                                className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs ${isZeroBalance
+                                    ? "opacity-50 pointer-events-none"
+                                    : ""
+                                  }`}
                               >
                                 <div className="p-3 pl-4 align-top flex items-center gap-2">
-
                                   {assets.includes(item[0]) && (
                                     <img
                                       src={AssetImages[assets.indexOf(item[0])]}
@@ -2132,14 +2000,19 @@ const DashboardComponent = () => {
                                       ? "$0.00"
                                       : calculatedUsdValue < 0.01
                                         ? "<0.01$"
-                                        : `$${calculatedUsdValue.toLocaleString(undefined, {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })}`}
+                                        : `$${calculatedUsdValue.toLocaleString(
+                                          undefined,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )}`}
                                   </p>
                                 </div>
 
-                                <div className="align-top text-left min-w-[50px] ml-2">{apy}</div>
+                                <div className="align-top text-left min-w-[50px] ml-2">
+                                  {apy}
+                                </div>
 
                                 <div className="p-3 -ml-5 align-top flex items-center justify-center dark:text-darkText">
                                   <Check color={checkColor} size={16} />
@@ -2153,12 +2026,13 @@ const DashboardComponent = () => {
 
                                       handleAssetAction("supply", item[0]);
                                     }}
-
                                     className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] text-white shadow-md shadow-[#00000040] rounded-md px-3 py-1.5 font-semibold text-xs"
                                   />
                                   <Button
                                     title={"Details"}
-                                    onClickHandler={() => handleDetailsClick(item[0], item[1])}
+                                    onClickHandler={() =>
+                                      handleDetailsClick(item[0], item[1])
+                                    }
                                     className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
                                   />
                                 </div>
@@ -2229,7 +2103,6 @@ const DashboardComponent = () => {
 
                       return null;
                     })}
-
 
                     <div className="flex gap-2">
                       <div className="hidden dxl:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 place-content-center rounded-md">
@@ -2364,190 +2237,154 @@ const DashboardComponent = () => {
                     </div>
                   ) : !userData?.Ok?.reserves ||
                     !userData?.Ok?.reserves[0] ||
-                    userData?.Ok?.reserves[0].filter((reserveGroup) => {
-                      const asset = reserveGroup[0];
-                      const assetBalance = assetBalances.find(
-                        (balance) => balance.asset === asset
-                      )?.debtTokenBalance;
-                      return (
-                        (assetBalance > 0 || assetBalance === undefined) &&
-                        getAssetBorrowValue(reserveGroup[0]) > 0n
-                      ); // Check both conditions
-                    }).length === 0 ? (
-                    noBorrowMessage
+                    getFilteredBorrowReserves().length === 0 ? (
+                    <div className="text-center text-gray-500">
+                      {noBorrowMessage}
+                    </div>
                   ) : (
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
                         <div className="w-full">
-                          { }
+                          {/* Loop through and display filtered borrowable reserves */}
+                          {getFilteredBorrowReserves().map(
+                            (reserveGroup, index) => {
+                              const asset = reserveGroup[0];
 
-                          {userData?.Ok?.reserves[0]?.length === 0
-                            ? noBorrowMessage
-                            : userData?.Ok?.reserves[0]
-                              ?.filter((reserveGroup) => {
-                                const asset = reserveGroup[0];
-                                const assetBalance =
-                                  assetBalances.find(
-                                    (balance) => balance.asset === asset
-                                  )?.debtTokenBalance || 0;
-                                return (
-                                  getAssetBorrowValue(reserveGroup[0]) > 0n &&
-                                  assetBalance > 0
-                                );
-                              })
-                              .map((reserveGroup, index) => {
-                                const asset = reserveGroup[0];
-                                const DebtIndex =
-                                  userData?.Ok?.reserves[0]?.find(
-                                    (reserveGroup) =>
-                                      reserveGroup[0] === asset
-                                  )?.[1]?.variable_borrow_index;
+                              const DebtIndex = userData?.Ok?.reserves[0]?.find(
+                                (reserveGroup) => reserveGroup[0] === asset
+                              )?.[1]?.variable_borrow_index;
 
-                                const assetBorrowBalance =
-                                  assetBalances.find(
-                                    (balance) => balance.asset === asset
-                                  )?.debtTokenBalance || 0;
+                              const assetBorrowBalance =
+                                assetBalances.find(
+                                  (balance) => balance.asset === asset
+                                )?.debtTokenBalance || 0;
+                              const assetBorrow =
+                                (Number(assetBorrowBalance) *
+                                  Number(getAssetBorrowValue(asset))) /
+                                (Number(DebtIndex) * 1e8);
 
-                                const currentLiquidity =
-                                  userData?.Ok?.reserves[0]?.find(
-                                    (reserveGroup) =>
-                                      reserveGroup[0] === asset
-                                  )?.[1]?.liquidity_index;
-                                const assetBalance =
-                                  assetBalances.find(
-                                    (balance) => balance.asset === asset
-                                  )?.dtokenBalance || 0;
+                              const item = filteredItems.find(
+                                (item) => item[0] === asset
+                              );
 
-                                const assetSupply =
-                                  (Number(assetBalance) *
-                                    Number(getAssetSupplyValue(asset))) /
-                                  (Number(currentLiquidity) * 1e8);
+                              const assetData = item[1].Ok;
 
-                                const assetBorrow =
-                                  (Number(assetBorrowBalance) *
-                                    Number(getAssetBorrowValue(asset))) /
-                                  (Number(DebtIndex) * 1e8);
+                              const total_supply =
+                                Number(assetData?.asset_supply || 0) /
+                                100000000;
+                              const total_borrow =
+                                Number(assetData?.asset_borrow || 0) /
+                                100000000;
 
-                                const item = filteredItems.find(
-                                  (item) => item[0] === asset
+                              const { borrowableValue, borrowableAssetValue } =
+                                calculateBorrowableValues(
+                                  item,
+                                  availableBorrow,
+                                  Number((total_supply * 0.85).toFixed(8)) -
+                                  Number(total_borrow)
                                 );
 
-                                const assetData = item[1].Ok;
+                              const ckBalance =
+                                asset === "ckBTC"
+                                  ? ckBTCBalance
+                                  : asset === "ckETH"
+                                    ? ckETHBalance
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : asset === "ICP"
+                                        ? ckICPBalance
+                                        : asset === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null;
 
-                                const total_supply =
-                                  Number(assetData?.asset_supply || 0) /
-                                  100000000;
-                                const total_borrow =
-                                  Number(assetData?.asset_borrow || 0) /
-                                  100000000;
+                              const borrowRateApr =
+                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                                100000000 || 0;
 
-                                const ckBalance =
-                                  asset === "ckBTC"
-                                    ? ckBTCBalance
-                                    : asset === "ckETH"
-                                      ? ckETHBalance
-                                      : asset === "ckUSDC"
-                                        ? ckUSDCBalance
-                                        : asset === "ICP"
-                                          ? ckICPBalance
-                                          : asset === "ckUSDT"
-                                            ? ckUSDTBalance
-                                            : null;
-
-                                const borrowRateApr =
-                                  (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
-                                  100000000 || 0;
-                                const liquidationThreshold =
-                                  Number(userAccountData?.Ok?.[3]) /
-                                  100000000 || 0;
-                                const reserveliquidationThreshold =
-                                  Number(
-                                    item?.[1]?.Ok.configuration
-                                      .liquidation_threshold
-                                  ) / 100000000 || 0;
-
-                                return (
-                                  <div
-                                    key={index}
-                                    className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
-                                  >
-                                    <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                      { }
-                                      {assets.includes(asset) && (
-                                        <img
-                                          src={AssetImages[assets.indexOf(asset)]}
-                                          alt={`${asset} logo`}
-                                          className="w-8 h-8 rounded-full"
-                                        />
-                                      )}
-                                      {asset}
-                                    </div>
-                                    <div className="flex justify-between gap-4">
-                                      <div className="text-[#233D63] text-xs font-semibold mt-3 mb-4 w-1/3">
-                                        <p className="text-[#233D63] dark:text-darkText dark:opacity-50 mb-1 ">
-                                          Debt
-                                        </p>
-                                      </div>
-                                      <div className="flex flex-col text-right text-[#2A1F9D] dark:text-darkText w-2/3 text-xs font-semibold mt-3">
-
-                                        {(() => {
-                                          const { debtFormatted, usdFormatted } = getDebtValue(item[0], assetBorrow);
-                                          return (
-                                            <>
-                                              <p className="text-[#2A1F9D] dark:text-darkText">{debtFormatted}</p>
-                                              <p className="font-light text-[#2A1F9D] dark:text-darkText">{usdFormatted}</p>
-                                            </>
-                                          );
-                                        })()}
-                                      </div>
-                                    </div>
-                                    <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
-                                      <div className="flex items-center relative group">
-                                        <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
-                                          APY:
-                                        </p>
-                                        <span className="relative cursor-pointer">
-                                          <span className="group inline-flex ml-1">
-                                            <Info
-                                              size={14}
-                                              className="text-[#233D63] dark:text-darkText dark:opacity-50"
-                                            />
-                                            <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
-                                              The variable borrow interest
-                                              rate may change over time,
-                                              influenced by market trends and
-                                              conditions.
-                                            </div>
-                                          </span>
-                                        </span>
-                                      </div>
-                                      <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                        {borrowRateApr < 0.01
-                                          ? "<0.01%"
-                                          : `${borrowRateApr.toFixed(2)}%`}
-                                      </p>
-                                    </div>
-                                    <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
-                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                        APY Type:
-                                      </p>
-                                      <p className="text-right text-white bg-[#79779a] px-4 border border-white rounded-lg p-2 dark:text-darkText">
-                                        variable
-                                      </p>
-                                    </div>
-                                    <div className="flex justify-between gap-4 mt-4">
-                                      <Button
-                                        title={"Borrow"}
-                                        onClickHandler={() => handleAssetAction("borrow", item[0])}
-                                        disabled={isTableDisabled || isButtonDisabled}
-                                        className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                              return (
+                                <div
+                                  key={index}
+                                  className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
+                                >
+                                  <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
+                                    {assets.includes(asset) && (
+                                      <img
+                                        src={AssetImages[assets.indexOf(asset)]}
+                                        alt={`${asset} logo`}
+                                        className="w-8 h-8 rounded-full"
                                       />
-                                      <Button
-                                        title={"Repay"}
-                                        onClickHandler={() => {
-                                          if (ckBalance === 0) {
-                                            toast.dismiss();
-                                            toast.info("Insufficient wallet balance to allow repay request.", {
+                                    )}
+                                    {asset}
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <div className="text-[#233D63] text-xs font-semibold mt-3 mb-4 w-1/3">
+                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50 mb-1">
+                                        Debt
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col text-right text-[#2A1F9D] dark:text-darkText w-2/3 text-xs font-semibold mt-3">
+                                      {(() => {
+                                        const { debtFormatted, usdFormatted } =
+                                          getDebtValue(item[0], assetBorrow);
+                                        return (
+                                          <>
+                                            <p className="text-[#2A1F9D] dark:text-darkText">
+                                              {debtFormatted}
+                                            </p>
+                                            <p className="font-light text-[#2A1F9D] dark:text-darkText">
+                                              {usdFormatted}
+                                            </p>
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
+                                    <div className="flex items-center relative group">
+                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
+                                        APY:
+                                      </p>
+                                      <span className="relative cursor-pointer">
+                                        <span className="group inline-flex ml-1">
+                                          <Info
+                                            size={14}
+                                            className="text-[#233D63] dark:text-darkText dark:opacity-50"
+                                          />
+                                          <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                            The variable borrow interest rate
+                                            may change over time, influenced by
+                                            market trends and conditions.
+                                          </div>
+                                        </span>
+                                      </span>
+                                    </div>
+                                    <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
+                                      {borrowRateApr < 0.01
+                                        ? "<0.01%"
+                                        : `${borrowRateApr.toFixed(2)}%`}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
+                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                      APY Type:
+                                    </p>
+                                    <p className="text-right text-white bg-[#79779a] px-4 border border-white rounded-lg p-2 dark:text-darkText">
+                                      variable
+                                    </p>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4 mt-4">
+                                    <Button
+                                      title={"Borrow"}
+                                      onClickHandler={() => {
+                                        if (parseFloat(borrowableValue) <= 0) {
+                                          toast.dismiss();
+                                          toast.info(
+                                            "Insufficient asset supply or balance to allow borrow request",
+                                            {
                                               className: "custom-toast",
                                               position: "top-center",
                                               autoClose: 3000,
@@ -2556,24 +2393,60 @@ const DashboardComponent = () => {
                                               pauseOnHover: true,
                                               draggable: true,
                                               progress: undefined,
-                                            });
-                                            return;
-                                          }
+                                            }
+                                          );
+                                          return;
+                                        }
 
+                                        handleAssetAction("borrow", item[0]);
+                                      }}
+                                      disabled={
+                                        isTableDisabled ||
+                                        isButtonDisabled ||
+                                        parseFloat(borrowableValue) <= 0
+                                      }
+                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                    />
 
-                                          handleAssetAction("repay", item[0]);
-                                        }}
-                                        disabled={isTableDisabled || isButtonDisabled || ckBalance === 0}
-                                        className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                                      />
-                                    </div>
+                                    <Button
+                                      title={"Repay"}
+                                      onClickHandler={() => {
+                                        if (ckBalance === 0) {
+                                          toast.dismiss();
+                                          toast.info(
+                                            "Insufficient wallet balance to allow repay request.",
+                                            {
+                                              className: "custom-toast",
+                                              position: "top-center",
+                                              autoClose: 3000,
+                                              hideProgressBar: false,
+                                              closeOnClick: true,
+                                              pauseOnHover: true,
+                                              draggable: true,
+                                              progress: undefined,
+                                            }
+                                          );
+                                          return;
+                                        }
 
-                                    {index !== filteredItems.length - 1 && (
-                                      <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                                    )}
+                                        handleAssetAction("repay", item[0]);
+                                      }}
+                                      disabled={
+                                        isTableDisabled ||
+                                        isButtonDisabled ||
+                                        ckBalance === 0
+                                      }
+                                      className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                    />
                                   </div>
-                                );
-                              })}
+
+                                  {index !== filteredItems.length - 1 && (
+                                    <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2592,16 +2465,7 @@ const DashboardComponent = () => {
                     </div>
                   ) : !userData?.Ok?.reserves ||
                     !userData?.Ok?.reserves[0] ||
-                    userData?.Ok?.reserves[0].filter((reserveGroup) => {
-                      const asset = reserveGroup[0];
-                      const assetBalance = assetBalances.find(
-                        (balance) => balance.asset === asset
-                      )?.debtTokenBalance;
-                      return (
-                        (assetBalance > 0 || assetBalance === undefined) &&
-                        getAssetBorrowValue(reserveGroup[0]) > 0n
-                      );
-                    }).length === 0 ? (
+                    getFilteredBorrowReserves().length === 0 ? (
                     noBorrowMessage
                   ) : (
                     <div className="w-full h-auto mt-6">
@@ -2634,153 +2498,127 @@ const DashboardComponent = () => {
                           }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
-                          {userData?.Ok?.reserves[0]
-                            ?.filter((reserveGroup) => {
-                              const asset = reserveGroup[0];
-                              const assetBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.debtTokenBalance || 0;
-                              return (
-                                getAssetBorrowValue(reserveGroup[0]) > 0n &&
-                                assetBalance > 0
-                              );
-                            })
-                            .map((reserveGroup, index) => {
-                              const asset = reserveGroup[0];
-                              const item = filteredItems.find(
-                                (item) => item[0] === asset
-                              );
-                              const DebtIndex = userData?.Ok?.reserves[0]?.find(
-                                (reserveGroup) => reserveGroup[0] === asset
-                              )?.[1]?.variable_borrow_index;
-
-                              const assetBorrowBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.debtTokenBalance || 0;
-
-                              const currentLiquidity =
-                                userData?.Ok?.reserves[0]?.find(
-                                  (reserveGroup) => reserveGroup[0] === asset
-                                )?.[1]?.liquidity_index;
-                              const assetBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.dtokenBalance || 0;
-
-                              const assetSupply =
-                                (Number(assetBalance) *
-                                  Number(getAssetSupplyValue(asset))) /
-                                (Number(currentLiquidity) * 1e8);
-
-                              const assetBorrow =
-                                (Number(assetBorrowBalance) *
-                                  Number(getAssetBorrowValue(asset))) /
-                                (Number(DebtIndex) * 1e8);
-                              const assetData = item[1].Ok;
-                              const total_supply =
-                                Number(assetData?.asset_supply || 0) /
-                                100000000;
-                              const total_borrow =
-                                Number(assetData?.asset_borrow || 0) /
-                                100000000;
-                              const ckBalance =
-                                asset === "ckBTC"
-                                  ? ckBTCBalance
-                                  : asset === "ckETH"
-                                    ? ckETHBalance
-                                    : asset === "ckUSDC"
-                                      ? ckUSDCBalance
-                                      : asset === "ICP"
-                                        ? ckICPBalance
-                                        : asset === "ckUSDT"
-                                          ? ckUSDTBalance
-                                          : null;
-                              const borrowRateApr =
-                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
-                                100000000 || 0;
-                              const liquidationThreshold =
-                                Number(userAccountData?.Ok?.[3]) / 100000000 ||
-                                0;
-                              const reserveliquidationThreshold =
-                                Number(
-                                  item?.[1]?.Ok.configuration
-                                    .liquidation_threshold
-                                ) / 100000000 || 0;
-
-                              return (
-                                <div
-                                  key={index}
-                                  className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f]  rounded-lg text-xs mt-2"
-                                >
-                                  <div className="p-3 pl-4 flex items-center gap-2">
-                                    {assets.includes(asset) && (
-                                      <img
-                                        src={AssetImages[assets.indexOf(asset)]}
-                                        alt={`${asset} logo`}
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset}
-                                  </div>
-                                  <div className="p-3">
-                                    <div className="flex flex-col">
-                                      <p className="text-left min-w-[60px]">
-                                        {(() => {
-                                          const { debtFormatted } = getDebtValue(item[0], assetBorrow);
-                                          return debtFormatted;
-                                        })()}
-                                      </p>
-                                      <p className="text-left min-w-[60px] font-light text-[#2A1F9D] dark:text-darkText">
-                                        {(() => {
-                                          const { usdFormatted } = getDebtValue(item[0], assetBorrow);
-                                          return usdFormatted;
-                                        })()}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="p-3 ml-1 text-left min-w-[50px]">
-                                    {borrowRateApr < 0.1
-                                      ? "<0.01%"
-                                      : `${borrowRateApr.toFixed(2)}%`}
-                                  </div>
-                                  <div className="p-3">
-                                    <div className="w-full flex">variable</div>
-                                  </div>
-                                  <div className="p-3 flex gap-2">
-                                    <Button
-                                      title={"Borrow"}
-                                      onClickHandler={() => handleAssetAction("borrow", item[0])}
-                                      disabled={isTableDisabled || isButtonDisabled}
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
-                                    />
-                                    <Button
-                                      title={"Repay"}
-                                      onClickHandler={() => {
-                                        if (ckBalance === 0) {
-                                          toast.dismiss();
-                                          toast.info("Insufficient wallet balance to allow repay request.", {
-                                            className: "custom-toast",
-                                            position: "top-center",
-                                            autoClose: 3000,
-                                            hideProgressBar: false,
-                                            closeOnClick: true,
-                                            pauseOnHover: true,
-                                            draggable: true,
-                                            progress: undefined,
-                                          });
-                                          return;
-                                        }
-                                        handleAssetAction("repay", item[0]);
-                                      }}
-                                      disabled={isTableDisabled || isButtonDisabled || ckBalance === 0}
-                                      className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
-                                    />
-                                  </div>
+                          {filteredReserves?.map((reserveData, index) => (
+                            <div
+                              key={index}
+                              className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs mt-2"
+                            >
+                              <div className="p-3 pl-4 flex items-center gap-2">
+                                {assets.includes(reserveData.asset) && (
+                                  <img
+                                    src={
+                                      AssetImages[
+                                      assets.indexOf(reserveData.asset)
+                                      ]
+                                    }
+                                    alt={`${reserveData.asset} logo`}
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
+                                {reserveData.asset}
+                              </div>
+                              <div className="p-3">
+                                <div className="flex flex-col">
+                                  <p className="text-left min-w-[60px]">
+                                    {(() => {
+                                      const { debtFormatted } = getDebtValue(
+                                        reserveData.item[0],
+                                        reserveData.assetBorrow
+                                      );
+                                      return debtFormatted;
+                                    })()}
+                                  </p>
+                                  <p className="text-left min-w-[60px] font-light text-[#2A1F9D] dark:text-darkText">
+                                    {(() => {
+                                      const { usdFormatted } = getDebtValue(
+                                        reserveData.item[0],
+                                        reserveData.assetBorrow
+                                      );
+                                      return usdFormatted;
+                                    })()}
+                                  </p>
                                 </div>
-                              );
-                            })}
+                              </div>
+                              <div className="p-3 ml-1 text-left min-w-[50px]">
+                                {reserveData.borrowRateApr < 0.1
+                                  ? "<0.01%"
+                                  : `${reserveData.borrowRateApr.toFixed(2)}%`}
+                              </div>
+                              <div className="p-3">
+                                <div className="w-full flex">variable</div>
+                              </div>
+                              <div className="p-3 flex gap-2">
+                                <Button
+                                  title={"Borrow"}
+                                  onClickHandler={() => {
+                                    if (
+                                      parseFloat(reserveData.borrowableValue) <=
+                                      0
+                                    ) {
+                                      toast.info(
+                                        "Insufficient asset supply or balance to allow borrow request",
+                                        {
+                                          className: "custom-toast",
+                                          position: "top-center",
+                                          autoClose: 3000,
+                                          hideProgressBar: false,
+                                          closeOnClick: true,
+                                          pauseOnHover: true,
+                                          draggable: true,
+                                          progress: undefined,
+                                        }
+                                      );
+                                      return;
+                                    }
+
+                                    handleAssetAction(
+                                      "borrow",
+                                      reserveData.item[0]
+                                    );
+                                  }}
+                                  disabled={
+                                    isTableDisabled ||
+                                    isButtonDisabled ||
+                                    parseFloat(reserveData.borrowableValue) <= 0
+                                  }
+                                  className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
+                                />
+
+                                <Button
+                                  title={"Repay"}
+                                  onClickHandler={() => {
+                                    if (reserveData.ckBalance === 0) {
+                                      toast.dismiss();
+                                      toast.info(
+                                        "Insufficient wallet balance to allow repay request.",
+                                        {
+                                          className: "custom-toast",
+                                          position: "top-center",
+                                          autoClose: 3000,
+                                          hideProgressBar: false,
+                                          closeOnClick: true,
+                                          pauseOnHover: true,
+                                          draggable: true,
+                                          progress: undefined,
+                                        }
+                                      );
+                                      return;
+                                    }
+                                    handleAssetAction(
+                                      "repay",
+                                      reserveData.item[0]
+                                    );
+                                  }}
+                                  disabled={
+                                    isTableDisabled ||
+                                    isButtonDisabled ||
+                                    reserveData.ckBalance === 0
+                                  }
+                                  className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
+                                />
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -2844,7 +2682,6 @@ const DashboardComponent = () => {
                   )}
                 </div>
 
-                { }
                 <label
                   htmlFor="showZeroBalance"
                   className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer ml-2"
@@ -2867,33 +2704,38 @@ const DashboardComponent = () => {
                       { }
                       <div className="w-full">
                         {getFilteredAndSortedItems().map((item, index) => {
-                          const reserveData = userData?.Ok?.reserves[0]?.find(
-                            (reserveGroup) => reserveGroup[0] === item[0]
-                          );
-
                           const assetData = item[1].Ok;
-                          const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-                          const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
-                          const availableBorrowNumber = Number(availableBorrow || 0);
-
-                          const { displayedAsset, usdFormatted } = calculateAssetValue(
-                            item,
-                            total_supply,
-                            total_borrow,
-                            availableBorrow
+                          const total_supply =
+                            Number(assetData?.asset_supply || 0) / 100000000;
+                          const total_borrow =
+                            Number(assetData?.asset_borrow || 0) / 100000000;
+                          const availableBorrowNumber = Number(
+                            availableBorrow || 0
                           );
 
-                          const isEligible = (total_supply * 0.85).toFixed(8) > total_borrow;
+                          const { displayedAsset, usdFormatted } =
+                            calculateAssetValue(
+                              item,
+                              total_supply,
+                              total_borrow,
+                              availableBorrow
+                            );
+
+                          const isEligible =
+                            (total_supply * 0.85).toFixed(8) > total_borrow;
 
                           const itemClass =
-                            (showAllAssets && !isEligible) || availableBorrowNumber === 0
+                            (showAllAssets && !isEligible) ||
+                              availableBorrowNumber === 0
                               ? "opacity-50 pointer-events-none"
                               : "";
 
                           return (
                             <div
                               key={index}
-                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass} ${isTableDisabled ? "opacity-50 pointer-events-none" : ""
+                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass} ${isTableDisabled
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
                                 }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
@@ -2916,15 +2758,22 @@ const DashboardComponent = () => {
                                   </p>
                                   <span className="relative cursor-pointer">
                                     <span className="group inline-flex ml-1">
-                                      <Info size={14} className="text-[#233D63] dark:text-darkText dark:opacity-50" />
+                                      <Info
+                                        size={14}
+                                        className="text-[#233D63] dark:text-darkText dark:opacity-50"
+                                      />
                                       <div className="absolute left-[95px] transform -translate-x-1/2 mb-2 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
                                         <div className="flex flex-col">
                                           <p>
-                                            This is the total amount you can borrow, determined by your collateral and limited by the borrow cap.
+                                            This is the total amount you can
+                                            borrow, determined by your
+                                            collateral and limited by the borrow
+                                            cap.
                                           </p>
                                           <hr className="my-1" />
                                           <p className="mt-2">
-                                            Clicking "Max" may leave a small balance due to:
+                                            Clicking "Max" may leave a small
+                                            balance due to:
                                           </p>
                                           <ul>
                                             <li>1. Borrow cap limit.</li>
@@ -2943,20 +2792,32 @@ const DashboardComponent = () => {
 
                               <div className="flex justify-between text-[#233D63] dark:text-darkText text-xs font-semibold mt-4 mb-1">
                                 <div className="flex relative group">
-                                  <p className="text-[#233D63] dark:text-darkText dark:opacity-50">APY:</p>
+                                  <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                    APY:
+                                  </p>
                                   <span className="relative cursor-pointer">
                                     <span className="group inline-flex ml-1">
-                                      <Info size={14} className="dark:opacity-50" />
+                                      <Info
+                                        size={14}
+                                        className="dark:opacity-50"
+                                      />
                                       <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
-                                        The variable borrow interest rate may change over time, influenced by market trends and conditions.
+                                        The variable borrow interest rate may
+                                        change over time, influenced by market
+                                        trends and conditions.
                                       </div>
                                     </span>
                                   </span>
                                 </div>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                  {(Number(item[1].Ok.borrow_rate) * 100) / 100000000 < 0.01
+                                  {(Number(item[1].Ok.borrow_rate) * 100) /
+                                    100000000 <
+                                    0.01
                                     ? "<0.01%"
-                                    : `${((Number(item[1].Ok.borrow_rate) * 100) / 100000000).toFixed(2)}%`}
+                                    : `${(
+                                      (Number(item[1].Ok.borrow_rate) * 100) /
+                                      100000000
+                                    ).toFixed(2)}%`}
                                 </p>
                               </div>
 
@@ -2972,7 +2833,9 @@ const DashboardComponent = () => {
                                 />
                                 <Button
                                   title={"Details"}
-                                  onClickHandler={() => handleDetailsClick(item[0], item[1])}
+                                  onClickHandler={() =>
+                                    handleDetailsClick(item[0], item[1])
+                                  }
                                   disabled={!isEligible}
                                   className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
                                 />
@@ -2990,7 +2853,6 @@ const DashboardComponent = () => {
               )}
             </div>
 
-            { }
             <div className="hidden xl:block mt-2">
               {isBorrowVisible && (
                 <>
@@ -3022,73 +2884,97 @@ const DashboardComponent = () => {
                         <div>
                           {(showAllAssets || hasVisibleAssets) && (
                             <div className="grid grid-cols-4 items-center text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10 mt-4 gap-6">
-                              {MY_ASSET_TO_SUPPLY_TABLE_COL.map((item, index) => (
-                                <div key={index} className="p-4 font-[500] flex items-center">
-                                  <div className="inline-flex relative gap-1">
-                                    <p>{index === 2 ? item.header1 : item.header}</p>
-                                    {index === 1 && (
-                                      <span className="relative cursor-pointer">
-                                        <span className="group inline-flex">
-                                          <Info size={14} />
-                                          <div className="absolute left-1/2 transform -translate-x-1/2 mb-2 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[25vw] pointer-events-none">
-                                            <div className="flex flex-col">
-                                              <p className="mb-1">
-                                                This is the total amount you can borrow, determined
-                                                by your collateral and limited by the borrow cap.
-                                              </p>
-                                              <hr className="my-1 mt-1" />
-                                              <p className="mt-2">Clicking "Max" may leave a small balance due to:</p>
-                                              <ul>
-                                                <li>1. Borrow cap limit.</li>
-                                                <li>2. Price fluctuations.</li>
-                                              </ul>
+                              {MY_ASSET_TO_SUPPLY_TABLE_COL.map(
+                                (item, index) => (
+                                  <div
+                                    key={index}
+                                    className="p-4 font-[500] flex items-center"
+                                  >
+                                    <div className="inline-flex relative gap-1">
+                                      <p>
+                                        {index === 2
+                                          ? item.header1
+                                          : item.header}
+                                      </p>
+                                      {index === 1 && (
+                                        <span className="relative cursor-pointer">
+                                          <span className="group inline-flex">
+                                            <Info size={14} />
+                                            <div className="absolute left-1/2 transform -translate-x-1/2 mb-2 bottom-full bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[25vw] pointer-events-none">
+                                              <div className="flex flex-col">
+                                                <p className="mb-1">
+                                                  This is the total amount you
+                                                  can borrow, determined by your
+                                                  collateral and limited by the
+                                                  borrow cap.
+                                                </p>
+                                                <hr className="my-1 mt-1" />
+                                                <p className="mt-2">
+                                                  Clicking "Max" may leave a
+                                                  small balance due to:
+                                                </p>
+                                                <ul>
+                                                  <li>1. Borrow cap limit.</li>
+                                                  <li>
+                                                    2. Price fluctuations.
+                                                  </li>
+                                                </ul>
+                                              </div>
                                             </div>
-                                          </div>
+                                          </span>
                                         </span>
-                                      </span>
-                                    )}
-                                    {index === 2 && (
-                                      <span className="relative cursor-pointer">
-                                        <span className="group inline-flex">
-                                          <Info size={14} />
-                                          <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none font-base">
-                                            The variable borrow interest rate may change over time,
-                                            influenced by market trends and conditions.
-                                          </div>
+                                      )}
+                                      {index === 2 && (
+                                        <span className="relative cursor-pointer">
+                                          <span className="group inline-flex">
+                                            <Info size={14} />
+                                            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[20vw] pointer-events-none font-base">
+                                              The variable borrow interest rate
+                                              may change over time, influenced
+                                              by market trends and conditions.
+                                            </div>
+                                          </span>
                                         </span>
-                                      </span>
-                                    )}
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                )
+                              )}
                             </div>
                           )}
                         </div>
 
                         <div className="w-full h-auto max-h-auto overflow-y-auto scrollbar-none">
                           {getFilteredAndSortedItems().map((item, index) => {
-                            const reserveData = userData?.Ok?.reserves[0]?.find(
-                              (reserveGroup) => reserveGroup[0] === item[0]
-                            );
                             const assetData = item[1].Ok;
-                            const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-                            const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
-                            const availableBorrowNumber = Number(availableBorrow || 0);
-                            const { displayedAsset, usdFormatted } = calculateAssetValue(
-                              item,
-                              total_supply,
-                              total_borrow,
-                              availableBorrow
+                            const total_supply =
+                              Number(assetData?.asset_supply || 0) / 100000000;
+                            const total_borrow =
+                              Number(assetData?.asset_borrow || 0) / 100000000;
+                            const availableBorrowNumber = Number(
+                              availableBorrow || 0
                             );
-                            const isEligible = (total_supply * 0.85).toFixed(8) > total_borrow;
+                            const { displayedAsset, usdFormatted } =
+                              calculateAssetValue(
+                                item,
+                                total_supply,
+                                total_borrow,
+                                availableBorrow
+                              );
+                            const isEligible =
+                              (total_supply * 0.85).toFixed(8) > total_borrow;
                             const itemClass =
-                              (showAllAssets && !isEligible) || availableBorrowNumber === 0
+                              (showAllAssets && !isEligible) ||
+                                availableBorrowNumber === 0
                                 ? "opacity-50 pointer-events-none"
                                 : "";
                             return (
                               <div
                                 key={index}
-                                className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${isTableDisabled ? "opacity-50 pointer-events-none" : ""}`}
+                                className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${isTableDisabled
+                                    ? "opacity-50 pointer-events-none"
+                                    : ""
+                                  }`}
                               >
                                 <div className="flex items-center gap-3">
                                   {assets.includes(item[0]) && (
@@ -3102,13 +2988,21 @@ const DashboardComponent = () => {
                                 </div>
                                 <div className="text-left">
                                   <p>{displayedAsset}</p>
-                                  <p className="font-light text-left">{usdFormatted}</p>
+                                  <p className="font-light text-left">
+                                    {usdFormatted}
+                                  </p>
                                 </div>
                                 <div className="text-left">
                                   <p className="mt-1.5">
-                                    {(Number(item[1].Ok.borrow_rate) * 100) / 100000000 < 0.01
+                                    {(Number(item[1].Ok.borrow_rate) * 100) /
+                                      100000000 <
+                                      0.01
                                       ? "<0.01%"
-                                      : `${((Number(item[1].Ok.borrow_rate) * 100) / 100000000).toFixed(2)}%`}
+                                      : `${(
+                                        (Number(item[1].Ok.borrow_rate) *
+                                          100) /
+                                        100000000
+                                      ).toFixed(2)}%`}
                                   </p>
                                 </div>
                                 <div className="flex gap-3 justify-end">
@@ -3123,7 +3017,9 @@ const DashboardComponent = () => {
                                   />
                                   <Button
                                     title={"Details"}
-                                    onClickHandler={() => handleDetailsClick(item[0], item[1])}
+                                    onClickHandler={() =>
+                                      handleDetailsClick(item[0], item[1])
+                                    }
                                     disabled={!isEligible}
                                     className="bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md px-4 py-2 shadow-md font-semibold text-xs"
                                   />
@@ -3132,7 +3028,6 @@ const DashboardComponent = () => {
                             );
                           })}
                         </div>
-
                       </div>
                     )}
                   </div>

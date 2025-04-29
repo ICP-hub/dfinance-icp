@@ -55,14 +55,14 @@ const Borrow = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
+
   const { isBlocked } = useFunctionBlockStatus();
   const borrowButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { filteredItems } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const { conversionRate } = useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();
 
   /* ===================================================================================
@@ -72,9 +72,8 @@ const Borrow = ({
   const [availableBorrow, setAvailableBorrow] = useState([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [amount, setAmount] = useState(null);
+  const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
-  const [isAcknowledgmentRequired, setIsAcknowledgmentRequired] = useState(false);
   const [usdValue, setUsdValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -84,23 +83,18 @@ const Borrow = ({
   const [totalSupply, setTotalSupply] = useState(0);
   const [totalBorrow, setTotalBorrow] = useState(0);
   const [borrowableValue, setBorrowableValue] = useState("0.00000000");
-  const [borrowableAssetValue, setBorrowableAssetValue] = useState("0.0000");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
   /* ===================================================================================
-   *                                  REDUX-SELECTER
+   *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
 
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const dispatch = useDispatch();
-  const ledgerActors = useSelector((state) => state.ledger);
-
-  /* ===================================================================================
-   *                                  MEMOIZATION
-   * =================================================================================== */
+  const paymentModalRef = useRef(null);
 
   const principalObj = useMemo(
     () => Principal.fromText(principal),
@@ -110,9 +104,6 @@ const Borrow = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-  const paymentModalRef = useRef(null);
-
-
 
   // Fetches asset data and updates supply/borrow values.
   const fetchAssetData = () => {
@@ -192,18 +183,6 @@ const Borrow = ({
       return;
     }
     setIsLoading(true);
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") {
-      ledgerActor = ledgerActors.ckUSDT;
-    }
 
     const borrowParams = {
       asset: asset,
@@ -384,9 +363,6 @@ const Borrow = ({
     setIsModalOpen(false);
   };
 
-  const numericBalance = parseFloat(balance);
-  const supplyBalance = numericBalance;
-
   // Calculates the health factor based on collateral and debt values.
   const calculateHealthFactor = (
     totalCollateral,
@@ -459,17 +435,26 @@ const Borrow = ({
   //   Updates the amount and USD value based on the input.
   const updateAmountAndUsdValue = (inputAmount) => {
     const numericAmount = parseFloat(inputAmount.replace(/,/g, ""));
+
     if (inputAmount === "") {
       setAmount("");
       setUsdValue(0);
       return;
     }
+
+    if (numericAmount < 0) {
+      console.error("Amount must be a positive number.");
+      setUsdValue(0);
+      return;
+    }
+
     if (numericAmount <= borrowableValue) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(7));
     } else {
-      console.error("Amount must be a positive number.");
+      // No need for an error here unless you specifically want to handle this case.
+      console.warn("Amount exceeds borrowable value.");
       setUsdValue(0);
     }
   };
@@ -563,7 +548,6 @@ const Borrow = ({
           remainingBorrowable
         );
         setBorrowableValue(updatedValues.borrowableValue);
-        setBorrowableAssetValue(updatedValues.borrowableAssetValue);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -584,7 +568,6 @@ const Borrow = ({
 
   useEffect(() => {
     if (userAccountData?.Ok?.length > 5) {
-      const remainingBorrowable = total_supply * 0.85 - total_borrow;
       const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
       setAvailableBorrow(borrowValue);
     } else {
@@ -618,17 +601,19 @@ const Borrow = ({
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
   useEffect(() => {
-    const healthFactor = calculateHealthFactor(
-      totalCollateral,
-      totalDebt,
-      liquidationThreshold
-    );
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
 
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     const nextTotalDebt = parseFloat(amountTaken) + parseFloat(totalDebt);
+
+    const healthFactor = calculateHealthFactor(
+      totalCollateral,
+      totalDebt,
+      liquidationThreshold
+    );
+
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
 
     const truncateToDecimals = (num, decimals) => {
@@ -640,23 +625,38 @@ const Borrow = ({
       healthFactor > 100 ? "Infinity" : truncateToDecimals(healthFactor, 2)
     );
 
-    if (value < 2 && value > 1) {
-      setIsAcknowledgmentRequired(true);
-    } else {
-      setIsAcknowledgmentRequired(false);
-      setIsAcknowledged(false);
+    const acknowledgmentRequired = value < 2 && value > 1;
+
+    let toastMessage = "";
+
+    const isLtvExceeded = ltv * 100 >= liquidationThreshold;
+    const isHealthFactorLow = healthFactor <= 1;
+    const needsAcknowledgment = acknowledgmentRequired && !isAcknowledged;
+
+    if (isLtvExceeded && isHealthFactorLow) {
+      toastMessage = "LTV Exceeded & Health Factor Less than 1";
+    } else if (isLtvExceeded) {
+      toastMessage = "LTV Exceeded!";
+    } else if (isHealthFactorLow) {
+      toastMessage = "Health Factor Less than 1";
     }
 
-    if (ltv * 100 >= liquidationThreshold) {
+    if (toastMessage) {
       toast.dismiss();
-      toast.info("LTV Exceeded!");
+      toast.info(toastMessage, {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
 
-    if (
-      healthFactor <= 1 ||
-      ltv * 100 >= liquidationThreshold ||
-      (isAcknowledgmentRequired && !isAcknowledged)
-    ) {
+    // Handle button disabled
+    if (isHealthFactorLow || isLtvExceeded || needsAcknowledgment) {
       setIsButtonDisabled(true);
     } else {
       setIsButtonDisabled(false);
@@ -671,8 +671,7 @@ const Borrow = ({
     usdValue,
     isAcknowledged,
     value,
-    isAcknowledgmentRequired,
-    setIsAcknowledged,
+    setIsAcknowledged
   ]);
 
   useEffect(() => {

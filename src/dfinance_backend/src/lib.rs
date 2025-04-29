@@ -36,7 +36,7 @@ use std::time::Duration;
  */
 // TODO: check why this function is async function.
 #[init]
-pub async fn init(args: Principal) {
+pub fn init(args: Principal) {
     ic_cdk::println!("init function = {:?}", args.to_text());
     // This controller ID will be used for setting the controller 
     // of other canisters (e.g., asset reserves) dynamically created 
@@ -52,8 +52,7 @@ pub async fn init(args: Principal) {
         );
     });
 
-    ic_cdk::println!("function called");
-    schedule_midnight_task().await;
+    ic_cdk::println!("init function called");
 }
 
 /*
@@ -87,6 +86,7 @@ pub async fn schedule_midnight_task() {
  * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.
  * @functionality Resets faucet usage for all users at midnight.
  */
+//TODO check faucet reset at midnight
 async fn run_midnight_reset() {
     let vector_faucet_data: Vec<(Principal, FaucetReserves)> = get_all_faucet().await;
     for (user_principal, _) in vector_faucet_data {

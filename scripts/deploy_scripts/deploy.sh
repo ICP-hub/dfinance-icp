@@ -215,6 +215,10 @@ export TOKEN_SYMBOL="debttoken"
      };
  }})"
 
+dfx canister create logs
+dfx build logs
+dfx deploy logs
+
 dfx canister create xrc
 dfx build xrc
 dfx deploy xrc
@@ -231,6 +235,8 @@ dfx deploy dfinance_backend --argument "(
 )"
 
 XRC_CANISTER_ID=$(dfx canister id xrc)
+LOGS_CANISTER_ID=$(dfx canister id logs)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
+dfx canister call dfinance_backend set_canister_id "(\"logs\", principal \"$LOGS_CANISTER_ID\")"
 
 dfx deploy

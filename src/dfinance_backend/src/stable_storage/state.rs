@@ -1,5 +1,4 @@
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
-
 use crate::stable_storage::memory::{
     ASSET_INDEX_MEMORY_ID, BLOCKED_USERS_FUNCTION, CANISTER_MEMORY_ID, FUNCTION_REQUESTS,
     META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST,
@@ -10,8 +9,8 @@ use crate::stable_storage::types::{
     ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile,
 };
 
-use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, DEVELOPER_DATA, FAUCETDATA};
-use super::types::{AdminData, AssetRecords, DeveloperData, FaucetData};
+use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, DEVELOPER_DATA, FAUCETDATA, LOG_STORAGE};
+use super::types::{AdminData, AssetRecords, DeveloperData, FaucetData, LogStorage};
 
 pub struct State {
     pub asset_index: AssetIndex,
@@ -29,6 +28,7 @@ pub struct State {
     pub admin_data: AdminData,
     pub asset_records:AssetRecords,
     pub faucet_data: FaucetData,
+    pub log_storage:LogStorage
 }
 /*
  * @title State
@@ -55,6 +55,7 @@ impl State {
             developer_data: DeveloperData::init(memory_manager.get(DEVELOPER_DATA)),
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),
             faucet_data: FaucetData::init(memory_manager.get(FAUCETDATA)),
+            log_storage: LogStorage::init(memory_manager.get(LOG_STORAGE)),
         }
     }
 }

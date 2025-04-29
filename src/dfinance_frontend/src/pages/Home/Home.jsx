@@ -2,20 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
 import { ChevronRight } from "lucide-react";
-import Button from "../../components/Common/Button";
-import Ellipse from "../../components/Common/Ellipse";
+import Button from "../../components/Common/button";
+import Ellipse from "../../components/Common/ellipse";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
 import HeroSection from "../../components/Home/HeroSection";
 import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
-import Loading from "../../components/Common/Loading";
-import {
-  MAIN_NAV_LINK,
-  FAQ_QUESTION,
-  TAB_CARD_DATA,
-} from "../../utils/constants";
+import Loading from "../../components/Common/loading";
+import { MAIN_NAV_LINK, FAQ_QUESTION } from "../../utils/constants";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 
 /**
@@ -25,7 +21,6 @@ import { usePageLoading } from "../../components/customHooks/useLoading";
  */
 const Home = () => {
   const intervalRef = useRef();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const theme = useSelector((state) => state.theme.theme);
   const isLoading = usePageLoading();
   const [currentFAQ, setCurrentFAQ] = useState(0);
@@ -94,12 +89,10 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => window.innerWidth <= 768;
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const visibleCards = isMobile ? TAB_CARD_DATA.slice(0, 4) : TAB_CARD_DATA;
 
   if (isLoading) {
     return <Loading isLoading={isLoading} />;
@@ -192,7 +185,7 @@ const Home = () => {
 
             <div className="w-full flex justify-center mt-3">
               {" "}
-              {}
+              { }
               <a
                 href="https://dfinance.notion.site/DFinance-Points-System-17544afe836e80ffae46f31b676a7ce7"
                 target="_blank"
@@ -223,38 +216,34 @@ const Home = () => {
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full dark:text-darkText">
                       <div
-                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${
-                          currentFAQ === index
+                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${currentFAQ === index
                             ? "bg-[#eef0f5] dark:bg-currentFAQBackground"
                             : ""
-                        } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
+                          } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
                       >
                         <div className="w-1/12">
                           <div
-                            className={`w-4 h-4 rounded-full ${
-                              currentFAQ === index
+                            className={`w-4 h-4 rounded-full ${currentFAQ === index
                                 ? "bg-[#517687] dark:bg-darkText"
                                 : "bg-[#DBE8EE] dark:bg-[#192C35]"
-                            }`}
+                              }`}
                           ></div>
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${
-                            currentFAQ === index
+                          className={`w-1/12 ${currentFAQ === index
                               ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0"
                               : "text-[#DBE8EE] dark:text-[#192C35]"
-                          } flex justify-end`}
+                            } flex justify-end`}
                         >
                           <ChevronRight />
                         </div>
                       </div>
                       {currentFAQ === index && (
                         <div
-                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
-                            currentFAQ === index ? "opacity-100" : "opacity-0"
-                          }`}
+                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${currentFAQ === index ? "opacity-100" : "opacity-0"
+                            }`}
                         >
                           <p>{item.answer}</p>
                         </div>
@@ -286,9 +275,8 @@ const Home = () => {
         </div>
       </div>
       <button
-        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
+          }`}
         onClick={scrollToTop}
       >
         <LuMoveUp className="text-[30px] mx-auto hover:text-white transition-colors" />

@@ -126,7 +126,6 @@ body {
   overflow: hidden;
 }
 
-/* Bouncing Loader */
 .bouncing-loader {
   position: absolute;
   display: flex;
@@ -157,7 +156,6 @@ body {
   animation-delay: 0.6s;
 }
 
-/* Bouncing Mini Loader */
 .bouncing-miniloader {
   position: absolute;
   display: flex;
@@ -166,7 +164,6 @@ body {
   width: 100%;
   height: 100%;
   z-index: 8;
-  /* Reduced z-index */
 }
 
 .bouncing-miniloader>.loader-element {
@@ -202,7 +199,6 @@ body {
   }
 }
 
-/* Bouncing Div */
 .bouncing-div {
   position: absolute;
   display: flex;
@@ -230,7 +226,6 @@ body {
   animation-delay: 0.3s;
 }
 
-/* Mini Bouncing Div */
 .bouncing-mini-div {
   position: absolute;
   display: flex;
@@ -240,7 +235,6 @@ body {
   width: 100%;
   height: 100%;
   z-index: 80;
-  /* Reduced z-index */
 }
 
 .bouncing-mini-div div {
@@ -259,7 +253,6 @@ body {
   animation-delay: 0.3s;
 }
 
-/* Shared Keyframes */
 @keyframes bouncing-div {
   to {
     transform: translateY(-6px);
@@ -272,7 +265,6 @@ body {
   }
 }
 
-/* Fade In Animation */
 @keyframes fadeInLeft {
   0% {
     opacity: 0;
@@ -580,4 +572,27 @@ button:active {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.flip-card {
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  transition: transform 0.7s;
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
 }

@@ -48,18 +48,24 @@ pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
  * @functionality Validates asset amount by checking if it's greater than zero.
  */
 pub fn validate_zero_value(value: &candid::Nat) -> Result<(), Error> {
-    if value <= &zero_nat_value() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::InvalidAmount);
-    }
-    Ok(())
+  if value <= &zero_nat_value() {
+      ic_cdk::println!("Amount must be greater than 0");
+      return Err(Error::InvalidAmount);
+  }
+
+
+
+  Ok(())
 }
 
-pub fn validate_connected_wallet(connected_wallet: &str) -> Result<(), Error> {
-    if connected_wallet.len() > 15 {
-        ic_cdk::println!("connected wallet length is not valid");
-        return Err(Error::ConnectedWalletInvalid);
-    }
+// to validate zero value
+pub fn validate_negatige_value(value: &candid::Nat) -> Result<(), Error> {
+  if value < &zero_nat_value() {
+      ic_cdk::println!("value must be positive");
+      return Err(Error::NegativeAmount);
+  }
+
+
 
     Ok(())
 }

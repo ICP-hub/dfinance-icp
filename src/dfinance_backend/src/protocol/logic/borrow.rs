@@ -105,7 +105,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     ValidationLogic::validate_borrow(
         &reserve_data,
         params.amount.clone(),
-        user_principal,
         ledger_canister_id,
     )
     .await?;

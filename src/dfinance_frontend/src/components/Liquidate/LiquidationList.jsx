@@ -1,17 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../Common/pagination";
-import UserInformationPopup from "./userInformation";
+import UserInformationPopup from "./UserInformation";
 import useAssetData from "../customHooks/useAssets";
-import MiniLoader from "../Common/MiniLoader";
+import MiniLoader from "../Common/miniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import Lottie from "../Common/Lottie";
+import Lottie from "../Common/lottie";
 
 /**
  * DebtStatus Component
@@ -31,17 +31,13 @@ const DebtStatus = () => {
     (state) => state.liquidateUpdate.LiquidateTrigger
   );
   const popupRef = useRef(null);
-  const [Showsearch, setShowSearch] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showUserInfoPopup, setShowUserInfoPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(true);
-  const [supplyDataLoading, setSupplyDataLoading] = useState(true);
-  const [borrowDataLoading, setBorrowDataLoading] = useState(true);
   const [users, setUsers] = useState([]);
-  const [userLoadingStates, setUserLoadingStates] = useState({});
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -53,12 +49,10 @@ const DebtStatus = () => {
   const {
     assets,
     AssetImages,
-    filteredItems,
     asset_supply,
     asset_borrow,
     fetchAssetSupply,
     fetchAssetBorrow,
-    loading: filteredDataLoading,
   } = useAssetData();
 
   const {
@@ -68,8 +62,6 @@ const DebtStatus = () => {
     fetchReserveData,
     createLedgerActor,
   } = useAuth();
-
-
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -144,7 +136,6 @@ const DebtStatus = () => {
 
   //Function to filter the users based on the search query
   const relevantItems = liquidationUsers.filter((item) => {
-
     return (
       item.principal?._arr.toText() !== user.toString() &&
       item.debt !== 0n &&
@@ -267,7 +258,6 @@ const DebtStatus = () => {
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
-
       }
     });
 
@@ -280,9 +270,16 @@ const DebtStatus = () => {
 
     if (!currentLiquidity) return 0;
 
+    const safeAssetBalance =
+      typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
+    const safeCurrentLiquidity =
+      typeof currentLiquidity === "bigint"
+        ? Number(currentLiquidity)
+        : currentLiquidity;
+    const supplyValue = Number(getAssetSupplyValue(assetName));
+
     return Math.trunc(
-      (Number(assetBalance) * Number(getAssetSupplyValue(assetName))) /
-      Number(currentLiquidity)
+      Math.trunc(safeAssetBalance / safeCurrentLiquidity) * supplyValue
     );
   };
 
@@ -294,7 +291,6 @@ const DebtStatus = () => {
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         debtIndex = reserveGroup[1]?.variable_borrow_index || 0;
-
       }
     });
 
@@ -313,12 +309,12 @@ const DebtStatus = () => {
     );
   };
 
-  //Function to handle pagination 
+  //Function to handle pagination
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  //Function to handle search inputclose popup when click outside 
+  //Function to handle search inputclose popup when click outside
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
@@ -359,7 +355,6 @@ const DebtStatus = () => {
     })();
   }, []);
 
-
   //Function to fetch  each user
   useEffect(() => {
     const fetchUsers = async () => {
@@ -381,7 +376,6 @@ const DebtStatus = () => {
       try {
         const usersPerPage = 10;
         const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-
         const data = await fetchLiquidationUsers(totalPages, usersPerPage);
         setLiquidationUsers(data);
       } catch (err) {
@@ -403,43 +397,33 @@ const DebtStatus = () => {
     }
   }, [liquidationUsers, assets, users, liquidateTrigger]);
 
-
   //Funtion to fetch asset supply and borrow data
   useEffect(() => {
     const fetchSupplyData = async () => {
       if (assets.length === 0) return;
-      setSupplyDataLoading(true);
       try {
         for (const asset of assets) {
           await fetchAssetSupply(asset);
         }
       } catch (error) {
-        setSupplyDataLoading(false);
         console.error("Error fetching supply data:", error);
-      } finally {
-        setSupplyDataLoading(false);
       }
     };
 
     const fetchBorrowData = async () => {
       if (assets.length === 0) return;
-      setBorrowDataLoading(true);
       try {
         for (const asset of assets) {
           await fetchAssetBorrow(asset);
         }
       } catch (error) {
-        setBorrowDataLoading(false);
         console.error("Error fetching borrow data:", error);
-      } finally {
-        setBorrowDataLoading(false);
       }
     };
 
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, liquidateTrigger]);
-
 
   // useeffect for Closing popup when click outside
   useEffect(() => {
@@ -450,8 +434,6 @@ const DebtStatus = () => {
       };
     }
   }, [showPopup]);
-
-
 
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -510,14 +492,12 @@ const DebtStatus = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => {
-                    const userLoading =
-                      userLoadingStates[item.principal?._arr.toText()];
                     return (
                       <tr
                         key={index}
                         className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
+                            ? "gradient-line-bottom"
+                            : ""
                           }`}
                       >
                         <td className="p-2 align-top py-8 ">
@@ -545,22 +525,24 @@ const DebtStatus = () => {
                               item?.userData?.reserves?.[0].map(
                                 (mappedItem, index) => {
                                   const assetName = mappedItem?.[0];
-                                  const assetSupply = calculateAssetSupply(
-                                    assetName,
-                                    item
-                                  );
+
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
                                     item
                                   );
 
                                   if (assetBorrow > 0) {
-                                    const assetIndex = assets.indexOf(assetName);
+                                    const assetIndex =
+                                      assets.indexOf(assetName);
 
                                     return (
                                       <img
                                         key={index}
-                                        src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
+                                        src={
+                                          assetIndex !== -1
+                                            ? AssetImages[assetIndex]
+                                            : undefined
+                                        }
                                         alt={assetName || "asset"}
                                         className="rounded-[50%] w-7"
                                       />
@@ -581,28 +563,22 @@ const DebtStatus = () => {
                                     assetName,
                                     item
                                   );
-                                  const assetBorrow = calculateAssetBorrow(
-                                    assetName,
-                                    item
-                                  );
-                                  const item1 = filteredItems.find(
-                                    (item) => item[0] === assetName
-                                  );
-                                  const reserveliquidationThreshold =
-                                    Number(
-                                      item1?.[1]?.Ok.configuration
-                                        .liquidation_threshold
-                                    ) / 100000000 || 0;
+
                                   if (assetSupply > 0) {
-                                    const assetIndex = assets.indexOf(assetName);
+                                    const assetIndex =
+                                      assets.indexOf(assetName);
 
                                     return (
                                       <img
-                                      key={index}
-                                      src={assetIndex !== -1 ? AssetImages[assetIndex] : undefined}  // Get the image URL dynamically
-                                      alt={assetName || "asset"}
-                                      className="rounded-[50%] w-7"
-                                    />
+                                        key={index}
+                                        src={
+                                          assetIndex !== -1
+                                            ? AssetImages[assetIndex]
+                                            : undefined
+                                        }
+                                        alt={assetName || "asset"}
+                                        className="rounded-[50%] w-7"
+                                      />
                                     );
                                   }
                                   return null;

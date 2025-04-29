@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import Aos from "aos";
 import "aos/dist/aos.css";
-import supply from "../../../public/Helpers/supply.png";
-import borrow from "../../../public/Helpers/borrow.png";
-import Max from "../../../public/Helpers/max.png";
-import Ltv from "../../../public/Helpers/Ltv.png";
-import Points from "../../../public/Helpers/points.png";
+import supply from "../../../public/helper/supply.png";
+import borrow from "../../../public/helper/borrow.png";
+import Max from "../../../public/helper/max.png";
+import Ltv from "../../../public/helper/ltv.png";
+import Points from "../../../public/helper/points.png";
 
 const HowITWork = () => {
   useEffect(() => {

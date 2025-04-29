@@ -1,40 +1,16 @@
 import ckBTC from "../../public/assests-icon/ckBTC.png";
-import cekTH from "../../public/assests-icon/CKETH.svg";
-
-import icp from "../../public/assests-icon/ICPMARKET.png";
-
+import cekTH from "../../public/assests-icon/cKETH.svg";
+import icp from "../../public/assests-icon/iCPMarket.png";
 import ckusdc from "../../public/assests-icon/ckusdc.svg";
 import ckusdt from "../../public/assests-icon/ckUSDT.svg";
-
 import trailofbits from "../../public/assests-icon/trail-Of-Bits-svg-fill.png";
 import certora from "../../public/assests-icon/certora-svg-fill.png";
 import openZeppelinsvg from "../../public/assests-icon/open-Zeppelin-svg.png";
 import sigmaprime from "../../public/assests-icon/sigma-Prime-svg-fill.png";
 import Peckshield from "../../public/assests-icon/peckshield-logo-svg.png";
-import abdk from "../../public/assests-icon/abdk-svg.png";
+import abdk from "../../public/assests-icon/abdk.png";
 
-const TabPanel = ({ items }) => {
-  return (
-    <div className="flex flex-wrap justify-center gap-4">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="max-w-xs w-full p-4 border rounded-lg shadow-md"
-        >
-          <img
-            src={item.image}
-            alt={item.title}
-            className="w-full h-48 object-cover rounded-md"
-          />
-          <h2 className="mt-4 text-lg font-semibold text-[#0C5A74]">
-            {item.title}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">{item.description}</p>
-        </div>
-      ))}
-    </div>
-  );
-};
+const isProduction = process.env.DFX_PRODUCTION === 'true';
 
 export const FOOTER_LINK_1 = [
   {
@@ -100,7 +76,6 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     alwaysPresent: true,
   },
-
   {
     id: 1,
     title: "Market",
@@ -108,20 +83,19 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     alwaysPresent: true,
   },
-
   {
     id: 3,
     title: "Faq",
     route: "/#Faq",
     icon: "",
-    testnet: false,
+    testnet: false, // stays false
   },
   {
     id: 4,
     title: "Faucet",
     route: "/Faucet",
     icon: "",
-    testnet: true,
+    testnet: !isProduction, // <-- 👈 dynamic based on production
   },
 ];
 export const error = [
@@ -342,7 +316,6 @@ export const WALLET_ASSETS_TABLE_COL = [
   },
 ];
 
-
 export const LIQUIDATION_USERLIST_COL = [
   {
     col_id: 0,
@@ -362,9 +335,7 @@ export const LIQUIDATION_USERLIST_COL = [
   },
 ];
 
-
 export const ASSET_DETAILS = ["Supply Info", "Borrow Info"];
-
 
 export const TAB_CARD_DESCRIPTION_LENGTH = 300;
 
@@ -422,8 +393,6 @@ export const MY_SUPPLY_ASSET_TABLE_COL = [
   },
 ];
 
-
-
 export const MY_ASSET_TO_SUPPLY_TABLE_COL = [
   {
     col_id: 0,
@@ -473,8 +442,6 @@ export const MY_BORROW_ASSET_TABLE_COL = [
   },
 ];
 
-
-
 export const healthFactorValue = 0.5;
 export const healthFactorCutOutPositions = {
   green: 10,
@@ -500,4 +467,3 @@ export const FAUCET_ASSETS_TABLE_COL = [
     header: "Wallet Balance",
   },
 ];
-

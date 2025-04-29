@@ -57,18 +57,15 @@ const SupplyPopup = ({
   const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const { conversionRate } = useRealTimeConversionRate(asset);
 
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
 
-
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [collateral, setCollateral] = useState(currentCollateralStatus);
   const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState(null);
+  const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -81,14 +78,12 @@ const SupplyPopup = ({
    * =================================================================================== */
 
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
-  const fees = useSelector((state) => state.fees.fees);
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
-  // Memoize the principal object to avoid unnecessary re-renders
   const principalObj = useMemo(
     () => Principal.fromText(principal),
     [principal]
@@ -97,8 +92,6 @@ const SupplyPopup = ({
   /* ===================================================================================
    *                                  HELPERS
    * =================================================================================== */
-
-
 
   const errorMessages = {
     NoReserveDataFound:
@@ -114,11 +107,8 @@ const SupplyPopup = ({
     Default: "An unexpected error occurred. Please try again later.",
   };
 
-
-
   const numericBalance = parseFloat(balance);
   const supplyBalance = Math.max(numericBalance - transferFee, 0);
-
   const hasEnoughBalance = balance >= transferFee;
   const value = currentHealthFactor;
 
@@ -138,14 +128,12 @@ const SupplyPopup = ({
     if (inputAmount === "") {
       setAmount("");
       updateAmountAndUsdValue("");
-      ;
       return;
     }
 
     if (inputAmount === "." || inputAmount === "0.") {
       setAmount(inputAmount);
       updateAmountAndUsdValue(inputAmount);
-      ;
       return;
     }
 
@@ -159,7 +147,6 @@ const SupplyPopup = ({
       );
       return;
     } else {
-      ;
     }
 
     let formattedAmount;
@@ -192,13 +179,11 @@ const SupplyPopup = ({
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(convertedValue.toFixed(8));
       } else {
-
       }
     } else {
       console.error("Amount must be a positive number");
     }
   };
-
 
   // Function to handle the approval process
   const handleApprove = async () => {
@@ -246,18 +231,32 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-      setIsApproved(true);
-      toast.success(`Approval successful!`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      if (approval?.Ok) {
+        setIsApproved(true);
+        toast.success(`Approval successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (approval?.Err) {
+        toast.error(`Error: ${approval.Err || "Approval failed!"}`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
     } catch (error) {
+      console.error(error.message);
       toast.error(`Error: ${error.message || "Approval failed!"}`, {
         className: "custom-toast",
         position: "top-center",
@@ -271,7 +270,6 @@ const SupplyPopup = ({
     }
   };
 
-
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -280,8 +278,6 @@ const SupplyPopup = ({
   const totalAmount = transferFeeBigInt
     ? scaledAmount + transferFeeBigInt
     : scaledAmount;
-
-
 
   // Function to handle the supply process
   const handleSupplyETH = async () => {
@@ -300,19 +296,6 @@ const SupplyPopup = ({
     }
 
     try {
-      let ledgerActor;
-      if (asset === "ckBTC") {
-        ledgerActor = ledgerActors.ckBTC;
-      } else if (asset === "ckETH") {
-        ledgerActor = ledgerActors.ckETH;
-      } else if (asset === "ckUSDC") {
-        ledgerActor = ledgerActors.ckUSDC;
-      } else if (asset === "ICP") {
-        ledgerActor = ledgerActors.ICP;
-      } else if (asset === "ckUSDT") {
-        ledgerActor = ledgerActors.ckUSDT;
-      }
-
       const supplyParams = {
         asset: asset,
         is_collateral: currentCollateralStatus,
@@ -457,7 +440,6 @@ const SupplyPopup = ({
       }
     } catch (error) {
       console.error(`Error: ${error.message || "Supply action failed!"}`);
-
       const message = error.message || "Supply action failed!";
       const isPanicError = message.toLowerCase().includes("panic");
       const isOutOfCyclesError =
@@ -534,7 +516,7 @@ const SupplyPopup = ({
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    const amountAdded = collateral ? usdValue || 0 : 0;
+    const amountAdded = currentCollateralStatus ? usdValue || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -554,14 +536,6 @@ const SupplyPopup = ({
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
     result = Math.round(result * 1e8) / 1e8;
     return result;
-  };
-
-  // Function to calculate the Loan-to-Value (LTV) ratio
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return (totalDeptValue / totalCollateralValue) * 100;
   };
 
   // Function to handle the click action of the max button
@@ -666,7 +640,7 @@ const SupplyPopup = ({
       reserveliquidationThreshold
     );
 
-    const amountAdded = collateral ? usdValue || 0 : 0;
+    const amountAdded = currentCollateralStatus ? usdValue || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -677,7 +651,6 @@ const SupplyPopup = ({
       totalDeptValue = 0;
     }
 
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -706,8 +679,6 @@ const SupplyPopup = ({
       setUsdValue(0);
     }
   }, [amount, conversionRate]);
-
-
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -767,8 +738,8 @@ const SupplyPopup = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
@@ -798,8 +769,8 @@ const SupplyPopup = ({
                   <p>Collateralization</p>
                   <p
                     className={`font-semibold ${currentCollateralStatus
-                      ? "text-green-500"
-                      : "text-red-500"
+                        ? "text-green-500"
+                        : "text-red-500"
                       }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
@@ -812,14 +783,14 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : truncatedValue <= 1
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -827,14 +798,14 @@ const SupplyPopup = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                          ? "text-green-500"
-                          : value <= 1
-                            ? "text-red-500"
-                            : value <= 1.5
-                              ? "text-orange-600"
-                              : value <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : value <= 1
+                              ? "text-red-500"
+                              : value <= 1.5
+                                ? "text-orange-600"
+                                : value <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -912,13 +883,9 @@ const SupplyPopup = ({
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                isLoading ||
-                !hasEnoughBalance ||
-                amount <= 0
-
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                 }`}
               disabled={
                 isApproved || isLoading || amount <= 0 || !hasEnoughBalance
@@ -931,13 +898,9 @@ const SupplyPopup = ({
             <button
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                isLoading ||
-                amount <= 0 ||
-                !hasEnoughBalance
-
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                 }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance

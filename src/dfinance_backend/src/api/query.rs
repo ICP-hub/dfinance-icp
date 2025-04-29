@@ -157,7 +157,6 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
  * @returns A vector of tuples containing user principals and their faucet reserves.
  * @functionality This function returns a list of all users and their respective faucet reserves.
  */
-#[query]
 pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
     read_state(|state| {
         state
@@ -433,6 +432,7 @@ pub fn get_user_guide() -> Result<bool, Error> {
  *
  * @functionality Retrieve Controller Information
  */
+//Controller for creating dynamic dtoken and debt token canisters
 pub fn get_controller() -> Result<InitArgs, Error> {
     read_state(|state| {
         state

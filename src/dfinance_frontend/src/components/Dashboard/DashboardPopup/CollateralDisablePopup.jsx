@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Check, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
@@ -18,39 +17,47 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
  * @param {Object} props - Component props
  * @returns {JSX.Element} - Returns the ColateralPopup component.
  */
-const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThreshold, reserveliquidationThreshold, assetSupply, assetBorrow, totalCollateral, totalDebt, currentCollateralStatus, Ltv, borrowableValue, borrowableAssetValue, isModalOpen, handleModalOpen, setIsModalOpen, onLoadingChange, }) => {
-
+const ColateralPopup = ({
+  asset,
+  image,
+  supplyRateAPR,
+  balance,
+  liquidationThreshold,
+  reserveliquidationThreshold,
+  assetSupply,
+  assetBorrow,
+  totalCollateral,
+  totalDebt,
+  currentCollateralStatus,
+  Ltv,
+  borrowableValue,
+  borrowableAssetValue,
+  isModalOpen,
+  handleModalOpen,
+  setIsModalOpen,
+  onLoadingChange,
+}) => {
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
   const { healthFactorBackend } = useUserData();
   const { backendActor } = useAuth();
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const { conversionRate } = useRealTimeConversionRate(asset);
 
   /* ===================================================================================
-   *                                 STATE MANAGEMENT
+   *                                 STATE MANAGEMENT & REDUX STATES
    * =================================================================================== */
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const value = currentHealthFactor;
   const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState(null);
-
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, SetError] = useState(null);
-
-  /* ===================================================================================
-   *                                  REDUX-SELECTER
-   * =================================================================================== */
-
   const dispatch = useDispatch();
 
   /**
@@ -76,7 +83,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
           draggable: true,
           progress: undefined,
         });
-        setIsModalOpen(false)
+        setIsModalOpen(false);
         return;
       }
       const addedAmount = currentCollateralStatus
@@ -108,7 +115,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
             progress: undefined,
           });
           setIsModalOpen(false);
-          setIsLoading(false)
+          setIsLoading(false);
         }
         if (
           typeof errorMsg === "string" &&
@@ -131,10 +138,24 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
             progress: undefined,
           });
 
-          SetError(
+          console.error(
             "Price fetch failed: Your assets are safe, try again after some time."
           );
           throw new Error("ExchangeRateError: Price fetch failed.");
+        }
+        if (errorMsg?.NegativeAmount === null) {
+          toast.error("Amount must be a positive number", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+
+          console.error("Amount must be a positive number");
         }
         if (errorMsg?.LTVGreaterThanThreshold === null) {
           const errorText =
@@ -155,8 +176,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
 
         throw new Error(JSON.stringify(errorMsg));
       }
-
-
     } catch (error) {
       console.error("Error in toggleCollateral:", error);
       throw error;
@@ -192,7 +211,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
       setIsVisible(false);
     } catch (error) {
       console.error("Error updating collateral:", error);
-      const errorMessage = error?.message || "An unexpected error occurred.";
     } finally {
       setIsLoading(false);
     }
@@ -203,15 +221,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
-
-  // Function to calculate LTV (Loan-to-Value)
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return (totalDeptValue / totalCollateralValue) * 100;
-  };
-
 
   // Function to format the value based on the conditions
   const formatValue = (value) => {
@@ -232,20 +241,24 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
   // Function to truncate the number to a specific number of decimal places
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+    return (Math.floor(num * factor) / factor).toFixed(decimals);
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (paymentModalRef.current && !paymentModalRef.current.contains(event.target)) {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
         setIsPaymentDone(false);
-        setIsVisible(false)
-        setIsModalOpen(false)
+        setIsVisible(false);
+        setIsModalOpen(false);
       }
     };
 
@@ -257,7 +270,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
     }
   }, [isPaymentDone]);
 
-
   useEffect(() => {
     if (assetSupply && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
@@ -267,7 +279,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
     } else {
       setUsdValue(0);
     }
-  }, [amount, conversionRate]);
+  }, [assetSupply, conversionRate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -312,8 +324,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
     }
 
     const healthFactor = result;
-    const ltv = calculateLTV(adjustedCollateral, totalDebt);
-    setPrevHealthFactor(currentHealthFactor);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -343,7 +353,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
     reserveliquidationThreshold,
     assetSupply,
     assetBorrow,
-    amount,
     usdValue,
     currentCollateralStatus,
     totalCollateral,
@@ -389,15 +398,17 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
               </div>
               <div className="w-full bg-gray-100 cursor-pointer p-3  rounded-md text-xs sm:text-sm dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-full flex justify-between items-center ">
-                  <p className="text-xs sm:text-sm">Supply Balance</p>
-                  <div className="w-auto flex items-center gap-2">
+                  <p className="text-xs sm:text-[13px]">Supply Balance</p>
+                  <div className="w-auto flex items-center gap-1">
                     <img
                       src={image}
                       alt="connect_wallet_icon"
-                      className="object-cover w-4 h-4 sm:w-6 sm:h-6 rounded-full"
+                      className="object-cover w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
-                    <span className="text-xs sm:text-lg">{formatValue(assetSupply)}</span>
-                    <span className="text-xs sm:text-lg">{asset}</span>
+                    <span className="text-xs sm:text-[14px]">
+                      {formatValue(assetSupply)}
+                    </span>
+                    <span className="text-xs sm:text-[13px]">{asset}</span>
                   </div>
                 </div>
 
@@ -417,9 +428,7 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
                                   : "text-orange-300"
                           }`}
                       >
-                        {truncatedValue > 100
-                          ? "Infinity"
-                          : (truncatedValue)}
+                        {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
@@ -445,7 +454,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
               </div>
             </div>
           </div>
-
 
           {value <= 1 ? (
             <div className="w-full flex flex-col my-3 space-y-2">
@@ -476,7 +484,6 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
               : `Enable ${asset} as collateral`}
           </button>
 
-
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
@@ -492,7 +499,10 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
       )}
 
       {isPaymentDone && (
-        <div ref={paymentModalRef} className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
+        <div
+          ref={paymentModalRef}
+          className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 py-3 px-5 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50"
+        >
           <div className="w-full flex flex-col items-center">
             <button
               onClick={handleClosePaymentPopup}
@@ -520,8 +530,13 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
             <div className="w-[325px] lg1:w-[420px] absolute bg-white shadow-xl  rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2  text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
               <div className="w-full flex flex-col items-center ">
                 <div className="w-full flex items-center justify-between  ">
-                  <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">Important Message</h1>
-                  <button onClick={handleClosePaymentPopup} className="text-gray-400 focus:outline-none mt-3 mr-4">
+                  <h1 className="font-semibold text-lg text-orange-400 text-center flex-grow mt-3">
+                    Important Message
+                  </h1>
+                  <button
+                    onClick={handleClosePaymentPopup}
+                    className="text-gray-400 focus:outline-none mt-3 mr-4"
+                  >
                     <X size={22} />
                   </button>
                 </div>
@@ -532,19 +547,19 @@ const ColateralPopup = ({ asset, image, supplyRateAPR, balance, liquidationThres
                           dark:to-darkGradientEnd 
                           dark:text-darkText p-2 "
                 >
-
                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
                     Thanks for helping us improve DFinance! <br></br> You’ve
                     uncovered a bug, and our dev team is on it.
                   </p>
 
                   <p className="text-gray-700 mb-4 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                    Your account is temporarily locked while we investigate and fix
-                    the issue. <br />
+                    Your account is temporarily locked while we investigate and
+                    fix the issue. <br />
                   </p>
                   <p className="text-gray-700 mb-2 text-[14px] dark:text-darkText mt-2 leading-relaxed">
-                    We appreciate your contribution and have logged your ID—testers
-                    like you are key to making DFinance better! <br />
+                    We appreciate your contribution and have logged your
+                    ID—testers like you are key to making DFinance better!{" "}
+                    <br />
                     If you have any questions, feel free to reach out.
                   </p>
                 </div>

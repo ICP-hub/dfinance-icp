@@ -7,45 +7,49 @@ import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useUserData from "../../components/customHooks/useUserData";
-import { Provider } from "react-redux";
 import { createStore } from "redux";
 
 // Mock all the required dependencies
 jest.mock("react-redux", () => ({
   useSelector: jest.fn(),
-  Provider: ({ children }) => children
+  Provider: ({ children }) => children,
 }));
 
 jest.mock("react-router-dom", () => ({
-  useNavigate: () => jest.fn()
+  useNavigate: () => jest.fn(),
 }));
 
-jest.mock("../../components/Common/Lottie", () => ({
+jest.mock("../../components/Common/lottie", () => ({
   __esModule: true,
-  default: () => <div data-testid="lottie-animation">Lottie Animation</div>
+  default: () => <div data-testid="lottie-animation">Lottie Animation</div>,
 }));
 
-jest.mock("../../components/Common/MiniLoader", () => ({
+jest.mock("../../components/Common/miniLoader", () => ({
   __esModule: true,
   default: ({ isLoading }) => (
-    <div data-testid="mini-loader">{isLoading ? "Loading..." : "Not Loading"}</div>
-  )
+    <div data-testid="mini-loader">
+      {isLoading ? "Loading..." : "Not Loading"}
+    </div>
+  ),
 }));
 
 jest.mock("../../components/Dashboard/WalletModal", () => ({
   __esModule: true,
-  default: () => <div data-testid="wallet-modal">Wallet Modal</div>
+  default: () => <div data-testid="wallet-modal">Wallet Modal</div>,
 }));
 
-jest.mock("../../components/Dashboard/DashboardPopup/CanisterDrainPopup", () => ({
-  __esModule: true,
-  default: ({ onClose }) => (
-    <div data-testid="freeze-canister-popup">
-      Freeze Canister Popup
-      <button onClick={onClose}>Close</button>
-    </div>
-  )
-}));
+jest.mock(
+  "../../components/Dashboard/DashboardPopup/CanisterDrainPopup",
+  () => ({
+    __esModule: true,
+    default: ({ onClose }) => (
+      <div data-testid="freeze-canister-popup">
+        Freeze Canister Popup
+        <button onClick={onClose}>Close</button>
+      </div>
+    ),
+  })
+);
 
 jest.mock("../../components/Faucet/FaucetPopup", () => ({
   __esModule: true,
@@ -54,16 +58,18 @@ jest.mock("../../components/Faucet/FaucetPopup", () => ({
       Faucet Popup for {asset}
       <button onClick={onClose}>Close</button>
     </div>
-  )
+  ),
 }));
 
 jest.mock("../../components/customHooks/useAssets", () => jest.fn());
 
 jest.mock("../../utils/useAuthClient", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () => jest.fn());
+jest.mock("../../components/customHooks/useFetchConversionRate", () =>
+  jest.fn()
+);
 
 jest.mock("../../components/customHooks/useUserData", () => jest.fn());
 
@@ -77,7 +83,7 @@ jest.mock("../../../public/assests-icon/ICPMARKET.png", () => "icp.png");
 // Create a mock Redux store
 const mockStore = createStore(() => ({
   faucetUpdate: { refreshTrigger: false },
-  utility: { isSwitchingWallet: false }
+  utility: { isSwitchingWallet: false },
 }));
 
 describe("FaucetDetails Component", () => {
@@ -86,24 +92,18 @@ describe("FaucetDetails Component", () => {
     useSelector.mockImplementation((selector) =>
       selector({
         faucetUpdate: { refreshTrigger: false },
-        utility: { isSwitchingWallet: false }
+        utility: { isSwitchingWallet: false },
       })
     );
 
     useAssetData.mockReturnValue({
-      filteredItems: [
-        ["ckBTC"],
-        ["ckETH"],
-        ["ckUSDC"],
-        ["ICP"],
-        ["ckUSDT"]
-      ],
-      loading: false
+      filteredItems: [["ckBTC"], ["ckETH"], ["ckUSDC"], ["ICP"], ["ckUSDT"]],
+      loading: false,
     });
 
     useAuth.mockReturnValue({
       isAuthenticated: true,
-      backendActor: {}
+      backendActor: {},
     });
 
     useFetchConversionRate.mockReturnValue({
@@ -123,7 +123,7 @@ describe("FaucetDetails Component", () => {
 
     useUserData.mockReturnValue({
       isFreezePopupVisible: false,
-      setIsFreezePopupVisible: jest.fn()
+      setIsFreezePopupVisible: jest.fn(),
     });
   };
 
@@ -143,7 +143,7 @@ describe("FaucetDetails Component", () => {
   test("displays loading state when data is being fetched", () => {
     useAssetData.mockReturnValue({
       filteredItems: [],
-      loading: true
+      loading: true,
     });
 
     render(<FaucetDetails />);
@@ -154,7 +154,7 @@ describe("FaucetDetails Component", () => {
   test("displays 'NO ASSETS FOUND!' when there are no assets", () => {
     useAssetData.mockReturnValue({
       filteredItems: [],
-      loading: false
+      loading: false,
     });
 
     render(<FaucetDetails />);
@@ -172,7 +172,7 @@ describe("FaucetDetails Component", () => {
     expect(screen.getByText("ICP")).toBeInTheDocument();
     expect(screen.getByText("ckUSDT")).toBeInTheDocument();
   });
-// show faucet buttons for each asset 
+  // show faucet buttons for each asset
   test("shows faucet buttons for each asset", () => {
     render(<FaucetDetails />);
 
@@ -213,7 +213,7 @@ describe("FaucetDetails Component", () => {
   test("shows wallet modal when user is not authenticated", () => {
     useAuth.mockReturnValue({
       isAuthenticated: false,
-      backendActor: {}
+      backendActor: {},
     });
 
     render(<FaucetDetails />);
@@ -224,7 +224,7 @@ describe("FaucetDetails Component", () => {
     useSelector.mockImplementation((selector) =>
       selector({
         faucetUpdate: { refreshTrigger: false },
-        utility: { isSwitchingWallet: true }
+        utility: { isSwitchingWallet: true },
       })
     );
 
@@ -265,7 +265,7 @@ describe("FaucetDetails Component", () => {
   test("shows freeze canister popup when isFreezePopupVisible is true", () => {
     useUserData.mockReturnValue({
       isFreezePopupVisible: true,
-      setIsFreezePopupVisible: jest.fn()
+      setIsFreezePopupVisible: jest.fn(),
     });
 
     render(<FaucetDetails />);
@@ -276,7 +276,7 @@ describe("FaucetDetails Component", () => {
     const setIsFreezePopupVisible = jest.fn();
     useUserData.mockReturnValue({
       isFreezePopupVisible: true,
-      setIsFreezePopupVisible
+      setIsFreezePopupVisible,
     });
 
     render(<FaucetDetails />);
@@ -294,7 +294,7 @@ describe("FaucetDetails Component", () => {
     useFetchConversionRate.mockReturnValue({
       ...useFetchConversionRate(),
       fetchBalance,
-      fetchConversionRate
+      fetchConversionRate,
     });
 
     render(<FaucetDetails />);
@@ -324,7 +324,7 @@ describe("FaucetDetails Component", () => {
   test("updates body overflow style when freeze popup is visible", () => {
     useUserData.mockReturnValue({
       isFreezePopupVisible: true,
-      setIsFreezePopupVisible: jest.fn()
+      setIsFreezePopupVisible: jest.fn(),
     });
 
     render(<FaucetDetails />);
@@ -334,7 +334,7 @@ describe("FaucetDetails Component", () => {
     // Cleanup
     useUserData.mockReturnValue({
       isFreezePopupVisible: false,
-      setIsFreezePopupVisible: jest.fn()
+      setIsFreezePopupVisible: jest.fn(),
     });
 
     render(<FaucetDetails />);

@@ -26,6 +26,7 @@ pub enum Error {
     LessRewardAmount,
     UnauthorizedAccess,
     UserNotFound,
+    UserFaucetReserveNotFound,
     BorrowingNotEnabled,
     NoDebtToRepay,
     NoCanisterIdFound,
@@ -72,9 +73,9 @@ pub enum Error {
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
     AmountSubtractionError,
-    USERCANNOTBELIQUIDATED,
     TOOMANYREQUESTS,
     BLOCKEDFORONEHOUR,
+    USERCANNOTBELIQUIDATED,
     FeeExceedsAmount ,
     LiquidationProtocolfeeIsHigher,
     RateLimitExceeded,
@@ -93,7 +94,10 @@ pub enum Error {
     InvalidValue,
     NoFaucetReservesFound,
     InvalidAssetImageUrl,
-    UserFaucetReserveNotFound
+    ErrorCreatingCanister,
+    ErrorUpdateCanisterSetting,
+    NoCollateralFound,
+    LowPlatformBalance
 }
 
 impl Error {
@@ -185,9 +189,13 @@ impl Error {
             Error::NotAnAuditor => "Caller is not an auditor!",
             Error::ControllerNotFound => "Controller not found!",
             Error::InvalidValue => "Enter value is invalid",
-            Error::NoFaucetReservesFound => "No faucet reserves found",
             Error::UserFaucetReserveNotFound => "User faucet reserve not found",
             Error::InvalidAssetImageUrl => "Invalid asset image URL",
-       }
+            Error::ErrorCreatingCanister => "Error creating canister",
+            Error::ErrorUpdateCanisterSetting => "Error updating canister settings",
+            Error::NoFaucetReservesFound => "No faucet reserves found",
+            Error::NoCollateralFound => "No collateral found",
+            Error::LowPlatformBalance => "Platform balance is low"
+        }
     }
 }

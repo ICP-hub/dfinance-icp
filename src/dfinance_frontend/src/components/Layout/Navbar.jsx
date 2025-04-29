@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Info, User } from "lucide-react";
+import { Info } from "lucide-react";
 import MobileTopNav from "../Home/MobileTopNav";
 import { useAuth } from "../../utils/useAuthClient";
 import { setUserData } from "../../redux/reducers/userReducer";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import { useRef } from "react";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import { FaWallet } from "react-icons/fa";
-import loader from "../../../public/Helpers/loader.svg";
+import loader from "../../../public/helper/loader.svg";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
-import TestnetModePopup from "../Dashboard/DashboardPopup/testnetmode";
+import TestnetModePopup from "../Dashboard/DashboardPopup/Testnetmode";
 
 import {
   DASHBOARD_TOP_NAV_LINK,
@@ -26,28 +26,22 @@ import {
   generateRandomUsername,
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
-import ThemeToggle from "../Common/ThemeToggle";
-import settingsIcon from "../../../public/Helpers/Settings.svg";
+import ThemeToggle from "../Common/themeToggle";
+import settingsIcon from "../../../public/helper/settings.svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
-import CustomizedSwitches from "../Common/MaterialUISwitch";
+import CustomizedSwitches from "../Common/materialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import { X } from 'lucide-react';
 import useAssetData from "../customHooks/useAssets";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Principal } from "@dfinity/principal";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../customHooks/useTransferFee";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
+
 /**
  * Navbar Component
  *
@@ -67,10 +61,7 @@ export default function Navbar({ isHomeNav }) {
   const location = useLocation();
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const theme = useSelector((state) => state.theme.theme);
-  const {
-    assets,
-    AssetImages
-  } = useAssetData();
+  const { assets, AssetImages } = useAssetData();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
@@ -80,23 +71,17 @@ export default function Navbar({ isHomeNav }) {
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
   const { isWalletModalOpen } = useSelector((state) => state.utility);
-
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-  const { isAuthenticated, login, logout, principal, User, accountIdString } = useAuth();
-  const [asset, setAsset] = useState("ICP"); // default asset
-  const assetImages = {
-    ckBTC: ckBTC,
-    ckETH: ckETH,
-    ckUSDC: ckUSDC,
-    ckUSDT: ckUSDT,
-    ICP: icp,
-  };
+  const { isAuthenticated, login, logout, principal, accountIdString } =
+    useAuth();
+  const [asset, setAsset] = useState("ICP");
   const [amount, setAmount] = useState("");
-  const [maxClicked, setMaxClicked] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const isButtonDisabled = false;
+  const isProduction = process.env.DFX_PRODUCTION === 'true';
+
   const {
     fetchConversionRate,
     ckBTCBalance,
@@ -106,9 +91,6 @@ export default function Navbar({ isHomeNav }) {
     ckUSDTBalance,
     fetchBalance,
   } = useFetchConversionRate();
-
-
-
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -122,16 +104,15 @@ export default function Navbar({ isHomeNav }) {
   );
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [isMobileNav, setIsMobileNav] = useState(false);
-  const [switchTokenDrop, setSwitchTokenDrop] = useState(false);
   const [switchWalletDrop, setSwitchWalletDrop] = useState(false);
   const [showTestnetPopup, setShowTestnetPopup] = useState(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTransferDropdownOpen, setIsTransferDropDownOpen] = useState(false);
   const [showDepositPopup, setShowDepositPopup] = useState(false);
   const [receiverAddress, setReceiverAddress] = useState("");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
+  const popupPosition = { top: 0, left: 0 };
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -141,7 +122,6 @@ export default function Navbar({ isHomeNav }) {
   const toggleDropdown = () => {
     setIsTransferDropDownOpen(!isTransferDropdownOpen);
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -151,14 +131,11 @@ export default function Navbar({ isHomeNav }) {
   const toggleDepositDropdown = () => {
     setShowDepositPopup(!showDepositPopup);
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
   };
 
-  const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
   const hash = window.location.hash;
   const ledgerActors = useSelector((state) => state.ledger);
 
@@ -192,6 +169,7 @@ export default function Navbar({ isHomeNav }) {
       "Minting of tokens failed. Your account state has been rolled back. Try again later.",
     Default: "An unexpected error occurred. Please try again later.",
   };
+
   // asset balances for retrieving the walet balance
   const assetBalances = {
     ICP: ckICPBalance,
@@ -217,6 +195,7 @@ export default function Navbar({ isHomeNav }) {
       });
       return;
     }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -229,12 +208,11 @@ export default function Navbar({ isHomeNav }) {
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
 
     try {
-      const approval = await ledgerActor.icrc2_approve({
+      await ledgerActor.icrc2_approve({
         fee: [],
         memo: [],
         from_subaccount: [],
@@ -301,11 +279,11 @@ export default function Navbar({ isHomeNav }) {
       } else if (asset === "ckUSDT") {
         ledgerActor = ledgerActors.ckUSDT;
       }
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
 
-      let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
+      let amountAsNat64 = Math.round(
+        amount.replace(/,/g, "") * Math.pow(10, 8)
+      );
       const scaledAmount = amountAsNat64;
-
 
       const transferFromArgs = {
         from: {
@@ -323,12 +301,10 @@ export default function Navbar({ isHomeNav }) {
         spender_subaccount: [],
       };
 
-      // Call the icrc2_transfer_from function
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in response) {
-
         setIsTransferDropDownOpen(false);
 
         if (isSoundOn) {
@@ -401,18 +377,22 @@ export default function Navbar({ isHomeNav }) {
         progress: undefined,
       });
     } else if (errorMsg.toLowerCase().includes("unauthorized access")) {
-      toast.error("Unauthorized access. Only platform or controllers can perform this action.", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      toast.error(
+        "Unauthorized access. Only platform or controllers can perform this action.",
+        {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        }
+      );
     } else {
-      const userFriendlyMessage = errorMessages[errorKey] || errorMessages.Default;
+      const userFriendlyMessage =
+        errorMessages[errorKey] || errorMessages.Default;
       toast.error(`Supply failed: ${userFriendlyMessage}`, {
         className: "custom-toast",
         position: "top-center",
@@ -430,18 +410,12 @@ export default function Navbar({ isHomeNav }) {
   const handleTransferException = (error) => {
     const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
-
     const msgLower = message.toLowerCase();
 
     if (msgLower.includes("panic")) {
       setShowPanicPopup(true);
       setIsVisible(false);
-
     } else if (msgLower.includes("invalid character")) {
-      // Principal ID has an invalid character
-      const match = message.match(/"(.+?)"/);
-      const invalidChar = match ? match[1] : "?";
-
       toast.error("Invalid principal ID format ", {
         className: "custom-toast",
         position: "top-center",
@@ -452,7 +426,6 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-
     } else if (
       msgLower.includes("out of cycles") ||
       message.includes("Reject text: Canister")
@@ -467,7 +440,6 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-
     } else {
       toast.error(`Error: ${message}`, {
         className: "custom-toast",
@@ -485,13 +457,11 @@ export default function Navbar({ isHomeNav }) {
   //funtion for handle amount change
   const handleAmountChange = (e) => {
     setAmount(e.target.value);
-    setMaxClicked(false);
   };
 
   // Function to handle the click event on the "Max" button
   const handleMaxClick = () => {
     setAmount(supplyBalance.toString());
-    setMaxClicked(true);
   };
 
   // Function to handle the click event on the "Tour" button
@@ -502,11 +472,9 @@ export default function Navbar({ isHomeNav }) {
 
   // Function to handle the click event on the "Settings" button
   const handleCloseDropdownOnScroll = () => {
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
-
   };
 
   const handleCreateInternetIdentity = () => {
@@ -523,7 +491,6 @@ export default function Navbar({ isHomeNav }) {
   const handleButtonClick = () => {
     setShowTestnetPopup(true);
     setDropdownVisible(false);
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
 
     setIsPopupVisible(false);
@@ -536,7 +503,6 @@ export default function Navbar({ isHomeNav }) {
   // Function to handle the click event on the "Switch Wallet" button
   const handleSwitchWallet = () => {
     setSwitchWalletDrop(!switchWalletDrop);
-    setSwitchTokenDrop(false);
     setDropdownVisible(false);
     setIsPopupVisible(false);
     setShowTestnetPopup(false);
@@ -544,8 +510,6 @@ export default function Navbar({ isHomeNav }) {
 
   //function to click outside the dropdown
   const handleClickAway = () => {
-
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setDropdownVisible(false);
     setIsPopupVisible(false);
@@ -608,7 +572,6 @@ export default function Navbar({ isHomeNav }) {
   // Function to handle the dropdown to open
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
-    setSwitchTokenDrop(false);
     setSwitchWalletDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
@@ -623,7 +586,6 @@ export default function Navbar({ isHomeNav }) {
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setDropdownVisible(false);
   };
 
@@ -659,7 +621,7 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-  //function to trunccate the decimals up to 8 digits 
+  //function to trunccate the decimals up to 8 digits
   const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
@@ -677,15 +639,15 @@ export default function Navbar({ isHomeNav }) {
 
     try {
       Principal.fromText(trimmedValue);
-      ;
     } catch (error) {
       const errorMsg = error.toString();
-
 
       if (errorMsg.toLowerCase().includes("invalid character")) {
         const match = errorMsg.match(/"(.+?)"/);
         const invalidChar = match ? match[1] : "?";
-        console.error(`Principal ID contains an invalid character: "${invalidChar}"`);
+        console.error(
+          `Principal ID contains an invalid character: "${invalidChar}"`
+        );
       } else {
         console.error("Invalid principal ID format.");
       }
@@ -705,7 +667,7 @@ export default function Navbar({ isHomeNav }) {
    *                                  EFFECTS
    * =================================================================================== */
 
-  // Close the dropdown when the user scrolls 
+  // Close the dropdown when the user scrolls
   useEffect(() => {
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
     return () => {
@@ -713,17 +675,16 @@ export default function Navbar({ isHomeNav }) {
     };
   }, []);
 
-  // when dropdown open scroll is locked 
+  // when dropdown open scroll is locked
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
 
     if (shouldLockScroll) {
-      document.body.style.overflow = "hidden"; // Disable scroll
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ""; // Restore scroll
+      document.body.style.overflow = "";
     }
 
-    // Clean up on unmount (just in case)
     return () => {
       document.body.style.overflow = "";
     };
@@ -747,12 +708,16 @@ export default function Navbar({ isHomeNav }) {
     };
 
     fetchAllData();
-  }, [fetchBalance, fetchConversionRate, dashboardRefreshTrigger, toggleRefresh]);
+  }, [
+    fetchBalance,
+    fetchConversionRate,
+    dashboardRefreshTrigger,
+    toggleRefresh,
+  ]);
 
-  // funtion for Closing the dropdown when the user change location 
+  // funtion for Closing the dropdown when the user change location
   useEffect(() => {
     setSwitchWalletDrop(false);
-    setSwitchTokenDrop(false);
     setShowTestnetPopup(false);
     setIsPopupVisible(false);
     setDropdownVisible(false);
@@ -840,11 +805,15 @@ export default function Navbar({ isHomeNav }) {
                   onClick={handleLogoClick}
                   className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
                 />
-                <h1 className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer" onClick={handleLogoClick}>DFinance</h1>
+                <h1
+                  className="dark:text-darkText text-[#4137A8] font-semibold text-[1.4rem] md:text-[2rem] cursor-pointer"
+                  onClick={handleLogoClick}
+                >
+                  DFinance
+                </h1>
               </div>
 
-
-              {!isHomeNav && isTestnetMode && (
+              {!isHomeNav && isTestnetMode && !isProduction && (
                 <button
                   className="bg-[#4659CF]  z-50  hover:bg-blue-700 text-white font-bold rounded-full md:rounded  text-[12px] p-1 md:px-2 md:py-[1px] md:pt-[2px] mt-[1px] ml-3"
                   onClick={handleButtonClick}
@@ -983,7 +952,6 @@ export default function Navbar({ isHomeNav }) {
               <div className="flex items-center gap-2">
                 <div className="flex justify-end">
                   <div className="relative">
-
                     {isTransferDropdownOpen && (
                       <>
                         {/* Overlay that captures outside clicks */}
@@ -996,7 +964,6 @@ export default function Navbar({ isHomeNav }) {
                               setIsDropdownOpen(false);
                               setReceiverAddress("");
                               setAmount("");
-                              setMaxClicked(false);
                               setIsApproved(false);
                             }
                           }}
@@ -1004,13 +971,24 @@ export default function Navbar({ isHomeNav }) {
                           <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
                             {/* Add close button (X) in the top-right corner */}
                             <div className="flex justify-between items-center">
-                              <h1 className="font-semibold text-xl">Transfer</h1>
+                              <h1 className="font-semibold text-xl">
+                                Transfer
+                              </h1>
                               <button
                                 onClick={() => setIsTransferDropDownOpen(false)}
                                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
                                 </svg>
                               </button>
                             </div>
@@ -1026,12 +1004,13 @@ export default function Navbar({ isHomeNav }) {
                                       type="text"
                                       value={amount}
                                       onChange={handleAmountChange}
-                                      disabled={supplyBalance === 0 || isApproved}
+                                      disabled={
+                                        supplyBalance === 0 || isApproved
+                                      }
                                       className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none px-2 py-1 bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                                       placeholder={`Enter Amount `}
                                     />
-                                    <p className="text-[12px] text-gray-500 -mb-1">
-                                    </p>
+                                    <p className="text-[12px] text-gray-500 -mb-1"></p>
                                   </div>
 
                                   <div className="flex flex-col items-end gap-3">
@@ -1039,26 +1018,39 @@ export default function Navbar({ isHomeNav }) {
                                       {/* Replace image with dropdown */}
                                       <div className="relative">
                                         <button
-                                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                          onClick={() =>
+                                            setIsDropdownOpen(!isDropdownOpen)
+                                          }
                                           className="flex items-center gap-2 focus:outline-none"
                                         >
-
                                           {asset && (
                                             <img
-                                              src={AssetImages[assets.indexOf(asset)]} // Dynamically fetch image from AssetImages using assetIndex
+                                              src={
+                                                AssetImages[
+                                                assets.indexOf(asset)
+                                                ]
+                                              }
                                               alt={asset}
                                               className="object-fill w-6 h-6 rounded-full"
                                             />
                                           )}
-                                          <span className="text-lg">{asset}</span>
+                                          <span className="text-lg">
+                                            {asset}
+                                          </span>
                                           <svg
-                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                                              }`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg"
                                           >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth="2"
+                                              d="M19 9l-7 7-7-7"
+                                            ></path>
                                           </svg>
                                         </button>
 
@@ -1067,48 +1059,55 @@ export default function Navbar({ isHomeNav }) {
                                           <div
                                             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                                             onClick={(e) => {
-                                              // Close dropdown when clicking the overlay background
-                                              if (e.target === e.currentTarget) {
+                                              if (
+                                                e.target === e.currentTarget
+                                              ) {
                                                 setIsDropdownOpen(false);
                                               }
                                             }}
                                           >
                                             <div className="absolute right-[40px] mt-2 w-48 origin-top-right bg-white dark:bg-darkOverlayBackground border dark:border-gray-600 border-gray-300 rounded-xl shadow-md z-10">
-
                                               <div className="py-1">
                                                 {assets.map((a) => {
-                                                  const assetIndex = assets.indexOf(a); // Get the index of the asset in the assets array
+                                                  const assetIndex =
+                                                    assets.indexOf(a);
 
                                                   return (
                                                     <button
                                                       key={a}
                                                       className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
                                                       onClick={() => {
-                                                        // Clear amount when selecting a different asset
                                                         if (a !== asset) {
                                                           setAmount("");
-                                                          setMaxClicked(false);
                                                         }
                                                         setAsset(a);
-                                                        setIsDropdownOpen(false);
+                                                        setIsDropdownOpen(
+                                                          false
+                                                        );
                                                       }}
                                                     >
                                                       {/* Conditionally render the image using assetIndex */}
-                                                      {assetIndex !== -1 && AssetImages[assetIndex] && (
-                                                        <img
-                                                          key={assetIndex}
-                                                          src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
-                                                          alt={a || "asset"} // alt text should match the asset name
-                                                          className="rounded-full w-5 h-5 mt-1"
-                                                        />
-                                                      )}
+                                                      {assetIndex !== -1 &&
+                                                        AssetImages[
+                                                        assetIndex
+                                                        ] && (
+                                                          <img
+                                                            key={assetIndex}
+                                                            src={
+                                                              AssetImages[
+                                                              assetIndex
+                                                              ]
+                                                            }
+                                                            alt={a || "asset"}
+                                                            className="rounded-full w-5 h-5 mt-1"
+                                                          />
+                                                        )}
 
                                                       <span>{a}</span>
                                                     </button>
                                                   );
                                                 })}
                                               </div>
-
                                             </div>
                                           </div>
                                         )}
@@ -1120,22 +1119,26 @@ export default function Navbar({ isHomeNav }) {
                                       </p>
                                       <div className="flex gap-1 items-center">
                                         <p className="text-[12px] text-gray-500 -mb-[3px]">
-                                          {truncateToEightDecimals(supplyBalance)}
+                                          {truncateToEightDecimals(
+                                            supplyBalance
+                                          )}
                                         </p>
                                         <p
                                           className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                            ? "text-gray-400 cursor-not-allowed"
-                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                              ? "text-gray-400 cursor-not-allowed"
+                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                                             }`}
                                           onClick={() => {
-                                            if (supplyBalance > 0 && !isApproved) {
+                                            if (
+                                              supplyBalance > 0 &&
+                                              !isApproved
+                                            ) {
                                               handleMaxClick();
                                             }
                                           }}
                                         >
                                           Max
                                         </p>
-
                                       </div>
                                     </div>
                                   </div>
@@ -1174,7 +1177,8 @@ export default function Navbar({ isHomeNav }) {
                                 {amount > 0 && amount > supplyBalance && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
-                                      Insufficient wallet balance to transfer {asset}.
+                                      Insufficient wallet balance to transfer{" "}
+                                      {asset}.
                                     </div>
                                   </div>
                                 )}
@@ -1182,8 +1186,9 @@ export default function Navbar({ isHomeNav }) {
                                 {supplyBalance <= 0 && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
-                                      You do not have any {asset} in your wallet for transferring.
-                                      Please deposit {asset} before attempting to transfer.
+                                      You do not have any {asset} in your wallet
+                                      for transferring. Please deposit {asset}{" "}
+                                      before attempting to transfer.
                                     </div>
                                   </div>
                                 )}
@@ -1193,13 +1198,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => !isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                      isLoading ||
-                                      isButtonDisabled ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
+                                        isLoading ||
+                                        isButtonDisabled ||
+                                        amount <= 0 ||
+                                        supplyBalance <= 0 ||
+                                        amount > supplyBalance
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
                                       }`}
                                     disabled={
                                       isApproved ||
@@ -1216,13 +1221,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                      isButtonDisabled ||
-                                      isLoading ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
+                                        isButtonDisabled ||
+                                        isLoading ||
+                                        amount <= 0 ||
+                                        supplyBalance <= 0 ||
+                                        amount > supplyBalance
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
                                       }`}
                                     disabled={
                                       !isApproved ||
@@ -1257,12 +1262,14 @@ export default function Navbar({ isHomeNav }) {
                     {/* Transfer Assets Popup */}
                     {showDepositPopup && (
                       <>
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
-                          // Close dropdown when clicking the overlay background
-                          if (e.target === e.currentTarget) {
-                            setShowDepositPopup(false);
-                          }
-                        }}>
+                        <div
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                          onClick={(e) => {
+                            if (e.target === e.currentTarget) {
+                              setShowDepositPopup(false);
+                            }
+                          }}
+                        >
                           <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
                             {/* Add close button (X) in the top-right corner */}
                             <div className="flex justify-between items-center">
@@ -1271,8 +1278,17 @@ export default function Navbar({ isHomeNav }) {
                                 onClick={() => setShowDepositPopup(false)}
                                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-5 w-5"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
                                 </svg>
                               </button>
                             </div>
@@ -1307,7 +1323,6 @@ export default function Navbar({ isHomeNav }) {
                                     }}
                                   />
                                 </div>
-
                               </div>
 
                               <div className="w-full">
@@ -1324,7 +1339,9 @@ export default function Navbar({ isHomeNav }) {
                                   <GrCopy
                                     className="h-5 w-4 ml-4 lg1:ml-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-darkText"
                                     onClick={() => {
-                                      navigator.clipboard.writeText(accountIdString);
+                                      navigator.clipboard.writeText(
+                                        accountIdString
+                                      );
                                       toast.dismiss();
                                       toast.success(`Account Id  Coppied !`, {
                                         className: "custom-toast",
@@ -1340,8 +1357,6 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </div>
                               </div>
-
-
                             </div>
                           </div>
                         </div>
@@ -1349,7 +1364,6 @@ export default function Navbar({ isHomeNav }) {
                     )}
 
                     {/* Deposit Assets Popup */}
-
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
@@ -1385,7 +1399,11 @@ export default function Navbar({ isHomeNav }) {
                           style={{ pointerEvents: "auto" }}
                         >
                           <div className="w-full flex items-center gap-2">
-                            <img src={loader} alt="square" className="w-8 h-8" />
+                            <img
+                              src={loader}
+                              alt="square"
+                              className="w-8 h-8"
+                            />
                             <h1 className="font-bold md:text-xl text-[17px] text-blue-800 dark:text-darkText">
                               {truncateString(principal, 20)}
                             </h1>
@@ -1423,8 +1441,6 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
-
-
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
                               { }
@@ -1587,9 +1603,9 @@ export default function Navbar({ isHomeNav }) {
 
                                 { }
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
-                                  Enabling this will allow the user to hear sound
-                                  when supply, borrow, repay, or withdraw actions
-                                  are performed.
+                                  Enabling this will allow the user to hear
+                                  sound when supply, borrow, repay, or withdraw
+                                  actions are performed.
                                 </div>
                               </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import { FOOTER_LINK_1, FOOTER_LINK_2 } from "../../utils/constants";
-import Ellipse from "../Common/Ellipse";
+import Ellipse from "../Common/ellipse";
 import { useAuth } from "../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
@@ -15,15 +15,11 @@ const Footer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
-
-  /* ===================================================================================
-  *                                 Redux Hooks
-  * =================================================================================== */
   const ledgerActors = useSelector((state) => state.ledger);
 
   /* ===================================================================================
-  *                                 STATE-MANAGEMENT
-  * =================================================================================== */
+   *                                 STATE-MANAGEMENT
+   * =================================================================================== */
   const [loading, setLoading] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isTester, setIsTester] = useState(false);
@@ -55,8 +51,6 @@ const Footer = () => {
     updateZoom(100);
   };
 
-
-  //
   const handleLogoClick = () => {
     if (location.pathname === "/") {
       window.scrollTo(0, 0);
@@ -68,9 +62,7 @@ const Footer = () => {
     }
   };
 
-
-
-  //  // Function to handle approval
+  // Function to handle approval
   const handleApprove = async () => {
     const ledgerActor = ledgerActors.ckUSDC;
     try {
@@ -80,7 +72,7 @@ const Footer = () => {
         memo: [],
         from_subaccount: [],
         created_at_time: [],
-        amount: 34000000000, // Adjust amount if needed
+        amount: 34000000000,
         expected_allowance: [],
         expires_at: [],
         spender: {
@@ -91,10 +83,8 @@ const Footer = () => {
 
       if (approval?.Ok && approval.Ok > 0n) {
         setIsApproved(true);
-
       } else {
         setIsApproved(false);
-
       }
     } catch (error) {
       console.error(`Approval failed: ${error.message}`);
@@ -106,7 +96,6 @@ const Footer = () => {
   // Function to create a user reserve
   const handleCreateUserReserve = async () => {
     if (!isApproved) {
-
       return;
     }
 
@@ -265,7 +254,7 @@ const Footer = () => {
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img
-                    src="./social/X.png"
+                    src="./social/x.png"
                     alt="X"
                     className="w-full h-full object-contain"
                   />

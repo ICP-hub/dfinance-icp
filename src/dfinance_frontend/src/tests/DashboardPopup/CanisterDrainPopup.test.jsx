@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup"; // Component to test
-import { BrowserRouter as Router } from "react-router-dom"; // Router for rendering with routing context
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
+import { BrowserRouter as Router } from "react-router-dom";
 
 describe("FreezeCanisterPopup", () => {
   // Test case to verify the popup renders correctly and closes when the close button is clicked
@@ -17,7 +17,9 @@ describe("FreezeCanisterPopup", () => {
 
     // Verifying the presence of popup content
     expect(screen.getByText(/Canister Out of Cycles/i)).toBeInTheDocument(); // Ensure heading is present
-    expect(screen.getByText(/The canister is out of cycles./i)).toBeInTheDocument(); // Ensure body text is displayed
+    expect(
+      screen.getByText(/The canister is out of cycles./i)
+    ).toBeInTheDocument(); // Ensure body text is displayed
     expect(screen.getByText(/Your funds are safe./i)).toBeInTheDocument(); // Ensure safety message is displayed
 
     // Simulating a click on the 'Close' button

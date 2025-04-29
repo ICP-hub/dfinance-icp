@@ -1,18 +1,15 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import Button from "../Common/Button";
-import {
-  FAUCET_ASSETS_TABLE_COL,
-} from "../../utils/constants";
-import { useNavigate } from "react-router-dom";
+import Button from "../Common/button";
+import { FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
 import FaucetPopup from "./FaucetPopup";
 import useAssetData from "../customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import MiniLoader from "../Common/MiniLoader";
+import MiniLoader from "../Common/miniLoader";
 import WalletModal from "../Dashboard/WalletModal";
-import Lottie from "../Common/Lottie";
+import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";
 const ITEMS_PER_PAGE = 8;
@@ -30,7 +27,7 @@ const FaucetDetails = () => {
    * =================================================================================== */
 
   const { filteredItems, loading, assets, AssetImages } = useAssetData();
-  const { isAuthenticated, backendActor } = useAuth();
+  const { isAuthenticated } = useAuth();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -47,61 +44,53 @@ const FaucetDetails = () => {
   } = useFetchConversionRate();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
 
-  const navigate = useNavigate();
-
   /* ===================================================================================
    *                                  STATE-MANAGEMENT
    * =================================================================================== */
 
   const [showPopup, setShowPopup] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  //This state might be used later
+  const currentPage = 1;
   const [ckBTCUsdBalance, setCkBTCUsdBalance] = useState(null);
   const [ckETHUsdBalance, setCkETHUsdBalance] = useState(null);
   const [ckUSDCUsdBalance, setCkUSDCUsdBalance] = useState(null);
   const [ckICPUsdBalance, setCkICPUsdBalance] = useState(null);
   const [ckUSDTUsdBalance, setCkUSDTUsdBalance] = useState(null);
-
   const [hasLoaded, setHasLoaded] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  // Redux selector for faucetUpdate, triggers refresh when data is updated
   const refreshTrigger = useSelector(
     (state) => state.faucetUpdate.refreshTrigger
   );
 
-  // Redux selector for wallet switching status
   const { isSwitchingWallet } = useSelector((state) => state.utility);
-
 
   /* ===================================================================================
    *                                  FUNCTION
    * =================================================================================== */
 
-
   // This function is called when the user clicks on the "Faucet" button for a specific asset.
   const handleFaucetClick = (asset) => {
-    // Directly set the selected asset from the AssetImages array based on asset name
-    const assetIndex = assets?.indexOf(asset); // Find the index of the asset in the assets array
-    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null; // If asset exists, get the corresponding image
-  
-    setSelectedAsset({ asset, assetImage }); // Update the selected asset state
-    setShowPopup(true); // Show the popup
-  };
-  
+    const assetIndex = assets?.indexOf(asset);
+    const assetImage = assetIndex >= 0 ? AssetImages[assetIndex] : null;
 
-  // This function is for closing the popup
+    setSelectedAsset({ asset, assetImage });
+    setShowPopup(true);
+  };
+
   const closePopup = () => {
-    setShowPopup(false); // Hide the faucet popup
+    setShowPopup(false);
   };
 
   // This helps for pagination: calculating the items for the current page
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE; // Get the index of the last item
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE; // Get the index of the first item
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem); // Get the items for the current page
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -109,13 +98,13 @@ const FaucetDetails = () => {
 
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 
@@ -254,7 +243,6 @@ const FaucetDetails = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => (
-
                     <tr
                       key={index}
                       className={`w-full font-bold hover:bg-[#ddf5ff8f]  text-sm  rounded-lg ${index !== currentItems.length - 1
@@ -274,7 +262,6 @@ const FaucetDetails = () => {
                           {item[0]}
                         </div>
                       </td>
-
 
                       <td>
                         <div className="p-3">

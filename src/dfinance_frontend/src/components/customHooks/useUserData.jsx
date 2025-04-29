@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import useAssetData from "./useAssets";
 import { idlFactory } from "../../../../declarations/debttoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/dtoken";
+
 /**
  * Custom hook to fetch and manage user data from the backend canister.
  * Includes user account data, health factor, and error handling.
@@ -143,7 +144,6 @@ const useUserData = () => {
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
 
-
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -158,8 +158,6 @@ const useUserData = () => {
           }
         });
 
-
-
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
         const borrowBalancesParam =
@@ -170,7 +168,6 @@ const useUserData = () => {
           assetBalancesParam,
           borrowBalancesParam
         );
-
 
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");

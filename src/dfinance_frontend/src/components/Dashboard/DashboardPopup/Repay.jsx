@@ -46,49 +46,37 @@ const Repay = ({
   onLoadingChange,
 }) => {
   /* ===================================================================================
-   *                                  HOOKS
+   *                                  HOOKS &  REDUX-SELECTER
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const approveButtonRef = useRef(null);
   const repayButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const { healthFactorBackend } = useUserData();
+  const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
-
-  const [amount, setAmount] = useState(null);
+  const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [maxAmount, setMaxAmount] = useState("0");
   const [maxClicked, setMaxClicked] = useState(false);
-
-  /* ===================================================================================
-   *                                  REDUX-SELECTER
-   * =================================================================================== */
-
-  const fees = useSelector((state) => state.fees.fees);
   const dispatch = useDispatch();
+  const paymentModalRef = useRef(null);
 
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
 
-  // Memoize the principal object to prevent unnecessary re-renders
   const principalObj = useMemo(() => {
     if (!principal) return null;
     try {
@@ -102,7 +90,6 @@ const Repay = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-  const paymentModalRef = useRef(null);
 
   // Function to truncate a number to 8 decimal places
   const truncateToEightDecimals = (value) => {
@@ -169,21 +156,18 @@ const Repay = ({
     if (isNaN(numericAmount) || numericAmount < 0) {
       setAmount("");
       setUsdValue("0.00"); // ✅ Always show 2 decimal places
-      setError("Amount must be a positive number");
+      console.error("Amount must be a positive number");
       return;
     }
     if (numericAmount > assetBorrow) {
-      setError("Amount exceeds the supply balance");
+      console.error("Amount exceeds the supply balance");
       return;
     }
     const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
     const convertedValue = numericAmount * adjustedConversionRate;
     setUsdValue(convertedValue.toFixed(7));
     setAmount(inputAmount);
-    setError("");
   };
-
-
 
   const numericBalance = balance;
   const supplyBalance = numericBalance;
@@ -222,7 +206,7 @@ const Repay = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
     const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -309,27 +293,14 @@ const Repay = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
-    }
-
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") {
-      ledgerActor = ledgerActors.ckUSDT;
+      return;
     }
 
     try {
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
       const scaledAmount = amountAsNat64;
       const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
       const totalAmount = transferFeeBigInt
@@ -506,14 +477,6 @@ const Repay = ({
     );
   };
 
-  // Function to calculate the Loan-to-Value (LTV) ratio
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return totalDeptValue / totalCollateralValue;
-  };
-
   // Function to handle the click event for the Max button
   const handleMaxClick = () => {
     const truncateToEightDecimals = (value) => {
@@ -539,13 +502,12 @@ const Repay = ({
           ? Number(selectedBalance).toFixed(7)
           : truncateToEightDecimals(selectedBalance)
       : "0";
-    ("displayBalance", displayBalance)
+    "displayBalance", displayBalance;
     setMaxAmount(displayBalance.toString());
-    setAmount(displayBalance)
+    setAmount(displayBalance);
     setMaxClicked(true);
     updateAmountAndUsdValue(displayBalance.toString());
   };
-
 
   // Function to handle the click event for the close button
   const truncateToDecimals = (num, decimals) => {
@@ -578,7 +540,6 @@ const Repay = ({
       };
     }
   }, [isPaymentDone]);
-
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -616,16 +577,6 @@ const Repay = ({
       setUsdValue(truncatedValue);
     } else {
       setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  useEffect(() => {
-    if (assetBorrow && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
     }
   }, [amount, conversionRate]);
 
@@ -671,9 +622,7 @@ const Repay = ({
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
 
-    setPrevHealthFactor(currentHealthFactor);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -749,14 +698,13 @@ const Repay = ({
                       </p>
                       <p
                         className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                           }`}
                         onClick={handleMaxClick}
                       >
                         Max
                       </p>
-
                     </div>
                   </div>
                 </div>
@@ -780,7 +728,6 @@ const Repay = ({
                           minimumFractionDigits: 8,
                           maximumFractionDigits: 8,
                         })}{" "}
-
                         Max
                       </p>
                     </div>
@@ -791,14 +738,14 @@ const Repay = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : truncatedValue <= 1
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -806,14 +753,14 @@ const Repay = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -897,13 +844,12 @@ const Repay = ({
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                    isLoading ||
-                    isButtonDisabled ||
-                    amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    amount > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                      isLoading ||
+                      amount <= 0 ||
+                      supplyBalance <= 0 ||
+                      amount > supplyBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                     }`}
                   disabled={
                     isApproved ||
@@ -921,13 +867,12 @@ const Repay = ({
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                    isButtonDisabled ||
-                    isLoading ||
-                    amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    amount > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                      isLoading ||
+                      amount <= 0 ||
+                      supplyBalance <= 0 ||
+                      amount > supplyBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                     }`}
                   disabled={
                     !isApproved ||

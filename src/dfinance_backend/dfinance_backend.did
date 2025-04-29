@@ -9,6 +9,7 @@ type CachedPrice = record { price : nat };
 type Error = variant {
   NormalizedSupply;
   ConversionErrorToU128;
+  NoCollateralFound;
   NoDebtToRepay;
   NoFaucetReservesFound;
   SupportNotFound;
@@ -53,6 +54,7 @@ type Error = variant {
   InvalidUserId;
   UserFaucetReserveNotFound;
   ErrorDTokenBalanceLessThan;
+  NegativeAmount;
   EmailError;
   ErrorPriceCache;
   NotADeveloper;
@@ -72,6 +74,7 @@ type Error = variant {
   AmountExceedsLimit;
   ErrorBurnDTokens;
   NoPriceCache;
+  LowPlatformBalance;
   ConversionErrorFromTextToPrincipal;
   MaxAmountPlatform;
   NotFoundAssetPrincipal;
@@ -85,7 +88,9 @@ type Error = variant {
   ErrorEncoding;
   HealthFactorLess;
   UnauthorizedAccess;
+  ErrorCreatingCanister;
   ReservePaused;
+  ErrorUpdateCanisterSetting;
   ErrorBurnTokens;
   RepayMoreThanDebt;
   InvalidMintAmount;
@@ -218,7 +223,7 @@ service : (principal) -> {
   execute_withdraw : (ExecuteWithdrawParams) -> (Result_4);
   faucet : (text, nat) -> (Result_4);
   get_all_assets : () -> (vec AssetInfo) query;
-  get_all_faucet : () -> (vec record { principal; FaucetReserves }) query;
+  get_all_logs : () -> (vec text) query;
   get_all_user_list : (nat64, nat64) -> (Result_5);
   get_all_users : () -> (vec record { principal; UserData }) query;
   get_asset_principal : (text) -> (Result_6) query;
@@ -242,6 +247,7 @@ service : (principal) -> {
   guard_admin_only : () -> (Result_1) query;
   guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
+  insert_multiple_logs : () -> (Result_1);
   is_user_blocked : () -> (Result_11) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   remove_admin : (principal) -> (Result);

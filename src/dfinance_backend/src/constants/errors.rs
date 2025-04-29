@@ -190,7 +190,7 @@ impl Error {
             Error::InvalidValue => "Enter value is invalid",
             Error::UserFaucetReserveNotFound => "User faucet reserve not found",
             Error::InvalidAssetImageUrl => "Invalid asset image URL",
-            Error::NegativeAmount => "amount must be a postive number"
+            Error::NegativeAmount => "amount must be a postive number",
             Error::ErrorCreatingCanister => "Error creating canister",
             Error::ErrorUpdateCanisterSetting => "Error updating canister settings",
             Error::NoFaucetReservesFound => "No faucet reserves found",

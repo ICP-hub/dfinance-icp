@@ -8,8 +8,9 @@ use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use candid::{Nat, Principal};
-
+use crate::protocol::libraries::update::user_reserve;
 pub struct ValidationLogic;
+use crate::protocol::libraries::update::user_data;
 
 impl ValidationLogic {
     /*
@@ -172,8 +173,12 @@ impl ValidationLogic {
                 }
                 Err(e) => return Err(e),
             };
-
-        if total_debt != Nat::from(0u128) || total_collateral != Nat::from(0u128) {
+        
+           let  mut user_data = user_data(user)?;
+            let user_reserve = user_reserve(&mut user_data, &reserve.asset_name.clone()).and_then(|(_, reserve_data)| Some(reserve_data.clone()))
+            .ok_or(Error::NoUserReserveDataFound)?;
+        if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
+             
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
@@ -187,7 +192,6 @@ impl ValidationLogic {
             let mut adjusted_collateral: Nat = Nat::from(0u128);
             //checking for substration error
             if total_collateral < usd_withdrawl {
-
                 return Err(Error::AmountSubtractionError);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();

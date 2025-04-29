@@ -56,9 +56,6 @@ const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 #[cfg(not(feature = "u256-tokens"))]
 pub type Tokens = ic_icrc1_tokens_u64::U64;
 
-#[cfg(feature = "u256-tokens")]
-pub type Tokens = ic_icrc1_tokens_u256::U256;
-
 thread_local! {
     static LEDGER: RefCell<Option<Ledger<Tokens>>> = const { RefCell::new(None) };
 }
@@ -581,16 +578,6 @@ fn get_data_certificate() -> DataCertificate {
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
 
-    // let caller = ic_cdk::api::caller();
-    // let platform_principal = ic_cdk::api::id();
-
-    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-    //     return Err(ApproveError::GenericError {
-    //         message: "Unauthorized access.".to_string(),
-    //         error_code: Nat::from(2u32),
-    //     });
-    // }
-
     let block_idx = Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
 
@@ -773,8 +760,6 @@ candid::export_service!();
 fn __get_candid_interface_tmp_hack() -> String {
     __export_service()
 }
-
-fn main() {}
 
 #[test]
 fn check_candid_interface() {

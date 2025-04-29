@@ -226,7 +226,6 @@ const AssetDetails = () => {
 
   // Calculates borrowable value based on available assets
   const calculateBorrowableValues = (
-    asset,
     availableBorrow,
     remainingBorrowable
   ) => {

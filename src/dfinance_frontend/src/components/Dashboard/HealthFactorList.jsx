@@ -115,7 +115,7 @@ const HealthFactorList = () => {
     const batchSize = 5;
 
     const processUsersInBatches = async (usersBatch) => {
-      for (const [principal, userData] of usersBatch) {
+      for (const [principal] of usersBatch) {
         if (!principal) continue;
 
         const userBalances = {};
@@ -225,7 +225,7 @@ const HealthFactorList = () => {
           let assetBalancesObj = [];
           let borrowBalancesObj = [];
 
-          reserves.forEach(([asset, assetInfo]) => {
+          reserves.forEach(([asset]) => {
             const assetBalance = BigInt(
               userBalance?.[asset]?.dtokenBalance || 0
             );
@@ -299,7 +299,7 @@ const HealthFactorList = () => {
   };
 
   // Function to get the asset supply value
-  const getAssetSupplyValue = (asset, principal) => {
+  const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
       return supplyValue;
@@ -308,7 +308,7 @@ const HealthFactorList = () => {
   };
 
   // Function to get the asset borrow value
-  const getAssetBorrowValue = (asset, principal) => {
+  const getAssetBorrowValue = (asset) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
@@ -913,7 +913,7 @@ const HealthFactorList = () => {
                 </thead>
                 <tbody>
                   {paginatedUsers.map(([principal, data], index) => {
-                    if (!data) return null; // Ensure data exists
+                    if (!data) return null; 
 
                     const totalCollateral = Number(data.collateral) / 1e8;
                     const totalDebt = Number(data.debt) / 1e8;

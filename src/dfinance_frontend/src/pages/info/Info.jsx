@@ -281,6 +281,7 @@ const DashboardCards = () => {
 
   let emailInterval;
 
+  
   let lastExhaustedEmailTimestamp;
   let lastWarningEmailTimestamp;
 

@@ -66,7 +66,7 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  const isMobile = window.innerWidth <= 1115;
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1115);
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
@@ -578,9 +578,21 @@ export default function Navbar({ isHomeNav }) {
   };
 
   // Function to handle the resize event
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    // Call once to make sure state is in sync on mount
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
 
   // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
@@ -765,12 +777,7 @@ export default function Navbar({ isHomeNav }) {
     }
   }, [hash]);
 
-  useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+
 
   useEffect(() => {
     const htmlElement = document.documentElement;
@@ -1015,7 +1022,6 @@ export default function Navbar({ isHomeNav }) {
 
                                   <div className="flex flex-col items-end gap-3">
                                     <div className="w-auto flex gap-2 items-center">
-                                      {/* Replace image with dropdown */}
                                       <div className="relative">
                                         <button
                                           onClick={() =>
@@ -1125,8 +1131,8 @@ export default function Navbar({ isHomeNav }) {
                                         </p>
                                         <p
                                           className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                              ? "text-gray-400 cursor-not-allowed"
-                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                                             }`}
                                           onClick={() => {
                                             if (
@@ -1173,7 +1179,6 @@ export default function Navbar({ isHomeNav }) {
                               </div>
 
                               <div className="w-full mt-3">
-                                {/* Warning messages */}
                                 {amount > 0 && amount > supplyBalance && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
@@ -1198,13 +1203,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => !isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                        isLoading ||
-                                        isButtonDisabled ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isLoading ||
+                                      isButtonDisabled ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       isApproved ||
@@ -1221,13 +1226,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                        isButtonDisabled ||
-                                        isLoading ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isButtonDisabled ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       !isApproved ||
@@ -1582,7 +1587,6 @@ export default function Navbar({ isHomeNav }) {
                                 </span>
                                 <CustomizedSwitches
                                   checked={isTestnetMode}
-                                // onChange={handleTestnetModeToggle}
                                 />
                               </div>
                             </div>
@@ -1660,6 +1664,7 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   </div>
                 </button>
+                {console.log("ismobile", isMobile)}
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (
@@ -1706,7 +1711,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        { }
+
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label

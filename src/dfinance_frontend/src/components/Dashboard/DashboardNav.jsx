@@ -649,19 +649,6 @@ const DashboardNav = () => {
                 color={chevronColor}
                 className="cursor-pointer"
               />
-
-              {/* {isAssetDetailsPage && (
-                <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">
-                  {isAssetDetailsPage && assetImage && (
-                    <img
-                      src={assetImage}
-                      alt={id}
-                      className="w-8 h-8 inline-block mr-2 rounded-[50%]"
-                    />
-                  )}
-                  {id}
-                </h1>
-              )} */}
             </div>
           </div>
         )}

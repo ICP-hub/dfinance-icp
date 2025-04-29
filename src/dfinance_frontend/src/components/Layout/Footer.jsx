@@ -101,7 +101,7 @@ const Footer = () => {
 
     try {
       setLoading(true);
-      const response = await backendActor.create_user_reserve_with_low_health(
+      await backendActor.create_user_reserve_with_low_health(
         "ckUSDC",
         "ckUSDC",
         34000000000,

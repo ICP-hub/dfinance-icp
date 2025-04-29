@@ -680,7 +680,7 @@ const DashboardComponent = () => {
       const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
       const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
 
-      const { borrowableValue, borrowableAssetValue } =
+      const { borrowableValue } =
         calculateBorrowableValues(
           item,
           availableBorrow,
@@ -1061,12 +1061,6 @@ const DashboardComponent = () => {
   }, [valueChanged, availableBorrow, filteredItems]);
 
   useEffect(() => {
-    if (filteredItems && filteredItems.length > 0) {
-      const item = filteredItems[0][1].Ok;
-    }
-  }, [filteredItems, dashboardRefreshTrigger]);
-
-  useEffect(() => {
     if (userData?.Ok?.reserves[0]) {
       userData.Ok.reserves[0].map((reserveGroup) => {
         const totalCollateralValue =
@@ -1288,8 +1282,8 @@ const DashboardComponent = () => {
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
             }`}
           onClick={() => setActiveSection("supply")}
         >
@@ -1297,8 +1291,8 @@ const DashboardComponent = () => {
         </button>
         <button
           className={`w-1/2 py-2 button1 ${activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
             }`}
           onClick={() => setActiveSection("borrow")}
         >
@@ -1818,8 +1812,8 @@ const DashboardComponent = () => {
                             <div
                               key={index}
                               className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isZeroBalance
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
+                                ? "opacity-50 pointer-events-none"
+                                : ""
                                 }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
@@ -1978,8 +1972,8 @@ const DashboardComponent = () => {
                               <div
                                 key={index}
                                 className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs ${isZeroBalance
-                                    ? "opacity-50 pointer-events-none"
-                                    : ""
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
                                   }`}
                               >
                                 <div className="p-3 pl-4 align-top flex items-center gap-2">
@@ -2245,7 +2239,6 @@ const DashboardComponent = () => {
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
                         <div className="w-full">
-                          {/* Loop through and display filtered borrowable reserves */}
                           {getFilteredBorrowReserves().map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
@@ -2276,7 +2269,7 @@ const DashboardComponent = () => {
                                 Number(assetData?.asset_borrow || 0) /
                                 100000000;
 
-                              const { borrowableValue, borrowableAssetValue } =
+                              const { borrowableValue } =
                                 calculateBorrowableValues(
                                   item,
                                   availableBorrow,
@@ -2734,8 +2727,8 @@ const DashboardComponent = () => {
                             <div
                               key={index}
                               className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass} ${isTableDisabled
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
+                                ? "opacity-50 pointer-events-none"
+                                : ""
                                 }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
@@ -2972,8 +2965,8 @@ const DashboardComponent = () => {
                               <div
                                 key={index}
                                 className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${isTableDisabled
-                                    ? "opacity-50 pointer-events-none"
-                                    : ""
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
                                   }`}
                               >
                                 <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const numVisiblePages = 3;
@@ -48,8 +48,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             onClick={handlePreviousPage}
             className={`flex items-center justify-center px-3 h-8 ms-0 leading-tight bg-white border border-e-0 border-gray-300 rounded-s-lg dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${currentPage === 1
-                ? 'text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed'
-                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white'
+                ? "text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed"
+                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
               }`}
             disabled={currentPage === 1}
           >
@@ -62,10 +62,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
             <li key={pageNum}>
               <button
                 onClick={() => onPageChange(pageNum)}
-                aria-current={currentPage === pageNum ? 'page' : undefined}
+                aria-current={currentPage === pageNum ? "page" : undefined}
                 className={`flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white ${currentPage === pageNum
-                    ? 'text-black border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                    : ''
+                    ? "text-black border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                    : ""
                   }`}
               >
                 {pageNum}
@@ -77,8 +77,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             onClick={handleNextPage}
             className={`flex items-center justify-center px-3 h-8 leading-tight bg-white border border-gray-300 rounded-e-lg dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${currentPage === totalPages
-                ? 'text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed'
-                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white'
+                ? "text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed"
+                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
               }`}
             disabled={currentPage === totalPages}
           >

@@ -53,10 +53,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [accountId, setAccountId] = useState(null);
 
   const {
-    isWalletCreated,
-    isWalletModalOpen,
     isSwitchingWallet,
-    connectedWallet,
   } = useSelector((state) => state.utility);
 
   useEffect(() => {
@@ -164,7 +161,6 @@ export const useAuthClient = (options = defaultOptions) => {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
-
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }

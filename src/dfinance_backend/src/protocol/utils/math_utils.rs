@@ -5,7 +5,6 @@ use crate::constants::interest_variables::constants::{MAX_VALUE, SCALING_FACTOR,
 use crate::constants::constant_variables::constants::{
     ZERO_VALUE, TWO_VALUE, NANOS_PER_SECOND
 };
-use crate::constants::errors::Error;
 
 /* 
  * @title Get Scaling Value

@@ -2,7 +2,7 @@ export default {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.mjs'],
   transform: {
-    '^.+\\.(js|jsx|ts|tsx|mjs)$': 'babel-jest',  // Handle mjs files
+    '^.+\\.(js|jsx|ts|tsx|mjs)$': 'babel-jest',  
   },
   moduleNameMapper: {
     '\\.css$': 'identity-obj-proxy',
@@ -11,6 +11,6 @@ export default {
   },
   maxWorkers: 2,
   transformIgnorePatterns: [
-    "/node_modules/(?!some-esm-package|other-esm-package)"  // Allow specific node_modules packages
+    "/node_modules/(?!some-esm-package|other-esm-package)"  
   ],
 };

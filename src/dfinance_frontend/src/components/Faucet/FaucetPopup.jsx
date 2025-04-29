@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
-import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 
@@ -28,7 +27,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, user } = useAuth();
-  const { userData } = useUserData();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -52,6 +50,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
+
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -110,7 +109,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       return;
     }
     const numericAmount = parseFloat(inputAmount);
-    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
     if (numericAmount > exchangeRate) {
       return;
     }
@@ -184,7 +182,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     setLoading(true);
@@ -276,10 +274,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     } catch (error) {
       console.error(error.message);
 
-      // ✅ **Check for "Out of Cycles" Error**
       if (
         error.message.includes("out of cycles") ||
-        error.message.includes("Reject text: Canister") // Matches error pattern
+        error.message.includes("Reject text: Canister")
       ) {
         toast.error(
           "Canister is out of cycles. Please wait, the admin has been notified.",
@@ -322,19 +319,18 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     onClose();
   };
 
-  //Fetch faucet data limit and usage 
+  //Fetch faucet data limit and usage
   const getUserFaucetData = async (user) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
 
-    setIsFaucetLoading(true); // Start loading
+    setIsFaucetLoading(true);
 
     try {
       const result = await backendActor.get_user_faucet_data(user);
 
       if (result?.Ok?.reserves && result.Ok.reserves[0]?.length > 0) {
-        // Initializing separate objects to track individual asset limits and usages
         const updatedLimits = { ...initialLimits };
         const updatedUsages = { ...initialUsages };
 
@@ -342,7 +338,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           const asset = reserveGroup[0];
           if (!asset) return;
 
-          // Handling BigInt correctly and converting values to numbers
           const faucetLimitRaw = reserveGroup[1]?.faucet_limit
             ? Number(reserveGroup[1].faucet_limit)
             : initialLimits[asset];
@@ -350,21 +345,16 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             ? Number(reserveGroup[1].faucet_usage)
             : initialUsages[asset];
 
-          // Truncate to 8 decimal places for each asset
           const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
           const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
 
-
-          // Set values per asset
           updatedLimits[asset] = faucetLimit;
           updatedUsages[asset] = faucetUsage;
         });
 
-        // Set state for each asset separately
         setFaucetLimit(updatedLimits);
         setFaucetUsage(updatedUsages);
       } else {
-        // Handle no data or fallback
         setFaucetLimit(initialLimits);
         setFaucetUsage(initialUsages);
       }
@@ -375,7 +365,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         setIsFreezePopupVisible(true);
       }
     } finally {
-      setIsFaucetLoading(false); // Stop loading after the data is fetched or an error occurs
+      setIsFaucetLoading(false);
     }
   };
 
@@ -385,7 +375,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -415,7 +405,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-      } catch (error) { console.error(error.message) }
+      } catch (error) {
+        console.error(error.message);
+      }
     };
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
@@ -470,16 +462,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, [isOpen]);
 
-
-
-
   useEffect(() => {
     if (user) {
       getUserFaucetData(user);
     }
   }, [user]);
-
-
 
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
@@ -493,12 +480,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, []);
 
-
-
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        onClose(); // Call the function to close the modal
+        onClose();
       }
     };
 
@@ -506,7 +491,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]); // Dependency to ensure correct reference
+  }, [onClose]);
 
   /* ===================================================================================
    *                                  RENDER-COMPONENTS
@@ -551,12 +536,25 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       <span className="text-lg">{asset}</span>
                     </div>
                     <div
-                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${isFaucetLoading || Math.floor(((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) * 100) / 100 <= 0
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                        }`}
+                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            100
+                        ) /
+                          100 <=
+                          0
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
                       onClick={
-                        isFaucetLoading || Math.floor(((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) * 100) / 100 <= 0
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            100
+                        ) /
+                          100 <=
+                          0
                           ? undefined
                           : handleMaxAmountClick
                       }
@@ -568,14 +566,15 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                         </div>
                       ) : (
                         <>
-                          ${((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8).toFixed(2)} Max
+                          $
+                          {(
+                            (FaucetLimit[asset] - FaucetUsage[asset]) /
+                            1e8
+                          ).toFixed(2)}{" "}
+                          Max
                         </>
                       )}
                     </div>
-
-
-
-
                   </div>
                 </div>
               </div>
@@ -594,20 +593,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
                 return parseFloat(formattedAmount) <= 0;
               })() && (
-                  <div className="w-full flex flex-col my-3 space-y-2">
-                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-                      <div className="w-1/12 flex items-center justify-center">
-                        <div className="warning-icon-container">
-                          <TriangleAlert />
-                        </div>
-                      </div>
-                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                        Faucet limit has been exceeded. It will reset at 00:00
-                        (UTC).
+                <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <TriangleAlert />
                       </div>
                     </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      Faucet limit has been exceeded. It will reset at 00:00
+                      (UTC).
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
               <button
                 ref={faucetButtonRef}
@@ -617,11 +616,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   FaucetUsage[asset] >= FaucetLimit ||
                   loading
                 }
-                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount.replace(/,/g, "") > 0 &&
+                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${
+                  amount.replace(/,/g, "") > 0 &&
                   FaucetUsage[asset] < FaucetLimit[asset]
-                  ? "opacity-100 cursor-pointer"
-                  : "opacity-50 cursor-not-allowed"
-                  }`}
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
+                }`}
               >
                 {loading ? "Processing..." : `Faucet ${asset}`}
               </button>

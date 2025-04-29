@@ -1,5 +1,6 @@
 pub mod constants {
 
+    //TODO: if we try to see the file name then i think most of the constant variable in this file are not justifying their location. 
     // ------------------- Interest Rate Constants -------------------
     pub const CKBTC_OPTIMAL_USAGE_RATIO: u128 = 45;
     pub const CKBTC_MAX_EXCESS_USAGE_RATIO: u128 = 55;

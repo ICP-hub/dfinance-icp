@@ -1,9 +1,9 @@
 import React from "react";
-import Button from "../../components/Common/Button";
+import Button from "../../components/Common/button";
 import { useDispatch, useSelector } from "react-redux";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { useAuth } from "../../utils/useAuthClient";
-import Element from "../../../public/element/Elements.svg";
+import Element from "../../../public/element/elements.svg";
 import MySupply from "../../components/Dashboard/DashboardComponent";
 import WalletModal from "../../components/Dashboard/WalletModal";
 
@@ -12,13 +12,19 @@ const CreateWallet = () => {
    *                                  HOOKS
    * =================================================================================== */
   const dispatch = useDispatch();
-  const { isWalletModalOpen, isSwitchingWallet } = useSelector((state) => state.utility);
+  const { isWalletModalOpen, isSwitchingWallet } = useSelector(
+    (state) => state.utility
+  );
   const { isAuthenticated } = useAuth();
-  const handleWalletConnect = () => { dispatch(setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })); };
+  const handleWalletConnect = () => {
+    dispatch(
+      setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
+    );
+  };
 
   /* ===================================================================================
-  *                                  RENDER COMPONENT
-  * =================================================================================== */
+   *                                  RENDER COMPONENT
+   * =================================================================================== */
   return (
     <>
       {isAuthenticated ? (

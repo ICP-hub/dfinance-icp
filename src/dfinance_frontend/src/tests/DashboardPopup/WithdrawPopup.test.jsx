@@ -1,10 +1,15 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"; // Import testing utilities
-import WithdrawPopup from '../../components/Dashboard/DashboardPopup/WithdrawPopup'; // Component to test
-import { Provider } from "react-redux"; // Redux provider for store integration in test
-import { store } from "../../redux/store"; // Import the Redux store for testing
-import { MemoryRouter } from "react-router-dom"; // For routing during tests
-import { toast } from "react-toastify"; // For mocking toast notifications
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
+import WithdrawPopup from "../../components/Dashboard/DashboardPopup/WithdrawPopup";
+import { Provider } from "react-redux";
+import { store } from "../../redux/store";
+import { MemoryRouter } from "react-router-dom";
 
 // Mocking react-toastify to simulate toast notifications during tests
 jest.mock("react-toastify", () => ({
@@ -12,7 +17,7 @@ jest.mock("react-toastify", () => ({
     success: jest.fn(), // Mock success toast
     error: jest.fn(), // Mock error toast
     info: jest.fn(), // Mock info toast
-  }
+  },
 }));
 
 // Mocking custom hook for real-time conversion rates
@@ -20,8 +25,8 @@ jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     conversionRate: 50000 * Math.pow(10, 8), // Mock conversion rate for ckBTC
-    error: null
-  })
+    error: null,
+  }),
 }));
 
 // Mocking authentication logic (backendActor)
@@ -30,8 +35,8 @@ jest.mock("../../utils/useAuthClient", () => ({
     backendActor: {
       execute_withdraw: jest.fn().mockResolvedValue({ Ok: true }), // Simulating a successful withdraw operation
     },
-    principal: "rrkah-fqaaa-aaaaa-aaaaq-cai"
-  })
+    principal: "rrkah-fqaaa-aaaaa-aaaaq-cai",
+  }),
 }));
 
 // Mocking user data hook (health factor and user data)
@@ -40,60 +45,60 @@ jest.mock("../../components/customHooks/useUserData", () => ({
   default: jest.fn().mockReturnValue({
     userData: {},
     healthFactorBackend: 2.5, // Mock health factor value
-    refetchUserData: jest.fn()
-  })
+    refetchUserData: jest.fn(),
+  }),
 }));
 
 // Mocking function block status to simulate an unblocked state
 jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    isBlocked: false // Simulating that no function is blocked
-  })
+    isBlocked: false, // Simulating that no function is blocked
+  }),
 }));
 
 // Mocking transfer fee hook to simulate transfer fee data
 jest.mock("../../components/customHooks/useTransferFee", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    transferFee: 0.0001 // Mock transfer fee
-  })
+    transferFee: 0.0001, // Mock transfer fee
+  }),
 }));
 
 // Mocking Principal for dfinity actor integration
 jest.mock("@dfinity/principal", () => ({
   Principal: {
-    fromText: jest.fn().mockImplementation(text => ({
+    fromText: jest.fn().mockImplementation((text) => ({
       _arr: new Uint8Array(10),
-      toString: () => text
-    }))
-  }
+      toString: () => text,
+    })),
+  },
 }));
 
 // Mocking Redux's useSelector for state management
 jest.mock("react-redux", () => ({
   ...jest.requireActual("react-redux"),
-  useSelector: jest.fn().mockImplementation(callback => {
+  useSelector: jest.fn().mockImplementation((callback) => {
     return callback({
       ledger: {
         ckBTC: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ckETH: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ckUSDC: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ICP: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
         },
         ckUSDT: {
-          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true })
-        }
+          icrc2_approve: jest.fn().mockResolvedValue({ Ok: true }),
+        },
       },
       sound: {
-        isSoundOn: true
+        isSoundOn: true,
       },
       fees: {
         fees: {
@@ -101,12 +106,12 @@ jest.mock("react-redux", () => ({
           ckETH: 0.0001,
           ckUSDC: 0.0001,
           ICP: 0.0001,
-          ckUSDT: 0.0001
-        }
-      }
+          ckUSDT: 0.0001,
+        },
+      },
     });
   }),
-  useDispatch: () => jest.fn()
+  useDispatch: () => jest.fn(),
 }));
 
 describe("WithdrawPopup Component", () => {
@@ -149,7 +154,9 @@ describe("WithdrawPopup Component", () => {
     });
 
     // Check for key elements (amount input field, health factor, transaction overview)
-    const inputElement = await screen.findByPlaceholderText("Enter Amount ckBTC");
+    const inputElement = await screen.findByPlaceholderText(
+      "Enter Amount ckBTC"
+    );
     expect(inputElement).toBeInTheDocument(); // Verify amount input is rendered
 
     // Verifying that health factor is displayed
@@ -172,11 +179,11 @@ describe("WithdrawPopup Component", () => {
       );
     });
 
-    const withdrawButton = screen.getByRole('button', { name: /Withdraw/i });
+    const withdrawButton = screen.getByRole("button", { name: /Withdraw/i });
 
     // Verify that the button has the disabled visual class (opacity-50 and cursor-not-allowed)
-    expect(withdrawButton).toHaveClass('opacity-50');
-    expect(withdrawButton).toHaveClass('cursor-not-allowed'); // Button should be disabled when amount is 0
+    expect(withdrawButton).toHaveClass("opacity-50");
+    expect(withdrawButton).toHaveClass("cursor-not-allowed"); // Button should be disabled when amount is 0
   });
 
   // Test case 3: Verifying that the amount input field is handled correctly when changed
@@ -191,15 +198,17 @@ describe("WithdrawPopup Component", () => {
       );
     });
 
-    const amountInput = await screen.findByPlaceholderText("Enter Amount ckBTC");
+    const amountInput = await screen.findByPlaceholderText(
+      "Enter Amount ckBTC"
+    );
 
     // Simulate typing a value into the amount input field
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '10' } });
+      fireEvent.change(amountInput, { target: { value: "10" } });
     });
 
     // Verify that the input value is correctly updated
-    expect(amountInput.value).toBe('10');
+    expect(amountInput.value).toBe("10");
   });
 
   // Test case 4: Verifying that the transaction overview section displays the correct information
@@ -239,11 +248,13 @@ describe("WithdrawPopup Component", () => {
     // Verify that USD value is displayed as $0.00 initially
     expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
 
-    const amountInput = await screen.findByPlaceholderText("Enter Amount ckBTC");
+    const amountInput = await screen.findByPlaceholderText(
+      "Enter Amount ckBTC"
+    );
 
     // Simulate changing the amount input and check if the USD value is updated
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: '10' } });
+      fireEvent.change(amountInput, { target: { value: "10" } });
     });
 
     await waitFor(() => {

@@ -57,8 +57,6 @@ const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 #[cfg(not(feature = "u256-tokens"))]
 pub type Tokens = ic_icrc1_tokens_u64::U64;
 
-#[cfg(feature = "u256-tokens")]
-pub type Tokens = ic_icrc1_tokens_u256::U256;
 
 thread_local! {
     static LEDGER: RefCell<Option<Ledger<Tokens>>> = const { RefCell::new(None) };
@@ -433,32 +431,6 @@ async fn execute_transfer(
     Ok(Nat::from(block_idx))
 }
 
-// #[update]
-// #[candid_method(update)]
-// async fn icrc1_transfer(arg: TransferArg) -> Result<Nat, TransferError> {
-//     let from_account = Account {
-//         owner: ic_cdk::api::caller(),
-//         subaccount: arg.from_subaccount,
-//     };
-//     execute_transfer(
-//         from_account,
-//         arg.to,
-//         None,
-//         arg.fee,
-//         arg.amount,
-//         arg.memo,
-//         arg.created_at_time,
-//     )
-//     .await
-//     .map_err(convert_transfer_error)
-//     .map_err(|err| {
-//         let err: TransferError = match err.try_into() {
-//             Ok(err) => err,
-//             Err(err) => ic_cdk::trap(&err),
-//         };
-//         err
-//     })
-// }
 #[update]
 #[candid_method(update)]
 async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {

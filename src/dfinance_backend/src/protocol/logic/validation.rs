@@ -8,7 +8,6 @@ use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use candid::{Nat, Principal};
-use futures::stream::Peek;
 
 pub struct ValidationLogic;
 
@@ -156,7 +155,7 @@ impl ValidationLogic {
         let _ = update_token_price(reserve.asset_name.clone()).await;
         
         ic_cdk::println!("going inside calculate user account data"); //info
-        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
+        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
                     t_collateral,
@@ -185,7 +184,7 @@ impl ValidationLogic {
             ic_cdk::println!("usd withdraw amount = {}", usd_withdrawl);   //debug
             ic_cdk::println!("total collateral = {}", total_collateral);   //debug
             // Calculate Adjusted Collateral
-            let mut adjusted_collateral: Nat = Nat::from(0u128);
+            let adjusted_collateral: Nat;
             //checking for substration error
             if total_collateral < usd_withdrawl {
 
@@ -273,7 +272,7 @@ impl ValidationLogic {
             ic_cdk::println!("Failed to update reserves price: {:?}", e);  //error
         }
 
-        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
+        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
                     t_collateral,
@@ -308,7 +307,7 @@ impl ValidationLogic {
         ic_cdk::println!("adjusted amount = {}", adjusted_debt);  //debug
 
         //calculating the new LTV with adjusted debt
-        let mut new_ltv = Nat::from(ZERO_VALUE);
+        let mut new_ltv: Nat;
         new_ltv = adjusted_debt.clone().scaled_div(total_collateral.clone());
         new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
         ic_cdk::println!("New ltv: {}", new_ltv);   //debug

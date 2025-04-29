@@ -1,7 +1,7 @@
-use crate::api::query::{self, get_canister_id_by_name};
+use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::MAX_LOG_ENTRIES;
 use crate::constants::errors::Error;
-use crate::stable_storage::state_handler::{mutate_state, read_state, STATE};
+use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use candid::Principal;
 use ic_cdk::{call, query};

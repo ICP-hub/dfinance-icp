@@ -5,7 +5,6 @@ import { useDispatch } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
-import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 

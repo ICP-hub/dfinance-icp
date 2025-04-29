@@ -113,12 +113,14 @@ pub fn add_tester(username: String, principal: Principal) -> Result<(), Error> {
  * @functionality Get Testers List
  */
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
-    let user_principal = ic_cdk::caller();
+    // Check if the user is anonymous
+    guard_prevent_anonymous()?;
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if user_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     read_state(|state| {
         let mut testers = Vec::new();

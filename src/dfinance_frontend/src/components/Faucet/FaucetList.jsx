@@ -297,7 +297,7 @@ const FaucetDetails = () => {
                                 }[item[0]];
 
                                 if (!assetData) return null;
-                                const { balance, usdBalance, rate } = assetData;
+                                const { balance, rate } = assetData;
                                 const usdRate = rate / 1e8;
                                 const calculatedUsdValue = balance * usdRate;
                                 let displayedBalance;

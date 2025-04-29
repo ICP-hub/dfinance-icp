@@ -676,7 +676,6 @@ const DashboardCards = () => {
         </div>
       ) : like ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 lgx:grid-cols-3 gap-10 p-10 ">
-          {/*  Users Card */}
           {cardData
             .filter((card) => card.title === "Users")
             .map((card, index) => (
@@ -710,7 +709,6 @@ const DashboardCards = () => {
               </div>
             ))}
 
-          {/*  Health Factor Card */}
           <div
             className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 
           text-[#233D63] dark:text-darkTextSecondary1 rounded-[40px] shadow-lg p-5 flex flex-col relative 
@@ -737,7 +735,6 @@ const DashboardCards = () => {
               </button>
             </div>
 
-            {/* Show MiniLoader until pieData is available */}
             {!pieData ? (
               <div className="flex flex-1 items-center justify-center h-full">
                 <MiniLoader />
@@ -765,7 +762,6 @@ const DashboardCards = () => {
             )}
           </div>
 
-          {/*  Reserves Card */}
           {cardData
             .filter((card) => card.title === "Reserves")
             .map((card, index) => (
@@ -778,12 +774,10 @@ const DashboardCards = () => {
                   {card.title}
                 </h3>
 
-                {/* Value */}
                 <p className="text-4xl font-bold  text-[#233D63] dark:text-darkText px-3  py-1  ">
                   {card.value}
                 </p>
 
-                {/* Assets Row (Clickable Images) */}
                 {!usersLoading && (
                   <div className="mt-3 flex flex-wrap justify-start gap-3 px-3">
                     {card.assets.map((asset, idx) => (
@@ -802,14 +796,12 @@ const DashboardCards = () => {
                   </div>
                 )}
 
-                {/* Click Text */}
                 <p className="text-xs  text-[#233D63] dark:text-gray-400 mt-9 py-2 px-3 ">
                   Click on assets to learn more
                 </p>
               </div>
             ))}
 
-          {/*  Interest Accrued Card */}
           <div className="flex flex-col">
             {cardData
               .filter((card) => card.title === "Interest Accured")
@@ -818,12 +810,10 @@ const DashboardCards = () => {
                   key={index}
                   className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-[40px] shadow-lg px-6 py-4 lgx:ml-[190px] flex flex-col items-start justify-start hover:shadow-2xl transition-shadow duration-300 lgx:w-[355px] lgx:h-[210px]  w-100 h-[240px]"
                 >
-                  {/* Title - Moved Up */}
                   <h3 className="lg:text-lg text-sm font-normal px-3 py-2 mt-3 ">
                     {card.title}
                   </h3>
 
-                  {/* Value - Moved Closer to Title */}
                   <p className="text-4xl font-bold  text-[#233D63] dark:text-darkText px-3 py-2 mt-1">
                     <span className="font-normal  text-[#233D63] dark:text-gray-400">
                       $
@@ -834,7 +824,6 @@ const DashboardCards = () => {
               ))}
           </div>
 
-          {/*  Cycles Card */}
           {cardData
             .filter((card) => card.title === "Cycles")
             .map((card, index) => (
@@ -847,17 +836,16 @@ const DashboardCards = () => {
                   {card.title}
                 </h3>
 
-                {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
+                    usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                    }`}
+                  }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
 
-                {/* Threshold for Cycles */}
                 {!usersLoading && (
                   <p className="text-sm mt-1 px-3 py-2 text-[#233D63] dark:text-darkTextSecondary1">
                     Threshold Value:{" "}
@@ -870,10 +858,8 @@ const DashboardCards = () => {
           {showPopup &&
             selectedAsset &&
             (() => {
-              // Initialize assetBalance with 0
               let assetBalance = 0;
 
-              // Extract first valid assetBalance if data exists
               if (filteredData && filteredData.length > 0) {
                 for (const data of filteredData) {
                   const assetName = data[0];
@@ -894,7 +880,6 @@ const DashboardCards = () => {
                     className="bg-white dark:bg-darkOverlayBackground shadow-xl ring-1 ring-black/10 dark:ring-white/20 flex flex-col text-white dark:text-darkText z-50 rounded-[20px] p-6 w-[325px] lg1:w-[350px]"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* Asset Header */}
                     <div className="flex items-center lg:gap-2 mb-3 gap-2 ">
                       <img
                         src={selectedAsset.imageUrl}
@@ -906,7 +891,6 @@ const DashboardCards = () => {
                       </h3>
                     </div>
 
-                    {/* Asset Data List */}
                     <div className="flex flex-col space-y-3">
                       {filteredData && filteredData.length > 0 ? (
                         filteredData.map((data, idx) => {
@@ -944,7 +928,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -960,7 +944,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                      (assetRate / 1e8)
+                                        (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -975,7 +959,6 @@ const DashboardCards = () => {
                       )}
                     </div>
 
-                    {/* Divider & Testnet Section Below */}
                     <div className="dark:bg-[#1D1B40] bg-gray-100 hover:bg-gray-200 rounded-xl p-3 flex flex-col space-y-1  mt-5">
                       <div className="flex justify-between">
                         <p className="font-normal text-sm text-[#233D63] dark:text-darkTextSecondary1">
@@ -996,7 +979,6 @@ const DashboardCards = () => {
                       </div>
                     </div>
 
-                    {/* Close Button */}
                     <button
                       className="mt-6 w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-xl shadow-md px-5 py-1 text-lg font-semibold"
                       onClick={() => setShowPopup(false)}

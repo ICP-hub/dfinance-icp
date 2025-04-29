@@ -842,7 +842,6 @@ const MobileTopNav = ({
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
-                    // onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>
@@ -978,7 +977,7 @@ const MobileTopNav = ({
                           >
                             {asset && (
                               <img
-                                src={AssetImages[assets.indexOf(asset)]} // Dynamically fetch image from AssetImages using assetIndex
+                                src={AssetImages[assets.indexOf(asset)]} 
                                 alt={asset}
                                 className="object-fill w-6 h-6 rounded-full"
                               />
@@ -1001,12 +1000,10 @@ const MobileTopNav = ({
                             </svg>
                           </button>
 
-                          {/* Dropdown menu */}
                           {isDropdownOpen && (
                             <div
                               className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                               onClick={(e) => {
-                                // Close dropdown when clicking the overlay background
                                 if (e.target === e.currentTarget) {
                                   setIsDropdownOpen(false);
                                 }
@@ -1015,14 +1012,12 @@ const MobileTopNav = ({
                               <div className="absolute right-[40px]  mt-20 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
                                 <div className="py-1">
                                   {assets.map((a) => {
-                                    const assetIndex = assets.indexOf(a); // Get the index of the asset in the assets array
-
+                                    const assetIndex = assets.indexOf(a); 
                                     return (
                                       <button
                                         key={a}
                                         className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
                                         onClick={() => {
-                                          // Clear amount when selecting a different asset
                                           if (a !== asset) {
                                             setAmount("");
                                           }
@@ -1030,13 +1025,12 @@ const MobileTopNav = ({
                                           setIsDropdownOpen(false);
                                         }}
                                       >
-                                        {/* Conditionally render the image using assetIndex */}
                                         {assetIndex !== -1 &&
                                           AssetImages[assetIndex] && (
                                             <img
                                               key={assetIndex}
-                                              src={AssetImages[assetIndex]} // Get the image URL dynamically using assetIndex
-                                              alt={a || "asset"} // alt text should match the asset name
+                                              src={AssetImages[assetIndex]} 
+                                              alt={a || "asset"} 
                                               className="rounded-full w-5 h-5 mt-1"
                                             />
                                           )}

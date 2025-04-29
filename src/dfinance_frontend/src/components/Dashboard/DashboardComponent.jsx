@@ -2245,7 +2245,6 @@ const DashboardComponent = () => {
                     <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
                       <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
                         <div className="w-full">
-                          {/* Loop through and display filtered borrowable reserves */}
                           {getFilteredBorrowReserves().map(
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];

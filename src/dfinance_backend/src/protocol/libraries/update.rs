@@ -2,7 +2,7 @@ use crate::api::inter_canister::get_balance;
 use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_negatige_value, validate_zero_value};
+use crate::constants::validators::{validate_asset_name, validate_negatige_value};
 use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
      ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,

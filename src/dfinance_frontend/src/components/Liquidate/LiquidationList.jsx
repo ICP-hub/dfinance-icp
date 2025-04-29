@@ -123,13 +123,11 @@ const DebtStatus = () => {
     }
   };
 
-  // Fetches the list of all users data from the backend
   const handleDetailsClick = (item) => {
     setSelectedAsset(item);
     setShowUserInfoPopup(true);
   };
 
-  //Function to close the popup
   const closePopup = () => {
     setShowPopup(false);
   };
@@ -143,7 +141,6 @@ const DebtStatus = () => {
     );
   });
 
-  //Function for pagination logic
   const ITEMS_PER_PAGE = 8;
   const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
@@ -231,7 +228,6 @@ const DebtStatus = () => {
     return assetBalance ? assetBalance[balanceType] || 0 : 0;
   };
 
-  //function to get asset supply value
   const getAssetSupplyValue = (asset, principal) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
@@ -241,7 +237,6 @@ const DebtStatus = () => {
     return;
   };
 
-  //function to get asset borrow value
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
@@ -250,6 +245,7 @@ const DebtStatus = () => {
 
     return;
   };
+
   // Function to calculate asset supply
   const calculateAssetSupply = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
@@ -309,24 +305,20 @@ const DebtStatus = () => {
     );
   };
 
-  //Function to handle pagination
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  //Function to handle search inputclose popup when click outside
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
     }
   };
 
-  //Function to truncatetext
   const truncateText = (text, length) => {
     return text.length > length ? text.substring(0, length) + "..." : text;
   };
 
-  //Function to format value
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
     if (isNaN(numericValue)) {

@@ -226,7 +226,6 @@ const AssetDetails = () => {
 
   // Calculates borrowable value based on available assets
   const calculateBorrowableValues = (
-    asset,
     availableBorrow,
     remainingBorrowable
   ) => {
@@ -573,7 +572,6 @@ const AssetDetails = () => {
     const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
 
     const { borrowableValue, borrowableAssetValue } = calculateBorrowableValues(
-      item,
       availableBorrow,
       Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
     );

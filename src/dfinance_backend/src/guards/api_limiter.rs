@@ -7,6 +7,8 @@ use crate::guards::access_control::guard_prevent_anonymous;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 
+use super::access_control::guard_principal_not_anonymous;
+
 
 thread_local! {
     static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
@@ -15,11 +17,13 @@ thread_local! {
 //TODO: remove this function later at the time of deployment, just to check number of calls by the user.
 #[query]
 pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
+    // Check if the user is anonymous
+    guard_principal_not_anonymous(&caller)?;
 
-    if caller == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::InvalidPrincipal);
-    }
+    // if caller == Principal::anonymous() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::InvalidPrincipal);
+    // }
 
     let now = current_timestamp();
 

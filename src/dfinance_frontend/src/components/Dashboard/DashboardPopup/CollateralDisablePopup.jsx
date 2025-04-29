@@ -412,20 +412,20 @@ const ColateralPopup = ({
                   </div>
                 </div>
 
-                <div className="w-full flex flex-col ">
+                <div className="w-full flex flex-col mt-2 ">
                   <div className="w-full flex justify-between items-center">
                     <p>Health Factor</p>
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -433,14 +433,14 @@ const ColateralPopup = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                            ? "text-green-500"
-                            : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -474,8 +474,8 @@ const ColateralPopup = ({
           <button
             onClick={handleToggleCollateral}
             className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isButtonDisabled || isLoading
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              ? "opacity-50 cursor-not-allowed"
+              : ""
               }`}
             disabled={isButtonDisabled || isLoading}
           >

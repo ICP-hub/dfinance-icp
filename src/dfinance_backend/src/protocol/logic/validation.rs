@@ -320,7 +320,7 @@ impl ValidationLogic {
 
         //checking the health factor
         let mut new_health_factor = total_collateral.scaled_mul(liquidation_threshold_var);
-        new_health_factor = new_health_factor.scaled_div(total_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
+        new_health_factor = new_health_factor.scaled_div(adjusted_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
         ic_cdk::println!("new health factor = {}", new_health_factor);   //debug
 
         //checking if the health factor

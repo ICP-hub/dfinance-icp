@@ -281,7 +281,7 @@ const DashboardCards = () => {
 
   let emailInterval;
 
-  
+
   let lastExhaustedEmailTimestamp;
   let lastWarningEmailTimestamp;
 
@@ -289,7 +289,7 @@ const DashboardCards = () => {
    * Handles cycle-based notifications and sends warning or exhaustion emails.
    * @param {number} currentCycles - The current number of cycles.
    */
-  const handleNotification = (currentCycles, assetBalance) => {
+  const handleNotification = (currentCycles) => {
     const oneDay = 24 * 60 * 60 * 1000;
 
     const sendWarningEmail = async () => {
@@ -347,6 +347,7 @@ const DashboardCards = () => {
 
   let emailinterval = null;
 
+  
   let lastTokenWarningEmailTimestamp;
   let lastTokenExhaustedEmailTimestamp;
   /**

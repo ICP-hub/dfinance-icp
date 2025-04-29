@@ -196,7 +196,7 @@ impl Error {
             Error::ErrorUpdateCanisterSetting => "Error updating canister settings",
             Error::NoFaucetReservesFound => "No faucet reserves found",
             Error::NoCollateralFound => "No collateral found",
-            Error::LowPlatformBalance => "Platform balance is low"
+            Error::LowPlatformBalance => "Platform balance is low",
             Error::ConnectedWalletInvalid => "connected wallet length is invalid"
         }
     }

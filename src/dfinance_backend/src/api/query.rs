@@ -5,6 +5,8 @@ use crate::declarations::datatypes::InitArgs;
 use crate::declarations::datatypes::ReserveData;
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
+use crate::guards::access_control::guard_prevent_anonymous;
+use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::protocol::utils::math_utils::current_timestamp;
 use super::inter_canister::get_balance;
 use crate::constants::data_types::zero_nat_value;
@@ -52,10 +54,12 @@ pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
  */
 #[query]
 fn get_user_data(user: Principal) -> Result<UserData, Error> {
-    if user == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // Check if the user is anonymous
+    guard_principal_not_anonymous(&user)?;
+    // if user == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     read_state(|state| {
         state
@@ -76,10 +80,12 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
  */
 #[query]
 fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
-    if user == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // Check if the user is anonymous
+    guard_principal_not_anonymous(&user)?;
+    // if user == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     read_state(|state| {
         state
@@ -211,12 +217,14 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
  */
 #[query]
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
-    let user_principal = ic_cdk::caller();
+    // Check if the user is anonymous
+    guard_prevent_anonymous()?;
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if user_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -246,12 +254,14 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
  */
 #[query]
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
-    let user_principal = ic_cdk::caller();
+    // Check if the user is anonymous
+    guard_prevent_anonymous()?;
+    // let user_principal = ic_cdk::caller();
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if user_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     let current_time = current_timestamp();
     ic_cdk::println!("Current timestamp: {}", current_time);
@@ -318,12 +328,16 @@ async fn get_user_account_data(
  */
 #[query]
 pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
-    let caller_id = ic_cdk::caller();
+    // asset name validator
+    validate_asset_name(&asset_name)?;
+    // Check if the user is anonymous
+    guard_prevent_anonymous()?;
+    // let caller_id = ic_cdk::caller();
 
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if caller_id == Principal::anonymous() {
+    //     ic_cdk::println!("principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
         Ok(price) => price,
@@ -361,12 +375,14 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
  */
 #[query]
 pub fn get_caller_session() -> Result<SessionStorageData, Error> {
+    // Check if the user is anonymous
+    guard_prevent_anonymous()?;
     let caller_id = ic_cdk::caller();
 
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if caller_id == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     Ok(read_state(|state| {
         state
@@ -389,12 +405,14 @@ pub fn get_caller_session() -> Result<SessionStorageData, Error> {
  */
 #[query]
 pub fn get_user_guide() -> Result<bool, Error> {
+    // Check if the user is anonymous
+    guard_prevent_anonymous()?;
     let caller_id = ic_cdk::caller();
 
-    if caller_id == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    // if caller_id == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     Ok(read_state(|state| {
         state.user_guide_data.get(&caller_id).unwrap_or(false)
@@ -575,20 +593,24 @@ pub async fn get_asset_debt(
     validate_asset_name(&asset_name)?;
 
     if let Some(principal) = on_behalf {
-        if principal == Principal::anonymous() {
-            ic_cdk::println!("Anonymous principals are not allowed");
-            return Err(Error::AnonymousPrincipal);
-        }
+        // Check if the user is anonymous
+        guard_principal_not_anonymous(&principal)?;
+        // if principal == Principal::anonymous() {
+        //     ic_cdk::println!("Anonymous principals are not allowed");
+        //     return Err(Error::AnonymousPrincipal);
+        // }
     }
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
     };
 
-    if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
-        return Err(Error::AnonymousPrincipal);
-    }
+    guard_principal_not_anonymous(&user_principal)?;
+
+    // if user_principal == Principal::anonymous() {
+    //     ic_cdk::println!("Anonymous principals are not allowed");
+    //     return Err(Error::AnonymousPrincipal);
+    // }
 
     let user_data_result = user_data(user_principal);
 
@@ -600,6 +622,8 @@ pub async fn get_asset_debt(
         }
     };
     ic_cdk::println!("user data = {:?}", user_data);
+    
+    // extracting asset specfic user reservedata fieds with asset name.
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
         Some(data) => data,
         None => {
@@ -673,6 +697,7 @@ pub async fn get_asset_debt(
  */
 #[query]
 pub async fn cycle_checker() -> Result<Nat, Error> {
+    // only the admin can access this function.
     guard_admin_only()?;
     Ok(Nat::from(api::canister_balance128()))
 }

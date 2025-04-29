@@ -472,11 +472,7 @@ async fn icrc1_transfer(arg: TransferArg) -> Result<Nat, TransferError> {
 
 #[update]
 #[candid_method(update)]
-async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
-
-    ic_cdk::println!("just want to check things if out ");
-
-    
+async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {    
 
     let spender_account = Account {
         owner: ic_cdk::api::caller(),

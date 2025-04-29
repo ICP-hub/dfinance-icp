@@ -91,7 +91,8 @@ pub enum Error {
     ControllerNotFound,
     InvalidValue,
     NoFaucetReservesFound,
-    InvalidAssetImageUrl
+    InvalidAssetImageUrl,
+    ConnectedWalletInvalid
 }
 
 impl Error {
@@ -186,6 +187,7 @@ impl Error {
             Error::NoFaucetReservesFound => "No faucet reserves found",
             Error::UserFaucetReserveNotFound => "User faucet reserve not found",
             Error::InvalidAssetImageUrl => "Invalid asset image URL",
+            Error::ConnectedWalletInvalid => "connected wallet length is invalid"
         }
     }
 }

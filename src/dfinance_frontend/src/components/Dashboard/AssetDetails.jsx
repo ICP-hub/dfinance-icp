@@ -323,14 +323,14 @@ const AssetDetails = () => {
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-      ? ckETHBalance
-      : id === "ckUSDC"
-      ? ckUSDCBalance
-      : id === "ICP"
-      ? ckICPBalance
-      : id === "ckUSDT"
-      ? ckUSDTBalance
-      : null;
+        ? ckETHBalance
+        : id === "ckUSDC"
+          ? ckUSDCBalance
+          : id === "ICP"
+            ? ckICPBalance
+            : id === "ckUSDT"
+              ? ckUSDTBalance
+              : null;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -402,13 +402,13 @@ const AssetDetails = () => {
       calculatedBalance =
         balance >= 1
           ? balance.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
           : balance.toLocaleString(undefined, {
-              minimumFractionDigits: 7,
-              maximumFractionDigits: 7,
-            });
+            minimumFractionDigits: 7,
+            maximumFractionDigits: 7,
+          });
       calculatedUsdValueFormatted = `$${calculatedUsdValue.toLocaleString(
         undefined,
         {
@@ -474,13 +474,13 @@ const AssetDetails = () => {
       displayedBalance =
         balance >= 1
           ? balance.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
           : balance.toLocaleString(undefined, {
-              minimumFractionDigits: 7,
-              maximumFractionDigits: 7,
-            });
+            minimumFractionDigits: 7,
+            maximumFractionDigits: 7,
+          });
     }
 
     let displayedUsd;
@@ -509,8 +509,8 @@ const AssetDetails = () => {
       (reserveGroup) => reserveGroup[0] === asset
     )
       ? userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === asset
-        )[1]?.liquidity_index
+        (reserveGroup) => reserveGroup[0] === asset
+      )[1]?.liquidity_index
       : 0;
 
     const assetBalance =
@@ -529,8 +529,8 @@ const AssetDetails = () => {
       (reserveGroup) => reserveGroup[0] === asset
     )
       ? userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === asset
-        )[1]?.variable_borrow_index
+        (reserveGroup) => reserveGroup[0] === asset
+      )[1]?.variable_borrow_index
       : 0;
 
     const assetBorrowBalance =
@@ -558,14 +558,14 @@ const AssetDetails = () => {
       asset === "ckBTC"
         ? ckBTCBalance
         : asset === "ckETH"
-        ? ckETHBalance
-        : asset === "ckUSDC"
-        ? ckUSDCBalance
-        : asset === "ICP"
-        ? ckICPBalance
-        : asset === "ckUSDT"
-        ? ckUSDTBalance
-        : null;
+          ? ckETHBalance
+          : asset === "ckUSDC"
+            ? ckUSDCBalance
+            : asset === "ICP"
+              ? ckICPBalance
+              : asset === "ckUSDT"
+                ? ckUSDTBalance
+                : null;
     const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
     const assetData = item[1].Ok;
 
@@ -654,9 +654,9 @@ const AssetDetails = () => {
             Number((total_supply * 0.85).toFixed(8)) < Number(total_borrow)
               ? 0
               : Math.min(
-                  Number((total_supply * 0.85 - total_borrow).toFixed(8)),
-                  Number(availableBorrow) / rate
-                );
+                Number((total_supply * 0.85 - total_borrow).toFixed(8)),
+                Number(availableBorrow) / rate
+              );
 
           if (rate) {
             setBorrowableValue(formattedMaxBorrow);

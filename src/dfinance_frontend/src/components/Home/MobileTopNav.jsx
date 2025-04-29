@@ -717,7 +717,7 @@ const MobileTopNav = ({
                           </div>
                         </div>
                       </div>
-                      {}
+                      { }
                       <div className=" w-full flex justify-center">
                         <div
                           className=" flex-1 flex flex-col lg1:items-center md:place-items-start justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -751,10 +751,22 @@ const MobileTopNav = ({
 
         {!isHomeNav
           ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-              if (link.alwaysPresent) {
-                return (
+            if (link.alwaysPresent) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            } else if (isTestnetMode && link.testnet) {
+              return (
+                <React.Fragment key={index}>
                   <NavLink
-                    key={index}
                     to={link.route}
                     className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
                     style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
@@ -762,48 +774,36 @@ const MobileTopNav = ({
                   >
                     {link.title}
                   </NavLink>
-                );
-              } else if (isTestnetMode && link.testnet) {
-                return (
-                  <React.Fragment key={index}>
-                    <NavLink
-                      to={link.route}
-                      className="text-[#2A1F9D] mt-5 p-3 font-bold text-sm dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                      style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
-                      onClick={handleClose}
-                    >
-                      {link.title}
-                    </NavLink>
-                    {link.title === "Faucet" && <>{}</>}
-                  </React.Fragment>
-                );
-              } else if (!isTestnetMode && !link.testnet) {
-                return (
-                  <NavLink
-                    key={index}
-                    to={link.route}
-                    className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                    style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
-                    onClick={handleClose}
-                  >
-                    {link.title}
-                  </NavLink>
-                );
-              }
-              return null;
-            })
+                  {link.title === "Faucet" && <>{ }</>}
+                </React.Fragment>
+              );
+            } else if (!isTestnetMode && !link.testnet) {
+              return (
+                <NavLink
+                  key={index}
+                  to={link.route}
+                  className="text-[#2A1F9D] mt-5 p-3 text-sm font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+                  style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
+                  onClick={handleClose}
+                >
+                  {link.title}
+                </NavLink>
+              );
+            }
+            return null;
+          })
           : HOME_TOP_NAV_LINK.map((link, index) => (
-              <NavLink
-                key={index}
-                target={link.target}
-                to={link.route}
-                className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
-                style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
-                onClick={handleClose}
-              >
-                {link.title}
-              </NavLink>
-            ))}
+            <NavLink
+              key={index}
+              target={link.target}
+              to={link.route}
+              className="text-[#2A1F9D] text-sm mt-5 p-3 font-bold dark:text-darkTextSecondary rounded-md shadow-sm border-gray-300 dark:border-none bg-[#F6F6F6] dark:bg-darkBackground/40 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 ease-in-out mx-2"
+              style={{ marginBottom: "0.25rem", marginTop: "0.25rem" }}
+              onClick={handleClose}
+            >
+              {link.title}
+            </NavLink>
+          ))}
 
         <h2 className="text-sm my-4 font-semibold text-[#AEADCB] dark:text-darkTextPrimary mb-2 mt-8">
           Settings
@@ -842,7 +842,7 @@ const MobileTopNav = ({
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
-                      // onChange={handleTestnetModeToggle}
+                    // onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>
@@ -985,9 +985,8 @@ const MobileTopNav = ({
                             )}
                             <span className="text-lg">{asset}</span>
                             <svg
-                              className={`w-4 h-4 transition-transform ${
-                                isDropdownOpen ? "rotate-180" : ""
-                              }`}
+                              className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                                }`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -1061,11 +1060,10 @@ const MobileTopNav = ({
                             {truncateToSevenDecimals(supplyBalance)}
                           </p>
                           <p
-                            className={`text-[12px] px-2 py-0 rounded-md button1 ${
-                              supplyBalance === 0 || isApproved
+                            className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
                                 ? "text-gray-400 cursor-not-allowed"
                                 : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                            }`}
+                              }`}
                             onClick={() => {
                               if (supplyBalance > 0 && !isApproved) {
                                 handleMaxClick();
@@ -1130,15 +1128,14 @@ const MobileTopNav = ({
                     {/* Approve Button */}
                     <button
                       onClick={() => !isApproved && handleClick()}
-                      className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                        isApproved ||
-                        isLoading ||
-                        amount <= 0 ||
-                        supplyBalance <= 0 ||
-                        amount > supplyBalance
+                      className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                          isLoading ||
+                          amount <= 0 ||
+                          supplyBalance <= 0 ||
+                          amount > supplyBalance
                           ? "opacity-50 cursor-not-allowed"
                           : ""
-                      }`}
+                        }`}
                       disabled={
                         isApproved ||
                         isLoading ||
@@ -1152,15 +1149,14 @@ const MobileTopNav = ({
 
                     <button
                       onClick={() => isApproved && handleClick()}
-                      className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                        !isApproved ||
-                        isLoading ||
-                        amount <= 0 ||
-                        supplyBalance <= 0 ||
-                        amount > supplyBalance
+                      className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                          isLoading ||
+                          amount <= 0 ||
+                          supplyBalance <= 0 ||
+                          amount > supplyBalance
                           ? "opacity-50 cursor-not-allowed"
                           : ""
-                      }`}
+                        }`}
                       disabled={
                         !isApproved ||
                         isLoading ||

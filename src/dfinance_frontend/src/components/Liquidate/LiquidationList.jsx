@@ -305,7 +305,7 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-        Number(debtIndex)
+      Number(debtIndex)
     );
   };
 
@@ -495,11 +495,10 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
-                          index !== liquidationUsers.length - 1
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
                             ? "gradient-line-bottom"
                             : ""
-                        }`}
+                          }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -587,7 +586,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        {}
+                        { }
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

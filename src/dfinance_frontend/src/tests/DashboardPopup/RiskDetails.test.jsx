@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import RiskPopup from "../../components/Dashboard/DashboardPopup/RiskDetails"; 
-import { Provider } from "react-redux"; 
-import { createStore } from "redux"; 
+import RiskPopup from "../../components/Dashboard/DashboardPopup/RiskDetails";
+import { Provider } from "react-redux";
+import { createStore } from "redux";
 
 // Mock reducer for the Redux store
 const mockReducer = (state = { theme: { theme: "light" } }, action) => state;
@@ -28,7 +28,7 @@ describe("RiskPopup Component", () => {
       <Provider store={mockStore}>
         {" "}
         {/* Wrapping the component with the mock store */}
-        <RiskPopup onClose={() => {}} userAccountData={mockUserAccountData} />
+        <RiskPopup onClose={() => { }} userAccountData={mockUserAccountData} />
       </Provider>
     );
 

@@ -172,15 +172,15 @@ const useAssetData = (searchQuery = "") => {
           );
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
-              100000000
+            100000000
           );
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
-              100000000
+            100000000
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
-              100000000
+            100000000
           );
           const interestAccure = parseFloat(
             Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
@@ -223,15 +223,15 @@ const useAssetData = (searchQuery = "") => {
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(
-          ([asset, data]) =>
-            asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (data.asset_supply &&
-              data.asset_supply.toString().includes(searchQuery)) ||
-            (data.borrow_rate &&
-              data.borrow_rate.some((rate) =>
-                rate.toString().includes(searchQuery)
-              ))
-        )
+        ([asset, data]) =>
+          asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (data.asset_supply &&
+            data.asset_supply.toString().includes(searchQuery)) ||
+          (data.borrow_rate &&
+            data.borrow_rate.some((rate) =>
+              rate.toString().includes(searchQuery)
+            ))
+      )
       : [];
 
   const formatNumber = useFormatNumber();

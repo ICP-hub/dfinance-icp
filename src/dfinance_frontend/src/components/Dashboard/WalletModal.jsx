@@ -133,7 +133,7 @@ const WalletModal = () => {
               <span> is connected</span>
             </>
           ) : (
-            <span></span> 
+            <span></span>
           )}
         </h1>
         <div className="flex flex-col gap-2 mt-3 text-sm">

@@ -290,11 +290,10 @@ const Market = () => {
               id="search"
               placeholder="Search assets"
               style={{ fontSize: "0.75rem" }}
-              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${
-                Showsearch
+              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
                   ? "animate-fade-left flex"
                   : "animate-fade-right hidden"
-              }`}
+                }`}
               value={searchQuery}
               onChange={handleSearchInputChange}
             />
@@ -355,9 +354,8 @@ const Market = () => {
           name="search"
           id="search"
           placeholder="Search assets"
-          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${
-            Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
-          }`}
+          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
+            }`}
           value={searchQuery}
           onChange={handleSearchInputChange}
         />
@@ -386,11 +384,10 @@ const Market = () => {
                     {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td key={index} className=" whitespace-nowrap">
                         <div
-                          className={`flex ${
-                            index === 0
+                          className={`flex ${index === 0
                               ? "justify-start sxs3:pl-2 md:pl-2"
                               : "justify-center"
-                          }`}
+                            }`}
                         >
                           {item.header}
                         </div>
@@ -422,11 +419,10 @@ const Market = () => {
                   {currentItems.map((item, index) => (
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${
-                        index !== currentItems.length - 1
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${index !== currentItems.length - 1
                           ? "gradient-line-bottom"
                           : ""
-                      }`}
+                        }`}
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
@@ -521,7 +517,7 @@ const Market = () => {
                               })()}
                             </p>
 
-                            {}
+                            { }
                           </div>
                           <div
                             className="lg:hidden justify-center ml-6"
@@ -542,13 +538,13 @@ const Market = () => {
                           {(Number(item?.[1]?.Ok?.current_liquidity_rate) *
                             100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(item?.[1]?.Ok?.current_liquidity_rate) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-2 align-center hidden lg:table-cell">
@@ -640,12 +636,12 @@ const Market = () => {
                           {" "}
                           {(Number(item?.[1]?.Ok?.borrow_rate) * 100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-3 align-center">
@@ -665,7 +661,7 @@ const Market = () => {
                 </tbody>
               </table>
             </div>
-            {}
+            { }
 
             {showPopup && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -705,7 +701,7 @@ const Market = () => {
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
                               Number(selectedAssetData[1].Ok.asset_supply) /
-                                100000000
+                              100000000
                             )}
                           </p>
 
@@ -714,7 +710,7 @@ const Market = () => {
                             {formatValue(
                               (Number(selectedAssetData[1].Ok.asset_supply) /
                                 100000000) *
-                                getUsdRate(selectedAssetData[0])
+                              getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -730,15 +726,15 @@ const Market = () => {
                           ) *
                             100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(
-                                  selectedAssetData[1].Ok.current_liquidity_rate
-                                ) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(
+                                selectedAssetData[1].Ok.current_liquidity_rate
+                              ) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
 
@@ -750,7 +746,7 @@ const Market = () => {
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
                               Number(selectedAssetData[1].Ok.asset_borrow) /
-                                100000000
+                              100000000
                             )}
                           </p>
 
@@ -759,7 +755,7 @@ const Market = () => {
                             {formatValue(
                               (Number(selectedAssetData[1].Ok.asset_borrow) /
                                 100000000) *
-                                getUsdRate(selectedAssetData[0])
+                              getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -771,13 +767,13 @@ const Market = () => {
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {(Number(selectedAssetData[1].Ok.borrow_rate) * 100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(selectedAssetData[1].Ok.borrow_rate) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(selectedAssetData[1].Ok.borrow_rate) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
                     </div>

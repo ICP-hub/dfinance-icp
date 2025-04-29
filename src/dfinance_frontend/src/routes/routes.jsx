@@ -3,14 +3,14 @@ import CreateWallet from "../pages/Dashboard/Dashboard";
 import Market from "../pages/Market/Market";
 import MainDashboard from "../pages/Dashboard/MainDashboard";
 import Home from "../pages/Home/Home";
-import Faucet from "../pages/Faucet/faucet";
+import Faucet from "../pages/Faucet/Faucet";
 import { Outlet } from "react-router-dom";
 import MiniLoader from "../components/Common/miniLoader";
 
 const Error = lazy(() => import("../pages/Error"));
 const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
 const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
-const DashboardCards = lazy(() => import("../pages/info/info"));
+const DashboardCards = lazy(() => import("../pages/info/Info"));
 const HealthFactorList = lazy(() =>
   import("../components/Dashboard/HealthFactorList")
 );
@@ -19,7 +19,7 @@ const LiquidationList = lazy(() => import("../components/Liquidate/LiquidationLi
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;
 const isProduction = process.env.DFX_PRODUCTION === 'true';
-console.log("isProduction",isProduction)
+console.log("isProduction", isProduction)
 const routes = [
   {
     path: "/",

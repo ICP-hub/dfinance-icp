@@ -105,7 +105,7 @@ describe("DebtStatus Component", () => {
     // Manually trigger state update by using a side effect
     // This is a simplified approach since we can't directly manipulate component state in tests
     jest.useFakeTimers();
-    setTimeout(() => {}, 1300); // Just past the 1200ms timeout in the component
+    setTimeout(() => { }, 1300); // Just past the 1200ms timeout in the component
     jest.runAllTimers();
 
     rerender(<DebtStatus />);

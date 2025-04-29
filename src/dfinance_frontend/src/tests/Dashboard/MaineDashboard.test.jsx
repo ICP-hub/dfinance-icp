@@ -1,11 +1,11 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import MainDashboard from "../../pages/Dashboard/MainDashboard"; 
-import { BrowserRouter as Router } from "react-router-dom"; 
-import { Provider } from "react-redux"; 
-import { store } from "../../redux/store"; 
-import { useAuth } from "../../utils/useAuthClient"; 
-import useAssetData from "../../components/customHooks/useAssets"; 
+import MainDashboard from "../../pages/Dashboard/MainDashboard";
+import { BrowserRouter as Router } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "../../redux/store";
+import { useAuth } from "../../utils/useAuthClient";
+import useAssetData from "../../components/customHooks/useAssets";
 
 // Mocking the useAuth hook to control authentication state in the tests
 jest.mock("../../utils/useAuthClient", () => ({

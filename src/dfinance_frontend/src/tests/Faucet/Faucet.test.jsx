@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import Faucet from "../../pages/Faucet/faucet";
+import Faucet from "../../pages/Faucet/Faucet";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import { useAuth } from "../../utils/useAuthClient";
@@ -210,7 +210,7 @@ describe("Faucet Component", () => {
       screen.getByText(/Please connect your wallet to get free testnet assets/i)
     ).toBeInTheDocument();
   });
-  
+
   test("does not render content when isTestnetMode is false", () => {
     // Set up store with isTestnetMode as false
     store = mockStore({
@@ -236,7 +236,7 @@ describe("Faucet Component", () => {
     expect(
       screen.queryByText(/With our testnet Faucet you can receive free assets/i)
     ).not.toBeInTheDocument();
-    
+
     expect(screen.queryByTestId("connect-wallet-button")).not.toBeInTheDocument();
   });
 });

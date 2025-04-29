@@ -5,11 +5,11 @@ import {
   fireEvent,
   waitFor,
   act,
-} from "@testing-library/react"; 
-import WithdrawPopup from "../../components/Dashboard/DashboardPopup/WithdrawPopup"; 
-import { Provider } from "react-redux"; 
-import { store } from "../../redux/store"; 
-import { MemoryRouter } from "react-router-dom"; 
+} from "@testing-library/react";
+import WithdrawPopup from "../../components/Dashboard/DashboardPopup/WithdrawPopup";
+import { Provider } from "react-redux";
+import { store } from "../../redux/store";
+import { MemoryRouter } from "react-router-dom";
 
 // Mocking react-toastify to simulate toast notifications during tests
 jest.mock("react-toastify", () => ({

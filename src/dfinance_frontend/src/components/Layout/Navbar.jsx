@@ -80,6 +80,7 @@ export default function Navbar({ isHomeNav }) {
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isButtonDisabled = false;
+  const isProduction = process.env.DFX_PRODUCTION === 'true';
 
   const {
     fetchConversionRate,
@@ -812,7 +813,7 @@ export default function Navbar({ isHomeNav }) {
                 </h1>
               </div>
 
-              {!isHomeNav && isTestnetMode && (
+              {!isHomeNav && isTestnetMode && !isProduction && (
                 <button
                   className="bg-[#4659CF]  z-50  hover:bg-blue-700 text-white font-bold rounded-full md:rounded  text-[12px] p-1 md:px-2 md:py-[1px] md:pt-[2px] mt-[1px] ml-3"
                   onClick={handleButtonClick}
@@ -850,66 +851,66 @@ export default function Navbar({ isHomeNav }) {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                        if (link.alwaysPresent) {
-                          return (
+                      if (link.alwaysPresent) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      } else if (isTestnetMode && link.testnet) {
+                        return (
+                          <React.Fragment key={index}>
                             <NavLink
-                              key={index}
-                              to={link.route}
-                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                            >
-                              {link.title}
-                            </NavLink>
-                          );
-                        } else if (isTestnetMode && link.testnet) {
-                          return (
-                            <React.Fragment key={index}>
-                              <NavLink
-                                to={link.route}
-                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                              >
-                                {link.title}
-                              </NavLink>
-                              {link.title === "Faucet" && (
-                                <>
-                                  <span
-                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                    onClick={handlePopupToggle}
-                                  >
-                                    •••
-                                  </span>
-                                  {isPopupVisible && (
-                                    <Popup
-                                      position={popupPosition}
-                                      onClose={() => setIsPopupVisible(false)}
-                                    />
-                                  )}
-                                </>
-                              )}
-                            </React.Fragment>
-                          );
-                        } else if (!isTestnetMode && !link.testnet) {
-                          return (
-                            <NavLink
-                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                          );
-                        }
-                        return null;
-                      })
+                            {link.title === "Faucet" && (
+                              <>
+                                <span
+                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
+                                  onClick={handlePopupToggle}
+                                >
+                                  •••
+                                </span>
+                                {isPopupVisible && (
+                                  <Popup
+                                    position={popupPosition}
+                                    onClose={() => setIsPopupVisible(false)}
+                                  />
+                                )}
+                              </>
+                            )}
+                          </React.Fragment>
+                        );
+                      } else if (!isTestnetMode && !link.testnet) {
+                        return (
+                          <NavLink
+                            key={index}
+                            to={link.route}
+                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                          >
+                            {link.title}
+                          </NavLink>
+                        );
+                      }
+                      return null;
+                    })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                        <NavLink
-                          key={index}
-                          target={link.target}
-                          to={link.route}
-                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                        >
-                          {link.title}
-                        </NavLink>
-                      ))}
+                      <NavLink
+                        key={index}
+                        target={link.target}
+                        to={link.route}
+                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                      >
+                        {link.title}
+                      </NavLink>
+                    ))}
                 </div>
               </>
             )}
@@ -942,7 +943,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                     </div>
                   </div>
                 )}
@@ -1026,9 +1027,9 @@ export default function Navbar({ isHomeNav }) {
                                             <img
                                               src={
                                                 AssetImages[
-                                                  assets.indexOf(asset)
+                                                assets.indexOf(asset)
                                                 ]
-                                              } 
+                                              }
                                               alt={asset}
                                               className="object-fill w-6 h-6 rounded-full"
                                             />
@@ -1037,9 +1038,8 @@ export default function Navbar({ isHomeNav }) {
                                             {asset}
                                           </span>
                                           <svg
-                                            className={`w-4 h-4 transition-transform ${
-                                              isDropdownOpen ? "rotate-180" : ""
-                                            }`}
+                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                                              }`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -1089,13 +1089,13 @@ export default function Navbar({ isHomeNav }) {
                                                       {/* Conditionally render the image using assetIndex */}
                                                       {assetIndex !== -1 &&
                                                         AssetImages[
-                                                          assetIndex
+                                                        assetIndex
                                                         ] && (
                                                           <img
                                                             key={assetIndex}
                                                             src={
                                                               AssetImages[
-                                                                assetIndex
+                                                              assetIndex
                                                               ]
                                                             }
                                                             alt={a || "asset"}
@@ -1124,11 +1124,10 @@ export default function Navbar({ isHomeNav }) {
                                           )}
                                         </p>
                                         <p
-                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${
-                                            supplyBalance === 0 || isApproved
+                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
                                               ? "text-gray-400 cursor-not-allowed"
                                               : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                                          }`}
+                                            }`}
                                           onClick={() => {
                                             if (
                                               supplyBalance > 0 &&
@@ -1198,16 +1197,15 @@ export default function Navbar({ isHomeNav }) {
                                   {/* Approve Button */}
                                   <button
                                     onClick={() => !isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                                      isApproved ||
-                                      isLoading ||
-                                      isButtonDisabled ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                                        isLoading ||
+                                        isButtonDisabled ||
+                                        amount <= 0 ||
+                                        supplyBalance <= 0 ||
+                                        amount > supplyBalance
                                         ? "opacity-50 cursor-not-allowed"
                                         : ""
-                                    }`}
+                                      }`}
                                     disabled={
                                       isApproved ||
                                       isLoading ||
@@ -1222,16 +1220,15 @@ export default function Navbar({ isHomeNav }) {
                                   {/* Repay Button */}
                                   <button
                                     onClick={() => isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                                      !isApproved ||
-                                      isButtonDisabled ||
-                                      isLoading ||
-                                      amount <= 0 ||
-                                      supplyBalance <= 0 ||
-                                      amount > supplyBalance
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                                        isButtonDisabled ||
+                                        isLoading ||
+                                        amount <= 0 ||
+                                        supplyBalance <= 0 ||
+                                        amount > supplyBalance
                                         ? "opacity-50 cursor-not-allowed"
                                         : ""
-                                    }`}
+                                      }`}
                                     disabled={
                                       !isApproved ||
                                       isLoading ||
@@ -1370,7 +1367,7 @@ export default function Navbar({ isHomeNav }) {
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                  {}
+                  { }
                   <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                     {!isMobile2 && (
                       <div
@@ -1446,7 +1443,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                              {}
+                              { }
                               <div className="hidden lg1:flex justify-center">
                                 <div
                                   className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -1492,7 +1489,7 @@ export default function Navbar({ isHomeNav }) {
                                   </div>
                                 </div>
                               </div>
-                              {}
+                              { }
                               <div className=" w-full flex justify-center">
                                 <div
                                   className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -1548,7 +1545,7 @@ export default function Navbar({ isHomeNav }) {
                               Settings
                             </h2>
 
-                            {}
+                            { }
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around">
                                 <label
@@ -1569,7 +1566,7 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
 
-                            {}
+                            { }
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <label
@@ -1585,12 +1582,12 @@ export default function Navbar({ isHomeNav }) {
                                 </span>
                                 <CustomizedSwitches
                                   checked={isTestnetMode}
-                                  // onChange={handleTestnetModeToggle}
+                                // onChange={handleTestnetModeToggle}
                                 />
                               </div>
                             </div>
 
-                            {}
+                            { }
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around relative group">
                                 <label
@@ -1604,7 +1601,7 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </label>
 
-                                {}
+                                { }
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                   Enabling this will allow the user to hear
                                   sound when supply, borrow, repay, or withdraw
@@ -1644,7 +1641,7 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setIsMobileNav(!isMobileNav)}
                         className="cursor-pointer"
                       >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                       </div>
                     </div>
                   )}
@@ -1678,7 +1675,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
                         </div>
                       </div>
                     )}
@@ -1688,7 +1685,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        {}
+                        { }
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -1709,7 +1706,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        {}
+                        { }
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label

@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import CreateWallet from "../../pages/Dashboard/Dashboard"; 
+import CreateWallet from "../../pages/Dashboard/Dashboard";
 import { Provider } from "react-redux";
-import { store } from "../../redux/store"; 
-import { BrowserRouter as Router } from "react-router-dom"; 
-import { useAuth } from "../../utils/useAuthClient"; 
+import { store } from "../../redux/store";
+import { BrowserRouter as Router } from "react-router-dom";
+import { useAuth } from "../../utils/useAuthClient";
 
 // Mocking the useAuth hook
 jest.mock("../../utils/useAuthClient", () => ({

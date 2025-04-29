@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup"; 
-import { BrowserRouter as Router } from "react-router-dom"; 
+import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
+import { BrowserRouter as Router } from "react-router-dom";
 
 describe("FreezeCanisterPopup", () => {
   // Test case to verify the popup renders correctly and closes when the close button is clicked

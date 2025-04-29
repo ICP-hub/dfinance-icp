@@ -1,8 +1,8 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react"; 
-import TestnetModePopup from "../../components/Dashboard/DashboardPopup/Testnetmode"; 
-import { ToastContainer } from "react-toastify"; 
-import "@testing-library/jest-dom/extend-expect"; 
+import { render, screen, fireEvent } from "@testing-library/react";
+import TestnetModePopup from "../../components/Dashboard/DashboardPopup/Testnetmode";
+import { ToastContainer } from "react-toastify";
+import "@testing-library/jest-dom/extend-expect";
 
 // Mocking react-toastify for controlling toast notifications during tests
 jest.mock("react-toastify", () => ({

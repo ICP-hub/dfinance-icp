@@ -185,7 +185,7 @@ const Home = () => {
 
             <div className="w-full flex justify-center mt-3">
               {" "}
-              {}
+              { }
               <a
                 href="https://dfinance.notion.site/DFinance-Points-System-17544afe836e80ffae46f31b676a7ce7"
                 target="_blank"
@@ -216,38 +216,34 @@ const Home = () => {
                   {FAQ_QUESTION.map((item, index) => (
                     <div key={index} className="w-full dark:text-darkText">
                       <div
-                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${
-                          currentFAQ === index
+                        className={`w-full flex p-4 items-center transition-opacity duration-300 ease-in-out ${currentFAQ === index
                             ? "bg-[#eef0f5] dark:bg-currentFAQBackground"
                             : ""
-                        } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
+                          } hover:bg-[#FAFBFF] hover:dark:bg-currentFAQBackground`}
                         onClick={() => setCurrentFAQ(index)}
                       >
                         <div className="w-1/12">
                           <div
-                            className={`w-4 h-4 rounded-full ${
-                              currentFAQ === index
+                            className={`w-4 h-4 rounded-full ${currentFAQ === index
                                 ? "bg-[#517687] dark:bg-darkText"
                                 : "bg-[#DBE8EE] dark:bg-[#192C35]"
-                            }`}
+                              }`}
                           ></div>
                         </div>
                         <div className="w-10/12">{item.question}</div>
                         <div
-                          className={`w-1/12 ${
-                            currentFAQ === index
+                          className={`w-1/12 ${currentFAQ === index
                               ? "text-[#517687] dark:text-darkText rotate-90 md:rotate-0"
                               : "text-[#DBE8EE] dark:text-[#192C35]"
-                          } flex justify-end`}
+                            } flex justify-end`}
                         >
                           <ChevronRight />
                         </div>
                       </div>
                       {currentFAQ === index && (
                         <div
-                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${
-                            currentFAQ === index ? "opacity-100" : "opacity-0"
-                          }`}
+                          className={`block animate-fade-down -z-10 md:hidden p-4 bg-[#FAFBFF] rounded-b-xl text-black max-h-full dark:bg-darkFAQBackground2 dark:text-darkText transition-opacity duration-300 ${currentFAQ === index ? "opacity-100" : "opacity-0"
+                            }`}
                         >
                           <p>{item.answer}</p>
                         </div>
@@ -279,9 +275,8 @@ const Home = () => {
         </div>
       </div>
       <button
-        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`fixed bottom-5 md:bottom-10 z-50 right-5 md:right-10 bg-[#5B62FE] h-[50px] w-[50px] text-white rounded-full transition-opacity duration-300 ${isVisible ? "opacity-100" : "opacity-0"
+          }`}
         onClick={scrollToTop}
       >
         <LuMoveUp className="text-[30px] mx-auto hover:text-white transition-colors" />

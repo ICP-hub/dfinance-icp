@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import BorrowInfo from "../../components/Dashboard/DashboardPopup/BorrowInfo"; 
-import { useParams } from "react-router-dom"; 
+import BorrowInfo from "../../components/Dashboard/DashboardPopup/BorrowInfo";
+import { useParams } from "react-router-dom";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 
 // Mocking react-router's useParams to return a fake ID

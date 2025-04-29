@@ -849,11 +849,10 @@ const DashboardCards = () => {
 
                 {/* Value with Conditional Coloring */}
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                  }`}
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -945,7 +944,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_supply) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>
@@ -961,7 +960,7 @@ const DashboardCards = () => {
                                     {formatValue(
                                       (Number(data[1]?.Ok?.asset_borrow) /
                                         1e8) *
-                                        (assetRate / 1e8)
+                                      (assetRate / 1e8)
                                     )}
                                   </p>
                                 </div>

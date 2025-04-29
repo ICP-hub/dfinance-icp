@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import Popup from "../../components/Dashboard/DashboardPopup/Morepopup"; 
+import Popup from "../../components/Dashboard/DashboardPopup/Morepopup";
 
 describe("Popup Component", () => {
   // Mock data for position and onClose handler to simulate prop values

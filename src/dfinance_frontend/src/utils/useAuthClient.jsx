@@ -216,7 +216,7 @@ export const useAuthClient = (options = defaultOptions) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => {});
+      agent.fetchRootKey().catch((err) => { });
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
@@ -230,7 +230,7 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchReserveData = async (asset) => {

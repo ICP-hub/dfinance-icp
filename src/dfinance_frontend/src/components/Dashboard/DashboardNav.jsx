@@ -99,8 +99,8 @@ const DashboardNav = () => {
           ? netApy === "<0.01%"
             ? "<0.01%"
             : !isNaN(parseFloat(netApy))
-            ? `${formatNetApy(netApy)}`
-            : "-"
+              ? `${formatNetApy(netApy)}`
+              : "-"
           : "-",
     },
     {
@@ -139,7 +139,7 @@ const DashboardNav = () => {
     !pathname.includes("/dashboard/transaction-history") &&
     !pathname.startsWith("/dashboard/asset-details/");
 
- 
+
 
   const isAssetDetailsPage =
     location.pathname.startsWith("/dashboard/asset-details/") ||
@@ -308,7 +308,7 @@ const DashboardNav = () => {
         const assetBorrowed =
           (Number(assetBorrowBalance) *
             Number(getAssetBorrowValue(assetKey) || 0)) /
-            Number(DebtIndex) || 0;
+          Number(DebtIndex) || 0;
 
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
         totalBorrowedInUSD += assetBorrowedInUSD;
@@ -380,17 +380,17 @@ const DashboardNav = () => {
         prevTab.map((item) =>
           item.id === 0
             ? {
-                ...item,
-                count:
-                  newValue === "-" ? (
-                    newValue
-                  ) : (
-                    <>
-                      <span style={{ fontWeight: "lighter" }}>$</span>
-                      {formatNumber(newValue, 2)}
-                    </>
-                  ),
-              }
+              ...item,
+              count:
+                newValue === "-" ? (
+                  newValue
+                ) : (
+                  <>
+                    <span style={{ fontWeight: "lighter" }}>$</span>
+                    {formatNumber(newValue, 2)}
+                  </>
+                ),
+            }
             : item
         )
       );
@@ -426,9 +426,9 @@ const DashboardNav = () => {
         prevTab.map((item) =>
           item.id === 2
             ? {
-                ...item,
-                count: calculatedHealthFactor,
-              }
+              ...item,
+              count: calculatedHealthFactor,
+            }
             : item
         )
       );
@@ -503,7 +503,7 @@ const DashboardNav = () => {
               ?.dtokenBalance || 0;
           const supply =
             (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-              Number(currentLiquidity) || 0;
+            Number(currentLiquidity) || 0;
 
           if (supply) {
             setAssetSupply(supply);
@@ -517,7 +517,7 @@ const DashboardNav = () => {
               ?.debtTokenBalance || 0;
           const borrow =
             (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-              Number(DebtIndex) || 0;
+            Number(DebtIndex) || 0;
 
           if (borrow > 0) {
             totalBorrow += borrow;
@@ -667,9 +667,8 @@ const DashboardNav = () => {
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${
-            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-          }`}
+          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+            }`}
         >
           {(isMarketRoute || (isDashboardRoute && isAuthenticated)) && (
             <button onClick={toggleMenu} className="rounded-md button1 z-10">
@@ -683,9 +682,8 @@ const DashboardNav = () => {
         <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
-                isMenuOpen ? "block" : "hidden"
-              } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
+                } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -750,23 +748,22 @@ const DashboardNav = () => {
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                             <span
-                              className={`font-bold text-[20px] ${
-                                data.title === "Health Factor"
+                              className={`font-bold text-[20px] ${data.title === "Health Factor"
                                   ? data.count === 0
                                     ? "text-red-500"
                                     : data.count > 3
-                                    ? "text-green-500"
-                                    : data.count <= 1
-                                    ? "text-red-500"
-                                    : data.count <= 1.5
-                                    ? "text-orange-600"
-                                    : data.count <= 2
-                                    ? "text-orange-400"
-                                    : "text-orange-300"
+                                      ? "text-green-500"
+                                      : data.count <= 1
+                                        ? "text-red-500"
+                                        : data.count <= 1.5
+                                          ? "text-orange-600"
+                                          : data.count <= 2
+                                            ? "text-orange-400"
+                                            : "text-orange-300"
                                   : data.title === "Total Borrows"
-                                  ? "text-[#2A1F9D] dark:text-darkBlue"
-                                  : "text-[#2A1F9D] dark:text-darkBlue"
-                              }`}
+                                    ? "text-[#2A1F9D] dark:text-darkBlue"
+                                    : "text-[#2A1F9D] dark:text-darkBlue"
+                                }`}
                             >
                               {data.count !== null ? data.count : "\u00A0"}
                             </span>
@@ -844,21 +841,20 @@ const DashboardNav = () => {
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                     <span
-                      className={`font-bold text-[20px] ${
-                        data.title === "Health Factor"
+                      className={`font-bold text-[20px] ${data.title === "Health Factor"
                           ? data.count === 0 && assetSupply === 0
                             ? "text-[#2A1F9D] dark:text-darkBlue"
                             : data.count > 3
-                            ? "text-green-500"
-                            : data.count <= 1
-                            ? "text-red-500"
-                            : data.count <= 1.5
-                            ? "text-orange-600"
-                            : data.count <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
+                              ? "text-green-500"
+                              : data.count <= 1
+                                ? "text-red-500"
+                                : data.count <= 1.5
+                                  ? "text-orange-600"
+                                  : data.count <= 2
+                                    ? "text-orange-400"
+                                    : "text-orange-300"
                           : "text-[#2A1F9D] dark:text-darkBlue"
-                      }`}
+                        }`}
                     >
                       {data.count !== null ? data.count : "\u00A0"}
                     </span>

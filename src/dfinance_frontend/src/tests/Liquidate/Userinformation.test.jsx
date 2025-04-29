@@ -34,7 +34,7 @@ test("renders UserInformationPopup component", () => {
   render(
     <Provider store={store}>
       <UserInformationPopup
-        onClose={() => {}}
+        onClose={() => { }}
         mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }}
       />
     </Provider>
@@ -48,7 +48,7 @@ test("renders user principal", () => {
   render(
     <Provider store={store}>
       <UserInformationPopup
-        onClose={() => {}}
+        onClose={() => { }}
         mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }}
       />
     </Provider>
@@ -61,7 +61,7 @@ test("clicking the Next button", () => {
   render(
     <Provider store={store}>
       <UserInformationPopup
-        onClose={() => {}}
+        onClose={() => { }}
         mappedItem={{ principal: { _arr: ["rrkah-fqaaa-aaaaa-aaaaq-cai"] } }}
       />
     </Provider>

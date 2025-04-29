@@ -50,6 +50,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
+
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -273,10 +274,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     } catch (error) {
       console.error(error.message);
 
-      // ✅ **Check for "Out of Cycles" Error**
       if (
         error.message.includes("out of cycles") ||
-        error.message.includes("Reject text: Canister") // Matches error pattern
+        error.message.includes("Reject text: Canister")
       ) {
         toast.error(
           "Canister is out of cycles. Please wait, the admin has been notified.",
@@ -365,7 +365,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         setIsFreezePopupVisible(true);
       }
     } finally {
-      setIsFaucetLoading(false); // Stop loading after the data is fetched or an error occurs
+      setIsFaucetLoading(false);
     }
   };
 
@@ -375,7 +375,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -536,22 +536,23 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       <span className="text-lg">{asset}</span>
                     </div>
                     <div
-                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${isFaucetLoading ||
-                          Math.floor(
-                            ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
                             100
-                          ) /
+                        ) /
                           100 <=
                           0
                           ? "opacity-50 cursor-not-allowed"
                           : ""
-                        }`}
+                      }`}
                       onClick={
                         isFaucetLoading ||
-                          Math.floor(
-                            ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
                             100
-                          ) /
+                        ) /
                           100 <=
                           0
                           ? undefined
@@ -592,20 +593,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
                 return parseFloat(formattedAmount) <= 0;
               })() && (
-                  <div className="w-full flex flex-col my-3 space-y-2">
-                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-                      <div className="w-1/12 flex items-center justify-center">
-                        <div className="warning-icon-container">
-                          <TriangleAlert />
-                        </div>
-                      </div>
-                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                        Faucet limit has been exceeded. It will reset at 00:00
-                        (UTC).
+                <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <TriangleAlert />
                       </div>
                     </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      Faucet limit has been exceeded. It will reset at 00:00
+                      (UTC).
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
               <button
                 ref={faucetButtonRef}
@@ -615,11 +616,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   FaucetUsage[asset] >= FaucetLimit ||
                   loading
                 }
-                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount.replace(/,/g, "") > 0 &&
-                    FaucetUsage[asset] < FaucetLimit[asset]
+                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${
+                  amount.replace(/,/g, "") > 0 &&
+                  FaucetUsage[asset] < FaucetLimit[asset]
                     ? "opacity-100 cursor-pointer"
                     : "opacity-50 cursor-not-allowed"
-                  }`}
+                }`}
               >
                 {loading ? "Processing..." : `Faucet ${asset}`}
               </button>

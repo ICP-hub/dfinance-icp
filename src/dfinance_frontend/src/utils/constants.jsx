@@ -88,14 +88,14 @@ export const DASHBOARD_TOP_NAV_LINK = [
     title: "Faq",
     route: "/#Faq",
     icon: "",
-    testnet: false, // stays false
+    testnet: false, 
   },
   {
     id: 4,
     title: "Faucet",
     route: "/Faucet",
     icon: "",
-    testnet: !isProduction, // <-- 👈 dynamic based on production
+    testnet: !isProduction, 
   },
 ];
 export const error = [

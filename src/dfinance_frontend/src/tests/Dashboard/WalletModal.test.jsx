@@ -7,16 +7,16 @@ import { useAuth } from "../../utils/useAuthClient";
 
 // Mocking necessary imports for the test environment
 jest.mock("react-redux", () => ({
-  useDispatch: jest.fn(), // Mock useDispatch hook
-  useSelector: jest.fn(), // Mock useSelector hook
+  useDispatch: jest.fn(), 
+  useSelector: jest.fn(), 
 }));
 
 jest.mock("react-router-dom", () => ({
-  useNavigate: jest.fn(), // Mock useNavigate hook
+  useNavigate: jest.fn(), 
 }));
 
 jest.mock("../../utils/useAuthClient", () => ({
-  useAuth: jest.fn(), // Mock useAuth hook
+  useAuth: jest.fn(), 
 }));
 
 // Mocking MUI Modal component for testing
@@ -54,13 +54,13 @@ describe("WalletModal Component", () => {
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
 
-    useDispatch.mockReturnValue(mockDispatch); // Mock dispatch function
-    useNavigate.mockReturnValue(mockNavigate); // Mock navigate function
+    useDispatch.mockReturnValue(mockDispatch); 
+    useNavigate.mockReturnValue(mockNavigate); 
 
     useAuth.mockReturnValue({
-      login: mockLogin, // Mock login function
-      logout: mockLogout, // Mock logout function
-      isAuthenticated: false, // Mock authentication status
+      login: mockLogin, 
+      logout: mockLogout, 
+      isAuthenticated: false, 
     });
 
     // Mock localStorage methods
@@ -77,10 +77,10 @@ describe("WalletModal Component", () => {
   // Test case 1: Ensure modal displays 'Connect a wallet' when no wallet is connected
   test("renders connect wallet modal when no wallet is connected", () => {
     useSelector.mockReturnValue({
-      isWalletModalOpen: true, // Modal should be open
-      isSwitchingWallet: false, // Not in switching mode
-      connectedWallet: null, // No wallet connected
-      isWalletCreated: false, // No wallet created
+      isWalletModalOpen: true, 
+      isSwitchingWallet: false, 
+      connectedWallet: null,
+      isWalletCreated: false,
     });
 
     render(<WalletModal />);
@@ -96,7 +96,7 @@ describe("WalletModal Component", () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
-      connectedWallet: "ii", // 'ii' wallet is connected
+      connectedWallet: "ii", 
       isWalletCreated: false,
     });
 
@@ -120,7 +120,7 @@ describe("WalletModal Component", () => {
   // Test case 3: Ensure modal does not render when closed
   test("does not render when modal is closed", () => {
     useSelector.mockReturnValue({
-      isWalletModalOpen: false, // Modal should be closed
+      isWalletModalOpen: false, 
       isSwitchingWallet: false,
       connectedWallet: null,
       isWalletCreated: false,
@@ -136,7 +136,7 @@ describe("WalletModal Component", () => {
   test("calls switch wallet handler when in switching mode", async () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
-      isSwitchingWallet: true, // Switching wallet is enabled
+      isSwitchingWallet: true, 
       connectedWallet: "nfid",
       isWalletCreated: false,
     });
@@ -187,7 +187,7 @@ describe("WalletModal Component", () => {
       isWalletModalOpen: true,
       isSwitchingWallet: false,
       connectedWallet: null,
-      isWalletCreated: true, // Wallet is created
+      isWalletCreated: true, 
     });
 
     render(<WalletModal />);
@@ -198,7 +198,7 @@ describe("WalletModal Component", () => {
 
   // Test case 7: Ensure connected wallet is retrieved from localStorage on mount
   test("retrieves connected wallet from localStorage on mount", () => {
-    window.localStorage.getItem.mockReturnValueOnce("ii"); // Simulate 'ii' in localStorage
+    window.localStorage.getItem.mockReturnValueOnce("ii"); 
 
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
@@ -219,14 +219,14 @@ describe("WalletModal Component", () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
-      connectedWallet: "ii", // 'ii' is the connected wallet
+      connectedWallet: "ii", 
       isWalletCreated: false,
     });
 
     useAuth.mockReturnValue({
       login: mockLogin,
       logout: mockLogout,
-      isAuthenticated: false, // User is not authenticated
+      isAuthenticated: false, 
     });
 
     render(<WalletModal />);
@@ -242,7 +242,7 @@ describe("WalletModal Component", () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
-      connectedWallet: "nfid", // 'nfid' is connected wallet
+      connectedWallet: "nfid", 
       isWalletCreated: false,
     });
 

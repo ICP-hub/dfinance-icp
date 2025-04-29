@@ -29,24 +29,20 @@ const Footer = () => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
-  // Function to update the zoom level
   const updateZoom = (newZoom) => {
     document.documentElement.style.fontSize = `${newZoom}%`;
     setZoomLevel(newZoom);
     localStorage.setItem("zoomLevel", newZoom);
   };
 
-  // Function to handle zoom in, zoom out, and reset
   const handleZoomIn = () => {
     if (zoomLevel < 150) updateZoom(zoomLevel + 10);
   };
 
-  // Function to handle zoom out
   const handleZoomOut = () => {
     if (zoomLevel > 80) updateZoom(zoomLevel - 10);
   };
 
-  // Function to reset zoom to 100%
   const handleReset = () => {
     updateZoom(100);
   };
@@ -101,7 +97,7 @@ const Footer = () => {
 
     try {
       setLoading(true);
-      const response = await backendActor.create_user_reserve_with_low_health(
+      await backendActor.create_user_reserve_with_low_health(
         "ckUSDC",
         "ckUSDC",
         34000000000,
@@ -144,7 +140,7 @@ const Footer = () => {
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">
-        { }
+        {}
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"bottom-left"}
@@ -204,8 +200,8 @@ const Footer = () => {
                   {isApproved
                     ? "Approved"
                     : loading
-                      ? "Approving..."
-                      : "Approve"}
+                    ? "Approving..."
+                    : "Approve"}
                 </button>
 
                 <button
@@ -237,7 +233,7 @@ const Footer = () => {
           <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
             <h1 className="font-semibold">Follow us on</h1>
             <div className="flex gap-2 mt-6">
-              { }
+              {}
               <a
                 target="_blank"
                 href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all"
@@ -250,7 +246,7 @@ const Footer = () => {
                   />
                 </span>
               </a>
-              { }
+              {}
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img

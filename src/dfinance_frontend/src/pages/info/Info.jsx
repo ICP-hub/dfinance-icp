@@ -288,7 +288,7 @@ const DashboardCards = () => {
    * Handles cycle-based notifications and sends warning or exhaustion emails.
    * @param {number} currentCycles - The current number of cycles.
    */
-  const handleNotification = (currentCycles, assetBalance) => {
+  const handleNotification = (currentCycles) => {
     const oneDay = 24 * 60 * 60 * 1000;
 
     const sendWarningEmail = async () => {
@@ -831,7 +831,6 @@ const DashboardCards = () => {
                 key={index}
                 className="dark:from-darkGradientStart dark:to-darkGradientEnd bg-gradient-to-r from-[#4659CF]/40 via-[#D379AB]/40 to-[#FCBD78]/40 text-[#233D63] dark:text-darkTextSecondary1 rounded-[40px] shadow-lg px-6 py-4 lgx:ml-[260px] flex flex-col items-start justify-start hover:shadow-2xl transition-shadow duration-300 lgx:w-[355px] lgx:h-[210px] w-100 h-[240px]"
               >
-                {/* Title */}
                 <h3 className="lg:text-lg text-sm font-normal px-3 py-2 mt-3">
                   {card.title}
                 </h3>
@@ -915,7 +914,6 @@ const DashboardCards = () => {
                               key={idx}
                               className="dark:bg-[#1D1B40] bg-gray-100 hover:bg-gray-200 rounded-xl p-3 flex flex-col space-y-1"
                             >
-                              {/* First Section: Total Supplied & Borrowed */}
                               <div className="flex flex-col space-y-2">
                                 <div className="flex justify-between">
                                   <p className="text-sm text-[#233D63] dark:text-darkTextSecondary1">

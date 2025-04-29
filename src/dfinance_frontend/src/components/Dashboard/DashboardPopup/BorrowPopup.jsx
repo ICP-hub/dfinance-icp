@@ -448,7 +448,6 @@ const Borrow = ({
       const convertedValue = numericAmount * adjustedConversionRate;
       setUsdValue(convertedValue.toFixed(7));
     } else {
-      // No need for an error here unless you specifically want to handle this case.
       console.warn("Amount exceeds borrowable value.");
       setUsdValue(0);
     }

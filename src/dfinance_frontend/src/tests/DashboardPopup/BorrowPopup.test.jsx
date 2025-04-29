@@ -212,18 +212,18 @@ describe("Borrow Component", () => {
       );
     });
 
-    expect(screen.getByText("$0.00 USD")).toBeInTheDocument(); // Initially displays USD as 0.00
+    expect(screen.getByText("$0.00 USD")).toBeInTheDocument(); 
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: "0.5" } }); // Enter value for conversion
+      fireEvent.change(amountInput, { target: { value: "0.5" } }); 
     });
 
     const usdValueAfterInput = screen.queryByText("$0.00 USD");
     if (usdValueAfterInput === null) {
       expect(true).toBe(true); // Check for USD sign
     } else {
-      expect(screen.getByText(/\$/)).toBeInTheDocument(); // Ensure a dollar sign is displayed
+      expect(screen.getByText(/\$/)).toBeInTheDocument(); 
     }
   });
 

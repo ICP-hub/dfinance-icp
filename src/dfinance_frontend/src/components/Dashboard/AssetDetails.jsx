@@ -426,7 +426,6 @@ const AssetDetails = () => {
     let usdBalance = 0;
     let usdRate = 0;
 
-    // Set values based on asset id
     switch (id) {
       case "ckBTC":
         balance = borrowableValue;

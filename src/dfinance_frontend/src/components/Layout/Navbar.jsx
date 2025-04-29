@@ -66,7 +66,7 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  const isMobile = window.innerWidth <= 1115;
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1115);
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
@@ -80,7 +80,7 @@ export default function Navbar({ isHomeNav }) {
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isButtonDisabled = false;
-  const isProduction = process.env.DFX_PRODUCTION === 'true';
+  const isProduction = process.env.DFX_PRODUCTION === "true";
 
   const {
     fetchConversionRate,
@@ -111,7 +111,6 @@ export default function Navbar({ isHomeNav }) {
   const [isTransferDropdownOpen, setIsTransferDropDownOpen] = useState(false);
   const [showDepositPopup, setShowDepositPopup] = useState(false);
   const [receiverAddress, setReceiverAddress] = useState("");
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
   const popupPosition = { top: 0, left: 0 };
 
   /* ===================================================================================
@@ -578,9 +577,18 @@ export default function Navbar({ isHomeNav }) {
   };
 
   // Function to handle the resize event
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
@@ -604,7 +612,6 @@ export default function Navbar({ isHomeNav }) {
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
   };
 
-  // Function to handle the click event on the "Wallet" button
   const switchWallet = () => {
     dispatch(setWalletModalOpen({ isOpen: true, isSwitching: true }));
   };
@@ -766,13 +773,6 @@ export default function Navbar({ isHomeNav }) {
   }, [hash]);
 
   useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
     const htmlElement = document.documentElement;
     const bodyElement = document.body;
     if (theme === "dark") {
@@ -851,66 +851,66 @@ export default function Navbar({ isHomeNav }) {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                      if (link.alwaysPresent) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      } else if (isTestnetMode && link.testnet) {
-                        return (
-                          <React.Fragment key={index}>
+                        if (link.alwaysPresent) {
+                          return (
                             <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (isTestnetMode && link.testnet) {
+                          return (
+                            <React.Fragment key={index}>
+                              <NavLink
+                                to={link.route}
+                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                              >
+                                {link.title}
+                              </NavLink>
+                              {link.title === "Faucet" && (
+                                <>
+                                  <span
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
+                                    onClick={handlePopupToggle}
+                                  >
+                                    •••
+                                  </span>
+                                  {isPopupVisible && (
+                                    <Popup
+                                      position={popupPosition}
+                                      onClose={() => setIsPopupVisible(false)}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </React.Fragment>
+                          );
+                        } else if (!isTestnetMode && !link.testnet) {
+                          return (
+                            <NavLink
+                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                            {link.title === "Faucet" && (
-                              <>
-                                <span
-                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                  onClick={handlePopupToggle}
-                                >
-                                  •••
-                                </span>
-                                {isPopupVisible && (
-                                  <Popup
-                                    position={popupPosition}
-                                    onClose={() => setIsPopupVisible(false)}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </React.Fragment>
-                        );
-                      } else if (!isTestnetMode && !link.testnet) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      return null;
-                    })
+                          );
+                        }
+                        return null;
+                      })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                      <NavLink
-                        key={index}
-                        target={link.target}
-                        to={link.route}
-                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                      >
-                        {link.title}
-                      </NavLink>
-                    ))}
+                        <NavLink
+                          key={index}
+                          target={link.target}
+                          to={link.route}
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                 </div>
               </>
             )}
@@ -943,7 +943,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -954,11 +954,9 @@ export default function Navbar({ isHomeNav }) {
                   <div className="relative">
                     {isTransferDropdownOpen && (
                       <>
-                        {/* Overlay that captures outside clicks */}
                         <div
                           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                           onClick={(e) => {
-                            // Close dropdown when clicking the overlay background
                             if (e.target === e.currentTarget) {
                               setIsTransferDropDownOpen(false);
                               setIsDropdownOpen(false);
@@ -969,7 +967,6 @@ export default function Navbar({ isHomeNav }) {
                           }}
                         >
                           <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                            {/* Add close button (X) in the top-right corner */}
                             <div className="flex justify-between items-center">
                               <h1 className="font-semibold text-xl">
                                 Transfer
@@ -1015,7 +1012,6 @@ export default function Navbar({ isHomeNav }) {
 
                                   <div className="flex flex-col items-end gap-3">
                                     <div className="w-auto flex gap-2 items-center">
-                                      {/* Replace image with dropdown */}
                                       <div className="relative">
                                         <button
                                           onClick={() =>
@@ -1027,7 +1023,7 @@ export default function Navbar({ isHomeNav }) {
                                             <img
                                               src={
                                                 AssetImages[
-                                                assets.indexOf(asset)
+                                                  assets.indexOf(asset)
                                                 ]
                                               }
                                               alt={asset}
@@ -1038,8 +1034,9 @@ export default function Navbar({ isHomeNav }) {
                                             {asset}
                                           </span>
                                           <svg
-                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""
-                                              }`}
+                                            className={`w-4 h-4 transition-transform ${
+                                              isDropdownOpen ? "rotate-180" : ""
+                                            }`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -1054,7 +1051,6 @@ export default function Navbar({ isHomeNav }) {
                                           </svg>
                                         </button>
 
-                                        {/* Dropdown menu */}
                                         {isDropdownOpen && (
                                           <div
                                             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
@@ -1086,16 +1082,15 @@ export default function Navbar({ isHomeNav }) {
                                                         );
                                                       }}
                                                     >
-                                                      {/* Conditionally render the image using assetIndex */}
                                                       {assetIndex !== -1 &&
                                                         AssetImages[
-                                                        assetIndex
+                                                          assetIndex
                                                         ] && (
                                                           <img
                                                             key={assetIndex}
                                                             src={
                                                               AssetImages[
-                                                              assetIndex
+                                                                assetIndex
                                                               ]
                                                             }
                                                             alt={a || "asset"}
@@ -1124,10 +1119,11 @@ export default function Navbar({ isHomeNav }) {
                                           )}
                                         </p>
                                         <p
-                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
+                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${
+                                            supplyBalance === 0 || isApproved
                                               ? "text-gray-400 cursor-not-allowed"
                                               : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                                            }`}
+                                          }`}
                                           onClick={() => {
                                             if (
                                               supplyBalance > 0 &&
@@ -1173,7 +1169,6 @@ export default function Navbar({ isHomeNav }) {
                               </div>
 
                               <div className="w-full mt-3">
-                                {/* Warning messages */}
                                 {amount > 0 && amount > supplyBalance && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
@@ -1194,18 +1189,18 @@ export default function Navbar({ isHomeNav }) {
                                 )}
 
                                 <div className="flex flex-col gap-4 mt-4">
-                                  {/* Approve Button */}
                                   <button
                                     onClick={() => !isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                        isLoading ||
-                                        isButtonDisabled ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                                      isApproved ||
+                                      isLoading ||
+                                      isButtonDisabled ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
                                         ? "opacity-50 cursor-not-allowed"
                                         : ""
-                                      }`}
+                                    }`}
                                     disabled={
                                       isApproved ||
                                       isLoading ||
@@ -1217,18 +1212,18 @@ export default function Navbar({ isHomeNav }) {
                                     Approve {asset} to continue
                                   </button>
 
-                                  {/* Repay Button */}
                                   <button
                                     onClick={() => isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                        isButtonDisabled ||
-                                        isLoading ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                                      !isApproved ||
+                                      isButtonDisabled ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
                                         ? "opacity-50 cursor-not-allowed"
                                         : ""
-                                      }`}
+                                    }`}
                                     disabled={
                                       !isApproved ||
                                       isLoading ||
@@ -1259,7 +1254,6 @@ export default function Navbar({ isHomeNav }) {
                       </>
                     )}
 
-                    {/* Transfer Assets Popup */}
                     {showDepositPopup && (
                       <>
                         <div
@@ -1271,7 +1265,6 @@ export default function Navbar({ isHomeNav }) {
                           }}
                         >
                           <div className="w-[325px] lg1:w-[400px] absolute bg-white shadow-xl rounded-xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-6 px-6 text-[#2A1F9D] dark:bg-[#252347] dark:text-darkText z-50">
-                            {/* Add close button (X) in the top-right corner */}
                             <div className="flex justify-between items-center">
                               <h1 className="font-semibold text-xl">Deposit</h1>
                               <button
@@ -1362,12 +1355,10 @@ export default function Navbar({ isHomeNav }) {
                         </div>
                       </>
                     )}
-
-                    {/* Deposit Assets Popup */}
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                  { }
+                  {}
                   <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                     {!isMobile2 && (
                       <div
@@ -1410,9 +1401,7 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                           <div className="flex flex-col-reverse   lg:block">
                             <div className="w-full flex flex-col lg1:flex-row justify-center mt-3 gap-3">
-                              {/* Transfer & Deposit Buttons */}
                               <div className="w-full flex flex-col gap-3 mb-3">
-                                {/* First row: Transfer + Deposit */}
                                 <div className="flex flex-row gap-3">
                                   <Button
                                     title="Transfer"
@@ -1426,7 +1415,6 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </div>
 
-                                {/* Second row: Switch Wallet + Disconnect */}
                                 <div className="flex flex-row gap-3">
                                   <Button
                                     title="Switch Wallet"
@@ -1443,7 +1431,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                              { }
+                              {}
                               <div className="hidden lg1:flex justify-center">
                                 <div
                                   className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -1489,7 +1477,7 @@ export default function Navbar({ isHomeNav }) {
                                   </div>
                                 </div>
                               </div>
-                              { }
+                              {}
                               <div className=" w-full flex justify-center">
                                 <div
                                   className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -1545,7 +1533,7 @@ export default function Navbar({ isHomeNav }) {
                               Settings
                             </h2>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around">
                                 <label
@@ -1566,7 +1554,7 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <label
@@ -1580,14 +1568,11 @@ export default function Navbar({ isHomeNav }) {
                                 <span className="text-[13px] mr-2">
                                   {isTestnetMode ? "ON" : "OFF"}
                                 </span>
-                                <CustomizedSwitches
-                                  checked={isTestnetMode}
-                                // onChange={handleTestnetModeToggle}
-                                />
+                                <CustomizedSwitches checked={isTestnetMode} />
                               </div>
                             </div>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around relative group">
                                 <label
@@ -1601,7 +1586,7 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </label>
 
-                                { }
+                                {}
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                   Enabling this will allow the user to hear
                                   sound when supply, borrow, repay, or withdraw
@@ -1641,7 +1626,7 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setIsMobileNav(!isMobileNav)}
                         className="cursor-pointer"
                       >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                       </div>
                     </div>
                   )}
@@ -1660,6 +1645,7 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   </div>
                 </button>
+                {console.log("ismobile", isMobile)}
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (
@@ -1675,7 +1661,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}
@@ -1685,7 +1671,7 @@ export default function Navbar({ isHomeNav }) {
                           Settings
                         </h2>
 
-                        { }
+                        {}
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label
@@ -1706,7 +1692,6 @@ export default function Navbar({ isHomeNav }) {
                           </div>
                         </div>
 
-                        { }
                         <div className="flex items-center justify-between">
                           <div className="flex flex-col">
                             <label

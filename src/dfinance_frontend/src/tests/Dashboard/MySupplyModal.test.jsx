@@ -70,7 +70,7 @@ describe("MySupplyModal Component", () => {
   test("closes modal on backdrop click when isLoading is false", () => {
     render(<MySupplyModal {...defaultProps} />);
     fireEvent.click(screen.getByTestId("modal"));
-    expect(mockSetIsModalOpen).not.toHaveBeenCalled(); // NOTE: This seems incorrect
+    expect(mockSetIsModalOpen).not.toHaveBeenCalled(); 
   });
 
   // Test that correct CSS classes are applied to modal content for both light and dark themes

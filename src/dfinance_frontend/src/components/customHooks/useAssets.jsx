@@ -49,7 +49,7 @@ const useAssetData = (searchQuery = "") => {
         const assetData = await backendActor.get_all_assets();
 
         const names = assetData.map((asset) => asset.asset_name);
-        const images = assetData.map((asset) => asset.image); // Already URL strings
+        const images = assetData.map((asset) => asset.image); 
 
         setAssets(names);
         setAssetImages(images);

@@ -1004,6 +1004,7 @@ const MobileTopNav = ({
                             <div
                               className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
                               onClick={(e) => {
+
                                 if (e.target === e.currentTarget) {
                                   setIsDropdownOpen(false);
                                 }
@@ -1012,12 +1013,14 @@ const MobileTopNav = ({
                               <div className="absolute right-[40px]  mt-20 w-48 origin-top-right  bg-white dark:bg-darkOverlayBackground border dark:border-gray-600  border-gray-300 rounded-xl shadow-md z-10">
                                 <div className="py-1">
                                   {assets.map((a) => {
-                                    const assetIndex = assets.indexOf(a); 
+                                    const assetIndex = assets.indexOf(a);
+
                                     return (
                                       <button
                                         key={a}
                                         className="flex items-center gap-2 px-4 py-2 text-sm w-full text-left hover:bg-gray-100 dark:hover:bg-darkBackground/10"
                                         onClick={() => {
+
                                           if (a !== asset) {
                                             setAmount("");
                                           }
@@ -1025,12 +1028,13 @@ const MobileTopNav = ({
                                           setIsDropdownOpen(false);
                                         }}
                                       >
+
                                         {assetIndex !== -1 &&
                                           AssetImages[assetIndex] && (
                                             <img
                                               key={assetIndex}
-                                              src={AssetImages[assetIndex]} 
-                                              alt={a || "asset"} 
+                                              src={AssetImages[assetIndex]}
+                                              alt={a || "asset"}
                                               className="rounded-full w-5 h-5 mt-1"
                                             />
                                           )}
@@ -1055,8 +1059,8 @@ const MobileTopNav = ({
                           </p>
                           <p
                             className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                               }`}
                             onClick={() => {
                               if (supplyBalance > 0 && !isApproved) {
@@ -1119,16 +1123,15 @@ const MobileTopNav = ({
                   )}
 
                   <div className="flex flex-col gap-4 mt-4">
-                    {/* Approve Button */}
                     <button
                       onClick={() => !isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                          isLoading ||
-                          amount <= 0 ||
-                          supplyBalance <= 0 ||
-                          amount > supplyBalance
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
+                        isLoading ||
+                        amount <= 0 ||
+                        supplyBalance <= 0 ||
+                        amount > supplyBalance
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
                         }`}
                       disabled={
                         isApproved ||
@@ -1144,12 +1147,12 @@ const MobileTopNav = ({
                     <button
                       onClick={() => isApproved && handleClick()}
                       className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                          isLoading ||
-                          amount <= 0 ||
-                          supplyBalance <= 0 ||
-                          amount > supplyBalance
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
+                        isLoading ||
+                        amount <= 0 ||
+                        supplyBalance <= 0 ||
+                        amount > supplyBalance
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
                         }`}
                       disabled={
                         !isApproved ||

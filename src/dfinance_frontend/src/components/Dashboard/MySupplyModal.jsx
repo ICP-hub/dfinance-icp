@@ -7,7 +7,7 @@ const MySupplyModal = ({
   setIsModalOpen,
   children,
 }) => {
-  const handleCloseModal = (reason) => {
+  const handleCloseModal = ( reason) => {
     if (!isLoading && reason !== "backdropClick") {
       setIsModalOpen(false);
     }

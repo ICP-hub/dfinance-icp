@@ -115,7 +115,7 @@ const HealthFactorList = () => {
     const batchSize = 5;
 
     const processUsersInBatches = async (usersBatch) => {
-      for (const [principal, userData] of usersBatch) {
+      for (const [principal] of usersBatch) {
         if (!principal) continue;
 
         const userBalances = {};
@@ -225,7 +225,7 @@ const HealthFactorList = () => {
           let assetBalancesObj = [];
           let borrowBalancesObj = [];
 
-          reserves.forEach(([asset, assetInfo]) => {
+          reserves.forEach(([asset]) => {
             const assetBalance = BigInt(
               userBalance?.[asset]?.dtokenBalance || 0
             );
@@ -299,7 +299,7 @@ const HealthFactorList = () => {
   };
 
   // Function to get the asset supply value
-  const getAssetSupplyValue = (asset, principal) => {
+  const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
       return supplyValue;
@@ -308,7 +308,7 @@ const HealthFactorList = () => {
   };
 
   // Function to get the asset borrow value
-  const getAssetBorrowValue = (asset, principal) => {
+  const getAssetBorrowValue = (asset) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
@@ -344,8 +344,6 @@ const HealthFactorList = () => {
       return matchesSearch && matchesFilter;
     }
   );
-
-  // Pagination logic
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
@@ -385,8 +383,8 @@ const HealthFactorList = () => {
           : "0",
         "Health Factor":
           user.healthFactor &&
-            (Number(user.healthFactor) >= 3.4028236692093848e28 ||
-              healthFactor > 100)
+          (Number(user.healthFactor) >= 3.4028236692093848e28 ||
+            healthFactor > 100)
             ? "Infinity"
             : healthFactor,
       };
@@ -477,10 +475,10 @@ const HealthFactorList = () => {
       const assetSupply =
         currentLiquidity > 0
           ? Math.trunc(
-            (Math.trunc((assetBalance / currentLiquidity) * 1e8) *
-              supplyValue) /
-            1e8
-          )
+              (Math.trunc((assetBalance / currentLiquidity) * 1e8) *
+                supplyValue) /
+                1e8
+            )
           : 0;
 
       const assetBorrow =
@@ -626,7 +624,6 @@ const HealthFactorList = () => {
         updatedHealthFactors[principal] = null;
       }
     });
-
   }, [userAccountData]);
 
   useEffect(() => {
@@ -653,29 +650,6 @@ const HealthFactorList = () => {
     } else {
       document.body.style.overflow = "auto";
     }
-    const filteredUsers = Object.entries(userAccountData).filter(
-      ([principal, data]) => {
-        if (!data?.Ok || !Array.isArray(data.Ok) || data.Ok.length < 7)
-          return false;
-
-        const healthFactor =
-          Math.trunc((Number(data.Ok[4]) / 1e10) * 100) / 100;
-        const principalStr = principal.toLowerCase();
-
-        const matchesSearch =
-          !searchQuery ||
-          principalStr.includes(searchQuery.toLowerCase()) ||
-          healthFactor.toString().includes(searchQuery);
-
-        const matchesFilter =
-          !healthFilter ||
-          (healthFilter === "<1" && healthFactor < 1) ||
-          (healthFilter === ">1" && healthFactor > 1) ||
-          (healthFilter === "∞" && healthFactor > 100);
-
-        return matchesSearch && matchesFilter;
-      }
-    );
 
     return () => {
       document.body.style.overflow = "auto";
@@ -796,10 +770,11 @@ const HealthFactorList = () => {
                 name="search"
                 id="search"
                 placeholder="Search assets"
-                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${showSearch
+                className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${
+                  showSearch
                     ? "animate-fade-left flex"
                     : "animate-fade-right hidden"
-                  }`}
+                }`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -807,7 +782,6 @@ const HealthFactorList = () => {
           )}
 
           <div className="relative ml-3 flex items-center space-x-4">
-            {/* Filter Icon */}
             <SlidersHorizontal
               size={20}
               onClick={() => setShowFilter(!showFilter)}
@@ -815,7 +789,6 @@ const HealthFactorList = () => {
              text-[#695fd4] dark:text-white hover:text-[#4c43b8]"
             />
 
-            {/* Download Excel Icon */}
             <Download
               size={20}
               onClick={downloadExcel}
@@ -823,7 +796,6 @@ const HealthFactorList = () => {
             text-[#695fd4] dark:text-white hover:text-[#4c43b8]"
             />
 
-            {/* Filter Dropdown */}
             {showFilter && (
               <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
                 <div
@@ -913,7 +885,7 @@ const HealthFactorList = () => {
                 </thead>
                 <tbody>
                   {paginatedUsers.map(([principal, data], index) => {
-                    if (!data) return null; // Ensure data exists
+                    if (!data) return null;
 
                     const totalCollateral = Number(data.collateral) / 1e8;
                     const totalDebt = Number(data.debt) / 1e8;
@@ -939,20 +911,21 @@ const HealthFactorList = () => {
                         </td>
                         <td className="px-3 py-6 text-center">
                           <span
-                            className={`flex items-center justify-center gap-1 ${healthFactor > 100
+                            className={`flex items-center justify-center gap-1 ${
+                              healthFactor > 100
                                 ? "text-yellow-500"
                                 : healthFactor === 0
-                                  ? "text-red-500"
-                                  : healthFactor > 3
-                                    ? "text-green-500"
-                                    : healthFactor <= 1
-                                      ? "text-red-500"
-                                      : healthFactor <= 1.5
-                                        ? "text-orange-600"
-                                        : healthFactor <= 2
-                                          ? "text-orange-400"
-                                          : "text-orange-300"
-                              }`}
+                                ? "text-red-500"
+                                : healthFactor > 3
+                                ? "text-green-500"
+                                : healthFactor <= 1
+                                ? "text-red-500"
+                                : healthFactor <= 1.5
+                                ? "text-orange-600"
+                                : healthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                            }`}
                           >
                             {healthFactor > 100 ? (
                               <>
@@ -999,13 +972,11 @@ const HealthFactorList = () => {
             ref={popupRef}
             className="bg-white dark:bg-darkOverlayBackground shadow-xl ring-1 ring-black/10 dark:ring-white/20 flex flex-col text-white dark:text-darkText z-50 rounded-[20px] p-6 w-[325px] lg1:w-[400px]"
           >
-            {/* Header with Download Icon */}
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-bold text-[#FCBD78] dark:text-darkText text-center">
                 User Details
               </h3>
 
-              {/* 📥 Download Icon */}
               <Download
                 size={20}
                 className="cursor-pointer text-[#4659CF] dark:text-darkTextSecondary hover:text-[#FCBD78]"
@@ -1019,7 +990,6 @@ const HealthFactorList = () => {
               </span>
             </p>
 
-            {/* User Assets Section */}
             <div className="mt-4">
               <h4 className="text-sm font-bold text-[#4659CF] dark:text-darkTextSecondary">
                 User Assets:
@@ -1033,7 +1003,6 @@ const HealthFactorList = () => {
                   ?.at(1)
                   ?.reserves?.flat()
                   ?.map(([asset, assetInfo]) => {
-                    // Extract values
                     const currentLiquidity = Number(
                       assetInfo?.liquidity_index || 0n
                     );
@@ -1041,7 +1010,6 @@ const HealthFactorList = () => {
                       assetInfo?.variable_borrow_index || 0n
                     );
 
-                    // Extract user balances
                     const userAssetBalance = assetBalances[
                       selectedUser.principal
                     ]?.[asset] || {
@@ -1057,11 +1025,10 @@ const HealthFactorList = () => {
                     const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
                     const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
 
-                    // Compute asset supply & borrow
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /
-                        (currentLiquidity * 1e8)
+                          (currentLiquidity * 1e8)
                         : 0;
 
                     const assetBorrow =
@@ -1071,7 +1038,6 @@ const HealthFactorList = () => {
                     const assetIndex = assets.indexOf(asset);
                     return (
                       <div key={asset} className="relative group">
-                        {/* 🌟 Asset Image */}
                         <img
                           key={assetInfo}
                           src={
@@ -1083,7 +1049,6 @@ const HealthFactorList = () => {
                           className="rounded-[50%] w-7"
                         />
 
-                        {/* ✨ Hover Effect to Show Supply & Borrow ✨ */}
                         <div className="absolute hidden group-hover:block bg-[#fcfafa] text-[#233D63] lg:left-1/2 left-28 transform -translate-x-1/2 shadow-xl ring-2 ring-black/30 dark:ring-white/40 w-[180px] dark:bg-darkOverlayBackground dark:text-darkText text-xs rounded-lg p-2 bottom-14 z-50">
                           <p>Asset Supply: {formatValue(assetSupply)}</p>
                           <p>Asset Borrow: {formatValue(assetBorrow)}</p>
@@ -1094,7 +1059,6 @@ const HealthFactorList = () => {
               </div>
             </div>
 
-            {/* User Information */}
             <div className="bg-gray-100 hover:bg-gray-200 dark:bg-[#1D1B40] text-[#233D63] dark:text-darkText rounded-xl p-5 flex flex-col space-y-3 mt-4">
               <p className="text-sm flex justify-between">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
@@ -1125,7 +1089,6 @@ const HealthFactorList = () => {
               </p>
             </div>
 
-            {/* Close Button */}
             <button
               className="mt-6 w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-xl shadow-md px-5 py-1 text-lg font-semibold"
               onClick={closePopup}

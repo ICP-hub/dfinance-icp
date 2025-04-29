@@ -25,15 +25,11 @@ jest.mock("lottie-react", () => ({
 describe("CreateWallet Component", () => {
   // Test case 1: Ensure 'Please connect your wallet' message is displayed when not authenticated
   test("renders 'Please connect your wallet' message when not authenticated", () => {
-    useAuth.mockReturnValue({ isAuthenticated: false }); // Mocking the authentication status as false
+    useAuth.mockReturnValue({ isAuthenticated: false }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux provider */}
         <Router>
-          {" "}
-          {/* Wrapping with Router for routing */}
           <CreateWallet />
         </Router>
       </Provider>
@@ -47,41 +43,32 @@ describe("CreateWallet Component", () => {
 
   // Test case 2: Ensure Connect Wallet button is rendered and triggers modal on click
   test("renders Connect Wallet button and triggers modal on click", () => {
-    useAuth.mockReturnValue({ isAuthenticated: false }); // Mocking the authentication status as false
+    useAuth.mockReturnValue({ isAuthenticated: false }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux provider */}
         <Router>
           {" "}
-          {/* Wrapping with Router for routing */}
           <CreateWallet />
         </Router>
       </Provider>
     );
 
-    const connectWalletButton = screen.getByText(/Connect Wallet/i); // Finding the Connect Wallet button
-    expect(connectWalletButton).toBeInTheDocument(); // Verifying button presence
+    const connectWalletButton = screen.getByText(/Connect Wallet/i); 
+    expect(connectWalletButton).toBeInTheDocument(); 
 
-    // Simulating a button click
     fireEvent.click(connectWalletButton);
 
-    // Verifying that the Wallet Modal appears after the click
     expect(screen.getByText("Wallet Modal")).toBeInTheDocument();
   });
 
   // Test case 3: Ensure Wallet Modal is rendered when isSwitchingWallet is true
   test("WalletModal is rendered when isSwitchingWallet is true", () => {
-    useAuth.mockReturnValue({ isAuthenticated: false }); // Mocking the authentication status as false
+    useAuth.mockReturnValue({ isAuthenticated: false }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux provider */}
         <Router>
-          {" "}
-          {/* Wrapping with Router for routing */}
           <CreateWallet />
         </Router>
       </Provider>

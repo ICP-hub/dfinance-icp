@@ -19,7 +19,7 @@ jest.mock("../../components/customHooks/useAssets", () => ({
     loading: false,
     filteredItems: [
       ["ckBTC", { Ok: { asset_supply: 100000000, asset_borrow: 50000000 } }],
-    ], // Sample filtered asset data
+    ], 
   }),
 }));
 
@@ -41,19 +41,13 @@ jest.mock("../../components/Dashboard/DashboardNav", () => () => (
 describe("MainDashboard Component", () => {
   // Test case 1: Ensure Navbar, Footer, and children are rendered
   test("renders Navbar, Footer, and children", () => {
-    useAuth.mockReturnValue({ isAuthenticated: true }); // Mock authenticated state
+    useAuth.mockReturnValue({ isAuthenticated: true }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux store */}
         <Router>
-          {" "}
-          {/* Wrapping with Router for routing */}
           <MainDashboard isDGov={false} includeDashboardNav={true}>
-            {" "}
-            {/* Rendering the MainDashboard component */}
-            <div>Test Child</div> {/* Rendering a child element */}
+            <div>Test Child</div> 
           </MainDashboard>
         </Router>
       </Provider>
@@ -67,20 +61,14 @@ describe("MainDashboard Component", () => {
 
   // Test case 2: Ensure loading state is displayed when isLoadingPage is true
   test("displays loading state when isLoadingPage is true", async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true }); // Mock authenticated state
-    useAssetData.mockReturnValue({ loading: true }); // Simulate loading state for assets
+    useAuth.mockReturnValue({ isAuthenticated: true }); 
+    useAssetData.mockReturnValue({ loading: true }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux store */}
         <Router>
-          {" "}
-          {/* Wrapping with Router for routing */}
           <MainDashboard isDGov={false} includeDashboardNav={true}>
-            {" "}
-            {/* Rendering the MainDashboard component */}
-            <div>Test Child</div> {/* Rendering a child element */}
+            <div>Test Child</div> 
           </MainDashboard>
         </Router>
       </Provider>
@@ -92,20 +80,14 @@ describe("MainDashboard Component", () => {
 
   // Test case 3: Ensure children and DashboardNav are rendered when includeDashboardNav is true
   test("renders children and DashboardNav when includeDashboardNav is true", () => {
-    useAuth.mockReturnValue({ isAuthenticated: true }); // Mock authenticated state
-    useAssetData.mockReturnValue({ loading: false }); // Simulate loading state as false
+    useAuth.mockReturnValue({ isAuthenticated: true }); 
+    useAssetData.mockReturnValue({ loading: false }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux store */}
         <Router>
-          {" "}
-          {/* Wrapping with Router for routing */}
           <MainDashboard isDGov={false} includeDashboardNav={true}>
-            {" "}
-            {/* Rendering the MainDashboard component */}
-            <div>Test Child</div> {/* Rendering a child element */}
+            <div>Test Child</div> 
           </MainDashboard>
         </Router>
       </Provider>
@@ -117,20 +99,14 @@ describe("MainDashboard Component", () => {
 
   // Test case 4: Ensure children are rendered without DashboardNav when includeDashboardNav is false
   test("renders children without DashboardNav when includeDashboardNav is false", () => {
-    useAuth.mockReturnValue({ isAuthenticated: true }); // Mock authenticated state
-    useAssetData.mockReturnValue({ loading: false }); // Simulate loading state as false
+    useAuth.mockReturnValue({ isAuthenticated: true }); 
+    useAssetData.mockReturnValue({ loading: false }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux store */}
         <Router>
-          {" "}
-          {/* Wrapping with Router for routing */}
           <MainDashboard isDGov={false} includeDashboardNav={false}>
-            {" "}
-            {/* Rendering the MainDashboard component */}
-            <div>Test Child</div> {/* Rendering a child element */}
+            <div>Test Child</div> 
           </MainDashboard>
         </Router>
       </Provider>
@@ -142,20 +118,15 @@ describe("MainDashboard Component", () => {
 
   // Test case 5: Ensure children are rendered without DashboardNav when isDGov page is true
   test("renders children without DashboardNav for isDGov page", () => {
-    useAuth.mockReturnValue({ isAuthenticated: true }); // Mock authenticated state
-    useAssetData.mockReturnValue({ loading: false }); // Simulate loading state as false
+    useAuth.mockReturnValue({ isAuthenticated: true }); 
+    useAssetData.mockReturnValue({ loading: false }); 
 
     render(
       <Provider store={store}>
-        {" "}
-        {/* Wrapping with Redux store */}
         <Router>
           {" "}
-          {/* Wrapping with Router for routing */}
           <MainDashboard isDGov={true} includeDashboardNav={true}>
-            {" "}
-            {/* Rendering the MainDashboard component */}
-            <div>Test Child</div> {/* Rendering a child element */}
+            <div>Test Child</div> 
           </MainDashboard>
         </Router>
       </Provider>

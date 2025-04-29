@@ -558,7 +558,7 @@ const SupplyPopup = ({
 
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); // Ensures "2.20" format
+    return (Math.floor(num * factor) / factor).toFixed(decimals); 
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);

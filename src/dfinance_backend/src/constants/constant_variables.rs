@@ -38,4 +38,7 @@ pub mod constants {
 
     // ------------------- XRC Service Fee -------------------
     pub const XRC_CYCLES_FEE: u128 = 1_000_000_000u128;
+
+    // ------------------- Logs Constants -------------------
+    pub const MAX_LOG_ENTRIES: u64 = 100;
 }

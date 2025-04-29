@@ -16,7 +16,7 @@ thread_local! {
 }
 
 // Constants
-const LOG_RETENTION_DAYS: u64 = 7;
+const LOG_RETENTION_DAYS: u64 = 7; // Number of days to retain logs
 const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -78,7 +78,7 @@ pub fn receive_log(log_id: u32, log_data: String) {
 // Main function to clean up old logs
 pub fn process_log_heartbeat() {
     let current_time = api::time() / 1_000_000_000;
-    let retention_cutoff = current_time.saturating_sub(SECONDS_PER_DAY);
+    let retention_cutoff = current_time.saturating_sub(LOG_RETENTION_DAYS * SECONDS_PER_DAY);
     ic_cdk::println!(
         "Current time: {}, Retention cutoff: {}",
         current_time,

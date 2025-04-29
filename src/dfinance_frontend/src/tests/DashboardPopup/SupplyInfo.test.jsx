@@ -17,7 +17,7 @@ jest.mock("../../components/customHooks/useFetchConversionRate", () =>
 );
 
 // Mocking the CircularProgressbar component to simulate loading state in tests
-jest.mock("../../components/Common/CircularProgressbar", () => ({
+jest.mock("../../components/Common/circularProgressbar", () => ({
   __esModule: true,
   default: () => (
     <div data-testid="circular-progress">Mock Circular Progress</div>

@@ -22,7 +22,7 @@ jest.mock("../../components/Dashboard/WalletModal", () => () => (
   <div data-testid="wallet-modal">Wallet Modal</div>
 ));
 
-jest.mock("../../components/Common/Button", () => ({
+jest.mock("../../components/Common/button", () => ({
   __esModule: true,
   default: ({ title, onClickHandler }) => (
     <button onClick={onClickHandler} data-testid="connect-wallet-button">
@@ -31,7 +31,7 @@ jest.mock("../../components/Common/Button", () => ({
   ),
 }));
 
-jest.mock("../../components/Common/MiniLoader", () => () => (
+jest.mock("../../components/Common/miniLoader", () => () => (
   <div data-testid="mini-loader">Loading...</div>
 ));
 

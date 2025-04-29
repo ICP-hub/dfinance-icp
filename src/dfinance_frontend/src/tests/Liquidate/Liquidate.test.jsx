@@ -59,7 +59,7 @@ jest.mock("../../components/Liquidate/LiquidationList", () => ({
   ),
 }));
 
-jest.mock("../../components/Common/Button", () => ({
+jest.mock("../../components/Common/button", () => ({
   __esModule: true,
   default: ({ title, onClickHandler }) => (
     <button

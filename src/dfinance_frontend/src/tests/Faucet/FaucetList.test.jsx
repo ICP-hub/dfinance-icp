@@ -19,12 +19,12 @@ jest.mock("react-router-dom", () => ({
   useNavigate: () => jest.fn(),
 }));
 
-jest.mock("../../components/Common/Lottie", () => ({
+jest.mock("../../components/Common/lottie", () => ({
   __esModule: true,
   default: () => <div data-testid="lottie-animation">Lottie Animation</div>,
 }));
 
-jest.mock("../../components/Common/MiniLoader", () => ({
+jest.mock("../../components/Common/miniLoader", () => ({
   __esModule: true,
   default: ({ isLoading }) => (
     <div data-testid="mini-loader">

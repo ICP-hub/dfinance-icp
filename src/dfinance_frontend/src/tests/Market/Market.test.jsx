@@ -39,14 +39,14 @@ jest.mock("../../../public/assests-icon/ckusdc.svg", () => "ckusdc.svg");
 jest.mock("../../../public/assests-icon/ckUSDT.svg", () => "ckUSDT.svg");
 jest.mock("../../../public/assests-icon/ICPMARKET.png", () => "ICPMARKET.png");
 
-jest.mock("../../components/Common/Lottie", () => () => (
+jest.mock("../../components/Common/lottie", () => () => (
   <div>Lottie Animation</div>
 ));
-jest.mock("../../components/Common/MiniLoader", () => ({ isLoading }) => (
+jest.mock("../../components/Common/miniLoader", () => ({ isLoading }) => (
   <div>Loading...</div>
 ));
 jest.mock(
-  "../../components/Common/Button",
+  "../../components/Common/button",
   () =>
     ({ title, onClickHandler }) =>
       <button onClick={onClickHandler}>{title}</button>

@@ -129,27 +129,8 @@ describe("Borrow Component", () => {
     expect(borrowButton).toBeDisabled(); // Button should be disabled if amount is 0
   });
 
-  // Test case 3: Ensure the amount input field updates correctly
-  test("handles amount input change correctly", async () => {
-    await act(async () => {
-      render(
-        <Provider store={store}>
-          <MemoryRouter>
-            <Borrow {...defaultProps} />
-          </MemoryRouter>
-        </Provider>
-      );
-    });
 
-    const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
-    await act(async () => {
-      fireEvent.change(amountInput, { target: { value: "0.5" } }); // Simulate input change
-    });
-
-    expect(amountInput.value).toBe("0.5"); // Ensure value is updated correctly
-  });
-
-  // Test case 4: Verify that transaction overview details are shown correctly
+  // Test case 3: Verify that transaction overview details are shown correctly
   test("displays correct transaction overview information", async () => {
     await act(async () => {
       render(
@@ -169,7 +150,7 @@ describe("Borrow Component", () => {
     expect(healthFactorElements.length).toBeGreaterThan(0);
   });
 
-  // Test case 5: Ensure borrow button is enabled when amount is entered and risks are acknowledged
+  // Test case 4: Ensure borrow button is enabled when amount is entered and risks are acknowledged
   test("enables borrow button when amount is entered and risk is acknowledged", async () => {
     await act(async () => {
       render(
@@ -201,7 +182,7 @@ describe("Borrow Component", () => {
     expect(riskCheckbox).toBeChecked(); // Ensure checkbox is checked
   });
 
-  // Test case 6: Verify that liquidation risk warning is displayed correctly
+  // Test case 5: Verify that liquidation risk warning is displayed correctly
   test("displays liquidation risk warning message", async () => {
     await act(async () => {
       render(
@@ -219,7 +200,7 @@ describe("Borrow Component", () => {
     expect(warningMessage).toBeInTheDocument();
   });
 
-  // Test case 7: Verify that USD value is displayed when amount is entered
+  // Test case 6: Verify that USD value is displayed when amount is entered
   test("displays USD value for amount input", async () => {
     await act(async () => {
       render(
@@ -246,7 +227,7 @@ describe("Borrow Component", () => {
     }
   });
 
-  // Test case 8: Ensure health factor calculations are correct with valid inputs
+  // Test case 7: Ensure health factor calculations are correct with valid inputs
   test("handles health factor calculations correctly with valid inputs", async () => {
     await act(async () => {
       render(

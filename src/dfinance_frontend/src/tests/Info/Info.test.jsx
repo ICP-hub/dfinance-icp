@@ -20,7 +20,7 @@ jest.mock("../../utils/useAuthClient", () => ({
   }),
 }));
 
-jest.mock("../../components/Common/Loading", () => ({
+jest.mock("../../components/Common/loading", () => ({
   __esModule: true,
   default: ({ isLoading }) => (
     <div>{isLoading ? "Loading..." : "Not Loading"}</div>

@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "../../components/Common/Button";
+import Button from "../../components/Common/button";
 import { useDispatch, useSelector } from "react-redux";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import { useAuth } from "../../utils/useAuthClient";

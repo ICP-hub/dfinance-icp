@@ -65,7 +65,7 @@ const SupplyPopup = ({
 
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [usdValue, setUsdValue] = useState(0);
-  const [amount, setAmount] = useState(null);
+  const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);

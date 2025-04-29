@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";

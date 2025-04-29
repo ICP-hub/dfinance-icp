@@ -8,8 +8,8 @@ import { useAuth } from "../../utils/useAuthClient";
 import { MY_ASSET_TO_SUPPLY_TABLE_COL } from "../../utils/constants";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import CustomizedSwitches from "../Common/MaterialUISwitch";
-import Button from "../Common/Button";
+import CustomizedSwitches from "../Common/materialUISwitch";
+import Button from "../Common/button";
 import useAssetData from "../customHooks/useAssets";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
@@ -27,8 +27,8 @@ import Borrow from "./DashboardPopup/BorrowPopup";
 import Repay from "./DashboardPopup/Repay";
 import ColateralPopup from "./DashboardPopup/CollateralDisablePopup";
 import { Check, Eye, EyeOff, Info } from "lucide-react";
-import MiniLoader from "../Common/MiniLoader";
-import Lottie from "../Common/Lottie";
+import MiniLoader from "../Common/miniLoader";
+import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 
 /**

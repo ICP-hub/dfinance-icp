@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import CircularProgress from "../../Common/CircularProgressbar";
+import CircularProgress from "../../Common/circularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { Info } from "lucide-react";

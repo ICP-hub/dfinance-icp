@@ -8,7 +8,7 @@ import emailjs from "emailjs-com";
 import useAssetData from "../../components/customHooks/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
-import MiniLoader from "../../components/Common/MiniLoader";
+import MiniLoader from "../../components/Common/miniLoader";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import Analytics from "../../../public/helper/analytics-icon.svg";

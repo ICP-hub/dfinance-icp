@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import Astro from "../../public/errors/astro.png";
 import Globe from "../../public/errors/globe.png";
 import { useAuth } from "../utils/useAuthClient";
-import MiniLoader from "../components/Common/MiniLoader";
+import MiniLoader from "../components/Common/miniLoader";
 const WalletModal = lazy(() => import("../components/Dashboard/WalletModal"));
 
 const Error = () => {

@@ -1,5 +1,5 @@
-import lightImages from "./LightImages";
-import darkImages from "./DarkImages";
+import lightImages from "./lightImages";
+import darkImages from "./darkImages";
 
 export const getSteps = (theme, isMobile2, isMobile) => [
   {

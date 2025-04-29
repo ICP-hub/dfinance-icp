@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import React from "react";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import { useAuth } from "../../utils/useAuthClient";
 import { SlidersHorizontal, SlidersVertical } from "lucide-react";
 import { ASSET_DETAILS } from "../../utils/constants";
@@ -22,7 +22,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 import { lazy, Suspense } from "react";
-import MiniLoader from "../Common/MiniLoader";
+import MiniLoader from "../Common/miniLoader";
 
 const SupplyInfo = lazy(() => import("./DashboardPopup/SupplyInfo"));
 const BorrowInfo = lazy(() => import("./DashboardPopup/BorrowInfo"));

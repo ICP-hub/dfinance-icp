@@ -1,10 +1,10 @@
 import React, { lazy, Suspense } from "react";
-import Button from "../../components/Common/Button";
+import Button from "../../components/Common/button";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
-import MiniLoader from "../../components/Common/MiniLoader";
+import MiniLoader from "../../components/Common/miniLoader";
 
 const FaucetDetails = lazy(() =>
   import("../../components/Faucet/FaucetList")

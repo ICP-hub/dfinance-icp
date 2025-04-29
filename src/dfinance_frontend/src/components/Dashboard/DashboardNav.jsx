@@ -14,12 +14,6 @@ import { useCallback } from "react";
 import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
-import { useParams } from "react-router-dom";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import ckETH from "../../../public/assests-icon/CKETH.svg";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import { Info } from "lucide-react";
 
 const DashboardNav = () => {
@@ -59,7 +53,7 @@ const DashboardNav = () => {
   const { isAuthenticated, principal, fetchReserveData, createLedgerActor } =
     useAuth();
 
-  const { id } = useParams();
+
   const theme = useSelector((state) => state.theme.theme);
   const menuRef = useRef(null);
   const { pathname } = useLocation();
@@ -145,13 +139,7 @@ const DashboardNav = () => {
     !pathname.includes("/dashboard/transaction-history") &&
     !pathname.startsWith("/dashboard/asset-details/");
 
-  const assetImages = {
-    ckBTC: ckBTC,
-    ckETH: ckETH,
-    ckUSDC: ckUSDC,
-    ICP: icp,
-    ckUSDT: ckUSDT,
-  };
+ 
 
   const isAssetDetailsPage =
     location.pathname.startsWith("/dashboard/asset-details/") ||
@@ -159,7 +147,6 @@ const DashboardNav = () => {
 
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
   const checkColor = theme === "dark" ? "#ffffff" : "#2A1F9D";
-  const assetImage = assetImages[id] || null;
   const isDashboardRoute = location.pathname === "/dashboard";
   const dashboardTitle = pathname.includes("/market") ? "Market" : "Dashboard";
   const isMarketRoute = location.pathname === "/market";
@@ -663,7 +650,7 @@ const DashboardNav = () => {
                 className="cursor-pointer"
               />
 
-              {isAssetDetailsPage && (
+              {/* {isAssetDetailsPage && (
                 <h1 className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-1 ml-3">
                   {isAssetDetailsPage && assetImage && (
                     <img
@@ -674,7 +661,7 @@ const DashboardNav = () => {
                   )}
                   {id}
                 </h1>
-              )}
+              )} */}
             </div>
           </div>
         )}

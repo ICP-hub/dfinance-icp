@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
-import CustomizedSwitches from "../Common/MaterialUISwitch";
+import CustomizedSwitches from "../Common/materialUISwitch";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toggleSound } from "../../redux/reducers/soundReducer";
@@ -19,7 +19,7 @@ import {
   generateRandomUsername,
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import icplogo from "../../../public/wallet/icp.png";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";

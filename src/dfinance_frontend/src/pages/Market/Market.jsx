@@ -1,7 +1,7 @@
 import { ChevronRight, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
-import Button from "../../components/Common/Button";
+import Button from "../../components/Common/button";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
@@ -10,8 +10,8 @@ import { trackEvent } from "../../utils/googleAnalytics";
 import useAssetData from "../../components/customHooks/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import MiniLoader from "../../components/Common/MiniLoader";
-import Lottie from "../../components/Common/Lottie";
+import MiniLoader from "../../components/Common/miniLoader";
+import Lottie from "../../components/Common/lottie";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 

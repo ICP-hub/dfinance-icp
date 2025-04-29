@@ -2,15 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
 import { ChevronRight } from "lucide-react";
-import Button from "../../components/Common/Button";
-import Ellipse from "../../components/Common/Ellipse";
+import Button from "../../components/Common/button";
+import Ellipse from "../../components/Common/ellipse";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
 import HeroSection from "../../components/Home/HeroSection";
 import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
-import Loading from "../../components/Common/Loading";
+import Loading from "../../components/Common/loading";
 import { MAIN_NAV_LINK, FAQ_QUESTION } from "../../utils/constants";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 

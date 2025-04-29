@@ -8,7 +8,7 @@ import { setUserData } from "../../redux/reducers/userReducer";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import { useRef } from "react";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
 import { FaWallet } from "react-icons/fa";
@@ -26,10 +26,10 @@ import {
   generateRandomUsername,
 } from "../../utils/constants";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
-import ThemeToggle from "../Common/ThemeToggle";
+import ThemeToggle from "../Common/themeToggle";
 import settingsIcon from "../../../public/helper/settings.svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
-import CustomizedSwitches from "../Common/MaterialUISwitch";
+import CustomizedSwitches from "../Common/materialUISwitch";
 import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";

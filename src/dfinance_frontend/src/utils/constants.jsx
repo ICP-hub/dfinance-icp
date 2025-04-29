@@ -1,14 +1,15 @@
 import ckBTC from "../../public/assests-icon/ckBTC.png";
-import cekTH from "../../public/assests-icon/CKETH.svg";
-import icp from "../../public/assests-icon/ICPMARKET.png";
+import cekTH from "../../public/assests-icon/cKETH.svg";
+import icp from "../../public/assests-icon/iCPMarket.png";
 import ckusdc from "../../public/assests-icon/ckusdc.svg";
 import ckusdt from "../../public/assests-icon/ckUSDT.svg";
-import trailofbits from "../../public/assests-icon/trail-of-bits-svg-fill.png";
+import trailofbits from "../../public/assests-icon/trail-Of-Bits-svg-fill.png";
 import certora from "../../public/assests-icon/certora-svg-fill.png";
-import openZeppelinsvg from "../../public/assests-icon/open-zeppelin-svg.png";
-import sigmaprime from "../../public/assests-icon/sigma-prime-svg-fill.png";
+import openZeppelinsvg from "../../public/assests-icon/open-Zeppelin-svg.png";
+import sigmaprime from "../../public/assests-icon/sigma-Prime-svg-fill.png";
 import Peckshield from "../../public/assests-icon/peckshield-logo-svg.png";
 import abdk from "../../public/assests-icon/abdk.png";
+const isProduction = process.env.DFX_PRODUCTION === 'true';
 
 export const FOOTER_LINK_1 = [
   {
@@ -74,7 +75,6 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     alwaysPresent: true,
   },
-
   {
     id: 1,
     title: "Market",
@@ -82,20 +82,19 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     alwaysPresent: true,
   },
-
   {
     id: 3,
     title: "Faq",
     route: "/#Faq",
     icon: "",
-    testnet: false,
+    testnet: false, // stays false
   },
   {
     id: 4,
     title: "Faucet",
     route: "/Faucet",
     icon: "",
-    testnet: true,
+    testnet: !isProduction, // <-- 👈 dynamic based on production
   },
 ];
 export const error = [

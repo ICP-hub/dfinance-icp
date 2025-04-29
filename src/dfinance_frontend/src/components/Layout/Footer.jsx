@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import { FOOTER_LINK_1, FOOTER_LINK_2 } from "../../utils/constants";
-import Ellipse from "../Common/Ellipse";
+import Ellipse from "../Common/ellipse";
 import { useAuth } from "../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";

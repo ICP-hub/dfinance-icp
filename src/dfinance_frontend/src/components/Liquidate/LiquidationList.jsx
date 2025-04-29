@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
-import Button from "../Common/Button";
+import Button from "../Common/button";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../Common/pagination";
-import UserInformationPopup from "./userInformation";
+import UserInformationPopup from "./UserInformation";
 import useAssetData from "../customHooks/useAssets";
-import MiniLoader from "../Common/MiniLoader";
+import MiniLoader from "../Common/miniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import Lottie from "../Common/Lottie";
+import Lottie from "../Common/lottie";
 
 /**
  * DebtStatus Component

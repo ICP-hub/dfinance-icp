@@ -25,6 +25,8 @@ use crate::stable_storage::storable::Candid;
 use candid::Nat;
 use candid::Principal;
 use ic_cdk::api;
+use crate::stable_storage::state_handler::get_certificate_witness;
+use crate::declarations::datatypes::Certificate;
 
 /*
  * @title Get Reserve Data
@@ -357,13 +359,16 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
  * @returns The principal ID of the canister or an error.
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
-pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
-    read_state(|state| {
+#[query]
+pub fn get_canister_id_by_name(canister_name: String) -> Result<(Principal, Certificate), Error> {
+    let value = read_state(|state| {
         state
             .canister_list
             .get(&canister_name)
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
-    })
+    })?;
+    let certificate = get_certificate_witness(canister_name.clone());
+    return  Ok((value, certificate));
 }
 
 /*

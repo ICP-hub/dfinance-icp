@@ -340,3 +340,9 @@ pub struct CachedPrice {
 pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
+
+#[derive(CandidType)]
+pub struct Certificate {
+    pub certificate: Vec<u8>,
+    pub witness: Vec<u8>,
+}

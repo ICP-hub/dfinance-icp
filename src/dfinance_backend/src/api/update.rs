@@ -9,6 +9,7 @@ use crate::stable_storage::storable::Candid;
 use candid::Nat;
 use candid::Principal;
 use ic_cdk::update;
+use crate::stable_storage::state_handler::insert_certified_value;
 
 /*
  * @title Set Canister ID
@@ -24,8 +25,9 @@ pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> R
     guard_admin_only()?;
 
     mutate_state(|state| {
-        state.canister_list.insert(canister_name, canister_id);
+        state.canister_list.insert(canister_name.clone(), canister_id);
     });
+    insert_certified_value(canister_name, canister_id);
 
     Ok(())
 }

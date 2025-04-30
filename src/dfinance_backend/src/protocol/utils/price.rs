@@ -160,7 +160,7 @@ pub async fn get_exchange_rates(
         },
     };
   
-    let xrc_canister_id = get_canister_id_by_name("xrc".to_string()).map_err(|e| {
+    let (xrc_canister_id,_) = get_canister_id_by_name("xrc".to_string()).map_err(|e| {
         ic_cdk::println!("Error fetching xrc canister ID: {:?}", e);
         Error::NoCanisterIdFound
     })?;

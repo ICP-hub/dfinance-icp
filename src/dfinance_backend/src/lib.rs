@@ -27,6 +27,7 @@ use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECO
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
 use protocol::utils::log;
+use crate::declarations::datatypes::Certificate;
 
 /*
  * @title Initialization Function

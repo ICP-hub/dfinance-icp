@@ -29,6 +29,8 @@ once_cell = { workspace = true }
 ic-xrc-types = { workspace = true }
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git" }
 ciborium = { git = "https://github.com/enarx/ciborium", rev = "e719537c99b564c3674a56defe53713c702c6f46" }
+ic-certified-map = "0.4.0"
+serde_cbor = "0.11.2"
 
 [dev-dependencies]
 pocket-ic = "6.0.0"

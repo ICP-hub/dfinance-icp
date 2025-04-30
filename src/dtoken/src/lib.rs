@@ -55,11 +55,7 @@ use std::cell::RefCell;
 const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 
 #[cfg(not(feature = "u256-tokens"))]
-
 pub type Tokens = ic_icrc1_tokens_u64::U64;
-
-#[cfg(feature = "u256-tokens")]
-pub type Tokens = ic_icrc1_tokens_u256::U256;
 
 thread_local! {
     static LEDGER: RefCell<Option<Ledger<Tokens>>> = const { RefCell::new(None) };
@@ -318,28 +314,6 @@ fn icrc1_balance_of(account: Account) -> Nat {
     Access::with_ledger(|ledger| ledger.balances().account_balance(&account).into())
 }
 
-// #[update(name = "icrc1_update_balance_of")]
-// #[candid_method(update, rename = "icrc1_update_balance_of")]
-// fn icrc1_update_balance_of(account: Account, target_balance: u128) -> Result<Nat, String> {
-//     // Access the ledger to get the current balance and adjust to the target balance
-//     Access::with_ledger_mut(|ledger| {
-//         let current_balance: u128 = ledger.balances().account_balance(&account).into();
-
-//         if current_balance < target_balance {
-//             // Calculate the amount to credit (increase balance)
-//             let credit_amount = target_balance - current_balance;
-//             ledger.balances_mut().credit(&account, credit_amount.into());
-//         } else if current_balance > target_balance {
-//             // Calculate the amount to debit (decrease balance)
-//             let debit_amount = current_balance - target_balance;
-//             ledger.balances_mut()
-//                 .debit(&account, debit_amount.into())
-//                 .map_err(|err| format!("Failed to debit balance: {:?}", err))?;
-//         }
-//         Ok(ledger.balances().account_balance(&account).into())
-//     })
-// }
-
 #[query(name = "icrc1_total_supply")]
 #[candid_method(query, rename = "icrc1_total_supply")]
 fn icrc1_total_supply() -> Nat {
@@ -456,32 +430,6 @@ async fn execute_transfer(
     Ok(Nat::from(block_idx))
 }
 
-// #[update]
-// #[candid_method(update)]
-// async fn icrc1_transfer(arg: TransferArg) -> Result<Nat, TransferError> {
-//     let from_account = Account {
-//         owner: ic_cdk::api::caller(),
-//         subaccount: arg.from_subaccount,
-//     };
-//     execute_transfer(
-//         from_account,
-//         arg.to,
-//         None,
-//         arg.fee,
-//         arg.amount,
-//         arg.memo,
-//         arg.created_at_time,
-//     )
-//     .await
-//     .map_err(convert_transfer_error)
-//     .map_err(|err| {
-//         let err: TransferError = match err.try_into() {
-//             Ok(err) => err,
-//             Err(err) => ic_cdk::trap(&err),
-//         };
-//         err
-//     })
-// }
 #[update]
 #[candid_method(update)]
 async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {

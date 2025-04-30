@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-
 import { useSelector } from "react-redux";
 
 /**
@@ -12,17 +11,11 @@ import { useSelector } from "react-redux";
  * @returns {Object} - Returns asset data and utility functions.
  */
 const useAssetData = (searchQuery = "") => {
-
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const {
-    principal,
-    fetchReserveData,
-    backendActor,
-    isAuthenticated,
-
-  } = useAuth();
+  const { principal, fetchReserveData, backendActor, isAuthenticated } =
+    useAuth();
 
   const [assets, setAssets] = useState([]);
   const [AssetImages, setAssetImages] = useState([]);
@@ -51,31 +44,28 @@ const useAssetData = (searchQuery = "") => {
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
-  
+
       try {
         const assetData = await backendActor.get_all_assets();
-        
-  
-        const names = assetData.map(asset => asset.asset_name);
-        const images = assetData.map(asset => asset.image); // Already URL strings
-  
+
+        const names = assetData.map((asset) => asset.asset_name);
+        const images = assetData.map((asset) => asset.image); 
+
         setAssets(names);
         setAssetImages(images);
       } catch (error) {
         console.error("Failed to fetch assets:", error.message);
       }
     };
-  
+
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
-  
-  // Helper function to check if the image is an SVG
- 
+
 
   /**
-    * Fetches the total supply of a specific asset.
-    * @param {string} asset - The asset.
-    */
+   * Fetches the total supply of a specific asset.
+   * @param {string} asset - The asset.
+   */
   const fetchAssetSupply = async (asset) => {
     if (backendActor && isAuthenticated) {
       try {
@@ -91,7 +81,7 @@ const useAssetData = (searchQuery = "") => {
       } catch (error) {
         console.error("Error fetching asset supply:", error.message);
       }
-    } 
+    }
   };
 
   /**
@@ -113,7 +103,7 @@ const useAssetData = (searchQuery = "") => {
       } catch (error) {
         console.error("Error fetching asset borrow:", error.message);
       }
-    } 
+    }
   };
 
   /**
@@ -210,7 +200,6 @@ const useAssetData = (searchQuery = "") => {
         setTotalBorrowSize(formatNumber(totalBorrowes));
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
-
       } catch (err) {
         console.error("Error during fetch:", err.message);
         console.error(err.message);

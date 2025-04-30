@@ -10,8 +10,9 @@ use crate::declarations::datatypes::ReserveData;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use candid::{Nat, Principal};
-
+use crate::protocol::libraries::update::user_reserve;
 pub struct ValidationLogic;
+use crate::protocol::libraries::update::user_data;
 
 impl ValidationLogic {
     /*
@@ -158,12 +159,22 @@ impl ValidationLogic {
             error!("Withdraw amount exceeds platform balance."); //error
             return Err(Error::LowPlatformBalance);
         }
+        
+        let  mut user_data = user_data(user)?;
+        let user_reserve = user_reserve(&mut user_data, &reserve.asset_name.clone()).and_then(|(_, reserve_data)| Some(reserve_data.clone()))
+        .ok_or(Error::NoUserReserveDataFound)?;
 
+        ic_cdk::println!("user collateral status for this token = {:?}", user_reserve.is_collateral);  //debug
+        if !user_reserve.is_collateral {
+            return Ok(());
+        }
         //updating token price and store latest price in price cache
         let _ = update_token_price(reserve.asset_name.clone()).await;
         info!("updating token price"); //info
         
-        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
+        debug!("going inside calculate user account data"); //info
+
+        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
                     t_collateral,
@@ -180,8 +191,10 @@ impl ValidationLogic {
                 }
                 Err(e) => return Err(e),
             };
-
-        if total_debt != Nat::from(0u128) || total_collateral != Nat::from(0u128) {
+        
+          
+        if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
+             
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
@@ -192,11 +205,11 @@ impl ValidationLogic {
             debug!("usd withdraw amount = {}", usd_withdrawl);   //debug
             debug!("total collateral = {}", total_collateral);   //debug
             // Calculate Adjusted Collateral
-            let mut adjusted_collateral: Nat = Nat::from(0u128);
+            let adjusted_collateral: Nat;
             //checking for substration error
             if total_collateral < usd_withdrawl {
                 error!("total collateral is less than withdrawl amount");
-                return Err(Error::AmountSubtractionError);
+                return Err(Error::AmountSubtractionError);//TODO specify the error
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
@@ -212,15 +225,16 @@ impl ValidationLogic {
             }
 
             //checking if the LTV is greater than the liquidation threshold
-            if new_ltv >= liquidation_threshold_var {
-                error!("LTV is greater than liquidation threshold"); //error
+            if new_ltv >= liquidation_threshold_var { //TODO '=' will be there?, check 
+            error!("LTV is greater than liquidation threshold"); //error
                 return Err(Error::LTVGreaterThanThreshold);
             }
 
             if total_debt != Nat::from(0u128) {
+                //TODO : new_liq_thres calculation?
                 let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold_var);
-                new_health_factor = health_factor.scaled_div(total_debt);
-               debug!("new health factor = {}", new_health_factor);   //debug
+                new_health_factor = new_health_factor.scaled_div(total_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
+                debug!("new health factor = {}", new_health_factor);   //debug
                 
                 //checking if the health factor
                 if new_health_factor < Nat::from(SCALING_FACTOR) {
@@ -241,7 +255,7 @@ impl ValidationLogic {
      * @dev Performs checks on:
      * - Reserve status (active and borrowing enabled).
      * - Loan-to-value (LTV) limits to prevent excessive borrowing.
-     * - User’s health factor to ensure safe borrowing.
+     * - User’s health factor  ic_cdk::println!("new health factor = {}", new_health_factor);   //debugto ensure safe borrowing.
      *
      * @param reserve The reserve from which the user is borrowing.
      * @param amount The borrowing amount requested.
@@ -285,7 +299,7 @@ impl ValidationLogic {
             error!("Failed to update reserves price: {:?}", e);  //error
         }
 
-        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, health_factor) =
+        let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
                     t_collateral,
@@ -321,7 +335,7 @@ impl ValidationLogic {
         debug!("adjusted amount = {}", adjusted_debt);  //debug
 
         //calculating the new LTV with adjusted debt
-        let mut new_ltv = Nat::from(ZERO_VALUE);
+        let mut new_ltv: Nat;
         new_ltv = adjusted_debt.clone().scaled_div(total_collateral.clone());
         new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
         debug!("New ltv: {}", new_ltv);   //debug
@@ -334,7 +348,7 @@ impl ValidationLogic {
 
         //checking the health factor
         let mut new_health_factor = total_collateral.scaled_mul(liquidation_threshold_var);
-        new_health_factor = health_factor.scaled_div(adjusted_debt);
+        new_health_factor = new_health_factor.scaled_div(adjusted_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
         debug!("new health factor = {}", new_health_factor);   //debug
 
         //checking if the health factor
@@ -367,7 +381,7 @@ impl ValidationLogic {
      * @dev Performs checks on:
      * - User’s or liquidator’s balance to ensure sufficient funds for repayment.
      * - User’s outstanding debt to verify if repayment is needed.
-     * - Reserve status to confirm it is active and not paused or frozen.
+     * - Reserveic_cdk::println!("new health factor = {}", new_health_factor);   //debug status to confirm it is active and not paused or frozen.
      * - Repayment amount to prevent overpayment.
      *
      * @param reserve The reserve data containing asset information.

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Check, Info } from "lucide-react";
 import { X } from "lucide-react";
-import CircularProgress from "../../Common/CircularProgressbar";
+import CircularProgress from "../../Common/circularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -16,19 +16,36 @@ import { useSelector } from "react-redux";
  * @param {Object} props - The component props containing asset data and necessary functions.
  * @returns {JSX.Element} - The rendered SupplyInfo component displaying key supply and risk metrics.
  */
-const SupplyInfo = ({formatNumber, supplyCap, totalSupplied, totalBorrowed, supplyRateAPR, ltv, canBeCollateral, liquidationBonus, liquidationThreshold,}) => {
-
+const SupplyInfo = ({
+  formatNumber,
+  supplyCap,
+  totalSupplied,
+  totalBorrowed,
+  supplyRateAPR,
+  ltv,
+  canBeCollateral,
+  liquidationBonus,
+  liquidationThreshold,
+}) => {
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
 
-  const dashboardRefreshTrigger = useSelector((state) => state.dashboardUpdate.refreshDashboardTrigger);
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
 
   /* ===================================================================================
    *                                  HOOKS
    * =================================================================================== */
 
-  const { ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate, } = useFetchConversionRate();
+  const {
+    ckBTCUsdRate,
+    ckETHUsdRate,
+    ckUSDCUsdRate,
+    ckICPUsdRate,
+    ckUSDTUsdRate,
+  } = useFetchConversionRate();
 
   const { id } = useParams();
   const tooltipRef = useRef(null);
@@ -38,17 +55,24 @@ const SupplyInfo = ({formatNumber, supplyCap, totalSupplied, totalBorrowed, supp
    * =================================================================================== */
 
   const [supplied, setSupplied] = useState(totalSupplied);
-  const [borrowed, setBorrowed] = useState(totalBorrowed);
+
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
-  const [isLiquidationThresholdTooltipVisible,setLiquidationThresholdTooltipVisible] = useState(false);
-  const [isLiquidationPenaltyTooltipVisible,setLiquidationPenaltyTooltipVisible] = useState(false);
+  const [
+    isLiquidationThresholdTooltipVisible,
+    setLiquidationThresholdTooltipVisible,
+  ] = useState(false);
+  const [
+    isLiquidationPenaltyTooltipVisible,
+    setLiquidationPenaltyTooltipVisible,
+  ] = useState(false);
 
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
 
   const supplyCapNumber = supplyCap ? Number(supplyCap) : 0;
-  const totalSupplyPercentage =supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
+  const totalSupplyPercentage =
+    supplyCapNumber && supplied ? (supplied / supplyCapNumber) * 100 : 0;
 
   const getAssetRate = (assetName) => {
     switch (assetName) {
@@ -68,8 +92,10 @@ const SupplyInfo = ({formatNumber, supplyCap, totalSupplied, totalBorrowed, supp
   };
 
   const assetRate = getAssetRate(id);
-  const totalSuppliedAsset = assetRate && supplied ? Number(supplied) * assetRate : 0;
-  const totalSuppliedCap = assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
+  const totalSuppliedAsset =
+    assetRate && supplied ? Number(supplied) * assetRate : 0;
+  const totalSuppliedCap =
+    assetRate && supplyCap ? Number(supplyCap) / assetRate : 0;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -82,8 +108,10 @@ const SupplyInfo = ({formatNumber, supplyCap, totalSupplied, totalBorrowed, supp
   };
 
   const toggleLTVTooltip = () => setLTVTooltipVisible((prev) => !prev);
-  const toggleLiquidationThresholdTooltip = () =>setLiquidationThresholdTooltipVisible((prev) => !prev);
-  const toggleLiquidationPenaltyTooltip = () =>setLiquidationPenaltyTooltipVisible((prev) => !prev);
+  const toggleLiquidationThresholdTooltip = () =>
+    setLiquidationThresholdTooltipVisible((prev) => !prev);
+  const toggleLiquidationPenaltyTooltip = () =>
+    setLiquidationPenaltyTooltipVisible((prev) => !prev);
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -106,7 +134,7 @@ const SupplyInfo = ({formatNumber, supplyCap, totalSupplied, totalBorrowed, supp
 
   useEffect(() => {
     setSupplied(totalSupplied);
-    setBorrowed(totalBorrowed);
+
   }, [dashboardRefreshTrigger, totalSupplied, totalBorrowed]);
 
   /* ===================================================================================

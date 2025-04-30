@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
-import Ellipse from "../../components/Common/Ellipse";
+import Ellipse from "../../components/Common/ellipse";
 import DashboardNav from "../../components/Dashboard/DashboardNav";
-import Loading from "../../components/Common/Loading";
+import Loading from "../../components/Common/loading";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";

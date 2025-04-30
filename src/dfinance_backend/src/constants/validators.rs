@@ -1,7 +1,5 @@
-
 use super::{constant_variables::constants::MAX_ASSET_LENGTH, data_types::zero_nat_value};
 use crate::constants::errors::Error;
-
 
 /*
  * @title Validate Asset Name
@@ -11,17 +9,21 @@ use crate::constants::errors::Error;
  * @functionality Validates asset name by checking if it's non-empty and within the allowed length.
  */
 pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
+  
   if asset_name.trim().is_empty() {
       ic_cdk::println!("Asset cannot be an empty string");
       return Err(Error::EmptyAsset);
   }
 
-  if asset_name.len() > MAX_ASSET_LENGTH {
-      ic_cdk::println!("Asset must have a maximum length of {} characters", MAX_ASSET_LENGTH);
-      return Err(Error::InvalidAssetLength);
-  }
+    if asset_name.len() > MAX_ASSET_LENGTH {
+        ic_cdk::println!(
+            "Asset must have a maximum length of {} characters",
+            MAX_ASSET_LENGTH
+        );
+        return Err(Error::InvalidAssetLength);
+    }
 
-  Ok(())
+    Ok(())
 }
 
 /*
@@ -32,13 +34,21 @@ pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
  * @functionality Validates asset image URL by checking if it starts with "http://" or "https://".
  */
 pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
-  if !asset_image_url.starts_with("http://") && !asset_image_url.starts_with("https://") {
-    return Err(Error::InvalidAssetImageUrl);
+    if !asset_image_url.starts_with("http://") && !asset_image_url.starts_with("https://") {
+        return Err(Error::InvalidAssetImageUrl);
+    }
+
+    Ok(())
 }
 
-  Ok(())
-}
 
+pub fn validate_connected_wallet(connected_wallet: &str )-> Result<(), Error>{
+    if connected_wallet.len() > 15 {
+        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        return Err(Error::ConnectedWalletInvalid);
+    }
+    Ok(())
+}
 /*
  * @title Validate Asset Amount
  * @dev Ensures that the asset amount is greater than zero.
@@ -66,5 +76,5 @@ pub fn validate_negatige_value(value: &candid::Nat) -> Result<(), Error> {
 
 
 
-  Ok(())
+    Ok(())
 }

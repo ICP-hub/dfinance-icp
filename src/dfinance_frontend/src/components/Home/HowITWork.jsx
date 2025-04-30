@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import Aos from "aos";
 import "aos/dist/aos.css";
-import supply from "../../../public/Helpers/supply.png";
-import borrow from "../../../public/Helpers/borrow.png";
-import Max from "../../../public/Helpers/max.png";
-import Ltv from "../../../public/Helpers/Ltv.png";
-import Points from "../../../public/Helpers/points.png";
+import supply from "../../../public/helper/supply.png";
+import borrow from "../../../public/helper/borrow.png";
+import Max from "../../../public/helper/max.png";
+import Ltv from "../../../public/helper/ltv.png";
+import Points from "../../../public/helper/points.png";
 
 const HowITWork = () => {
   useEffect(() => {
@@ -20,11 +20,8 @@ const HowITWork = () => {
         </h1>
       </div>
 
-      { }
       <div className="mt-[21px] lg:mt-[53px]">
-        { }
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-20 max-w-full">
-          { }
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -46,7 +43,6 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-          { }
           <div
             data-aos="fade-left"
             data-aos-duration="2000"
@@ -68,7 +64,6 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-          { }
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -91,7 +86,6 @@ const HowITWork = () => {
             </div>
           </div>
 
-          { }
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -114,7 +108,6 @@ const HowITWork = () => {
               </p>
             </div>
           </div>
-          { }
           <div
             data-aos="fade-left"
             data-aos-duration="2000"
@@ -138,7 +131,6 @@ const HowITWork = () => {
             </div>
           </div>
 
-          { }
           <div
             data-aos="fade-right"
             data-aos-duration="2000"
@@ -163,7 +155,6 @@ const HowITWork = () => {
             </div>
           </div>
 
-          { }
           <div
             data-aos="fade-left"
             data-aos-duration="2000"

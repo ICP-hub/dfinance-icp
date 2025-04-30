@@ -30,7 +30,6 @@ const useFetchBalanceBackend = () => {
    */
   const fetchBalance = useCallback(
     async (assetType) => {
-
       if (principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };

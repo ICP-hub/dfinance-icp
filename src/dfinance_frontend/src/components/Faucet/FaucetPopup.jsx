@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
-import useUserData from "../customHooks/useUserData";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 
@@ -27,8 +26,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { isBlocked } = useFunctionBlockStatus();
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { backendActor ,user} = useAuth();
-  const { userData } = useUserData();
+  const { backendActor, user } = useAuth();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -42,7 +40,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   /* ===================================================================================
    *                                 STATE-MANAGEMENT
    * =================================================================================== */
-
+  const [isFaucetLoading, setIsFaucetLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [faucetBTC, setFaucetBTC] = useState(0);
   const [faucetETH, setFaucetETH] = useState(0);
@@ -52,6 +50,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
+
   const initialLimits = {
     ckBTC: 50000000000,
     ckETH: 50000000000,
@@ -110,7 +109,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       return;
     }
     const numericAmount = parseFloat(inputAmount);
-    const availableAmount = (FaucetLimit[asset] - FaucetUsage[asset]) / 1e8;
     if (numericAmount > exchangeRate) {
       return;
     }
@@ -126,7 +124,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
     setAmount(formattedAmount);
   };
-
   const handleMaxAmountClick = () => {
     if (exchangeRate) {
       const formattedAmount = parseFloat(exchangeRate).toFixed(8);
@@ -185,7 +182,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     setLoading(true);
@@ -277,10 +274,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     } catch (error) {
       console.error(error.message);
 
-      // ✅ **Check for "Out of Cycles" Error**
       if (
         error.message.includes("out of cycles") ||
-        error.message.includes("Reject text: Canister") // Matches error pattern
+        error.message.includes("Reject text: Canister")
       ) {
         toast.error(
           "Canister is out of cycles. Please wait, the admin has been notified.",
@@ -323,7 +319,55 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     onClose();
   };
 
+  //Fetch faucet data limit and usage
+  const getUserFaucetData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
 
+    setIsFaucetLoading(true);
+
+    try {
+      const result = await backendActor.get_user_faucet_data(user);
+
+      if (result?.Ok?.reserves && result.Ok.reserves[0]?.length > 0) {
+        const updatedLimits = { ...initialLimits };
+        const updatedUsages = { ...initialUsages };
+
+        result.Ok.reserves[0].forEach((reserveGroup) => {
+          const asset = reserveGroup[0];
+          if (!asset) return;
+
+          const faucetLimitRaw = reserveGroup[1]?.faucet_limit
+            ? Number(reserveGroup[1].faucet_limit)
+            : initialLimits[asset];
+          const faucetUsageRaw = reserveGroup[1]?.faucet_usage
+            ? Number(reserveGroup[1].faucet_usage)
+            : initialUsages[asset];
+
+          const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
+          const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
+
+          updatedLimits[asset] = faucetLimit;
+          updatedUsages[asset] = faucetUsage;
+        });
+
+        setFaucetLimit(updatedLimits);
+        setFaucetUsage(updatedUsages);
+      } else {
+        setFaucetLimit(initialLimits);
+        setFaucetUsage(initialUsages);
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error(error.message);
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
+    } finally {
+      setIsFaucetLoading(false);
+    }
+  };
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -331,7 +375,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -361,7 +405,9 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
           fetchBalance("ckUSDT"),
           fetchConversionRate(),
         ]);
-      } catch (error) { console.error(error.message)}
+      } catch (error) {
+        console.error(error.message);
+      }
     };
     fetchAllData();
   }, [fetchBalance, fetchConversionRate]);
@@ -416,75 +462,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, [isOpen]);
 
-  const getUserFaucetData = async (user) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const result = await backendActor.get_user_faucet_data(user);
-      if (result?.Ok?.reserves && result.Ok.reserves[0]?.length > 0) {
-        const updatedLimits = { ...initialLimits };
-        const updatedUsages = { ...initialUsages };
-  
-        result.Ok.reserves[0].forEach((reserveGroup) => {
-          const asset = reserveGroup[0];
-          if (!asset) return;
-          const faucetLimit = reserveGroup[1]?.faucet_limit
-            ? Number(reserveGroup[1].faucet_limit)
-            : initialLimits[asset];
-          const faucetUsage = reserveGroup[1]?.faucet_usage
-            ? Number(reserveGroup[1].faucet_usage)
-            : initialUsages[asset];
-  
-          updatedLimits[asset] = faucetLimit;
-          updatedUsages[asset] = faucetUsage;
-        });
-  
-        setFaucetLimit(updatedLimits);
-        setFaucetUsage(updatedUsages);
-      } else {
-        // Handle no data or fallback
-        setFaucetLimit(initialLimits);
-        setFaucetUsage(initialUsages);
-      }
-    } catch (error) {
-      setError(error.message);
-      console.error(error.message);
-      if (error.message.toLowerCase().includes("freeze canister")) {
-        setIsFreezePopupVisible(true);
-      }
-    }
-  };
-  
   useEffect(() => {
     if (user) {
       getUserFaucetData(user);
     }
   }, [user]);
-  
-  useEffect(() => {
-    if (userData?.Ok?.reserves && userData.Ok.reserves[0]?.length > 0) {
-      const updatedLimits = { ...initialLimits };
-      const updatedUsages = { ...initialUsages };
-      userData.Ok.reserves[0].forEach((reserveGroup) => {
-        const asset = reserveGroup[0];
-        if (!asset) return;
-        const faucetLimit = reserveGroup[1]?.faucet_limit
-          ? Number(reserveGroup[1].faucet_limit)
-          : initialLimits[asset];
-        const faucetUsage = reserveGroup[1]?.faucet_usage
-          ? Number(reserveGroup[1].faucet_usage)
-          : initialUsages[asset];
-
-        updatedLimits[asset] = faucetLimit;
-        updatedUsages[asset] = faucetUsage;
-      });
-
-      setFaucetLimit(updatedLimits);
-      setFaucetUsage(updatedUsages);
-    } else {
-    }
-  }, [userData]);
 
   useEffect(() => {
     const faucetAmount = getFaucetAmount();
@@ -498,12 +480,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, []);
 
-
-  
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
-        onClose(); // Call the function to close the modal
+        onClose();
       }
     };
 
@@ -511,7 +491,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]); // Dependency to ensure correct reference
+  }, [onClose]);
 
   /* ===================================================================================
    *                                  RENDER-COMPONENTS
@@ -556,15 +536,44 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       <span className="text-lg">{asset}</span>
                     </div>
                     <div
-                      className="cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md"
-                      onClick={handleMaxAmountClick}
+                      className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            100
+                        ) /
+                          100 <=
+                          0
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                      onClick={
+                        isFaucetLoading ||
+                        Math.floor(
+                          ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            100
+                        ) /
+                          100 <=
+                          0
+                          ? undefined
+                          : handleMaxAmountClick
+                      }
                     >
-                      $
-                      {(
-                        (FaucetLimit[asset] - FaucetUsage[asset]) /
-                        1e8
-                      ).toLocaleString()}{" "}
-                      Max
+                      {isFaucetLoading ? (
+                        <div className="flex justify-center items-center space-x-2">
+                          <div className="w-4 h-4 border-4 border-t-4 border-gray-200 border-solid rounded-full animate-spin border-t-blue-500"></div>
+                          <span>Loading...</span>
+                        </div>
+                      ) : (
+                        <>
+                          $
+                          {(
+                            (FaucetLimit[asset] - FaucetUsage[asset]) /
+                            1e8
+                          ).toFixed(2)}{" "}
+                          Max
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

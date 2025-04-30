@@ -3,11 +3,11 @@ import { createSlice } from "@reduxjs/toolkit";
 const faucetUpdateReducer = createSlice({
   name: "faucet",
   initialState: {
-    refreshTrigger: false, // Tracks when data should be refreshed
+    refreshTrigger: false, 
   },
   reducers: {
     toggleRefresh: (state) => {
-      state.refreshTrigger = !state.refreshTrigger; // Toggles the state
+      state.refreshTrigger = !state.refreshTrigger; 
     },
   },
 });

@@ -8,7 +8,6 @@ use crate::{debug, info, trace};
 use candid::Nat;
 use ic_cdk::api::time;
 use std::ops::Mul;
-// use crate::{debug, error, info, trace, warn};
 
 /*
  * @title Get Scaling Value

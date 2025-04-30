@@ -153,7 +153,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
                 is_collateral: params.is_collateral,
-                on_behalf_of: None,
+                // on_behalf_of: None,
                 amount: params.amount.clone(),
             };
             //for burning and reverting the supplied amount
@@ -213,29 +213,27 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     guard_prevent_anonymous()?;
 
     // prevent anonymous on behalf of
-    if params.on_behalf_of == Some(Principal::anonymous()) {
-        return Err(Error::AnonymousPrincipal);
-    }
-
-    let (user_principal, liquidator_principal) =
-        if let Some(on_behalf_of) = params.on_behalf_of.clone() {
-            let user_principal = on_behalf_of;
-            let liquidator_principal = ic_cdk::caller();
-            debug!("Liquidator principal: {:?}", liquidator_principal.to_text()); //debug
-            (user_principal, Some(liquidator_principal))
-        } else {
-            let user_principal = ic_cdk::caller();
-            debug!("User principal: {:?}", user_principal.to_text()); //debug
-            (user_principal, None)
-        };
+    // if params.on_behalf_of == Some(Principal::anonymous()) {
+    //     return Err(Error::AnonymousPrincipal);
+    // }
+    let user_principal = ic_cdk::caller();
+    // let (user_principal, liquidator_principal) =
+    //     if let Some(on_behalf_of) = params.on_behalf_of.clone() {
+    //         let user_principal = on_behalf_of;
+    //         let liquidator_principal = ic_cdk::caller();
+    //         (user_principal, Some(liquidator_principal))
+    //     } else {
+    //         let user_principal = ic_cdk::caller();
+    //         (user_principal, None)
+    //     };
 
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
-    let transfer_to_principal: Principal = liquidator_principal.unwrap_or(user_principal);
-
+    // let transfer_to_principal: Principal = liquidator_principal.unwrap_or(user_principal);
+    let transfer_to_principal: Principal = user_principal.clone();
     let mut reserve_data = read_state(|state| {
         state
             .asset_index
@@ -256,6 +254,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         params.amount.clone(),
         user_principal,
         ledger_canister_id,
+        
     )
     .await?;
     info!("Withdraw validated successfully");

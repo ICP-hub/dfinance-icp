@@ -67,7 +67,7 @@ pub struct ExecuteRepayParams {
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    pub on_behalf_of: Option<Principal>,
+    // pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
 

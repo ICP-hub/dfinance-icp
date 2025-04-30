@@ -1,13 +1,7 @@
 import { Check, Wallet, X } from "lucide-react";
-
 import React from "react";
 
 const PaymentDone = ({ asset, isModalOpen, handleModalOpen }) => {
-
-  /* ===================================================================================
-  *                                  RENDER COMPONENT
-  * =================================================================================== */
-
   return (
     <div className="w-full flex flex-col items-center">
       <button

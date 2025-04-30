@@ -213,7 +213,6 @@ const WithdrawPopup = ({
       const withdrawParams = {
         asset: asset,
         amount: scaledAmount,
-        on_behalf_of: [],
         is_collateral: currentCollateralStatus,
       };
 

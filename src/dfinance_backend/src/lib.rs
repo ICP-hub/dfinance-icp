@@ -14,6 +14,7 @@ pub mod declarations;
 mod dynamic_canister;
 mod guards;
 mod protocol;
+
 mod stable_storage;
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
@@ -25,6 +26,7 @@ use api::query::get_all_faucet;
 use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
+use protocol::utils::log;
 
 /*
  * @title Initialization Function

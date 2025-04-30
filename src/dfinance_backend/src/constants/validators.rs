@@ -9,10 +9,11 @@ use crate::constants::errors::Error;
  * @functionality Validates asset name by checking if it's non-empty and within the allowed length.
  */
 pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
-    if asset_name.trim().is_empty() {
-        ic_cdk::println!("Asset cannot be an empty string");
-        return Err(Error::EmptyAsset);
-    }
+  
+  if asset_name.trim().is_empty() {
+      ic_cdk::println!("Asset cannot be an empty string");
+      return Err(Error::EmptyAsset);
+  }
 
     if asset_name.len() > MAX_ASSET_LENGTH {
         ic_cdk::println!(

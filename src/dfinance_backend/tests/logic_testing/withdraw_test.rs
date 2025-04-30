@@ -174,7 +174,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
-            on_behalf_of: case.on_behalf_of,
             is_collateral: case.is_collateral.clone(),
         };
 

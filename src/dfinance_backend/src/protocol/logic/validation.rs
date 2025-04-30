@@ -255,7 +255,7 @@ impl ValidationLogic {
      * @dev Performs checks on:
      * - Reserve status (active and borrowing enabled).
      * - Loan-to-value (LTV) limits to prevent excessive borrowing.
-     * - User’s health factor  ic_cdk::println!("new health factor = {}", new_health_factor);   //debugto ensure safe borrowing.
+     * - User’s health factor ensure safe borrowing.
      *
      * @param reserve The reserve from which the user is borrowing.
      * @param amount The borrowing amount requested.
@@ -509,7 +509,7 @@ impl ValidationLogic {
             return Err(Error::RewardIsHigher);
         }
 
-        //checking if the user health factor is less than 1 else can't be liquidated
+        //checking if the user health factor is more than 1 than can't be liquidated
         debug!("percentage factor {:?}",health_factor.clone() / Nat::from(PERCENTAGE_FACTOR));   //debug
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             error!("User health factor is greater than 1."); //error

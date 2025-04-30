@@ -7,16 +7,16 @@ import { useAuth } from "../../utils/useAuthClient";
 
 // Mocking necessary imports for the test environment
 jest.mock("react-redux", () => ({
-  useDispatch: jest.fn(), 
-  useSelector: jest.fn(), 
+  useDispatch: jest.fn(),
+  useSelector: jest.fn(),
 }));
 
 jest.mock("react-router-dom", () => ({
-  useNavigate: jest.fn(), 
+  useNavigate: jest.fn(),
 }));
 
 jest.mock("../../utils/useAuthClient", () => ({
-  useAuth: jest.fn(), 
+  useAuth: jest.fn(),
 }));
 
 // Mocking MUI Modal component for testing
@@ -51,16 +51,17 @@ describe("WalletModal Component", () => {
   const mockLogin = jest.fn();
   const mockLogout = jest.fn();
 
+  // This function Clear mocks before each test
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test
+    jest.clearAllMocks();
 
-    useDispatch.mockReturnValue(mockDispatch); 
-    useNavigate.mockReturnValue(mockNavigate); 
+    useDispatch.mockReturnValue(mockDispatch);
+    useNavigate.mockReturnValue(mockNavigate);
 
     useAuth.mockReturnValue({
-      login: mockLogin, 
-      logout: mockLogout, 
-      isAuthenticated: false, 
+      login: mockLogin,
+      logout: mockLogout,
+      isAuthenticated: false,
     });
 
     // Mock localStorage methods
@@ -77,15 +78,13 @@ describe("WalletModal Component", () => {
   // Test case 1: Ensure modal displays 'Connect a wallet' when no wallet is connected
   test("renders connect wallet modal when no wallet is connected", () => {
     useSelector.mockReturnValue({
-      isWalletModalOpen: true, 
-      isSwitchingWallet: false, 
+      isWalletModalOpen: true,
+      isSwitchingWallet: false,
       connectedWallet: null,
       isWalletCreated: false,
     });
 
     render(<WalletModal />);
-
-    // Check if modal is displayed with relevant text
     expect(screen.getByText("Connect a wallet")).toBeInTheDocument();
     expect(screen.getByText("Internet Identity")).toBeInTheDocument();
     expect(screen.getByText("NFID")).toBeInTheDocument();
@@ -96,18 +95,16 @@ describe("WalletModal Component", () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
-      connectedWallet: "ii", 
+      connectedWallet: "ii",
       isWalletCreated: false,
     });
 
     render(<WalletModal />);
-
-    // Verify the modal has the correct text when a wallet is connected
     expect(screen.getByText("Switch wallet")).toBeInTheDocument();
     expect(screen.getByText("Internet Identity")).toBeInTheDocument();
     expect(screen.getByText("is connected")).toBeInTheDocument();
 
-    // Ensure that 'Internet Identity' option is not clickable
+    // This is to Ensure that 'Internet Identity' option is not clickable
     const divElements = document.querySelectorAll("div.cursor-pointer");
     const iiOptionExists = Array.from(divElements).some((div) =>
       div.textContent.includes("Internet Identity")
@@ -120,15 +117,13 @@ describe("WalletModal Component", () => {
   // Test case 3: Ensure modal does not render when closed
   test("does not render when modal is closed", () => {
     useSelector.mockReturnValue({
-      isWalletModalOpen: false, 
+      isWalletModalOpen: false,
       isSwitchingWallet: false,
       connectedWallet: null,
       isWalletCreated: false,
     });
 
     render(<WalletModal />);
-
-    // Verify that modal is not rendered
     expect(screen.queryByTestId("modal")).not.toBeInTheDocument();
   });
 
@@ -136,7 +131,7 @@ describe("WalletModal Component", () => {
   test("calls switch wallet handler when in switching mode", async () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
-      isSwitchingWallet: true, 
+      isSwitchingWallet: true,
       connectedWallet: "nfid",
       isWalletCreated: false,
     });
@@ -150,14 +145,9 @@ describe("WalletModal Component", () => {
     const iiOption = Array.from(divElements).find((el) =>
       el.textContent.includes("Internet Identity")
     );
-
-    // Verify that 'Internet Identity' option exists and click on it
     expect(iiOption).toBeTruthy();
     fireEvent.click(iiOption);
-
     await Promise.resolve();
-
-    // Check that logout and login functions are called
     expect(mockLogout).toHaveBeenCalled();
     expect(mockLogin).toHaveBeenCalled();
   });
@@ -170,14 +160,10 @@ describe("WalletModal Component", () => {
       connectedWallet: null,
       isWalletCreated: false,
     });
-
     render(<WalletModal />);
-
     // Simulate clicking outside the modal (backdrop)
     const modal = screen.getByTestId("modal");
     fireEvent.click(modal);
-
-    // Check that dispatch is called to close the modal
     expect(mockDispatch).toHaveBeenCalled();
   });
 
@@ -187,29 +173,22 @@ describe("WalletModal Component", () => {
       isWalletModalOpen: true,
       isSwitchingWallet: false,
       connectedWallet: null,
-      isWalletCreated: true, 
+      isWalletCreated: true,
     });
-
     render(<WalletModal />);
-
-    // Check that navigation to '/dashboard/wallet-details' happens
     expect(mockNavigate).toHaveBeenCalledWith("/dashboard/wallet-details");
   });
 
   // Test case 7: Ensure connected wallet is retrieved from localStorage on mount
   test("retrieves connected wallet from localStorage on mount", () => {
-    window.localStorage.getItem.mockReturnValueOnce("ii"); 
-
+    window.localStorage.getItem.mockReturnValueOnce("ii");
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
       connectedWallet: null,
       isWalletCreated: false,
     });
-
     render(<WalletModal />);
-
-    // Verify that localStorage is checked for the connected wallet
     expect(window.localStorage.getItem).toHaveBeenCalledWith("connectedWallet");
     expect(mockDispatch).toHaveBeenCalled();
   });
@@ -219,19 +198,15 @@ describe("WalletModal Component", () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
-      connectedWallet: "ii", 
+      connectedWallet: "ii",
       isWalletCreated: false,
     });
-
     useAuth.mockReturnValue({
       login: mockLogin,
       logout: mockLogout,
-      isAuthenticated: false, 
+      isAuthenticated: false,
     });
-
     render(<WalletModal />);
-
-    // Check that connected wallet is removed from localStorage
     expect(window.localStorage.removeItem).toHaveBeenCalledWith(
       "connectedWallet"
     );
@@ -242,13 +217,10 @@ describe("WalletModal Component", () => {
     useSelector.mockReturnValue({
       isWalletModalOpen: true,
       isSwitchingWallet: false,
-      connectedWallet: "nfid", 
+      connectedWallet: "nfid",
       isWalletCreated: false,
     });
-
     render(<WalletModal />);
-
-    // Verify that 'NFID' text is displayed for the connected wallet
     const connectedWalletTexts = screen.getAllByText("NFID");
     expect(connectedWalletTexts.length).toBeGreaterThan(0);
     expect(screen.getByText("is connected")).toBeInTheDocument();

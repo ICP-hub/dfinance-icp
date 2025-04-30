@@ -73,8 +73,6 @@ describe("MainDashboard Component", () => {
         </Router>
       </Provider>
     );
-
-    // Verifying that "Loading..." message is displayed when isLoading is true
     expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 
@@ -92,8 +90,6 @@ describe("MainDashboard Component", () => {
         </Router>
       </Provider>
     );
-
-    // Verifying that the DashboardNav component is rendered
     expect(screen.getByText("DashboardNav")).toBeInTheDocument();
   });
 
@@ -111,8 +107,6 @@ describe("MainDashboard Component", () => {
         </Router>
       </Provider>
     );
-
-    // Verifying that DashboardNav is not rendered
     expect(screen.queryByText("DashboardNav")).toBeNull();
   });
 
@@ -131,8 +125,6 @@ describe("MainDashboard Component", () => {
         </Router>
       </Provider>
     );
-
-    // Verifying that DashboardNav is not rendered when isDGov is true
     expect(screen.queryByText("DashboardNav")).toBeNull();
   });
 });

@@ -15,6 +15,7 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
 
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
@@ -55,8 +56,9 @@ const Borrow = ({
     ckICPUsdRate,
     ckUSDTUsdRate,
   } = useFetchConversionRate();
-
   const { isBlocked } = useFunctionBlockStatus();
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
   const borrowButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { filteredItems } = useAssetData();
@@ -155,6 +157,10 @@ const Borrow = ({
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;
+  const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+  const totalAmount = transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt
+    : scaledAmount;
 
   const borrowErrorMessages = {
     NoReserveDataFound:
@@ -186,7 +192,7 @@ const Borrow = ({
 
     const borrowParams = {
       asset: asset,
-      amount: scaledAmount,
+      amount: totalAmount,
     };
 
     try {
@@ -195,12 +201,10 @@ const Borrow = ({
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${
-            scaledAmount / 100000000
+          `Borrow,${asset},${scaledAmount / 100000000
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${
-            scaledAmount / 100000000
+          `Borrow,${asset},${scaledAmount / 100000000
           }, ${principalObj.toString()}`
         );
 
@@ -358,7 +362,8 @@ const Borrow = ({
     setIsModalOpen(false);
   };
 
-  // Calculates the health factor based on collateral and debt values.
+
+  //calculate health factor
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -377,6 +382,7 @@ const Borrow = ({
     return result;
   };
 
+  //calculate Ltv
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;
@@ -385,6 +391,7 @@ const Borrow = ({
     return result;
   };
 
+  //Calculate Amount change
   const handleAmountChange = (e) => {
     const maxBorrow = parseFloat(borrowableValue);
 
@@ -705,9 +712,9 @@ const Borrow = ({
                   <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -732,12 +739,12 @@ const Borrow = ({
                     }}
                   >
                     {loading &&
-                    (borrowableValue == null || borrowableValue === "0") ? (
+                      (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
                     ) : parseFloat(borrowableValue) === 0 ? (
                       "0 Max"
                     ) : (
-                      `${formatValue(borrowableValue)} Max`
+                      `${formatValue(Math.max(0, borrowableValue - transferFee))} Max`
                     )}
                   </p>
                 </div>
@@ -793,6 +800,35 @@ const Borrow = ({
                         {currentHealthFactor}
                       </span>
                     </p>
+                  </div>
+                  <div className="w-full flex justify-between items-center my-1 mt-2">
+                    <div className="flex items-center gap-1">
+                      <p>Transaction Fee</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p>{transferFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {(amount
+                          ? (+amount || 0) + (+transferFee || 0)
+                          : 0
+                        ).toFixed(8)}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
                   </div>
 
                   <div className="w-full flex justify-end items-center mt-1 ">
@@ -908,8 +944,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -921,8 +957,8 @@ const Borrow = ({
                   ? Number(scaledAmount / 100000000).toFixed(8)
                   : scaledAmount / 100000000 >= 1e-7 &&
                     scaledAmount / 100000000 < 1e-6
-                  ? Number(scaledAmount / 100000000).toFixed(7)
-                  : scaledAmount / 100000000
+                    ? Number(scaledAmount / 100000000).toFixed(7)
+                    : scaledAmount / 100000000
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

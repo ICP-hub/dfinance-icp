@@ -1,9 +1,8 @@
-import React from "react";
+import React ,{ act } from "react";
 import {
   render,
   screen,
   fireEvent,
-  act,
 } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { store } from "../../redux/store";

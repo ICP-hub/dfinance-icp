@@ -258,7 +258,26 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     )
     .await?;
 
-    let withdraw_amount = params.amount.clone();
+    if let Err(_) = update_token_price(params.asset.clone()).await {}
+
+    let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+        Ok(price) => price,
+        Err(e) => {
+            ic_cdk::println!("Failed to fetch exchange rate");
+            return Err(e);
+        }
+    };
+
+    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+
+    if params.amount.clone() < transfer_token_fee {
+        ic_cdk::println!("Amount is less than the transfer token fee");
+        return Err(Error::FeeExceedsAmount);
+    }
+
+    let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
+    ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
 
     reserve::update_interest_rates(
         &mut reserve_data,

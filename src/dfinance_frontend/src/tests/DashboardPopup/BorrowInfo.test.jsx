@@ -55,7 +55,6 @@ describe("BorrowInfo Component", () => {
     render(<BorrowInfo {...mockProps} />); 
     expect(screen.getByText("200.00")).toBeInTheDocument();
 
-    // Check if the 'of' elements are displayed twice (indicating the borrowed vs cap)
     const ofElements = screen.getAllByText("of");
     expect(ofElements).toHaveLength(2); 
     expect(ofElements[1]).toBeInTheDocument();

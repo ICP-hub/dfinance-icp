@@ -76,9 +76,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
     ic_cdk::println!("User principal: {:?}", user_principal);
 
-    let borrow_amount = params.amount.clone();
-    ic_cdk::println!("borrow amount = {}", borrow_amount);
-
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
     let platform_principal = ic_cdk::api::id();
@@ -108,6 +105,28 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         ledger_canister_id,
     )
     .await?;
+
+    if let Err(e) = update_token_price(params.asset.clone()).await {
+        ic_cdk::println!("Failed to update reserves price: {:?}", e);  //error
+    }
+
+    let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+        Ok(price) => price,
+        Err(e) => {
+            ic_cdk::println!("Failed to fetch exchange rate");
+            return Err(e);
+        }
+    };
+    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
+    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+
+    if params.amount.clone() < transfer_token_fee {
+        ic_cdk::println!("Amount is less than the transfer token fee");
+        return Err(Error::FeeExceedsAmount);
+    }
+    // let amount_requested = params.amount.clone();
+    let borrow_amount = params.amount.clone() - transfer_token_fee.clone();
+    ic_cdk::println!("borrow amount = {}", borrow_amount);
 
     // ----------- Update logic here -------------
     UpdateLogic::update_user_data_borrow(
@@ -142,7 +161,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         ledger_canister_id,
         platform_principal,
         user_principal,
-        params.amount.clone(),
+        borrow_amount.clone(),
     )
     .await
     {
@@ -157,7 +176,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             //Rollback user state
             let repay_param = ExecuteRepayParams {
                 asset: params.asset.clone(),
-                amount: borrow_amount.clone(),
+                amount: params.amount.clone(),
                 on_behalf_of: None,
             };
 

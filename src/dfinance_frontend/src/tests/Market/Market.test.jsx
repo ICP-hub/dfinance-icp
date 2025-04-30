@@ -123,7 +123,6 @@ describe("Market Component", () => {
       setIsFreezePopupVisible: jest.fn(),
     });
   });
-
   test("renders component with asset data", async () => {
     render(<Market />);
 

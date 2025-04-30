@@ -254,9 +254,6 @@ describe("Borrow Component", () => {
       const updatedHealthFactorElements = screen.getAllByText(/Health Factor/i);
       expect(updatedHealthFactorElements.length).toBeGreaterThan(0);
 
-      const updatedHealthFactorRow =
-        updatedHealthFactorElements[0].closest("div");
-
       // Verify that liquidation info is displayed correctly
       expect(screen.getByText(/liquidation at/i)).toBeInTheDocument();
     });

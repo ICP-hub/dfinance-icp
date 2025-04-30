@@ -128,6 +128,4 @@ const routes = [
   },
 ];
 
-// very important to filter falsy routes
 export default routes.filter(Boolean);
-

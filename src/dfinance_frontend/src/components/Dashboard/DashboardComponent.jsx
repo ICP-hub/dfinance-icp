@@ -55,6 +55,7 @@ const DashboardComponent = () => {
     userAccountData,
     isFreezePopupVisible,
     setIsFreezePopupVisible,
+    fetchUserAccountData
   } = useUserData();
 
   const tooltipRef = useRef(null);
@@ -542,6 +543,7 @@ const DashboardComponent = () => {
 
   // conditional rendering of jsx update model value for supply and borrow repay withdraw
   const handleAssetAction = (actionType, asset) => {
+    fetchUserAccountData()
     const reserveData = userData?.Ok?.reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
@@ -1537,6 +1539,7 @@ const DashboardComponent = () => {
                                     title={"Withdraw"}
                                     onClickHandler={() => {
                                       fetchAssetSupply(asset);
+                                      fetchUserAccountData()
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"

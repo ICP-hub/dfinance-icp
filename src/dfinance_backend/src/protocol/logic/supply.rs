@@ -1,22 +1,24 @@
 use crate::api::inter_canister::asset_transfer_from;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
+use crate::api::query::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::stable_storage::storable::Candid;
 use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::guards::access_control::guard_prevent_anonymous;
+use crate::guards::api_limiter::request_limiter;
+use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::reserve::{self};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
-use crate::api::query::{get_cached_exchange_rate, reserve_ledger_canister_id};
+use crate::stable_storage::state_handler::{mutate_state, read_state};
+use crate::stable_storage::storable::Candid;
+use crate::{debug, error, info,};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::guards::locks_handler::CallerGuard;
-use crate::guards::api_limiter::request_limiter;
 
 /*
 -------------------------------------
@@ -51,6 +53,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     // prevent anonymous call
     guard_prevent_anonymous()?;
     let user_principal = ic_cdk::caller();
+    debug!("User principal: {:?}", user_principal.to_text()); //debug
     //todo- add comment here
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
     //valid params
@@ -60,10 +63,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
     //fetch backend canister id
     let platform_principal = ic_cdk::api::id();
-    
 
     let amount_nat = params.amount.clone(); //check
-    //fetch reserve data for the asset
+                                            //fetch reserve data for the asset
     let mut reserve_data = mutate_state(|state| {
         state
             .asset_index
@@ -74,9 +76,11 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 
     //initialize a asset reserve cache for temp changes
     let mut reserve_cache = reserve::cache(&reserve_data);
-    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache); //info
-    //update the reserve cache state
+    info!("Reserve cache fetched successfully: {:?}", reserve_cache); //info
+                                                                      //update the reserve cache state
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
+    info!("Reserve state updated successfully"); //info
+
     //validat the supply request
     ValidationLogic::validate_supply(
         &reserve_data,
@@ -85,26 +89,24 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         ledger_canister_id,
     )
     .await?;
-
-    ic_cdk::println!("Supply validated successfully");//info
+    info!("Supply info validated successfully"); //info
 
     // updating the price cached in the state
     let _ = update_token_price(params.asset.clone()).await;
     //fetching the price of the asset in USD
     let asset_price = get_cached_exchange_rate(params.asset.clone())?;
-    
+
     //TODO : 96 to 104 can be common
     //Calculating Transfer fee in usd
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee); //debug
-    
+    debug!("Transfer token fee: {:?}", transfer_token_fee); //debug
+
     if params.amount.clone() < transfer_token_fee {
-        ic_cdk::println!("Amount is less than the transfer token fee"); //error
+        error!("Amount is less than the transfer token fee"); //error
         return Err(Error::FeeExceedsAmount);
     }
     //updating params.amount with the actual amount of tokens to be supplied
     params.amount = params.amount.clone() - transfer_token_fee.clone();
-    
 
     let liq_added = params.amount.clone();
     let liq_taken = zero_nat_value();
@@ -112,8 +114,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
         .await?;
 
-    ic_cdk::println!("Interest rates updated successfully"); //info  
-    //intializing and updating user state and minting the dtokens to the user
+    info!("Interest rates updated successfully"); //info
+                                                  //intializing and updating user state and minting the dtokens to the user
     UpdateLogic::update_user_data_supply(
         user_principal,
         &reserve_cache,
@@ -121,7 +123,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
-    ic_cdk::println!("Dtoken Mint and user state updated successfully for supplied asset"); //info
+    info!("udpate user data supply called successfully"); //info
+
     //updating the reserve data in the state
     mutate_state(|state| {
         state
@@ -139,21 +142,21 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     .await
     {
         Ok(new_balance) => {
-            println!("Asset transfer from user to backend canister executed successfully");
+            info!("Asset transfer from user to backend canister executed successfully");
             Ok(new_balance)
         }
         Err(_) => {
-            ic_cdk::println!("Error in asset transfer from user to backend canister"); //error
-            //Rollback user state and burning dtokens
-            //NOTE: transfer fee is not returned to the user
-            //TODO: ask from vinayak sir whether to keep the transfer fee or return it back to the user 
+            error!("Error in asset transfer from user to backend canister"); //error
+                                                                             //Rollback user state and burning dtokens
+                                                                             //NOTE: transfer fee is not returned to the user
+                                                                             //TODO: ask from vinayak sir whether to keep the transfer fee or return it back to the user
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
                 is_collateral: params.is_collateral,
                 on_behalf_of: None,
                 amount: params.amount.clone(),
             };
-            //for burning and reverting the supplied amount 
+            //for burning and reverting the supplied amount
             UpdateLogic::update_user_data_withdraw(
                 user_principal,
                 &reserve_cache,
@@ -161,17 +164,15 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                 &mut reserve_data,
             )
             .await?;
-            ic_cdk::println!("Dtoken Burn and user state reverted successfully for supplied asset"); //info
-            //revert the reserve data changes 
+            //revert the reserve data changes
             //TODO: check if we need to revert the reserve data changes
             mutate_state(|state| {
                 state
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
-            ic_cdk::println!("Rollback successfull");//info
+            info!("Rollback successfully executed"); //info
 
-            //return the error
             return Err(Error::ErrorMintTokens); //TODO: jyotirmay change the error message it should be ErrorSupplyTokens
         }
     }
@@ -220,9 +221,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
             let user_principal = on_behalf_of;
             let liquidator_principal = ic_cdk::caller();
+            debug!("Liquidator principal: {:?}", liquidator_principal.to_text()); //debug
             (user_principal, Some(liquidator_principal))
         } else {
             let user_principal = ic_cdk::caller();
+            debug!("User principal: {:?}", user_principal.to_text()); //debug
             (user_principal, None)
         };
 
@@ -243,11 +246,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
-    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+    info!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
-
-    ic_cdk::println!("Reserve state updated successfully");
+    info!("Reserve state updated successfully");
 
     ValidationLogic::validate_withdraw(
         &reserve_data,
@@ -256,6 +258,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         ledger_canister_id,
     )
     .await?;
+    info!("Withdraw validated successfully");
 
     let withdraw_amount = params.amount.clone();
 
@@ -266,6 +269,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         zero_nat_value(),
     )
     .await?;
+    info!("Interest rates updated successfully");
 
     // ----------- Update logic here -------------
     UpdateLogic::update_user_data_withdraw(
@@ -275,6 +279,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
+    info!("User state updated successfully for withdraw asset");
 
     mutate_state(|state| {
         state
@@ -292,10 +297,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     .await
     {
         Ok(new_balance) => {
-            println!("Asset transfer from backend to user executed successfully");
+            info!("Asset transfer from backend to user executed successfully");
             return Ok(new_balance);
         }
         Err(_) => {
+            error!("Error in asset transfer from backend to user"); //error
             let supply_param = ExecuteSupplyParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
@@ -315,6 +321,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
+            info!("Rollback successfully executed"); //info
             return Err(Error::ErrorBurnTokens);
         }
     }

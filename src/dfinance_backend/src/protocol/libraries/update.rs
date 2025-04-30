@@ -2,24 +2,28 @@ use crate::api::inter_canister::get_balance;
 use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_negatige_value, validate_zero_value};
+use crate::constants::validators::{
+    validate_asset_name, validate_negatige_value,
+};
+use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData};
 use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
-     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
 use crate::guards::access_control::guard_prevent_anonymous;
+use crate::guards::api_limiter::request_limiter;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData};
+use crate::protocol::utils::price::get_exchange_rates;
 use crate::stable_storage::{
     state_handler::{mutate_state, read_state},
     storable::Candid,
 };
-use crate::protocol::utils::price::get_exchange_rates;
+use crate::{debug, error, info};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::guards::api_limiter::request_limiter;
 
 pub struct UpdateLogic;
 
@@ -70,7 +74,7 @@ impl UpdateLogic {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
 
-            ic_cdk::println!(
+            debug!(
                 "Updated asset supply for existing reserve: {:?}",
                 reserve_data
             );
@@ -98,6 +102,7 @@ impl UpdateLogic {
                 }) {
                 reserve_data
             } else {
+                error!("no reserve data found");
                 return Err(Error::NoUserReserveDataFound);
             };
             new_reserve_data
@@ -117,9 +122,10 @@ impl UpdateLogic {
 
         match minted_result {
             Ok(()) => {
-                ic_cdk::println!("Minting dtokens successfully");
+                info!("Minting dtokens successfully");
             }
             Err(e) => {
+                error!("Error minting dTokens: {:?}", e);
                 return Err(e);
             }
         }
@@ -130,7 +136,6 @@ impl UpdateLogic {
                 .insert(user_principal, Candid(user_data.clone()));
         });
 
-        ic_cdk::println!("User data updated successfully");
         Ok(())
     }
 
@@ -158,17 +163,12 @@ impl UpdateLogic {
         params: ExecuteBorrowParams,
         reserve: &mut ReserveData,
     ) -> Result<(), Error> {
-        ic_cdk::println!(
-            "Starting update_user_data_borrow for user: {:?}",
-            user_principal
-        );
-
         let platform_principal = ic_cdk::api::id();
 
         let mut user_data = user_data(user_principal)?;
 
         let user_reserve = user_reserve(&mut user_data, &params.asset);
-        ic_cdk::println!("User reserve: {:?}", user_reserve);
+        debug!("User reserve: {:?}", user_reserve);
 
         let mut user_reserve_data = match user_reserve {
             Some((_, reserve_data)) => {
@@ -206,6 +206,7 @@ impl UpdateLogic {
                     }) {
                     reserve_data
                 } else {
+                    error!("No reserve data found");
                     return Err(Error::NoUserReserveDataFound);
                 };
                 new_reserve_data
@@ -223,14 +224,15 @@ impl UpdateLogic {
             false,
         )
         .await?;
+        info!("mint scaled called successfully");
 
+        debug!("User data updated successfully: {:?}", user_data);
         mutate_state(|state| {
             state
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()))
         });
 
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
         Ok(())
     }
 
@@ -271,7 +273,7 @@ impl UpdateLogic {
             None => return Err(Error::NoUserReserveDataFound),
         };
 
-        ic_cdk::println!("Update user state before burn: {:?}", user_reserve_data);
+        debug!("Update user state before burn: {:?}", user_reserve_data);
 
         burn_scaled(
             reserve,
@@ -300,6 +302,7 @@ impl UpdateLogic {
                 }
             }
             None => {
+                error!("No reserve data found");
                 return Err(Error::NoReserveDataFound);
             }
         }
@@ -320,7 +323,7 @@ impl UpdateLogic {
                 .insert(user_principal, Candid(user_data.clone()))
         });
 
-        ic_cdk::println!("User data updated successfully: {:?}", user_data);
+        info!("User data updated successfully: {:?}", user_data);
         Ok(())
     }
 
@@ -349,13 +352,10 @@ impl UpdateLogic {
         reserve: &mut ReserveData,
     ) -> Result<(), Error> {
         let platform_principal: Principal = ic_cdk::api::id();
-        ic_cdk::println!(
-            "Starting update_user_data_repay for user: {:?}",
-            user_principal
-        );
+
         let mut user_data = user_data(user_principal)?;
 
-        ic_cdk::println!("Repay user update initial data = {:?}", user_data);
+        debug!("Repay user update initial data = {:?}", user_data);
 
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         let mut user_reserve_data = match user_reserve.as_mut() {
@@ -363,7 +363,7 @@ impl UpdateLogic {
             None => return Err(Error::NoUserReserveDataFound), // or handle appropriately
         };
 
-        ic_cdk::println!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
+        debug!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
                          params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
         let debt_token = reserve.debt_token_canister.clone().unwrap();
 
@@ -382,9 +382,10 @@ impl UpdateLogic {
 
         match burn_scaled_result {
             Ok(()) => {
-                ic_cdk::println!("Burning debttoken successfully");
+                info!("Burning debttoken successfully");
             }
             Err(e) => {
+                error!("Error burning dTokens: {:?}", e);
                 return Err(e);
             }
         };
@@ -406,18 +407,17 @@ impl UpdateLogic {
                 }
             }
         } else {
+            error!("No reserve data found");
             return Err(Error::NoUserReserveDataFound);
         }
 
-        ic_cdk::println!("Saving updated user data to state");
-
+        debug!("User data updated successfully: {:?}", user_data);
         mutate_state(|state| {
             state
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()));
         });
 
-        ic_cdk::println!("User data updated successfully");
         Ok(())
     }
 }
@@ -448,6 +448,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     validate_negatige_value(&added_amount)?;
 
     let user_principal = ic_cdk::caller();
+    debug!("User principal in toggle collateral: {:?}", user_principal);
 
     let mut user_data = user_data(user_principal)?;
 
@@ -482,7 +483,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             }
         } else {
             let adjusted_collateral = total_collateral.clone() + added_usd_amount;
-            ic_cdk::println!("adjusted amount = {}", adjusted_collateral);
+            debug!("adjusted amount = {}", adjusted_collateral);
             if total_debt == zero_nat_value() {
                 ltv = zero_nat_value();
             } else {
@@ -491,8 +492,9 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         }
 
         ltv = ltv * Nat::from(PERCENTAGE_FACTOR);
-        ic_cdk::println!("New ltv: {}", ltv);
+        debug!("New ltv: {}", ltv);
         if ltv >= liquidation_threshold_var {
+            error!("LTV is greater than the threshold");
             return Err(Error::LTVGreaterThanThreshold);
         }
     }
@@ -518,6 +520,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         }
     }
 
+    debug!("User data updated successfully: {:?}", user_data);
     // Save the updated user data back to state
     mutate_state(|state| {
         state
@@ -525,7 +528,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             .insert(user_principal, Candid(user_data.clone()))
     });
 
-    ic_cdk::println!("User data updated successfully: {:?}", user_data);
     Ok(())
 }
 
@@ -567,7 +569,6 @@ pub fn get_user_faucet_reserves(user_principal: Principal) -> FaucetReserves {
     })
 }
 
-
 /*
  * @functionality user-reserve-access
  * @title Fetch User Reserve Data
@@ -588,7 +589,6 @@ pub fn user_reserve<'a>(
     };
     user_reserve
 }
-
 
 /*
  * @functionality faucet-reserve-access

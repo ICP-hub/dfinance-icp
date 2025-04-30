@@ -42,12 +42,12 @@ pub fn store_session_data(connected_wallet: String, session_start: Nat) -> Resul
     let caller_id = ic_cdk::caller();
 
     if caller_id == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
+        // debug!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
 
     if connected_wallet.len() > 15 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
+        // debug!("Asset must have a maximum length of 7 characters");
         return Err(Error::InvalidAssetLength);
     }
 
@@ -79,7 +79,7 @@ pub fn store_user_guide() -> Result<(), Error> {
     let caller_id = ic_cdk::caller();
 
     if caller_id == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
+        // debug!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
 

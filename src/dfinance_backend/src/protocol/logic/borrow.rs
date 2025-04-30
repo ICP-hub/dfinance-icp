@@ -1,4 +1,5 @@
 use crate::api::inter_canister::asset_transfer_from;
+use crate::{debug, error, info};
 use crate::stable_storage::state_handler::*;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
@@ -19,6 +20,7 @@ use candid::{Nat, Principal};
 use ic_cdk::update;
 use crate::guards::locks_handler::CallerGuard;
 use crate::guards::api_limiter::request_limiter;
+use crate::protocol::utils::log::{log_internal, LogLevel};
 
 /*
 -------------------------------------
@@ -68,16 +70,15 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     // prevent anonymous access
     guard_prevent_anonymous()?;
     let user_principal = ic_cdk::caller();
+    debug!("User principal: {:?}", user_principal.to_text());
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
 
     // input validations
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
 
-    ic_cdk::println!("User principal: {:?}", user_principal);
-
     let borrow_amount = params.amount.clone();
-    ic_cdk::println!("borrow amount = {}", borrow_amount);
+    debug!("borrow amount = {}", borrow_amount);
 
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
@@ -96,11 +97,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     }
 
     let mut reserve_cache = reserve::cache(&reserve_data);
-    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+    info!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
     // Updates the liquidity and borrow index
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
-    ic_cdk::println!("Reserve state updated successfully");
+    info!("Reserve state updated successfully");
 
     ValidationLogic::validate_borrow(
         &reserve_data,
@@ -108,6 +109,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         ledger_canister_id,
     )
     .await?;
+    info!("Borrow validated successfully");
 
     // ----------- Update logic here -------------
     UpdateLogic::update_user_data_borrow(
@@ -117,11 +119,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         &mut reserve_data,
     )
     .await?;
-
-    ic_cdk::println!("User data updated successfully");
+    info!("User data updated successfully");
 
     reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
-    ic_cdk::println!("Current debt: {:?}", reserve_cache.curr_debt);
+    debug!("Current debt: {:?}", reserve_cache.curr_debt);
 
     reserve::update_interest_rates(
         &mut reserve_data,
@@ -130,7 +131,9 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         zero_nat_value(),
     )
     .await?;
+    info!("Interest rates updated successfully");
 
+    debug!("updated Reserve data: {:?}", reserve_data);
     mutate_state(|state| {
         state
             .asset_index
@@ -147,13 +150,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     .await
     {
         Ok(new_balance) => {
-            ic_cdk::println!(
+            info!(
                 "Asset transfer from backend to user executed successfully. New balance: {:?}",
                 new_balance
             );
             Ok(new_balance)
         }
         Err(_) => {
+            error!("error in asset transfer from backend to user");
             //Rollback user state
             let repay_param = ExecuteRepayParams {
                 asset: params.asset.clone(),
@@ -174,6 +178,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
+            info!("Rollback user and reserve state executed successfully");
             return Err(Error::ErrorMintDebtTokens);
         }
     }
@@ -230,6 +235,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
+            debug!("On behalf of principal: {:?}", on_behalf_of);
             let user_principal = on_behalf_of;
             (user_principal, Some(ic_cdk::caller()))
         } else {
@@ -248,16 +254,16 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     let platform_principal = ic_cdk::api::id();
 
     let repay_amount = params.amount.clone();
-    ic_cdk::println!("Repay amount: {:?}", repay_amount);
+    debug!("Repay amount: {:?}", repay_amount);
 
     // Determines the sender principal
     let transfer_from_principal = if let Some(liquidator) = liquidator_principal {
-        ic_cdk::println!("Liquidator principal: {:?}", liquidator);
+        debug!("Liquidator principal: {:?}", liquidator);
         liquidator
     } else {
         user_principal
     };
-    ic_cdk::println!(
+    debug!(
         "Transfer from principal: {:?}",
         transfer_from_principal.to_string()
     );
@@ -276,10 +282,10 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
-    ic_cdk::println!("Reserve cache fetched successfully: {:?}", reserve_cache);
+    info!("Reserve cache fetched successfully: {:?}", reserve_cache);
 
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
-    ic_cdk::println!("Reserve state updated successfully");
+    info!("Reserve state updated successfully");
 
     // Validates repay using the reserve_data
     ValidationLogic::validate_repay(
@@ -290,12 +296,11 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         ledger_canister_id,
     )
     .await?;
-
-    ic_cdk::println!("Repay validated successfully");
+    info!("Repay validated successfully");
 
     let _ = update_token_price(params.asset.clone()).await;
 
-    ic_cdk::println!("Asset borrow: {:?}", reserve_data.asset_borrow);
+    debug!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
     // get exchange rates
     let asset_price: Nat = get_cached_exchange_rate(params.asset.clone())?;
@@ -303,18 +308,21 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
 
     if params.amount.clone() < transfer_token_fee {
+        error!("Repay amount is less than transfer token fee");
         return Err(Error::FeeExceedsAmount);
     }
     params.amount = params.amount - transfer_token_fee.clone();
 
     let user_current_debt: Nat = get_asset_debt(params.asset.clone(), Some(user_principal)).await?;
 
-    ic_cdk::println!("User current debt: {:?}", user_current_debt);
+    debug!("User current debt: {:?}", user_current_debt);
     if user_current_debt == zero_nat_value() {
+        error!("User has no debt to repay");
         return Err(Error::NoDebtToRepay);
     }
 
     if params.amount.clone() > user_current_debt {
+        error!("Repay amount exceeds current debt");
         return Err(Error::RepayMoreThanDebt);
     }
 
@@ -326,9 +334,10 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         &mut reserve_data,
     )
     .await?;
+    info!("User data updated successfully");
 
-    ic_cdk::println!("User data updated successfully");
     reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
+    debug!("Current debt: {:?}", reserve_cache.curr_debt);
 
     reserve::update_interest_rates(
         &mut reserve_data,
@@ -337,7 +346,9 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
         params.amount.clone(),
     )
     .await?;
+    info!("Interest rates updated successfully");
 
+    debug!("Updated Reserve data: {:?}", reserve_data);
     mutate_state(|state| {
         state
             .asset_index
@@ -354,14 +365,14 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     .await
     {
         Ok(new_balance) => {
-            ic_cdk::println!(
+            info!(
                 "Asset transfer from user to backend executed successfully, new balance: {:?}",
                 new_balance
             );
             Ok(new_balance)
         }
         Err(_) => {
-            ic_cdk::println!("inside the error");
+            error!("Error in asset transfer from user to backend");
             //Rollback user state
             let borrow_param = ExecuteBorrowParams {
                 asset: params.asset.clone(),
@@ -381,6 +392,7 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()));
             });
+            info!("Rollback user and reserve state executed successfully");
             return Err(Error::ErrorBurnDebtTokens);
         }
     }

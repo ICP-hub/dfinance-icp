@@ -17,7 +17,6 @@ thread_local! {
 pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
 
     if caller == Principal::anonymous() {
-        ic_cdk::println!("principals are not allowed");
         return Err(Error::InvalidPrincipal);
     }
 
@@ -31,7 +30,6 @@ pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
         match maybe_queue {
             Some(queue) => {
                 let valid_count = queue.iter().filter(|&&t| now - t <= WINDOW_SIZE).count();
-                ic_cdk::println!("Valid count: {:?}", valid_count);
                 valid_count
             }
             None => 0, // No calls logged = not blocked
@@ -68,7 +66,6 @@ pub fn is_user_blocked() -> Result<bool, Error> {
         match maybe_queue {
             Some(queue) => {
                 let valid_count = queue.iter().filter(|&&t| now - t <= WINDOW_SIZE).count();
-                ic_cdk::println!("Valid count: {:?}", valid_count);
                 valid_count >= LIMIT
             }
             None => false, // No calls logged = not blocked

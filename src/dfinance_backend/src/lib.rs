@@ -8,6 +8,7 @@ use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
 use protocol::logic::faucet::reset_faucet_usage;
+use protocol::utils::log::init_logging;
 mod api;
 mod constants;
 pub mod declarations;
@@ -25,6 +26,7 @@ use api::query::get_all_faucet;
 use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
+use crate::protocol::utils::log::{log_internal,LogLevel};
 
 /*
  * @title Initialization Function
@@ -52,8 +54,11 @@ pub async fn init(args: Principal) {
         );
     });
 
-    ic_cdk::println!("function called");
+    init_logging(true);
+
+    debug!("function called");
     schedule_midnight_task().await;
+    info!("Scheduled midnight task for faucet reset.");
 }
 
 /*
@@ -92,12 +97,12 @@ async fn run_midnight_reset() {
     let vector_faucet_data: Vec<(Principal, FaucetReserves)> = get_all_faucet().await;
     for (user_principal, _) in vector_faucet_data {
         if let Err(_) = reset_faucet_usage(user_principal).await {
-            ic_cdk::println!(
+            error!(
                 "Error resetting faucet usage for user: {}",
                 user_principal.to_string()
             );
         } else {
-            ic_cdk::println!(
+            debug!(
                 "Successfully reset faucet usage for user: {}",
                 user_principal.to_string()
             );

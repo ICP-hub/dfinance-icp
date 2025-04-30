@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
-import { createStore } from "redux";
+import { configureStore } from "@reduxjs/toolkit";
 import SupplyInfo from "../../components/Dashboard/DashboardPopup/SupplyInfo";
 import { useParams } from "react-router-dom";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
@@ -24,34 +24,36 @@ jest.mock("../../components/Common/circularProgressbar", () => ({
   ),
 }));
 
+const mockReducer = (state = { dashboardUpdate: { refreshDashboardTrigger: true } }) => state;
 // Creating a mock Redux store for testing
-const mockStore = createStore(
-  (state = { dashboardUpdate: { refreshDashboardTrigger: true } }) => state
-);
+const mockStore = configureStore({
+  reducer: mockReducer
+});
+
 
 describe("SupplyInfo Component", () => {
   // Mock props to simulate data passed to the component
   const mockProps = {
-    formatNumber: jest.fn((num) => num.toFixed(2)), // Mock function to format numbers
-    supplyCap: 1000, // Mock supply cap value
-    totalSupplied: 200, // Mock total supplied amount
-    totalBorrowed: 150, // Mock total borrowed amount
-    supplyRateAPR: 2.5, // Mock supply rate APR
-    ltv: 75, // Mock loan-to-value ratio
-    canBeCollateral: true, // Mock whether the asset can be used as collateral
-    liquidationBonus: 10, // Mock liquidation bonus
-    liquidationThreshold: 80, // Mock liquidation threshold
+    formatNumber: jest.fn((num) => num.toFixed(2)), 
+    supplyCap: 1000, 
+    totalSupplied: 200, 
+    totalBorrowed: 150, 
+    supplyRateAPR: 2.5, 
+    ltv: 75,
+    canBeCollateral: true, 
+    liquidationBonus: 10, 
+    liquidationThreshold: 80, 
   };
 
   // Before each test, mock the return values for useParams and useFetchConversionRate hooks
   beforeEach(() => {
-    useParams.mockReturnValue({ id: "ckBTC" }); // Simulating the 'ckBTC' id parameter in routing
+    useParams.mockReturnValue({ id: "ckBTC" }); 
     useFetchConversionRate.mockReturnValue({
-      ckBTCUsdRate: 50000 * 1e8, // Mock conversion rate for ckBTC
-      ckETHUsdRate: 3000 * 1e8, // Mock conversion rate for ckETH
-      ckUSDCUsdRate: 1 * 1e8, // Mock conversion rate for ckUSDC
-      ckICPUsdRate: 5 * 1e8, // Mock conversion rate for ckICP
-      ckUSDTUsdRate: 1 * 1e8, // Mock conversion rate for ckUSDT
+      ckBTCUsdRate: 50000 * 1e8, 
+      ckETHUsdRate: 3000 * 1e8, 
+      ckUSDCUsdRate: 1 * 1e8, 
+      ckICPUsdRate: 5 * 1e8, 
+      ckUSDTUsdRate: 1 * 1e8, 
     });
   });
 
@@ -60,11 +62,10 @@ describe("SupplyInfo Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <SupplyInfo {...mockProps} />
       </Provider>
     );
-    // Verifying that key text elements are rendered
+   
     expect(screen.getByText("Total Supplied")).toBeInTheDocument();
   });
 
@@ -73,12 +74,11 @@ describe("SupplyInfo Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <SupplyInfo {...mockProps} />
       </Provider>
     );
 
-    // Verifying that the correct values for total supplied and supply cap are displayed
+    
     expect(screen.getByText("200.00")).toBeInTheDocument(); // Total supplied should be 200.00
     expect(screen.getByText(/1000\.00/)).toBeInTheDocument(); // Supply cap should be 1000.00
   });
@@ -88,11 +88,10 @@ describe("SupplyInfo Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <SupplyInfo {...mockProps} />
       </Provider>
     );
-    // Verifying that the APY value (2.50%) is displayed correctly
+    
     expect(screen.getByText("2.50%")).toBeInTheDocument();
   });
 
@@ -101,11 +100,9 @@ describe("SupplyInfo Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <SupplyInfo {...mockProps} />
       </Provider>
     );
-    // Verifying that the reserve factor value (10%) is displayed correctly
     expect(screen.getByText("10%")).toBeInTheDocument();
   });
 
@@ -114,11 +111,9 @@ describe("SupplyInfo Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <SupplyInfo {...mockProps} />
       </Provider>
     );
-    // Verifying that the liquidation threshold value (80%) is displayed correctly
     expect(screen.getByText("80%")).toBeInTheDocument();
   });
 
@@ -127,11 +122,9 @@ describe("SupplyInfo Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <SupplyInfo {...mockProps} />
       </Provider>
     );
-    // Verifying that the liquidation penalty value (10%) is displayed correctly
     expect(screen.getByText("10%")).toBeInTheDocument();
   });
 });

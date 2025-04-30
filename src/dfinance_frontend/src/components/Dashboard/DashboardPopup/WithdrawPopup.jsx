@@ -12,7 +12,7 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-
+import useTransferFee from "../../customHooks/useTransferFee";
 /**
  * WithdrawPopup Component
  *
@@ -46,6 +46,8 @@ const WithdrawPopup = ({
    *                                  HOOKS
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = transferFeRetrive?.transferFee;
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
@@ -87,6 +89,7 @@ const WithdrawPopup = ({
    *                                  HELPERS
    * =================================================================================== */
 
+  console.log("assetSupply", assetSupply)
   // This function truncates a number to seven decimal places and returns it as a string.
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 7);
@@ -146,8 +149,9 @@ const WithdrawPopup = ({
       return Math.trunc(num * 1e8) / 1e8;
     };
     const numericAmount = truncateTo8Decimals(Amount);
+    const truncatedAssetSupply = truncateTo8Decimals(assetSupply);
     if (!isNaN(numericAmount) && numericAmount >= 0) {
-      if (numericAmount <= assetSupply) {
+      if (numericAmount <= truncatedAssetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(parseFloat(convertedValue));
@@ -209,10 +213,16 @@ const WithdrawPopup = ({
         Number((amount.toString() || "").replace(/,/g, "")) || 0;
       let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
       const scaledAmount = amountAsNat64;
+      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
 
+      const totalAmount = transferFeeBigInt
+
+        ? scaledAmount + transferFeeBigInt
+
+        : scaledAmount;
       const withdrawParams = {
         asset: asset,
-        amount: scaledAmount,
+        amount: totalAmount,
         is_collateral: currentCollateralStatus,
       };
 
@@ -436,7 +446,7 @@ const WithdrawPopup = ({
       const truncated = Math.floor(value * multiplier) / multiplier;
       return truncated;
     };
-
+    const fee = transferFee ? Number(transferFee) : 0;
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
         ? parseFloat(Number(assetSupply).toFixed(8))
@@ -444,11 +454,11 @@ const WithdrawPopup = ({
           ? parseFloat(Number(assetSupply).toFixed(7))
           : truncateToSevenDecimals(assetSupply)
       : 0;
-
-    const maxAmount = asset_supply;
-
-    setAmount(maxAmount);
+    const maxAmount = asset_supply - fee;
+    const formattedAmount = maxAmount.toString().split('.')[0] + '.' + (maxAmount.toString().split('.')[1] || '').padEnd(8, '0').substring(0, 8);
+    setAmount(formattedAmount);
     updateAmountAndUsdValue(assetSupply);
+
   };
 
   // This function handles the click event for the close button. It resets the payment state and closes the modal.
@@ -528,7 +538,7 @@ const WithdrawPopup = ({
     let showToastMessage = "";
 
     const isLtvExceeded =
-      assetBorrow > 0 && ltv  > tempLiq && currentCollateralStatus;
+      assetBorrow > 0 && ltv > tempLiq && currentCollateralStatus;
     const isHealthFactorLow = healthFactor <= 1 && currentCollateralStatus;
 
     if (isLtvExceeded && isHealthFactorLow) {
@@ -650,7 +660,8 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    {truncateToSevenDecimals(assetSupply)} Max
+                    {truncateToSevenDecimals(Math.max(0, assetSupply - transferFee))}{" "}
+                    Max
                   </p>
                 </div>
               </div>
@@ -666,7 +677,7 @@ const WithdrawPopup = ({
                 <div className="w-4/12 flex flex-col items-end">
                   <p className="text-xs mt-2">
                     {(
-                      assetSupply - amount.toString().replace(/,/g, "")
+                      Math.max(0, assetSupply - transferFee - Number(amount.toString().replace(/,/g, "")))
                     ).toLocaleString(undefined, {
                       minimumFractionDigits: 7,
                       maximumFractionDigits: 7,
@@ -703,14 +714,14 @@ const WithdrawPopup = ({
                   <p>
                     <span
                       className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : truncatedValue <= 1
+                          ? "text-red-500"
+                          : truncatedValue <= 1.5
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -718,19 +729,48 @@ const WithdrawPopup = ({
                     <span className="text-gray-500 mx-1">→</span>
                     <span
                       className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                        ? "text-green-500"
+                        : currentHealthFactor <= 1
+                          ? "text-red-500"
+                          : currentHealthFactor <= 1.5
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
                         }`}
                     >
                       {currentHealthFactor}
                     </span>
                   </p>
+                </div>
+                <div className="w-full flex justify-between items-center my-1 mt-2">
+                  <div className="flex items-center gap-1">
+                    <p>Transaction Fee</p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p>{transferFee}</p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
+                <div className="w-full flex justify-between items-center">
+                  <p>Final amount</p>
+                  <div className="flex items-center gap-2">
+                    <p>
+                      {(amount
+                        ? (+amount || 0) + (+transferFee || 0)
+                        : 0
+                      ).toFixed(8)}{" "}
+                    </p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
                 </div>
                 <div className="w-full flex justify-end items-center mt-1">
                   <p className="text-gray-500">liquidation at &lt;1</p>
@@ -761,8 +801,8 @@ const WithdrawPopup = ({
                   : handleWithdraw
               }
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
             >
               Withdraw

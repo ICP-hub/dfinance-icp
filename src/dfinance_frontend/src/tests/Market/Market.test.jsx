@@ -51,7 +51,7 @@ jest.mock(
     ({ title, onClickHandler }) =>
       <button onClick={onClickHandler}>{title}</button>
 );
-// Removed WalletModal mock
+
 jest.mock(
   "../../components/Dashboard/DashboardPopup/CanisterDrainPopup",
   () => () => <div>Freeze Canister Popup</div>
@@ -70,10 +70,10 @@ describe("Market Component", () => {
       "ckBTC",
       {
         Ok: {
-          asset_supply: "100000000", // 1 ckBTC
-          asset_borrow: "50000000", // 0.5 ckBTC
-          current_liquidity_rate: "500000", // 0.5%
-          borrow_rate: "1000000", // 1%
+          asset_supply: "100000000", 
+          asset_borrow: "50000000", 
+          current_liquidity_rate: "500000", 
+          borrow_rate: "1000000", 
         },
       },
     ],
@@ -81,21 +81,21 @@ describe("Market Component", () => {
       "ckETH",
       {
         Ok: {
-          asset_supply: "200000000", // 2 ckETH
-          asset_borrow: "100000000", // 1 ckETH
-          current_liquidity_rate: "600000", // 0.6%
-          borrow_rate: "1200000", // 1.2%
+          asset_supply: "200000000", 
+          asset_borrow: "100000000", 
+          current_liquidity_rate: "600000", 
+          borrow_rate: "1200000", 
         },
       },
     ],
   ];
 
   const mockConversionRates = {
-    ckBTCUsdRate: 5000000000, // $50,000
-    ckETHUsdRate: 300000000, // $3,000
-    ckUSDCUsdRate: 100000000, // $1
-    ckICPUsdRate: 1000000000, // $10
-    ckUSDTUsdRate: 100000000, // $1
+    ckBTCUsdRate: 5000000000, 
+    ckETHUsdRate: 300000000, 
+    ckUSDCUsdRate: 100000000, 
+    ckICPUsdRate: 1000000000, 
+    ckUSDTUsdRate: 100000000, 
   };
 
   beforeEach(() => {
@@ -106,7 +106,7 @@ describe("Market Component", () => {
     useAuth.mockReturnValue({
       isAuthenticated: true,
       principal:
-        "fiwxf-6ciew-637q6-qjls2-op344-mkbrd-sr3uw-3jnjs-dr74l-jhpll-iqe",
+        "fiwxf-6ciew-637q6-qjls2-op344-mkbrd-sr3uw-3jnjs-dr74l-jhpll-iqe", //Just atest PRINCIPAL NOT ANYONE's id
     });
     useAssetData.mockReturnValue({
       filteredItems: mockFilteredItems,

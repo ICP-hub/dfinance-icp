@@ -2,18 +2,20 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import RiskPopup from "../../components/Dashboard/DashboardPopup/RiskDetails";
 import { Provider } from "react-redux";
-import { createStore } from "redux";
+import { configureStore } from "@reduxjs/toolkit";
 
 // Mock reducer for the Redux store
-const mockReducer = (state = { theme: { theme: "light" } }, action) => state;
+const mockReducer = (state = { theme: { theme: "light" } }) => state;
 
-// Creating a mock store with the mockReducer
-const mockStore = createStore(mockReducer);
+
+const mockStore = configureStore({
+  reducer: mockReducer,
+});
 
 // Mock user account data with placeholder values
 const mockUserAccountData = {
   Ok: [
-    1000000000, // Example values for account data
+    1000000000, 
     200000000,
     300000000,
     400000000,
@@ -27,12 +29,9 @@ describe("RiskPopup Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <RiskPopup onClose={() => { }} userAccountData={mockUserAccountData} />
       </Provider>
     );
-
-    // Searching for elements that display the liquidation threshold value (4.00 in this case)
     const liquidationThresholds = screen.getAllByText(/4.00/); // Text expected to be displayed in the component
     expect(liquidationThresholds.length).toBeGreaterThan(0); // Verifying that the value is found in the document
   });
@@ -43,7 +42,6 @@ describe("RiskPopup Component", () => {
     render(
       <Provider store={mockStore}>
         {" "}
-        {/* Wrapping the component with the mock store */}
         <RiskPopup onClose={onClose} userAccountData={mockUserAccountData} />
       </Provider>
     );

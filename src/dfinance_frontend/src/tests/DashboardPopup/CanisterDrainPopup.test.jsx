@@ -16,11 +16,11 @@ describe("FreezeCanisterPopup", () => {
     );
 
     // Verifying the presence of popup content
-    expect(screen.getByText(/Canister Out of Cycles/i)).toBeInTheDocument(); // Ensure heading is present
+    expect(screen.getByText(/Canister Out of Cycles/i)).toBeInTheDocument(); //This  Ensure heading is present
     expect(
       screen.getByText(/The canister is out of cycles./i)
     ).toBeInTheDocument(); // Ensure body text is displayed
-    expect(screen.getByText(/Your funds are safe./i)).toBeInTheDocument(); // Ensure safety message is displayed
+    expect(screen.getByText(/Your funds are safe./i)).toBeInTheDocument(); // This Ensure safety message is displayed
 
     // Simulating a click on the 'Close' button
     fireEvent.click(screen.getByText("Close"));

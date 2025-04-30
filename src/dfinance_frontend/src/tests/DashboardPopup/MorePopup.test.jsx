@@ -5,7 +5,7 @@ import Popup from "../../components/Dashboard/DashboardPopup/Morepopup";
 describe("Popup Component", () => {
   // Mock data for position and onClose handler to simulate prop values
   const mockPosition = { top: 50, left: 100 };
-  const mockOnClose = jest.fn(); // Mock function for onClose prop
+  const mockOnClose = jest.fn();
 
   // Before each test, clear mocks to ensure clean test environment
   beforeEach(() => {
@@ -32,15 +32,15 @@ describe("Popup Component", () => {
     // Check if the style is applied correctly, ensuring that the popup is positioned based on the provided 'top' and 'left' values
     expect(popupContainer).toHaveStyle({
       position: "absolute",
-      top: `${mockPosition.top + 100}px`, // The top position should be offset by 100px (mockPosition.top + 100)
-      left: `${mockPosition.left + 850}px`, // The left position should be offset by 850px (mockPosition.left + 850)
-      zIndex: "10", // Ensure the popup has the correct z-index for visibility
+      top: `${mockPosition.top + 100}px`,
+      left: `${mockPosition.left + 850}px`,
+      zIndex: "10",
     });
   });
 
   // Test case 3: Verifying that links inside the popup have the correct attributes
   test("links have correct attributes", () => {
-    render(<Popup position={mockPosition} onClose={mockOnClose} />); // Render the Popup component with mock data
+    render(<Popup position={mockPosition} onClose={mockOnClose} />);
 
     // Verifying the 'Doc' link has the correct href and target attributes
     const docLink = screen.getByText("Doc").closest("a");

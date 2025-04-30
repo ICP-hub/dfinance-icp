@@ -1,10 +1,10 @@
-import React from "react";
+import React, { act } from "react";
 import {
   render,
   screen,
   fireEvent,
   waitFor,
-  act,
+
 } from "@testing-library/react";
 import WithdrawPopup from "../../components/Dashboard/DashboardPopup/WithdrawPopup";
 import { Provider } from "react-redux";
@@ -159,11 +159,9 @@ describe("WithdrawPopup Component", () => {
     );
     expect(inputElement).toBeInTheDocument(); // Verify amount input is rendered
 
-    // Verifying that health factor is displayed
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
     expect(healthFactorElements.length).toBeGreaterThan(0); // Verify health factor is displayed
 
-    // Verify transaction overview section is displayed
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
   });
 
@@ -181,7 +179,6 @@ describe("WithdrawPopup Component", () => {
 
     const withdrawButton = screen.getByRole("button", { name: /Withdraw/i });
 
-    // Verify that the button has the disabled visual class (opacity-50 and cursor-not-allowed)
     expect(withdrawButton).toHaveClass("opacity-50");
     expect(withdrawButton).toHaveClass("cursor-not-allowed"); // Button should be disabled when amount is 0
   });
@@ -207,7 +204,6 @@ describe("WithdrawPopup Component", () => {
       fireEvent.change(amountInput, { target: { value: "10" } });
     });
 
-    // Verify that the input value is correctly updated
     expect(amountInput.value).toBe("10");
   });
 
@@ -223,7 +219,6 @@ describe("WithdrawPopup Component", () => {
       );
     });
 
-    // Verifying various transaction details are displayed correctly
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
     expect(screen.getByText(/Supply APY/i)).toBeInTheDocument();
     expect(screen.getByText(/Collateralization/i)).toBeInTheDocument();
@@ -245,7 +240,6 @@ describe("WithdrawPopup Component", () => {
       );
     });
 
-    // Verify that USD value is displayed as $0.00 initially
     expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
 
     const amountInput = await screen.findByPlaceholderText(
@@ -258,7 +252,6 @@ describe("WithdrawPopup Component", () => {
     });
 
     await waitFor(() => {
-      // Verify that the USD value updates after amount change
       expect(screen.queryByText("$0.00 USD")).not.toBeInTheDocument();
       const usdTexts = screen.getAllByText(/\$.*USD/);
       expect(usdTexts.length).toBeGreaterThan(0); // Ensure that USD value is displayed

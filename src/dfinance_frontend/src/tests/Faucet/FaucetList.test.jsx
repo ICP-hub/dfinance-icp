@@ -7,7 +7,6 @@ import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useUserData from "../../components/customHooks/useUserData";
-import { createStore } from "redux";
 
 // Mock all the required dependencies
 jest.mock("react-redux", () => ({
@@ -80,11 +79,7 @@ jest.mock("../../../public/assests-icon/ckusdc.svg", () => "ckUSDC.svg");
 jest.mock("../../../public/assests-icon/ckUSDT.svg", () => "ckUSDT.svg");
 jest.mock("../../../public/assests-icon/ICPMARKET.png", () => "icp.png");
 
-// Create a mock Redux store
-const mockStore = createStore(() => ({
-  faucetUpdate: { refreshTrigger: false },
-  utility: { isSwitchingWallet: false },
-}));
+
 
 describe("FaucetDetails Component", () => {
   // Default mock values

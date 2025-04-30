@@ -1,7 +1,7 @@
-import React from "react";
-import { render, screen, act } from "@testing-library/react";
+import React ,{ act } from "react";
+import { render, screen} from "@testing-library/react";
 import { Provider } from "react-redux";
-import { createStore } from "redux";
+import { configureStore } from "@reduxjs/toolkit";
 import "@testing-library/jest-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import useAssetData from "../../components/customHooks/useAssets";
@@ -107,7 +107,9 @@ const initialState = {
   theme: { theme: "light" },
 };
 
-const mockStore = createStore((state = initialState) => state);
+const mockStore = configureStore({
+  reducer: () => initialState,
+});
 
 describe("DashboardCards Component", () => {
   const mockNavigate = jest.fn();

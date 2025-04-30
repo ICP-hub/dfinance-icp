@@ -1,10 +1,9 @@
-import React from "react";
+import React, { act } from "react";
 import {
   render,
   screen,
   fireEvent,
   waitFor,
-  act,
 } from "@testing-library/react";
 import Repay from "../../components/Dashboard/DashboardPopup/Repay";
 import { Provider } from "react-redux";
@@ -29,7 +28,7 @@ jest.mock("react-router-dom", () => ({
     state: null,
     key: "default",
   }),
-  useNavigate: jest.fn().mockReturnValue(jest.fn()), // Mocking navigation
+  useNavigate: jest.fn().mockReturnValue(jest.fn()),
   MemoryRouter: jest.requireActual("react-router-dom").MemoryRouter,
 }));
 
@@ -170,7 +169,7 @@ describe("Repay Component", () => {
       );
     });
 
-    // Check for expected content in the document
+
     expect(
       screen.getByRole("heading", { name: /Repay ckBTC/i })
     ).toBeInTheDocument();
@@ -194,7 +193,7 @@ describe("Repay Component", () => {
     });
 
     const approveButton = screen.getByText(/Approve ckBTC to continue/i);
-    expect(approveButton.closest("button")).toBeDisabled(); // Button should be disabled if the amount is 0
+    expect(approveButton.closest("button")).toBeDisabled(); // Checks Button should be disabled if the amount is 0
   });
 
   // Test case 3: Verifying that the amount input field is handled correctly
@@ -212,10 +211,10 @@ describe("Repay Component", () => {
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
 
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: "10" } }); // Simulating input change
+      fireEvent.change(amountInput, { target: { value: "10" } });
     });
 
-    expect(amountInput.value).toBe("10"); // Verify the value was correctly updated
+    expect(amountInput.value).toBe("10");
   });
 
   // Test case 4: Verifying that the Max button works correctly
@@ -233,7 +232,7 @@ describe("Repay Component", () => {
     const maxButton = screen.getByText("Max");
 
     await act(async () => {
-      fireEvent.click(maxButton); // Simulate clicking the Max button
+      fireEvent.click(maxButton);
     });
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
@@ -252,7 +251,7 @@ describe("Repay Component", () => {
       );
     });
 
-    // Verifying various details in the transaction overview
+
     expect(screen.getByText(/Transaction overview/i)).toBeInTheDocument();
     expect(screen.getByText(/Remaining debt/i)).toBeInTheDocument();
     expect(screen.getByText(/Health Factor/i)).toBeInTheDocument();
@@ -273,7 +272,7 @@ describe("Repay Component", () => {
       );
     });
 
-    // Initially, USD value should be displayed as $0.00
+
     expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
 
     // Entering an amount and checking if the USD value updates
@@ -284,9 +283,9 @@ describe("Repay Component", () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText("$0.00 USD")).not.toBeInTheDocument(); // Check if the USD text has been updated
+      expect(screen.queryByText("$0.00 USD")).not.toBeInTheDocument(); // this Check if the USD text has been updated
       const usdTexts = screen.getAllByText(/\$.*USD/);
-      expect(usdTexts.length).toBeGreaterThan(0); // Verify that USD value is displayed
+      expect(usdTexts.length).toBeGreaterThan(0);
     });
   });
 
@@ -325,7 +324,6 @@ describe("Repay Component", () => {
       );
     });
 
-    // Verifying that the initial health factor is displayed
     expect(screen.getByText(/2.50/)).toBeInTheDocument();
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
@@ -335,7 +333,6 @@ describe("Repay Component", () => {
     });
 
     await waitFor(() => {
-      // Verifying that the health factor is updated correctly after amount change
       expect(screen.getByText(/→/)).toBeInTheDocument();
     });
   });

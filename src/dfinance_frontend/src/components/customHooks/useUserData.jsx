@@ -124,7 +124,6 @@ const useUserData = () => {
    * Includes handling for pending states and health factor calculation.
    */
   const fetchUserAccountData = async () => {
-    console.log("calling user Account data ",userAccountData)
     if (backendActor && isAuthenticated) {
       try {
         if (!principal || typeof principal !== "string") {

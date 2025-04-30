@@ -528,7 +528,7 @@ const WithdrawPopup = ({
     let showToastMessage = "";
 
     const isLtvExceeded =
-      assetBorrow > 0 && ltv * 100 > tempLiq && currentCollateralStatus;
+      assetBorrow > 0 && ltv  > tempLiq && currentCollateralStatus;
     const isHealthFactorLow = healthFactor <= 1 && currentCollateralStatus;
 
     if (isLtvExceeded && isHealthFactorLow) {

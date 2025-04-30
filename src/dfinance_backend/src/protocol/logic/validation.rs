@@ -8,8 +8,9 @@ use crate::protocol::libraries::user::calculate_user_account_data;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::protocol::utils::price::update_token_price;
 use candid::{Nat, Principal};
-
+use crate::protocol::libraries::update::user_reserve;
 pub struct ValidationLogic;
+use crate::protocol::libraries::update::user_data;
 
 impl ValidationLogic {
     /*
@@ -150,11 +151,20 @@ impl ValidationLogic {
         if amount > platform_balance {
             return Err(Error::LowPlatformBalance);
         }
+        
+        let  mut user_data = user_data(user)?;
+        let user_reserve = user_reserve(&mut user_data, &reserve.asset_name.clone()).and_then(|(_, reserve_data)| Some(reserve_data.clone()))
+        .ok_or(Error::NoUserReserveDataFound)?;
 
+        ic_cdk::println!("user collateral status for this token = {:?}", user_reserve.is_collateral);  //debug
+        if !user_reserve.is_collateral {
+            return Ok(());
+        }
         //updating token price and store latest price in price cache
         let _ = update_token_price(reserve.asset_name.clone()).await;
         
         ic_cdk::println!("going inside calculate user account data"); //info
+
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
@@ -172,8 +182,10 @@ impl ValidationLogic {
                 }
                 Err(e) => return Err(e),
             };
-
-        if total_debt != Nat::from(0u128) || total_collateral != Nat::from(0u128) {
+        
+          
+        if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
+             
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
@@ -187,8 +199,7 @@ impl ValidationLogic {
             let adjusted_collateral: Nat;
             //checking for substration error
             if total_collateral < usd_withdrawl {
-
-                return Err(Error::AmountSubtractionError);
+                return Err(Error::AmountSubtractionError);//TODO specify the error
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
@@ -204,11 +215,12 @@ impl ValidationLogic {
             }
 
             //checking if the LTV is greater than the liquidation threshold
-            if new_ltv >= liquidation_threshold_var {
+            if new_ltv >= liquidation_threshold_var { //TODO '=' will be there?, check 
                 return Err(Error::LTVGreaterThanThreshold);
             }
 
             if total_debt != Nat::from(0u128) {
+                //TODO : new_liq_thres calculation?
                 let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold_var);
                 new_health_factor = new_health_factor.scaled_div(total_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
                 ic_cdk::println!("new health factor = {}", new_health_factor);   //debug

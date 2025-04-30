@@ -1645,7 +1645,6 @@ export default function Navbar({ isHomeNav }) {
                     </div>
                   </div>
                 </button>
-                {console.log("ismobile", isMobile)}
                 <div className="flex items-center justify-center">
                   <div className="relative">
                     {!isMobile ? (

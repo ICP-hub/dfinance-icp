@@ -121,12 +121,6 @@ type ExecuteSupplyParams = record {
   is_collateral : bool;
   amount : nat;
 };
-type ExecuteWithdrawParams = record {
-  asset : text;
-  is_collateral : bool;
-  on_behalf_of : opt principal;
-  amount : nat;
-};
 type FaucetReserve = record { faucet_limit : nat; faucet_usage : nat };
 type FaucetReserves = record {
   reserves : opt vec record { text; FaucetReserve };
@@ -191,8 +185,6 @@ type UserAccountData = record {
 };
 type UserData = record {
   reserves : opt vec record { text; UserReserveData };
-  total_collateral : opt nat;
-  total_debt : opt nat;
   user_id : opt text;
 };
 type UserReserveData = record {
@@ -221,7 +213,7 @@ service : (principal) -> {
   execute_liquidation : (ExecuteLiquidationParams) -> (Result_4);
   execute_repay : (ExecuteRepayParams) -> (Result_4);
   execute_supply : (ExecuteSupplyParams) -> (Result_4);
-  execute_withdraw : (ExecuteWithdrawParams) -> (Result_4);
+  execute_withdraw : (ExecuteSupplyParams) -> (Result_4);
   faucet : (text, nat) -> (Result_4);
   get_all_assets : () -> (vec AssetInfo) query;
   get_all_logs : () -> (vec text) query;

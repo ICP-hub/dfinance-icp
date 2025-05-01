@@ -249,8 +249,6 @@ pub struct UserReserveData {
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
-    // pub faucet_usage: Nat,
-    // pub faucet_limit: Nat,
     pub d_token_balance: Nat,
     pub debt_token_blance: Nat,
 }
@@ -264,8 +262,6 @@ impl Default for UserReserveData {
             is_using_as_collateral_or_borrow: Default::default(),
             is_collateral: true,
             is_borrowed: Default::default(),
-            // faucet_usage: Default::default(),
-            // faucet_limit: Nat::from(FAUCET_LIMIT),
             d_token_balance: Default::default(),
             debt_token_blance: Default::default(),
         }

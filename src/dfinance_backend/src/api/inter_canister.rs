@@ -30,7 +30,6 @@ pub async fn asset_transfer_from(
     to: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
-
     let args = TransferFromArgs {
         to: Account {
             owner: to,
@@ -49,12 +48,15 @@ pub async fn asset_transfer_from(
 
     match call(ledger_canister_id, "icrc2_transfer_from", (args,)).await {
         Ok((result,)) => match result {
-            TransferFromResult::Ok(balance) => {
-                info!("icrc2 transfer from successful. New balance: {:?}", balance);
-                Ok(balance)
+            TransferFromResult::Ok(block_index) => {
+                info!(
+                    "icrc2_transfer_from successful. Ledger block index: {:?}",
+                    block_index
+                );
+                Ok(block_index)
             }
             TransferFromResult::Err(err) => {
-                error!("icrc2 transfer from failed with error: {:?}", err);
+                error!("icrc2_transfer_from failed with error: {:?}", err);
                 Err(format!("{:?}", err))
             }
         },
@@ -104,12 +106,15 @@ pub async fn asset_transfer(
             .map_err(|e| e.1)?;
 
     match new_result {
-        TransferFromResult::Ok(balance) => {
-            info!("icrc1 transfer successful. New balance: {:?}", balance);
-            Ok(balance)
+        TransferFromResult::Ok(block_index) => {
+            info!(
+                "icrc2_transfer successful. Ledger block index: {:?}",
+                block_index
+            );
+            Ok(block_index)
         }
         TransferFromResult::Err(err) => {
-            error!("icrc1 transfer failed with error: {:?}", err);
+            error!("icrc1_transfer failed with error: {:?}", err);
             Err(format!("{:?}", err))
         }
     }
@@ -152,24 +157,28 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
         }
     };
 
-    let raw_response_result =
-        ic_cdk::api::call::call_raw(canister, "icrc1_balance_of", &encoded_args, 0).await;
-    let raw_response = match raw_response_result {
-        Ok(response) => {
-            info!("Call succeeded with response of get balance: {:?}", response);
-            response
-        }
-        Err((code, message)) => {
-            error!("get balance call failed with code: {:?}, message: {}", code, message);
-            return Err(Error::ErrorRawResponse);
-        }
-    };
+    let raw_response =
+        match ic_cdk::api::call::call_raw(canister, "icrc1_balance_of", &encoded_args, 0).await {
+            Ok(response) => {
+                info!(
+                    "get_balance: call_raw succeeded, raw response: {:?}",
+                    response
+                );
+                response
+            }
+            Err((code, message)) => {
+                error!(
+                    "get_balance: call failed, code: {:?}, message: {}",
+                    code, message
+                );
+                return Err(Error::ErrorRawResponse);
+            }
+        };
 
-    let balance_result = decode_one(&raw_response);
-    let balance = match balance_result {
+    let balance: Nat = match decode_one(&raw_response) {
         Ok(bal) => bal,
         Err(err) => {
-            error!("Error decoding balance of get balance: {:?}", err);
+            error!("Error decoding balance in get_icrc1_balance: {:?}", err);
             return Err(Error::ErrorDecoding);
         }
     };
@@ -195,13 +204,13 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
         return Err(Error::AnonymousPrincipal);
     }
 
-    let raw_response: Result<(Nat,), _> =
-        ic_cdk::api::call::call(canister_id, "icrc1_total_supply", ()).await;
-
-    match raw_response {
-        Ok((balance,)) => Ok(balance),
-        Err(e) => {
-            error!("Error calling icrc1_total_supply: {:?}", e);
+    match ic_cdk::api::call::call::<(), (Nat,)>(canister_id, "icrc1_total_supply", ()).await {
+        Ok((supply,)) => Ok(supply),
+        Err((code, msg)) => {
+            error!(
+                "get_total_supply: call to canister {:?} failed with code {:?}, message: {}",
+                canister_id, code, msg
+            );
             Err(Error::ErrorRawResponse)
         }
     }

@@ -15,6 +15,7 @@ const HealthFactorList = lazy(() =>
   import("../components/Dashboard/HealthFactorList")
 );
 const LiquidationList = lazy(() => import("../components/Liquidate/LiquidationList"));
+const Logs = lazy(() => import("../pages/Logs"));
 
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;
@@ -65,6 +66,16 @@ const routes = [
     element: (
       <MainDashboard>
         <CreateWallet />
+      </MainDashboard>
+    ),
+  },
+  {
+    path: "/logs",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+      <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
+        <Logs />
+      </Suspense>
       </MainDashboard>
     ),
   },

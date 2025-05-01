@@ -240,7 +240,6 @@ service : (principal) -> {
   guard_admin_only : () -> (Result_1) query;
   guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  insert_multiple_logs : () -> (Result_1);
   is_user_blocked : () -> (Result_11) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   remove_admin : (principal) -> (Result);

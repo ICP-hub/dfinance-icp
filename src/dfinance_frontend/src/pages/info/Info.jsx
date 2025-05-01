@@ -924,7 +924,7 @@ const DashboardCards = () => {
                                       $
                                     </span>{" "}
                                     {formatValue(
-                                      (Number(data[1]?.Ok?.asset_supply) /
+                                      (Number(data[1]?.Ok[0]?.asset_supply) /
                                         1e8) *
                                         (assetRate / 1e8)
                                     )}
@@ -940,7 +940,7 @@ const DashboardCards = () => {
                                       $
                                     </span>{" "}
                                     {formatValue(
-                                      (Number(data[1]?.Ok?.asset_borrow) /
+                                      (Number(data[1]?.Ok[0]?.asset_borrow) /
                                         1e8) *
                                         (assetRate / 1e8)
                                     )}

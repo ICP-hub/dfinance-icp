@@ -156,15 +156,11 @@ type ReserveData = record {
 type Result = variant { Ok : text; Err : Error };
 type Result_1 = variant { Ok; Err : Error };
 type Result_10 = variant {
-  Ok : record { ReserveData; Certificate };
-  Err : Error;
-};
-type Result_11 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
-type Result_12 = variant { Ok : FaucetReserves; Err : Error };
-type Result_13 = variant { Ok : bool; Err : Error };
+type Result_11 = variant { Ok : FaucetReserves; Err : Error };
+type Result_12 = variant { Ok : bool; Err : Error };
 type Result_2 = variant { Ok : nat64; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : nat; Err : Error };
@@ -174,8 +170,11 @@ type Result_5 = variant {
 };
 type Result_6 = variant { Ok : principal; Err : Error };
 type Result_7 = variant { Ok : SessionStorageData; Err : Error };
-type Result_8 = variant { Ok : record { principal; Certificate }; Err : Error };
-type Result_9 = variant { Ok : ReserveData; Err : Error };
+type Result_8 = variant { Ok : ReserveData; Err : Error };
+type Result_9 = variant {
+  Ok : record { ReserveData; Certificate };
+  Err : Error;
+};
 type SessionStorageData = record {
   session_start : nat;
   connected_wallet : text;
@@ -228,12 +227,12 @@ service : (principal) -> {
   get_asset_principal : (text) -> (Result_6) query;
   get_cached_exchange_rate : (text) -> (Result_4) query;
   get_caller_session : () -> (Result_7) query;
-  get_canister_id_by_name : (text) -> (Result_8) query;
+  get_canister_id_by_name : (text) -> (Result_6) query;
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     );
-  get_reserve_data : (text) -> (Result_9) query;
-  get_reserve_data_certified : (text) -> (Result_10) query;
+  get_reserve_data : (text) -> (Result_8) query;
+  get_reserve_data_certified : (text) -> (Result_9) query;
   get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
   get_transfer_fee : (text) -> (Result_4) query;
@@ -241,15 +240,15 @@ service : (principal) -> {
       opt principal,
       opt vec AssetData,
       opt vec AssetData,
-    ) -> (Result_11) query;
+    ) -> (Result_10) query;
   get_user_data : (principal) -> (Result_3) query;
-  get_user_faucet_data : (principal) -> (Result_12) query;
-  get_user_guide : () -> (Result_13) query;
+  get_user_faucet_data : (principal) -> (Result_11) query;
+  get_user_guide : () -> (Result_12) query;
   guard_admin_only : () -> (Result_1) query;
   guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
   insert_multiple_logs : () -> (Result_1);
-  is_user_blocked : () -> (Result_13) query;
+  is_user_blocked : () -> (Result_12) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   remove_admin : (principal) -> (Result);
   remove_developer : (principal) -> (Result);

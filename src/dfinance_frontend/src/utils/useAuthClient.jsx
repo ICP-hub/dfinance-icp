@@ -256,7 +256,6 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     try {
       const reserveData = await backendActor.get_reserve_data_certified(asset);
-      // console.log("Reserve data fetched:", reserveData);
       if("Ok" in reserveData){
         const verification = await verifyCertificate(reserveData.Ok[1]);
         if (!verification) {

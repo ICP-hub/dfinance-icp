@@ -92,7 +92,6 @@ const useAssetData = (searchQuery = "") => {
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-        console.log("reserveDataForAsset asset o", reserveDataForAsset);
         if (reserveDataForAsset.Ok[0]?.id) {
           const result = await backendActor.user_normalized_debt(
             reserveDataForAsset.Ok[0]
@@ -145,9 +144,7 @@ const useAssetData = (searchQuery = "") => {
           data[asset] = reserveDataForAsset;
           
           const assetName = reserveDataForAsset.Ok[0].asset_name.toString();
-          if(assetName === "ICP") {
-            console.log("reserveDataForAsset icp ", reserveDataForAsset);
-          }
+          
           let assetRate = 0;
 
           switch (assetName) {

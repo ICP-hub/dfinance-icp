@@ -182,14 +182,14 @@ const DashboardComponent = () => {
       item[0] === "ckBTC"
         ? ckBTCBalance
         : item[0] === "ckETH"
-        ? ckETHBalance
-        : item[0] === "ckUSDC"
-        ? ckUSDCBalance
-        : item[0] === "ICP"
-        ? ckICPBalance
-        : item[0] === "ckUSDT"
-        ? ckUSDTBalance
-        : 0;
+          ? ckETHBalance
+          : item[0] === "ckUSDC"
+            ? ckUSDCBalance
+            : item[0] === "ICP"
+              ? ckICPBalance
+              : item[0] === "ckUSDT"
+                ? ckUSDTBalance
+                : 0;
     return showZeroBalance || Number(balance) > 0;
   });
 
@@ -288,7 +288,6 @@ const DashboardComponent = () => {
 
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
-      console.log("reserveDataForAsset", reserveDataForAsset);
       const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
       const assetBalance = {
@@ -304,7 +303,6 @@ const DashboardComponent = () => {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
             assetBalance.dtokenBalance = balance;
-            console.log("balance", balance);
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -409,7 +407,6 @@ const DashboardComponent = () => {
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
-      console.log("borrowValue ff", borrowValue);
       return borrowValue;
     }
     return noBorrowMessage;
@@ -451,13 +448,13 @@ const DashboardComponent = () => {
       displayedBalance =
         balance >= 1
           ? balance.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
           : balance.toLocaleString(undefined, {
-              minimumFractionDigits: 7,
-              maximumFractionDigits: 7,
-            });
+            minimumFractionDigits: 7,
+            maximumFractionDigits: 7,
+          });
     }
 
     const liquidityRate = item[1]?.Ok.current_liquidity_rate;
@@ -504,15 +501,15 @@ const DashboardComponent = () => {
         formattedValue =
           assetSupply >= 1
             ? assetSupply.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
             : assetSupply >= 1e-7
-            ? assetSupply.toLocaleString(undefined, {
+              ? assetSupply.toLocaleString(undefined, {
                 minimumFractionDigits: 7,
                 maximumFractionDigits: 7,
               })
-            : assetSupply.toLocaleString(undefined, {
+              : assetSupply.toLocaleString(undefined, {
                 minimumFractionDigits: 8,
                 maximumFractionDigits: 8,
               });
@@ -554,8 +551,8 @@ const DashboardComponent = () => {
       (reserveGroup) => reserveGroup[0] === asset
     )
       ? userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === asset
-        )[1]?.liquidity_index
+        (reserveGroup) => reserveGroup[0] === asset
+      )[1]?.liquidity_index
       : 0;
 
     const assetBalance =
@@ -574,8 +571,8 @@ const DashboardComponent = () => {
       (reserveGroup) => reserveGroup[0] === asset
     )
       ? userData?.Ok?.reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === asset
-        )[1]?.variable_borrow_index
+        (reserveGroup) => reserveGroup[0] === asset
+      )[1]?.variable_borrow_index
       : 0;
 
     const assetBorrowBalance =
@@ -595,23 +592,25 @@ const DashboardComponent = () => {
     const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
       Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
-      console.log("item ",item);
     const reserveliquidationThreshold =
       Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
-    const supplyRateApr =
-      (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
+    const supplyRate = (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
+    const borrowRate = (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / 100000000 || 0;
+
+    const rateApr = actionType === "borrow" ? borrowRate : supplyRate;
+
     const ckBalance =
       asset === "ckBTC"
         ? ckBTCBalance
         : asset === "ckETH"
-        ? ckETHBalance
-        : asset === "ckUSDC"
-        ? ckUSDCBalance
-        : asset === "ICP"
-        ? ckICPBalance
-        : asset === "ckUSDT"
-        ? ckUSDTBalance
-        : null;
+          ? ckETHBalance
+          : asset === "ckUSDC"
+            ? ckUSDCBalance
+            : asset === "ICP"
+              ? ckICPBalance
+              : asset === "ckUSDT"
+                ? ckUSDTBalance
+                : null;
     const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
     const assetData = item[1].Ok;
 
@@ -627,7 +626,7 @@ const DashboardComponent = () => {
       actionType,
       asset,
       AssetImages[assets.indexOf(asset)],
-      supplyRateApr,
+      rateApr,
       ckBalance,
       liquidationThreshold,
       reserveliquidationThreshold,
@@ -691,20 +690,19 @@ const DashboardComponent = () => {
         availableBorrow,
         Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
       );
-      console.log("available borrow", borrowableValue);
 
       const ckBalance =
         asset === "ckBTC"
           ? ckBTCBalance
           : asset === "ckETH"
-          ? ckETHBalance
-          : asset === "ckUSDC"
-          ? ckUSDCBalance
-          : asset === "ICP"
-          ? ckICPBalance
-          : asset === "ckUSDT"
-          ? ckUSDTBalance
-          : null;
+            ? ckETHBalance
+            : asset === "ckUSDC"
+              ? ckUSDCBalance
+              : asset === "ICP"
+                ? ckICPBalance
+                : asset === "ckUSDT"
+                  ? ckUSDTBalance
+                  : null;
 
       const borrowRateApr =
         (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / 100000000 || 0;
@@ -770,15 +768,15 @@ const DashboardComponent = () => {
       debtFormatted =
         debtAmount >= 1
           ? debtAmount.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
           : debtAmount >= 1e-7
-          ? debtAmount.toLocaleString(undefined, {
+            ? debtAmount.toLocaleString(undefined, {
               minimumFractionDigits: 7,
               maximumFractionDigits: 7,
             })
-          : debtAmount.toLocaleString(undefined, {
+            : debtAmount.toLocaleString(undefined, {
               minimumFractionDigits: 7,
               maximumFractionDigits: 7,
             });
@@ -818,9 +816,9 @@ const DashboardComponent = () => {
       maxLendable < Number(total_borrow)
         ? 0
         : Math.min(
-            maxLendable - Number(total_borrow),
-            Number(availableBorrow) / usdRate
-          );
+          maxLendable - Number(total_borrow),
+          Number(availableBorrow) / usdRate
+        );
 
     const usdValue = formattedMaxBorrow * usdRate;
 
@@ -843,8 +841,8 @@ const DashboardComponent = () => {
       usdValue === 0
         ? "$0.00"
         : usdValue < 0.01
-        ? "<0.01$"
-        : `$${usdValue.toLocaleString(undefined, {
+          ? "<0.01$"
+          : `$${usdValue.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`;
@@ -861,10 +859,9 @@ const DashboardComponent = () => {
         );
 
         const assetData = item[1].Ok;
-        const total_supply = Number(assetData.asset_supply || 0) / 100000000;
-        const total_borrow = Number(assetData.asset_borrow || 0) / 100000000;
+        const total_supply = Number(assetData[0].asset_supply || 0) / 100000000;
+        const total_borrow = Number(assetData[0].asset_borrow || 0) / 100000000;
         const availableBorrowNumber = Number(availableBorrow || 0);
-
         const isBorrowAvailable = availableBorrowNumber > 0.01;
 
         if (!showAllAssets) {
@@ -882,21 +879,19 @@ const DashboardComponent = () => {
         if (showAllAssets) {
           const assetDataA = a[1].Ok;
           const assetDataB = b[1].Ok;
-
           const total_supply_A =
-            Number(assetDataA.asset_supply || 0) / 100000000;
+            Number(assetDataA[0].asset_supply || 0) / 100000000;
           const total_borrow_A =
-            Number(assetDataA.asset_borrow || 0) / 100000000;
+            Number(assetDataA[0].asset_borrow || 0) / 100000000;
           const total_supply_B =
-            Number(assetDataB.asset_supply || 0) / 100000000;
+            Number(assetDataB[0].asset_supply || 0) / 100000000;
           const total_borrow_B =
-            Number(assetDataB.asset_borrow || 0) / 100000000;
+            Number(assetDataB[0].asset_borrow || 0) / 100000000;
 
           const isEligibleA =
             (total_supply_A * 0.85).toFixed(8) > total_borrow_A.toFixed(8);
           const isEligibleB =
             (total_supply_B * 0.85).toFixed(8) > total_borrow_B.toFixed(8);
-
           if (isEligibleA && !isEligibleB) return -1;
           if (!isEligibleA && isEligibleB) return 1;
           return 0;
@@ -920,7 +915,8 @@ const DashboardComponent = () => {
       return assetBalance > 0 && assetSupplyValue > 0n;
     });
   };
-  const getFilteredBorrowReserves = () => {0
+  const getFilteredBorrowReserves = () => {
+    0
     if (!userData?.Ok?.reserves?.[0]?.length) return [];
 
     return userData.Ok.reserves[0].filter((reserveGroup) => {
@@ -931,9 +927,6 @@ const DashboardComponent = () => {
           ?.debtTokenBalance || 0;
 
       const assetBorrowValue = getAssetBorrowValue(asset);
-      console.log("assetBorrowValue", assetBorrowValue);
-      console.log("assetBalance", assetBalance);
-      console.log("reserveGroup", reserveGroup);
       return assetBalance > 0 && assetBorrowValue > 0n;
     });
   };
@@ -1087,7 +1080,7 @@ const DashboardComponent = () => {
           totalBorrowedValue === 0
             ? Infinity
             : (totalCollateralValue * liquidationThreshold) /
-              totalBorrowedValue;
+            totalBorrowedValue;
 
         return {
           ...reserveGroup,
@@ -1289,21 +1282,19 @@ const DashboardComponent = () => {
     <div className="w-full flex-col lg:flex-row flex gap-6 md:-mt-[3rem]">
       <div className="flex justify-center -mb-30 lg:hidden">
         <button
-          className={`w-1/2 py-2 button1 ${
-            activeSection === "supply"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-              : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
-          }`}
+          className={`w-1/2 py-2 button1 ${activeSection === "supply"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+            : "text-[#2A1F9D] opacity-50  dark:text-darkTextSecondary1 text-[14px]"
+            }`}
           onClick={() => setActiveSection("supply")}
         >
           &#8226; Supply
         </button>
         <button
-          className={`w-1/2 py-2 button1 ${
-            activeSection === "borrow"
-              ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
-              : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
-          }`}
+          className={`w-1/2 py-2 button1 ${activeSection === "borrow"
+            ? "text-[#2A1F9D] font-bold underline dark:text-darkTextSecondary text-[17px]"
+            : "text-[#2A1F9D] opacity-50 dark:text-darkTextSecondary text-[14px]"
+            }`}
           onClick={() => setActiveSection("borrow")}
         >
           &#8226; Borrow
@@ -1312,17 +1303,15 @@ const DashboardComponent = () => {
 
       <div className="w-full lg:w-6/12 lg:mt-20">
         <div
-          className={`${
-            activeSection === "supply" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "supply" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
             id="your-supplies"
-            className={`w-full  lgx:overflow-none   ${
-              isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
-            } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full  lgx:overflow-none   ${isSupplyVisible ? "min-h-auto" : "min-h-[100px]"
+              } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
-            {}
+            { }
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
                 <div className="flex">
@@ -1343,7 +1332,7 @@ const DashboardComponent = () => {
                         Math.trunc(
                           (calculated_supply *
                             Number(getAssetSupplyValue(asset))) /
-                            1e8
+                          1e8
                         ) / 1e8;
                       let usdValue = 0;
 
@@ -1395,7 +1384,7 @@ const DashboardComponent = () => {
               </span>{" "}
               ${formatNumber(totalUsdValueSupply)}
             </div>
-            {}
+            { }
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isSupplyVisible && (
                 <>
@@ -1424,32 +1413,32 @@ const DashboardComponent = () => {
                             const supplyRateApr =
                               (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) *
                                 100) /
-                                100000000 || 0;
+                              100000000 || 0;
 
                             const calculated_supply = Math.trunc(
                               (Number(assetBalance) /
                                 Number(currentLiquidity)) *
-                                1e8
+                              1e8
                             );
                             const assetSupply =
                               Math.trunc(
                                 (calculated_supply *
                                   Number(getAssetSupplyValue(asset))) /
-                                  1e8
+                                1e8
                               ) / 1e8;
 
                             const ckBalance =
                               asset === "ckBTC"
                                 ? ckBTCBalance
                                 : asset === "ckETH"
-                                ? ckETHBalance
-                                : asset === "ckUSDC"
-                                ? ckUSDCBalance
-                                : asset === "ICP"
-                                ? ckICPBalance
-                                : asset === "ckUSDT"
-                                ? ckUSDTBalance
-                                : null;
+                                  ? ckETHBalance
+                                  : asset === "ckUSDC"
+                                    ? ckUSDCBalance
+                                    : asset === "ICP"
+                                      ? ckICPBalance
+                                      : asset === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null;
 
                             return (
                               <div
@@ -1617,13 +1606,13 @@ const DashboardComponent = () => {
                             const calculated_supply = Math.trunc(
                               (Number(assetBalance) /
                                 Number(currentLiquidity)) *
-                                1e8
+                              1e8
                             );
                             const assetSupply =
                               Math.trunc(
                                 (calculated_supply *
                                   Number(getAssetSupplyValue(asset))) /
-                                  1e8
+                                1e8
                               ) / 1e8;
                             const item = filteredItems.find(
                               (item) => item[0] === asset
@@ -1633,19 +1622,19 @@ const DashboardComponent = () => {
                             const supplyRateApr =
                               (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) *
                                 100) /
-                                100000000 || 0;
+                              100000000 || 0;
                             const ckBalance =
                               asset === "ckBTC"
                                 ? ckBTCBalance
                                 : asset === "ckETH"
-                                ? ckETHBalance
-                                : asset === "ckUSDC"
-                                ? ckUSDCBalance
-                                : asset === "ICP"
-                                ? ckICPBalance
-                                : asset === "ckUSDT"
-                                ? ckUSDTBalance
-                                : null;
+                                  ? ckETHBalance
+                                  : asset === "ckUSDC"
+                                    ? ckUSDCBalance
+                                    : asset === "ICP"
+                                      ? ckICPBalance
+                                      : asset === "ckUSDT"
+                                        ? ckUSDTBalance
+                                        : null;
 
                             return (
                               <div
@@ -1738,9 +1727,8 @@ const DashboardComponent = () => {
 
           <div
             id="dashboard-assets-to-supply"
-            className={`w-full mt-6  lgx:overflow-none  ${
-              isVisible ? "min-h-auto" : "min-h-[100px]"
-            } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-6  lgx:overflow-none  ${isVisible ? "min-h-auto" : "min-h-[100px]"
+              } py-6 px-6 bg-gradient-to-r from-[#4659CF]/40   to-[#FCBD78]/40  rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
@@ -1760,19 +1748,18 @@ const DashboardComponent = () => {
             </div>
             {isVisible && (
               <div className="flex items-center mx-4 mt-6 select-none">
-                {}
+                { }
                 <div
                   className={`w-3 h-3 border-2 border-transparent rounded-sm cursor-pointer 
                 flex justify-center items-center relative 
-                ${
-                  showZeroBalance
-                    ? "bg-gradient-to-r from-[#FCBD78]/40 to-[#FCBD78]/40 dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ring-2 ring-[#e0d2dd] dark:ring-darkBlue"
-                    : "bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent dark:ring-transparent"
-                } 
+                ${showZeroBalance
+                      ? "bg-gradient-to-r from-[#FCBD78]/40 to-[#FCBD78]/40 dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ring-2 ring-[#e0d2dd] dark:ring-darkBlue"
+                      : "bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent dark:ring-transparent"
+                    } 
                 focus:outline-none focus:ring-2 focus:ring-[#e0d2dd] dark:focus:ring-darkBlue`}
                   onClick={() => setShowZeroBalance(!showZeroBalance)}
                 >
-                  {}
+                  { }
                   {showZeroBalance && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1790,7 +1777,7 @@ const DashboardComponent = () => {
                   )}
                 </div>
 
-                {}
+                { }
                 <label
                   htmlFor="showZeroBalance"
                   className="text-[12px] text-gray-600 dark:text-gray-300 cursor-pointer ml-2"
@@ -1799,7 +1786,7 @@ const DashboardComponent = () => {
                 </label>
               </div>
             )}
-            {}
+            { }
             <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
               {isVisible && (
                 <>
@@ -1825,11 +1812,10 @@ const DashboardComponent = () => {
                           ) => (
                             <div
                               key={index}
-                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${
-                                isZeroBalance
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
-                              }`}
+                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${isZeroBalance
+                                ? "opacity-50 pointer-events-none"
+                                : ""
+                                }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                 {assets.includes(item[0]) && (
@@ -1858,8 +1844,8 @@ const DashboardComponent = () => {
                                   {calculatedUsdValue === 0
                                     ? "$0.00"
                                     : calculatedUsdValue < 0.01
-                                    ? "<0.01$"
-                                    : `$${calculatedUsdValue.toLocaleString(
+                                      ? "<0.01$"
+                                      : `$${calculatedUsdValue.toLocaleString(
                                         undefined,
                                         {
                                           minimumFractionDigits: 2,
@@ -1985,11 +1971,10 @@ const DashboardComponent = () => {
                             ) => (
                               <div
                                 key={index}
-                                className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs ${
-                                  isZeroBalance
-                                    ? "opacity-50 pointer-events-none"
-                                    : ""
-                                }`}
+                                className={`grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs ${isZeroBalance
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
+                                  }`}
                               >
                                 <div className="p-3 pl-4 align-top flex items-center gap-2">
                                   {assets.includes(item[0]) && (
@@ -2008,8 +1993,8 @@ const DashboardComponent = () => {
                                     {calculatedUsdValue === 0
                                       ? "$0.00"
                                       : calculatedUsdValue < 0.01
-                                      ? "<0.01$"
-                                      : `$${calculatedUsdValue.toLocaleString(
+                                        ? "<0.01$"
+                                        : `$${calculatedUsdValue.toLocaleString(
                                           undefined,
                                           {
                                             minimumFractionDigits: 2,
@@ -2061,15 +2046,13 @@ const DashboardComponent = () => {
 
       <div className="w-full lg:w-6/12 md:-mt-6 lg:mt-20">
         <div
-          className={`${
-            activeSection === "borrow" ? "block" : "hidden"
-          } lg:block`}
+          className={`${activeSection === "borrow" ? "block" : "hidden"
+            } lg:block`}
         >
           <div
             id="your-borrow"
-            className={`w-full  lgx:overflow-none  sxs3:-mt-6 md:-mt-0 ${
-              isborrowVisible ? "min-h-auto" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full  lgx:overflow-none  sxs3:-mt-6 md:-mt-0 ${isborrowVisible ? "min-h-auto" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40  to-[#FCBD78]/40 rounded-[30px] dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-2 mx-4">
               <h1 className="text-[#2A1F9D] font-semibold dark:text-darkText">
@@ -2238,7 +2221,7 @@ const DashboardComponent = () => {
               </div>
             </div>
 
-            {}
+            { }
             <div className="block xl:hidden">
               {isborrowVisible && (
                 <>
@@ -2291,25 +2274,25 @@ const DashboardComponent = () => {
                                   item,
                                   availableBorrow,
                                   Number((total_supply * 0.85).toFixed(8)) -
-                                    Number(total_borrow)
+                                  Number(total_borrow)
                                 );
 
                               const ckBalance =
                                 asset === "ckBTC"
                                   ? ckBTCBalance
                                   : asset === "ckETH"
-                                  ? ckETHBalance
-                                  : asset === "ckUSDC"
-                                  ? ckUSDCBalance
-                                  : asset === "ICP"
-                                  ? ckICPBalance
-                                  : asset === "ckUSDT"
-                                  ? ckUSDTBalance
-                                  : null;
+                                    ? ckETHBalance
+                                    : asset === "ckUSDC"
+                                      ? ckUSDCBalance
+                                      : asset === "ICP"
+                                        ? ckICPBalance
+                                        : asset === "ckUSDT"
+                                          ? ckUSDTBalance
+                                          : null;
 
                               const borrowRateApr =
                                 (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) /
-                                  100000000 || 0;
+                                100000000 || 0;
 
                               return (
                                 <div
@@ -2465,7 +2448,7 @@ const DashboardComponent = () => {
               )}
             </div>
 
-            {}
+            { }
             <div className="hidden xl:block">
               {isborrowVisible && (
                 <>
@@ -2504,9 +2487,8 @@ const DashboardComponent = () => {
                       </div>
 
                       <div
-                        className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${
-                          totalAssetBorrow > 0 ? "h-[260px]" : ""
-                        }`}
+                        className={`w-full h-auto max-h-auto overflow-y-auto scrollbar-none ${totalAssetBorrow > 0 ? "h-[260px]" : ""
+                          }`}
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {filteredReserves?.map((reserveData, index) => (
@@ -2519,7 +2501,7 @@ const DashboardComponent = () => {
                                   <img
                                     src={
                                       AssetImages[
-                                        assets.indexOf(reserveData.asset)
+                                      assets.indexOf(reserveData.asset)
                                       ]
                                     }
                                     alt={`${reserveData.asset} logo`}
@@ -2641,9 +2623,8 @@ const DashboardComponent = () => {
 
           <div
             id="dashboard-assets-to-borrow"
-            className={`w-full mt-6  lgx:overflow-none  ${
-              isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
-            } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
+            className={`w-full mt-6  lgx:overflow-none  ${isBorrowVisible ? "min-h-auto" : "min-h-[100px]"
+              } p-6 bg-gradient-to-r from-[#4659CF]/40 to-[#FCBD78]/40 rounded-[30px]  dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd relative`}
           >
             <div className="flex justify-between items-center mt-3 mx-4">
               <div className="relative group">
@@ -2668,11 +2649,10 @@ const DashboardComponent = () => {
                 <div
                   className={`w-3 h-3 border-2 border-transparent rounded-sm cursor-pointer 
                 flex justify-center items-center relative 
-                ${
-                  showAllAssets
-                    ? "bg-gradient-to-r from-[#FCBD78]/40 to-[#FCBD78]/40 dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ring-2 ring-[#e0d2dd] dark:ring-darkBlue"
-                    : "bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent dark:ring-transparent"
-                } 
+                ${showAllAssets
+                      ? "bg-gradient-to-r from-[#FCBD78]/40 to-[#FCBD78]/40 dark:bg-gradient-to-r dark:from-darkGradientStart dark:to-darkGradientEnd ring-2 ring-[#e0d2dd] dark:ring-darkBlue"
+                      : "bg-gray-200 dark:bg-gray-700 ring-2 ring-transparent dark:ring-transparent"
+                    } 
                 focus:outline-none focus:ring-2 focus:ring-[#e0d2dd] dark:focus:ring-darkBlue`}
                   onClick={() => setShowAllAssets(!showAllAssets)}
                 >
@@ -2716,9 +2696,9 @@ const DashboardComponent = () => {
                         {getFilteredAndSortedItems().map((item, index) => {
                           const assetData = item[1].Ok;
                           const total_supply =
-                            Number(assetData?.asset_supply || 0) / 100000000;
+                            Number(assetData?.[0].asset_supply || 0) / 100000000;
                           const total_borrow =
-                            Number(assetData?.asset_borrow || 0) / 100000000;
+                            Number(assetData?.[0].asset_borrow || 0) / 100000000;
                           const availableBorrowNumber = Number(
                             availableBorrow || 0
                           );
@@ -2736,18 +2716,17 @@ const DashboardComponent = () => {
 
                           const itemClass =
                             (showAllAssets && !isEligible) ||
-                            availableBorrowNumber === 0
+                              availableBorrowNumber === 0
                               ? "opacity-50 pointer-events-none"
                               : "";
 
                           return (
                             <div
                               key={index}
-                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass} ${
-                                isTableDisabled
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
-                              }`}
+                              className={`p-3 rounded-lg dark:bg-darkSurface dark:text-darkText ${itemClass} ${isTableDisabled
+                                ? "opacity-50 pointer-events-none"
+                                : ""
+                                }`}
                             >
                               <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
                                 {assets.includes(item[0]) && (
@@ -2821,14 +2800,14 @@ const DashboardComponent = () => {
                                   </span>
                                 </div>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
-                                  {(Number(item[1].Ok.borrow_rate) * 100) /
+                                  {(Number(item[1].Ok[0].borrow_rate) * 100) /
                                     100000000 <
-                                  0.01
+                                    0.01
                                     ? "<0.01%"
                                     : `${(
-                                        (Number(item[1].Ok.borrow_rate) * 100) /
-                                        100000000
-                                      ).toFixed(2)}%`}
+                                      (Number(item[1].Ok[0].borrow_rate) * 100) /
+                                      100000000
+                                    ).toFixed(2)}%`}
                                 </p>
                               </div>
 
@@ -2872,14 +2851,14 @@ const DashboardComponent = () => {
                     userData?.Ok?.reserves[0].every(
                       (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
                     )) && (
-                    <div className="bg-[#6d6c89] opacity-80 mt-4 px-2 py-2 mb-2 rounded-lg flex items-center">
-                      <span className="text-white dark:text-darkText ms-4 text-sm">
-                        To borrow, you need to supply any asset to be used as
-                        collateral.
-                      </span>
-                      <Info className="ml-2 text-[#5d151c]" size={16} />
-                    </div>
-                  )}
+                      <div className="bg-[#6d6c89] opacity-80 mt-4 px-2 py-2 mb-2 rounded-lg flex items-center">
+                        <span className="text-white dark:text-darkText ms-4 text-sm">
+                          To borrow, you need to supply any asset to be used as
+                          collateral.
+                        </span>
+                        <Info className="ml-2 text-[#5d151c]" size={16} />
+                      </div>
+                    )}
 
                   <div className="w-full h-auto mt-6">
                     {filteredDataLoading && !isSwitchingWallet && !hasLoaded ? (
@@ -2959,9 +2938,9 @@ const DashboardComponent = () => {
                           {getFilteredAndSortedItems().map((item, index) => {
                             const assetData = item[1].Ok;
                             const total_supply =
-                              Number(assetData?.asset_supply || 0) / 100000000;
+                              Number(assetData?.[0].asset_supply || 0) / 100000000;
                             const total_borrow =
-                              Number(assetData?.asset_borrow || 0) / 100000000;
+                              Number(assetData?.[0].asset_borrow || 0) / 100000000;
                             const availableBorrowNumber = Number(
                               availableBorrow || 0
                             );
@@ -2976,17 +2955,16 @@ const DashboardComponent = () => {
                               (total_supply * 0.85).toFixed(8) > total_borrow;
                             const itemClass =
                               (showAllAssets && !isEligible) ||
-                              availableBorrowNumber === 0
+                                availableBorrowNumber === 0
                                 ? "opacity-50 pointer-events-none"
                                 : "";
                             return (
                               <div
                                 key={index}
-                                className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${
-                                  isTableDisabled
-                                    ? "opacity-50 pointer-events-none"
-                                    : ""
-                                }`}
+                                className={`grid grid-cols-4 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs p-4 gap-6 ${itemClass} ${isTableDisabled
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
+                                  }`}
                               >
                                 <div className="flex items-center gap-3">
                                   {assets.includes(item[0]) && (
@@ -3006,15 +2984,15 @@ const DashboardComponent = () => {
                                 </div>
                                 <div className="text-left">
                                   <p className="mt-1.5">
-                                    {(Number(item[1].Ok.borrow_rate) * 100) /
+                                    {(Number(item[1].Ok[0].borrow_rate) * 100) /
                                       100000000 <
-                                    0.01
+                                      0.01
                                       ? "<0.01%"
                                       : `${(
-                                          (Number(item[1].Ok.borrow_rate) *
-                                            100) /
-                                          100000000
-                                        ).toFixed(2)}%`}
+                                        (Number(item[1].Ok[0].borrow_rate) *
+                                          100) /
+                                        100000000
+                                      ).toFixed(2)}%`}
                                   </p>
                                 </div>
                                 <div className="flex gap-3 justify-end">

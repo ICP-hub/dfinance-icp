@@ -291,8 +291,8 @@ const Market = () => {
               placeholder="Search assets"
               style={{ fontSize: "0.75rem" }}
               className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
-                  ? "animate-fade-left flex"
-                  : "animate-fade-right hidden"
+                ? "animate-fade-left flex"
+                : "animate-fade-right hidden"
                 }`}
               value={searchQuery}
               onChange={handleSearchInputChange}
@@ -385,8 +385,8 @@ const Market = () => {
                       <td key={index} className=" whitespace-nowrap">
                         <div
                           className={`flex ${index === 0
-                              ? "justify-start sxs3:pl-2 md:pl-2"
-                              : "justify-center"
+                            ? "justify-start sxs3:pl-2 md:pl-2"
+                            : "justify-center"
                             }`}
                         >
                           {item.header}
@@ -420,8 +420,8 @@ const Market = () => {
                     <tr
                       key={index}
                       className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${index !== currentItems.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
+                        ? "gradient-line-bottom"
+                        : ""
                         }`}
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
@@ -443,7 +443,7 @@ const Market = () => {
                             <p className="min-w-[70px] text-center">
                               {(() => {
                                 const assetSupply =
-                                  Number(item[1].Ok.asset_supply) / 100000000;
+                                  Number(item[1].Ok[0].asset_supply) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -482,7 +482,7 @@ const Market = () => {
                             <p className="font-light text-[12px] text-center">
                               {(() => {
                                 const assetSupply =
-                                  Number(item[1].Ok.asset_supply) / 100000000;
+                                  Number(item[1].Ok[0].asset_supply) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -535,13 +535,13 @@ const Market = () => {
 
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
-                          {(Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                          {(Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
                             100) /
                             100000000 <
                             0.01
                             ? "<0.01%"
                             : `${(
-                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                              (Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
                                 100) /
                               100000000
                             ).toFixed(2)}%`}
@@ -554,7 +554,7 @@ const Market = () => {
                             <p className="min-w-[150px] text-center">
                               {(() => {
                                 const assetBorrow =
-                                  Number(item[1].Ok.asset_borrow) / 100000000;
+                                  Number(item[1].Ok[0].asset_borrow) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -593,7 +593,7 @@ const Market = () => {
                             <p className="font-light text-[12px] text-center">
                               {(() => {
                                 const assetBorrow =
-                                  Number(item[1].Ok.asset_borrow) / 100000000;
+                                  Number(item[1].Ok[0].asset_borrow) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -634,12 +634,12 @@ const Market = () => {
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
-                          {(Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                          {(Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
                             100000000 <
                             0.01
                             ? "<0.01%"
                             : `${(
-                              (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                              (Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
                               100000000
                             ).toFixed(2)}%`}
                         </div>
@@ -700,7 +700,7 @@ const Market = () => {
                         <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
-                              Number(selectedAssetData[1].Ok.asset_supply) /
+                              Number(selectedAssetData[1].Ok[0].asset_supply) /
                               100000000
                             )}
                           </p>
@@ -708,7 +708,7 @@ const Market = () => {
                           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             $
                             {formatValue(
-                              (Number(selectedAssetData[1].Ok.asset_supply) /
+                              (Number(selectedAssetData[1].Ok[0].asset_supply) /
                                 100000000) *
                               getUsdRate(selectedAssetData[0])
                             )}
@@ -722,7 +722,7 @@ const Market = () => {
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {" "}
                           {(Number(
-                            selectedAssetData[1].Ok.current_liquidity_rate
+                            selectedAssetData[1].Ok[0].current_liquidity_rate
                           ) *
                             100) /
                             100000000 <
@@ -730,7 +730,7 @@ const Market = () => {
                             ? "<0.01%"
                             : `${(
                               (Number(
-                                selectedAssetData[1].Ok.current_liquidity_rate
+                                selectedAssetData[1].Ok[0].current_liquidity_rate
                               ) *
                                 100) /
                               100000000
@@ -745,7 +745,7 @@ const Market = () => {
                         <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
-                              Number(selectedAssetData[1].Ok.asset_borrow) /
+                              Number(selectedAssetData[1].Ok[0].asset_borrow) /
                               100000000
                             )}
                           </p>
@@ -753,7 +753,7 @@ const Market = () => {
                           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             $
                             {formatValue(
-                              (Number(selectedAssetData[1].Ok.asset_borrow) /
+                              (Number(selectedAssetData[1].Ok[0].asset_borrow) /
                                 100000000) *
                               getUsdRate(selectedAssetData[0])
                             )}
@@ -765,12 +765,12 @@ const Market = () => {
                           Borrow APY:
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {(Number(selectedAssetData[1].Ok.borrow_rate) * 100) /
+                          {(Number(selectedAssetData[1].Ok[0].borrow_rate) * 100) /
                             100000000 <
                             0.01
                             ? "<0.01%"
                             : `${(
-                              (Number(selectedAssetData[1].Ok.borrow_rate) *
+                              (Number(selectedAssetData[1].Ok[0].borrow_rate) *
                                 100) /
                               100000000
                             ).toFixed(2)}%`}

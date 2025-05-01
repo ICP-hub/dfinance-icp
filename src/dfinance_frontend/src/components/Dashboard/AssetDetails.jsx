@@ -510,7 +510,6 @@ const AssetDetails = () => {
         (reserveGroup) => reserveGroup[0] === asset
       )[1]?.liquidity_index
       : 0;
-
     const assetBalance =
       assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance ||
       0;
@@ -549,9 +548,9 @@ const AssetDetails = () => {
     const liquidationThreshold =
       Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
     const reserveliquidationThreshold =
-      Number(item?.[1]?.Ok.configuration.liquidation_threshold) / 100000000;
+      Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
     const supplyRateApr =
-      (Number(item?.[1]?.Ok?.current_liquidity_rate) * 100) / 100000000 || 0;
+      (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
     const ckBalance =
       asset === "ckBTC"
         ? ckBTCBalance
@@ -603,14 +602,14 @@ const AssetDetails = () => {
   useEffect(() => {
     if (assetData?.Ok) {
       setReserveFactor(
-        Number(assetData.Ok.configuration.reserve_factor) / 100000000
+        Number(assetData.Ok[0].configuration.reserve_factor) / 100000000
       );
-      setTotalBorrowed(Number(assetData.Ok.asset_borrow) / 100000000);
-      setTotalSupplied(Number(assetData.Ok.asset_supply) / 100000000);
-      setBorrowCap(Number(assetData.Ok.configuration?.borrow_cap) / 100000000);
-      setSupplyCap(Number(assetData.Ok.configuration?.supply_cap) / 100000000);
+      setTotalBorrowed(Number(assetData.Ok[0].asset_borrow) / 100000000);
+      setTotalSupplied(Number(assetData.Ok[0].asset_supply) / 100000000);
+      setBorrowCap(Number(assetData.Ok[0].configuration?.borrow_cap) / 100000000);
+      setSupplyCap(Number(assetData.Ok[0].configuration?.supply_cap) / 100000000);
 
-      setCanBeCollateral(Number(assetData.Ok.can_be_collateral?.[0])) /
+      setCanBeCollateral(Number(assetData.Ok[0].can_be_collateral?.[0])) /
         100000000;
     }
   }, [assetData, dashboardRefreshTrigger, totalBorrowed, totalSupplied]);
@@ -621,16 +620,16 @@ const AssetDetails = () => {
         const item = filteredItems.find((item) => item[0] === id);
         if (item && item[1]?.Ok) {
           const assetData = item[1].Ok;
-          const total_supply = Number(assetData?.asset_supply) / 100000000;
-          const total_borrow = Number(assetData?.asset_borrow) / 100000000;
-          const borrow_rate = Number(assetData?.borrow_rate) / 100000000;
+          const total_supply = Number(assetData[0]?.asset_supply) / 100000000;
+          const total_borrow = Number(assetData[0]?.asset_borrow) / 100000000;
+          const borrow_rate = Number(assetData[0]?.borrow_rate) / 100000000;
           const supply_rate =
-            Number(assetData?.current_liquidity_rate) / 100000000;
-          const maxLtv = Number(assetData?.configuration?.ltv) / 100000000;
+            Number(assetData[0]?.current_liquidity_rate) / 100000000;
+          const maxLtv = Number(assetData[0]?.configuration?.ltv) / 100000000;
           const liquidation_bonus =
-            Number(assetData?.configuration?.liquidation_bonus) / 100000000;
+            Number(assetData[0]?.configuration?.liquidation_bonus) / 100000000;
           const liquidation_threshold =
-            Number(assetData?.configuration?.liquidation_threshold) / 100000000;
+            Number(assetData[0]?.configuration?.liquidation_threshold) / 100000000;
           setmaxLtv(maxLtv);
           setLiquidationbonus(liquidation_bonus);
           setLiquidationthreshold(liquidation_threshold);

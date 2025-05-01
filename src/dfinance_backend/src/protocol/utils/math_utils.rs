@@ -54,7 +54,16 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
  * @title Compounded Interest Calculation Inspired by Aave Protocol
  * @dev This function calculates compounded interest using a 3rd-order Taylor expansion approximation.
  *
-
+ * Inspired Formula (from Aave Solidity Code):
+ *
+ *   1 + (rate * t) + (rate^2 * t * (t-1)) / (2) + (rate^3 * t * (t-1) * (t-2)) / (6)
+ *
+ * Where:
+ *   - `rate` is the interest rate per second (scaled using SCALING_FACTOR, e.g., 1e27)
+ *   - `t` is the time difference in seconds (current_timestamp - last_update_timestamp)
+ *   - `SCALING_FACTOR` ensures precision for financial operations which is 10^8.
+ *
+ * This 3rd-order Taylor expansion is an efficient approximation for calculating compound interest
  * over small intervals without expensive exponential operations.
  * @param rate_input The annual interest rate as a `Nat` (percentage basis). e.g (1% -> 0.01 * 10^8)
  * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.

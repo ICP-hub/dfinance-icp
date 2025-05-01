@@ -1,10 +1,9 @@
-import React from "react";
+import React, { act } from "react";
 import {
   render,
   screen,
   fireEvent,
   waitFor,
-  act,
 } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { store } from "../../redux/store";
@@ -15,7 +14,7 @@ import Borrow from "../../components/Dashboard/DashboardPopup/BorrowPopup";
 jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    ckBTCUsdRate: 50000, // Mocked exchange rates for assets
+    ckBTCUsdRate: 50000,
     ckETHUsdRate: 4000,
     ckUSDCUsdRate: 1,
     ckICPUsdRate: 5,
@@ -26,8 +25,8 @@ jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn().mockReturnValue({
     backendActor: {
-      execute_borrow: jest.fn().mockResolvedValue({ Ok: true }), // Mocked borrow function (successful)
-      is_function_blocked: jest.fn().mockResolvedValue({ Ok: false }), // Mock function block check (not blocked)
+      execute_borrow: jest.fn().mockResolvedValue({ Ok: true }),
+      is_function_blocked: jest.fn().mockResolvedValue({ Ok: false }),
     },
     principal: "rrkah-fqaaa-aaaaa-aaaaq-cai",
   }),
@@ -105,7 +104,6 @@ describe("Borrow Component", () => {
       screen.getByPlaceholderText(/Enter Amount ckBTC/i)
     ).toBeInTheDocument();
 
-    // Check if health factor elements and other transaction-related details are displayed
     const healthFactorElements = screen.getAllByText(/Health Factor/i);
     expect(healthFactorElements.length).toBeGreaterThan(0);
 
@@ -170,7 +168,7 @@ describe("Borrow Component", () => {
       /I acknowledge the risk involved/i
     );
 
-    // Simulate user entering amount and acknowledging risk
+    // This function Simulate user entering amount and acknowledging risk
     await act(async () => {
       fireEvent.change(amountInput, { target: { value: "0.5" } });
     });
@@ -212,18 +210,18 @@ describe("Borrow Component", () => {
       );
     });
 
-    expect(screen.getByText("$0.00 USD")).toBeInTheDocument(); 
+    expect(screen.getByText("$0.00 USD")).toBeInTheDocument();
 
     const amountInput = screen.getByPlaceholderText(/Enter Amount ckBTC/i);
     await act(async () => {
-      fireEvent.change(amountInput, { target: { value: "0.5" } }); 
+      fireEvent.change(amountInput, { target: { value: "0.5" } });
     });
 
     const usdValueAfterInput = screen.queryByText("$0.00 USD");
     if (usdValueAfterInput === null) {
       expect(true).toBe(true); // Check for USD sign
     } else {
-      expect(screen.getByText(/\$/)).toBeInTheDocument(); 
+      expect(screen.getByText(/\$/)).toBeInTheDocument();
     }
   });
 
@@ -253,9 +251,6 @@ describe("Borrow Component", () => {
     await waitFor(() => {
       const updatedHealthFactorElements = screen.getAllByText(/Health Factor/i);
       expect(updatedHealthFactorElements.length).toBeGreaterThan(0);
-
-      const updatedHealthFactorRow =
-        updatedHealthFactorElements[0].closest("div");
 
       // Verify that liquidation info is displayed correctly
       expect(screen.getByText(/liquidation at/i)).toBeInTheDocument();

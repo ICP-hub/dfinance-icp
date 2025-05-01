@@ -280,9 +280,9 @@ impl ValidationLogic {
         }
 
         //updating token price and store latest price in price cache
-        if let Err(e) = update_token_price(reserve.asset_name.clone()).await {
-            ic_cdk::println!("Failed to update reserves price: {:?}", e);  //error
-        }
+        // if let Err(e) = update_token_price(reserve.asset_name.clone()).await {
+        //     ic_cdk::println!("Failed to update reserves price: {:?}", e);  //error
+        // }
 
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {

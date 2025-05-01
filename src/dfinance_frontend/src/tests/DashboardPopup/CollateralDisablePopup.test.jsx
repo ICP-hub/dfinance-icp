@@ -1,10 +1,9 @@
-import React from "react";
+import React, { act } from "react";
 import {
   render,
   screen,
   fireEvent,
-  waitFor,
-  act,
+  waitFor
 } from "@testing-library/react";
 import ColateralPopup from "../../components/Dashboard/DashboardPopup/CollateralDisablePopup";
 import { Provider } from "react-redux";
@@ -44,14 +43,14 @@ describe("ColateralPopup Component", () => {
     assetBorrow: "1.0",
     totalCollateral: "5000",
     totalDebt: "2000",
-    currentCollateralStatus: true, // Mock status of collateral (enabled)
+    currentCollateralStatus: true,
     Ltv: 40,
     borrowableValue: "3000",
     borrowableAssetValue: "3000",
-    isModalOpen: true, // Modal is open by default
-    handleModalOpen: jest.fn(), // Mocked modal open handler
-    setIsModalOpen: jest.fn(), // Mocked setter for modal open state
-    onLoadingChange: jest.fn(), // Mocked loading state change handler
+    isModalOpen: true,
+    handleModalOpen: jest.fn(),
+    setIsModalOpen: jest.fn(),
+    onLoadingChange: jest.fn(),
   };
 
   // Reset mocks before each test case

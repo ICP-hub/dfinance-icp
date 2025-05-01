@@ -19,7 +19,6 @@ const LiquidationList = lazy(() => import("../components/Liquidate/LiquidationLi
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;
 const isProduction = process.env.DFX_PRODUCTION === 'true';
-console.log("isProduction", isProduction)
 const routes = [
   {
     path: "/",
@@ -128,6 +127,4 @@ const routes = [
   },
 ];
 
-// very important to filter falsy routes
 export default routes.filter(Boolean);
-

@@ -1,10 +1,12 @@
 import { AuthClient } from "@dfinity/auth-client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { HttpAgent, Actor } from "@dfinity/agent";
+import { HttpAgent, Actor, blsVerify } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor } from "../../../declarations/dfinance_backend/index";
 import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
+import { Principal } from "@dfinity/principal";
+import useCertificateVerification from "../components/customHooks/useVerifiedCetificate";
 const AuthContext = createContext();
 
 const defaultOptions = {
@@ -51,10 +53,12 @@ export const useAuthClient = (options = defaultOptions) => {
   const [user, setUser] = useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
-
+  const [certObj, setCertObj] = useState(null);
+  const [rootKey, setRootKey] = useState(null);
   const {
     isSwitchingWallet,
   } = useSelector((state) => state.utility);
+  const { isVerified, error: verificationError } = useCertificateVerification(certObj, rootKey, process.env.CANISTER_ID_DFINANCE_BACKEND, blsVerify);
 
   useEffect(() => {
     AuthClient.create(options.createOptions).then((client) => {
@@ -244,6 +248,64 @@ export const useAuthClient = (options = defaultOptions) => {
       throw error;
     }
   };
+
+  const getCanisterIdByName = async (canisterName) => {
+    if (!backendActor) {
+      console.error("Backend actor not initialized");
+      throw new Error("Backend actor not initialized");
+    }
+    try {
+      const result = await backendActor.get_canister_id_by_name(canisterName);
+      if ("Ok" in result) {
+        const [principal, certObj] = result.Ok;
+        const agent = new HttpAgent({ identity });
+        const rootKey = await agent.fetchRootKey();
+        setCertObj(certObj);
+        setRootKey(rootKey);
+        console.log("Canister ID fetched successfully");
+        return {
+          principal: Principal.from(principal),
+          verified: true,
+        };
+      } else {
+        console.error("Error result received:", result.Err);
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error("Error during getCanisterIdByName execution:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const fetchCanisterInfo = async () => {
+      try {
+        console.log("Fetching canister info...");
+        const data = await getCanisterIdByName("xrc");
+        console.log("Canister data fetched:", data);
+      } catch (err) {
+        console.error("Error fetching canister info:", err);
+      }
+    };
+
+    if (backendActor) {
+      fetchCanisterInfo();
+    }
+  }, [backendActor]);
+
+  useEffect(() => {
+    if (certObj && rootKey) {
+      if (isVerified === null || isVerified === undefined) {
+        return;
+      }
+      if (!isVerified) {
+        console.error("Certificate verification failed:", verificationError);
+      } else {
+        console.log("Certificate verified successfully");
+      }
+    }
+  }, [certObj, rootKey, isVerified, verificationError]);
+
 
   // Fetches all registered users
   const getAllUsers = async () => {

@@ -39,7 +39,7 @@ pub async fn store_log(
 ) -> Result<(), Error> {
     let timestamp = api::time() / 1_000_000_000;
     let file_name = file.split('/').last().unwrap_or(file);
-    let (logs_canister_id,_) = get_canister_id_by_name("logs".to_string()).unwrap();
+    let logs_canister_id = get_canister_id_by_name("logs".to_string()).unwrap();
     let mut oldest_log_to_send = Default::default();
     let mut oldest_log_id: u32 = 0;
     let mut call_inter_canister = false;

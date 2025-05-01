@@ -1,5 +1,5 @@
 use crate::api::inter_canister::asset_transfer_from;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
@@ -128,7 +128,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             .asset_index
             .insert(params.asset.clone(), Candid(reserve_data.clone()))
     });
-
+    insert_certified_value(params.asset.clone(), reserve_data.clone());
     // Transfers the asset from the user to our backend cansiter
     match asset_transfer_from(
         ledger_canister_id,

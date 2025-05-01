@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Certificate, Cbor, reconstruct } from "@dfinity/agent";
-import { Principal } from "@dfinity/principal"; // Ensure this path is correct
+import { Principal } from "@dfinity/principal";
 
-
-// Utility function to compare buffers
 const buffersEqual = (buf1, buf2) => {
   if (!buf1 || !buf2 || buf1.byteLength !== buf2.byteLength) return false;
   const view1 = new Uint8Array(buf1);
@@ -17,19 +15,20 @@ const buffersEqual = (buf1, buf2) => {
 const useCertificateVerification = (certObj, rootKey, canisterId, blsVerify) => {
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState(null);
+  const hasVerified = useRef(false); // Prevent repeated calls
 
   useEffect(() => {
+    if (!certObj || !rootKey || !canisterId || hasVerified.current) return;
+
     const verifyCertificate = async () => {
       try {
-       
+        hasVerified.current = true; // Mark as executed
+
         const cert = new Certificate(certObj.certificate, rootKey, canisterId, blsVerify);
-        
         await cert.verify();
 
-        
         const te = new TextEncoder();
         const canisterPrincipal = Principal.fromText(canisterId);
-
         const pathData = [
           te.encode("canister"),
           canisterPrincipal.toUint8Array(),
@@ -37,9 +36,8 @@ const useCertificateVerification = (certObj, rootKey, canisterId, blsVerify) => 
         ];
 
         const certifiedData = cert.lookup(pathData);
-
-        let witnessTree = Cbor.decode(certObj.witness);
-        let witnessRootHash = await reconstruct(witnessTree);
+        const witnessTree = Cbor.decode(certObj.witness);
+        const witnessRootHash = await reconstruct(witnessTree);
 
         if (certifiedData && buffersEqual(certifiedData, witnessRootHash)) {
           console.log("✅ Certified data matches!");
@@ -55,9 +53,7 @@ const useCertificateVerification = (certObj, rootKey, canisterId, blsVerify) => 
       }
     };
 
-    if (certObj && rootKey && canisterId) {
-      verifyCertificate();
-    }
+    verifyCertificate();
   }, [certObj, rootKey, canisterId, blsVerify]);
 
   return { isVerified, error };

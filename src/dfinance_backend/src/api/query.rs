@@ -46,6 +46,18 @@ pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
     })
 }
 
+#[query]
+pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certificate), Error> {
+    let reserved_data = read_state(|state| {
+        state
+            .asset_index
+            .get(&asset.to_string())
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| Error::NoReserveDataFound)
+    })?;
+    let certificate = get_certificate_witness(asset.clone());
+    return Ok((reserved_data,certificate));
+}
 /*
  * @title Get User Data
  * @dev Retrieves user data for a given principal.
@@ -360,15 +372,14 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
 #[query]
-pub fn get_canister_id_by_name(canister_name: String) -> Result<(Principal, Certificate), Error> {
-    let value = read_state(|state| {
+pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
+    read_state(|state| {
         state
             .canister_list
             .get(&canister_name)
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
-    })?;
-    let certificate = get_certificate_witness(canister_name.clone());
-    return  Ok((value, certificate));
+    })
+    
 }
 
 /*

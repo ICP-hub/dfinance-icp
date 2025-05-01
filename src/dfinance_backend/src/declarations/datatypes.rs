@@ -25,7 +25,7 @@ use std::collections::HashMap;
  *
  * @functionality Stores and tracks complete reserve metadata and on-chain accounting values.
  */
-#[derive(Debug, CandidType, Deserialize, Clone)]
+#[derive(Debug, CandidType, Deserialize, Clone,  Serialize)]
 pub struct ReserveData {
     pub asset_name: String,
     pub id: u16,

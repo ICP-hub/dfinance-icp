@@ -288,8 +288,9 @@ const DashboardComponent = () => {
 
     for (const asset of assets) {
       const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+      console.log("reserveDataForAsset", reserveDataForAsset);
+      const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
+      const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
       const assetBalance = {
         asset,
         dtokenBalance: null,
@@ -303,6 +304,7 @@ const DashboardComponent = () => {
             const account = { owner: principalObj, subaccount: [] };
             const balance = await dtokenActor.icrc1_balance_of(account);
             assetBalance.dtokenBalance = balance;
+            console.log("balance", balance);
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
           }
@@ -407,6 +409,7 @@ const DashboardComponent = () => {
   const getAssetBorrowValue = (asset, principal) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
+      console.log("borrowValue ff", borrowValue);
       return borrowValue;
     }
     return noBorrowMessage;
@@ -592,10 +595,11 @@ const DashboardComponent = () => {
     const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
       Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
+      console.log("item ",item);
     const reserveliquidationThreshold =
-      Number(item?.[1]?.Ok.configuration.liquidation_threshold) / 100000000;
+      Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
     const supplyRateApr =
-      (Number(item?.[1]?.Ok?.current_liquidity_rate) * 100) / 100000000 || 0;
+      (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
     const ckBalance =
       asset === "ckBTC"
         ? ckBTCBalance
@@ -687,6 +691,7 @@ const DashboardComponent = () => {
         availableBorrow,
         Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
       );
+      console.log("available borrow", borrowableValue);
 
       const ckBalance =
         asset === "ckBTC"
@@ -702,13 +707,13 @@ const DashboardComponent = () => {
           : null;
 
       const borrowRateApr =
-        (Number(item?.[1]?.Ok?.borrow_rate) * 100) / 100000000 || 0;
+        (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / 100000000 || 0;
 
       const liquidationThreshold =
         Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
 
       const reserveliquidationThreshold =
-        Number(item?.[1]?.Ok.configuration.liquidation_threshold) / 100000000 ||
+        Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000 ||
         0;
 
       return {
@@ -915,7 +920,7 @@ const DashboardComponent = () => {
       return assetBalance > 0 && assetSupplyValue > 0n;
     });
   };
-  const getFilteredBorrowReserves = () => {
+  const getFilteredBorrowReserves = () => {0
     if (!userData?.Ok?.reserves?.[0]?.length) return [];
 
     return userData.Ok.reserves[0].filter((reserveGroup) => {
@@ -926,7 +931,9 @@ const DashboardComponent = () => {
           ?.debtTokenBalance || 0;
 
       const assetBorrowValue = getAssetBorrowValue(asset);
-
+      console.log("assetBorrowValue", assetBorrowValue);
+      console.log("assetBalance", assetBalance);
+      console.log("reserveGroup", reserveGroup);
       return assetBalance > 0 && assetBorrowValue > 0n;
     });
   };
@@ -1415,7 +1422,7 @@ const DashboardComponent = () => {
                               assetBalances.find((bal) => bal.asset === asset)
                                 ?.dtokenBalance || 0;
                             const supplyRateApr =
-                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                              (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) *
                                 100) /
                                 100000000 || 0;
 
@@ -1624,7 +1631,7 @@ const DashboardComponent = () => {
                             const collateralStatus =
                               reserveGroup[1]?.is_collateral;
                             const supplyRateApr =
-                              (Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                              (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) *
                                 100) /
                                 100000000 || 0;
                             const ckBalance =
@@ -2301,7 +2308,7 @@ const DashboardComponent = () => {
                                   : null;
 
                               const borrowRateApr =
-                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                                (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) /
                                   100000000 || 0;
 
                               return (

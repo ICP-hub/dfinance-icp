@@ -123,9 +123,9 @@ const HealthFactorList = () => {
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = await fetchReserveData(asset);
-            const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+            const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
             const debtTokenId =
-              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+              reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
 
             const assetBalance = {
               dtokenBalance: null,

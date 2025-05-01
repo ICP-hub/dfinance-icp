@@ -6,7 +6,9 @@ import { createActor } from "../../../declarations/dfinance_backend/index";
 import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
 import { Principal } from "@dfinity/principal";
-import useCertificateVerification from "../components/customHooks/useVerifiedCetificate";
+// import useCertificateVerification from "../components/customHooks/useVerifiedCetificate";
+
+import { Certificate, Cbor, reconstruct } from "@dfinity/agent";
 const AuthContext = createContext();
 
 const defaultOptions = {
@@ -58,7 +60,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const {
     isSwitchingWallet,
   } = useSelector((state) => state.utility);
-  const { isVerified, error: verificationError } = useCertificateVerification(certObj, rootKey, process.env.CANISTER_ID_DFINANCE_BACKEND, blsVerify);
+  // const { isVerified, error: verificationError } = useCertificateVerification(certObj, rootKey, process.env.CANISTER_ID_DFINANCE_BACKEND, blsVerify);
 
   useEffect(() => {
     AuthClient.create(options.createOptions).then((client) => {
@@ -171,7 +173,9 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
-  checkSession();
+  useEffect(() => {
+    checkSession();
+  }, []);
 
   /**
    * Updates client state with authentication details.
@@ -236,75 +240,120 @@ export const useAuthClient = (options = defaultOptions) => {
       }
     } catch (error) { }
   };
+  const buffersEqual = (buf1, buf2) => {
+    if (!buf1 || !buf2 || buf1.byteLength !== buf2.byteLength) return false;
+    const view1 = new Uint8Array(buf1);
+    const view2 = new Uint8Array(buf2);
+    for (let i = 0; i < view1.length; i++) {
+      if (view1[i] !== view2[i]) return false;
+    }
+    return true;
+  };
 
   const fetchReserveData = async (asset) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
     try {
-      const reserveData = await backendActor.get_reserve_data(asset);
+      const reserveData = await backendActor.get_reserve_data_certified(asset);
+      // console.log("Reserve data fetched:", reserveData);
+      if("Ok" in reserveData){
+        const verification = await verifyCertificate(reserveData.Ok[1]);
+        if (!verification) {
+          console.error("Certificate verification failed");
+        } else {
+          console.log("Certificate verified successfully");
+        }
+      }
       return reserveData;
+      
     } catch (error) {
       throw error;
     }
   };
 
-  const getCanisterIdByName = async (canisterName) => {
-    if (!backendActor) {
-      console.error("Backend actor not initialized");
-      throw new Error("Backend actor not initialized");
+  const verifyCertificate = async (certObj)=>{
+    const agent = new HttpAgent({ identity });
+    const rootKey = await agent.fetchRootKey();
+    const cert = new Certificate(certObj.certificate, rootKey, process.env.CANISTER_ID_DFINANCE_BACKEND, blsVerify);
+    await cert.verify();
+    const te = new TextEncoder();
+    const canisterId = Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND);
+    
+    const pathData = [
+      te.encode("canister"),
+      canisterId.toUint8Array(),
+      te.encode("certified_data"),
+    ];
+    
+    const certifiedData = cert.lookup(pathData);
+    
+    let witnessTree = Cbor.decode(certObj.witness);
+    let witnessRootHash = await reconstruct(witnessTree);
+    
+    if (!certifiedData || !buffersEqual(certifiedData, witnessRootHash)) {
+      return false;
+    } else {
+      return true;
     }
-    try {
-      const result = await backendActor.get_canister_id_by_name(canisterName);
-      if ("Ok" in result) {
-        const [principal, certObj] = result.Ok;
-        const agent = new HttpAgent({ identity });
-        const rootKey = await agent.fetchRootKey();
-        setCertObj(certObj);
-        setRootKey(rootKey);
-        console.log("Canister ID fetched successfully");
-        return {
-          principal: Principal.from(principal),
-          verified: true,
-        };
-      } else {
-        console.error("Error result received:", result.Err);
-        throw new Error(result.Err);
-      }
-    } catch (error) {
-      console.error("Error during getCanisterIdByName execution:", error);
-      throw error;
-    }
-  };
+  }
+  // Todo make this function commented 
+  // const getCanisterIdByName = async (canisterName) => {
+  //   if (!backendActor) {
+  //     console.error("Backend actor not initialized");
+  //     throw new Error("Backend actor not initialized");
+  //   }
+  //   try {
+  //     const result = await backendActor.get_canister_id_by_name(canisterName);
+  //     if ("Ok" in result) {
+  //       const [principal, certObj] = result.Ok;
+  //       const agent = new HttpAgent({ identity });
+  //       const rootKey = await agent.fetchRootKey();
+  //       setCertObj(certObj);
+  //       setRootKey(rootKey);
+  //       console.log("Canister ID fetched successfully");
+  //       return {
+  //         principal: Principal.from(principal),
+  //         verified: isVerified,
+  //       };
+  //     } else {
+  //       console.error("Error result received:", result.Err);
+  //       throw new Error(result.Err);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error during getCanisterIdByName execution:", error);
+  //     throw error;
+  //   }
+  // };
 
-  useEffect(() => {
-    const fetchCanisterInfo = async () => {
-      try {
-        console.log("Fetching canister info...");
-        const data = await getCanisterIdByName("xrc");
-        console.log("Canister data fetched:", data);
-      } catch (err) {
-        console.error("Error fetching canister info:", err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchCanisterInfo = async () => {
+  //     try {
+  //       console.log("Fetching canister info...");
+  //       const data = await getCanisterIdByName("xrc");
+  //       console.log("Canister data fetched:", data);
+  //     } catch (err) {
+  //       console.error("Error fetching canister info:", err);
+  //     }
+  //   };
 
-    if (backendActor) {
-      fetchCanisterInfo();
-    }
-  }, [backendActor]);
+  //   if (backendActor) {
+  //     fetchCanisterInfo();
+  //   }
+  // }, [backendActor]);
 
-  useEffect(() => {
-    if (certObj && rootKey) {
-      if (isVerified === null || isVerified === undefined) {
-        return;
-      }
-      if (!isVerified) {
-        console.error("Certificate verification failed:", verificationError);
-      } else {
-        console.log("Certificate verified successfully");
-      }
-    }
-  }, [certObj, rootKey, isVerified, verificationError]);
+  // useEffect(() => {
+  //   if (certObj && rootKey) {
+  //     if (isVerified === null || isVerified === undefined) {
+  //       return;
+  //     }
+  //     if (!isVerified) {
+  //       console.error("Certificate verification failed:", verificationError);
+  //     } else {
+  //       console.log("Certificate verified successfully");
+  //     }
+  //   }
+  // }, [rootKey, verificationError]);
 
 
   // Fetches all registered users

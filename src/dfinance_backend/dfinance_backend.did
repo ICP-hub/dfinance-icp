@@ -156,11 +156,15 @@ type ReserveData = record {
 type Result = variant { Ok : text; Err : Error };
 type Result_1 = variant { Ok; Err : Error };
 type Result_10 = variant {
+  Ok : record { ReserveData; Certificate };
+  Err : Error;
+};
+type Result_11 = variant {
   Ok : record { nat; nat; nat; nat; nat; nat; bool };
   Err : Error;
 };
-type Result_11 = variant { Ok : FaucetReserves; Err : Error };
-type Result_12 = variant { Ok : bool; Err : Error };
+type Result_12 = variant { Ok : FaucetReserves; Err : Error };
+type Result_13 = variant { Ok : bool; Err : Error };
 type Result_2 = variant { Ok : nat64; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : nat; Err : Error };
@@ -229,6 +233,7 @@ service : (principal) -> {
       vec record { principal; UserAccountData; UserData },
     );
   get_reserve_data : (text) -> (Result_9) query;
+  get_reserve_data_certified : (text) -> (Result_10) query;
   get_total_supply : (principal) -> (Result_4) query;
   get_total_users : () -> (nat64) query;
   get_transfer_fee : (text) -> (Result_4) query;
@@ -236,15 +241,15 @@ service : (principal) -> {
       opt principal,
       opt vec AssetData,
       opt vec AssetData,
-    ) -> (Result_10) query;
+    ) -> (Result_11) query;
   get_user_data : (principal) -> (Result_3) query;
-  get_user_faucet_data : (principal) -> (Result_11) query;
-  get_user_guide : () -> (Result_12) query;
+  get_user_faucet_data : (principal) -> (Result_12) query;
+  get_user_guide : () -> (Result_13) query;
   guard_admin_only : () -> (Result_1) query;
   guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
   insert_multiple_logs : () -> (Result_1);
-  is_user_blocked : () -> (Result_12) query;
+  is_user_blocked : () -> (Result_13) query;
   queary_reserve_price : () -> (vec PriceCache) query;
   remove_admin : (principal) -> (Result);
   remove_developer : (principal) -> (Result);

@@ -70,9 +70,9 @@ const useAssetData = (searchQuery = "") => {
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-        if (reserveDataForAsset.Ok?.id) {
+        if (reserveDataForAsset.Ok[0]?.id) {
           const result = await backendActor.user_normalized_supply(
-            reserveDataForAsset.Ok
+            reserveDataForAsset.Ok[0]
           );
           setAssetSupply((prev) => ({ ...prev, [asset]: result.Ok }));
         } else {
@@ -92,9 +92,10 @@ const useAssetData = (searchQuery = "") => {
     if (backendActor && isAuthenticated) {
       try {
         const reserveDataForAsset = await fetchReserveData(asset);
-        if (reserveDataForAsset.Ok?.id) {
+        console.log("reserveDataForAsset asset o", reserveDataForAsset);
+        if (reserveDataForAsset.Ok[0]?.id) {
           const result = await backendActor.user_normalized_debt(
-            reserveDataForAsset.Ok
+            reserveDataForAsset.Ok[0]
           );
           setAssetBorrow((prev) => ({ ...prev, [asset]: result.Ok }));
         } else {
@@ -140,11 +141,13 @@ const useAssetData = (searchQuery = "") => {
 
         results.forEach((result) => {
           if (!result || !result.reserveDataForAsset) return;
-
           const { asset, reserveDataForAsset } = result;
           data[asset] = reserveDataForAsset;
-
-          const assetName = reserveDataForAsset.Ok.asset_name.toString();
+          
+          const assetName = reserveDataForAsset.Ok[0].asset_name.toString();
+          if(assetName === "ICP") {
+            console.log("reserveDataForAsset icp ", reserveDataForAsset);
+          }
           let assetRate = 0;
 
           switch (assetName) {
@@ -168,22 +171,22 @@ const useAssetData = (searchQuery = "") => {
           }
 
           const supplyCap = parseFloat(
-            Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000
+            Number(reserveDataForAsset.Ok[0].configuration.supply_cap) / 100000000
           );
           const totalSupply = parseFloat(
-            (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
+            (Number(reserveDataForAsset.Ok[0].asset_supply) * (assetRate / 1e8)) /
             100000000
           );
           const totalBorrow = parseFloat(
-            (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
+            (Number(reserveDataForAsset.Ok[0].asset_borrow) * (assetRate / 1e8)) /
             100000000
           );
           const reserveFactor = parseFloat(
-            Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
+            Number(reserveDataForAsset.Ok[0].configuration.reserve_factor) /
             100000000
           );
           const interestAccure = parseFloat(
-            Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
+            Number(reserveDataForAsset.Ok[0].accure_to_platform) / 100000000
           );
           const accruedValue = interestAccure * (assetRate / 1e8);
 

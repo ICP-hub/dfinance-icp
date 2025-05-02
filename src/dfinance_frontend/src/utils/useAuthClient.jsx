@@ -384,6 +384,7 @@ export const useAuthClient = (options = defaultOptions) => {
     accountIdString,
     fetchReserveData,
     getAllUsers,
+    verifyCertificate
   };
 };
 

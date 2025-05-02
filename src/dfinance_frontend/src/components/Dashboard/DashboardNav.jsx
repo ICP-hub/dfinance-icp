@@ -262,7 +262,7 @@ const DashboardNav = () => {
           (Number(reserveData[assetKey].Ok.borrow_rate) || 0) / 100000000;
 
         const currentLiquidity =
-          userData?.Ok?.reserves[0]?.find(
+          userData?.Ok?.[0].reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
           )?.[1]?.liquidity_index || 1;
 
@@ -293,7 +293,7 @@ const DashboardNav = () => {
         );
 
         const DebtIndex =
-          userData?.Ok?.reserves[0]?.find(
+          userData?.Ok?.[0].reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
           )?.[1]?.variable_borrow_index || 1;
 
@@ -461,11 +461,11 @@ const DashboardNav = () => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
-
+console.log("userData",userData)
   useEffect(() => {
-    if (userData && userData.Ok && userData.Ok.reserves[0] && reserveData) {
+    if (userData && userData?.Ok && userData?.Ok[0].reserves[0] && reserveData) {
       const updateState = async () => {
-        const reservesData = userData.Ok.reserves[0];
+        const reservesData = userData.Ok[0].reserves[0];
         const calculatedNetApy = calculateNetSupplyApy(
           reservesData,
           reserveData
@@ -490,7 +490,7 @@ const DashboardNav = () => {
         let totalBorrow = 0;
         reservesData.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
-          const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+          const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.liquidity_index;
 
@@ -505,7 +505,7 @@ const DashboardNav = () => {
             setAssetSupply(supply);
           }
 
-          const DebtIndex = userData?.Ok?.reserves[0]?.find(
+          const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === asset
           )?.[1]?.variable_borrow_index;
           const assetBorrowBalance =

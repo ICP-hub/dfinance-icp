@@ -26,7 +26,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { isBlocked } = useFunctionBlockStatus();
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { backendActor, user } = useAuth();
+  const { backendActor, user ,verifyCertificate} = useAuth();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -324,39 +324,52 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-
+  
     setIsFaucetLoading(true);
-
+  
     try {
       const result = await backendActor.get_user_faucet_data(user);
-
-      if (result?.Ok?.reserves && result.Ok.reserves[0]?.length > 0) {
-        const updatedLimits = { ...initialLimits };
-        const updatedUsages = { ...initialUsages };
-
-        result.Ok.reserves[0].forEach((reserveGroup) => {
-          const asset = reserveGroup[0];
-          if (!asset) return;
-
-          const faucetLimitRaw = reserveGroup[1]?.faucet_limit
-            ? Number(reserveGroup[1].faucet_limit)
-            : initialLimits[asset];
-          const faucetUsageRaw = reserveGroup[1]?.faucet_usage
-            ? Number(reserveGroup[1].faucet_usage)
-            : initialUsages[asset];
-
-          const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
-          const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
-
-          updatedLimits[asset] = faucetLimit;
-          updatedUsages[asset] = faucetUsage;
-        });
-
-        setFaucetLimit(updatedLimits);
-        setFaucetUsage(updatedUsages);
-      } else {
-        setFaucetLimit(initialLimits);
-        setFaucetUsage(initialUsages);
+  
+      if ("Ok" in result) {
+        const verification = await verifyCertificate(result.Ok[1]);
+        if (!verification) {
+          console.error("Certificate verification failed");
+          setError("Certificate verification failed");
+          return; // ⛔ Abort if verification fails
+        } else {
+          console.log("Certificate verified successfully");
+        }
+  
+        const reserves = result.Ok[0].reserves;
+        console.log("reserves",reserves)
+        if (reserves && reserves[0]?.length > 0) {
+          const updatedLimits = { ...initialLimits };
+          const updatedUsages = { ...initialUsages };
+  
+          reserves[0].forEach((reserveGroup) => {
+            const asset = reserveGroup[0];
+            if (!asset) return;
+  
+            const faucetLimitRaw = reserveGroup[1]?.faucet_limit
+              ? Number(reserveGroup[1].faucet_limit)
+              : initialLimits[asset];
+            const faucetUsageRaw = reserveGroup[1]?.faucet_usage
+              ? Number(reserveGroup[1].faucet_usage)
+              : initialUsages[asset];
+  
+            const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
+            const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
+  
+            updatedLimits[asset] = faucetLimit;
+            updatedUsages[asset] = faucetUsage;
+          });
+  
+          setFaucetLimit(updatedLimits);
+          setFaucetUsage(updatedUsages);
+        } else {
+          setFaucetLimit(initialLimits);
+          setFaucetUsage(initialUsages);
+        }
       }
     } catch (error) {
       setError(error.message);
@@ -368,6 +381,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       setIsFaucetLoading(false);
     }
   };
+  
 
   /* ===================================================================================
    *                                  EFFECTS

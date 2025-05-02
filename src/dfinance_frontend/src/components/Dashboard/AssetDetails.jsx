@@ -492,7 +492,6 @@ const AssetDetails = () => {
         maximumFractionDigits: 2,
       })}`;
     }
-
     return { displayedBalance, displayedUsd };
   };
 
@@ -500,13 +499,13 @@ const AssetDetails = () => {
 
   // Handle which popup to open and data per asset selected
   const handleAssetAction = (actionType, asset) => {
-    const reserveData = userData?.Ok?.reserves[0]?.find(
+    const reserveData = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
-    const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+    const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     )
-      ? userData?.Ok?.reserves[0]?.find(
+      ? userData?.Ok?.[0].reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )[1]?.liquidity_index
       : 0;
@@ -522,10 +521,10 @@ const AssetDetails = () => {
         (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
       ) / 1e8;
 
-    const DebtIndex = userData?.Ok?.reserves[0]?.find(
+    const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     )
-      ? userData?.Ok?.reserves[0]?.find(
+      ? userData?.Ok?.[0].reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )[1]?.variable_borrow_index
       : 0;
@@ -563,7 +562,7 @@ const AssetDetails = () => {
               : asset === "ckUSDT"
                 ? ckUSDTBalance
                 : null;
-    const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
+    const Ltv = Number(userData?.Ok?.[0].ltv) / 100000000 || 0;
     const assetData = item[1].Ok;
 
     const total_supply = Number(assetData?.asset_supply || 0) / 100000000;

@@ -24,6 +24,7 @@ const useUserData = () => {
     isAuthenticated,
     fetchReserveData,
     createLedgerActor,
+    verifyCertificate
   } = useAuth();
 
   const [userData, setUserData] = useState(null);
@@ -45,6 +46,14 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
+      if("Ok" in result){
+        const verification = await verifyCertificate(result.Ok[1]);
+        if (!verification) {
+          console.error("Certificate verification failed");
+        } else {
+          console.log("Certificate verified successfully");
+        }
+      }
       return result;
     } catch (error) {
       setError(error.message);
@@ -168,7 +177,7 @@ const useUserData = () => {
           assetBalancesParam,
           borrowBalancesParam
         );
-
+console.log("result",result)
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
           setTimeout(fetchUserAccountData, 1000);

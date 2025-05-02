@@ -258,15 +258,15 @@ const DashboardComponent = () => {
 
   //condition for showing the borrow table
   const isTableDisabled =
-    !userData?.Ok?.reserves ||
-    !userData?.Ok?.reserves[0] ||
+    !userData?.Ok?.[0].reserves ||
+    !userData?.Ok?.[0].reserves[0] ||
     availableBorrow == 0 ||
-    userData?.Ok?.reserves[0].every(
+    userData?.Ok?.[0].reserves[0].every(
       (reserveGroup) =>
         asset_supply === 0n || reserveGroup[1]?.is_collateral === false
     );
 
-  const hasValidAssets = userData?.Ok?.reserves?.[0]?.some((reserveGroup) => {
+  const hasValidAssets = userData?.Ok?.[0].reserves?.[0]?.some((reserveGroup) => {
     const asset = reserveGroup[0];
     const assetBalance = assetBalances.find(
       (balance) => balance.asset === asset
@@ -544,13 +544,13 @@ const DashboardComponent = () => {
   // conditional rendering of jsx update model value for supply and borrow repay withdraw
   const handleAssetAction = (actionType, asset) => {
     fetchUserAccountData()
-    const reserveData = userData?.Ok?.reserves[0]?.find(
+    const reserveData = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
-    const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+    const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     )
-      ? userData?.Ok?.reserves[0]?.find(
+      ? userData?.Ok?.[0].reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )[1]?.liquidity_index
       : 0;
@@ -567,10 +567,10 @@ const DashboardComponent = () => {
         (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
       ) / 1e8;
 
-    const DebtIndex = userData?.Ok?.reserves[0]?.find(
+    const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     )
-      ? userData?.Ok?.reserves[0]?.find(
+      ? userData?.Ok?.[0].reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )[1]?.variable_borrow_index
       : 0;
@@ -611,7 +611,7 @@ const DashboardComponent = () => {
               : asset === "ckUSDT"
                 ? ckUSDTBalance
                 : null;
-    const Ltv = Number(userData?.Ok?.ltv) / 100000000 || 0;
+    const Ltv = Number(userData?.Ok?.[0].ltv) / 100000000 || 0;
     const assetData = item[1].Ok;
 
     const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
@@ -641,7 +641,7 @@ const DashboardComponent = () => {
     );
   };
 
-  const filteredReserves = userData?.Ok?.reserves[0]
+  const filteredReserves = userData?.Ok?.[0].reserves[0]
     ?.filter((reserveGroup) => {
       const asset = reserveGroup[0];
       const assetBalance =
@@ -652,7 +652,7 @@ const DashboardComponent = () => {
     .map((reserveGroup, index) => {
       const asset = reserveGroup[0];
       const item = filteredItems.find((item) => item[0] === asset);
-      const DebtIndex = userData?.Ok?.reserves[0]?.find(
+      const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )?.[1]?.variable_borrow_index;
 
@@ -660,7 +660,7 @@ const DashboardComponent = () => {
         assetBalances.find((balance) => balance.asset === asset)
           ?.debtTokenBalance || 0;
 
-      const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+      const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
         (reserveGroup) => reserveGroup[0] === asset
       )?.[1]?.liquidity_index;
 
@@ -854,16 +854,19 @@ const DashboardComponent = () => {
   const getFilteredAndSortedItems = () => {
     return filteredItems
       .filter((item) => {
-        userData?.Ok?.reserves[0]?.find(
+        userData.Ok[0].reserves[0]?.find(
           (reserveGroup) => reserveGroup[0] === item[0]
         );
 
         const assetData = item[1].Ok;
+        console.log("assetData",assetData)
         const total_supply = Number(assetData[0].asset_supply || 0) / 100000000;
         const total_borrow = Number(assetData[0].asset_borrow || 0) / 100000000;
         const availableBorrowNumber = Number(availableBorrow || 0);
         const isBorrowAvailable = availableBorrowNumber > 0.01;
-
+console.log("total_supply",total_supply)
+console.log("total_borrow",total_borrow)
+console.log("isBorrowAvailable",availableBorrowNumber)
         if (!showAllAssets) {
           const formattedTotalSupply = (total_supply * 0.85).toFixed(8);
           const formattedTotalBorrow = total_borrow.toFixed(8);
@@ -901,9 +904,9 @@ const DashboardComponent = () => {
   };
 
   const getFilteredSupplyReserves = () => {
-    if (!userData?.Ok?.reserves?.[0]?.length) return [];
+    if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
 
-    return userData.Ok.reserves[0].filter((reserveGroup) => {
+    return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
 
       const assetBalance =
@@ -917,9 +920,9 @@ const DashboardComponent = () => {
   };
   const getFilteredBorrowReserves = () => {
     0
-    if (!userData?.Ok?.reserves?.[0]?.length) return [];
+    if (!userData.Ok[0].reserves?.[0]?.length) return [];
 
-    return userData.Ok.reserves[0].filter((reserveGroup) => {
+    return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
 
       const assetBalance =
@@ -936,11 +939,13 @@ const DashboardComponent = () => {
    * =================================================================================== */
 
   useEffect(() => {
-    const reserves = userData?.Ok?.reserves?.[0] || [];
+    const reserves = userData?.Ok[0].reserves?.[0] || [];
+    console.log("reserves",reserves)
     let updatedAvailableBorrow = 0;
 
     reserves.map((reserveGroup) => {
       const asset = reserveGroup[0];
+      console.log("asset",asset)
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
@@ -949,9 +954,10 @@ const DashboardComponent = () => {
         (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
         (Number(liquidityIndex) * 1e8);
       const isCollateral = reserveGroup[1]?.is_collateral || true;
-
+console.log("assetSupply",assetSupply)
       if (assetSupply > 0) {
         if (userAccountData?.Ok?.length > 5) {
+          console.log("userAccount",userAccountData)
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           updatedAvailableBorrow = isCollateral ? borrowValue : 0;
         } else {
@@ -1062,8 +1068,8 @@ const DashboardComponent = () => {
   }, [valueChanged, availableBorrow, filteredItems]);
 
   useEffect(() => {
-    if (userData?.Ok?.reserves[0]) {
-      userData.Ok.reserves[0].map((reserveGroup) => {
+    if (userData?.Ok?.[0].reserves[0]) {
+      userData.Ok[0].reserves[0].map((reserveGroup) => {
         const totalCollateralValue =
           Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
         const totalBorrowedValue =
@@ -1095,7 +1101,7 @@ const DashboardComponent = () => {
   useEffect(() => {
     let totalSupply = 0;
     let totalBorrow = 0;
-    userData?.Ok?.reserves[0]?.forEach((reserveGroup) => {
+    userData?.Ok?.[0].reserves[0]?.forEach((reserveGroup) => {
       const asset = reserveGroup[0];
       const assetSupply = getAssetSupplyValue(asset);
       const assetBorrow = getAssetBorrowValue(asset);
@@ -1317,9 +1323,9 @@ const DashboardComponent = () => {
                 <div className="flex">
                   <h1>Your supplies</h1>
                   <div className="ml-5">
-                    {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
+                    {userData?.Ok?.[0].reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
-                      const currentLiquidity = userData?.Ok?.reserves[0]?.find(
+                      const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
                         (reserveGroup) => reserveGroup[0] === asset
                       )?.[1]?.liquidity_index;
                       const assetBalance =
@@ -1595,7 +1601,7 @@ const DashboardComponent = () => {
                           (reserveGroup, index) => {
                             const asset = reserveGroup[0];
                             const currentLiquidity =
-                              userData?.Ok?.reserves[0]?.find(
+                              userData?.Ok?.[0].reserves[0]?.find(
                                 (reserveGroup) => reserveGroup[0] === asset
                               )?.[1]?.liquidity_index;
                             const assetBalance =
@@ -2059,10 +2065,10 @@ const DashboardComponent = () => {
                 <div className="flex">
                   <h1>Your borrow</h1>
                   <div className="ml-5">
-                    {userData?.Ok?.reserves[0]?.map((reserveGroup, index) => {
+                    {userData?.Ok?.[0].reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
 
-                      const DebtIndex = userData?.Ok?.reserves[0]?.find(
+                      const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
                         (reserveGroup) => reserveGroup[0] === asset
                       )?.[1]?.variable_borrow_index;
 
@@ -2229,8 +2235,8 @@ const DashboardComponent = () => {
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
-                  ) : !userData?.Ok?.reserves ||
-                    !userData?.Ok?.reserves[0] ||
+                  ) : !userData?.Ok?.[0].reserves ||
+                    !userData?.Ok?.[0].reserves[0] ||
                     getFilteredBorrowReserves().length === 0 ? (
                     <div className="text-center text-gray-500">
                       {noBorrowMessage}
@@ -2243,7 +2249,7 @@ const DashboardComponent = () => {
                             (reserveGroup, index) => {
                               const asset = reserveGroup[0];
 
-                              const DebtIndex = userData?.Ok?.reserves[0]?.find(
+                              const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
                                 (reserveGroup) => reserveGroup[0] === asset
                               )?.[1]?.variable_borrow_index;
 
@@ -2456,8 +2462,8 @@ const DashboardComponent = () => {
                     <div className="min-h-[100px] flex justify-center items-center ">
                       <MiniLoader isLoading={true} />
                     </div>
-                  ) : !userData?.Ok?.reserves ||
-                    !userData?.Ok?.reserves[0] ||
+                  ) : !userData?.Ok?.[0].reserves ||
+                    !userData?.Ok?.[0].reserves[0] ||
                     getFilteredBorrowReserves().length === 0 ? (
                     noBorrowMessage
                   ) : (
@@ -2846,9 +2852,9 @@ const DashboardComponent = () => {
             <div className="hidden xl:block mt-2">
               {isBorrowVisible && (
                 <>
-                  {(!userData?.Ok?.reserves ||
-                    !userData?.Ok?.reserves[0] ||
-                    userData?.Ok?.reserves[0].every(
+                  {(!userData?.Ok?.[0].reserves ||
+                    !userData?.Ok?.[0].reserves[0] ||
+                    userData?.Ok?.[0].reserves[0].every(
                       (reserveGroup) => reserveGroup[1]?.asset_supply === 0n
                     )) && (
                       <div className="bg-[#6d6c89] opacity-80 mt-4 px-2 py-2 mb-2 rounded-lg flex items-center">
@@ -2951,6 +2957,7 @@ const DashboardComponent = () => {
                                 total_borrow,
                                 availableBorrow
                               );
+                              console.log(displayedAsset,usdFormatted)
                             const isEligible =
                               (total_supply * 0.85).toFixed(8) > total_borrow;
                             const itemClass =

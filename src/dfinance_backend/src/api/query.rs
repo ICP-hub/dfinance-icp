@@ -35,8 +35,8 @@ use crate::declarations::datatypes::Certificate;
  * @returns The reserve data if found.
  *  @functionality Retrieve Reserve Data for a Specified Asset
  */
-#[query]
-pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
+
+ pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
     read_state(|state| {
         state
             .asset_index
@@ -48,16 +48,12 @@ pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
 
 #[query]
 pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certificate), Error> {
-    let reserved_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&asset.to_string())
-            .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| Error::NoReserveDataFound)
-    })?;
-    let certificate = get_certificate_witness(asset.clone());
+    validate_asset_name(&asset.clone());
+    let reserved_data = get_reserve_data(asset.clone())?;
+    let certificate = get_certificate_witness(asset);
     return Ok((reserved_data,certificate));
 }
+
 /*
  * @title Get User Data
  * @dev Retrieves user data for a given principal.
@@ -70,10 +66,6 @@ pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certific
 fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
     // Check if the user is anonymous
     guard_principal_not_anonymous(&user)?;
-    // if user == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
 
     let user_data = read_state(|state| {
         state
@@ -98,10 +90,6 @@ fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
 fn get_user_faucet_data(user: Principal) -> Result<(FaucetReserves, Certificate), Error> {
     // Check if the user is anonymous
     guard_principal_not_anonymous(&user)?;
-    // if user == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
 
     let user_faucet_data = read_state(|state| {
         state
@@ -123,15 +111,32 @@ fn get_user_faucet_data(user: Principal) -> Result<(FaucetReserves, Certificate)
  *
  * @functionality Retrieve a List of All Available Assets in the Reserve
  */
+// #[query]
+// pub fn get_all_assets() -> Vec<AssetInfo> {
+//     read_state(|state| {
+//         state.asset_records
+//              .iter()
+//              .map(|(_, asset)| asset.0.clone()) // .0 to unwrap Candid<AssetInfo>
+//              .collect()
+//      })
+   
+// }
+
 #[query]
-pub fn get_all_assets() -> Vec<AssetInfo> {
+pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
     read_state(|state| {
-        state.asset_records
-             .iter()
-             .map(|(_, asset)| asset.0.clone()) // .0 to unwrap Candid<AssetInfo>
-             .collect()
-     })
+        let assets: Vec<AssetInfo> = state.asset_records
+            .iter()
+            .map(|(_, asset)| asset.0.clone())
+            .collect();
+
+        // Generate the certificate from the certified map
+        let cert = get_certificate_witness("all_assets".to_string());
+
+        (assets, cert)
+    })
 }
+
 
 /*
  * @title Get Asset Principal
@@ -141,16 +146,13 @@ pub fn get_all_assets() -> Vec<AssetInfo> {
  * @functionality This function returns the principal ID linked to a particular asset.
  */
 #[query]
-pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
+pub fn get_asset_principal(asset_name: String) -> Result<(Principal, Certificate), Error> {
     // asset name validator
     validate_asset_name(&asset_name)?;
 
-    read_state(|state| match state.reserve_list.get(&asset_name) {
-        Some(principal) => Ok(principal),
-        None => {
-            return Err(Error::NotFoundAssetPrincipal);
-        }
-    })
+    let asset_principal = read_state(|state| {state.reserve_list.get(&asset_name).ok_or_else(|| Error::NotFoundAssetPrincipal)})?;
+    let cert = get_certificate_witness("asset_principal".to_string());
+    Ok((asset_principal, cert))
 }
 
 /*
@@ -159,7 +161,7 @@ pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
  * @returns A vector of tuples containing user principals and their data.
  * @functionality This function returns a list of all registered users and their respective data.
  */
-#[query]
+#[query]  //update
 pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     read_state(|state| {
         state
@@ -314,7 +316,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @returns The total user count as `usize`.
  * @functionality This function returns the total number of users that are currently registered in the system.
  */
-#[query]
+#[query] //update
 pub fn get_total_users() -> usize {
     read_state(|state| state.user_profile.len().try_into().unwrap())
 }
@@ -716,7 +718,7 @@ pub async fn get_asset_debt(
  * # Returns
  * - `Nat` - The current cycle balance of the canister.
  */
-#[query]
+#[query] //update
 pub async fn cycle_checker() -> Result<Nat, Error> {
     // only the admin can access this function.
     guard_admin_only()?;

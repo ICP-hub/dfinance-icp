@@ -13,6 +13,7 @@ use crate::protocol::libraries::update::{
 };
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::state_handler::mutate_state;
+use crate::stable_storage::state_handler::read_state;
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
 use ic_cdk_macros::update;
@@ -45,7 +46,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     let mut user_faucet_reserves = get_user_faucet_reserves(user_principal);
     ic_cdk::println!("faucet data = {:?}", user_faucet_reserves);
 
-    let ledger_canister_id = mutate_state(|state| {
+    let ledger_canister_id = read_state(|state| {
         let reserve_list = &state.reserve_list;
         reserve_list
             .get(&asset.to_string().clone())

@@ -19,6 +19,7 @@ use crate::protocol::libraries::interest_rate::{
 use crate::protocol::utils::math_utils;
 use crate::protocol::utils::math_utils::current_timestamp;
 use crate::protocol::utils::math_utils::ScalingMath;
+use crate::stable_storage::state_handler::insert_certified_value;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
@@ -704,12 +705,13 @@ pub async fn initialize(
             .reserve_list
             .insert(token_name.clone(), token_canister_id);
 
+            insert_certified_value("asset_principal".to_string(),token_canister_id);
         state
             .asset_records
-            .insert(token_name.clone(), Candid(asset_info));
-
+            .insert(token_name.clone(), Candid(asset_info.clone()));
+        insert_certified_value("all_assets".to_string(), asset_info);
         let reserve_data_e = &mut state.asset_index;
-
+      
         reserve_data_e.insert(token_name.clone(), Candid(reserve_data));
         ic_cdk::println!("Reserve for {} initialized successfully", token_name);
     });

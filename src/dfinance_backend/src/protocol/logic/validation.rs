@@ -455,7 +455,7 @@ impl ValidationLogic {
             return Err(Error::RepayMoreThanDebt);
         }
 
-        let repay_ledger_canister_id = get_asset_principal(repay_asset.clone())?;
+        let (repay_ledger_canister_id, _cert) = get_asset_principal(repay_asset.clone())?;
 
         //fetching the liquidator wallet balance
         let liquidator_wallet_balance =

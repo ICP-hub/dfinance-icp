@@ -26,6 +26,7 @@ use crate::{
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};
+use crate::stable_storage::state_handler::insert_certified_value;
 //TODO once the certified query or update usage decided, remove extra functions from this file
 /*
  * @title User Account Data Calculation
@@ -875,6 +876,7 @@ pub fn register_user() -> Result<String, Error> {
             }
         }
     });
+    insert_certified_value(user_principal.to_string(), UserData::default());
 
     user_data
 }
@@ -1179,6 +1181,7 @@ pub async fn create_user_reserve_with_low_health(
             .user_profile
             .insert(user_principal, Candid(user_data.clone()));
     });
+    insert_certified_value(user_principal.to_string(), user_data.clone());
 
     ic_cdk::println!("user data success = {:?}", user_data);
 

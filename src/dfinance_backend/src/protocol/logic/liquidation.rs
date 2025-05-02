@@ -24,6 +24,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
+use crate::stable_storage::state_handler::insert_certified_value;
 
 /*
 -------------------------------------
@@ -295,6 +296,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             .user_profile
             .insert(user_principal, Candid(user_account_data.clone()));
     });
+    insert_certified_value(user_principal.to_string(), user_account_data.clone());
 
     let params_repay = ExecuteRepayParams {
         asset: params.debt_asset.clone(),

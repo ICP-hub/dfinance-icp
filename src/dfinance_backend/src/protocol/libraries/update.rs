@@ -12,6 +12,7 @@ use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
 use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData};
+use crate::stable_storage::state_handler::insert_certified_value;
 use crate::stable_storage::{
     state_handler::{mutate_state, read_state},
     storable::Candid,
@@ -129,6 +130,7 @@ impl UpdateLogic {
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()));
         });
+        insert_certified_value(user_principal.to_string(), user_data.clone());
 
         ic_cdk::println!("User data updated successfully");
         Ok(())
@@ -229,6 +231,7 @@ impl UpdateLogic {
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()))
         });
+        insert_certified_value(user_principal.to_string(), user_data.clone());
 
         ic_cdk::println!("User data updated successfully: {:?}", user_data);
         Ok(())
@@ -319,6 +322,7 @@ impl UpdateLogic {
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()))
         });
+        insert_certified_value(user_principal.to_string(), user_data.clone());
 
         ic_cdk::println!("User data updated successfully: {:?}", user_data);
         Ok(())
@@ -416,6 +420,7 @@ impl UpdateLogic {
                 .user_profile
                 .insert(user_principal, Candid(user_data.clone()));
         });
+        insert_certified_value(user_principal.to_string(), user_data.clone());
 
         ic_cdk::println!("User data updated successfully");
         Ok(())
@@ -524,6 +529,7 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             .user_profile
             .insert(user_principal, Candid(user_data.clone()))
     });
+    insert_certified_value(user_principal.to_string(), user_data.clone());
 
     ic_cdk::println!("User data updated successfully: {:?}", user_data);
     Ok(())

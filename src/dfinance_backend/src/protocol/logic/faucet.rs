@@ -16,6 +16,7 @@ use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
 use ic_cdk_macros::update;
+use crate::stable_storage::state_handler::insert_certified_value;
 
 /*
  * @title Token Faucet
@@ -126,6 +127,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             .faucet_data
             .insert(user_principal, Candid(user_faucet_reserves.clone()));
     });
+    insert_certified_value(user_principal.to_string(), user_faucet_reserves.clone());
 
     ic_cdk::println!("updated user data = {:?}", user_faucet_reserves);
 
@@ -183,6 +185,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
             .faucet_data
             .insert(user_principal, Candid(user_faucet_reserves.clone()));
     });
+    insert_certified_value(user_principal.to_string(), user_faucet_reserves.clone());
 
     ic_cdk::println!(
         "updated user data after facuet reset = {:?}",

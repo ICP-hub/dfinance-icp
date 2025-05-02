@@ -67,7 +67,7 @@ pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certific
  * @functionality Retrieve User Data for a Specified Principal
  */
 #[query]
-fn get_user_data(user: Principal) -> Result<UserData, Error> {
+fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
     // Check if the user is anonymous
     guard_principal_not_anonymous(&user)?;
     // if user == Principal::anonymous() {
@@ -75,13 +75,15 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
     //     return Err(Error::AnonymousPrincipal);
     // }
 
-    read_state(|state| {
+    let user_data = read_state(|state| {
         state
             .user_profile
             .get(&user)
             .map(|reserve| reserve.0.clone())
             .ok_or_else(|| Error::UserNotFound)
-    })
+    })?;
+    let certificate = get_certificate_witness(user.to_string());
+    return Ok((user_data, certificate));
 }
 
 /*
@@ -93,7 +95,7 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
  * @functionality Retrieve User Faucet Data for a Specified Principal
  */
 #[query]
-fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
+fn get_user_faucet_data(user: Principal) -> Result<(FaucetReserves, Certificate), Error> {
     // Check if the user is anonymous
     guard_principal_not_anonymous(&user)?;
     // if user == Principal::anonymous() {
@@ -101,13 +103,16 @@ fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
     //     return Err(Error::AnonymousPrincipal);
     // }
 
-    read_state(|state| {
+    let user_faucet_data = read_state(|state| {
         state
             .faucet_data
             .get(&user)
             .map(|reserve| reserve.0.clone())
             .ok_or_else(|| Error::UserNotFound)
-    })
+    })?;
+
+    let certificate = get_certificate_witness(user.to_string());
+    return Ok((user_faucet_data, certificate));
 }
 
 

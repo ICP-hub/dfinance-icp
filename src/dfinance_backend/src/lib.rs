@@ -1,6 +1,6 @@
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::{
-    AssetInfo, FaucetReserves, PriceCache, ReserveData, SessionStorageData, UserData,
+    AssetInfo, FaucetReserves, PriceCache, ReserveData, UserData,
 };
 use candid::Nat;
 use candid::Principal;

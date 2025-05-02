@@ -1,5 +1,4 @@
 use crate::constants::constant_variables::constants::{NANOS_PER_SECOND, TWO_VALUE, ZERO_VALUE};
-use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::{
     MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR,
 };

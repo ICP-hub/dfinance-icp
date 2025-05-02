@@ -1,12 +1,12 @@
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 use crate::stable_storage::memory::{
-    ASSET_INDEX_MEMORY_ID, BLOCKED_USERS_FUNCTION, CANISTER_MEMORY_ID, FUNCTION_REQUESTS,
-    META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, SESSION_DETAILS, TESTER_LIST,
-    USER_GUIDE_DATA, USER_PROFILE_MEMORY_ID,
+    ASSET_INDEX_MEMORY_ID,  CANISTER_MEMORY_ID,
+    META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, TESTER_LIST,
+     USER_PROFILE_MEMORY_ID,
 };
 use crate::stable_storage::types::{
-    AssetIndex, BlockedUsersFunction, CanisterList, FunctionRequests, MetaData, PriceCacheList,
-    ReserveList, SessionDetails, TesterList, UserGuideData, UserProfile,
+    AssetIndex,CanisterList, MetaData, PriceCacheList,
+    ReserveList, TesterList, UserProfile,
 };
 
 use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, DEVELOPER_DATA, FAUCETDATA, LOG_STORAGE};
@@ -20,10 +20,6 @@ pub struct State {
     pub canister_list: CanisterList,
     pub meta_data: MetaData,
     pub tester_list: TesterList,
-    pub userrequests: FunctionRequests,
-    pub restrict_users: BlockedUsersFunction,
-    pub session_details: SessionDetails,
-    pub user_guide_data: UserGuideData,
     pub developer_data: DeveloperData,
     pub admin_data: AdminData,
     pub asset_records:AssetRecords,
@@ -47,10 +43,6 @@ impl State {
             canister_list: CanisterList::init(memory_manager.get(CANISTER_MEMORY_ID)),
             meta_data: MetaData::init(memory_manager.get(META_DATA)),
             tester_list: TesterList::init(memory_manager.get(TESTER_LIST)),
-            userrequests: FunctionRequests::init(memory_manager.get(FUNCTION_REQUESTS)),
-            restrict_users: BlockedUsersFunction::init(memory_manager.get(BLOCKED_USERS_FUNCTION)),
-            session_details: SessionDetails::init(memory_manager.get(SESSION_DETAILS)),
-            user_guide_data: UserGuideData::init(memory_manager.get(USER_GUIDE_DATA)),
             admin_data: AdminData::init(memory_manager.get(ADMIN_DATA)),
             developer_data: DeveloperData::init(memory_manager.get(DEVELOPER_DATA)),
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),

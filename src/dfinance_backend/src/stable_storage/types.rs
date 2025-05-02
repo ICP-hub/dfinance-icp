@@ -1,9 +1,9 @@
 use candid::Principal;
 use ic_stable_structures::StableBTreeMap;
-use std::collections::BTreeMap;
+
 
 use crate::declarations::datatypes::{
-    AssetInfo, BlockedUserDetails, FaucetReserves, InitArgs, PriceCache, RequestTracker, ReserveData, SessionStorageData, UserData
+    AssetInfo, FaucetReserves, InitArgs, PriceCache,  ReserveData,  UserData
 };
 use crate::stable_storage::storable::Candid;
 
@@ -18,13 +18,6 @@ pub type PriceCacheList =  StableBTreeMap<String,Candid<PriceCache>, VMem>;
 pub type CanisterList =  StableBTreeMap<String,Principal, VMem>;
 pub type TesterList =  StableBTreeMap<String,Principal, VMem>;
 pub type MetaData =  StableBTreeMap<String,Candid<InitArgs>, VMem>;
-
-pub type FunctionRequests =
-    StableBTreeMap<Principal, Candid<BTreeMap<String, RequestTracker>>, VMem>;
-pub type BlockedUsersFunction =
-    StableBTreeMap<Principal, Candid<BTreeMap<String, BlockedUserDetails>>, VMem>;
-pub type SessionDetails = StableBTreeMap<Principal, Candid<SessionStorageData>, VMem>;
-pub type UserGuideData = StableBTreeMap<Principal, bool, VMem>;
 pub type AdminData = StableBTreeMap<Principal, String, VMem>;
 pub type DeveloperData = StableBTreeMap<Principal, String, VMem>;
 pub type AssetRecords = StableBTreeMap<String, Candid<AssetInfo>, VMem>;

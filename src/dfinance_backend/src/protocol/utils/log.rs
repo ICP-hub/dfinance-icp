@@ -1,11 +1,10 @@
-use crate::api::query::get_canister_id_by_name;
+
 use crate::constants::constant_variables::constants::MAX_LOG_ENTRIES;
 use crate::constants::errors::Error;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
-use candid::Principal;
 use ic_cdk::api;
-use ic_cdk::{call, query};
+use ic_cdk::query;
 use std::fmt;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]

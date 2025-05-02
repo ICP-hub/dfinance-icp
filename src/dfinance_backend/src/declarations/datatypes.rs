@@ -1,8 +1,8 @@
-use crate::constants::constant_variables::constants::{FAUCET_LIMIT, ZERO_VALUE};
+use crate::constants::constant_variables::constants::FAUCET_LIMIT;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 use std::collections::HashMap;
-
+//TODO : remove either get_zero_value or zero_value constant
 /*
  * @title Reserve Data
  * @notice Stores information about a reserve of an asset.

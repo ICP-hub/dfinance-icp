@@ -16,7 +16,7 @@ use super::inter_canister::get_balance;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::validate_asset_name;
-use crate::declarations::datatypes::{PriceCache, SessionStorageData, UserData};
+use crate::declarations::datatypes::{PriceCache, UserData};
 use crate::declarations::structs::AssetData;
 use ic_cdk::query;
 use crate::protocol::libraries::update::user_data;
@@ -394,34 +394,6 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<(Principal, Cert
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
     })?;
     let cert = get_certificate_witness("canister_id".to_string());
-    Ok((res, cert))
-}
-
-/*
- * @title Get Caller Session
- * @dev Retrieves the session data for the caller.
- * @returns The session data for the caller.
- * @functionality Retrieves the session data for the caller.
- */
-#[query]
-pub fn get_caller_session() -> Result<(SessionStorageData, Certificate), Error> {
-    // Check if the user is anonymous
-    guard_prevent_anonymous()?;
-    let caller_id = ic_cdk::caller();
-
-    let res = read_state(|state| {
-        state
-            .session_details
-            .get(&caller_id)
-            .map(|data| data.0.clone()) 
-            .unwrap_or_else(|| SessionStorageData {
-                // Default value
-                connected_wallet: "".to_string(),
-                session_start: zero_nat_value(),
-            })
-    });
-
-    let cert = get_certificate_witness("caller_session".to_string());
     Ok((res, cert))
 }
 

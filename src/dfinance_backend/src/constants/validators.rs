@@ -42,13 +42,6 @@ pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
 }
 
 
-pub fn validate_connected_wallet(connected_wallet: &str )-> Result<(), Error>{
-    if connected_wallet.len() > 15 {
-        ic_cdk::println!("Asset must have a maximum length of 7 characters");
-        return Err(Error::ConnectedWalletInvalid);
-    }
-    Ok(())
-}
 /*
  * @title Validate Asset Amount
  * @dev Ensures that the asset amount is greater than zero.

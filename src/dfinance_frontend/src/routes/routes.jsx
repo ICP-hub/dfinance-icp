@@ -139,4 +139,3 @@ const routes = [
 ];
 
 export default routes.filter(Boolean);
-

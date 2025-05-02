@@ -38,7 +38,7 @@ use std::time::Duration;
  *
  * @functionality Initialize Contract and Schedule Task
  */
-// TODO: check why this function is async function.
+
 #[init]
 pub fn init(args: Principal) {
     ic_cdk::println!("init function = {:?}", args.to_text());

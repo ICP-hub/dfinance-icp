@@ -66,8 +66,8 @@ const Logs = () => {
   const logCounts = getLogCounts();
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 min-h-screen text-[#4036A8] dark:text-white rounded-2xl">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-[#4036A8] dark:text-white">
+    <div className=" min-h-screen text-[#4036A8] dark:text-white rounded-2xl">
+      <h1 className="text-2xl md:text-[2xl] font-bold mb-4 sm:mb-5 text-[#4036A8] dark:text-white mt-1">
         Logs
       </h1>
 
@@ -126,8 +126,8 @@ const Logs = () => {
       </div>
 
       {/* Search and Title */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3 sm:gap-0">
-        <h2 className="text-lg sm:text-xl font-bold text-[#4036A8] dark:text-white">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3 sm:gap-0 mt-10">
+        <h2 className="text-lg sm:text-xl font-semibold text-[#4036A8] dark:text-white">
           System Logs
         </h2>
         <div className="relative flex items-center w-full sm:w-auto">

@@ -25,7 +25,7 @@ jest.mock("lottie-react", () => ({
 describe("CreateWallet Component", () => {
   // Test case 1: Ensure 'Please connect your wallet' message is displayed when not authenticated
   test("renders 'Please connect your wallet' message when not authenticated", () => {
-    useAuth.mockReturnValue({ isAuthenticated: false }); 
+    useAuth.mockReturnValue({ isAuthenticated: false });
 
     render(
       <Provider store={store}>
@@ -41,9 +41,9 @@ describe("CreateWallet Component", () => {
     ).toBeInTheDocument();
   });
 
-  // Test case 2: Ensure Connect Wallet button is rendered and triggers modal on click
+  // Test case 2: Tets case for Ensuring Connect Wallet button is rendered and triggers modal on click
   test("renders Connect Wallet button and triggers modal on click", () => {
-    useAuth.mockReturnValue({ isAuthenticated: false }); 
+    useAuth.mockReturnValue({ isAuthenticated: false });
 
     render(
       <Provider store={store}>
@@ -54,8 +54,8 @@ describe("CreateWallet Component", () => {
       </Provider>
     );
 
-    const connectWalletButton = screen.getByText(/Connect Wallet/i); 
-    expect(connectWalletButton).toBeInTheDocument(); 
+    const connectWalletButton = screen.getByText(/Connect Wallet/i);
+    expect(connectWalletButton).toBeInTheDocument();
 
     fireEvent.click(connectWalletButton);
 
@@ -64,7 +64,7 @@ describe("CreateWallet Component", () => {
 
   // Test case 3: Ensure Wallet Modal is rendered when isSwitchingWallet is true
   test("WalletModal is rendered when isSwitchingWallet is true", () => {
-    useAuth.mockReturnValue({ isAuthenticated: false }); 
+    useAuth.mockReturnValue({ isAuthenticated: false });
 
     render(
       <Provider store={store}>

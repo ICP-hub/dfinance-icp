@@ -70,5 +70,4 @@ test("clicking the Next button", () => {
   // Use getByText if the button's text is static and exactly known
   const nextButton = screen.getByText("NEXT");
   fireEvent.click(nextButton);
-  // expect(nextButton).toBeInTheDocument();
 });

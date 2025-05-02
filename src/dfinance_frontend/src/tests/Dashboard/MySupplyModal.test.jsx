@@ -30,7 +30,7 @@ describe("MySupplyModal Component", () => {
     children: <div>Test Content</div>,
   };
 
-  // Clear mock function calls before each test
+  // This function Clear mock function calls before each test
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -64,13 +64,6 @@ describe("MySupplyModal Component", () => {
     render(<MySupplyModal {...{ ...defaultProps, isLoading: true }} />);
     fireEvent.click(screen.getByTestId("modal"));
     expect(mockSetIsModalOpen).not.toHaveBeenCalled();
-  });
-
-  // Test modal closure on backdrop click when not loading (possible test bug: checking that callback is NOT called)
-  test("closes modal on backdrop click when isLoading is false", () => {
-    render(<MySupplyModal {...defaultProps} />);
-    fireEvent.click(screen.getByTestId("modal"));
-    expect(mockSetIsModalOpen).not.toHaveBeenCalled(); 
   });
 
   // Test that correct CSS classes are applied to modal content for both light and dark themes

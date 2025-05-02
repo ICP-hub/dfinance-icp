@@ -1,10 +1,9 @@
-import React from "react";
+import React ,{ act }from "react";
 import {
   render,
   screen,
   fireEvent,
   waitFor,
-  act,
 } from "@testing-library/react";
 import { Provider } from "react-redux";
 import SupplyPopup from "../../components/Dashboard/DashboardPopup/SupplyPopup";
@@ -98,7 +97,7 @@ jest.mock("react-redux", () => ({
         },
       },
       sound: {
-        isSoundOn: true, // Enable sound effects for testing
+        isSoundOn: true, 
       },
       fees: {
         fees: {

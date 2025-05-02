@@ -40,5 +40,7 @@ pub mod constants {
     pub const XRC_CYCLES_FEE: u128 = 1_000_000_000u128;
 
     // ------------------- Logs Constants -------------------
-    pub const MAX_LOG_ENTRIES: u64 = 100;
+    pub const BATCH_SIZE: usize = 100;
+    pub const LOG_CANISTER_NAME: &str = "logs";
+    pub const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
 }

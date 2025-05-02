@@ -11,11 +11,10 @@ use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
 use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
 use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::CallerGuard;
+use crate::guards::locks_handler::{CallerGuard, LogFlusher};
 use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::update::{user_data, user_reserve};
-// use crate::protocol::libraries::user::register_user;
-use crate::protocol::logic::borrow::execute_repay;
+use crate::protocol::logic::borrow::repay;
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::storable::Candid;
@@ -96,6 +95,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         params.collateral_asset
     );
     debug!("liquidation amount = {}", params.amount.clone());
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     let repay_reserve_data = get_reserve_data(params.debt_asset.clone())?;
 
@@ -313,7 +315,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         on_behalf_of: Some(user_principal),
     };
 
-    let repay_response = execute_repay(params_repay).await;
+    let repay_response = repay(params_repay).await;
 
     match repay_response {
         Ok(_) => {

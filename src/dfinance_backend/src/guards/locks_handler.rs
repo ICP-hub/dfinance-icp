@@ -1,9 +1,12 @@
+use crate::api::query::get_canister_id_by_name;
+use crate::constants::constant_variables::constants::LOG_CANISTER_NAME;
+use crate::constants::errors::Error;
+use crate::protocol::utils::log::{get_logs_in_batches, send_log_to_logs_canister};
+use crate::stable_storage::state_handler::mutate_state;
+use candid::Principal;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
-use candid::Principal;
-use crate::constants::errors::Error;
 
-//TODO: shifting this into the stable, i dont think a good idea too many changes need to do then ask bhanu.
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State{pending_requests: BTreeSet::new()});
 }
@@ -15,6 +18,10 @@ pub struct State {
 
 pub struct CallerGuard {
     pub principal: Principal,
+}
+//TODO handle unused variable
+pub struct LogFlusher {
+    pub user_key: String,
 }
 
 impl CallerGuard {
@@ -53,3 +60,32 @@ impl Drop for CallerGuard {
     }
 }
 
+impl Drop for LogFlusher {
+    fn drop(&mut self) {
+        let (logs_canister_id, _cer) = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+            Ok(id) => id,
+            Err(_) => return,
+        };
+
+        ic_cdk::println!("logs canister id = {:?}", logs_canister_id.to_text());
+
+        let all_logs = get_logs_in_batches();
+        ic_cdk::println!("lenght of logs = {:?}",all_logs.len());
+
+        // This fires and ignores the result; runs asynchronously but not awaited.
+        ic_cdk::spawn(async move {
+            let result = send_log_to_logs_canister(all_logs.clone(), logs_canister_id).await;
+
+            if result.is_ok() {
+                ic_cdk::println!("✅ Batch logs sent successfully.");
+                mutate_state(|state| {
+                    for user_id in all_logs.keys() {
+                        state.log_storage.remove(user_id);
+                    }
+                });
+            } else {
+                ic_cdk::println!("❌ Failed to send batch logs. Logs remain in memory.");
+            }
+        });
+    }
+}

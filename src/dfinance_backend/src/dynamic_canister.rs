@@ -334,6 +334,7 @@ pub async fn create_testtoken_canister(
  *      - `Ok("principals are not allowed")`: If the caller is not a controller of the canister.
  * @functionality Adds a new user as a controller of the specified canister.
  */
+//TODO - no need of this in production
 #[update]
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, Error> {
     guard_admin_only()?;

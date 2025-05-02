@@ -1,4 +1,9 @@
+type LogRecord = record {
+  id: nat32;
+  logs: vec text;
+};
+
 service : {
-  "receive_log": (nat32, text) -> ();              // This is your update method
-  "get_logs": () -> (vec record { id : nat32; logs : vec text }) query; // Query method
-}
+  get_logs: () -> (vec LogRecord) query;
+  receive_logs_batch: (vec record { nat32; vec text }) -> ();
+};

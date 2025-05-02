@@ -10,7 +10,7 @@ use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
 use protocol::logic::faucet::reset_faucet_usage;
-use protocol::utils::log::init_logging;
+use protocol::utils::log::{clear_temp_log, init_logging};
 mod api;
 mod constants;
 pub mod declarations;
@@ -27,7 +27,7 @@ use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
 use api::query::get_all_faucet;
-use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECOND_PER_DAY};
+use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
 use crate::declarations::datatypes::Certificate;
@@ -40,7 +40,7 @@ use crate::declarations::datatypes::Certificate;
  *
  * @functionality Initialize Contract and Schedule Task
  */
-// TODO: check why this function is async function.
+
 #[init]
 pub fn init(args: Principal) {
     ic_cdk::println!("init function = {:?}", args.to_text());
@@ -57,6 +57,7 @@ pub fn init(args: Principal) {
         );
     });
     init_logging(true);
+    schedule_temp_log_cleanup();
     debug!("function called");
 }
 /* @title Schedule Midnight Task
@@ -77,6 +78,26 @@ pub async fn schedule_midnight_task() {
             });
         });
     });
+}
+
+pub fn schedule_temp_log_cleanup() {
+    // Schedule the log cleanup to run once per day (86400 seconds)
+    let interval = Duration::from_secs(SECONDS_PER_DAY);
+
+    // Set up a recurring timer that will call process_log_heartbeat
+    ic_cdk_timers::set_timer_interval(interval, || {
+        // process_log_heartbeat();
+        clear_temp_log();
+    });
+
+    ic_cdk::println!("logs cleaned up");
+
+    log_internal(
+        LogLevel::INFO,
+        file!(),
+        line!(),
+        "Log cleanup scheduled to run once per day",
+    );
 }
 
 /* @title Run Midnight Reset

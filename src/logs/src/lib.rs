@@ -1,18 +1,28 @@
 use candid::candid_method;
 use candid::{CandidType, Deserialize};
-use ic_cdk::api;
-use ic_cdk::query;
-use ic_cdk::storage;
-use ic_cdk::update;
-use ic_cdk_macros::{init, post_upgrade, pre_upgrade};
-use std::cell::RefCell;
-use std::collections::HashMap;
+use ic_cdk::api::{self};
+use ic_cdk_macros::*;
+use ic_stable_structures::{
+    memory_manager::{MemoryManager, MemoryId},
+    DefaultMemoryImpl, StableBTreeMap,
+};
+use core::cell::RefCell;
 use std::time::Duration;
+use std::collections::HashMap;
 
-type LogStorage = HashMap<u32, Vec<String>>;
+// Define the virtual memory type
+type VMem = ic_stable_structures::memory_manager::VirtualMemory<DefaultMemoryImpl>;
 
+// Thread-local memory manager and storage
 thread_local! {
-    static LOG_STORAGE: RefCell<LogStorage> = RefCell::new(HashMap::new());
+    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
+        RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+
+    static LOG_STORAGE: RefCell<StableBTreeMap<u32, Vec<u8>, VMem>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
+        )
+    );
 }
 
 // Constants
@@ -38,39 +48,50 @@ pub enum LogLevel {
 fn init() {
     schedule_log_cleanup();
     // Initialize the log storage
-    LOG_STORAGE.with(|logs| logs.borrow_mut().clear());
-}
-
-#[pre_upgrade]
-fn pre_upgrade() {
-    LOG_STORAGE.with(|logs| {
-        let logs = logs.borrow();
-        storage::stable_save((logs.clone(),)).expect("Failed to save logs");
+     // Re-initialize LOG_STORAGE by replacing the existing StableBTreeMap
+     LOG_STORAGE.with(|logs| {
+        let new_map = StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
+        );
+        *logs.borrow_mut() = new_map;
     });
 }
 
-#[post_upgrade]
-fn post_upgrade() {
-    let (logs,): (LogStorage,) = storage::stable_restore().expect("Failed to restore logs");
-    LOG_STORAGE.with(|cell| {
-        let mut logs_ref = cell.borrow_mut();
-        logs_ref.extend(logs);
-    });
-}
-
-//TODO: add some validation.
 #[update]
 #[candid_method(update)]
-pub fn receive_log(log_id: u32, log_data: String) {
+pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) {
+    // let caller = ic_cdk::api::caller();
+    // let platform_principal = ic_cdk::api::id();
+
+    //TODO: this validation is not working.
+    // make backend canister controller of the log canister and then validate.
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     ic_cdk::println!("Unauthorized access");
+    //     return 
+    // }
+
     LOG_STORAGE.with(|storage| {
         let mut storage = storage.borrow_mut();
 
-        storage
-            .entry(log_id)
-            .or_insert_with(Vec::new)
-            .push(log_data);
+        // Find the current maximum log ID in storage
+        let mut max_id = storage.iter().map(|(key, _)| key).max().map(|key| key).unwrap_or(0);
+        ic_cdk::println!("max id = {:?}",max_id);
 
-        ic_cdk::println!("Log received and stored with ID: {}", log_id);
+        for (log_id, new_logs) in batch_logs {
+            let final_id = if storage.contains_key(&log_id) {
+                max_id += 1;
+                max_id // Use a new ID
+            } else {
+                log_id
+            };
+
+            let serialized_logs = candid::encode_one(&new_logs)
+                .expect("Failed to serialize logs");
+
+            storage.insert(final_id, serialized_logs);
+        }
+
+        ic_cdk::println!("✅ Batch logs received and stored.");
     });
 }
 
@@ -98,31 +119,39 @@ pub fn process_log_heartbeat() {
     );
 }
 
-// Function to actually clear old logs
 pub fn clear_old_logs(retention_cutoff: u64) {
+    ic_cdk::println!("clear old logs is working ");
     let removed_count = LOG_STORAGE.with(|state| {
         let mut state_mut = state.borrow_mut();
 
         let logs_to_remove: Vec<u32> = state_mut
             .iter()
-            .filter_map(|(key, logs)| {
+            .filter_map(|(key, bytes)| {
+                // Decode bytes into Vec<String>
+                let logs: Vec<String> = match candid::decode_one(&bytes) {
+                    Ok(l) => l,
+                    Err(_) => return Some(key), // Remove corrupted entries
+                };
+
+                // Check if the first log's timestamp is older than cutoff
                 if let Some(log_entry) = logs.first() {
                     if let Some(timestamp_str) = log_entry.split(']').next() {
-                        if let Ok(timestamp) = timestamp_str.trim_start_matches('[').parse::<u64>()
-                        {
+                        if let Ok(timestamp) = timestamp_str.trim_start_matches('[').parse::<u64>() {
+                            ic_cdk::println!("comparision in time = {} , {}", timestamp, retention_cutoff);
                             if timestamp < retention_cutoff {
-                                return Some(*key);
+                                return Some(key);
                             }
                         }
                     }
                 }
+
                 None
             })
             .collect();
 
         let count = logs_to_remove.len();
         for key in logs_to_remove {
-            ic_cdk::println!("are we Removing log entry with ID: {}", key);
+            ic_cdk::println!("🗑️ Removing log entry with ID: {}", key);
             state_mut.remove(&key);
         }
 
@@ -157,7 +186,7 @@ pub fn schedule_log_cleanup() {
     );
 }
 
-//TODO: add some validation.
+// access validations.
 #[query]
 #[candid_method(query)]
 pub fn get_logs() -> Vec<LogRecord> {
@@ -165,9 +194,18 @@ pub fn get_logs() -> Vec<LogRecord> {
         storage
             .borrow()
             .iter()
-            .map(|(id, logs)| LogRecord {
-                id: *id,
-                logs: logs.clone(),
+            .filter_map(|(id, bytes)| {
+                // Decode the bytes into Vec<String> using candid
+                let deserialized_logs: Vec<String> = match candid::decode_one(&bytes) {
+                    Ok(logs) => logs,
+                    Err(_) => return None, // If deserialization fails, skip the log entry
+                };
+
+                // Return the log record if deserialization is successful
+                Some(LogRecord {
+                    id,
+                    logs: deserialized_logs,
+                })
             })
             .collect()
     })

@@ -438,8 +438,8 @@ const DashboardNav = () => {
   useEffect(() => {
     const fetchData = async () => {
       for (const asset of assets) {
-        fetchAssetSupply(asset);
-        fetchAssetBorrow(asset);
+        await fetchAssetSupply(asset);
+        await fetchAssetBorrow(asset);
       }
     };
 

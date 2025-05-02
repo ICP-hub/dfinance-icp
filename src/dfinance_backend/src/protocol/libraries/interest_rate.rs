@@ -18,14 +18,14 @@ use crate::{
                 VARIABLE_RATE_SLOPE1, VARIABLE_RATE_SLOPE2,
             },
         }
-    },
-    protocol::utils::math_utils::ScalingMath,
+    }, debug, protocol::utils::math_utils::ScalingMath, trace
 };
 use crate::api::query::{get_reserve_data,user_normalized_supply};
 use candid::Nat;
 use interest_variables::constants::OPTIMAL_USAGE_RATIO;
 use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
 use crate::declarations::structs::InterestRateParams;
+use crate::protocol::utils::log::{log_internal, LogLevel};
 
 /* 
  * @title Interest Rate Parameter Initialization
@@ -41,7 +41,6 @@ use crate::declarations::structs::InterestRateParams;
  * @return InterestRateParams A struct containing the asset's interest rate parameters.
  */
 pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
-    println!("asset name in initialize {:?}", asset.to_string());
     match asset {
         "ckBTC" => InterestRateParams {
             optimal_usage_ratio: ScalingMath::to_scaled(Nat::from(CKBTC_OPTIMAL_USAGE_RATIO))/Nat::from(PERCENTAGE_FACTOR),
@@ -132,12 +131,12 @@ pub async fn calculate_interest_rates(
     reserve_factor: Nat,
     asset: String,
 ) -> Result<(Nat, Nat), Error> {
-    ic_cdk::println!("--- Calculating Interest Rates ---");
-    ic_cdk::println!("Asset: {:?}", asset);
-    ic_cdk::println!("Total Debt: {:?}", total_debt);
-    ic_cdk::println!("Liquidity Added: {:?}", liq_added);
-    ic_cdk::println!("Liquidity Taken: {:?}", liq_taken);
-    ic_cdk::println!("Reserve Factor: {:?}", reserve_factor);
+    trace!("calling calculating Interest Rates function");
+    debug!("Asset: {:?}", asset);
+    debug!("Total Debt: {:?}", total_debt);
+    debug!("Liquidity Added: {:?}", liq_added);
+    debug!("Liquidity Taken: {:?}", liq_taken);
+    debug!("Reserve Factor: {:?}", reserve_factor);
 
     let mut current_liquidity_rate = zero_nat_value();
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
@@ -148,41 +147,39 @@ pub async fn calculate_interest_rates(
     let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply);
 
     let available_liq = total_supply + liq_added - liq_taken;
-    ic_cdk::println!("Available Liquidity: {:?}", available_liq);
+    debug!("Available Liquidity: {:?}", available_liq);
 
     if total_debt != zero_nat_value() {
         let utilization_ratio = total_debt.clone().scaled_div(total_debt.clone() + available_liq.clone());
-        ic_cdk::println!("Utilization Ratio: {:?}", utilization_ratio);
-        ic_cdk::println!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
+        debug!("Utilization Ratio: {:?}", utilization_ratio);
+        debug!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
         
         if utilization_ratio > params.optimal_usage_ratio {
             let excess_ratio = utilization_ratio.clone() - params.optimal_usage_ratio.clone();
             let excess_usage_scaled = excess_ratio.clone().scaled_div(params.max_excess_usage_ratio.clone());
             
-            ic_cdk::println!("Excess Ratio: {:?}", excess_ratio);
-            ic_cdk::println!("Excess Usage Scaled: {:?}", excess_usage_scaled);
+            debug!("Excess Ratio: {:?}", excess_ratio);
+            debug!("Excess Usage Scaled: {:?}", excess_usage_scaled);
             
             curr_borrow_rate += params.variable_rate_slope1.clone()
                 + params.variable_rate_slope2.clone().scaled_mul(excess_usage_scaled);
             
-            ic_cdk::println!("Borrow Rate (After Excess Usage Applied): {:?}", curr_borrow_rate);
+            debug!("Borrow Rate (After Excess Usage Applied): {:?}", curr_borrow_rate);
         } else {
             curr_borrow_rate += params.variable_rate_slope1.clone()
                 .scaled_mul(utilization_ratio.clone())
                 .scaled_div(params.optimal_usage_ratio.clone());
             
             
-            ic_cdk::println!("Borrow Rate (Within Optimal Usage): {:?}", curr_borrow_rate);
+            debug!("Borrow Rate (Within Optimal Usage): {:?}", curr_borrow_rate);
         }
 
         current_liquidity_rate = curr_borrow_rate.clone().scaled_mul(utilization_ratio.clone())
             .scaled_mul(Nat::from(100_000_000u128) - (reserve_factor/Nat::from(PERCENTAGE_FACTOR)));
 
-        ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
-        ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);
+        debug!("Final Borrow Rate: {:?}", curr_borrow_rate);
+        debug!("Final Liquidity Rate: {:?}", current_liquidity_rate);
     }
-
-    ic_cdk::println!("--- Interest Rate Calculation Completed ---");
 
     Ok((current_liquidity_rate, curr_borrow_rate))
 }

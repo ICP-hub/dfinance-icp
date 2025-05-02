@@ -14,11 +14,11 @@ use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
 use crate::guards::access_control::guard_admin_only;
-use crate::guards::access_control::{
- {check_is_tester, guard_prevent_anonymous},
-};
+use crate::guards::access_control::{check_is_tester, guard_prevent_anonymous};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::{current_timestamp, get_max_value};
 use crate::stable_storage::storable::Candid;
+use crate::{debug, error, info, trace};
 use crate::{
     protocol::utils::math_utils::ScalingMath,
     stable_storage::state_handler::{mutate_state, read_state},
@@ -53,6 +53,7 @@ use ic_cdk::{api, update};
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
+    trace!("calling calculate user account data");
     // prevent anonymous user
     if on_behalf == Some(Principal::anonymous()) {
         return Err(Error::AnonymousPrincipal);
@@ -68,14 +69,14 @@ pub async fn calculate_user_account_data(
             user_principal
         }
     };
-    ic_cdk::println!("Principal of the user: {:?}", user_principal);
+    debug!("Principal of the user: {:?}", user_principal);
 
     let max = get_max_value();
 
     let user_data = user_data(user_principal)?;
 
     if user_data.reserves.is_none() {
-        ic_cdk::println!("No reserves found for the user.");
+        info!("No reserves found for the user.");
         return Ok((
             zero_nat_value(),
             zero_nat_value(),
@@ -92,8 +93,6 @@ pub async fn calculate_user_account_data(
         .as_ref()
         .ok_or_else(|| Error::NoUserReserveDataFound)?;
 
-    ic_cdk::println!("User reserves found");
-
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
     let mut avg_ltv = zero_nat_value();
@@ -102,10 +101,10 @@ pub async fn calculate_user_account_data(
     let mut available_borrow = zero_nat_value();
 
     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
-        ic_cdk::println!("Processing reserve: {:?}", reserve_name);
+        debug!("Processing reserve: {:?}", reserve_name);
 
         if !user_reserve_data.is_using_as_collateral_or_borrow {
-            ic_cdk::println!("no supply no borrow, skipping..... {:?}", reserve_name);
+            debug!("no supply no borrow, skipping..... {:?}", reserve_name);
             continue;
         }
 
@@ -118,11 +117,11 @@ pub async fn calculate_user_account_data(
         .ok_or_else(|| Error::NoReserveDataFound)?;
 
         let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-        ic_cdk::println!("asset price = {}", rate);
+        debug!("asset price = {}", rate);
 
         let asset_price = rate;
         if user_reserve_data.is_collateral {
-            ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
+            debug!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
             let user_balance = get_user_balance_in_base_currency(
                 user_principal,
@@ -130,24 +129,24 @@ pub async fn calculate_user_account_data(
                 asset_price.clone(),
             )
             .await?;
+            info!("get user balance in base currency called");
 
-            ic_cdk::println!(
+            debug!(
                 "User balance in usd for collateral reserve '{}': {}",
-                user_reserve_data.reserve,
-                user_balance
+                user_reserve_data.reserve, user_balance
             );
 
             total_collateral += user_balance.clone();
-            ic_cdk::println!("Total collateral so far: {}", total_collateral);
+            debug!("Total collateral so far: {}", total_collateral);
 
             if reserve_data.configuration.ltv != zero_nat_value() {
                 avg_ltv += user_balance
                     .clone()
                     .scaled_mul(reserve_data.configuration.ltv.clone());
-                ic_cdk::println!("Average LTV updated to: {}", avg_ltv);
+                debug!("Average LTV updated to: {}", avg_ltv);
             } else {
                 has_zero_ltv_collateral = true;
-                ic_cdk::println!(
+                debug!(
                     "Reserve '{}' has zero LTV collateral.",
                     user_reserve_data.reserve
                 );
@@ -156,22 +155,21 @@ pub async fn calculate_user_account_data(
             avg_liquidation_threshold += user_balance
                 .clone()
                 .scaled_mul(reserve_data.configuration.liquidation_threshold);
-            ic_cdk::println!(
+            debug!(
                 "Average liquidation threshold updated to: {}",
                 avg_liquidation_threshold
             );
 
             available_borrow += user_balance.scaled_mul(reserve_data.configuration.ltv)
                 / Nat::from(PERCENTAGE_FACTOR);
-            ic_cdk::println!(
+            debug!(
                 "available borrow after adding collateral of {} = {}",
-                reserve_name,
-                available_borrow
+                reserve_name, available_borrow
             );
         }
 
         if user_reserve_data.is_borrowed {
-            ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
+            debug!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
             let user_debt = get_user_debt_in_base_currency(
                 user_principal,
@@ -179,9 +177,11 @@ pub async fn calculate_user_account_data(
                 asset_price.clone(),
             )
             .await?;
+            info!("get user debt in base currency called");
+            debug!("User debt {}", user_debt);
 
             total_debt += user_debt.clone();
-            ic_cdk::println!("Total debt for borrowed reserves {}", total_debt.clone());
+            debug!("Total debt for borrowed reserves {}", total_debt.clone());
         }
     }
 
@@ -191,7 +191,7 @@ pub async fn calculate_user_account_data(
         available_borrow -= total_debt.clone();
     }
 
-    ic_cdk::println!(
+    debug!(
         "available borrow after subtracting debt = {}",
         available_borrow.clone()
     );
@@ -201,29 +201,29 @@ pub async fn calculate_user_account_data(
     } else {
         zero_nat_value()
     };
-    ic_cdk::println!("Final Avg LTV: {}", avg_ltv);
+    debug!("Final Avg LTV: {}", avg_ltv);
 
     avg_liquidation_threshold = if total_collateral != zero_nat_value() {
         avg_liquidation_threshold.scaled_div(total_collateral.clone())
     } else {
         zero_nat_value()
     };
-    ic_cdk::println!(
+    debug!(
         "Final Avg Liquidation Threshold: {}",
         avg_liquidation_threshold
     );
 
     let health_factor = if total_debt == zero_nat_value() {
-        ic_cdk::println!("Health factor: No debt, setting to MAX.");
+        debug!("Health factor: No debt, setting to MAX.");
         max
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-    ic_cdk::println!("Calculated Final Health Factor: {}", health_factor);
+    debug!("Calculated Final Health Factor: {}", health_factor);
 
-    ic_cdk::println!("Final avaiable borrow = {}", available_borrow);
+    debug!("Final avaiable borrow = {}", available_borrow);
 
-    ic_cdk::println!(
+    debug!(
             "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
             total_collateral,
             total_debt,
@@ -282,7 +282,7 @@ pub async fn calculate_user_asset_data(
     // prevent anonymous caller
     guard_prevent_anonymous()?;
 
-    ic_cdk::println!("to check the on behalf = {:?}", on_behalf);
+    debug!("to check the on behalf = {:?}", on_behalf);
 
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
@@ -294,28 +294,28 @@ pub async fn calculate_user_asset_data(
 
     let dtoken_balance = dtoken_balance.unwrap_or_default();
     let debt_token_balance = debt_token_balance.unwrap_or_default();
-    ic_cdk::println!("dtoken_balance: {:?}", dtoken_balance);
-    ic_cdk::println!("debt_token_balance: {:?}", debt_token_balance);
-    ic_cdk::println!("Principal of the user: {:?}", user_principal);
+    debug!("dtoken_balance: {:?}", dtoken_balance);
+    debug!("debt_token_balance: {:?}", debt_token_balance);
+    debug!("Principal of the user: {:?}", user_principal);
 
     let max = get_max_value();
 
     let user_data_result = user_data(user_principal);
-    ic_cdk::println!("Fetching user data...");
+    debug!("Fetching user data...");
 
     let user_data = match user_data_result {
         Ok(data) => {
-            ic_cdk::println!("User data found");
+            debug!("User data found");
             data
         }
         Err(e) => {
-            ic_cdk::println!("Error fetching user data: {:?}", e);
+            error!("Error fetching user data: {:?}", e);
             return Err(e);
         }
     };
 
     if user_data.reserves.is_none() {
-        ic_cdk::println!("No reserves found for the user.");
+        debug!("No reserves found for the user.");
         return Ok((
             zero_nat_value(),
             zero_nat_value(),
@@ -331,7 +331,7 @@ pub async fn calculate_user_asset_data(
         .reserves
         .as_ref()
         .ok_or_else(|| Error::NoUserReserveDataFound)?;
-    ic_cdk::println!("User reserves found");
+    debug!("User reserves found");
 
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
@@ -341,9 +341,9 @@ pub async fn calculate_user_asset_data(
     let mut available_borrow = zero_nat_value();
 
     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
-        ic_cdk::println!("Processing reserve: {:?}", reserve_name);
+        debug!("Processing reserve: {:?}", reserve_name);
         if !user_reserve_data.is_using_as_collateral_or_borrow {
-            ic_cdk::println!("no supply no borrow, skipping..... {:?}", reserve_name);
+            debug!("no supply no borrow, skipping..... {:?}", reserve_name);
             continue;
         }
         let reserve_data_result = mutate_state(|state| {
@@ -356,11 +356,11 @@ pub async fn calculate_user_asset_data(
 
         let reserve_data = match reserve_data_result {
             Ok(data) => {
-                ic_cdk::println!("Reserve data found for asset");
+                debug!("Reserve data found for asset");
                 data
             }
             Err(e) => {
-                ic_cdk::println!("Error: {:?}", e);
+                error!("Error: {:?}", e);
                 return Err(e);
             }
         };
@@ -368,15 +368,15 @@ pub async fn calculate_user_asset_data(
         let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
             Ok(price) => price,
             Err(e) => {
-                ic_cdk::println!("Failed to fetch exchange rate");
+                error!("Failed to fetch exchange rate");
                 return Err(e);
             }
         };
-        ic_cdk::println!("asset price = {}", rate);
+        debug!("asset price = {}", rate);
 
         let asset_price = rate;
         if user_reserve_data.is_collateral {
-            ic_cdk::println!("Reserve '{}' is collateral.", user_reserve_data.reserve);
+            debug!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
             let balance: Nat = dtoken_balance
                 .iter()
@@ -394,7 +394,7 @@ pub async fn calculate_user_asset_data(
 
             let user_balance = match user_balance_in_base_currency {
                 Ok(data) => {
-                    ic_cdk::println!("user_balance_in_base_currency: {:?}", data);
+                    debug!("user_balance_in_base_currency: {:?}", data);
                     data
                 }
                 Err(e) => {
@@ -402,23 +402,22 @@ pub async fn calculate_user_asset_data(
                 }
             };
 
-            ic_cdk::println!(
+            debug!(
                 "User balance in usd for collateral reserve '{}': {}",
-                user_reserve_data.reserve,
-                user_balance
+                user_reserve_data.reserve, user_balance
             );
 
             total_collateral += user_balance.clone();
-            ic_cdk::println!("Total collateral so far: {}", total_collateral);
+            debug!("Total collateral so far: {}", total_collateral);
 
             if reserve_data.configuration.ltv != zero_nat_value() {
                 avg_ltv += user_balance
                     .clone()
                     .scaled_mul(reserve_data.configuration.ltv.clone());
-                ic_cdk::println!("Average LTV updated to: {}", avg_ltv);
+                debug!("Average LTV updated to: {}", avg_ltv);
             } else {
                 has_zero_ltv_collateral = true;
-                ic_cdk::println!(
+                debug!(
                     "Reserve '{}' has zero LTV collateral.",
                     user_reserve_data.reserve
                 );
@@ -427,31 +426,30 @@ pub async fn calculate_user_asset_data(
             avg_liquidation_threshold += user_balance
                 .clone()
                 .scaled_mul(reserve_data.configuration.liquidation_threshold);
-            ic_cdk::println!(
+            debug!(
                 "Average liquidation threshold updated to: {}",
                 avg_liquidation_threshold
             );
 
             available_borrow += user_balance.scaled_mul(reserve_data.configuration.ltv)
                 / Nat::from(PERCENTAGE_FACTOR);
-            ic_cdk::println!(
+            debug!(
                 "available borrow after adding collateral of {} = {}",
-                reserve_name,
-                available_borrow
+                reserve_name, available_borrow
             );
         }
 
         if user_reserve_data.is_borrowed {
-            ic_cdk::println!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
+            debug!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
             let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
                 Ok(price) => price,
                 Err(e) => {
-                    ic_cdk::println!("Failed to fetch exchange rate");
+                    error!("Failed to fetch exchange rate");
                     return Err(e);
                 }
             };
-            ic_cdk::println!("asset price = {}", rate);
+            debug!("asset price = {}", rate);
 
             let asset_price = rate;
 
@@ -474,9 +472,10 @@ pub async fn calculate_user_asset_data(
                 asset_price.clone(),
             )
             .await?;
+            debug!("user_debt_in_base_currency: {:?}", user_debt);
 
             total_debt += user_debt.clone();
-            ic_cdk::println!("Total debt for borrowed reserves {}", total_debt.clone());
+            debug!("Total debt for borrowed reserves {}", total_debt.clone());
         }
     }
     if available_borrow < total_debt.clone() || available_borrow < Nat::from(MIN_BORROW) {
@@ -485,7 +484,7 @@ pub async fn calculate_user_asset_data(
         available_borrow -= total_debt.clone();
     }
 
-    ic_cdk::println!(
+    debug!(
         "available borrow after subtracting debt = {}",
         available_borrow.clone()
     );
@@ -495,29 +494,29 @@ pub async fn calculate_user_asset_data(
     } else {
         zero_nat_value()
     };
-    ic_cdk::println!("Final Avg LTV: {}", avg_ltv);
+    debug!("Final Avg LTV: {}", avg_ltv);
 
     avg_liquidation_threshold = if total_collateral != zero_nat_value() {
         avg_liquidation_threshold.scaled_div(total_collateral.clone())
     } else {
         zero_nat_value()
     };
-    ic_cdk::println!(
+    debug!(
         "Final Avg Liquidation Threshold: {}",
         avg_liquidation_threshold
     );
 
     let health_factor = if total_debt == zero_nat_value() {
-        ic_cdk::println!("Health factor: No debt, setting to MAX.");
+        debug!("Health factor: No debt, setting to MAX.");
         max
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-    ic_cdk::println!("Calculated Final Health Factor: {}", health_factor);
+    debug!("Calculated Final Health Factor: {}", health_factor);
 
-    ic_cdk::println!("Final avaiable borrow = {}", available_borrow);
+    debug!("Final avaiable borrow = {}", available_borrow);
 
-    ic_cdk::println!(
+    debug!(
             "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
             total_collateral,
             total_debt,
@@ -567,10 +566,10 @@ pub async fn get_user_balance_in_base_currency(
     reserve: &UserReserveData,
     asset_price: Nat,
 ) -> Result<Nat, Error> {
-    ic_cdk::println!("Calculating user balance in base currency...");
-    ic_cdk::println!("User principal: {:?}", user_principal);
-    ic_cdk::println!("Reserve: {:?}", reserve.reserve);
-    ic_cdk::println!("Asset price: {}", asset_price);
+    trace!("Calculating user balance in base currency...");
+    debug!("User principal: {:?}", user_principal);
+    debug!("Reserve: {:?}", reserve.reserve);
+    debug!("Asset price: {}", asset_price);
 
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
@@ -578,15 +577,15 @@ pub async fn get_user_balance_in_base_currency(
 
     let user_scaled_balance = get_balance(d_token_canister_principal, user_principal).await?;
 
-    ic_cdk::println!(
+    debug!(
         "Fetched balance from DToken canister: {:?}",
         user_scaled_balance
     );
 
     let normalized_supply = user_normalized_supply(asset_reserve)?;
 
-    ic_cdk::println!("user balance normailized supply = {:?}", normalized_supply);
-    ic_cdk::println!("user liq index {}", reserve.liquidity_index.clone());
+    debug!("user balance normailized supply = {:?}", normalized_supply);
+    debug!("user liq index {}", reserve.liquidity_index.clone());
     let user_scaled = if reserve.liquidity_index != zero_nat_value() {
         user_scaled_balance
             .clone()
@@ -595,9 +594,9 @@ pub async fn get_user_balance_in_base_currency(
         user_scaled_balance.clone()
     };
 
-    ic_cdk::println!("user_scaled = {}", user_scaled);
+    debug!("user_scaled = {}", user_scaled);
     let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
-    ic_cdk::println!(
+    debug!(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
@@ -611,20 +610,20 @@ pub async fn get_user_asset_balance_in_base_currency(
     user_balance: Nat,
     asset_price: Nat,
 ) -> Result<Nat, Error> {
-    ic_cdk::println!("Calculating user asset balance in base currency...");
-    ic_cdk::println!("User principal: {:?}", user_principal);
-    ic_cdk::println!("Reserve: {:?}", reserve.reserve);
-    ic_cdk::println!("User balance: {}", user_balance);
-    ic_cdk::println!("Asset price : {}", asset_price);
+    trace!("Calculating user asset balance in base currency...");
+    debug!("User principal: {:?}", user_principal);
+    debug!("Reserve: {:?}", reserve.reserve);
+    debug!("User balance: {}", user_balance);
+    debug!("Asset price : {}", asset_price);
 
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
     let user_scaled_balance = user_balance.clone();
 
     let normalized_supply = user_normalized_supply(asset_reserve)?;
-    ic_cdk::println!("user balance normailized supply = {:?}", normalized_supply);
+    debug!("user balance normailized supply = {:?}", normalized_supply);
 
-    ic_cdk::println!("user liq index {}", reserve.liquidity_index.clone());
+    debug!("user liq index {}", reserve.liquidity_index.clone());
     let user_scaled = if reserve.liquidity_index != zero_nat_value() {
         user_scaled_balance
             .clone()
@@ -633,9 +632,9 @@ pub async fn get_user_asset_balance_in_base_currency(
         user_scaled_balance.clone()
     };
 
-    ic_cdk::println!("user_scaled = {}", user_scaled);
+    debug!("user_scaled = {}", user_scaled);
     let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
-    ic_cdk::println!(
+    debug!(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
@@ -680,14 +679,14 @@ pub async fn get_user_debt_in_base_currency(
     if user_variable_debt != zero_nat_value() {
         user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
         user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
-        ic_cdk::println!(
+        debug!(
             "User variable debt after normalization: {}",
             user_variable_debt
         );
     }
 
     let result = user_variable_debt.scaled_mul(asset_price);
-    ic_cdk::println!("Final user debt in base currency: {}", result);
+    debug!("Final user debt in base currency: {}", result);
     Ok(result)
 }
 
@@ -731,7 +730,7 @@ pub async fn get_user_asset_debt_in_base_currency(
     if user_variable_debt != zero_nat_value() {
         user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
         user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
-        ic_cdk::println!(
+        debug!(
             "User variable debt after normalization: {}",
             user_variable_debt
         );
@@ -767,11 +766,11 @@ pub async fn get_liquidation_users_concurrent(
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
 
     // let total_users = vector_user_data.len();
-    // ic_cdk::println!("Total users: {}", total_users);
+    // debug!("Total users: {}", total_users);
 
     let mut liq_list = Vec::new();
     let cycles_start = Nat::from(api::canister_balance128());
-    ic_cdk::println!("cycles start = {:?}", cycles_start);
+    debug!("cycles start = {:?}", cycles_start);
 
     for page in 0..total_pages {
         let users_to_process = vector_user_data
@@ -781,17 +780,16 @@ pub async fn get_liquidation_users_concurrent(
             .cloned()
             .collect::<Vec<_>>();
 
-        ic_cdk::println!("Processing page: {}", page + 1);
+        debug!("Processing page: {}", page + 1);
 
         let page_liq_list = stream::iter(users_to_process)
             .map(|(user_principal, user_data)| async move {
-                ic_cdk::println!("Processing user: {:?}", user_principal);
+                debug!("Processing user: {:?}", user_principal);
                 match calculate_user_account_data(Some(user_principal)).await {
                     Ok(user_account_data_tuple) => {
-                        ic_cdk::println!(
+                        debug!(
                             "User {:?} data: {:?}",
-                            user_principal,
-                            user_account_data_tuple
+                            user_principal, user_account_data_tuple
                         );
                         let user_account_data = UserAccountData {
                             collateral: user_account_data_tuple.0,
@@ -810,10 +808,9 @@ pub async fn get_liquidation_users_concurrent(
                         if user_account_data.health_factor.clone() / Nat::from(PERCENTAGE_FACTOR)
                             < Nat::from(HEALTH_FACTOR_BARRIER)
                         {
-                            ic_cdk::println!(
+                            debug!(
                                 "Low health factor user: {:?}, Health Factor: {:?}",
-                                user_principal,
-                                user_account_data.health_factor
+                                user_principal, user_account_data.health_factor
                             );
                             Some((user_principal, user_account_data, user_data))
                         } else {
@@ -821,11 +818,7 @@ pub async fn get_liquidation_users_concurrent(
                         }
                     }
                     Err(err) => {
-                        ic_cdk::println!(
-                            "Failed to fetch data for {:?}: {:?}",
-                            user_principal,
-                            err
-                        );
+                        error!("Failed to fetch data for {:?}: {:?}", user_principal, err);
                         None
                     }
                 }
@@ -836,11 +829,11 @@ pub async fn get_liquidation_users_concurrent(
 
         liq_list.extend(page_liq_list.into_iter().flatten());
         let cycles_end = Nat::from(api::canister_balance128());
-        ic_cdk::println!("cycles middle = {:?}", cycles_end);
+        debug!("cycles middle = {:?}", cycles_end);
     }
 
     let cycles_end = Nat::from(api::canister_balance128());
-    ic_cdk::println!("cycles end = {:?}", cycles_end);
+    debug!("cycles end = {:?}", cycles_end);
 
     liq_list
 }
@@ -861,7 +854,6 @@ pub fn register_user() -> Result<String, Error> {
     guard_prevent_anonymous()?;
 
     let user_principal: Principal = ic_cdk::api::caller();
-    ic_cdk::println!("user principal register = {} ", user_principal);
 
     let user_data = mutate_state(|state| {
         // let user_index = &mut state.user_profile;
@@ -910,6 +902,7 @@ pub async fn create_user_reserve_with_low_health(
     supply_tokens: Nat,
     borrow_tokens: Nat,
 ) -> Result<UserData, Error> {
+    trace!("Creating user reserve with low health factor...");
     // prevent anonymous access
     guard_prevent_anonymous()?;
     validate_asset_name(&asset_supply)?;
@@ -917,23 +910,23 @@ pub async fn create_user_reserve_with_low_health(
     validate_zero_value(&supply_tokens)?;
     validate_zero_value(&borrow_tokens)?;
 
-    ic_cdk::println!(
+    debug!(
         "Creating user reserve with low health factor for supply asset: {} and borrow asset: {}",
-        asset_supply,
-        asset_borrow
+        asset_supply, asset_borrow
     );
 
     if !check_is_tester() {
-        ic_cdk::println!("Invalid User");
+        error!("Invalid User");
         return Err(Error::InvalidUser);
     }
 
     let user_principal = ic_cdk::caller();
-    ic_cdk::println!("User principal: {:?}", user_principal.to_text());
+    debug!("User principal: {:?}", user_principal.to_text());
     register_user()?;
+    info!("User registered successfully");
 
     let platform_principal = ic_cdk::api::id();
-    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+    debug!("Platform principal: {:?}", platform_principal);
 
     let (supply_reserve_data, borrow_reserve_data) = if asset_supply == asset_borrow {
         let mut reserve_data = mutate_state(|state| {
@@ -1097,10 +1090,13 @@ pub async fn create_user_reserve_with_low_health(
     .await
     {
         Ok(data) => {
-            ic_cdk::println!("Dtoken transfer from backend to user executed successfully = {:?}", data);
+            info!(
+                "Dtoken transfer from backend to user executed successfully = {:?}",
+                data
+            );
         }
         Err(err) => {
-            ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+            error!("Error: Dtoken transfer from backend to user: {:?}", err);
             return Err(Error::ErrorMintTokens);
         }
     }
@@ -1114,13 +1110,13 @@ pub async fn create_user_reserve_with_low_health(
     .await
     {
         Ok(new_balance) => {
-            println!(
+            info!(
                 "Asset transfer from user to backend canister executed successfully = {:?}",
                 new_balance
             );
         }
         Err(e) => {
-            ic_cdk::println!("Error: Minting failed. Error: {:?}", e);
+            error!("Error: Asset transfer from user to backend canister: {:?}", e);
             return Err(Error::ErrorMintTokens);
         }
     }
@@ -1135,10 +1131,10 @@ pub async fn create_user_reserve_with_low_health(
     .await
     {
         Ok(_) => {
-            ic_cdk::println!("Dtoken transfer from backend to user executed successfully");
+            info!("Dtoken transfer from backend to user executed successfully");
         }
         Err(err) => {
-            ic_cdk::println!("Error: Minting failed. Error: {:?}", err);
+            error!("Error: Dtoken transfer from backend to user: {:?}", err);
             return Err(Error::ErrorMintTokens);
         }
     }
@@ -1152,13 +1148,13 @@ pub async fn create_user_reserve_with_low_health(
     .await
     {
         Ok(new_balance) => {
-            ic_cdk::println!(
+            info!(
                 "Asset transfer from backend to user executed successfully. New balance: {:?}",
                 new_balance
             );
         }
         Err(e) => {
-            ic_cdk::println!("Error: Minting failed. Error: {:?}", e);
+            error!("Error: Asset transfer from backend to user: {:?}", e);
             return Err(Error::ErrorRollBack);
         }
     }
@@ -1180,7 +1176,7 @@ pub async fn create_user_reserve_with_low_health(
             .insert(user_principal, Candid(user_data.clone()));
     });
 
-    ic_cdk::println!("user data success = {:?}", user_data);
+    debug!("user data success = {:?}", user_data);
 
     Ok(user_data)
 }
@@ -1215,11 +1211,11 @@ pub async fn get_all_user_list(
 
     let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
     let total_users = vector_user_data.len();
-    ic_cdk::println!("Total users: {}", total_users);
+    debug!("Total users: {}", total_users);
 
     let mut liq_list = Vec::new();
     let cycles_start = Nat::from(api::canister_balance128());
-    ic_cdk::println!("cycles start = {:?}", cycles_start);
+    debug!("cycles start = {:?}", cycles_start);
 
     for page in 0..total_pages {
         let users_to_process = vector_user_data
@@ -1229,17 +1225,16 @@ pub async fn get_all_user_list(
             .cloned()
             .collect::<Vec<_>>();
 
-        ic_cdk::println!("Processing page: {}", page + 1);
+        debug!("Processing page: {}", page + 1);
 
         let page_liq_list = stream::iter(users_to_process)
             .map(|(user_principal, user_data)| async move {
-                ic_cdk::println!("Processing user: {:?}", user_principal);
+                debug!("Processing user: {:?}", user_principal);
                 match calculate_user_account_data(Some(user_principal)).await {
                     Ok(user_account_data_tuple) => {
-                        ic_cdk::println!(
+                        debug!(
                             "User {:?} data: {:?}",
-                            user_principal,
-                            user_account_data_tuple
+                            user_principal, user_account_data_tuple
                         );
                         let user_account_data = UserAccountData {
                             collateral: user_account_data_tuple.0,
@@ -1254,11 +1249,7 @@ pub async fn get_all_user_list(
                         Some((user_principal, user_account_data, user_data))
                     }
                     Err(err) => {
-                        ic_cdk::println!(
-                            "Failed to fetch data for {:?}: {:?}",
-                            user_principal,
-                            err
-                        );
+                        error!("Failed to fetch data for {:?}: {:?}", user_principal, err);
                         None
                     }
                 }
@@ -1270,11 +1261,11 @@ pub async fn get_all_user_list(
         liq_list.extend(page_liq_list.into_iter().flatten());
 
         let cycles_end = Nat::from(api::canister_balance128());
-        ic_cdk::println!("cycles middle = {:?}", cycles_end);
+        debug!("cycles middle = {:?}", cycles_end);
     }
 
     let cycles_end = Nat::from(api::canister_balance128());
-    ic_cdk::println!("cycles end = {:?}", cycles_end);
+    debug!("cycles end = {:?}", cycles_end);
 
     Ok(liq_list)
 }

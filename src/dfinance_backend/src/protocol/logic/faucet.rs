@@ -4,13 +4,15 @@ use crate::api::query::get_cached_exchange_rate;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::debug;
 use crate::declarations::datatypes::FaucetReserve;
+use crate::error;
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::update::{
-    get_faucet_reserve_for_asset, get_user_faucet_reserves,
-};
+use crate::info;
+use crate::protocol::libraries::update::{get_faucet_reserve_for_asset, get_user_faucet_reserves};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
@@ -42,7 +44,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     validate_zero_value(&amount)?;
 
     let mut user_faucet_reserves = get_user_faucet_reserves(user_principal);
-    ic_cdk::println!("faucet data = {:?}", user_faucet_reserves);
+    debug!("faucet data = {:?}", user_faucet_reserves);
 
     let ledger_canister_id = mutate_state(|state| {
         let reserve_list = &state.reserve_list;
@@ -53,40 +55,46 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     })?;
 
     let platform_principal = ic_cdk::api::id();
-    ic_cdk::println!("Platform principal: {:?}", platform_principal);
+    debug!("Platform principal: {:?}", platform_principal);
 
     let balance = get_balance(ledger_canister_id, platform_principal).await?;
 
-    ic_cdk::println!("balance of wallet = {}", balance);
+    debug!("balance of wallet = {}", balance);
 
     //TODO: error message is not clear.
     if amount > balance {
-        ic_cdk::println!("wallet balance is low");
+        error!("wallet balance is low");
         return Err(Error::LowWalletBalance);
     }
 
     let asset_price = get_cached_exchange_rate(asset.clone())?;
-    ic_cdk::println!("asset price = {}", asset_price);
+    debug!("asset price = {}", asset_price);
 
     let usd_amount = ScalingMath::scaled_mul(amount.clone(), asset_price.clone());
 
-    ic_cdk::println!("usd amount of the facut = {}, {}", usd_amount, asset_price);
+    debug!("usd amount of the facut = {}, {}", usd_amount, asset_price);
 
     let faucet_reserve = get_faucet_reserve_for_asset(&mut user_faucet_reserves, &asset);
-    ic_cdk::println!("faucet reserve = {:?}", faucet_reserve);
+    debug!("faucet reserve = {:?}", faucet_reserve);
 
     if let Some((_, reserve)) = faucet_reserve {
-        ic_cdk::println!("inside if statement");
+        debug!("inside if statement");
 
         if usd_amount.clone() > reserve.faucet_limit {
+            error!("Faucet request amount exceeds the faucet limit",);
             return Err(Error::AmountExceedsLimit);
         }
 
         if (reserve.faucet_usage.clone() + usd_amount.clone()) > reserve.faucet_limit {
+            error!(
+                "Faucet request exceeds limit: requested = {}, available = {}",
+                reserve.faucet_usage.clone() + usd_amount.clone(),
+                reserve.faucet_limit
+            );
             return Err(Error::ExceedsRemainingLimit);
         }
         reserve.faucet_usage += usd_amount;
-        ic_cdk::println!("if faucet usage = {}", reserve.faucet_usage);
+        info!("updated faucet usage = {}", reserve.faucet_usage);
     } else {
         let mut new_reserve = FaucetReserve {
             // reserve: asset.clone(),
@@ -95,17 +103,22 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         };
 
         if usd_amount > new_reserve.faucet_limit {
+            error!("Faucet request amount exceeds the faucet limit",);
             return Err(Error::AmountExceedsLimit);
         }
 
         if (new_reserve.faucet_usage.clone() + usd_amount.clone())
             > new_reserve.faucet_limit.clone()
         {
+            error!(
+                "Faucet request exceeds limit: requested = {}, available = {}",
+                new_reserve.faucet_usage.clone() + usd_amount.clone(),
+                new_reserve.faucet_limit
+            );
             return Err(Error::ExceedsRemainingLimit);
         }
 
         new_reserve.faucet_usage += usd_amount;
-        ic_cdk::println!("else faucet usage = {}", new_reserve.faucet_usage);
 
         if let Some(ref mut reserves) = user_faucet_reserves.reserves {
             reserves.push((asset.clone(), new_reserve.clone()));
@@ -113,21 +126,20 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
             user_faucet_reserves.reserves = Some(vec![(asset.clone(), new_reserve.clone())]);
         }
 
-        ic_cdk::println!(
+        info!(
             "faucet new_reserve.faucet_usage = {}",
             new_reserve.faucet_usage
         );
     }
 
-    ic_cdk::println!("user data before submit = {:?}", user_faucet_reserves);
-
+    info!("user faucet reserve updated successfully");
     mutate_state(|state| {
         state
             .faucet_data
             .insert(user_principal, Candid(user_faucet_reserves.clone()));
     });
 
-    ic_cdk::println!("updated user data = {:?}", user_faucet_reserves);
+    debug!("updated user data = {:?}", user_faucet_reserves);
 
     match asset_transfer_from(
         ledger_canister_id,
@@ -138,10 +150,11 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     .await
     {
         Ok(new_balance) => {
-            ic_cdk::println!("Asset transfer from backend to user executed successfully");
+            info!("Asset transfer from backend to user executed successfully");
             Ok(new_balance)
         }
         Err(_) => {
+            error!("error faucet tokens");
             return Err(Error::ErrorFaucetTokens);
         }
     }
@@ -161,7 +174,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
  */
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
     if user_principal == Principal::anonymous() {
-        ic_cdk::println!("Anonymous principals are not allowed");
+        error!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
 
@@ -173,18 +186,18 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
             reserve_data.faucet_usage = zero_nat_value();
         }
     } else {
+        error!("no user reserve data found");
         return Err(Error::NoUserReserveDataFound);
     }
 
-    ic_cdk::println!("User data after faucet reset = {:?}", user_faucet_reserves);
-
+    info!("user faucet reserve updated successfully");
     mutate_state(|state| {
         state
             .faucet_data
             .insert(user_principal, Candid(user_faucet_reserves.clone()));
     });
 
-    ic_cdk::println!(
+    info!(
         "updated user data after facuet reset = {:?}",
         user_faucet_reserves
     );

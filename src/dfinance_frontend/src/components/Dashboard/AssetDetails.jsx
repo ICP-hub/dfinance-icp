@@ -700,8 +700,8 @@ const AssetDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       for (const asset of assets) {
-        fetchAssetSupply(asset);
-        fetchAssetBorrow(asset);
+       await fetchAssetSupply(asset);
+       await  fetchAssetBorrow(asset);
       }
     };
 
@@ -1097,8 +1097,8 @@ const AssetDetails = () => {
                   <div className="ml-auto">
                     <Button
                       title={"Supply"}
-                      onClickHandler={() => {
-                        fetchAssetSupply(id);
+                      onClickHandler={async () => {
+                        await fetchAssetSupply(id);
                         if (ckBalance === 0) {
                           toast.dismiss();
                           toast.info(

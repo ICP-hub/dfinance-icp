@@ -61,48 +61,109 @@ const useAssetData = (searchQuery = "") => {
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
 
-
   /**
-   * Fetches the total supply of a specific asset.
-   * @param {string} asset - The asset.
+   * Fetches supply and borrow data for all assets in a single batch operation.
+   * This replaces the individual fetchAssetSupply and fetchAssetBorrow functions.
    */
-  const fetchAssetSupply = async (asset) => {
-    if (backendActor && isAuthenticated) {
-      try {
+  const fetchUserPositions = async (assetsList = assets) => {
+    if (!backendActor || !isAuthenticated || assetsList.length === 0) return;
+    
+    try {
+      const assetReserveData = {};
+      
+      for (const asset of assetsList) {
         const reserveDataForAsset = await fetchReserveData(asset);
         if (reserveDataForAsset.Ok?.id) {
-          const result = await backendActor.user_normalized_supply(
-            reserveDataForAsset.Ok
-          );
-          setAssetSupply((prev) => ({ ...prev, [asset]: result.Ok }));
-        } else {
-          console.error("Missing id in reserveDataForAsset.");
+          assetReserveData[asset] = reserveDataForAsset.Ok;
         }
-      } catch (error) {
-        console.error("Error fetching asset supply:", error.message);
       }
+      
+      const supplyPromises = Object.entries(assetReserveData).map(async ([asset, data]) => {
+        const result = await backendActor.user_normalized_supply(data);
+        return { asset, supply: result.Ok };
+      });
+      
+      const borrowPromises = Object.entries(assetReserveData).map(async ([asset, data]) => {
+        const result = await backendActor.user_normalized_debt(data);
+        return { asset, borrow: result.Ok };
+      });
+      
+      const [supplyResults, borrowResults] = await Promise.all([
+        Promise.all(supplyPromises),
+        Promise.all(borrowPromises)
+      ]);
+      
+      // Update state with the results
+      const newSupplyData = {};
+      const newBorrowData = {};
+      
+      supplyResults.forEach(({ asset, supply }) => {
+        newSupplyData[asset] = supply;
+      });
+      
+      borrowResults.forEach(({ asset, borrow }) => {
+        newBorrowData[asset] = borrow;
+      });
+      
+      setAssetSupply(newSupplyData);
+      setAssetBorrow(newBorrowData);
+      
+      return { supplyData: newSupplyData, borrowData: newBorrowData };
+    } catch (error) {
+      console.error("Error fetching user positions:", error.message);
+      return null;
     }
   };
 
   /**
-   * Fetches the total borrowed amount of a specific asset.
-   * @param {string} asset - The asset.
+   * Legacy individual fetch functions - now optimized to use cached reserve data
+   * to prevent duplicate fetches
    */
-  const fetchAssetBorrow = async (asset) => {
-    if (backendActor && isAuthenticated) {
-      try {
+  const fetchAssetSupply = async (asset) => {
+    if (!backendActor || !isAuthenticated) return;
+    
+    try {
+      let assetReserveData = reserveData?.[asset]?.Ok;
+      
+      if (!assetReserveData) {
         const reserveDataForAsset = await fetchReserveData(asset);
+        console.log("Asset supply:", reserveDataForAsset)
         if (reserveDataForAsset.Ok?.id) {
-          const result = await backendActor.user_normalized_debt(
-            reserveDataForAsset.Ok
-          );
-          setAssetBorrow((prev) => ({ ...prev, [asset]: result.Ok }));
+          assetReserveData = reserveDataForAsset.Ok;
         } else {
           console.error("Missing id in reserveDataForAsset.");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching asset borrow:", error.message);
       }
+      
+      const result = await backendActor.user_normalized_supply(assetReserveData);
+      setAssetSupply((prev) => ({ ...prev, [asset]: result.Ok }));
+    } catch (error) {
+      console.error("Error fetching asset supply:", error.message);
+    }
+  };
+
+  const fetchAssetBorrow = async (asset) => {
+    if (!backendActor || !isAuthenticated) return;
+    
+    try {
+      let assetReserveData = reserveData?.[asset]?.Ok;
+      
+      if (!assetReserveData) {
+        const reserveDataForAsset = await fetchReserveData(asset);
+        console.log("Asset borrow:", reserveDataForAsset)
+        if (reserveDataForAsset.Ok?.id) {
+          assetReserveData = reserveDataForAsset.Ok;
+        } else {
+          console.error("Missing id in reserveDataForAsset.");
+          return;
+        }
+      }
+      
+      const result = await backendActor.user_normalized_debt(assetReserveData);
+      setAssetBorrow((prev) => ({ ...prev, [asset]: result.Ok }));
+    } catch (error) {
+      console.error("Error fetching asset borrow:", error.message);
     }
   };
 
@@ -252,6 +313,7 @@ const useAssetData = (searchQuery = "") => {
     setLoading,
     fetchAssetBorrow,
     fetchAssetSupply,
+    fetchUserPositions,
   };
 };
 

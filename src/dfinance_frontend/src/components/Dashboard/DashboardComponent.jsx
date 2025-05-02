@@ -82,7 +82,7 @@ const DashboardComponent = () => {
     asset_supply,
     asset_borrow,
     fetchAssetSupply,
-    fetchAssetBorrow,
+    fetchUserPositions,
     loading: filteredDataLoading,
   } = useAssetData();
 
@@ -991,40 +991,29 @@ const DashboardComponent = () => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
 
-  useEffect(() => {
-    const fetchSupplyData = async () => {
-      if (assets.length === 0) return;
-      setSupplyDataLoading(true);
 
-      try {
-        for (const asset of assets) {
-          await fetchAssetSupply(asset);
-        }
-      } catch (error) {
-        console.error("Error fetching supply data:", error);
-      } finally {
-        setTimeout(() => setSupplyDataLoading(false), 1500);
-      }
-    };
+//fetch asset supply and asset borrow
+useEffect(() => {
+  const fetchUserData = async () => {
+    if (assets.length === 0) return;
+    setSupplyDataLoading(true);
+    setBorrowDataLoading(true);
 
-    const fetchBorrowData = async () => {
-      if (assets.length === 0) return;
-      setBorrowDataLoading(true);
+    try {
+      await fetchUserPositions(assets);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setTimeout(() => {
+        setSupplyDataLoading(false);
+        setBorrowDataLoading(false);
+      }, 1500);
+    }
+  };
 
-      try {
-        for (const asset of assets) {
-          await fetchAssetBorrow(asset);
-        }
-      } catch (error) {
-        console.error("Error fetching borrow data:", error);
-      } finally {
-        setTimeout(() => setBorrowDataLoading(false), 1500);
-      }
-    };
+  fetchUserData();
+}, [assets, dashboardRefreshTrigger]);
 
-    fetchSupplyData();
-    fetchBorrowData();
-  }, [assets, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (!filteredDataLoading) {
@@ -1515,8 +1504,8 @@ const DashboardComponent = () => {
                                 <div className="flex justify-between gap-4">
                                   <Button
                                     title={"Supply"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       if (ckBalance === 0) {
                                         toast.dismiss();
                                         toast.info(
@@ -1537,8 +1526,8 @@ const DashboardComponent = () => {
 
                                   <Button
                                     title={"Withdraw"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       fetchUserAccountData()
                                       handleAssetAction("withdraw", asset);
                                     }}
@@ -1683,8 +1672,8 @@ const DashboardComponent = () => {
                                 <div className="p-3 align-top flex gap-2 pt-2">
                                   <Button
                                     title={"Supply"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       if (ckBalance === 0) {
                                         toast.dismiss();
                                         toast.info(
@@ -1710,8 +1699,8 @@ const DashboardComponent = () => {
 
                                   <Button
                                     title={"Withdraw"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -1898,8 +1887,8 @@ const DashboardComponent = () => {
                               <div className="flex justify-between gap-4">
                                 <Button
                                   title={"Supply"}
-                                  onClickHandler={() => {
-                                    fetchAssetSupply(item[0]);
+                                  onClickHandler={async () => {
+                                    await fetchAssetSupply(item[0]);
 
                                     handleAssetAction("supply", item[0]);
                                   }}
@@ -2023,8 +2012,8 @@ const DashboardComponent = () => {
                                 <div className="p-3 align-top flex gap-2 pt-2">
                                   <Button
                                     title={"Supply"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(item[0]);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(item[0]);
 
                                       handleAssetAction("supply", item[0]);
                                     }}

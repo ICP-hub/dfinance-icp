@@ -7,7 +7,7 @@ use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::CallerGuard;
+use crate::guards::locks_handler::{CallerGuard,LogFlusher};
 use crate::protocol::libraries::reserve::{self};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
@@ -55,7 +55,10 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
     debug!("User principal: {:?}", user_principal.to_text()); //debug
     //todo- add comment here
-    let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _guard: CallerGuard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
     //valid params
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
@@ -228,6 +231,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     //     };
 
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(),
+    };
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;

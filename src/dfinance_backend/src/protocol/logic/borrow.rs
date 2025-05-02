@@ -18,7 +18,7 @@ use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::guards::locks_handler::CallerGuard;
+use crate::guards::locks_handler::{CallerGuard, LogFlusher};
 use crate::guards::api_limiter::request_limiter;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 
@@ -72,6 +72,9 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     let user_principal = ic_cdk::caller();
     debug!("User principal: {:?}", user_principal.to_text());
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     // input validations
     validate_asset_name(&params.asset)?;
@@ -246,6 +249,9 @@ pub async fn execute_repay(mut params: ExecuteRepayParams) -> Result<Nat, Error>
     if params.on_behalf_of.is_none() {
         _guard = CallerGuard::lock_principal(user_principal.clone())?;
     }
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
 

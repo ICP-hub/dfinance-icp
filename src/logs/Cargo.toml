@@ -13,3 +13,5 @@ ic-cdk-macros = { workspace = true }
 ic-cdk-timers = { workspace = true }
 time = { workspace = true }
 serde = { workspace = true }
+ic-stable-structures = { workspace = true }
+once_cell = { workspace = true }

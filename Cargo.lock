@@ -5510,6 +5510,8 @@ dependencies = [
  "ic-cdk 0.15.0",
  "ic-cdk-macros 0.15.0",
  "ic-cdk-timers",
+ "ic-stable-structures",
+ "once_cell",
  "serde",
  "time",
 ]

@@ -23,6 +23,7 @@ import useUserData from "../customHooks/useUserData";
 import WalletModal from "./WalletModal";
 import { lazy, Suspense } from "react";
 import MiniLoader from "../Common/miniLoader";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 const SupplyInfo = lazy(() => import("./DashboardPopup/SupplyInfo"));
 const BorrowInfo = lazy(() => import("./DashboardPopup/BorrowInfo"));
@@ -62,7 +63,6 @@ const AssetDetails = () => {
     isAuthenticated,
     principal,
     backendActor,
-    fetchReserveData,
     createLedgerActor,
   } = useAuth();
 
@@ -164,6 +164,8 @@ const AssetDetails = () => {
     });
   };
 
+  const { batchFetchReserveData } = useReserveData();
+
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -177,51 +179,73 @@ const AssetDetails = () => {
    * =================================================================================== */
   // Fetches asset data including supply and borrow balances
   const fetchAssetData = async () => {
-    const balances = [];
-
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
-
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
+    try {
+      const reserveDataMap = await batchFetchReserveData(assets);
+      
+      const balancePromises = assets.map(async (asset) => {
+        const reserveDataForAsset = reserveDataMap[asset]?.Ok;
+        if (!reserveDataForAsset) {
+          console.warn(`No reserve data found for ${asset}`);
+          return {
+            asset,
+            dtokenBalance: null,
+            debtTokenBalance: null,
+          };
+        }
+        
+        const dtokenId = reserveDataForAsset?.d_token_canister?.[0];
+        const debtTokenId = reserveDataForAsset?.debt_token_canister?.[0];
+        
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
+        
+        const dtokenPromise = dtokenId ? (async () => {
           try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            assetBalance.dtokenBalance = balance;
+            const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+            if (dtokenActor) {
+              const account = { owner: principalObj, subaccount: [] };
+              return await dtokenActor.icrc1_balance_of(account);
+            }
+            return null;
           } catch (error) {
             console.error(`Error fetching dtoken balance for ${asset}:`, error);
+            return null;
           }
-        }
-      }
-
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
+        })() : Promise.resolve(null);
+        
+        const debtTokenPromise = debtTokenId ? (async () => {
           try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            assetBalance.debtTokenBalance = balance;
+            const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+            if (debtTokenActor) {
+              const account = { owner: principalObj, subaccount: [] };
+              return await debtTokenActor.icrc1_balance_of(account);
+            }
+            return null;
           } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+            console.error(`Error fetching debt token balance for ${asset}:`, error);
+            return null;
           }
-        }
-      }
-      balances.push(assetBalance);
+        })() : Promise.resolve(null);
+        
+        const [dtokenBalance, debtTokenBalance] = await Promise.all([
+          dtokenPromise,
+          debtTokenPromise
+        ]);
+        
+        assetBalance.dtokenBalance = dtokenBalance;
+        assetBalance.debtTokenBalance = debtTokenBalance;
+        
+        return assetBalance;
+      });
+      
+      const balances = await Promise.all(balancePromises);
+      setAssetBalances(balances);
+    } catch (error) {
+      console.error("Error fetching asset data details:", error);
     }
-    setAssetBalances(balances);
   };
 
   // Calculates borrowable value based on available assets

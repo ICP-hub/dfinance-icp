@@ -8,11 +8,13 @@ import { store } from "./redux/store"
 import { AuthProvider } from "./utils/useAuthClient"
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ReserveDataProvider } from "./context/ReserveDataContext"
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
       <AuthProvider >
+      <ReserveDataProvider>
       <BrowserRouter>
           <App />
           <ToastContainer
@@ -26,6 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             progress={undefined}
           />
         </BrowserRouter>
+        </ReserveDataProvider>
       </AuthProvider>
     </Provider>
   </React.StrictMode>

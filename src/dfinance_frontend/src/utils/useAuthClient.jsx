@@ -52,9 +52,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
 
-  const {
-    isSwitchingWallet,
-  } = useSelector((state) => state.utility);
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
 
   useEffect(() => {
     AuthClient.create(options.createOptions).then((client) => {
@@ -216,7 +214,7 @@ export const useAuthClient = (options = defaultOptions) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => { });
+      agent.fetchRootKey().catch((err) => {});
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
@@ -230,19 +228,7 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) { }
-  };
-
-  const fetchReserveData = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const reserveData = await backendActor.get_reserve_data(asset);
-      return reserveData;
-    } catch (error) {
-      throw error;
-    }
+    } catch (error) {}
   };
 
   // Fetches all registered users
@@ -272,7 +258,6 @@ export const useAuthClient = (options = defaultOptions) => {
     createLedgerActor,
     reloadLogin,
     accountIdString,
-    fetchReserveData,
     getAllUsers,
   };
 };

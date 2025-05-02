@@ -15,6 +15,7 @@ import useFormatNumber from "../customHooks/useFormatNumber";
 import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import { Info } from "lucide-react";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 const DashboardNav = () => {
   /* ===================================================================================
@@ -50,13 +51,14 @@ const DashboardNav = () => {
     (state) => state.borrowSupply.totalUsdValueSupply
   );
   const tooltipRef = useRef(null);
-  const { isAuthenticated, principal, fetchReserveData, createLedgerActor } =
+  const { isAuthenticated, principal, createLedgerActor } =
     useAuth();
 
   const theme = useSelector((state) => state.theme.theme);
   const menuRef = useRef(null);
   const { pathname } = useLocation();
   const formatNumber = useFormatNumber();
+  const { batchFetchReserveData } = useReserveData();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -153,50 +155,55 @@ const DashboardNav = () => {
 
   // Function to fetch asset data
   const fetchAssetData = async () => {
-    const balances = [];
-
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
-
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            assetBalance.dtokenBalance = balance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+    if (!assets || assets.length === 0) return;
+    
+    try {
+      const batchedReserveData = await batchFetchReserveData(assets);
+      const balances = [];
+      
+      for (const asset of assets) {
+        const reserveDataForAsset = batchedReserveData[asset];
+        const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+        const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
+        
+        if (dtokenId) {
+          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          if (dtokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await dtokenActor.icrc1_balance_of(account);
+              assetBalance.dtokenBalance = balance;
+            } catch (error) {
+              console.error(`Error fetching dtoken balance for ${asset}:`, error);
+            }
           }
         }
-      }
-
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            assetBalance.debtTokenBalance = balance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+        
+        if (debtTokenId) {
+          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+          if (debtTokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await debtTokenActor.icrc1_balance_of(account);
+              assetBalance.debtTokenBalance = balance;
+            } catch (error) {
+              console.error(`Error fetching debt token balance for ${asset}:`, error);
+            }
           }
         }
+        
+        balances.push(assetBalance);
       }
-      balances.push(assetBalance);
+      
+      setAssetBalances(balances);
+    } catch (error) {
+      console.error("Error fetching asset data:", error);
     }
-    setAssetBalances(balances);
   };
 
   //calculate asset supply and borrow value

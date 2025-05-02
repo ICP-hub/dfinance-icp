@@ -15,6 +15,7 @@ import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useLocation } from "react-router-dom";
 import Pagination from "../Common/pagination";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 /**
  * HealthFactorList Component
@@ -27,13 +28,13 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const { backendActor, isAuthenticated, fetchReserveData, createLedgerActor } =
-    useAuth();
+  const { backendActor, isAuthenticated, createLedgerActor } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
+  const { batchFetchReserveData } = useReserveData();
   const {
     assets,
     AssetImages,
@@ -115,6 +116,8 @@ const HealthFactorList = () => {
     const batchSize = 5;
 
     const processUsersInBatches = async (usersBatch) => {
+      const reserveDataMap = await batchFetchReserveData(assets);
+
       for (const [principal] of usersBatch) {
         if (!principal) continue;
 
@@ -122,10 +125,19 @@ const HealthFactorList = () => {
 
         await Promise.all(
           assets.map(async (asset) => {
-            const reserveDataForAsset = await fetchReserveData(asset);
-            const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-            const debtTokenId =
-              reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+            const reserveDataForAsset = reserveDataMap[asset]?.Ok;
+
+            if (!reserveDataForAsset) {
+              console.warn(`No valid reserve data found for ${asset}`);
+              userBalances[asset] = {
+                dtokenBalance: null,
+                debtTokenBalance: null,
+              };
+              return;
+            }
+
+            const dtokenId = reserveDataForAsset.d_token_canister?.[0];
+            const debtTokenId = reserveDataForAsset.debt_token_canister?.[0];
 
             const assetBalance = {
               dtokenBalance: null,
@@ -138,11 +150,16 @@ const HealthFactorList = () => {
               );
               const account = { owner: formattedPrincipal, subaccount: [] };
 
+              const tokenRequests = [];
+
               if (dtokenId) {
                 const dtokenActor = createLedgerActor(dtokenId, idlFactory);
                 if (dtokenActor) {
-                  const balance = await dtokenActor.icrc1_balance_of(account);
-                  assetBalance.dtokenBalance = Number(balance);
+                  tokenRequests.push(
+                    dtokenActor.icrc1_balance_of(account).then((balance) => {
+                      assetBalance.dtokenBalance = Number(balance);
+                    })
+                  );
                 }
               }
 
@@ -152,12 +169,15 @@ const HealthFactorList = () => {
                   idlFactory1
                 );
                 if (debtTokenActor) {
-                  const balance = await debtTokenActor.icrc1_balance_of(
-                    account
+                  tokenRequests.push(
+                    debtTokenActor.icrc1_balance_of(account).then((balance) => {
+                      assetBalance.debtTokenBalance = Number(balance);
+                    })
                   );
-                  assetBalance.debtTokenBalance = Number(balance);
                 }
               }
+
+              await Promise.all(tokenRequests);
             } catch (error) {
               console.error(`Error processing balances for ${asset}:`, error);
             }

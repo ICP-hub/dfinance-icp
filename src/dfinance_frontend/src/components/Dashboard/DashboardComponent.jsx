@@ -30,6 +30,7 @@ import { Check, Eye, EyeOff, Info } from "lucide-react";
 import MiniLoader from "../Common/miniLoader";
 import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 /**
  * DashboardComponent Component
@@ -48,14 +49,14 @@ const DashboardComponent = () => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const theme = useSelector((state) => state.theme.theme);
-  const { principal, fetchReserveData, createLedgerActor } = useAuth();
+  const { principal, createLedgerActor } = useAuth();
 
   const {
     userData,
     userAccountData,
     isFreezePopupVisible,
     setIsFreezePopupVisible,
-    fetchUserAccountData
+    fetchUserAccountData,
   } = useUserData();
 
   const tooltipRef = useRef(null);
@@ -88,6 +89,7 @@ const DashboardComponent = () => {
 
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const formatNumber = useFormatNumber();
+  const { batchFetchReserveData } = useReserveData();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -284,50 +286,63 @@ const DashboardComponent = () => {
    * @returns {void}
    */
   const fetchAssetData = async () => {
-    const balances = [];
+    if (!assets || assets.length === 0) return;
 
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
+    try {
+      const batchedReserveData = await batchFetchReserveData(assets);
+      const balances = [];
 
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            assetBalance.dtokenBalance = balance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+      for (const asset of assets) {
+        const reserveDataForAsset = batchedReserveData[asset];
+        const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
+        const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
+
+        if (dtokenId) {
+          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          if (dtokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await dtokenActor.icrc1_balance_of(account);
+              assetBalance.dtokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching dtoken balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
-      }
 
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            assetBalance.debtTokenBalance = balance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+        if (debtTokenId) {
+          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+          if (debtTokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await debtTokenActor.icrc1_balance_of(account);
+              assetBalance.debtTokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching debt token balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
+
+        console.log("reserveDataForAsset", reserveDataForAsset);
+
+        balances.push(assetBalance);
       }
-      balances.push(assetBalance);
+
+      setAssetBalances(balances);
+    } catch (error) {
+      console.error("Error fetching asset data:", error);
     }
-    setAssetBalances(balances);
   };
 
   const toggleVisibility = () => {
@@ -543,7 +558,7 @@ const DashboardComponent = () => {
 
   // conditional rendering of jsx update model value for supply and borrow repay withdraw
   const handleAssetAction = (actionType, asset) => {
-    fetchUserAccountData()
+    fetchUserAccountData();
     const reserveData = userData?.Ok?.reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
@@ -991,29 +1006,27 @@ const DashboardComponent = () => {
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
 
+  //fetch asset supply and asset borrow
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (assets.length === 0) return;
+      setSupplyDataLoading(true);
+      setBorrowDataLoading(true);
 
-//fetch asset supply and asset borrow
-useEffect(() => {
-  const fetchUserData = async () => {
-    if (assets.length === 0) return;
-    setSupplyDataLoading(true);
-    setBorrowDataLoading(true);
+      try {
+        await fetchUserPositions(assets);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setTimeout(() => {
+          setSupplyDataLoading(false);
+          setBorrowDataLoading(false);
+        }, 1500);
+      }
+    };
 
-    try {
-      await fetchUserPositions(assets);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    } finally {
-      setTimeout(() => {
-        setSupplyDataLoading(false);
-        setBorrowDataLoading(false);
-      }, 1500);
-    }
-  };
-
-  fetchUserData();
-}, [assets, dashboardRefreshTrigger]);
-
+    fetchUserData();
+  }, [assets, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (!filteredDataLoading) {
@@ -1528,7 +1541,7 @@ useEffect(() => {
                                     title={"Withdraw"}
                                     onClickHandler={async () => {
                                       await fetchAssetSupply(asset);
-                                      fetchUserAccountData()
+                                      fetchUserAccountData();
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"

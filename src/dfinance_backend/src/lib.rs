@@ -26,6 +26,7 @@ use crate::declarations::structs::{
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
+#[cfg(feature = "testnet")]
 use api::query::get_all_faucet;
 use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
@@ -54,7 +55,9 @@ pub fn init(args: Principal) {
             }),
         );
     });
+    #[cfg(feature = "mainnet")]
     init_logging(true);
+
     schedule_temp_log_cleanup();
     debug!("function called");
 }
@@ -62,9 +65,10 @@ pub fn init(args: Principal) {
  * @dev This function schedules a task to reset faucet usage at midnight.
  * @functionality Schedules a daily reset task at midnight for faucet usage.
  */
+#[cfg(feature = "testnet")]
 pub async fn schedule_midnight_task() {
     let initial_delay = time_until_midnight();
-
+    
     set_timer(initial_delay, || {
         ic_cdk::spawn(async {
             run_midnight_reset().await;
@@ -105,6 +109,7 @@ pub fn schedule_temp_log_cleanup() {
  * @functionality Resets faucet usage for all users at midnight.
  */
 //TODO check faucet reset at midnight
+#[cfg(feature = "testnet")]
 async fn run_midnight_reset() {
     let vector_faucet_data: Vec<(Principal, FaucetReserves)> = get_all_faucet().await;
 
@@ -147,6 +152,7 @@ fn time_until_midnight() -> Duration {
 pub async fn admin_restart_reset_task() -> Result<(), Error> {
     guard_admin_only()?;
 
+    #[cfg(feature = "testnet")]
     schedule_midnight_task().await;
     return Ok(());
 }

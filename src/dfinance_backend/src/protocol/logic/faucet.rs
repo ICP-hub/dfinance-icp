@@ -33,6 +33,7 @@ use ic_cdk_macros::update;
  * # Returns
  * - `Ok(Nat)` - The new balance after the transfer.
  */
+#[cfg(feature = "testnet")]
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     request_limiter()?;

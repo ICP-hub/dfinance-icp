@@ -35,4 +35,7 @@ pocket-ic = "6.0.0"
 tokio = { version = "1", features = ["full"] }
 
 
-
+[features]
+default = ["mainnet"] 
+testnet = []
+mainnet = []

@@ -705,6 +705,7 @@ pub fn accrue_to_treasury(
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
 //TODO: add validation of the params.
+#[cfg(feature = "testnet")]
 #[update]
 pub async fn initialize(
     token_name: String,
@@ -772,6 +773,12 @@ pub async fn initialize(
     });
     info!("Reserve for {} initialized successfully", token_name);
 
+    Ok(())
+}
+
+#[cfg(feature = "mainnet")]
+#[update]
+pub async fn initialize() -> Result<(), Error> {
     Ok(())
 }
 

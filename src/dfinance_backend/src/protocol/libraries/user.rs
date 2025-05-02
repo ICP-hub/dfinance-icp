@@ -13,8 +13,9 @@ use crate::constants::interest_variables::constants::MIN_BORROW;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
-use crate::guards::access_control::guard_admin_only;
-use crate::guards::access_control::{check_is_tester, guard_prevent_anonymous};
+use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
+#[cfg(feature = "testnet")]
+use crate::guards::access_control::check_is_tester;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::{current_timestamp, get_max_value};
 use crate::stable_storage::storable::Candid;
@@ -895,6 +896,7 @@ pub fn register_user() -> Result<String, Error> {
  *         - Err(Error): An error if any validation or process fails, such as invalid input data or
  *           failed token transfers.
  */
+#[cfg(feature = "testnet")]
 #[update]
 pub async fn create_user_reserve_with_low_health(
     asset_supply: String,

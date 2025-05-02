@@ -83,6 +83,7 @@ fn get_user_data(user: Principal) -> Result<UserData, Error> {
  *
  * @functionality Retrieve User Faucet Data for a Specified Principal
  */
+#[cfg(feature = "testnet")]
 #[query]
 fn get_user_faucet_data(user: Principal) -> Result<FaucetReserves, Error> {
     // Check if the user is anonymous
@@ -162,6 +163,7 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
  * @returns A vector of tuples containing user principals and their faucet reserves.
  * @functionality This function returns a list of all users and their respective faucet reserves.
  */
+#[cfg(feature = "testnet")]
 pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
     read_state(|state| {
         state

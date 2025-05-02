@@ -16,6 +16,7 @@ thread_local! {
 
 //TODO: remove this function later at the time of deployment, just to check number of calls by the user.
 #[query]
+#[cfg(feature = "testnet")]
 pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
     // Check if the user is anonymous
     guard_principal_not_anonymous(&caller)?;

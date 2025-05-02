@@ -1,11 +1,12 @@
 use crate::constants::errors::Error;
 use crate::declarations::structs::TransferFromResult;
+use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::{error, info};
 use candid::{decode_one, encode_args};
 use candid::{Nat, Principal};
 use ic_cdk::{call, query};
 use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs};
-
 
 /*
  * @title Asset Transfer From Function
@@ -29,13 +30,6 @@ pub async fn asset_transfer_from(
     to: Principal,
     amount: Nat,
 ) -> Result<Nat, String> {
-    ic_cdk::println!(
-        "Initiating asset transfer from {:?} to {:?} of amount {:?} via ledger_canister_id {:?}",
-        from,
-        to,
-        amount,
-        ledger_canister_id
-    );
 
     let args = TransferFromArgs {
         to: Account {
@@ -56,16 +50,16 @@ pub async fn asset_transfer_from(
     match call(ledger_canister_id, "icrc2_transfer_from", (args,)).await {
         Ok((result,)) => match result {
             TransferFromResult::Ok(balance) => {
-                ic_cdk::println!("Transfer successful. New balance: {:?}", balance);
+                info!("icrc2 transfer from successful. New balance: {:?}", balance);
                 Ok(balance)
             }
             TransferFromResult::Err(err) => {
-                ic_cdk::println!("Transfer failed with error: {:?}", err);
+                error!("icrc2 transfer from failed with error: {:?}", err);
                 Err(format!("{:?}", err))
             }
         },
         Err(e) => {
-            ic_cdk::println!("Call to ledger canister failed: {:?}", e.1);
+            error!("Call to ledger canister failed: {:?}", e.1);
             Err(e.1)
         }
     }
@@ -104,18 +98,20 @@ pub async fn asset_transfer(
         amount: amount.clone(),
     };
 
-
     let (new_result,): (TransferFromResult,) =
         call(ledger, "icrc1_transfer", (token_args, false, Some(from)))
             .await
             .map_err(|e| e.1)?;
-    ic_cdk::println!(
-        "asset_transfer executed successfully and the call result : {:?}",
-        new_result
-    );
+
     match new_result {
-        TransferFromResult::Ok(balance) => Ok(balance),
-        TransferFromResult::Err(err) => Err(format!("{:?}", err)),
+        TransferFromResult::Ok(balance) => {
+            info!("icrc1 transfer successful. New balance: {:?}", balance);
+            Ok(balance)
+        }
+        TransferFromResult::Err(err) => {
+            error!("icrc1 transfer failed with error: {:?}", err);
+            Err(format!("{:?}", err))
+        }
     }
 }
 
@@ -151,7 +147,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
     let encoded_args = match encoded_args_result {
         Ok(args) => args,
         Err(err) => {
-            ic_cdk::println!("Error encoding arguments: {:?}", err);
+            error!("Error encoding arguments of get balance: {:?}", err);
             return Err(Error::ErrorEncoding);
         }
     };
@@ -160,11 +156,11 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
         ic_cdk::api::call::call_raw(canister, "icrc1_balance_of", &encoded_args, 0).await;
     let raw_response = match raw_response_result {
         Ok(response) => {
-            ic_cdk::println!("Call succeeded with response: {:?}", response);
+            info!("Call succeeded with response of get balance: {:?}", response);
             response
         }
         Err((code, message)) => {
-            ic_cdk::println!("Call failed with code: {:?}, message: {}", code, message);
+            error!("get balance call failed with code: {:?}, message: {}", code, message);
             return Err(Error::ErrorRawResponse);
         }
     };
@@ -173,7 +169,7 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
     let balance = match balance_result {
         Ok(bal) => bal,
         Err(err) => {
-            ic_cdk::println!("Error decoding balance: {:?}", err);
+            error!("Error decoding balance of get balance: {:?}", err);
             return Err(Error::ErrorDecoding);
         }
     };
@@ -205,9 +201,8 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     match raw_response {
         Ok((balance,)) => Ok(balance),
         Err(e) => {
-            ic_cdk::println!("Error calling icrc1_total_supply: {:?}", e);
+            error!("Error calling icrc1_total_supply: {:?}", e);
             Err(Error::ErrorRawResponse)
         }
     }
 }
-

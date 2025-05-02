@@ -224,7 +224,7 @@ export const useAuthClient = (options = defaultOptions) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => { });
+      agent.fetchRootKey().catch((err) => {});
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
@@ -250,26 +250,8 @@ export const useAuthClient = (options = defaultOptions) => {
     return true;
   };
 
-  const fetchReserveData = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const reserveData = await backendActor.get_reserve_data_certified(asset);
-      if("Ok" in reserveData){
-        const verification = await verifyCertificate(reserveData.Ok[1]);
-        if (!verification) {
-          console.error("Certificate verification failed");
-        } else {
-          console.log("Certificate verified successfully");
-        }
-      }
-      return reserveData;
-      
-    } catch (error) {
-      throw error;
-    }
-  };
+  
+
 
   const verifyCertificate = async (certObj)=>{
     const agent = new HttpAgent({ identity });
@@ -382,7 +364,6 @@ export const useAuthClient = (options = defaultOptions) => {
     createLedgerActor,
     reloadLogin,
     accountIdString,
-    fetchReserveData,
     getAllUsers,
     verifyCertificate
   };

@@ -30,6 +30,7 @@ import { Check, Eye, EyeOff, Info } from "lucide-react";
 import MiniLoader from "../Common/miniLoader";
 import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 /**
  * DashboardComponent Component
@@ -48,14 +49,14 @@ const DashboardComponent = () => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const theme = useSelector((state) => state.theme.theme);
-  const { principal, fetchReserveData, createLedgerActor } = useAuth();
+  const { principal, createLedgerActor } = useAuth();
 
   const {
     userData,
     userAccountData,
     isFreezePopupVisible,
     setIsFreezePopupVisible,
-    fetchUserAccountData
+    fetchUserAccountData,
   } = useUserData();
 
   const tooltipRef = useRef(null);
@@ -82,12 +83,13 @@ const DashboardComponent = () => {
     asset_supply,
     asset_borrow,
     fetchAssetSupply,
-    fetchAssetBorrow,
+    fetchUserPositions,
     loading: filteredDataLoading,
   } = useAssetData();
 
   const { isSwitchingWallet } = useSelector((state) => state.utility);
   const formatNumber = useFormatNumber();
+  const { batchFetchReserveData } = useReserveData();
 
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -284,50 +286,62 @@ const DashboardComponent = () => {
    * @returns {void}
    */
   const fetchAssetData = async () => {
-    const balances = [];
+    if (!assets || assets.length === 0) return;
 
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
+    try {
+      const batchedReserveData = await batchFetchReserveData(assets);
+      const balances = [];
 
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            assetBalance.dtokenBalance = balance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+      for (const asset of assets) {
+        const reserveDataForAsset = batchedReserveData[asset];
+        const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
+        const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
+
+        if (dtokenId) {
+          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          if (dtokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await dtokenActor.icrc1_balance_of(account);
+              assetBalance.dtokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching dtoken balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
-      }
 
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            assetBalance.debtTokenBalance = balance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+        if (debtTokenId) {
+          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+          if (debtTokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await debtTokenActor.icrc1_balance_of(account);
+              assetBalance.debtTokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching debt token balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
+
+
+        balances.push(assetBalance);
       }
-      balances.push(assetBalance);
+
+      setAssetBalances(balances);
+    } catch (error) {
+      console.error("Error fetching asset data:", error);
     }
-    setAssetBalances(balances);
   };
 
   const toggleVisibility = () => {
@@ -854,19 +868,15 @@ const DashboardComponent = () => {
   const getFilteredAndSortedItems = () => {
     return filteredItems
       .filter((item) => {
-        userData.Ok[0].reserves[0]?.find(
+        userData?.Ok[0].reserves[0]?.find(
           (reserveGroup) => reserveGroup[0] === item[0]
         );
 
         const assetData = item[1].Ok;
-        console.log("assetData",assetData)
         const total_supply = Number(assetData[0].asset_supply || 0) / 100000000;
         const total_borrow = Number(assetData[0].asset_borrow || 0) / 100000000;
         const availableBorrowNumber = Number(availableBorrow || 0);
         const isBorrowAvailable = availableBorrowNumber > 0.01;
-console.log("total_supply",total_supply)
-console.log("total_borrow",total_borrow)
-console.log("isBorrowAvailable",availableBorrowNumber)
         if (!showAllAssets) {
           const formattedTotalSupply = (total_supply * 0.85).toFixed(8);
           const formattedTotalBorrow = total_borrow.toFixed(8);
@@ -905,17 +915,22 @@ console.log("isBorrowAvailable",availableBorrowNumber)
 
   const getFilteredSupplyReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
-
-    return userData.Ok[0].reserves[0].filter((reserveGroup) => {
+  
+    return userData?.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
-
+  
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
-
+  
       const assetSupplyValue = getAssetSupplyValue(asset);
-
-      return assetBalance > 0 && assetSupplyValue > 0n;
+      
+      // Convert BigInt to number for comparison if needed
+      const supplyValue = typeof assetSupplyValue === 'bigint' 
+        ? assetSupplyValue > 0n 
+        : assetSupplyValue > 0;
+  
+      return assetBalance > 0 && supplyValue;
     });
   };
   const getFilteredBorrowReserves = () => {
@@ -940,12 +955,10 @@ console.log("isBorrowAvailable",availableBorrowNumber)
 
   useEffect(() => {
     const reserves = userData?.Ok[0].reserves?.[0] || [];
-    console.log("reserves",reserves)
     let updatedAvailableBorrow = 0;
 
     reserves.map((reserveGroup) => {
       const asset = reserveGroup[0];
-      console.log("asset",asset)
       const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
@@ -954,10 +967,8 @@ console.log("isBorrowAvailable",availableBorrowNumber)
         (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
         (Number(liquidityIndex) * 1e8);
       const isCollateral = reserveGroup[1]?.is_collateral || true;
-console.log("assetSupply",assetSupply)
       if (assetSupply > 0) {
         if (userAccountData?.Ok?.length > 5) {
-          console.log("userAccount",userAccountData)
           const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
           updatedAvailableBorrow = isCollateral ? borrowValue : 0;
         } else {
@@ -997,40 +1008,27 @@ console.log("assetSupply",assetSupply)
     fetchAssetData();
   }, [assets, principalObj, dashboardRefreshTrigger]);
 
+  //fetch asset supply and asset borrow
   useEffect(() => {
-    const fetchSupplyData = async () => {
+    const fetchUserData = async () => {
       if (assets.length === 0) return;
       setSupplyDataLoading(true);
-
-      try {
-        for (const asset of assets) {
-          await fetchAssetSupply(asset);
-        }
-      } catch (error) {
-        console.error("Error fetching supply data:", error);
-      } finally {
-        setTimeout(() => setSupplyDataLoading(false), 1500);
-      }
-    };
-
-    const fetchBorrowData = async () => {
-      if (assets.length === 0) return;
       setBorrowDataLoading(true);
 
       try {
-        for (const asset of assets) {
-          await fetchAssetBorrow(asset);
-        }
+        await fetchUserPositions(assets);
       } catch (error) {
-        console.error("Error fetching borrow data:", error);
+        console.error("Error fetching user data:", error);
       } finally {
-        setTimeout(() => setBorrowDataLoading(false), 1500);
+        setTimeout(() => {
+          setSupplyDataLoading(false);
+          setBorrowDataLoading(false);
+        }, 1500);
       }
     };
 
-    fetchSupplyData();
-    fetchBorrowData();
-  }, [assets, dashboardRefreshTrigger]);
+    fetchUserData();
+  }, [assets, dashboardRefreshTrigger,fetchUserPositions]);
 
   useEffect(() => {
     if (!filteredDataLoading) {
@@ -1323,7 +1321,7 @@ console.log("assetSupply",assetSupply)
                 <div className="flex">
                   <h1>Your supplies</h1>
                   <div className="ml-5">
-                    {userData?.Ok?.[0].reserves[0]?.map((reserveGroup, index) => {
+                    {userData?.Ok[0].reserves[0]?.map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
                       const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
                         (reserveGroup) => reserveGroup[0] === asset
@@ -1353,7 +1351,6 @@ console.log("assetSupply",assetSupply)
                       } else if (asset === "ckUSDT") {
                         usdValue = assetSupply * (ckUSDTUsdRate / 1e8);
                       }
-
                       if (assetSupply >= 0) {
                         totalUsdValueSupply += usdValue;
                         dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
@@ -1365,7 +1362,7 @@ console.log("assetSupply",assetSupply)
                     <div className="hidden md:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 rounded-md">
                       <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                         Total
-                      </span>
+                      </span>{" "}
                       ${formatNumber(totalUsdValueSupply)}
                     </div>
                   </div>
@@ -1517,8 +1514,8 @@ console.log("assetSupply",assetSupply)
                                 <div className="flex justify-between gap-4">
                                   <Button
                                     title={"Supply"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       if (ckBalance === 0) {
                                         toast.dismiss();
                                         toast.info(
@@ -1539,9 +1536,9 @@ console.log("assetSupply",assetSupply)
 
                                   <Button
                                     title={"Withdraw"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
-                                      fetchUserAccountData()
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
+                                      fetchUserAccountData();
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -1685,8 +1682,8 @@ console.log("assetSupply",assetSupply)
                                 <div className="p-3 align-top flex gap-2 pt-2">
                                   <Button
                                     title={"Supply"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       if (ckBalance === 0) {
                                         toast.dismiss();
                                         toast.info(
@@ -1712,8 +1709,8 @@ console.log("assetSupply",assetSupply)
 
                                   <Button
                                     title={"Withdraw"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(asset);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(asset);
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -1897,8 +1894,8 @@ console.log("assetSupply",assetSupply)
                               <div className="flex justify-between gap-4">
                                 <Button
                                   title={"Supply"}
-                                  onClickHandler={() => {
-                                    fetchAssetSupply(item[0]);
+                                  onClickHandler={async () => {
+                                    await fetchAssetSupply(item[0]);
 
                                     handleAssetAction("supply", item[0]);
                                   }}
@@ -2021,8 +2018,8 @@ console.log("assetSupply",assetSupply)
                                 <div className="p-3 align-top flex gap-2 pt-2">
                                   <Button
                                     title={"Supply"}
-                                    onClickHandler={() => {
-                                      fetchAssetSupply(item[0]);
+                                    onClickHandler={async () => {
+                                      await fetchAssetSupply(item[0]);
 
                                       handleAssetAction("supply", item[0]);
                                     }}
@@ -2115,7 +2112,7 @@ console.log("assetSupply",assetSupply)
                       <div className="hidden dxl:block text-center font-semibold text-[#2A1F9D] text-[12px] dark:text-darkText border border-[#2A1F9D]/50 dark:border-darkText/80 p-1 px-2 place-content-center rounded-md">
                         <span className="font-normal text-[#2A1F9D] dark:text-darkText/80">
                           Borrow power used
-                        </span>
+                        </span>{" "}
                         {(() => {
                           const ratio =
                             (totalUsdValueBorrow /
@@ -2235,8 +2232,7 @@ console.log("assetSupply",assetSupply)
                     <div className="h-[100px] flex justify-center items-center">
                       <MiniLoader isLoading={true} />
                     </div>
-                  ) : !userData?.Ok?.[0].reserves ||
-                    !userData?.Ok?.[0].reserves[0] ||
+                  ) :
                     getFilteredBorrowReserves().length === 0 ? (
                     <div className="text-center text-gray-500">
                       {noBorrowMessage}
@@ -2957,7 +2953,6 @@ console.log("assetSupply",assetSupply)
                                 total_borrow,
                                 availableBorrow
                               );
-                              console.log(displayedAsset,usdFormatted)
                             const isEligible =
                               (total_supply * 0.85).toFixed(8) > total_borrow;
                             const itemClass =

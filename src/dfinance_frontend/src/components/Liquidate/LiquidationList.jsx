@@ -12,6 +12,7 @@ import MiniLoader from "../Common/miniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import Lottie from "../Common/lottie";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 /**
  * DebtStatus Component
@@ -55,13 +56,9 @@ const DebtStatus = () => {
     fetchAssetBorrow,
   } = useAssetData();
 
-  const {
-    getAllUsers,
-    user,
-    backendActor,
-    fetchReserveData,
-    createLedgerActor,
-  } = useAuth();
+  const { getAllUsers, user, backendActor, createLedgerActor } = useAuth();
+
+  const { batchFetchReserveData } = useReserveData();
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -149,39 +146,57 @@ const DebtStatus = () => {
 
   // Function to fetch asset data for each user
   const fetchAssetData = async () => {
+    const reserveDataMap = await batchFetchReserveData(assets);
+
     const balances = {};
+
     await Promise.all(
       currentItems.map(async (mappedItem) => {
         const principal = mappedItem.principal?._arr;
+        if (!principal) return;
+
         const userBalances = {};
+        const account = { owner: principal, subaccount: [] };
 
         await Promise.all(
           assets.map(async (asset) => {
-            const reserveDataForAsset = await fetchReserveData(asset);
-            const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
-            const debtTokenId =
-              reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
+            const reserveDataForAsset = reserveDataMap[asset]?.Ok[0];
+
+            if (!reserveDataForAsset) {
+              console.warn(`No valid reserve data found for ${asset}`);
+              userBalances[asset] = {
+                dtokenBalance: null,
+                debtTokenBalance: null,
+              };
+              return;
+            }
+
+            const dtokenId = reserveDataForAsset.d_token_canister?.[0];
+            const debtTokenId = reserveDataForAsset.debt_token_canister?.[0];
 
             const assetBalance = {
               dtokenBalance: null,
               debtTokenBalance: null,
             };
 
-            const account = { owner: principal, subaccount: [] };
+            const tokenRequests = [];
 
             if (dtokenId) {
               const dtokenActor = createLedgerActor(dtokenId, idlFactory);
               if (dtokenActor) {
-                try {
-                  const balance = await dtokenActor.icrc1_balance_of(account);
-                  const formattedBalance = Number(balance);
-                  assetBalance.dtokenBalance = formattedBalance;
-                } catch (error) {
-                  console.error(
-                    `Error fetching dtoken balance for ${asset}:`,
-                    error
-                  );
-                }
+                tokenRequests.push(
+                  dtokenActor
+                    .icrc1_balance_of(account)
+                    .then((balance) => {
+                      assetBalance.dtokenBalance = Number(balance);
+                    })
+                    .catch((error) => {
+                      console.error(
+                        `Error fetching dtoken balance for ${asset}:`,
+                        error
+                      );
+                    })
+                );
               }
             }
 
@@ -191,21 +206,23 @@ const DebtStatus = () => {
                 idlFactory1
               );
               if (debtTokenActor) {
-                try {
-                  const balance = await debtTokenActor.icrc1_balance_of(
-                    account
-                  );
-                  const formattedBalance = Number(balance);
-                  assetBalance.debtTokenBalance = formattedBalance;
-                } catch (error) {
-                  console.error(
-                    `Error fetching debt token balance for ${asset}:`,
-                    error
-                  );
-                }
+                tokenRequests.push(
+                  debtTokenActor
+                    .icrc1_balance_of(account)
+                    .then((balance) => {
+                      assetBalance.debtTokenBalance = Number(balance);
+                    })
+                    .catch((error) => {
+                      console.error(
+                        `Error fetching debt token balance for ${asset}:`,
+                        error
+                      );
+                    })
+                );
               }
             }
 
+            await Promise.all(tokenRequests);
             userBalances[asset] = assetBalance;
           })
         );
@@ -301,7 +318,7 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-      Number(debtIndex)
+        Number(debtIndex)
     );
   };
 
@@ -487,10 +504,11 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
+                          index !== liquidationUsers.length - 1
                             ? "gradient-line-bottom"
                             : ""
-                          }`}
+                        }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -578,7 +596,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        { }
+                        {}
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

@@ -149,8 +149,7 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
 pub fn check_is_tester() -> bool {
     let testers = match get_testers() {
         Ok(data) => data,
-        Err(error) => {
-            ic_cdk::println!("Invalid Access {:?}", error);
+        Err(_) => {
             return false;
         }
     };

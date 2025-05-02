@@ -868,50 +868,45 @@ const DashboardComponent = () => {
   const getFilteredAndSortedItems = () => {
     return filteredItems
       .filter((item) => {
-        userData?.Ok[0].reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === item[0]
-        );
-
-        const assetData = item[1].Ok;
-        const total_supply = Number(assetData[0].asset_supply || 0) / 100000000;
-        const total_borrow = Number(assetData[0].asset_borrow || 0) / 100000000;
+        const assetData = item[1]?.Ok || [];
+        const total_supply = Number(assetData[0]?.asset_supply || 0) / 1e8;
+        const total_borrow = Number(assetData[0]?.asset_borrow || 0) / 1e8;
+  
         const availableBorrowNumber = Number(availableBorrow || 0);
         const isBorrowAvailable = availableBorrowNumber > 0.01;
+  
         if (!showAllAssets) {
-          const formattedTotalSupply = (total_supply * 0.85).toFixed(8);
-          const formattedTotalBorrow = total_borrow.toFixed(8);
-
+          const formattedTotalSupply = total_supply * 0.85;
+          const formattedTotalBorrow = total_borrow;
+  
           return (
             formattedTotalSupply > formattedTotalBorrow && isBorrowAvailable
           );
         }
-
+  
         return true;
       })
       .sort((a, b) => {
-        if (showAllAssets) {
-          const assetDataA = a[1].Ok;
-          const assetDataB = b[1].Ok;
-          const total_supply_A =
-            Number(assetDataA[0].asset_supply || 0) / 100000000;
-          const total_borrow_A =
-            Number(assetDataA[0].asset_borrow || 0) / 100000000;
-          const total_supply_B =
-            Number(assetDataB[0].asset_supply || 0) / 100000000;
-          const total_borrow_B =
-            Number(assetDataB[0].asset_borrow || 0) / 100000000;
-
-          const isEligibleA =
-            (total_supply_A * 0.85).toFixed(8) > total_borrow_A.toFixed(8);
-          const isEligibleB =
-            (total_supply_B * 0.85).toFixed(8) > total_borrow_B.toFixed(8);
-          if (isEligibleA && !isEligibleB) return -1;
-          if (!isEligibleA && isEligibleB) return 1;
-          return 0;
-        }
+        if (!showAllAssets) return 0;
+  
+        const assetDataA = a[1]?.Ok || [];
+        const assetDataB = b[1]?.Ok || [];
+  
+        const total_supply_A = Number(assetDataA[0]?.asset_supply || 0) / 1e8;
+        const total_borrow_A = Number(assetDataA[0]?.asset_borrow || 0) / 1e8;
+  
+        const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / 1e8;
+        const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / 1e8;
+  
+        const isEligibleA = total_supply_A * 0.85 > total_borrow_A;
+        const isEligibleB = total_supply_B * 0.85 > total_borrow_B;
+  
+        if (isEligibleA && !isEligibleB) return -1;
+        if (!isEligibleA && isEligibleB) return 1;
         return 0;
       });
   };
+  
 
   const getFilteredSupplyReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
@@ -934,57 +929,61 @@ const DashboardComponent = () => {
     });
   };
   const getFilteredBorrowReserves = () => {
-    0
-    if (!userData.Ok[0].reserves?.[0]?.length) return [];
-
+    if (!userData?.Ok?.[0]?.reserves?.[0]?.length) return [];
+  
     return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
-
+  
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.debtTokenBalance || 0;
-
+  
       const assetBorrowValue = getAssetBorrowValue(asset);
-      return assetBalance > 0 && assetBorrowValue > 0n;
+  
+      return Number(assetBalance) > 0 && assetBorrowValue > 0n;
     });
   };
+  
 
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
 
   useEffect(() => {
-    const reserves = userData?.Ok[0].reserves?.[0] || [];
+    const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
     let updatedAvailableBorrow = 0;
-
-    reserves.map((reserveGroup) => {
-      const asset = reserveGroup[0];
-      const liquidityIndex = reserveGroup[1]?.liquidity_index || 0;
+  
+    for (const reserveGroup of reserves) {
+      const asset = reserveGroup?.[0];
+      const reserveData = reserveGroup?.[1];
+      const liquidityIndex = Number(reserveData?.liquidity_index || 0);
+      const isCollateral = reserveData?.is_collateral ?? true;
+  
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
+  
       const assetSupply =
-        (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-        (Number(liquidityIndex) * 1e8);
-      const isCollateral = reserveGroup[1]?.is_collateral || true;
-      if (assetSupply > 0) {
-        if (userAccountData?.Ok?.length > 5) {
-          const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
-          updatedAvailableBorrow = isCollateral ? borrowValue : 0;
-        } else {
-          updatedAvailableBorrow = 0;
-        }
+        liquidityIndex > 0
+          ? (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
+            (liquidityIndex * 1e8)
+          : 0;
+  
+      if (assetSupply > 0 && userAccountData?.Ok?.length > 5) {
+        const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
+        updatedAvailableBorrow = isCollateral ? borrowValue : 0;
+        break; // stop after first eligible asset
       }
-    });
-    setAvailableBorrow(updatedAvailableBorrow);
-
-    if (!updatedAvailableBorrow || updatedAvailableBorrow < 0.01) {
-      setAvailableBorrow(0);
-    } else {
-      setAvailableBorrow(updatedAvailableBorrow);
     }
+  
+    const finalBorrowValue =
+      !updatedAvailableBorrow || updatedAvailableBorrow < 0.01
+        ? 0
+        : updatedAvailableBorrow;
+  
+    setAvailableBorrow(finalBorrowValue);
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
-
+  
   useEffect(() => {
     const savedShowZeroBalance = JSON.parse(
       localStorage.getItem("showZeroBalance")
@@ -1321,7 +1320,7 @@ const DashboardComponent = () => {
                 <div className="flex">
                   <h1>Your supplies</h1>
                   <div className="ml-5">
-                    {userData?.Ok[0].reserves[0]?.map((reserveGroup, index) => {
+                  {(userData?.Ok?.[0]?.reserves?.[0] || []).map((reserveGroup, index)  => {
                       const asset = reserveGroup[0];
                       const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
                         (reserveGroup) => reserveGroup[0] === asset

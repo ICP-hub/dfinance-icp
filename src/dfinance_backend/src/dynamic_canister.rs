@@ -10,8 +10,12 @@ use crate::constants::interest_variables::constants::{
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
     TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
 };
-use crate::declarations::structs::{ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg};
+use crate::declarations::structs::{
+    ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg,
+};
 use crate::guards::access_control::guard_admin_only;
+use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::{error, info};
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     update_settings, CanisterInstallMode, CanisterSettings,
@@ -142,19 +146,19 @@ pub async fn create_token_canister(
     let args = match Encode!(&(token)) {
         Ok(args) => args,
         Err(e) => {
-            ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
+            error!("Failed to serialize InitArgs: {:?}", e);
             return Err(Error::ErrorEncoding);
         }
     };
 
-    let canister_id = match ic_cdk::api::management_canister::main::create_canister(arg, DEFAULT_CYCLES).await {
-        Ok((record,)) => record.canister_id,
-        Err(e) => {
-            ic_cdk::println!("create_canister failed: {:?}", e);
-            return Err(Error::ErrorCreatingCanister); 
-        }
-    };
-    
+    let canister_id =
+        match ic_cdk::api::management_canister::main::create_canister(arg, DEFAULT_CYCLES).await {
+            Ok((record,)) => record.canister_id,
+            Err(e) => {
+                error!("create_canister failed: {:?}", e);
+                return Err(Error::ErrorCreatingCanister);
+            }
+        };
 
     // Choose the appropriate WASM file based on the token name
     let wasm_module = if token_name.starts_with("debt") {
@@ -171,18 +175,17 @@ pub async fn create_token_canister(
     };
 
     match ic_cdk::api::management_canister::main::install_code(install_config).await {
-        Ok(_) => {
-        },
+        Ok(_) => {}
         Err(e) => {
-            ic_cdk::println!("install_code failed: {:?}", e);
+            error!("install_code failed: {:?}", e);
             return Err(Error::ErrorCreatingCanister);
         }
     }
-    
-    ic_cdk::print(format!(
+
+    info!(
         "Created canister for token '{}' with canister ID: {}",
         token_name, canister_id
-    ));
+    );
     Ok(canister_id)
 }
 
@@ -278,21 +281,21 @@ pub async fn create_testtoken_canister(
     let args = match Encode!(&(token)) {
         Ok(args) => args,
         Err(e) => {
-            ic_cdk::print(format!("Failed to serialize InitArgs: {:?}", e));
+            error!("Failed to serialize InitArgs: {:?}", e);
             return Err(Error::ErrorEncoding);
         }
     };
 
-    let canister_id: Principal = match ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES).await {
-        Ok((res,)) => {
-            res.canister_id
-        },
-        Err(e) => {
-            ic_cdk::print(format!("Failed to create canister: {:?}", e));
-            return Err(Error::ErrorCreatingCanister);
-        }
-    };
-    
+    let canister_id: Principal =
+        match ic_cdk::api::management_canister::main::create_canister(arg, TEST_DEFAULT_CYCLES)
+            .await
+        {
+            Ok((res,)) => res.canister_id,
+            Err(e) => {
+                error!("Failed to create canister: {:?}", e);
+                return Err(Error::ErrorCreatingCanister);
+            }
+        };
 
     let install_config = ic_cdk::api::management_canister::main::InstallCodeArgument {
         mode: CanisterInstallMode::Install,
@@ -302,18 +305,17 @@ pub async fn create_testtoken_canister(
     };
 
     match ic_cdk::api::management_canister::main::install_code(install_config).await {
-        Ok(_) => {
-        },
+        Ok(_) => {}
         Err(e) => {
-            ic_cdk::println!("install_code failed: {:?}", e);
+            error!("install_code failed: {:?}", e);
             return Err(Error::ErrorCreatingCanister);
         }
     }
 
-    ic_cdk::print(format!(
+    info!(
         "Created canister for token '{}' with canister ID: {}",
         token_name, canister_id
-    ));
+    );
     Ok(canister_id)
 }
 
@@ -336,7 +338,7 @@ pub async fn create_testtoken_canister(
 pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, Error> {
     guard_admin_only()?;
     // if !to_check_controller() {
-    //     ic_cdk::println!("principals are not allowed");
+    //     debugln!("principals are not allowed");
     //     return Ok("principals are not allowed".to_string());
     // }
 
@@ -354,13 +356,16 @@ pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<
     };
 
     match update_settings(update_canister_args).await {
-        Ok(_) => {
-        },
+        Ok(_) => {}
         Err(e) => {
-            ic_cdk::println!("update_settings failed: {:?}", e);
+            error!("update_settings failed: {:?}", e);
             return Err(Error::ErrorUpdateCanisterSetting);
         }
     }
-
+    info!(
+        "Added user {} as a controller to canister {}",
+        user.to_text(),
+        canister_id.to_text()
+    );
     Ok("done".to_string())
 }

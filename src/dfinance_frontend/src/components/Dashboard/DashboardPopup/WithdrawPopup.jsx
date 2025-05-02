@@ -88,8 +88,7 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  HELPERS
    * =================================================================================== */
-
-  console.log("assetSupply", assetSupply)
+  
   // This function truncates a number to seven decimal places and returns it as a string.
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 7);

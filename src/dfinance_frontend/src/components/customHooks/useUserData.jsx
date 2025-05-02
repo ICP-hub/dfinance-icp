@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import useAssetData from "./useAssets";
 import { idlFactory } from "../../../../declarations/debttoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/dtoken";
+import { useReserveData } from "../../context/ReserveDataContext";
 
 /**
  * Custom hook to fetch and manage user data from the backend canister.
@@ -17,14 +18,10 @@ const useUserData = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const {
-    backendActor,
-    principal,
-    user,
-    isAuthenticated,
-    fetchReserveData,
-    createLedgerActor,
-  } = useAuth();
+  const { backendActor, principal, user, isAuthenticated, createLedgerActor,verifyCertificate } =
+    useAuth();
+
+  const { batchFetchReserveData } = useReserveData();
 
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
@@ -45,6 +42,14 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
+      if("Ok" in result){
+        const verification = await verifyCertificate(result.Ok[1]);
+        if (!verification) {
+          console.error("Certificate verification failed");
+        } else {
+          console.log("Certificate verified successfully");
+        }
+      }
       return result;
     } catch (error) {
       setError(error.message);
@@ -61,10 +66,14 @@ const useUserData = () => {
   );
 
   const fetchAssetData = async () => {
-    const balances = [];
+    if (!assets || assets.length === 0) return;
+
+    try {
+      const batchedReserveData = await batchFetchReserveData(assets);
+      const balances = [];
 
     for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
+      const reserveDataForAsset = batchedReserveData[asset];
       const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
       const assetBalance = {
@@ -73,38 +82,45 @@ const useUserData = () => {
         debtTokenBalance: null,
       };
 
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            assetBalance.dtokenBalance = balance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+        if (dtokenId) {
+          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          if (dtokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await dtokenActor.icrc1_balance_of(account);
+              assetBalance.dtokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching dtoken balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
-      }
 
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            assetBalance.debtTokenBalance = balance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+        if (debtTokenId) {
+          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+          if (debtTokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await debtTokenActor.icrc1_balance_of(account);
+              assetBalance.debtTokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching debt token balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
+
+        balances.push(assetBalance);
       }
-      balances.push(assetBalance);
+
+      setAssetBalances(balances);
+    } catch (error) {
+      console.error("Error fetching asset data:", error);
     }
-    setAssetBalances(balances);
   };
 
   const fetchUserData = async (user) => {
@@ -168,7 +184,7 @@ const useUserData = () => {
           assetBalancesParam,
           borrowBalancesParam
         );
-
+console.log("result",result)
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
           setTimeout(fetchUserAccountData, 1000);

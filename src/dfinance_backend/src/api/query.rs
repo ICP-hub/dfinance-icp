@@ -167,14 +167,17 @@ pub fn get_asset_principal(asset_name: String) -> Result<(Principal, Certificate
  * @functionality This function returns a list of all registered users and their respective data.
  */
 #[query]  //update
-pub async fn get_all_users() -> Vec<(Principal, UserData)> {
-    read_state(|state| {
+pub async fn get_all_users() -> (Vec<(Principal, UserData)>, Certificate) {
+    let res =read_state(|state| {
         state
             .user_profile
             .iter()
             .map(|(k, v)| (k.clone(), v.0.clone()))
             .collect()
-    })
+    }); 
+    let cert = get_certificate_witness("all_users".to_string());
+
+    (res, cert)
 }
 
 /*
@@ -202,11 +205,11 @@ pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
  * @functionality This function fetches the cached exchange rate for a specified base asset symbol.
  */
 #[query]
-pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
+pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certificate), Error> {
     trace!("calling get_cached_exchange_rate");
     // asset validator
     validate_asset_name(&base_asset_symbol)?;
-
+    
     let base_asset = match base_asset_symbol.as_str() {
         "ckBTC" => "btc",
         "ckETH" => "eth",
@@ -216,8 +219,8 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
     };
 
     debug!("base asset and base_asset_symbol {}, {}", base_asset , base_asset_symbol);
-
-    read_state(|state| {
+    
+    let res = read_state(|state| {
         state
             .price_cache_list
             .get(&base_asset.to_string())
@@ -230,8 +233,13 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
             })
             .flatten()
             .ok_or(Error::NoPriceCache)
-    })
+    })?;
+
+    let cert = get_certificate_witness("price_cache".to_string());
+    
+    Ok((res, cert)) 
 }
+
 
 /*
  * @title User Normalized Supply
@@ -264,10 +272,12 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.last_update_timestamp,
         );
         info!("calculate linear interest called successfully inside user normalized supply"); 
+
         debug!(
             "previoys liquidity index: {} for reserve",
             reserve_data.liquidity_index
         );
+        
         return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
 }
@@ -370,7 +380,7 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
     //     return Err(Error::AnonymousPrincipal);
     // }
 
-    let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
+    let (asset_price,_cer) = match get_cached_exchange_rate(asset_name.clone()) {
         Ok(price) => price,
         Err(e) => {
             error!("Failed to fetch cache exchange rate");
@@ -624,7 +634,7 @@ pub async fn get_asset_debt(
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
     // input validator
-    validate_asset_name(&asset_name)?;
+    // validate_asset_name(&asset_name)?;
 
     if let Some(principal) = on_behalf {
         // Check if the user is anonymous

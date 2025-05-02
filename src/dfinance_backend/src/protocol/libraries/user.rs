@@ -117,7 +117,7 @@ pub async fn calculate_user_account_data(
         })
         .ok_or_else(|| Error::NoReserveDataFound)?;
 
-        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
+        let (rate,_cer) = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
         debug!("asset price = {}", rate);
 
         let asset_price = rate;
@@ -366,7 +366,7 @@ pub async fn calculate_user_asset_data(
             }
         };
 
-        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+        let (rate, _cer) = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
             Ok(price) => price,
             Err(e) => {
                 error!("Failed to fetch exchange rate");
@@ -443,7 +443,7 @@ pub async fn calculate_user_asset_data(
         if user_reserve_data.is_borrowed {
             debug!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
-            let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+            let (rate,_cer) = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
                 Ok(price) => price,
                 Err(e) => {
                     error!("Failed to fetch exchange rate");
@@ -764,7 +764,7 @@ pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
     page_size: usize,
 ) -> Vec<(Principal, UserAccountData, UserData)> {
-    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    let (vector_user_data, _cer) = get_all_users().await;
 
     // let total_users = vector_user_data.len();
     // debug!("Total users: {}", total_users);
@@ -1212,7 +1212,7 @@ pub async fn get_all_user_list(
 ) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
     guard_admin_only()?;
 
-    let vector_user_data: Vec<(Principal, UserData)> = get_all_users().await;
+    let (vector_user_data, _cer) = get_all_users().await;
     let total_users = vector_user_data.len();
     debug!("Total users: {}", total_users);
 

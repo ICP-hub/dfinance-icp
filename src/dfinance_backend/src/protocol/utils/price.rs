@@ -1,7 +1,7 @@
 use crate::constants::validators::validate_asset_name;
 use crate::{debug, error, info, trace};
 use crate::protocol::utils::math_utils::current_timestamp;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
@@ -215,8 +215,10 @@ pub async fn get_exchange_rates(
         mutate_state(|state| {
             state
                 .price_cache_list
-                .insert(base_asset.clone(), Candid(price_cache_data));
+                .insert(base_asset.clone(), Candid(price_cache_data.clone()));
+            insert_certified_value("price_cache".to_string(), price_cache_data);
         });
+        
     }
 
     Ok((total_value, time))

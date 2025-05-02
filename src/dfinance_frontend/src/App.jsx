@@ -31,6 +31,7 @@ export default function App() {
     backendActor,
     createLedgerActor,
     reloadLogin,
+    verifyCertificate
   } = useAuth();
 
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
@@ -87,26 +88,45 @@ export default function App() {
   useEffect(() => {
     const fetchAssetPrincipals = async () => {
       if (!backendActor) return;
-
+  
       try {
         const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
         const results = await Promise.all(
           assets.map((asset) => backendActor.get_asset_principal(asset))
         );
+  
+        // Process each result
+        assets.forEach(async (asset, index) => {
+          const result = results[index];
+          console.log(`Result for ${asset}:`, result);
+          // Check if "Ok" exists in the result
+          if ("Ok" in result) {
 
-        setAssetPrincipal(
-          assets.reduce((acc, asset, index) => {
-            acc[asset] = results[index]?.Ok?.toText() || null;
-            return acc;
-          }, {})
-        );
+            try {
+              const verification = await verifyCertificate(result.Ok[1]);
+              if (!verification) {
+                console.error(`Certificate verification failed for ${asset}`);
+              } else {
+                console.log(`Certificate verified successfully for ${asset}`);
+              }
+            } catch (verificationError) {
+              console.error("Error verifying certificate:", verificationError);
+            }
+          }
+  
+          // Set the asset principal after certificate verification
+          setAssetPrincipal((prevState) => ({
+            ...prevState,
+            [asset]: result?.Ok?.toText() || null,
+          }));
+        });
       } catch (error) {
         console.error("Error fetching asset principals:", error);
       }
     };
-
+  
     fetchAssetPrincipals();
-  }, [principal, backendActor]);
+  }, [principal,backendActor]);
 
   /**
    * Creates ledger actors for all fetched asset principals.

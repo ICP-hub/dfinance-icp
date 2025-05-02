@@ -94,7 +94,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     // updating the price cached in the state
     let _ = update_token_price(params.asset.clone()).await;
     //fetching the price of the asset in USD
-    let asset_price = get_cached_exchange_rate(params.asset.clone())?;
+    let (asset_price, _cer) = get_cached_exchange_rate(params.asset.clone())?;
 
     //TODO : 96 to 104 can be common
     //Calculating Transfer fee in usd
@@ -261,7 +261,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     if let Err(_) = update_token_price(params.asset.clone()).await {}
 
-    let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
+    let (asset_price,_cer) = match get_cached_exchange_rate(params.asset.clone()) {
         Ok(price) => price,
         Err(e) => {
             ic_cdk::println!("Failed to fetch exchange rate");

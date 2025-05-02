@@ -15,7 +15,7 @@ const useAssetData = (searchQuery = "") => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const { principal, backendActor, isAuthenticated } = useAuth();
+  const { principal, backendActor, isAuthenticated, verifyCertificate } = useAuth();
   const { fetchReserveData, batchFetchReserveData, reserveDataCache } =
     useReserveData();
 
@@ -42,24 +42,49 @@ const useAssetData = (searchQuery = "") => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
-
+   
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
-
+  
       try {
-        const assetData = await backendActor.get_all_assets();
-
+        // Use the certified version of the function
+        const result = await backendActor.get_all_assets_certified();
+        
+        // Verify certificate
+        if (result && result[1]) {
+          try {
+            const verification = await verifyCertificate(result[1]);
+            if (!verification) {
+              console.error("Certificate verification failed for assets");
+            
+              return; // Don't proceed with unverified data
+            } else {
+              console.log("Assets certificate verified successfully");
+            }
+          } catch (verificationError) {
+            console.error("Error during assets certificate verification:", verificationError);
+            
+            return;
+          }
+        }
+        
+        // Process the assets data after successful verification
+        const assetData = result[0]; // Assets are at index 0
+        
         const names = assetData.map((asset) => asset.asset_name);
         const images = assetData.map((asset) => asset.image);
-
+  
         setAssets(names);
         setAssetImages(images);
+    
+        
       } catch (error) {
         console.error("Failed to fetch assets:", error.message);
+     
       }
     };
-
+  
     fetchAssets();
   }, [backendActor, dashboardRefreshTrigger]);
 

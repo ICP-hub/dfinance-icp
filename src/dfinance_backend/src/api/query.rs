@@ -53,7 +53,7 @@ use crate::declarations::datatypes::Certificate;
 
 #[query]
 pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certificate), Error> {
-    validate_asset_name(&asset.clone());
+    validate_asset_name(&asset.clone())?;
     let reserved_data = get_reserve_data(asset.clone())?;
     let certificate = get_certificate_witness(asset);
     return Ok((reserved_data,certificate));
@@ -69,7 +69,7 @@ pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certific
  */
 #[query]
 fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
-    // Check if the user is anonymous
+    
     guard_principal_not_anonymous(&user)?;
 
     let user_data = read_state(|state| {
@@ -93,7 +93,7 @@ fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
  */
 #[query]
 fn get_user_faucet_data(user: Principal) -> Result<(FaucetReserves, Certificate), Error> {
-    // Check if the user is anonymous
+
     guard_principal_not_anonymous(&user)?;
 
     let user_faucet_data = read_state(|state| {
@@ -126,7 +126,6 @@ fn get_user_faucet_data(user: Principal) -> Result<(FaucetReserves, Certificate)
 //      })
    
 // }
-
 #[query]
 pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
     read_state(|state| {
@@ -166,7 +165,7 @@ pub fn get_asset_principal(asset_name: String) -> Result<(Principal, Certificate
  * @returns A vector of tuples containing user principals and their data.
  * @functionality This function returns a list of all registered users and their respective data.
  */
-#[query]  //update
+#[query]  
 pub async fn get_all_users() -> (Vec<(Principal, UserData)>, Certificate) {
     let res =read_state(|state| {
         state
@@ -186,14 +185,17 @@ pub async fn get_all_users() -> (Vec<(Principal, UserData)>, Certificate) {
  * @returns A vector of tuples containing user principals and their faucet reserves.
  * @functionality This function returns a list of all users and their respective faucet reserves.
  */
-pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
-    read_state(|state| {
+pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate) {
+    let res = read_state(|state| {
         state
             .faucet_data
             .iter()
             .map(|(k, v)| (k.clone(), v.0.clone()))
             .collect()
-    })
+    });
+    let cer = get_certificate_witness("all_faucet".to_string());
+    (res, cer)
+
 }
 
 
@@ -249,23 +251,16 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certi
  * @functionality This function computes the normalized supply of a user based on the reserve's liquidity rate and index, adjusting for interest accumulation.
  */
 #[query]
-pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
+pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
     trace!("calling user_normalized_supply");
-    // Check if the user is anonymous
     guard_prevent_anonymous()?;
-    // let user_principal = ic_cdk::caller();
-
-    // if user_principal == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
-
+    let cert = get_certificate_witness("user_normalized_supply".to_string());
     let current_time = current_timestamp();
     debug!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
         debug!("No update needed as timestamps match.");
-        return Ok(reserve_data.liquidity_index);
+        return Ok((reserve_data.liquidity_index, cert));
     } else {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_data.current_liquidity_rate,
@@ -278,7 +273,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.liquidity_index
         );
         
-        return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
+        return Ok((cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index), cert));
     }
 }
 
@@ -290,23 +285,16 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @functionality This function calculates the normalized debt of a user based on the reserve's debt index and borrow rate, adjusting for interest over time.
  */
 #[query]
-pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
+pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
     trace!("calling user_normalized_debt");
-    // Check if the user is anonymous
     guard_prevent_anonymous()?;
-    // let user_principal = ic_cdk::caller();
-
-    // if user_principal == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
-
+    
     let current_time = current_timestamp();
     debug!("Current timestamp: {}", current_time);
-
+    let cert = get_certificate_witness("user_normalized_debt".to_string());
     if reserve_data.last_update_timestamp == current_time {
         debug!("No update needed as timestamps match.");
-        return Ok(reserve_data.debt_index);
+        return Ok((reserve_data.debt_index, cert));
     } else {
         debug!(
             "Previous borrow index & rate: {:?} {:?}",
@@ -325,7 +313,7 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
             reserve_data.borrow_rate, //take it from reserve of asset
             cumulated_borrow_interest.clone().scaled_mul(reserve_data.debt_index.clone())
         );
-        return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
+        return Ok((cumulated_borrow_interest.scaled_mul(reserve_data.debt_index), cert));
     }
 }
 
@@ -335,9 +323,12 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @returns The total user count as `usize`.
  * @functionality This function returns the total number of users that are currently registered in the system.
  */
-#[query] //update
-pub fn get_total_users() -> usize {
-    read_state(|state| state.user_profile.len().try_into().unwrap())
+#[query] 
+pub fn get_total_users() -> (usize, Certificate) {
+    let res =read_state(|state| state.user_profile.len().try_into().unwrap());
+    
+    let cert = get_certificate_witness("total_users".to_string());
+    (res, cert)
 }
 
 /*
@@ -352,11 +343,13 @@ async fn get_user_account_data(
     on_behalf: Option<Principal>,
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
-) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-    let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await;
+) -> Result<((Nat, Nat, Nat, Nat, Nat, Nat, bool),Certificate), Error> {
+
+    let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await?;
+    let cert = get_certificate_witness("user_account_data".to_string());
     info!("calculated user asset data called successfully inide get user account data");
     debug!("get_user_account_data result: {:?}", result);
-    result
+    Ok((result, cert))
 }
 
 /*
@@ -367,18 +360,11 @@ async fn get_user_account_data(
  * @functionality Calculates the transfer fee for a given asset based on its exchange rate.
  */
 #[query]
-pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
+pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), Error> {
     trace!("calling get_transfer_fee");
-    // asset name validator
     validate_asset_name(&asset_name)?;
-    // Check if the user is anonymous
     guard_prevent_anonymous()?;
-    // let caller_id = ic_cdk::caller();
-
-    // if caller_id == Principal::anonymous() {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
+    let cert = get_certificate_witness("transfer_fee".to_string());
 
     let (asset_price,_cer) = match get_cached_exchange_rate(asset_name.clone()) {
         Ok(price) => price,
@@ -389,7 +375,7 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
     };
 
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-    Ok(transfer_token_fee)
+    Ok((transfer_token_fee, cert))
 }
 
 /*
@@ -400,14 +386,15 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<Nat, Error> {
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
 #[query]
-pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
-    read_state(|state| {
+pub fn get_canister_id_by_name(canister_name: String) -> Result<(Principal, Certificate), Error> {
+    let res = read_state(|state| {
         state
             .canister_list
             .get(&canister_name)
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
-    })
-    
+    })?;
+    let cert = get_certificate_witness("canister_id".to_string());
+    Ok((res, cert))
 }
 
 /*
@@ -417,50 +404,27 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
  * @functionality Retrieves the session data for the caller.
  */
 #[query]
-pub fn get_caller_session() -> Result<SessionStorageData, Error> {
+pub fn get_caller_session() -> Result<(SessionStorageData, Certificate), Error> {
     // Check if the user is anonymous
     guard_prevent_anonymous()?;
     let caller_id = ic_cdk::caller();
 
-    // if caller_id == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
-
-    Ok(read_state(|state| {
+    let res = read_state(|state| {
         state
             .session_details
             .get(&caller_id)
-            .map(|data| data.0.clone()) // Extract value
+            .map(|data| data.0.clone()) 
             .unwrap_or_else(|| SessionStorageData {
                 // Default value
                 connected_wallet: "".to_string(),
                 session_start: zero_nat_value(),
             })
-    }))
+    });
+
+    let cert = get_certificate_witness("caller_session".to_string());
+    Ok((res, cert))
 }
 
-/*
- * @title Get User Guide
- * @dev Retrieves whether the user has seen the user guide.
- * @returns true if the user has seen the guide, false otherwise.
- * @functionality Retrieves whether the user has seen the guide.
- */
-#[query]
-pub fn get_user_guide() -> Result<bool, Error> {
-    // Check if the user is anonymous
-    guard_prevent_anonymous()?;
-    let caller_id = ic_cdk::caller();
-
-    // if caller_id == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
-
-    Ok(read_state(|state| {
-        state.user_guide_data.get(&caller_id).unwrap_or(false)
-    }))
-}
 
 /*
  * @title Get Controller Information
@@ -477,6 +441,7 @@ pub fn get_user_guide() -> Result<bool, Error> {
  * @functionality Retrieve Controller Information
  */
 //Controller for creating dynamic dtoken and debt token canisters
+//TODO: change its file location
 pub fn get_controller() -> Result<InitArgs, Error> {
     read_state(|state| {
         state
@@ -712,7 +677,7 @@ pub async fn get_asset_debt(
         get_balance_value
     );
 
-    let normalized_debt_data = match user_normalized_debt(asset_reserve.clone()) {
+    let (normalized_debt_data, _cert) = match user_normalized_debt(asset_reserve.clone()) {
         Ok(data) => data,
         Err(e) => {
             error!("Error fetching normalized debt data: {:?}", e);
@@ -741,10 +706,11 @@ pub async fn get_asset_debt(
  * - `Nat` - The current cycle balance of the canister.
  */
 #[query] //update
-pub async fn cycle_checker() -> Result<Nat, Error> {
+pub async fn cycle_checker() -> Result<(Nat, Certificate), Error> {
     // only the admin can access this function.
     guard_admin_only()?;
-    Ok(Nat::from(api::canister_balance128()))
+    let cert = get_certificate_witness("cycle_checker".to_string());
+    Ok((Nat::from(api::canister_balance128()), cert))
 }
 
 //TODO: assigned to vicky isme saare query function toh nhi h kuch internal functions bhi pade hai

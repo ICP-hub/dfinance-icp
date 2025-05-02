@@ -1,6 +1,5 @@
 use crate::{
-    constants::errors::Error,
-    stable_storage::state_handler::{mutate_state, read_state},
+    constants::errors::Error, declarations::datatypes::Certificate, stable_storage::state_handler::{get_certificate_witness, mutate_state, read_state}
 };
 use candid::Principal;
 use ic_cdk::{caller, query, update};
@@ -16,7 +15,8 @@ use ic_cdk::{caller, query, update};
  * @functionality Controller Permissions Check
  */
 pub fn guard_controller_only() -> Result<(), Error> {
-    if ic_cdk::caller() == Principal::anonymous() || !to_check_controller() {
+    let (is_controller, _cert) = to_check_controller();
+    if ic_cdk::caller() == Principal::anonymous() || !is_controller {
         return Err(Error::ErrorNotController);
     } else {
         Ok(())
@@ -69,8 +69,10 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
  * @functionality Controller Permissions Check
  */
 #[query]
-pub fn to_check_controller() -> bool {
-    ic_cdk::api::is_controller(&ic_cdk::api::caller())
+pub fn to_check_controller() -> (bool, Certificate) {
+    let cert = get_certificate_witness("controller".to_string());
+    let res = ic_cdk::api::is_controller(&ic_cdk::api::caller());
+    (res, cert)
 }
 
 /*

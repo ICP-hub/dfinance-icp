@@ -4,7 +4,7 @@ use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::{error, info};
 use candid::{decode_one, encode_args};
 use candid::{Nat, Principal};
-use ic_cdk::{call, query};
+use ic_cdk::call;
 use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs};
 
@@ -189,11 +189,10 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
  * # Returns
  * Returns the total supply of tokens as `Nat`.
  */
-#[query]
+
 pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
-    if canister_id == Principal::anonymous() {
-        return Err(Error::AnonymousPrincipal);
-    }
+    
+
 
     let raw_response: Result<(Nat,), _> =
         ic_cdk::api::call::call(canister_id, "icrc1_total_supply", ()).await;

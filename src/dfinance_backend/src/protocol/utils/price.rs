@@ -1,12 +1,12 @@
 use crate::constants::validators::validate_asset_name;
 use crate::{debug, error, info, trace};
 use crate::protocol::utils::math_utils::current_timestamp;
-use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
+use crate::stable_storage::state_handler::{get_certificate_witness, insert_certified_value, mutate_state, read_state};
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
 use crate::guards::access_control::{check_is_tester, guard_controller_only};
-use crate::declarations::datatypes::{CachedPrice, PriceCache};
+use crate::declarations::datatypes::{CachedPrice, Certificate, PriceCache};
 use candid::Nat;
 use ic_cdk::{query, update};
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
@@ -108,7 +108,7 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
  */
 //TODO correct the name
 #[query]
-pub fn queary_reserve_price() -> Vec<PriceCache> {
+pub fn queary_reserve_price() -> (Vec<PriceCache>, Certificate) {
     let tokens = read_state(|state| 
         // let cache_list = &state.price_cache_list;
         state.price_cache_list
@@ -118,7 +118,9 @@ pub fn queary_reserve_price() -> Vec<PriceCache> {
     );
 
     debug!("all tokens are = {:?}", tokens);
-    tokens
+    let cert = get_certificate_witness("reserve_price".to_string());
+    
+    (tokens, cert)
 }
 
 /*
@@ -168,7 +170,7 @@ pub async fn get_exchange_rates(
         },
     };
 
-    let xrc_canister_id = get_canister_id_by_name("xrc".to_string()).map_err(|e| {
+    let (xrc_canister_id, _cer) = get_canister_id_by_name("xrc".to_string()).map_err(|e| {
         // debug!("Error fetching xrc canister ID: {:?}", e);
         Error::NoCanisterIdFound
     })?;

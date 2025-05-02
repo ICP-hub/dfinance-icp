@@ -30,7 +30,6 @@ use api::query::get_all_faucet;
 use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
-use protocol::utils::log;
 use crate::declarations::datatypes::Certificate;
 
 /*
@@ -88,7 +87,7 @@ pub async fn schedule_midnight_task() {
  */
 //TODO check faucet reset at midnight
 async fn run_midnight_reset() {
-    let vector_faucet_data: Vec<(Principal, FaucetReserves)> = get_all_faucet().await;
+    let (vector_faucet_data, _cer) = get_all_faucet().await;
 
     for (user_principal, _) in vector_faucet_data {
         match reset_faucet_usage(user_principal).await {

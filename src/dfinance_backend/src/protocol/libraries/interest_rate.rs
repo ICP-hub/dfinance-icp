@@ -143,7 +143,7 @@ pub async fn calculate_interest_rates(
 
     let reserve = get_reserve_data(asset.clone())?;
 
-    let user_normalized_supply = user_normalized_supply(reserve.clone())?;
+    let (user_normalized_supply, _cer) = user_normalized_supply(reserve.clone())?;
     let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply);
 
     let available_liq = total_supply + liq_added - liq_taken;

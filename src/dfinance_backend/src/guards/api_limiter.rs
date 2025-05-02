@@ -1,47 +1,17 @@
 use crate::constants::constant_variables::constants::{REQUEST_LIMIT, WINDOW_SIZE_VAR};
 use crate::constants::errors::Error;
+use crate::declarations::datatypes::Certificate;
 use crate::protocol::utils::math_utils::current_timestamp;
+use crate::stable_storage::state_handler::get_certificate_witness;
 use candid::Principal;
 use ic_cdk::{query, update};
 use crate::guards::access_control::guard_prevent_anonymous;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 
-use super::access_control::guard_principal_not_anonymous;
-
 
 thread_local! {
     static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
-}
-
-//TODO: remove this function later at the time of deployment, just to check number of calls by the user.
-#[query]
-pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
-    // Check if the user is anonymous
-    guard_principal_not_anonymous(&caller)?;
-
-    // if caller == Principal::anonymous() {
-    //     ic_cdk::println!("principals are not allowed");
-    //     return Err(Error::InvalidPrincipal);
-    // }
-
-    let now = current_timestamp();
-
-    let is_blocked = RATE_LIMITER.with(|map| {
-        let map = map.borrow();
-        let maybe_queue = map.get(&caller);
-
-        // ask vaiahav what
-        match maybe_queue {
-            Some(queue) => {
-                let valid_count = queue.iter().filter(|&&t| now - t <= WINDOW_SIZE).count();
-                valid_count
-            }
-            None => 0, // No calls logged = not blocked
-        }
-    });
-
-    Ok(is_blocked)
 }
 
 /*
@@ -57,17 +27,17 @@ pub fn call_tracker(caller: Principal) -> Result<usize, Error> {
  * - `Ok(bool)` - True if the user is currently rate-limited (blocked), false otherwise.
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
+//TODO: add testing func in concurrency
 #[query]
-pub fn is_user_blocked() -> Result<bool, Error> {
+pub fn is_user_blocked() -> Result<(bool, Certificate), Error> {
     guard_prevent_anonymous()?;
     let caller = ic_cdk::api::caller();
     let now = current_timestamp();
-
+    let cert = get_certificate_witness("user_blocked".to_string());
     let is_blocked = RATE_LIMITER.with(|map| {
         let map = map.borrow();
         let maybe_queue = map.get(&caller);
 
-        // ask vaiahav what
         match maybe_queue {
             Some(queue) => {
                 let valid_count = queue.iter().filter(|&&t| now - t <= WINDOW_SIZE).count();
@@ -77,7 +47,7 @@ pub fn is_user_blocked() -> Result<bool, Error> {
         }
     });
 
-    Ok(is_blocked)
+    Ok((is_blocked, cert))
 }
 /*
  * @title Inspect Incoming Messages

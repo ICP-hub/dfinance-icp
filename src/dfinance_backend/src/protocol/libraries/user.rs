@@ -583,7 +583,7 @@ pub async fn get_user_balance_in_base_currency(
         user_scaled_balance
     );
 
-    let normalized_supply = user_normalized_supply(asset_reserve)?;
+    let (normalized_supply, _cer) = user_normalized_supply(asset_reserve)?;
 
     debug!("user balance normailized supply = {:?}", normalized_supply);
     debug!("user liq index {}", reserve.liquidity_index.clone());
@@ -621,7 +621,7 @@ pub async fn get_user_asset_balance_in_base_currency(
 
     let user_scaled_balance = user_balance.clone();
 
-    let normalized_supply = user_normalized_supply(asset_reserve)?;
+    let (normalized_supply, _cer) = user_normalized_supply(asset_reserve)?;
     debug!("user balance normailized supply = {:?}", normalized_supply);
 
     debug!("user liq index {}", reserve.liquidity_index.clone());
@@ -675,7 +675,7 @@ pub async fn get_user_debt_in_base_currency(
 
     let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await?;
 
-    let user_normailzed_debt = user_normalized_debt(asset_reserve)?;
+    let (user_normailzed_debt,_cer) = user_normalized_debt(asset_reserve)?;
 
     if user_variable_debt != zero_nat_value() {
         user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
@@ -726,7 +726,7 @@ pub async fn get_user_asset_debt_in_base_currency(
 
     let mut user_variable_debt = user_balance.clone();
 
-    let user_normailzed_debt = user_normalized_debt(asset_reserve)?;
+    let (user_normailzed_debt,_cer) = user_normalized_debt(asset_reserve)?;
 
     if user_variable_debt != zero_nat_value() {
         user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());

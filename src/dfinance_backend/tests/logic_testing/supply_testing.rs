@@ -212,14 +212,6 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 }
             };
 
-        ic_cdk::println!("==== Checking Before Balance ====");
-        check_ledger_balances(
-            pic,
-            backend_canister,
-            &[user_principal],
-            &[case.asset.clone()],
-        );
-
         ic_cdk::println!("user principal = {:?}",user_principal.to_text());
         ic_cdk::println!("asset principal = {:?}", asset_principal.to_text());
         ic_cdk::println!("backend canister = {:?}",backend_canister.to_text());
@@ -292,13 +284,9 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                             continue;
                         }
                         ic_cdk::println!("✅ IC Test Case {} Passed: Supply successful.", i + 1,);
-                        ic_cdk::println!("==== Checking After Balance ====");
-                        check_ledger_balances(
-                            pic,
-                            backend_canister,
-                            &[user_principal],
-                            &[case.asset.clone()],
-                        );
+                        ic_cdk::println!("=================== Checking Reserves After successful supply ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -316,17 +304,15 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("=================== Checking Balance After successful supply ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
-                        ic_cdk::println!("==== Checking After Balance ====");
-                        check_ledger_balances(
-                            pic,
-                            backend_canister,
-                            &[user_principal],
-                            &[case.asset.clone()],
-                        );
+                        
+                        
                     }
                 }
             }

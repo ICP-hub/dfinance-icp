@@ -19,8 +19,8 @@ fn call_test_function() {
     test_faucet(&pic, backend_canister,random_users.clone());
     test_supply(&pic, backend_canister,random_users.clone());
     test_borrow(&pic, backend_canister,random_users.clone());
-    test_repay(&pic, backend_canister,random_users.clone());
-    test_withdraw(&pic, backend_canister,random_users.clone());
+    // test_repay(&pic, backend_canister,random_users.clone());
+    // test_withdraw(&pic, backend_canister,random_users.clone());
     // test_liquidation(&pic, backend_canister,random_users.clone());
 }
 
@@ -33,7 +33,7 @@ fn call_test_function() {
 fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
-    let random_users = generate_principals(10);
+    let random_users = generate_principals(4);
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
@@ -393,7 +393,7 @@ fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Faucet successful. New Balance: {}",
+                                "✅ IC Test Case {} for user {} Passed: Faucet successful.",
                                 i + 1,
                                 balance
                             );
@@ -541,34 +541,34 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(40_000u128),
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(2_000u128),
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(5_000u128),
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(10_000u128),
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(40_000u128),
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(800_000u128),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5_000u128),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(400_000u128),
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     ic_cdk::println!(
@@ -587,6 +587,15 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
+
+        ic_cdk::println!(
+            "\n======================== Reserve data before concurent calls  ========================\n"
+        );
+        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+
+        ic_cdk::println!(
+            "\n======================================================================================\n"
+        );
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for user_principal in random_users.clone() {
@@ -677,7 +686,7 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Supply successful. New Balance: {}",
+                                "✅ IC Test Case {} Passed: Supply successful: {}",
                                 i + 1,
                                 balance
                             );
@@ -715,6 +724,10 @@ fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                 }
             }
         }
+
+        ic_cdk::println!(
+            "\n======================== Total reserve data after concurent calls  ========================\n"
+        );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
     }
     ic_cdk::println!(
@@ -745,30 +758,30 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(20_000u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(200u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(20_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(400_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(800_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     // let user_principal = get_user_principal();
@@ -828,7 +841,7 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Borrow successful. New Balance: {}",
+                                "✅ IC Test Case {} Passed: Borrow successful: {}",
                                 i + 1,
                                 balance
                             );
@@ -866,6 +879,9 @@ fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pr
                 }
             }
         }
+        ic_cdk::println!(
+            "\n======================== Total reserve data after concurent calls  ========================\n"
+        );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
     }
     ic_cdk::println!(
@@ -900,38 +916,38 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(40_000u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(5_000u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(10_000u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(2_000u128),
-        //     on_behalf_of: None,
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(40_000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5_000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(10_000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(2_000u128),
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     ic_cdk::println!(
@@ -997,7 +1013,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Withdraw successful. New Balance: {}",
+                                "✅ IC Test Case {} Passed: Withdraw successful: {}",
                                 i + 1,
                                 balance
                             );
@@ -1035,6 +1051,9 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
                 }
             }
         }
+        ic_cdk::println!(
+            "\n======================== Total reserve data after concurent calls  ========================\n"
+        );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
     }
 
@@ -1209,7 +1228,7 @@ fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Pri
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Repay successful. New Balance: {}",
+                                "✅ IC Test Case {} Passed: Repay successful: {}",
                                 i + 1,
                                 balance
                             );

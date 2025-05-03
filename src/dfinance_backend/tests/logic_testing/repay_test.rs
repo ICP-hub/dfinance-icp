@@ -201,8 +201,6 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                 }
             };
 
-        ic_cdk::println!("==== Checking Before Balance ====");
-        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
 
         /*
          * @title Approve ICRC2 Transfer
@@ -276,8 +274,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Repay successful.",
                             i + 1,
                         );
-                        ic_cdk::println!("==== Checking After Balance ====");
-                        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
+                        ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -295,8 +294,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("==== Checking After Balance ====");
-                            check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
+                            ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!(
                                 "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",

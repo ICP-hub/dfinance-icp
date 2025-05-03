@@ -187,9 +187,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             is_collateral: case.is_collateral.clone(),
         };
 
-        ic_cdk::println!("==== Checking Before Balance ====");
-        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
-
         /*
          * @title Execute Withdraw
          * @notice Executes the withdraw operation and validates outcomes.
@@ -220,8 +217,9 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Withdraw successful.",
                             i + 1,
                         );
-                        ic_cdk::println!("==== Checking After Balance ====");
-                        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
+                        ic_cdk::println!("=================== Checking Reserves After successful Withdrawal ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -239,8 +237,9 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("==== Checking After Balance ====");
-                            check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
+                            ic_cdk::println!("=================== Checking Reserves After successful Withdrawal ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;

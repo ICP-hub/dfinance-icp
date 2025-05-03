@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
 import Button from "../Common/button";
 import { useSelector } from "react-redux";
@@ -56,7 +56,7 @@ const DebtStatus = () => {
     fetchAssetBorrow,
   } = useAssetData();
 
-  const { getAllUsers, user, backendActor, createLedgerActor ,verifyCertificate} = useAuth();
+  const { getAllUsers, user, backendActor, createLedgerActor, verifyCertificate } = useAuth();
 
   const { batchFetchReserveData } = useReserveData();
 
@@ -71,14 +71,14 @@ const DebtStatus = () => {
       console.error("Error: Backend actor is not initialized.");
       throw new Error("Backend actor not initialized");
     }
-    
+
     try {
       const result = await backendActor.get_total_users();
-  console.log("result",result)
+      console.log("result", result)
       // Assuming result is a tuple: [data, certificate]
       const userData = result?.[0];
       const cert = result?.[1];
-  
+
       if (cert) {
         try {
           const verified = await verifyCertificate(cert);
@@ -93,14 +93,14 @@ const DebtStatus = () => {
           return;
         }
       }
-  
+
       setTotalUsers(userData || 0);
     } catch (error) {
       console.error("Error fetching total users:", error);
       throw error;
     }
   };
-  
+
 
   /**
    * Fetches a list of users eligible for liquidation.
@@ -267,42 +267,46 @@ const DebtStatus = () => {
     return assetBalance ? assetBalance[balanceType] || 0 : 0;
   };
 
-  const getAssetSupplyValue = (asset, principal) => {
+  const getAssetSupplyValue = useCallback((asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]);
+      const supplyValue = Number(asset_supply[asset][0]);
+      console.log(`Supply value for ${asset}:`, supplyValue);
       return supplyValue;
     }
+    console.warn(`No supply value found for ${asset}`);
+    return 0;
+  }, [asset_supply]);
 
-    return;
-  };
 
-  const getAssetBorrowValue = (asset, principal) => {
-    if (asset_borrow[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]);
+  // Function to get asset borrow value
+  const getAssetBorrowValue = useCallback((asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset][0]);
+      console.log(`Supply value for ${asset}:`, borrowValue);
       return borrowValue;
     }
-
-    return;
-  };
+    console.warn(`No supply value found for ${asset}`);
+    return 0;
+  }, [asset_supply]);
 
   // Function to calculate asset supply
   const calculateAssetSupply = (assetName, mappedItem) => {
     const reserves = mappedItem?.userData?.reserves?.[0] || [];
-
+    console.log("mappedItem", mappedItem?.userData?.reserves?.[0])
     let currentLiquidity = 0;
     reserves.map((reserveGroup) => {
       if (reserveGroup[0] === assetName) {
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
       }
     });
-
+    console.log("currentLiquidity", currentLiquidity)
     const assetBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
         assetName,
         "dtokenBalance"
       ) || 0;
-
+    console.log("assBalance", assetBalance)
     if (!currentLiquidity) return 0;
 
     const safeAssetBalance =
@@ -312,7 +316,7 @@ const DebtStatus = () => {
         ? Number(currentLiquidity)
         : currentLiquidity;
     const supplyValue = Number(getAssetSupplyValue(assetName));
-
+    console.log("supplyValue", supplyValue)
     return Math.trunc(
       Math.trunc(safeAssetBalance / safeCurrentLiquidity) * supplyValue
     );
@@ -340,7 +344,7 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-        Number(debtIndex)
+      Number(debtIndex)
     );
   };
 
@@ -525,11 +529,10 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
-                          index !== liquidationUsers.length - 1
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
                             ? "gradient-line-bottom"
                             : ""
-                        }`}
+                          }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -617,7 +620,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        {}
+                        { }
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

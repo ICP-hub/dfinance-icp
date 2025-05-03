@@ -410,7 +410,7 @@ pub async fn calculate_user_asset_data(
 
             total_collateral += user_balance.clone();
             debug!("Total collateral so far: {}", total_collateral);
-
+debug!("eserve_data.configuration{:?}", reserve_data.configuration.ltv);
             if reserve_data.configuration.ltv != zero_nat_value() {
                 avg_ltv += user_balance
                     .clone()
@@ -764,10 +764,8 @@ pub async fn get_liquidation_users_concurrent(
     total_pages: usize,
     page_size: usize,
 ) -> Vec<(Principal, UserAccountData, UserData)> {
-    let (vector_user_data, _cer) = get_all_users().await;
-
-    // let total_users = vector_user_data.len();
-    // debug!("Total users: {}", total_users);
+    
+    let vector_user_data = get_all_users().await;
 
     let mut liq_list = Vec::new();
     let cycles_start = Nat::from(api::canister_balance128());
@@ -783,6 +781,7 @@ pub async fn get_liquidation_users_concurrent(
 
         debug!("Processing page: {}", page + 1);
 
+        // Concurrent processing of users in the current page
         let page_liq_list = stream::iter(users_to_process)
             .map(|(user_principal, user_data)| async move {
                 debug!("Processing user: {:?}", user_principal);
@@ -1212,7 +1211,7 @@ pub async fn get_all_user_list(
 ) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
     guard_admin_only()?;
 
-    let (vector_user_data, _cer) = get_all_users().await;
+    let vector_user_data = get_all_users().await;  // Access the first element of the tuple
     let total_users = vector_user_data.len();
     debug!("Total users: {}", total_users);
 

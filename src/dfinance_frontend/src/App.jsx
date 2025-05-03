@@ -92,7 +92,7 @@ export default function App() {
       try {
         const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
         const results = await Promise.all(
-          assets.map((asset) => backendActor.get_asset_principal(asset))
+          assets.map((asset) => backendActor.get_asset_principal_certified(asset))
         );
         console.log("Fetched asset principals:", results);
         // Process each result

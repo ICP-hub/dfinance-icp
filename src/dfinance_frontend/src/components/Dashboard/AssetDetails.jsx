@@ -24,6 +24,7 @@ import WalletModal from "./WalletModal";
 import { lazy, Suspense } from "react";
 import MiniLoader from "../Common/miniLoader";
 import { useReserveData } from "../../context/ReserveDataContext";
+import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 
 const SupplyInfo = lazy(() => import("./DashboardPopup/SupplyInfo"));
 const BorrowInfo = lazy(() => import("./DashboardPopup/BorrowInfo"));
@@ -182,7 +183,7 @@ const AssetDetails = () => {
   const fetchAssetData = async () => {
     try {
       const reserveDataMap = await batchFetchReserveData(assets);
-      
+
       const balancePromises = assets.map(async (asset) => {
         const reserveDataForAsset = reserveDataMap[asset]?.Ok[0];
         if (!reserveDataForAsset) {
@@ -193,16 +194,16 @@ const AssetDetails = () => {
             debtTokenBalance: null,
           };
         }
-        
+
         const dtokenId = reserveDataForAsset?.d_token_canister?.[0];
         const debtTokenId = reserveDataForAsset?.debt_token_canister?.[0];
-        
+
         const assetBalance = {
           asset,
           dtokenBalance: null,
           debtTokenBalance: null,
         };
-        
+
         const dtokenPromise = dtokenId ? (async () => {
           try {
             const dtokenActor = createLedgerActor(dtokenId, idlFactory);
@@ -216,7 +217,7 @@ const AssetDetails = () => {
             return null;
           }
         })() : Promise.resolve(null);
-        
+
         const debtTokenPromise = debtTokenId ? (async () => {
           try {
             const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
@@ -230,18 +231,18 @@ const AssetDetails = () => {
             return null;
           }
         })() : Promise.resolve(null);
-        
+
         const [dtokenBalance, debtTokenBalance] = await Promise.all([
           dtokenPromise,
           debtTokenPromise
         ]);
-        
+
         assetBalance.dtokenBalance = dtokenBalance;
         assetBalance.debtTokenBalance = debtTokenBalance;
-        
+
         return assetBalance;
       });
-      
+
       const balances = await Promise.all(balancePromises);
       setAssetBalances(balances);
     } catch (error) {
@@ -314,7 +315,7 @@ const AssetDetails = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-  
+
     try {
       let result;
       switch (asset) {
@@ -323,15 +324,15 @@ const AssetDetails = () => {
         case "ckUSDC":
         case "ICP":
         case "ckUSDT":
-          result = await backendActor.get_asset_principal(asset);
+          result = await backendActor.get_asset_principal_certified(asset);
           break;
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-  
+
       if ("Ok" in result && Array.isArray(result.Ok)) {
         const [principalText, cert] = result.Ok;
-  
+
         try {
           const isVerified = await verifyCertificate(cert);
           if (!isVerified) {
@@ -354,7 +355,7 @@ const AssetDetails = () => {
       throw error;
     }
   };
-  
+
 
   //balance fetcher
   const ckBalance =
@@ -538,6 +539,7 @@ const AssetDetails = () => {
 
   // Handle which popup to open and data per asset selected
   const handleAssetAction = (actionType, asset) => {
+
     const reserveData = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
@@ -715,7 +717,8 @@ const AssetDetails = () => {
     ckUSDCUsdRate,
     ckICPUsdRate,
     ckUSDTUsdRate,
-    availableBorrow
+    availableBorrow,
+    dashboardRefreshTrigger
   ]);
 
   useEffect(() => {
@@ -737,8 +740,8 @@ const AssetDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       for (const asset of assets) {
-       await fetchAssetSupply(asset);
-       await  fetchAssetBorrow(asset);
+        await fetchAssetSupply(asset);
+        await fetchAssetBorrow(asset);
       }
     };
 
@@ -1135,7 +1138,7 @@ const AssetDetails = () => {
                     <Button
                       title={"Supply"}
                       onClickHandler={async () => {
-                        await fetchAssetSupply(id);
+                        dispatch(toggleDashboardRefresh());
                         if (ckBalance === 0) {
                           toast.dismiss();
                           toast.info(
@@ -1187,6 +1190,7 @@ const AssetDetails = () => {
                     <Button
                       title={"Borrow"}
                       onClickHandler={() => {
+                        dispatch(toggleDashboardRefresh());
                         if (parseFloat(displayedBalance) <= 0) {
                           toast.dismiss();
                           toast.info(

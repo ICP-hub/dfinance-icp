@@ -412,7 +412,7 @@ const DashboardComponent = () => {
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
-      console.log("supplyValue",supplyValue)
+      console.log("supplyValue", supplyValue)
       return supplyValue;
     }
     return noSupplyMessage;
@@ -872,144 +872,146 @@ const DashboardComponent = () => {
         const assetData = item[1]?.Ok || [];
         const total_supply = Number(assetData[0]?.asset_supply || 0) / 1e8;
         const total_borrow = Number(assetData[0]?.asset_borrow || 0) / 1e8;
-  
+
         const availableBorrowNumber = Number(availableBorrow || 0);
         const isBorrowAvailable = availableBorrowNumber > 0.01;
-  
+
         if (!showAllAssets) {
           const formattedTotalSupply = total_supply * 0.85;
           const formattedTotalBorrow = total_borrow;
-  
+
           return (
             formattedTotalSupply > formattedTotalBorrow && isBorrowAvailable
           );
         }
-  
+
         return true;
       })
       .sort((a, b) => {
         if (!showAllAssets) return 0;
-  
+
         const assetDataA = a[1]?.Ok || [];
         const assetDataB = b[1]?.Ok || [];
-  
+
         const total_supply_A = Number(assetDataA[0]?.asset_supply || 0) / 1e8;
         const total_borrow_A = Number(assetDataA[0]?.asset_borrow || 0) / 1e8;
-  
+
         const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / 1e8;
         const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / 1e8;
-  
+
         const isEligibleA = total_supply_A * 0.85 > total_borrow_A;
         const isEligibleB = total_supply_B * 0.85 > total_borrow_B;
-  
+
         if (isEligibleA && !isEligibleB) return -1;
         if (!isEligibleA && isEligibleB) return 1;
         return 0;
       });
   };
-  
+
 
   const getFilteredSupplyReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
-  
+
     return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
-  
+
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
-  
+
       const assetSupplyValue = getAssetSupplyValue(asset);
-  
+
       if (assetSupplyValue == null || isNaN(Number(assetSupplyValue))) {
         console.warn("Invalid supply value for", asset, assetSupplyValue);
         return false;
       }
-  
+
       const hasSupply =
         typeof assetSupplyValue === 'bigint'
           ? assetSupplyValue > 0n
           : Number(assetSupplyValue) > 0;
-  
+
       return assetBalance > 0 && hasSupply;
     });
   };
-  
-  
-  
+
+
+
   const getFilteredBorrowReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
-  
+
     return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
-  
+
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.debtTokenBalance || 0;
-  
+
       const assetBorrowValue = getAssetBorrowValue(asset);
-  
+      console.log("assetBorrow", assetBorrowValue)
       if (assetBorrowValue == null || isNaN(Number(assetBorrowValue))) {
         console.warn("Invalid supply value for", asset, assetBorrowValue);
         return false;
       }
-  
+
       const hasBorrow =
         typeof assetBorrowValue === 'bigint'
           ? assetBorrowValue > 0n
           : Number(assetBorrowValue) > 0;
-  
+
       return assetBalance > 0 && hasBorrow;
     });
   };
-  
+
 
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-  console.log("userAccountData",userAccountData)
+  console.log("userAccountData", userAccountData)
   useEffect(() => {
     const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
     let updatedAvailableBorrow = 0;
-  
+
     // Early return if userAccountData is missing or malformed
     if (!userAccountData?.Ok?.[0] || userAccountData.Ok[0].length <= 5) {
       setAvailableBorrow(0);
       return;
     }
-  
+
     for (const reserveGroup of reserves) {
       const asset = reserveGroup?.[0];
       const reserveData = reserveGroup?.[1];
       const liquidityIndex = Number(reserveData?.liquidity_index || 0);
       const isCollateral = reserveData?.is_collateral ?? true;
-  
+
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
-  
+
       const assetSupply =
         liquidityIndex > 0
           ? (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-            (liquidityIndex * 1e8)
+          (liquidityIndex * 1e8)
           : 0;
-  
+
       if (assetSupply > 0) {
         const borrowValue = Number(userAccountData.Ok[0][5]) / 1e8;
         updatedAvailableBorrow = isCollateral ? borrowValue : 0;
+        console.log("update", updatedAvailableBorrow)
+        setAvailableBorrow(updatedAvailableBorrow);
         break; // stop after first eligible asset
       }
     }
-  
+
     const finalBorrowValue =
       !updatedAvailableBorrow || updatedAvailableBorrow < 0.01
         ? 0
         : updatedAvailableBorrow;
-  
+
     setAvailableBorrow(finalBorrowValue);
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
-  
-  
+
+
   useEffect(() => {
     const savedShowZeroBalance = JSON.parse(
       localStorage.getItem("showZeroBalance")
@@ -1053,7 +1055,7 @@ const DashboardComponent = () => {
     };
 
     fetchUserData();
-  }, [assets, dashboardRefreshTrigger,fetchUserPositions]);
+  }, [assets, dashboardRefreshTrigger, fetchUserPositions]);
 
   useEffect(() => {
     if (!filteredDataLoading) {
@@ -1346,7 +1348,7 @@ const DashboardComponent = () => {
                 <div className="flex">
                   <h1>Your supplies</h1>
                   <div className="ml-5">
-                  {(userData?.Ok?.[0]?.reserves?.[0] || []).map((reserveGroup, index)  => {
+                    {(userData?.Ok?.[0]?.reserves?.[0] || []).map((reserveGroup, index) => {
                       const asset = reserveGroup[0];
                       const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
                         (reserveGroup) => reserveGroup[0] === asset
@@ -1378,7 +1380,7 @@ const DashboardComponent = () => {
                       }
                       if (assetSupply >= 0) {
                         totalUsdValueSupply += usdValue;
-                        console.log("totalUsdValueSupply",totalUsdValueSupply)
+                        console.log("totalUsdValueSupply", totalUsdValueSupply)
                         dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
                       }
 
@@ -2254,218 +2256,218 @@ const DashboardComponent = () => {
                     </div>
                   ) :
                     getFilteredBorrowReserves().length === 0 ? (
-                    <div className="text-center text-gray-500">
-                      {noBorrowMessage}
-                    </div>
-                  ) : (
-                    <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
-                      <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
-                        <div className="w-full">
-                          {getFilteredBorrowReserves().map(
-                            (reserveGroup, index) => {
-                              const asset = reserveGroup[0];
+                      <div className="text-center text-gray-500">
+                        {noBorrowMessage}
+                      </div>
+                    ) : (
+                      <div className="md:block lgx:block xl:hidden dark:bg-gradient dark:from-darkGradientStart dark:to-darkGradientEnd">
+                        <div className="relative mt-4 max-h-[2250px] overflow-y-auto scrollbar-none">
+                          <div className="w-full">
+                            {getFilteredBorrowReserves().map(
+                              (reserveGroup, index) => {
+                                const asset = reserveGroup[0];
 
-                              const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
-                                (reserveGroup) => reserveGroup[0] === asset
-                              )?.[1]?.variable_borrow_index;
+                                const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
+                                  (reserveGroup) => reserveGroup[0] === asset
+                                )?.[1]?.variable_borrow_index;
 
-                              const assetBorrowBalance =
-                                assetBalances.find(
-                                  (balance) => balance.asset === asset
-                                )?.debtTokenBalance || 0;
-                              const assetBorrow =
-                                (Number(assetBorrowBalance) *
-                                  Number(getAssetBorrowValue(asset))) /
-                                (Number(DebtIndex) * 1e8);
+                                const assetBorrowBalance =
+                                  assetBalances.find(
+                                    (balance) => balance.asset === asset
+                                  )?.debtTokenBalance || 0;
+                                const assetBorrow =
+                                  (Number(assetBorrowBalance) *
+                                    Number(getAssetBorrowValue(asset))) /
+                                  (Number(DebtIndex) * 1e8);
 
-                              const item = filteredItems.find(
-                                (item) => item[0] === asset
-                              );
-
-                              const assetData = item[1].Ok;
-
-                              const total_supply =
-                                Number(assetData?.asset_supply || 0) /
-                                100000000;
-                              const total_borrow =
-                                Number(assetData?.asset_borrow || 0) /
-                                100000000;
-
-                              const { borrowableValue } =
-                                calculateBorrowableValues(
-                                  item,
-                                  availableBorrow,
-                                  Number((total_supply * 0.85).toFixed(8)) -
-                                  Number(total_borrow)
+                                const item = filteredItems.find(
+                                  (item) => item[0] === asset
                                 );
 
-                              const ckBalance =
-                                asset === "ckBTC"
-                                  ? ckBTCBalance
-                                  : asset === "ckETH"
-                                    ? ckETHBalance
-                                    : asset === "ckUSDC"
-                                      ? ckUSDCBalance
-                                      : asset === "ICP"
-                                        ? ckICPBalance
-                                        : asset === "ckUSDT"
-                                          ? ckUSDTBalance
-                                          : null;
+                                const assetData = item[1].Ok;
 
-                              const borrowRateApr =
-                                (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) /
-                                100000000 || 0;
+                                const total_supply =
+                                  Number(assetData?.asset_supply || 0) /
+                                  100000000;
+                                const total_borrow =
+                                  Number(assetData?.asset_borrow || 0) /
+                                  100000000;
 
-                              return (
-                                <div
-                                  key={index}
-                                  className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
-                                >
-                                  <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
-                                    {assets.includes(asset) && (
-                                      <img
-                                        src={AssetImages[assets.indexOf(asset)]}
-                                        alt={`${asset} logo`}
-                                        className="w-8 h-8 rounded-full"
-                                      />
-                                    )}
-                                    {asset}
-                                  </div>
+                                const { borrowableValue } =
+                                  calculateBorrowableValues(
+                                    item,
+                                    availableBorrow,
+                                    Number((total_supply * 0.85).toFixed(8)) -
+                                    Number(total_borrow)
+                                  );
 
-                                  <div className="flex justify-between gap-4">
-                                    <div className="text-[#233D63] text-xs font-semibold mt-3 mb-4 w-1/3">
-                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50 mb-1">
-                                        Debt
-                                      </p>
+                                const ckBalance =
+                                  asset === "ckBTC"
+                                    ? ckBTCBalance
+                                    : asset === "ckETH"
+                                      ? ckETHBalance
+                                      : asset === "ckUSDC"
+                                        ? ckUSDCBalance
+                                        : asset === "ICP"
+                                          ? ckICPBalance
+                                          : asset === "ckUSDT"
+                                            ? ckUSDTBalance
+                                            : null;
+
+                                const borrowRateApr =
+                                  (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) /
+                                  100000000 || 0;
+
+                                return (
+                                  <div
+                                    key={index}
+                                    className="p-3 rounded-lg dark:bg-darkSurface dark:text-darkText"
+                                  >
+                                    <div className="flex items-center justify-start min-w-[80px] gap-2 mb-2">
+                                      {assets.includes(asset) && (
+                                        <img
+                                          src={AssetImages[assets.indexOf(asset)]}
+                                          alt={`${asset} logo`}
+                                          className="w-8 h-8 rounded-full"
+                                        />
+                                      )}
+                                      {asset}
                                     </div>
-                                    <div className="flex flex-col text-right text-[#2A1F9D] dark:text-darkText w-2/3 text-xs font-semibold mt-3">
-                                      {(() => {
-                                        const { debtFormatted, usdFormatted } =
-                                          getDebtValue(item[0], assetBorrow);
-                                        return (
-                                          <>
-                                            <p className="text-[#2A1F9D] dark:text-darkText">
-                                              {debtFormatted}
-                                            </p>
-                                            <p className="font-light text-[#2A1F9D] dark:text-darkText">
-                                              {usdFormatted}
-                                            </p>
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  </div>
 
-                                  <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
-                                    <div className="flex items-center relative group">
-                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
-                                        APY:
-                                      </p>
-                                      <span className="relative cursor-pointer">
-                                        <span className="group inline-flex ml-1">
-                                          <Info
-                                            size={14}
-                                            className="text-[#233D63] dark:text-darkText dark:opacity-50"
-                                          />
-                                          <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
-                                            The variable borrow interest rate
-                                            may change over time, influenced by
-                                            market trends and conditions.
-                                          </div>
+                                    <div className="flex justify-between gap-4">
+                                      <div className="text-[#233D63] text-xs font-semibold mt-3 mb-4 w-1/3">
+                                        <p className="text-[#233D63] dark:text-darkText dark:opacity-50 mb-1">
+                                          Debt
+                                        </p>
+                                      </div>
+                                      <div className="flex flex-col text-right text-[#2A1F9D] dark:text-darkText w-2/3 text-xs font-semibold mt-3">
+                                        {(() => {
+                                          const { debtFormatted, usdFormatted } =
+                                            getDebtValue(item[0], assetBorrow);
+                                          return (
+                                            <>
+                                              <p className="text-[#2A1F9D] dark:text-darkText">
+                                                {debtFormatted}
+                                              </p>
+                                              <p className="font-light text-[#2A1F9D] dark:text-darkText">
+                                                {usdFormatted}
+                                              </p>
+                                            </>
+                                          );
+                                        })()}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex justify-between text-[#233D63] text-xs font-semibold mb-2">
+                                      <div className="flex items-center relative group">
+                                        <p className="text-[#233D63] dark:text-darkText dark:opacity-50 relative">
+                                          APY:
+                                        </p>
+                                        <span className="relative cursor-pointer">
+                                          <span className="group inline-flex ml-1">
+                                            <Info
+                                              size={14}
+                                              className="text-[#233D63] dark:text-darkText dark:opacity-50"
+                                            />
+                                            <div className="absolute left-[85px] transform -translate-x-1/2 bottom-full mb-2 bg-[#fcfafa] px-4 py-2 dark:bg-darkOverlayBackground dark:text-darkText rounded-xl shadow-xl ring-1 ring-black/10 dark:ring-white/20 opacity-0 group-hover:opacity-100 transition-opacity text-gray-800 text-xs w-[15rem] pointer-events-none">
+                                              The variable borrow interest rate
+                                              may change over time, influenced by
+                                              market trends and conditions.
+                                            </div>
+                                          </span>
                                         </span>
-                                      </span>
+                                      </div>
+                                      <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
+                                        {borrowRateApr < 0.01
+                                          ? "<0.01%"
+                                          : `${borrowRateApr.toFixed(2)}%`}
+                                      </p>
                                     </div>
-                                    <p className="text-right text-[#2A1F9D] dark:text-darkText mt-2">
-                                      {borrowRateApr < 0.01
-                                        ? "<0.01%"
-                                        : `${borrowRateApr.toFixed(2)}%`}
-                                    </p>
-                                  </div>
 
-                                  <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
-                                    <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
-                                      APY Type:
-                                    </p>
-                                    <p className="text-right text-white bg-[#79779a] px-4 border border-white rounded-lg p-2 dark:text-darkText">
-                                      variable
-                                    </p>
-                                  </div>
+                                    <div className="flex justify-between text-[#233D63] text-xs font-semibold mt-6 mb-2">
+                                      <p className="text-[#233D63] dark:text-darkText dark:opacity-50">
+                                        APY Type:
+                                      </p>
+                                      <p className="text-right text-white bg-[#79779a] px-4 border border-white rounded-lg p-2 dark:text-darkText">
+                                        variable
+                                      </p>
+                                    </div>
 
-                                  <div className="flex justify-between gap-4 mt-4">
-                                    <Button
-                                      title={"Borrow"}
-                                      onClickHandler={() => {
-                                        if (parseFloat(borrowableValue) <= 0) {
-                                          toast.dismiss();
-                                          toast.info(
-                                            "Insufficient asset supply or balance to allow borrow request",
-                                            {
-                                              className: "custom-toast",
-                                              position: "top-center",
-                                              autoClose: 3000,
-                                              hideProgressBar: false,
-                                              closeOnClick: true,
-                                              pauseOnHover: true,
-                                              draggable: true,
-                                              progress: undefined,
-                                            }
-                                          );
-                                          return;
+                                    <div className="flex justify-between gap-4 mt-4">
+                                      <Button
+                                        title={"Borrow"}
+                                        onClickHandler={() => {
+                                          if (parseFloat(borrowableValue) <= 0) {
+                                            toast.dismiss();
+                                            toast.info(
+                                              "Insufficient asset supply or balance to allow borrow request",
+                                              {
+                                                className: "custom-toast",
+                                                position: "top-center",
+                                                autoClose: 3000,
+                                                hideProgressBar: false,
+                                                closeOnClick: true,
+                                                pauseOnHover: true,
+                                                draggable: true,
+                                                progress: undefined,
+                                              }
+                                            );
+                                            return;
+                                          }
+
+                                          handleAssetAction("borrow", item[0]);
+                                        }}
+                                        disabled={
+                                          isTableDisabled ||
+                                          isButtonDisabled ||
+                                          parseFloat(borrowableValue) <= 0
                                         }
+                                        className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                      />
 
-                                        handleAssetAction("borrow", item[0]);
-                                      }}
-                                      disabled={
-                                        isTableDisabled ||
-                                        isButtonDisabled ||
-                                        parseFloat(borrowableValue) <= 0
-                                      }
-                                      className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
-                                    />
+                                      <Button
+                                        title={"Repay"}
+                                        onClickHandler={() => {
+                                          if (ckBalance === 0) {
+                                            toast.dismiss();
+                                            toast.info(
+                                              "Insufficient wallet balance to allow repay request.",
+                                              {
+                                                className: "custom-toast",
+                                                position: "top-center",
+                                                autoClose: 3000,
+                                                hideProgressBar: false,
+                                                closeOnClick: true,
+                                                pauseOnHover: true,
+                                                draggable: true,
+                                                progress: undefined,
+                                              }
+                                            );
+                                            return;
+                                          }
 
-                                    <Button
-                                      title={"Repay"}
-                                      onClickHandler={() => {
-                                        if (ckBalance === 0) {
-                                          toast.dismiss();
-                                          toast.info(
-                                            "Insufficient wallet balance to allow repay request.",
-                                            {
-                                              className: "custom-toast",
-                                              position: "top-center",
-                                              autoClose: 3000,
-                                              hideProgressBar: false,
-                                              closeOnClick: true,
-                                              pauseOnHover: true,
-                                              draggable: true,
-                                              progress: undefined,
-                                            }
-                                          );
-                                          return;
+                                          handleAssetAction("repay", item[0]);
+                                        }}
+                                        disabled={
+                                          isTableDisabled ||
+                                          isButtonDisabled ||
+                                          ckBalance === 0
                                         }
+                                        className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
+                                      />
+                                    </div>
 
-                                        handleAssetAction("repay", item[0]);
-                                      }}
-                                      disabled={
-                                        isTableDisabled ||
-                                        isButtonDisabled ||
-                                        ckBalance === 0
-                                      }
-                                      className="md:block lgx:block xl:hidden focus:outline-none box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
-                                    />
+                                    {index !== filteredItems.length - 1 && (
+                                      <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
+                                    )}
                                   </div>
-
-                                  {index !== filteredItems.length - 1 && (
-                                    <div className="border-t border-[#2A1F9D] my-6 -mb-0 opacity-80"></div>
-                                  )}
-                                </div>
-                              );
-                            }
-                          )}
+                                );
+                              }
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </>
               )}
             </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState ,useCallback } from "react";
 import { Info, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
@@ -49,6 +49,8 @@ const UserInformationPopup = ({
     fetchAssetSupply,
     fetchAssetBorrow,
     AssetImages,
+    asset_supply,
+    asset_borrow
   } = useAssetData();
 
   /* ===================================================================================
@@ -115,21 +117,27 @@ const UserInformationPopup = ({
    * =================================================================================== */
 
   // Fetch asset supply and borrow data
-  const getAssetSupplyValue = (asset) => {
-    if (assetSupply[asset] !== undefined) {
-      const supplyValue = Number(assetSupply[asset]);
-      return supplyValue;
-    }
-    return;
-  };
+const getAssetSupplyValue = useCallback((asset) => {
+  if (asset_supply[asset] !== undefined) {
+    const supplyValue = Number(asset_supply[asset][0]);
+    console.log(`Supply value for ${asset}:`, asset_supply[asset][0]);
+    return supplyValue;
+  }
+  console.warn(`No supply value found for ${asset}`);
+  return 0;
+}, [asset_supply]);
 
-  const getAssetBorrowValue = (asset) => {
-    if (assetBorrow[asset] !== undefined) {
-      const borrowValue = Number(assetBorrow[asset]);
-      return borrowValue;
-    }
-    return;
-  };
+const getAssetBorrowValue = useCallback((asset) => {
+  if (asset_borrow[asset] !== undefined) { 
+    const borrowValue = Number(asset_borrow[asset][0]);
+    console.log(`Borrow value for ${asset}:`, asset_borrow[asset][0]);
+    return borrowValue;
+  }
+  console.warn(`No borrow value found for ${asset}`);
+  return 0;
+}, [asset_borrow]);
+
+  
 
   //Function to calculate health factor
   const calculateHealthFactor = (
@@ -214,16 +222,16 @@ const UserInformationPopup = ({
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
       }
     });
-
+console.log("currentLiquidty in user info",currentLiquidity)
     const assetBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
         assetName,
         "dtokenBalance"
       ) || 0;
-
+console.log("assetBalance",assetBalance)
     if (!currentLiquidity) return 0;
-
+console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     return Math.trunc(
       Math.trunc(Number(assetBalance) / Number(currentLiquidity)) *
         Number(getAssetSupplyValue(assetName))

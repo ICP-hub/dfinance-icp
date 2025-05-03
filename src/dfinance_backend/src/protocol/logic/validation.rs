@@ -452,43 +452,43 @@ impl ValidationLogic {
         user: Principal,
         repay_reserve_data: ReserveData,
     ) -> Result<(), Error> {
+        // Get the repay asset's debt token canister
         let repay_asset_principal = match repay_reserve_data.debt_token_canister.clone() {
             Some(principal) => principal,
             None => return Err(Error::NoCanisterIdFound),
         };
-
-        //fetching user total debt balance
+    
+        // Fetch the user's total debt balance for the repay asset
         let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
-        
+    
+        // Get the user's normalized debt factor
         let norm_debt = user_normalized_debt(repay_reserve_data.clone())?;
-        //user's normalized debt
-        let normalized_debt_amount = debt_amount
-            .clone()
-            .scaled_mul(norm_debt);
-
-        debug!("normalizesd {:?}", normalized_debt_amount);   //debug
-
-        debug!("User debt: {:?}", debt_amount);  //debug
-        debug!("Repay amount: {:?}", repay_amount);  //debug
-
-        //checking weather the repay amount is greater than the user's debt
+        let normalized_debt_amount = debt_amount.clone().scaled_mul(norm_debt);
+    
+        debug!("Normalized debt: {:?}", normalized_debt_amount);
+        debug!("User debt: {:?}", debt_amount);
+        debug!("Repay amount: {:?}", repay_amount);
+    
+        // Check if repay amount exceeds normalized user debt
         if repay_amount > normalized_debt_amount {
-            error!("Repay amount exceeds user debt."); //error
+            error!("Repay amount exceeds user debt.");
             return Err(Error::RepayMoreThanDebt);
         }
-
-        let (repay_ledger_canister_id, _cert) = get_asset_principal(repay_asset.clone())?;
-
-        //fetching the liquidator wallet balance
+    
+        // Get the repay ledger canister ID
+        let repay_ledger_canister_id = get_asset_principal(repay_asset.clone())?;
+    
+        // Fetch liquidator's wallet balance
         let liquidator_wallet_balance =
             get_balance(repay_ledger_canister_id, liquidator.clone()).await?;
-
-        //checking if the liquidator has enough wallet balance
+    
+        // Check if the liquidator has enough balance
         if liquidator_wallet_balance < repay_amount {
-            error!("Liquidator repay amount exceeds wallet balance."); //error
+            error!("Liquidator repay amount exceeds wallet balance.");
             return Err(Error::LowWalletBalance);
         }
-
+    
+        // Fetch user's total collateral and health factor
         let (total_collateral, health_factor) = match calculate_user_account_data(Some(user)).await {
             Ok((
                 t_collateral,
@@ -498,24 +498,26 @@ impl ValidationLogic {
                 h_factor,
                 _a_borrow,
                 _zero_ltv_collateral,
-            )) => {
-                (t_collateral, h_factor)
-            }
+            )) => (t_collateral, h_factor),
             Err(e) => return Err(e),
         };
-
-        //checkinf if the user has enough collateral
+    
+        // Check if reward amount is valid against total collateral
         if total_collateral < reward_amount {
-            error!("total collateral is less than reward amount."); //error
+            error!("Total collateral is less than reward amount.");
             return Err(Error::RewardIsHigher);
         }
-
-        //checking if the user health factor is more than 1 than can't be liquidated
-        debug!("percentage factor {:?}",health_factor.clone() / Nat::from(PERCENTAGE_FACTOR));   //debug
+    
+        // Check if user can be liquidated (health factor must be ≤ 1)
+        debug!(
+            "Health factor percentage: {:?}",
+            health_factor.clone() / Nat::from(PERCENTAGE_FACTOR)
+        );
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
-            error!("User health factor is greater than 1."); //error
+            error!("User health factor is greater than 1.");
             return Err(Error::USERCANNOTBELIQUIDATED);
         }
+    
         Ok(())
     }
-}
+}    

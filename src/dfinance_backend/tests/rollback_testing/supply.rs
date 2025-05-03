@@ -187,10 +187,14 @@ use crate::utils::structs::*;
 
             fetch_reserve_data(pic, backend_canister, &case.asset);
 
+        if i == Nat::from(0u128) {
+            ic_cdk::println!("\n======================== User Reserve Data will be Created after supply ========================\n");
+        }
+        else{
             ic_cdk::println!("\n======================== Initial User Data Before Roll Backs ========================\n");
 
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
+        }
         /* Supply params */
         let supply_params = ExecuteSupplyParams {
             asset: case.asset.clone(),
@@ -225,9 +229,8 @@ use crate::utils::structs::*;
                             failed_tests += 1;
                         } else {
                             ic_cdk::println!(
-                                "✅ Test Case {} Passed: Supply successful. New Balance: {}",
+                                "✅ Test Case {} Passed: Supply successful.",
                                 i + 1,
-                                balance
                             );
                             passed_tests += 1;
                         }
@@ -297,13 +300,21 @@ use crate::utils::structs::*;
                 failed_tests += 1;
             }
         }
-            ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
+        if i%2 == Nat::from(0u128) {
+            ic_cdk::println!("\n======================== Final Reserve Data (No Rollbacks Initiated) ========================\n");
             fetch_reserve_data(pic, backend_canister, &case.asset);
             ic_cdk::println!(
-            "\n======================== Final User Data After Rollback ========================\n"
+            "\n======================== Final User Data (No Rollbacks Initiated) ========================\n"
         );
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
+    }else{
+        ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
+        fetch_reserve_data(pic, backend_canister, &case.asset);
+        ic_cdk::println!(
+            "\n======================== Final User Data After Rollback ========================\n"
+        );
+        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+    }
     }
 
     ic_cdk::println!(

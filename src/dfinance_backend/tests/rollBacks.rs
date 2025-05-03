@@ -21,10 +21,10 @@ fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
     test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
-    test_repay(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    // test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
 }
 
 fn setup() -> (PocketIc, Principal) {

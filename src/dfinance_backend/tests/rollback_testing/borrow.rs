@@ -129,9 +129,8 @@ use crate::utils::structs::*;
                             continue;
                         }
                         ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Borrow successful. New Balance: {}",
+                            "✅ IC Test Case {} Passed: Borrow successful.",
                             i + 1,
-                            balance
                         );
                     }
                     Err(error) => {
@@ -174,11 +173,21 @@ use crate::utils::structs::*;
                 continue;
             }
         }
-        ic_cdk::println!("\n-------------------- Final Reserve Data After Rollback --------------------\n");
+        if i%2 == Nat::from(0u128) {
+            ic_cdk::println!("\n======================== Final Reserve Data (No Rollbacks Initiated) ========================\n");
+            fetch_reserve_data(pic, backend_canister, &case.asset);
+            ic_cdk::println!(
+            "\n======================== Final User Data (No Rollbacks Initiated) ========================\n"
+        );
+            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+    }else{
+        ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
         fetch_reserve_data(pic, backend_canister, &case.asset);
-        ic_cdk::println!("\n------------------- Final User Data After Rollback --------------------\n");
+        ic_cdk::println!(
+            "\n======================== Final User Data After Rollback ========================\n"
+        );
         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
+    }
     }
     ic_cdk::println!(
         "\n======================== IC Borrow Tests Completed ========================\n"

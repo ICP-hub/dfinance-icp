@@ -3,7 +3,6 @@ use candid::Nat;
 use candid::{encode_args, Principal};
 use crate::utils::error as errors;
 use crate::utils::common_functions::*;
-use std::collections::HashSet;
 /*
  * @title Faucet Functionality Test
  * @description Tests the `faucet` method with various asset and amount combinations to ensure proper token distribution, validation, and error handling.

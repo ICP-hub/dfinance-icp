@@ -297,33 +297,64 @@ use crate::utils::structs::*;
         }
 
         if i % 2 != Nat::from(0u128) {
-            if case.collateral_asset == case.debt_asset {
-                ic_cdk::println!("\n========================  Reserve Data After Roll Backs  ========================\n");
+            
+        }
+        if i%2 == Nat::from(0u128) {
 
+            if case.collateral_asset == case.debt_asset {
+                ic_cdk::println!("\n========================  Final Reserve Data (No Rollbacks Initiated)  ========================\n");
+    
                 fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
             } else {
-                ic_cdk::println!("\n======================== Debt Asset Reserve Data After Roll Backs  ========================\n");
-
+                ic_cdk::println!("\n======================== Final Debt Asset Reserve Data (No Rollbacks Initiated)  ========================\n");
+    
                 fetch_reserve_data(pic, backend_canister, &case.debt_asset);
-
-                ic_cdk::println!("\n======================== Collateral Asset Reserve Data After Roll Backs  ========================\n");
-
+    
+                ic_cdk::println!("\n========================  Final Collateral Asset Reserve Data (No Rollbacks Initiated)  ========================\n");
+    
                 fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
             }
-
-            ic_cdk::println!("\n======================== Liquidator User Data After Roll Backs ========================\n");
-
+    
+            ic_cdk::println!("\n======================== Liquidator User Data (No Rollbacks Initiated) ========================\n");
+    
             fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
-
-            ic_cdk::println!("\n======================== On Behalf User Data After Roll Backs ========================\n");
-
+    
+            ic_cdk::println!("\n======================== On Behalf User Data (No Rollbacks Initiated) ========================\n");
+    
             fetch_user_data(
                 pic,
                 backend_canister,
                 &case.on_behalf_of,
                 &case.collateral_asset,
             );
+    }else{
+        if case.collateral_asset == case.debt_asset {
+            ic_cdk::println!("\n========================  Reserve Data After Roll Backs  ========================\n");
+
+            fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+        } else {
+            ic_cdk::println!("\n======================== Debt Asset Reserve Data After Roll Backs  ========================\n");
+
+            fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+
+            ic_cdk::println!("\n======================== Collateral Asset Reserve Data After Roll Backs  ========================\n");
+
+            fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
         }
+
+        ic_cdk::println!("\n======================== Liquidator User Data After Roll Backs ========================\n");
+
+        fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+
+        ic_cdk::println!("\n======================== On Behalf User Data After Roll Backs ========================\n");
+
+        fetch_user_data(
+            pic,
+            backend_canister,
+            &case.on_behalf_of,
+            &case.collateral_asset,
+        );
+    }
     }
     ic_cdk::println!(
         "\n======================== IC Liquidation Tests Completed ========================\n"

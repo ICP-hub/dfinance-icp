@@ -2,7 +2,7 @@ use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
-use candid::{encode_args, encode_one, Principal};
+use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 /*
  * @title IC Supply Functionality Test

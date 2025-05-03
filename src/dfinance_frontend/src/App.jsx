@@ -94,7 +94,7 @@ export default function App() {
         const results = await Promise.all(
           assets.map((asset) => backendActor.get_asset_principal(asset))
         );
-  
+        console.log("Fetched asset principals:", results);
         // Process each result
         assets.forEach(async (asset, index) => {
           const result = results[index];

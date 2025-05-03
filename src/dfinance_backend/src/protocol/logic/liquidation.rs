@@ -118,7 +118,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .ok_or(Error::NoUserReserveDataFound)?;
 
 
-    let (debt_asset_price, _cer) = get_cached_exchange_rate(params.debt_asset.clone())?;
+    let debt_asset_price = get_cached_exchange_rate(params.debt_asset.clone())?;
 
     debug!("asset price = {}", debt_asset_price);
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(debt_asset_price);
@@ -465,10 +465,10 @@ pub async fn to_get_reward_amount(
 
     debug!("Fetching cached exchange rates for debt and collateral assets");
 
-    let (debt_price, _cer) = get_cached_exchange_rate(debt_asset.clone())?;
+    let debt_price = get_cached_exchange_rate(debt_asset.clone())?;
     debug!("asset price = {}", debt_price);
 
-    let (collateral_price,_cer) = get_cached_exchange_rate(collateral_asset.clone())?;
+    let collateral_price = get_cached_exchange_rate(collateral_asset.clone())?;
 
     debug!("asset price = {}", collateral_price);
 

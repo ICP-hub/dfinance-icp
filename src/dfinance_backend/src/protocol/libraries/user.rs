@@ -117,7 +117,7 @@ pub async fn calculate_user_account_data(
         })
         .ok_or_else(|| Error::NoReserveDataFound)?;
 
-        let (rate,_cer) = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
+        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
         debug!("asset price = {}", rate);
 
         let asset_price = rate;
@@ -366,7 +366,7 @@ pub async fn calculate_user_asset_data(
             }
         };
 
-        let (rate, _cer) = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
             Ok(price) => price,
             Err(e) => {
                 error!("Failed to fetch exchange rate");
@@ -443,7 +443,7 @@ pub async fn calculate_user_asset_data(
         if user_reserve_data.is_borrowed {
             debug!("Reserve '{}' is borrowed.", user_reserve_data.reserve);
 
-            let (rate,_cer) = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
+            let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
                 Ok(price) => price,
                 Err(e) => {
                     error!("Failed to fetch exchange rate");

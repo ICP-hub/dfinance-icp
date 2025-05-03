@@ -196,7 +196,7 @@ impl ValidationLogic {
         if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
              
             //fetching the exchange rate from cache
-            let (rate, _cer) = get_cached_exchange_rate(reserve.asset_name.clone())?;
+            let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
             debug!("withdraw asset price = {:?}", rate);   //debug
 
@@ -320,7 +320,7 @@ impl ValidationLogic {
             return Err(Error::NoCollateralFound);
         }
         //fetching the exchange rate from cache
-        let (rate, _cer) = get_cached_exchange_rate(reserve.asset_name.clone())?;
+        let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
         debug!("asset price = {}", rate);  //debug
 

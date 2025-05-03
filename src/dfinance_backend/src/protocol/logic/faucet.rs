@@ -73,7 +73,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         return Err(Error::LowWalletBalance);
     }
 
-    let (asset_price,_cer) = get_cached_exchange_rate(asset.clone())?;
+    let asset_price = get_cached_exchange_rate(asset.clone())?;
     debug!("asset price = {}", asset_price);
 
     let usd_amount = ScalingMath::scaled_mul(amount.clone(), asset_price.clone());

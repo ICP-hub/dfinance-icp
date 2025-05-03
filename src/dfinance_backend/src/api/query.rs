@@ -207,7 +207,17 @@ pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate)
  * @functionality This function fetches the cached exchange rate for a specified base asset symbol.
  */
 #[query]
-pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certificate), Error> {
+pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(Nat, Certificate), Error> {
+   
+    let res = get_cached_exchange_rate(base_asset_symbol)?;
+    let cert = get_certificate_witness("price_cache".to_string());
+    
+    Ok((res, cert)) 
+}
+
+
+#[query]
+pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
     trace!("calling get_cached_exchange_rate");
     // asset validator
     validate_asset_name(&base_asset_symbol)?;
@@ -222,7 +232,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certi
 
     debug!("base asset and base_asset_symbol {}, {}", base_asset , base_asset_symbol);
     
-    let res = read_state(|state| {
+   read_state(|state| {
         state
             .price_cache_list
             .get(&base_asset.to_string())
@@ -235,13 +245,9 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certi
             })
             .flatten()
             .ok_or(Error::NoPriceCache)
-    })?;
+    })
 
-    let cert = get_certificate_witness("price_cache".to_string());
-    
-    Ok((res, cert)) 
 }
-
 
 /*
  * @title User Normalized Supply
@@ -366,7 +372,7 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
     guard_prevent_anonymous()?;
     let cert = get_certificate_witness("transfer_fee".to_string());
 
-    let (asset_price,_cer) = match get_cached_exchange_rate(asset_name.clone()) {
+    let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
         Ok(price) => price,
         Err(e) => {
             error!("Failed to fetch cache exchange rate");

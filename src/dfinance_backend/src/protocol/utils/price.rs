@@ -203,8 +203,9 @@ pub async fn get_exchange_rates(
             let price_cache_data = &mut state.price_cache_list;
             if !price_cache_data.contains_key(&base_asset) {
                 price_cache_data.insert(base_asset.clone(), Candid(PriceCache { cache: HashMap::new() }));
+                
             }
-            
+           
             match price_cache_data.get(&base_asset) {
                 Some(Candid(data)) => Ok::<_, String>(data.clone()),
                 None => Err("Failed to retrieve or insert price cache".to_string()),
@@ -282,6 +283,7 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
                     //     base_asset_symbol,
                     //     price_cache.0
                     // );
+                    
                     Ok(price_cache.0.clone())
                 } else {
                     // debug!("Creating new price cache for {}", base_asset_symbol);
@@ -310,6 +312,7 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
                     //     "Full state after update: {:?}",
                     //     state.price_cache_list.iter().collect::<Vec<_>>()
                     // );
+                    insert_certified_value("price_cache".to_string(), price_cache_data);
                 });
             } else {
                 error!("Failed to update price cache for {}", base_asset_symbol);

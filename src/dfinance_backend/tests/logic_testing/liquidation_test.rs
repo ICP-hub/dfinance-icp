@@ -64,7 +64,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
             amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
-            on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
+            on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
             reward_amount: Nat::from(220_496u128), // Reward: 0.00220496 ckBTC
             expect_success: true,
             expected_error_message: None,

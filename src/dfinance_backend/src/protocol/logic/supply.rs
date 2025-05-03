@@ -277,6 +277,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
     ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
+    ic_cdk::println!("params amount = {}",params.amount);
 
     if params.amount.clone() < transfer_token_fee {
         ic_cdk::println!("Amount is less than the transfer token fee");

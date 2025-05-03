@@ -125,6 +125,30 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("wallet balance is low".to_string()),
         },
+        // tRAILING WHITESPACES
+        TestCase {
+            asset: "ckUSDC ".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        // Lower case asset name
+        TestCase {
+            asset: "ckusdc".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        // On behalf of --> anonymous user
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            on_behalf_of: Some(Principal::anonymous()),
+            expect_success: false,
+            expected_error_message: Some("Anonymous principals are not allowed".to_string()),
+        },
         // repay on no borrow
         // TestCase {
         //     asset: "ICP".to_string(),
@@ -135,7 +159,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // },
     ];
 
-    let user_principal = get_user_principal();
+    let user_principal = get_user_principal2();
 
     ic_cdk::println!(
         "\n======================== Starting IC Repay Tests ========================\n"
@@ -176,6 +200,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                     continue;
                 }
             };
+
+        ic_cdk::println!("==== Checking Before Balance ====");
+        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
 
         /*
          * @title Approve ICRC2 Transfer
@@ -249,6 +276,8 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Repay successful.",
                             i + 1,
                         );
+                        ic_cdk::println!("==== Checking After Balance ====");
+                        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -266,6 +295,8 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("==== Checking After Balance ====");
+                            check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                         } else {
                             ic_cdk::println!(
                                 "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",

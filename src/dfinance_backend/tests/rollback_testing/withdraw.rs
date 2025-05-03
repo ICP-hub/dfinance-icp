@@ -1,0 +1,190 @@
+
+use candid::{ encode_one, Principal};
+use candid::Nat;
+use pocket_ic::{PocketIc,  WasmResult};
+use crate::utils::common_functions::*;
+use crate::utils::error as errors;
+use crate::utils::structs::*;
+
+
+
+/*
+ * @title Withdraw Function Test
+ * @notice Tests the withdraw function for various assets and withdrawal conditions.
+ * @dev This function runs a series of test cases for withdraw requests with different assets, amounts, collateral status, and options for withdrawing on behalf of another principal. It verifies the success or failure of each withdrawal request and checks whether the appropriate error messages are returned when failures occur.
+ * 
+ * @param pic PocketIc instance.
+ * @param backend_canister Backend canister principal.
+ * 
+ * @functionality:
+ * 1. Executes withdraw requests for different assets (e.g., ICP, ckETH, ckUSDT) with varying amounts, including collateralized and non-collateralized withdrawals.
+ * 2. Checks if the withdrawal is processed successfully or rejected as expected.
+ * 3. Simulates withdrawing on behalf of another user when applicable.
+ * 4. Verifies that error messages are returned correctly if the withdrawal is unsuccessful or if the expected outcome does not match.
+ * 5. Validates whether the balance is updated correctly after the withdrawal.
+ */
+
+ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
+    #[derive(Debug, Clone)]
+    struct TestCase {
+        asset: String,
+        amount: Nat,
+        on_behalf_of: Option<Principal>,
+        is_collateral: bool,
+        expect_success: bool,
+        expected_error_message: Option<String>,
+    }
+
+    let test_cases = vec![
+        // Valid Withdrawals (Direct)
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(400_000u128), // 100 ckUSDT
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128), // 0.002 ckETH
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5_000u128), // 0.02 ckETH
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(200_000_000u128), // 2 ICP
+            on_behalf_of: None,
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(50_000u128), // 0.00000002 ICP
+            on_behalf_of: None,
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+    ];
+
+    ic_cdk::println!(
+        "\n======================== Starting IC Withdraw Tests ========================\n"
+    );
+    for (i, case) in test_cases.iter().enumerate() {
+        ic_cdk::println!("\n------------------------------------------------------------");
+        ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
+        ic_cdk::println!("Asset: {}", case.asset);
+        let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
+        let amount_float = amount_u128 as f64;
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
+        ic_cdk::println!(
+            "On Behalf Of: {}",
+            case.on_behalf_of
+                .as_ref()
+                .map_or("None".to_string(), |p| p.to_text())
+        );
+        ic_cdk::println!("Is Collateral: {}", case.is_collateral);
+        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        if let Some(ref msg) = case.expected_error_message {
+            ic_cdk::println!("Expected Error Message: {}", msg);
+        }
+        ic_cdk::println!("------------------------------------------------------------\n");
+
+        /* Withdraw params */
+        let withdraw_params = ExecuteWithdrawParams {
+            asset: case.asset.clone(),
+            amount: case.amount.clone(),
+            on_behalf_of: case.on_behalf_of,
+            is_collateral: case.is_collateral.clone(),
+        };
+
+        /*
+         * @title Execute Withdraw
+         * @notice Executes the withdraw operation and validates outcomes.
+         * @dev Calls the backend function, checks responses, and verifies success or failure.
+         */
+        let result = pic.update_call(
+            backend_canister,
+            get_user_principal2(),
+            "execute_withdraw",
+            encode_one(withdraw_params).unwrap(),
+        );
+
+        match result {
+            Ok(WasmResult::Reply(reply)) => {
+                let withdraw_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to get IC withdraw response");
+
+                match withdraw_response {
+                    Ok(balance) => {
+                        if !case.expect_success {
+                            ic_cdk::println!(
+                                "❌ IC Test Case {} Failed: Expected failure but got success.",
+                                i + 1
+                            );
+                            continue;
+                        }
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Withdraw successful. New Balance: {}",
+                            i + 1,
+                            balance
+                        );
+                    }
+                    Err(error) => {
+                        if !case.expect_success {
+                            if case.expected_error_message.as_deref() != Some(error.message()) {
+                                println!(
+                                    "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
+                                    i + 1,
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    error.message()
+                                );
+                                continue;
+                            }
+                            ic_cdk::println!(
+                                "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            continue;
+                        }
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Function call rejected with message: {}",
+                    i + 1,
+                    reject_message
+                );
+                continue;
+            }
+            Err(e) => {
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during withdraw function call: {:?}",
+                    i + 1,
+                    e
+                );
+                continue;
+            }
+        }
+    }
+
+    ic_cdk::println!(
+        "\n======================== IC Withdraw Tests Completed ========================\n"
+    );
+}

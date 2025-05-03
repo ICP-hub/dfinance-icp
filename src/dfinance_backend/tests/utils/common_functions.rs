@@ -14,7 +14,12 @@ use crate::utils::constant_variables::*;
  */
 #[allow(dead_code)]
 pub fn get_user_principal() -> Principal {
-    Principal::from_text(CONTROLLER_ID).unwrap()
+    Principal::from_text(TESTER_2).unwrap()
+}
+
+#[allow(dead_code)]
+pub fn get_user_principal2() -> Principal {
+    Principal::from_text(TESTER_3).unwrap()
 }
 
 /*
@@ -63,7 +68,19 @@ pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
             Principal::from_text(TESTER_5)
                 .unwrap(),
         )
-    } else {
+    }else if index == Nat::from(6u32) {
+        Ok(
+            Principal::from_text(TESTER_6)
+                .unwrap(),
+        )
+    }
+    else if index == Nat::from(7u32) {
+        Ok(
+            Principal::from_text(TESTER_7)
+                .unwrap(),
+        )
+    }
+     else {
         ic_cdk::println!("No valid input.");
         return Err("No valid input".to_string());
     }
@@ -105,7 +122,7 @@ pub fn test_get_asset_principal(
     pic: &PocketIc,
     backend_canister: Principal,
 ) -> Option<Principal> {
-    let result = pic.query_call(
+    let result = pic.update_call(
         backend_canister,
         Principal::anonymous(),
         "get_asset_principal",
@@ -175,6 +192,7 @@ pub fn test_icrc2_aprove(
             subaccount: None,
         },
     };
+
     let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
     ic_cdk::println!("🟦 ICRC2 Approving ...");
     let approve_result = pic.update_call(
@@ -247,36 +265,36 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
 
     // Pushing second user data
     users_with_low_health.push(LowHealthUsersData {
-        user_principal: get_users_principal(Nat::from(2u32)).unwrap(),
+        user_principal: get_users_principal(Nat::from(4u32)).unwrap(),
         asset_supply: "ckETH".to_string(),
         asset_borrow: "ckETH".to_string(),
         supply_tokens: Nat::from(14_000_000u128), // 0.14 cketh
         borrow_tokens: Nat::from(12_000_000u128), // 0.12 cketh
     });
-    // Pushing third user data
-    users_with_low_health.push(LowHealthUsersData {
-        user_principal: get_users_principal(Nat::from(3u32)).unwrap(),
-        asset_supply: "ckBTC".to_string(),
-        asset_borrow: "ckBTC".to_string(),
-        supply_tokens: Nat::from(450_000u128), // 0.0045 btc
-        borrow_tokens: Nat::from(420_000u128), // 0.0042 btc
-    });
-    // Pushing 4th user data
-    users_with_low_health.push(LowHealthUsersData {
-        user_principal: get_users_principal(Nat::from(4u32)).unwrap(),
-        asset_supply: "ckUSDC".to_string(),
-        asset_borrow: "ckUSDC".to_string(),
-        supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
-        borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
-    });
-    // Pushing 5th user data
-    users_with_low_health.push(LowHealthUsersData {
-        user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
-        asset_supply: "ckUSDT".to_string(),
-        asset_borrow: "ckUSDT".to_string(),
-        supply_tokens: Nat::from(30_000_000_000u128), // 300 USDT
-        borrow_tokens: Nat::from(25_000_000_000u128), // 250 USDT
-    });
+    // // Pushing third user data
+    // users_with_low_health.push(LowHealthUsersData {
+    //     user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
+    //     asset_supply: "ckBTC".to_string(),
+    //     asset_borrow: "ckBTC".to_string(),
+    //     supply_tokens: Nat::from(450_000u128), // 0.0045 btc
+    //     borrow_tokens: Nat::from(420_000u128), // 0.0042 btc
+    // });
+    // // Pushing 4th user data
+    // users_with_low_health.push(LowHealthUsersData {
+    //     user_principal: get_users_principal(Nat::from(6u32)).unwrap(),
+    //     asset_supply: "ckUSDC".to_string(),
+    //     asset_borrow: "ckUSDC".to_string(),
+    //     supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
+    //     borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
+    // });
+    // // Pushing 5th user data
+    // users_with_low_health.push(LowHealthUsersData {
+    //     user_principal: get_users_principal(Nat::from(7u32)).unwrap(),
+    //     asset_supply: "ckUSDT".to_string(),
+    //     asset_borrow: "ckUSDT".to_string(),
+    //     supply_tokens: Nat::from(30_000_000_000u128), // 300 USDT
+    //     borrow_tokens: Nat::from(25_000_000_000u128), // 250 USDT
+    // });
 
     for user in &users_with_low_health {
         let asset_principal =
@@ -408,7 +426,7 @@ pub fn test_add_tester(
  */
 #[allow(dead_code)]
 pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &str) {
-    let result = pic.query_call(
+    let result = pic.update_call(
         backend_canister,
         get_user_principal(),
         "get_reserve_data",
@@ -478,7 +496,7 @@ pub fn fetch_user_data(
     user_principal: &Principal,
     asset: &str,
 ) {
-    let result = pic.query_call(
+    let result = pic.update_call(
         backend_canister,
         *user_principal,
         "get_user_data",
@@ -542,4 +560,217 @@ pub fn fetch_user_data(
             ic_cdk::println!("Error retrieving user data for {}: {:?}", user_principal, e);
         }
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/// Fetches the ReserveData struct for a specific asset.
+/// Returns Ok(ReserveData) on success, or Err(String) on failure.
+pub fn get_reserve_data_struct(
+    pic: &PocketIc,
+    user_principal: &Principal,
+    backend_canister: Principal,
+    asset: &str,
+) -> Result<ReserveData, String> { 
+    let result = pic.update_call( 
+        backend_canister,
+        *user_principal, 
+        "get_reserve_data",
+        encode_one(asset.to_string()).unwrap(),
+    );
+
+    match result {
+        Ok(WasmResult::Reply(reply)) => {
+            match candid::decode_one::<Result<ReserveData, errors::Error>>(&reply) {
+                Ok(Ok(data)) => Ok(data), 
+                Ok(Err(backend_err)) => Err(format!("Backend returned error for {}: {:?}", asset, backend_err)),
+                Err(decode_err) => Err(format!("Failed to decode ReserveData response for {}: {:?}", asset, decode_err)),
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => Err(format!("Call rejected for {}: {}", asset, reject_message)),
+        Err(e) => Err(format!("Error calling get_reserve_data for {}: {:?}", asset, e)),
+    }
+}
+
+
+
+
+/// Fetches the specific UserReserveData for a user and asset.
+/// Returns Ok(UserReserveData) if found, or Err(String) if user or reserve not found.
+pub fn get_user_reserve_state(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    user_principal: Principal,
+    asset_name: &str,
+) -> Result<UserReserveData, String> {
+
+    // Call get_user_data (assuming it's a query)
+    let result = pic.query_call(
+        backend_canister,
+        user_principal, // Call as the user themselves
+        "get_user_data",
+        encode_one(user_principal).unwrap(),
+    );
+
+    match result {
+        Ok(WasmResult::Reply(reply)) => {
+            match candid::decode_one::<Result<UserData, errors::Error>>(&reply) {
+                Ok(Ok(user_data)) => {
+                    if let Some(reserves) = user_data.reserves {
+                        if let Some((_, reserve_data)) = reserves.iter().find(|(name, _)| name == asset_name) {
+                            Ok(reserve_data.clone()) 
+                        } else {
+                            Err(format!("User reserve data not found for asset '{}'", asset_name))
+                        }
+                    } else {
+                        Err(format!("User has no reserves data structure"))
+                    }
+                }
+                Ok(Err(backend_err)) => Err(format!("Backend error fetching UserData for {}: {:?}", user_principal, backend_err)),
+                Err(decode_err) => Err(format!("Failed to decode UserData response for {}: {:?}", user_principal, decode_err)),
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => Err(format!("get_user_data call rejected for {}: {}", user_principal, reject_message)),
+        Err(e) => Err(format!("Error calling get_user_data for {}: {:?}", user_principal, e)),
+    }
+}
+
+
+
+
+
+
+pub fn check_ledger_balances(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    users_to_check: &[Principal],
+    assets_to_check: &[String],
+) {}
+
+/// @title Verify Ledger Balances
+/// @notice Queries the ICRC1 balance for multiple users across multiple assets.
+/// @dev Iterates through users and assets, calls `icrc1_balance_of` on the respective
+///      ledger canister using a query call, and prints the results or errors.
+///
+/// @param pic A reference to the PocketIc instance.
+/// @param backend_canister The principal of the main backend canister (used to find ledger IDs).
+/// @param users_to_check A slice of user Principals whose balances need checking.
+/// @param assets_to_check A slice of asset name Strings to check for each user.
+pub fn fetch_balance(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    users_to_check: &[Principal],
+    assets_to_check: &[String],
+) -> f64 {
+
+    for user_principal in users_to_check {
+        ic_cdk::println!("--- Checking balances for user: {} ---", user_principal);
+        for asset_name in assets_to_check {
+            ic_cdk::println!(" Checking {} balance... ", asset_name);
+
+            //Get the ledger canister Principal for this asset
+            let ledger_principal = match test_get_asset_principal(asset_name.clone(), pic, backend_canister) {
+                Some(p) => p,
+                None => {
+                    ic_cdk::println!("Failed to get ledger principal for {}. Skipping.", asset_name);
+                    continue; 
+                }
+            };
+
+            //Prepare the argument for icrc1_balance_of
+            let account_arg = Account {
+                owner: *user_principal,
+                subaccount: None, 
+            };
+            let encoded_arg = match encode_one(&account_arg) {
+                 Ok(arg) => arg,
+                 Err(e) => {
+                     ic_cdk::println!("Failed to encode account arg for {}: {:?}. Skipping.", asset_name, e);
+                     continue; 
+                 }
+            };
+
+            //Make the query call using the helper
+            let balance_result = pic.update_call( 
+                ledger_principal,
+                Principal::anonymous(), 
+                "icrc1_balance_of",
+                encoded_arg,
+            );
+
+            // 4. Decode and print the result
+            match balance_result {
+                Ok(WasmResult::Reply(reply)) => {
+                    match decode_one::<Nat>(&reply) {
+                        Ok(balance) => {
+                            let amount_u128: u64 = balance.clone().0.try_into().unwrap();
+                            let amount_float = amount_u128 as f64;
+                            return amount_float / 100000000.0;
+                        }
+                        Err(e) => {
+                            ic_cdk::println!("Failed to decode balance response for {}: {:?}", asset_name, e);
+                        }
+                    }
+                }
+                Ok(WasmResult::Reject(msg)) => {
+                    ic_cdk::println!("Balance query rejected for {}: {}", asset_name, msg);
+                }
+                Err(e) => {
+                    ic_cdk::println!("Error calling balance query for {}: {:?}", asset_name, e);
+                }
+            }
+        } 
+    } 
+    0.0
+}
+
+// Ensure Account struct is defined or imported correctly above
+// #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+// pub struct Account {
+//     pub owner: Principal,
+//     pub subaccount: Option<Vec<u8>>,
+// }
+
+// Placeholder for ApproveArgs if not defined in structs.rs
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ApproveArgs {
+   pub fee: Option<Nat>,
+   pub memo: Option<Vec<u8>>,
+   pub from_subaccount: Option<Vec<u8>>,
+   pub created_at_time: Option<u64>,
+   pub amount: Nat,
+   pub expected_allowance: Option<Nat>,
+   pub expires_at: Option<u64>,
+   pub spender: Account,
+}
+
+// Placeholder for ApproveResult if not defined (adjust based on actual implementation)
+#[derive(CandidType, Deserialize, Debug)]
+pub enum ApproveResult {
+   Ok(Nat),
+   Err(ApproveError), // Replace ApproveError with the actual error enum/type
+}
+
+// Placeholder for ApproveError (replace with actual type)
+#[derive(CandidType, Deserialize, Debug)]
+pub enum ApproveError {
+    GenericError{ error_code: Nat, message: String },
+    TemporarilyUnavailable,
+    Duplicate{ duplicate_of: Nat },
+    BadFee{ expected_fee: Nat },
+    AllowanceChanged{ current_allowance: Nat },
+    CreatedInFuture{ ledger_time: u64 },
+    TooOld,
+    Expired{ ledger_time: u64 },
+    InsufficientFunds{ balance: Nat },
 }

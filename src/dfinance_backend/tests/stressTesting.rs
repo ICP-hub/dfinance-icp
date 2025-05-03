@@ -13,7 +13,6 @@ use crate::utils::constant_variables::*;
 #[test]
 fn call_test_function() {
     let (pic, backend_canister, random_users) = setup();
-    test_register_user(&pic, backend_canister, random_users.clone());
     test_faucet(&pic, backend_canister, random_users.clone());
     test_supply(&pic, backend_canister, random_users.clone());
     test_borrow(&pic, backend_canister, random_users.clone());
@@ -25,7 +24,7 @@ fn call_test_function() {
 fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
-    let random_users = generate_principals(10);
+    let random_users = generate_principals(2);
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
@@ -35,7 +34,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     pic.install_canister(
         backend_canister,
         wasm,
-        candid::encode_one(Principal::anonymous()).unwrap(),
+        candid::encode_one(user_principal).unwrap(),
         Some(Principal::anonymous()),
     );
 
@@ -67,9 +66,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -97,9 +93,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -127,9 +120,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -157,9 +147,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -187,9 +174,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -215,7 +199,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
             backend_canister,
             user_principal,
             "initialize",
-            encode_args((token_name, reserve_data)).unwrap(),
+            encode_args((token_name, reserve_data, "https://storage.googleapis.com/dfinance/ICPMARKET.png")).unwrap(),
         );
 
         match result {
@@ -265,16 +249,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         );
     }
 
-/*
-* @title Register Users
-* @notice Registers users to participate in liquidation testing scenarios.
-* @dev Registers the primary user as well as the test users for simulated liquidation events. 
-*      This allows the testing of how the system behaves with multiple participants, ensuring its scalability and functionality under load.
-* @test Steps:
-* 1. Registers all users (primary + test users) to the backend canister.
-* 2. Verifies that the system can handle multiple registered users and simulate their interaction within liquidation scenarios.
-*/
-    test_register_user(&pic, backend_canister, get_users_principals_vector());
 
 /*
  * @title Update Reserve Price
@@ -326,61 +300,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     (pic, backend_canister, random_users)
 }
 
-/*
- * @title Register Users
- * @notice Registers users to participate in liquidation testing.
- * @dev This function registers both the primary user and test users (1 to 5) to simulate liquidation events. 
- *      It interacts with the backend canister's `register_user` function, ensuring that user registration works as expected and no errors occur during the process.
- *      The system should correctly handle user registrations, and this test verifies that.
- * @test Steps:
- * 1. Iterates over the provided list of user principals (including test users and the primary user).
- * 2. For each user, it sends a registration call to the backend canister.
- * 3. The response is checked to ensure the registration succeeds without errors.
- * 4. If an error occurs (such as a failed registration), the test will panic and report the failure.
- */
-fn test_register_user(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
-    for (i, user_principal) in random_users.iter().enumerate() {
-        let result = pic.update_call(
-            backend_canister,
-            *user_principal,
-            "register_user",
-            encode_one(()).unwrap(),
-        );
-
-        // 🔹 Decode the response
-        match result {
-            Ok(WasmResult::Reply(response)) => {
-                let register_user_response: Result<String, errors::Error> =
-                    candid::decode_one(&response).expect("Failed to decode register user response");
-
-                match register_user_response {
-                    Ok(_message) => {
-                        ic_cdk::println!(
-                            "✅ Register user function succeeded for user {:?}",
-                            i + 1
-                        );
-                    }
-                    Err(e) => {
-                        ic_cdk::println!(
-                            "Register user function failed as expected with error: {:?}",
-                            e
-                        );
-                        panic!("🚨 Expected success but got error: {:?}", e);
-                    }
-                }
-            }
-            Ok(WasmResult::Reject(reject_message)) => {
-                panic!(
-                    "🚨 Register user function was rejected: {:?}",
-                    reject_message
-                );
-            }
-            Err(e) => {
-                panic!("🚨 Error calling register user function: {:?}", e);
-            }
-        }
-    }
-}
 
 /*
  * @title Faucet Stress Test
@@ -1185,6 +1104,7 @@ fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<
             let withdraw_params = ExecuteWithdrawParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
+                on_behalf_of: case.on_behalf_of,
                 is_collateral: case.is_collateral,
             };
 

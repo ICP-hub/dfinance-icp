@@ -574,38 +574,62 @@ fn get_data_certificate() -> DataCertificate {
     }
 }
 
+
 #[update]
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
+    ic_cdk::println!("===== Entered icrc2_approve =====");
+    ic_cdk::println!("Input ApproveArgs: {:?}", arg);
 
     let block_idx = Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
+        ic_cdk::println!("Current timestamp: {:?}", now);
 
         let from_account = Account {
             owner: ic_cdk::api::caller(),
             subaccount: arg.from_subaccount,
         };
+        ic_cdk::println!("From Account: {:?}", from_account.owner.to_text());
+        ic_cdk::println!("Spender Account: {:?}", arg.spender);
+
         if from_account.owner == arg.spender.owner {
+            ic_cdk::println!("Self approval attempted - trapping");
             ic_cdk::trap("self approval is not allowed")
         }
+
+        ic_cdk::println!("minting account = {:?}",ledger.minting_account().to_string());
+
         if &from_account == ledger.minting_account() {
+            ic_cdk::println!("Minting account attempted to delegate - trapping");
             ic_cdk::trap("the minting account cannot delegate mints")
         }
+
         match arg.memo.as_ref() {
             Some(memo) if memo.0.len() > ledger.max_memo_length() as usize => {
+                ic_cdk::println!("Memo too large - trapping");
                 ic_cdk::trap("the memo field is too large")
             }
             _ => {}
         };
-        let amount = Tokens::try_from(arg.amount).unwrap_or_else(|_| Tokens::max_value());
+
+        let amount = Tokens::try_from(arg.amount).unwrap_or_else(|_| {
+            ic_cdk::println!("Invalid amount, using max value");
+            Tokens::max_value()
+        });
+        ic_cdk::println!("Amount to approve: {:?}", amount);
+
         let expected_allowance = match arg.expected_allowance {
             Some(n) => match Tokens::try_from(n) {
-                Ok(n) => Some(n),
+                Ok(n) => {
+                    ic_cdk::println!("Expected allowance: {:?}", n);
+                    Some(n)
+                },
                 Err(_) => {
                     let current_allowance = ledger
                         .approvals()
                         .allowance(&from_account, &arg.spender, now)
                         .amount;
+                    ic_cdk::println!("Expected allowance mismatch - returning error");
                     return Err(ApproveError::AllowanceChanged {
                         current_allowance: current_allowance.into(),
                     });
@@ -616,7 +640,10 @@ async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
 
         let expected_fee_tokens = ledger.transfer_fee();
         let expected_fee: Nat = expected_fee_tokens.into();
+        ic_cdk::println!("Expected fee: {:?}", expected_fee);
+
         if arg.fee.is_some() && arg.fee.as_ref() != Some(&expected_fee) {
+            ic_cdk::println!("Bad fee provided - returning error");
             return Err(ApproveError::BadFee { expected_fee });
         }
 
@@ -630,28 +657,111 @@ async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
                 fee: arg.fee.map(|_| expected_fee_tokens),
             },
             created_at_time: arg.created_at_time,
-            memo: arg.memo,
+            memo: arg.memo.clone(),
         };
+        ic_cdk::println!("Constructed transaction: {:?}", tx);
 
         let (block_idx, _) = apply_transaction(ledger, tx, now, expected_fee_tokens)
             .map_err(convert_transfer_error)
             .map_err(|err| {
                 let err: ApproveError = match err.try_into() {
                     Ok(err) => err,
-                    Err(err) => ic_cdk::trap(&err),
+                    Err(err) => {
+                        ic_cdk::println!("Unexpected error - trapping: {:?}", err);
+                        ic_cdk::trap(&err)
+                    },
                 };
+                ic_cdk::println!("Transaction apply error: {:?}", err);
                 err
             })?;
+
+        ic_cdk::println!("Transaction successful - Block index: {:?}", block_idx);
         Ok(block_idx)
     })?;
 
-    // NB. we need to set the certified data before the first async call to make sure that the
-    // blockchain state agrees with the certificate while archiving is in progress.
-    ic_cdk::api::set_certified_data(&Access::with_ledger(Ledger::root_hash));
-
-    archive_blocks::<Access>(&LOG, MAX_MESSAGE_SIZE).await;
+    ic_cdk::println!("===== Exiting icrc2_approve with block index: {:?} =====", block_idx);
     Ok(Nat::from(block_idx))
 }
+
+
+// #[update]
+// #[candid_method(update)]
+// async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
+
+//     let block_idx = Access::with_ledger_mut(|ledger| {
+//         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
+
+//         let from_account = Account {
+//             owner: ic_cdk::api::caller(),
+//             subaccount: arg.from_subaccount,
+//         };
+//         if from_account.owner == arg.spender.owner {
+//             ic_cdk::trap("self approval is not allowed")
+//         }
+//         if &from_account == ledger.minting_account() {
+//             ic_cdk::trap("the minting account cannot delegate mints")
+//         }
+//         match arg.memo.as_ref() {
+//             Some(memo) if memo.0.len() > ledger.max_memo_length() as usize => {
+//                 ic_cdk::trap("the memo field is too large")
+//             }
+//             _ => {}
+//         };
+//         let amount = Tokens::try_from(arg.amount).unwrap_or_else(|_| Tokens::max_value());
+//         let expected_allowance = match arg.expected_allowance {
+//             Some(n) => match Tokens::try_from(n) {
+//                 Ok(n) => Some(n),
+//                 Err(_) => {
+//                     let current_allowance = ledger
+//                         .approvals()
+//                         .allowance(&from_account, &arg.spender, now)
+//                         .amount;
+//                     return Err(ApproveError::AllowanceChanged {
+//                         current_allowance: current_allowance.into(),
+//                     });
+//                 }
+//             },
+//             None => None,
+//         };
+
+//         let expected_fee_tokens = ledger.transfer_fee();
+//         let expected_fee: Nat = expected_fee_tokens.into();
+//         if arg.fee.is_some() && arg.fee.as_ref() != Some(&expected_fee) {
+//             return Err(ApproveError::BadFee { expected_fee });
+//         }
+
+//         let tx = Transaction {
+//             operation: Operation::Approve {
+//                 from: from_account,
+//                 spender: arg.spender,
+//                 amount,
+//                 expected_allowance,
+//                 expires_at: arg.expires_at,
+//                 fee: arg.fee.map(|_| expected_fee_tokens),
+//             },
+//             created_at_time: arg.created_at_time,
+//             memo: arg.memo,
+//         };
+
+//         let (block_idx, _) = apply_transaction(ledger, tx, now, expected_fee_tokens)
+//             .map_err(convert_transfer_error)
+//             .map_err(|err| {
+//                 let err: ApproveError = match err.try_into() {
+//                     Ok(err) => err,
+//                     Err(err) => ic_cdk::trap(&err),
+//                 };
+//                 err
+//             })?;
+//         Ok(block_idx)
+//     })?;
+
+    // NB. we need to set the certified data before the first async call to make sure that the
+    // blockchain state agrees with the certificate while archiving is in progress.
+//     ic_cdk::api::set_certified_data(&Access::with_ledger(Ledger::root_hash));
+
+//     archive_blocks::<Access>(&LOG, MAX_MESSAGE_SIZE).await;
+//     Ok(Nat::from(block_idx))
+// }
 
 #[query]
 #[candid_method(query)]

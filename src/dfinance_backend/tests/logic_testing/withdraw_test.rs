@@ -85,7 +85,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(10_000u128), // 10,000 ckUSDT
+            amount: Nat::from(1_000_000u128), // 10,000 ckUSDT
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
@@ -93,14 +93,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(200_000u128), // 200,000 ckUSDC
+            amount: Nat::from(400_000u128), // 200,000 ckUSDC
             on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
-        // Invalid Cases (General Failures)
-        // Large amount exceeding wallet balance
+        // // Invalid Cases (General Failures)
+        // // Large amount exceeding wallet balance
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(100_000_000_000u128),
@@ -109,7 +109,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
-        // Empty asset name
+        // // Empty asset name
         TestCase {
             asset: "".to_string(),
             amount: Nat::from(100u128),
@@ -118,7 +118,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
-        // Non-existent asset
+        // // Non-existent asset
         TestCase {
             asset: "XYZ".to_string(),
             amount: Nat::from(100u128),
@@ -127,7 +127,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
         },
-        // Asset length exceeds 7 characters
+        // // Asset length exceeds 7 characters
         TestCase {
             asset: "ckXYZ_long".to_string(),
             amount: Nat::from(100u128),
@@ -136,7 +136,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
-        // Zero amount request
+        // // Zero amount request
         TestCase {
             asset: "ckBTC".to_string(),
             amount: Nat::from(0u128),
@@ -145,8 +145,40 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
+        TestCase {
+            asset: "ckUSDT ".to_string(), // Asset name with trailing space
+            amount: Nat::from(10_000u128), // 10 USDT
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: false, 
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        TestCase {
+            asset: "icp".to_string(), // Lowercase asset name
+            amount: Nat::from(100_000_000u128), // 0.1 ICP
+            on_behalf_of: None,
+            is_collateral: false,
+            expect_success: false, // Assuming asset names are case-sensitive
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(1u128), // Withdraw tiny fraction
+            on_behalf_of: None, // Use anonymous principal for on_behalf_of
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("Fee exceeds the amount".to_string()),
+        },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(10_000_000u128),
+            on_behalf_of: None, // Target user
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        }
     ];
-
+    let user_principal = get_user_principal2();
     ic_cdk::println!(
         "\n======================== Starting IC Withdraw Tests ========================\n"
     );
@@ -174,8 +206,12 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
+            on_behalf_of: case.on_behalf_of,
             is_collateral: case.is_collateral.clone(),
         };
+
+        ic_cdk::println!("==== Checking Before Balance ====");
+        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
 
         /*
          * @title Execute Withdraw
@@ -184,7 +220,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
          */
         let result = pic.update_call(
             backend_canister,
-            get_user_principal(),
+            user_principal,
             "execute_withdraw",
             encode_one(withdraw_params).unwrap(),
         );
@@ -207,6 +243,8 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Withdraw successful.",
                             i + 1,
                         );
+                        ic_cdk::println!("==== Checking After Balance ====");
+                        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -224,6 +262,8 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("==== Checking After Balance ====");
+                            check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;

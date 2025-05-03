@@ -4,6 +4,11 @@ use candid::{encode_one, Principal};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::common_functions::*;
+
+
+
+
+
 /*
  * @title IC Borrow Functionality Test
  * @description This function tests the `execute_borrow` method of the backend canister by simulating both valid and invalid borrow scenarios.
@@ -116,9 +121,29 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                 "Platform balance is low".to_string(),
             ),
         },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(500_000_000_000u128), //5000
+            expect_success: false,
+            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
+        },
+        // tRAILING WHITESPACES
+        TestCase {
+            asset: "ckUSDC ".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        // Lower case asset name
+        TestCase {
+            asset: "ckusdc".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
     ];
 
-    let user_principal = get_user_principal();
+    let user_principal = get_user_principal2();
 
     ic_cdk::println!(
         "\n======================== Starting IC Borrow Tests ========================\n"
@@ -142,6 +167,24 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             amount: case.amount.clone(),
         };
 
+
+        ic_cdk::println!("==== Checking Before Balance ====");
+        // let old_balance = fetch_balance(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
+        let old_reserve_data = get_reserve_data_struct(&pic, &user_principal,backend_canister, &case.asset);
+        // let old_user_data = get_user_reserve_state(pic,  backend_canister, user_principal, &case.asset);
+        
+        let mut old_asset_borrow = Nat::from(0u128);
+        let mut old_liquidity_rate = Nat::from(0u128);
+        let mut old_borrow_rate = Nat::from(0u128);
+        if let Ok(ref reserve_data) = old_reserve_data{
+            old_asset_borrow = reserve_data.asset_borrow.clone();
+            old_liquidity_rate = reserve_data.current_liquidity_rate.clone();
+            old_borrow_rate = reserve_data.borrow_rate.clone();
+        }
+        // ic_cdk::println!("user data: {:?}", old_user_data);
+        ic_cdk::println!("Asset Borrowed - {:?}",old_asset_borrow);
+        
+        
         /*
          * @title Execute Borrow Transaction
          * @notice Calls the backend canister to execute a borrow operation.
@@ -173,6 +216,9 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                             i + 1,
                     
                         );
+                        ic_cdk::println!("==== Checking After Balance ====");
+                        
+                    
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -190,6 +236,20 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("==== Checking After Balance ====");
+                            // let new_balance = fetch_balance(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
+                            let new_reserve_data = get_reserve_data_struct(pic, &user_principal,backend_canister, &case.asset);
+                            // let new_user_data = get_user_reserve_state(pic,  backend_canister, user_principal, &case.asset);
+                            
+                            // ic_cdk::println!("Balance of {:?} : {:?} --> {:?}",case.asset.clone(), old_balance, new_balance);
+                            if let Ok(ref reserve_data) = new_reserve_data{
+                                ic_cdk::println!("Asset Borrowed - {:?} --> {:?}",old_asset_borrow, reserve_data.asset_borrow);
+                                ic_cdk::println!("Liquidity Rate - {:?} --> {:?}",old_liquidity_rate, reserve_data.current_liquidity_rate);
+                                ic_cdk::println!("Borrow Rate - {:?} --> {:?}",old_borrow_rate, reserve_data.borrow_rate);
+                            }
+                            
+                            
+                            
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;

@@ -3,6 +3,7 @@ use candid::Nat;
 use candid::{encode_args, Principal};
 use crate::utils::error as errors;
 use crate::utils::common_functions::*;
+use std::collections::HashSet;
 /*
  * @title Faucet Functionality Test
  * @description Tests the `faucet` method with various asset and amount combinations to ensure proper token distribution, validation, and error handling.
@@ -115,7 +116,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-    let user_principal = get_user_principal();
+    let user_principal = get_user_principal2();
     ic_cdk::println!(
         "\n======================== Starting IC Faucet Tests ========================\n"
     );
@@ -130,6 +131,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
+        
         ic_cdk::println!("------------------------------------------------------------\n");
 
         /*
@@ -156,7 +158,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             Ok(WasmResult::Reply(reply)) => {
                 let faucet_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to decode faucet response");
-
+                    ic_cdk::println!("==== Checking Before Balance ====");
+                    check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                 match faucet_response {
                     Ok(balance) => {
                         if !case.expect_success {
@@ -171,6 +174,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                             i + 1,
                             balance
                         );
+                        ic_cdk::println!("==== Checking After Balance ====");
+                        check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -188,6 +193,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("==== Checking After Balance ====");
+                            check_ledger_balances(pic, backend_canister, &[user_principal], &[case.asset.clone()]);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
@@ -228,6 +235,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         for num in 1..=5 {
             let index: u32 = num as u32;
             // Simulate faucet request
+            ic_cdk::println!("==== Checking Before Balance ====");
+            check_ledger_balances(pic, backend_canister, &[get_users_principal(Nat::from(index)).unwrap()], &[case.asset.clone()]);
             let result = pic.update_call(
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),
@@ -254,6 +263,9 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 balance
                             );
+                            ic_cdk::println!("==== Checking AFTER Balance ====");
+                            check_ledger_balances(pic, backend_canister, &[get_users_principal(Nat::from(index)).unwrap()], &[case.asset.clone()]);
+                            
                         }
                         Err(error) => {
                             if !case.expect_success {
@@ -271,6 +283,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                     i + 1,
                                     error
                                 );
+                                ic_cdk::println!("==== Checking AFTER Balance ====");
+                                check_ledger_balances(pic, backend_canister, &[get_users_principal(Nat::from(index)).unwrap()], &[case.asset.clone()]);
                             } else {
                                 ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                                 continue;
@@ -297,8 +311,11 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             }
         }
     }
-    ic_cdk::println!(
-        "\n======================== IC Faucet Tests Completed ========================\n"
-    );
+
+        ic_cdk::println!(
+            "\n======================== IC Faucet Tests Completed ========================\n"
+        );
 }
+
+
 

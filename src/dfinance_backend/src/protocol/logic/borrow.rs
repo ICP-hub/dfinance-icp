@@ -117,7 +117,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         ic_cdk::println!("Failed to update reserves price: {:?}", e);  //error
     }
 
-    let (asset_price, _cer) = match get_cached_exchange_rate(params.asset.clone()) {
+    let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
         Ok(price) => price,
         Err(e) => {
             ic_cdk::println!("Failed to fetch exchange rate");
@@ -326,7 +326,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     debug!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
     // get exchange rates
-    let (asset_price,_cer)= get_cached_exchange_rate(params.asset.clone())?;
+    let asset_price= get_cached_exchange_rate(params.asset.clone())?;
 
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
 

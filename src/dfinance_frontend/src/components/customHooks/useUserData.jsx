@@ -76,6 +76,8 @@ const useUserData = () => {
       const reserveDataForAsset = batchedReserveData[asset];
       const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
       const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
+      console.log("debtToken",debtTokenId)
+      console.log("dtokenid ",dtokenId)
       const assetBalance = {
         asset,
         dtokenBalance: null,
@@ -88,6 +90,7 @@ const useUserData = () => {
             try {
               const account = { owner: principalObj, subaccount: [] };
               const balance = await dtokenActor.icrc1_balance_of(account);
+              console.log("asset balance in dtoken",balance)
               assetBalance.dtokenBalance = balance;
             } catch (error) {
               console.error(
@@ -116,7 +119,7 @@ const useUserData = () => {
 
         balances.push(assetBalance);
       }
-
+console.log("baclances",balances)
       setAssetBalances(balances);
     } catch (error) {
       console.error("Error fetching asset data:", error);
@@ -147,13 +150,12 @@ const useUserData = () => {
           return;
         }
   
-        const reserves = userData?.Ok?.reserves?.[0] || [];
+        const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
         let assetBalancesObj = [];
         let borrowBalancesObj = [];
   
         reserves.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
-  
           const assetBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0n;
@@ -186,10 +188,10 @@ const useUserData = () => {
           borrowBalancesParam
         );
   
-        // 🔒 Certificate verification
-        if (result && result[1]) {
+        // ✅ Only run certificate check if result.Ok exists and has at least 2 elements
+        if (result?.Ok?.length > 1 && result.Ok[1]) {
           try {
-            const verified = await verifyCertificate(result[1]);
+            const verified = await verifyCertificate(result.Ok[1]);
             if (!verified) {
               console.error("Certificate verification failed for user account data");
               return;
@@ -210,8 +212,8 @@ const useUserData = () => {
           return;
         }
   
-        if (result?.Ok && result.Ok[4]) {
-          const healthFactor = Number(result.Ok[4]) / 10000000000;
+        if (result?.Ok && result.Ok[0]?.[4]) {
+          const healthFactor = Number(result.Ok[0][4]) / 10000000000;
           if (healthFactor) {
             setHealthFactorBackend(healthFactor);
           } else {
@@ -229,6 +231,7 @@ const useUserData = () => {
       }
     }
   };
+  
   
 
   useEffect(() => {

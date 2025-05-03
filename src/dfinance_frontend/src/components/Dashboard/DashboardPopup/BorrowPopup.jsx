@@ -568,8 +568,8 @@ const Borrow = ({
   ]);
 
   useEffect(() => {
-    if (userAccountData?.Ok?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+    if (userAccountData?.Ok[0]?.length > 5) {
+      const borrowValue = Number(userAccountData.Ok[0][5]) / 100000000;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);

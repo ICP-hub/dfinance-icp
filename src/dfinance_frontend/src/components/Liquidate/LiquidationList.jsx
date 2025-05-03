@@ -74,7 +74,7 @@ const DebtStatus = () => {
     
     try {
       const result = await backendActor.get_total_users();
-  
+  console.log("result",result)
       // Assuming result is a tuple: [data, certificate]
       const userData = result?.[0];
       const cert = result?.[1];
@@ -411,7 +411,6 @@ const DebtStatus = () => {
         setLiquidationUsers(data);
       } catch (err) {
         console.error("Failed to load liquidation users:", err);
-        console.error("Failed to fetch users. Please try again later.");
       } finally {
         setTimeout(() => {
           setLiquidationLoading(false);

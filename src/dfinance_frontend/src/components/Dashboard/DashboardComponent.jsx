@@ -409,16 +409,17 @@ const DashboardComponent = () => {
   };
 
   // Function to calculate the asset value based on the asset supply and borrow rates
-  const getAssetSupplyValue = (asset, principal) => {
+  const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
+      console.log("supplyValue",supplyValue)
       return supplyValue;
     }
     return noSupplyMessage;
   };
 
   // Function to calculate the asset borrow value based on the asset borrow rates
-  const getAssetBorrowValue = (asset, principal) => {
+  const getAssetBorrowValue = (asset) => {
     if (asset_borrow[asset] !== undefined) {
       const borrowValue = Number(asset_borrow[asset]);
       return borrowValue;
@@ -600,12 +601,12 @@ const DashboardComponent = () => {
     const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
     const totalCollateral =
-      parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[0]) / 100000000) || 0;
     const totalDebt =
-      parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[1]) / 100000000) || 0;
     const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
-      Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
+      Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0;
     const reserveliquidationThreshold =
       Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
     const supplyRate = (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
@@ -722,7 +723,7 @@ const DashboardComponent = () => {
         (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / 100000000 || 0;
 
       const liquidationThreshold =
-        Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
+        Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0;
 
       const reserveliquidationThreshold =
         Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000 ||
@@ -911,7 +912,7 @@ const DashboardComponent = () => {
   const getFilteredSupplyReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
   
-    return userData?.Ok[0].reserves[0].filter((reserveGroup) => {
+    return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
   
       const assetBalance =
@@ -919,17 +920,25 @@ const DashboardComponent = () => {
           ?.dtokenBalance || 0;
   
       const assetSupplyValue = getAssetSupplyValue(asset);
-      
-      // Convert BigInt to number for comparison if needed
-      const supplyValue = typeof assetSupplyValue === 'bigint' 
-        ? assetSupplyValue > 0n 
-        : assetSupplyValue > 0;
   
-      return assetBalance > 0 && supplyValue;
+      if (assetSupplyValue == null || isNaN(Number(assetSupplyValue))) {
+        console.warn("Invalid supply value for", asset, assetSupplyValue);
+        return false;
+      }
+  
+      const hasSupply =
+        typeof assetSupplyValue === 'bigint'
+          ? assetSupplyValue > 0n
+          : Number(assetSupplyValue) > 0;
+  
+      return assetBalance > 0 && hasSupply;
     });
   };
+  
+  
+  
   const getFilteredBorrowReserves = () => {
-    if (!userData?.Ok?.[0]?.reserves?.[0]?.length) return [];
+    if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
   
     return userData.Ok[0].reserves[0].filter((reserveGroup) => {
       const asset = reserveGroup[0];
@@ -940,7 +949,17 @@ const DashboardComponent = () => {
   
       const assetBorrowValue = getAssetBorrowValue(asset);
   
-      return Number(assetBalance) > 0 && assetBorrowValue > 0n;
+      if (assetBorrowValue == null || isNaN(Number(assetBorrowValue))) {
+        console.warn("Invalid supply value for", asset, assetBorrowValue);
+        return false;
+      }
+  
+      const hasBorrow =
+        typeof assetBorrowValue === 'bigint'
+          ? assetBorrowValue > 0n
+          : Number(assetBorrowValue) > 0;
+  
+      return assetBalance > 0 && hasBorrow;
     });
   };
   
@@ -948,10 +967,16 @@ const DashboardComponent = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-
+  console.log("userAccountData",userAccountData)
   useEffect(() => {
     const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
     let updatedAvailableBorrow = 0;
+  
+    // Early return if userAccountData is missing or malformed
+    if (!userAccountData?.Ok?.[0] || userAccountData.Ok[0].length <= 5) {
+      setAvailableBorrow(0);
+      return;
+    }
   
     for (const reserveGroup of reserves) {
       const asset = reserveGroup?.[0];
@@ -969,8 +994,8 @@ const DashboardComponent = () => {
             (liquidityIndex * 1e8)
           : 0;
   
-      if (assetSupply > 0 && userAccountData?.Ok?.length > 5) {
-        const borrowValue = Number(userAccountData.Ok[5]) / 1e8;
+      if (assetSupply > 0) {
+        const borrowValue = Number(userAccountData.Ok[0][5]) / 1e8;
         updatedAvailableBorrow = isCollateral ? borrowValue : 0;
         break; // stop after first eligible asset
       }
@@ -983,6 +1008,7 @@ const DashboardComponent = () => {
   
     setAvailableBorrow(finalBorrowValue);
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
+  
   
   useEffect(() => {
     const savedShowZeroBalance = JSON.parse(
@@ -1352,6 +1378,7 @@ const DashboardComponent = () => {
                       }
                       if (assetSupply >= 0) {
                         totalUsdValueSupply += usdValue;
+                        console.log("totalUsdValueSupply",totalUsdValueSupply)
                         dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
                       }
 
@@ -1514,7 +1541,6 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={async () => {
-                                      await fetchAssetSupply(asset);
                                       if (ckBalance === 0) {
                                         toast.dismiss();
                                         toast.info(
@@ -1536,8 +1562,6 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Withdraw"}
                                     onClickHandler={async () => {
-                                      await fetchAssetSupply(asset);
-                                      fetchUserAccountData();
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="box bg-transparent px-7 py-2 text-[14px] w-1/2 font-semibold"
@@ -1682,7 +1706,6 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={async () => {
-                                      await fetchAssetSupply(asset);
                                       if (ckBalance === 0) {
                                         toast.dismiss();
                                         toast.info(
@@ -1709,7 +1732,6 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Withdraw"}
                                     onClickHandler={async () => {
-                                      await fetchAssetSupply(asset);
                                       handleAssetAction("withdraw", asset);
                                     }}
                                     className="bg-gradient-to-r text-white from-[#4659CF] to-[#2A1F9D] rounded-md shadow-md shadow-[#00000040] px-3 py-1.5 font-semibold text-xs"
@@ -1894,7 +1916,6 @@ const DashboardComponent = () => {
                                 <Button
                                   title={"Supply"}
                                   onClickHandler={async () => {
-                                    await fetchAssetSupply(item[0]);
 
                                     handleAssetAction("supply", item[0]);
                                   }}
@@ -2018,7 +2039,7 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Supply"}
                                     onClickHandler={async () => {
-                                      await fetchAssetSupply(item[0]);
+
 
                                       handleAssetAction("supply", item[0]);
                                     }}

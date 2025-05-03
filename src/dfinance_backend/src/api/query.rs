@@ -207,7 +207,17 @@ pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate)
  * @functionality This function fetches the cached exchange rate for a specified base asset symbol.
  */
 #[query]
-pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certificate), Error> {
+pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(Nat, Certificate), Error> {
+   
+    let res = get_cached_exchange_rate(base_asset_symbol)?;
+    let cert = get_certificate_witness("price_cache".to_string());
+    
+    Ok((res, cert)) 
+}
+
+
+
+pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
     trace!("calling get_cached_exchange_rate");
     // asset validator
     validate_asset_name(&base_asset_symbol)?;
@@ -222,7 +232,7 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certi
 
     debug!("base asset and base_asset_symbol {}, {}", base_asset , base_asset_symbol);
     
-    let res = read_state(|state| {
+   read_state(|state| {
         state
             .price_cache_list
             .get(&base_asset.to_string())
@@ -235,13 +245,9 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certi
             })
             .flatten()
             .ok_or(Error::NoPriceCache)
-    })?;
+    })
 
-    let cert = get_certificate_witness("price_cache".to_string());
-    
-    Ok((res, cert)) 
 }
-
 
 /*
  * @title User Normalized Supply
@@ -251,16 +257,23 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<(Nat, Certi
  * @functionality This function computes the normalized supply of a user based on the reserve's liquidity rate and index, adjusting for interest accumulation.
  */
 #[query]
-pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
+pub fn user_normalized_supply_certified(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
+    let cert = get_certificate_witness("user_normalized_supply".to_string());
+    let res = user_normalized_supply(reserve_data.clone())?;
+    Ok((res, cert))
+}
+
+
+pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     trace!("calling user_normalized_supply");
     guard_prevent_anonymous()?;
-    let cert = get_certificate_witness("user_normalized_supply".to_string());
+    
     let current_time = current_timestamp();
     debug!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
         debug!("No update needed as timestamps match.");
-        return Ok((reserve_data.liquidity_index, cert));
+        return Ok(reserve_data.liquidity_index);
     } else {
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_data.current_liquidity_rate,
@@ -273,7 +286,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<(Nat, Certifi
             reserve_data.liquidity_index
         );
         
-        return Ok((cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index), cert));
+        return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
     }
 }
 
@@ -285,16 +298,23 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<(Nat, Certifi
  * @functionality This function calculates the normalized debt of a user based on the reserve's debt index and borrow rate, adjusting for interest over time.
  */
 #[query]
-pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
+pub fn user_normalized_debt_certified(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
+    let cert = get_certificate_witness("user_normalized_debt".to_string());
+    let res = user_normalized_debt(reserve_data.clone())?;
+    Ok((res, cert))
+}
+
+
+pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     trace!("calling user_normalized_debt");
     guard_prevent_anonymous()?;
     
     let current_time = current_timestamp();
     debug!("Current timestamp: {}", current_time);
-    let cert = get_certificate_witness("user_normalized_debt".to_string());
+    
     if reserve_data.last_update_timestamp == current_time {
         debug!("No update needed as timestamps match.");
-        return Ok((reserve_data.debt_index, cert));
+        return Ok(reserve_data.debt_index);
     } else {
         debug!(
             "Previous borrow index & rate: {:?} {:?}",
@@ -313,10 +333,9 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<(Nat, Certifica
             reserve_data.borrow_rate, //take it from reserve of asset
             cumulated_borrow_interest.clone().scaled_mul(reserve_data.debt_index.clone())
         );
-        return Ok((cumulated_borrow_interest.scaled_mul(reserve_data.debt_index), cert));
+        return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
     }
 }
-
 /*
  * @title Get Total Users
  * @dev Retrieves the total number of registered users.
@@ -366,7 +385,7 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
     guard_prevent_anonymous()?;
     let cert = get_certificate_witness("transfer_fee".to_string());
 
-    let (asset_price,_cer) = match get_cached_exchange_rate(asset_name.clone()) {
+    let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
         Ok(price) => price,
         Err(e) => {
             error!("Failed to fetch cache exchange rate");
@@ -648,7 +667,7 @@ pub async fn get_asset_debt(
         get_balance_value
     );
 
-    let (normalized_debt_data, _cert) = match user_normalized_debt(asset_reserve.clone()) {
+    let normalized_debt_data = match user_normalized_debt(asset_reserve.clone()) {
         Ok(data) => data,
         Err(e) => {
             error!("Error fetching normalized debt data: {:?}", e);

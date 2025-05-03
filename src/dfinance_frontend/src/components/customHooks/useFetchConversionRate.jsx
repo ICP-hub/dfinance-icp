@@ -50,7 +50,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       const rates = await Promise.all(
         assets.map(async (asset) => {
           try {
-            const result = await backendActor.get_cached_exchange_rate(asset);
+            const result = await backendActor.get_cached_exchange_rate_certified(asset);
   console.log("result",result)
             // 🔒 Certificate verification
             if (result && result[1]) {

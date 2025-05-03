@@ -124,7 +124,7 @@ const walletDetailTab = useMemo(() => [
     count: healthFactor ? healthFactor : "-",
   },
 ], [netWorth, netApy, healthFactor, formatNumber, formatNetApy]);
-
+console.log("netApy",netApy)
   // Memoize wallet details tabs to prevent unnecessary re-renders
   const walletDetailTabs = useMemo(() => [
     { 
@@ -257,20 +257,26 @@ const walletDetailTab = useMemo(() => [
   // Function to get asset supply value
   const getAssetSupplyValue = useCallback((asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]);
+      const supplyValue = Number(asset_supply[asset][0]);
+      console.log(`Supply value for ${asset}:`, supplyValue);
       return supplyValue;
     }
-    return `noSupply`;
+    console.warn(`No supply value found for ${asset}`);
+    return 0;
   }, [asset_supply]);
+  
 
   // Function to get asset borrow value
   const getAssetBorrowValue = useCallback((asset) => {
-    if (asset_borrow[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]);
+    if (asset_supply[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset][0]);
+      console.log(`Supply value for ${asset}:`, borrowValue);
       return borrowValue;
     }
-    return `noBorrow`;
-  }, [asset_borrow]);
+    console.warn(`No supply value found for ${asset}`);
+    return 0;
+  }, [asset_supply]);
+  
 
   // Function to get conversion rate for assets
   const getConversionRate = useCallback((asset) => {
@@ -298,93 +304,116 @@ const walletDetailTab = useMemo(() => [
   const calculateNetSupplyApy = useCallback(
     (reserves, reserveData) => {
       if (!reserves || !reserveData || !assetBalances || assetBalances.length === 0) {
+        console.warn("Missing reserves, reserveData, or assetBalances");
         return NaN;
       }
-
+  
       let totalSuppliedInUSD = 0;
       let weightedApySum = 0;
       let totalBorrowedInUSD = 0;
       let weightedDebtApySum = 0;
       let numerator = 0;
       let denominator = 0;
-
+  
       reserves?.forEach((reserve) => {
         const assetKey = reserve[0];
-
-        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok)
-          return;
-
+  
+        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok[0]) return;
+  
+        console.log("===========================================");
+        console.log("Processing asset:", assetKey);
+        console.log("Full reserve data:", reserveData[assetKey]);
+  
         const conversionRate = getConversionRate(assetKey) || 0;
-        const supplyApy =
-          (Number(reserveData[assetKey].Ok.current_liquidity_rate) || 0) /
-          100000000;
-        const debtApy =
-          (Number(reserveData[assetKey].Ok.borrow_rate) || 0) / 100000000;
-
+        console.log(`Conversion rate for ${assetKey}:`, conversionRate);
+  
+        const supplyApy = (Number(reserveData[assetKey].Ok[0].current_liquidity_rate) || 0) / 1e8;
+        const debtApy = (Number(reserveData[assetKey].Ok[0].borrow_rate) || 0) / 1e8;
+        console.log(`Supply APY: ${supplyApy}, Debt APY: ${debtApy}`);
+  
         const currentLiquidity =
           userData?.Ok?.[0].reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
           )?.[1]?.liquidity_index || 1;
-
+        console.log(`Current Liquidity Index:`, currentLiquidity);
+  
         const assetBalance =
-          assetBalances?.find((balance) => balance.asset === assetKey)
-            ?.dtokenBalance || 0;
-
-        const safeAssetBalance =
-          typeof assetBalance === "bigint"
-            ? Number(assetBalance)
-            : assetBalance;
-
-        const safeCurrentLiquidity =
-          typeof currentLiquidity === "bigint"
-            ? Number(currentLiquidity)
-            : currentLiquidity;
-
-        const safeSupplyValue =
-          typeof getAssetSupplyValue(assetKey) === "bigint"
-            ? Number(getAssetSupplyValue(assetKey))
-            : getAssetSupplyValue(assetKey);
-
-        const calculated_supply = Math.trunc(
-          (safeAssetBalance / safeCurrentLiquidity) * 1e8
-        );
-        const assetSupply = Math.trunc(
-          (calculated_supply * safeSupplyValue) / 1e8
-        );
-
+          assetBalances?.find((balance) => balance.asset === assetKey)?.dtokenBalance || 0;
+        console.log(`Raw Asset Balance (dToken):`, assetBalance);
+  
+        const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
+        console.log(`Safe Asset Balance (number):`, safeAssetBalance);
+  
+        const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
+        console.log(`Safe Liquidity Index (number):`, safeCurrentLiquidity);
+  
+        const supplyValue = getAssetSupplyValue(assetKey);
+        const safeSupplyValue = typeof supplyValue === "bigint" ? Number(supplyValue) : supplyValue;
+        console.log(`Safe Supply Value (USD rate):`, safeSupplyValue);
+  
+        const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * 1e8);
+        console.log(`Calculated Supply:`, calculated_supply);
+  
+        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / 1e8);
+        console.log(`Asset Supply (in units):`, assetSupply);
+  
+        const assetSupplyInUSD = assetSupply * conversionRate;
+        console.log(`Asset Supply in USD:`, assetSupplyInUSD);
+  
         const DebtIndex =
           userData?.Ok?.[0].reserves[0]?.find(
             (reserveGroup) => reserveGroup[0] === assetKey
           )?.[1]?.variable_borrow_index || 1;
-
+        console.log(`Variable Borrow Index:`, DebtIndex);
+  
         const assetBorrowBalance =
-          assetBalances.find((balance) => balance.asset === assetKey)
-            ?.debtTokenBalance || 0;
-
-        const assetBorrowed =
-          (Number(assetBorrowBalance) *
-            Number(getAssetBorrowValue(assetKey) || 0)) /
-            Number(DebtIndex) || 0;
-
+          assetBalances.find((balance) => balance.asset === assetKey)?.debtTokenBalance || 0;
+        console.log(`Raw Debt Token Balance:`, assetBorrowBalance);
+  
+        const safeBorrowBalance = Number(assetBorrowBalance);
+        const assetBorrowValue = Number(getAssetBorrowValue(assetKey) || 0);
+        console.log(`Borrow value (USD rate):`, assetBorrowValue);
+  
+        const assetBorrowed = (safeBorrowBalance * assetBorrowValue) / Number(DebtIndex) || 0;
+        console.log(`Asset Borrowed (in units):`, assetBorrowed);
+  
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
+        console.log(`Asset Borrowed in USD:`, assetBorrowedInUSD);
+  
         totalBorrowedInUSD += assetBorrowedInUSD;
         weightedDebtApySum += assetBorrowedInUSD * debtApy;
-
-        const assetSupplyInUSD = assetSupply * conversionRate;
+  
         totalSuppliedInUSD += assetSupplyInUSD;
         weightedApySum += assetSupplyInUSD * supplyApy;
-
+  
+        console.log(`Running Totals ->`);
+        console.log(`  Total Supplied in USD: ${totalSuppliedInUSD}`);
+        console.log(`  Total Borrowed in USD: ${totalBorrowedInUSD}`);
+        console.log(`  Weighted Supply APY Sum: ${weightedApySum}`);
+        console.log(`  Weighted Debt APY Sum: ${weightedDebtApySum}`);
+  
         numerator += weightedApySum - weightedDebtApySum;
         denominator += totalSuppliedInUSD;
+  
+        console.log(`Numerator (for net APY):`, numerator);
+        console.log(`Denominator (for net APY):`, denominator);
       });
-
-      if (denominator === 0) return NaN;
-
+  
+      if (denominator === 0) {
+        console.warn("Total supplied in USD is 0, cannot calculate APY");
+        return NaN;
+      }
+  
       const netApy = numerator / denominator;
+      console.log("===========================================");
+      console.log("Final Net Supply APY:", netApy);
+  
       return netApy < 0.0001 ? 0.0001 : netApy;
     },
     [reserveData, assetBalances, userData, getAssetSupplyValue, getAssetBorrowValue, getConversionRate]
   );
+  
+  
 
   const truncateToDecimals = useCallback((num, decimals) => {
     const factor = Math.pow(10, decimals);
@@ -497,7 +526,7 @@ const walletDetailTab = useMemo(() => [
     if (userData?.Ok?.[0]?.reserves?.[0] && reserveData && assetBalances.length > 0) {
       const reservesData = userData.Ok[0].reserves[0];
       const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
-
+console.log("calculatedNetsupply",calculatedNetApy)
       if (!calculatedNetApy || isNaN(calculatedNetApy)) {
         setNetApy("-");
         return;

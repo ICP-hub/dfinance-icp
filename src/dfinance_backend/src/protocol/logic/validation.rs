@@ -120,7 +120,7 @@ impl ValidationLogic {
         let user_current_supply = get_balance(d_token_principal, user).await?;
 
         //fetching interest rate
-        let (supplied_interest_rate,_cer) = user_normalized_supply(reserve.clone())?;
+        let supplied_interest_rate = user_normalized_supply(reserve.clone())?;
 
         debug!("user current supply = {}", user_current_supply);  //debug
         debug!("interest rate = {}", supplied_interest_rate);  //debug
@@ -196,7 +196,7 @@ impl ValidationLogic {
         if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
              
             //fetching the exchange rate from cache
-            let (rate, _cer) = get_cached_exchange_rate(reserve.asset_name.clone())?;
+            let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
             debug!("withdraw asset price = {:?}", rate);   //debug
 
@@ -320,7 +320,7 @@ impl ValidationLogic {
             return Err(Error::NoCollateralFound);
         }
         //fetching the exchange rate from cache
-        let (rate, _cer) = get_cached_exchange_rate(reserve.asset_name.clone())?;
+        let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
         debug!("asset price = {}", rate);  //debug
 
@@ -460,7 +460,7 @@ impl ValidationLogic {
         //fetching user total debt balance
         let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
         
-        let (norm_debt,_cer) = user_normalized_debt(repay_reserve_data.clone())?;
+        let norm_debt = user_normalized_debt(repay_reserve_data.clone())?;
         //user's normalized debt
         let normalized_debt_amount = debt_amount
             .clone()

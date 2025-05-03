@@ -11,10 +11,10 @@ const useTransferFee = (asset) => {
     const fetchTransferFee = async () => {
       try {
         const feeResponse = await backendActor.get_transfer_fee(asset);
-  
+  console.log("feeResponse",feeResponse)
         // If feeResponse is a tuple: [data, certificate]
-        const rawData = feeResponse?.[0];
-        const cert = feeResponse?.[1];
+        const rawData = feeResponse.Ok?.[0];
+        const cert = feeResponse.OK?.[1];
   
         if (cert) {
           try {
@@ -31,8 +31,8 @@ const useTransferFee = (asset) => {
           }
         }
   
-        const rawFee = rawData?.Ok;
-  
+        const rawFee = rawData;
+  console.log("raw",rawFee ,typeof(rawFee))
         if (typeof rawFee === "bigint") {
           if (rawFee === 0n) {
             setTransferFee(0);

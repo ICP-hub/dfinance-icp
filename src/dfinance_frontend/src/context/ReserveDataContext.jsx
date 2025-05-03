@@ -195,7 +195,7 @@ export const ReserveDataProvider = ({ children }) => {
       batchFetchReserveData,
       invalidateCache,
       reserveDataCache,
-      certificateStatus,
+      certificateStatus
     ]
   );
 

@@ -36,34 +36,34 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(20_000u128),
-        //     on_behalf_of: None,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(200u128),
-        //     on_behalf_of: None,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     on_behalf_of: None,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(500u128),
-        //     on_behalf_of: None,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(20_000u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(800_000u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(400_000u128),
+            on_behalf_of: None,
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     // let user_principal = get_user_principal();
@@ -76,6 +76,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
+        ic_cdk::println!("case amount = {}",case.amount);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
@@ -218,6 +219,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                 }
             }
         }
+        ic_cdk::println!(
+            "\n======================== Total reserve data after concurent calls  ========================\n"
+        );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
     }
     ic_cdk::println!(

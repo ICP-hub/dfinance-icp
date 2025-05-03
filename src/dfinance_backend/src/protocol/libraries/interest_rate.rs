@@ -146,7 +146,8 @@ pub async fn calculate_interest_rates(
     let user_normalized_supply = user_normalized_supply(reserve.clone())?;
     let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply);
 
-    let available_liq = total_supply + liq_added - liq_taken;
+    //TODO: ask should be do this or not --> anshika
+    let available_liq = (total_supply + liq_added) - liq_taken;
     debug!("Available Liquidity: {:?}", available_liq);
 
     if total_debt != zero_nat_value() {

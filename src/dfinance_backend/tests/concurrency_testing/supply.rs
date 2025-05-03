@@ -63,7 +63,7 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(400_000u128),
+            amount: Nat::from(40_000_000u128),
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,

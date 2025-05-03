@@ -15,6 +15,8 @@ const useAssetData = (searchQuery = "") => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
+  console.log(dashboardRefreshTrigger);  // Ensure it's updating in the console
+  
   const { principal, backendActor, isAuthenticated, verifyCertificate } = useAuth();
   const { fetchReserveData, batchFetchReserveData, reserveDataCache } =
     useReserveData();
@@ -113,12 +115,12 @@ const useAssetData = (searchQuery = "") => {
         const supplyPromises = Object.entries(assetReserveData).map(
           async ([asset, data]) => {
             try {
-              const result = await backendActor.user_normalized_supply(data);
-  
+              const result = await backendActor.user_normalized_supply_certified(data);
+  console.log("result in normalized supply ",result)
               // 🔒 Certificate verification step
-              if (result && result[1]) {
+              if (result && result.Ok[1]) {
                 try {
-                  const verification = await verifyCertificate(result[1]);
+                  const verification = await verifyCertificate(result.Ok[1]);
                   if (!verification) {
                     console.error(`Certificate verification failed for asset supply: ${asset}`);
                     return { asset, success: false };
@@ -131,7 +133,7 @@ const useAssetData = (searchQuery = "") => {
                 }
               }
   
-              return { asset, supply: result.Ok, success: true };
+              return { asset, supply: result.Ok[0], success: true };
             } catch (error) {
               console.error(`Error fetching supply for ${asset}:`, error.message);
               return { asset, success: false };
@@ -142,12 +144,12 @@ const useAssetData = (searchQuery = "") => {
         const borrowPromises = Object.entries(assetReserveData).map(
           async ([asset, data]) => {
             try {
-              const result = await backendActor.user_normalized_debt(data);
+              const result = await backendActor.user_normalized_debt_certified(data);
   
               // 🔒 Certificate verification step
-              if (result && result[1]) {
+              if (result && result.Ok[1]) {
                 try {
-                  const verification = await verifyCertificate(result[1]);
+                  const verification = await verifyCertificate(result.Ok[1]);
                   if (!verification) {
                     console.error(`Certificate verification failed for asset borrow: ${asset}`);
                     return { asset, success: false };
@@ -160,7 +162,7 @@ const useAssetData = (searchQuery = "") => {
                 }
               }
   
-              return { asset, borrow: result.Ok, success: true };
+              return { asset, borrow: result.Ok[0], success: true };
             } catch (error) {
               console.error(`Error fetching borrow for ${asset}:`, error.message);
               return { asset, success: false };
@@ -242,10 +244,10 @@ const useAssetData = (searchQuery = "") => {
               reserveDataForAsset.Ok[0]?.id) {
               dataToUse = reserveDataForAsset.Ok[0];
             }
-  
+            console.log("result in this",dataToUse)
             if (dataToUse) {
-              const result = await backendActor.user_normalized_supply(dataToUse);
-  
+              const result = await backendActor.user_normalized_supply_certified(dataToUse);
+  console.log("result in this",result)
               // 🔒 Certificate verification
               if (result && result[1]) {
                 try {
@@ -286,7 +288,7 @@ const useAssetData = (searchQuery = "") => {
           }
   
           if (dataToUse) {
-            const result = await backendActor.user_normalized_supply(dataToUse);
+            const result = await backendActor.user_normalized_supply_certified(dataToUse);
   
             // 🔒 Certificate verification
             if (result && result[1]) {
@@ -343,7 +345,7 @@ const useAssetData = (searchQuery = "") => {
             }
   
             if (dataToUse) {
-              const result = await backendActor.user_normalized_debt(dataToUse);
+              const result = await backendActor.user_normalized_debt_certified(dataToUse);
   
               // 🔒 Certificate verification
               if (result && result[1]) {
@@ -385,7 +387,7 @@ const useAssetData = (searchQuery = "") => {
           }
   
           if (dataToUse) {
-            const result = await backendActor.user_normalized_debt(dataToUse);
+            const result = await backendActor.user_normalized_debt_certified(dataToUse);
   
             // 🔒 Certificate verification
             if (result && result[1]) {
@@ -476,6 +478,7 @@ const useAssetData = (searchQuery = "") => {
             (Number(reserveDataForAsset.Ok[0].asset_supply) * (assetRate / 1e8)) /
             100000000
           );
+          console.log("totalSupply",totalSupply)
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok[0].asset_borrow) * (assetRate / 1e8)) /
             100000000
@@ -495,7 +498,7 @@ const useAssetData = (searchQuery = "") => {
           totalBorrowes += parseInt(totalBorrow);
           reserveFactors = reserveFactor;
         });
-
+        console.log("totalsupplies",totalSupplies)
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies));
@@ -517,7 +520,7 @@ const useAssetData = (searchQuery = "") => {
     ckICPUsdRate,
     ckUSDCUsdRate,
     ckETHUsdRate,
-    ckBTCUsdRate,
+    ckBTCUsdRate
   ]);
 
   const filteredItems =

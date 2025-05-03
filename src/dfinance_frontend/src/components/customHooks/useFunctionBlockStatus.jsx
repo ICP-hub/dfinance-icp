@@ -31,7 +31,7 @@ const useFunctionBlockStatus = (functionName) => {
         }
   
         if ("Ok" in response) {
-          setIsBlocked(response.Ok);
+          setIsBlocked(response.Ok[0]);
         } else {
           console.error("Error checking block status:", response.Err);
           setIsBlocked(false);

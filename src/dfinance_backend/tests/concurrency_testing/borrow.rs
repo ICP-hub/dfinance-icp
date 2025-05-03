@@ -31,30 +31,30 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(20_000u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(200u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(20_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(400_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(200u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(800_000u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     // let user_principal = get_user_principal();
@@ -114,7 +114,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Borrow successful. New Balance: {}",
+                                "✅ IC Test Case {} Passed: Borrow successful: {}",
                                 i + 1,
                                 balance
                             );
@@ -152,6 +152,9 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 }
             }
         }
+        ic_cdk::println!(
+            "\n======================== Total reserve data after concurent calls  ========================\n"
+        );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
     }
     ic_cdk::println!(

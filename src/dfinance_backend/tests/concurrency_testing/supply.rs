@@ -21,7 +21,7 @@ use crate::utils::structs::*;
  * @functionality Confirms that the supply function performs as expected, rejecting invalid requests and successfully processing valid transactions.
  */
 
-pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
+ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
@@ -40,34 +40,34 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     asset: "ckBTC".to_string(),
-        //     amount: Nat::from(40_000u128),
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(2_000u128),
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckETH".to_string(),
-        //     amount: Nat::from(5_000u128),
-        //     is_collateral: true,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(10_000u128),
-        //     is_collateral: false,
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            asset: "ckBTC".to_string(),
+            amount: Nat::from(40_000u128),
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(800_000u128),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckETH".to_string(),
+            amount: Nat::from(5_000u128),
+            is_collateral: true,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(400_000u128),
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
     ic_cdk::println!(
@@ -86,6 +86,15 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
+
+        ic_cdk::println!(
+            "\n======================== Reserve data before concurent calls  ========================\n"
+        );
+        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+
+        ic_cdk::println!(
+            "\n======================================================================================\n"
+        );
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for user_principal in random_users.clone() {
@@ -176,8 +185,9 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Supply successful.",
+                                "✅ IC Test Case {} Passed: Supply successful: {}",
                                 i + 1,
+                                balance
                             );
                         }
                         Err(error) => {
@@ -213,6 +223,10 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 }
             }
         }
+
+        ic_cdk::println!(
+            "\n======================== Total reserve data after concurent calls  ========================\n"
+        );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
     }
     ic_cdk::println!(

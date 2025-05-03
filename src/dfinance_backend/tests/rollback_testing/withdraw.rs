@@ -29,7 +29,6 @@ use crate::utils::structs::*;
     struct TestCase {
         asset: String,
         amount: Nat,
-        on_behalf_of: Option<Principal>,
         is_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
@@ -40,7 +39,6 @@ use crate::utils::structs::*;
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(400_000u128), // 100 ckUSDT
-            on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -48,7 +46,6 @@ use crate::utils::structs::*;
         TestCase {
             asset: "ckETH".to_string(),
             amount: Nat::from(200u128), // 0.002 ckETH
-            on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -56,7 +53,6 @@ use crate::utils::structs::*;
         TestCase {
             asset: "ckETH".to_string(),
             amount: Nat::from(5_000u128), // 0.02 ckETH
-            on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -64,7 +60,6 @@ use crate::utils::structs::*;
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(200_000_000u128), // 2 ICP
-            on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -72,7 +67,6 @@ use crate::utils::structs::*;
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(50_000u128), // 0.00000002 ICP
-            on_behalf_of: None,
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -89,12 +83,6 @@ use crate::utils::structs::*;
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!(
-            "On Behalf Of: {}",
-            case.on_behalf_of
-                .as_ref()
-                .map_or("None".to_string(), |p| p.to_text())
-        );
         ic_cdk::println!("Is Collateral: {}", case.is_collateral);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
@@ -106,7 +94,6 @@ use crate::utils::structs::*;
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
-            on_behalf_of: case.on_behalf_of,
             is_collateral: case.is_collateral.clone(),
         };
 
@@ -137,9 +124,8 @@ use crate::utils::structs::*;
                             continue;
                         }
                         ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Withdraw successful. New Balance: {}",
+                            "✅ IC Test Case {} Passed: Withdraw successful.",
                             i + 1,
-                            balance
                         );
                     }
                     Err(error) => {

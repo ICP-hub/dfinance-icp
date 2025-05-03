@@ -190,13 +190,9 @@ pub struct UserReserveData {
     pub last_update_timestamp: u64,
     pub liquidity_index: Nat,
     pub variable_borrow_index: Nat,
-    pub asset_supply: Nat,
-    pub asset_borrow: Nat,
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
-    pub faucet_usage: Nat,
-    pub faucet_limit: Nat,
     pub d_token_balance: Nat,
     pub debt_token_blance: Nat,
 }
@@ -204,8 +200,8 @@ pub struct UserReserveData {
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    pub total_collateral: Option<Nat>,
-    pub total_debt: Option<Nat>,
+    // pub total_collateral: Option<Nat>,
+    // pub total_debt: Option<Nat>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 

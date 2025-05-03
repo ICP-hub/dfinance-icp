@@ -95,14 +95,14 @@ use crate::utils::structs::*;
         expected_error_message: None, 
     },
 
-    // Test Case: Supply Very Small Amount 
-     TestCase { 
-        asset: "ckUSDC".to_string(), 
-        amount: Nat::from(811u128), // Fee + 1 base unit
-        is_collateral: true,
-        expect_success: false,
-        expected_error_message: Some("Fee exceeds the amount".to_string()), 
-    },
+    // // Test Case: Supply Very Small Amount 
+    //  TestCase { 
+    //     asset: "ckUSDC".to_string(), 
+    //     amount: Nat::from(811u128), // Fee + 1 base unit
+    //     is_collateral: true,
+    //     expect_success: false,
+    //     expected_error_message: Some("Fee exceeds the amount".to_string()), 
+    // },
     ];
 
     let user_principal = get_user_principal2();

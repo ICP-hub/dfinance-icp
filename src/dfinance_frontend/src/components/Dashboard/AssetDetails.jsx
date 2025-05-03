@@ -64,6 +64,7 @@ const AssetDetails = () => {
     principal,
     backendActor,
     createLedgerActor,
+    verifyCertificate
   } = useAuth();
 
   const location = useLocation();
@@ -313,33 +314,47 @@ const AssetDetails = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+  
     try {
       let result;
       switch (asset) {
         case "ckBTC":
-          result = await backendActor.get_asset_principal("ckBTC");
-          break;
         case "ckETH":
-          result = await backendActor.get_asset_principal("ckETH");
-          break;
         case "ckUSDC":
-          result = await backendActor.get_asset_principal("ckUSDC");
-          break;
         case "ICP":
-          result = await backendActor.get_asset_principal("ICP");
-          break;
         case "ckUSDT":
-          result = await backendActor.get_asset_principal("ckUSDT");
+          result = await backendActor.get_asset_principal(asset);
           break;
-
         default:
           throw new Error(`Unknown asset: ${asset}`);
       }
-      return result.Ok.toText();
+  
+      if ("Ok" in result && Array.isArray(result.Ok)) {
+        const [principalText, cert] = result.Ok;
+  
+        try {
+          const isVerified = await verifyCertificate(cert);
+          if (!isVerified) {
+            console.error(`Certificate verification failed for ${asset}`);
+            return null;
+          } else {
+            console.log(`Certificate verified for ${asset}`);
+            return principalText?.toText?.() || null;
+          }
+        } catch (err) {
+          console.error(`Error verifying certificate for ${asset}:`, err);
+          return null;
+        }
+      } else {
+        console.warn(`Invalid result format for ${asset}`, result);
+        return null;
+      }
     } catch (error) {
+      console.error(`Error getting principal for ${asset}:`, error);
       throw error;
     }
   };
+  
 
   //balance fetcher
   const ckBalance =
@@ -564,12 +579,12 @@ const AssetDetails = () => {
     const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
     const totalCollateral =
-      parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[0]) / 100000000) || 0;
     const totalDebt =
-      parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[1]) / 100000000) || 0;
     const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
-      Number(userAccountData?.Ok?.[3]) / 100000000 || 0;
+      Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0;
     const reserveliquidationThreshold =
       Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
     const supplyRateApr =
@@ -704,8 +719,8 @@ const AssetDetails = () => {
   ]);
 
   useEffect(() => {
-    if (userAccountData?.Ok?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[5]) / 100000000;
+    if (userAccountData?.Ok[0]?.length > 5) {
+      const borrowValue = Number(userAccountData.Ok[0][5]) / 100000000;
       if (totalSupply - totalBorrow < 0) {
         setAvailableBorrow(0);
         console.warn(

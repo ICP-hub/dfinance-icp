@@ -105,7 +105,7 @@ const DashboardCards = () => {
   /**
    * Checks the controller status from the backend.
    */
-  const checkControllerStatus = async () => {
+  const checkController = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }

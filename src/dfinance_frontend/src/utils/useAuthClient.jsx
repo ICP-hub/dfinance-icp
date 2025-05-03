@@ -342,13 +342,35 @@ export const useAuthClient = (options = defaultOptions) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+  
     try {
       const allUsers = await backendActor.get_all_users();
-      return allUsers;
+  
+      // Assuming certificate is present as the second element of the result
+      const cert = allUsers?.[1];
+  
+      if (cert) {
+        try {
+          const verified = await verifyCertificate(cert);
+          if (!verified) {
+            console.error("Certificate verification failed for users data");
+            return []; // Return empty array if verification fails
+          } else {
+            console.log("Users certificate verified successfully");
+          }
+        } catch (verificationError) {
+          console.error("Error verifying certificate for users:", verificationError);
+          return []; // Return empty array if verification fails
+        }
+      }
+  
+      return allUsers; // Return the data after successful verification
     } catch (error) {
+      console.error("Error fetching users:", error);
       throw error;
     }
   };
+  
 
   return {
     isAuthenticated,

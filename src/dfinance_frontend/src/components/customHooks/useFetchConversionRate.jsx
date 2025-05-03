@@ -15,7 +15,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const ledgerActors = useSelector((state) => state.ledger);
-  const { principal, backendActor } = useAuth();
+  const { principal, backendActor ,verifyCertificate } = useAuth();
   const {
     ckBTCBalance,
     ckETHBalance,
@@ -43,24 +43,39 @@ const useFetchConversionRate = (pollInterval = 2000) => {
         setError("Backend actor is not available.");
         return;
       }
+  
       const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
       let fetchedRates = 0;
+  
       const rates = await Promise.all(
         assets.map(async (asset) => {
           try {
             const result = await backendActor.get_cached_exchange_rate(asset);
-            if (result?.Ok !== undefined) {
+  console.log("result",result)
+            // 🔒 Certificate verification
+            if (result && result[1]) {
+              const verified = await verifyCertificate(result[1]);
+              if (!verified) {
+                console.error(`Certificate verification failed for ${asset}`);
+                return { asset, rate: null };
+              } else {
+                console.log(`Certificate verified for ${asset}`);
+              }
+            }
+  
+            if (result?.Ok[0] !== undefined) {
               fetchedRates++;
-              return { asset, rate: result.Ok.toString() };
+              return { asset, rate: result.Ok[0].toString() };
             } else {
-              throw new Error(`Invalid response structure for ${asset}`);
+              // throw new Error(`Invalid response structure for ${asset}`);
             }
           } catch (error) {
+            console.error(`Error fetching rate for ${asset}:`, error.message);
             return { asset, rate: null };
           }
         })
       );
-
+  
       rates.forEach(({ asset, rate }) => {
         if (rate !== null) {
           switch (asset) {
@@ -84,7 +99,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
           }
         }
       });
-
+  
       if (fetchedRates === assets.length) {
         clearInterval(intervalIdRef.current);
       }
@@ -93,6 +108,7 @@ const useFetchConversionRate = (pollInterval = 2000) => {
       console.error(error.message);
     }
   }, [backendActor, dashboardRefreshTrigger]);
+  
 
   useEffect(() => {
     intervalIdRef.current = setInterval(() => {

@@ -50,7 +50,7 @@ const useAssetData = (searchQuery = "") => {
       try {
         // Use the certified version of the function
         const result = await backendActor.get_all_assets_certified();
-        
+        console.log("result",result)
         // Verify certificate
         if (result && result[1]) {
           try {
@@ -94,27 +94,43 @@ const useAssetData = (searchQuery = "") => {
   const fetchUserPositions = useCallback(
     async (assetsList = assets) => {
       if (!backendActor || !isAuthenticated || assetsList.length === 0) return;
-      setLoading(true)
+      setLoading(true);
       try {
         const batchedReserveData = await batchFetchReserveData(assetsList);
-
         const assetReserveData = {};
-
+  
         Object.entries(batchedReserveData).forEach(([asset, data]) => {
           if (data?.Ok?.id || (data?.Ok?.[0]?.id)) {
             assetReserveData[asset] = data.Ok?.id ? data.Ok : data.Ok[0];
           }
         });
-
+  
         if (Object.keys(assetReserveData).length === 0) {
           console.warn("No valid reserve data found for any assets");
           return null;
         }
-
+  
         const supplyPromises = Object.entries(assetReserveData).map(
           async ([asset, data]) => {
             try {
               const result = await backendActor.user_normalized_supply(data);
+  
+              // 🔒 Certificate verification step
+              if (result && result[1]) {
+                try {
+                  const verification = await verifyCertificate(result[1]);
+                  if (!verification) {
+                    console.error(`Certificate verification failed for asset supply: ${asset}`);
+                    return { asset, success: false };
+                  } else {
+                    console.log(`Certificate verified for asset supply: ${asset}`);
+                  }
+                } catch (verificationError) {
+                  console.error("Error during certificate verification:", verificationError);
+                  return { asset, success: false };
+                }
+              }
+  
               return { asset, supply: result.Ok, success: true };
             } catch (error) {
               console.error(`Error fetching supply for ${asset}:`, error.message);
@@ -122,11 +138,28 @@ const useAssetData = (searchQuery = "") => {
             }
           }
         );
-
+  
         const borrowPromises = Object.entries(assetReserveData).map(
           async ([asset, data]) => {
             try {
               const result = await backendActor.user_normalized_debt(data);
+  
+              // 🔒 Certificate verification step
+              if (result && result[1]) {
+                try {
+                  const verification = await verifyCertificate(result[1]);
+                  if (!verification) {
+                    console.error(`Certificate verification failed for asset borrow: ${asset}`);
+                    return { asset, success: false };
+                  } else {
+                    console.log(`Certificate verified for asset borrow: ${asset}`);
+                  }
+                } catch (verificationError) {
+                  console.error("Error during certificate verification:", verificationError);
+                  return { asset, success: false };
+                }
+              }
+  
               return { asset, borrow: result.Ok, success: true };
             } catch (error) {
               console.error(`Error fetching borrow for ${asset}:`, error.message);
@@ -134,62 +167,58 @@ const useAssetData = (searchQuery = "") => {
             }
           }
         );
-
+  
         const [supplyResults, borrowResults] = await Promise.all([
           Promise.all(supplyPromises),
           Promise.all(borrowPromises),
         ]);
-
+  
         setAssetSupply(prevSupply => {
           const newSupplyData = { ...prevSupply };
-
           supplyResults.forEach(({ asset, supply, success }) => {
             if (success && supply !== undefined) {
               newSupplyData[asset] = supply;
             }
           });
-
           return newSupplyData;
         });
-
+  
         setAssetBorrow(prevBorrow => {
           const newBorrowData = { ...prevBorrow };
-
           borrowResults.forEach(({ asset, borrow, success }) => {
             if (success && borrow !== undefined) {
               newBorrowData[asset] = borrow;
             }
           });
-
           return newBorrowData;
         });
-
+  
         const newSupplyData = {};
         const newBorrowData = {};
-
+  
         supplyResults.forEach(({ asset, supply, success }) => {
           if (success && supply !== undefined) {
             newSupplyData[asset] = supply;
           }
         });
-
+  
         borrowResults.forEach(({ asset, borrow, success }) => {
           if (success && borrow !== undefined) {
             newBorrowData[asset] = borrow;
           }
         });
-
+  
         return { supplyData: newSupplyData, borrowData: newBorrowData };
       } catch (error) {
-        setLoading(false)
         console.error("Error fetching user positions:", error.message);
         return null;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
     [assets, backendActor, isAuthenticated, batchFetchReserveData]
   );
+  
 
   /**
    * Legacy individual fetch functions - now optimized to use cached data
@@ -197,15 +226,15 @@ const useAssetData = (searchQuery = "") => {
   const fetchAssetSupply = useCallback(
     async (asset) => {
       if (!backendActor || !isAuthenticated) return;
+  
       try {
         let assetReserveData = reserveData?.[asset]?.Ok;
-
+  
         if (!assetReserveData) {
           const reserveDataForAsset = await fetchReserveData(asset);
-
+  
           if (reserveDataForAsset?.Ok) {
             let dataToUse;
-
             if (reserveDataForAsset.Ok?.id) {
               dataToUse = reserveDataForAsset.Ok;
             } else if (Array.isArray(reserveDataForAsset.Ok) &&
@@ -213,10 +242,26 @@ const useAssetData = (searchQuery = "") => {
               reserveDataForAsset.Ok[0]?.id) {
               dataToUse = reserveDataForAsset.Ok[0];
             }
-
+  
             if (dataToUse) {
               const result = await backendActor.user_normalized_supply(dataToUse);
-
+  
+              // 🔒 Certificate verification
+              if (result && result[1]) {
+                try {
+                  const verified = await verifyCertificate(result[1]);
+                  if (!verified) {
+                    console.error(`Certificate verification failed for supply: ${asset}`);
+                    return;
+                  } else {
+                    console.log(`Certificate verified for supply: ${asset}`);
+                  }
+                } catch (e) {
+                  console.error(`Error verifying certificate for supply: ${asset}`, e);
+                  return;
+                }
+              }
+  
               if (result?.Ok !== undefined) {
                 setAssetSupply(prev => ({
                   ...prev,
@@ -231,7 +276,7 @@ const useAssetData = (searchQuery = "") => {
           }
         } else {
           let dataToUse;
-
+  
           if (assetReserveData?.id) {
             dataToUse = assetReserveData;
           } else if (Array.isArray(assetReserveData) &&
@@ -239,10 +284,26 @@ const useAssetData = (searchQuery = "") => {
             assetReserveData[0]?.id) {
             dataToUse = assetReserveData[0];
           }
-
+  
           if (dataToUse) {
             const result = await backendActor.user_normalized_supply(dataToUse);
-
+  
+            // 🔒 Certificate verification
+            if (result && result[1]) {
+              try {
+                const verified = await verifyCertificate(result[1]);
+                if (!verified) {
+                  console.error(`Certificate verification failed for supply: ${asset}`);
+                  return;
+                } else {
+                  console.log(`Certificate verified for supply: ${asset}`);
+                }
+              } catch (e) {
+                console.error(`Error verifying certificate for supply: ${asset}`, e);
+                return;
+              }
+            }
+  
             if (result?.Ok !== undefined) {
               setAssetSupply(prev => ({
                 ...prev,
@@ -257,21 +318,22 @@ const useAssetData = (searchQuery = "") => {
         console.error("Error fetching asset supply:", error.message);
       }
     },
-    [backendActor, isAuthenticated, reserveData, fetchReserveData]
+    [backendActor, isAuthenticated, reserveData, fetchReserveData, verifyCertificate]
   );
+  
 
   const fetchAssetBorrow = useCallback(
     async (asset) => {
       if (!backendActor || !isAuthenticated) return;
+  
       try {
         let assetReserveData = reserveData?.[asset]?.Ok;
-
+  
         if (!assetReserveData) {
           const reserveDataForAsset = await fetchReserveData(asset);
-
+  
           if (reserveDataForAsset?.Ok) {
             let dataToUse;
-
             if (reserveDataForAsset.Ok?.id) {
               dataToUse = reserveDataForAsset.Ok;
             } else if (Array.isArray(reserveDataForAsset.Ok) &&
@@ -279,10 +341,26 @@ const useAssetData = (searchQuery = "") => {
               reserveDataForAsset.Ok[0]?.id) {
               dataToUse = reserveDataForAsset.Ok[0];
             }
-
+  
             if (dataToUse) {
               const result = await backendActor.user_normalized_debt(dataToUse);
-
+  
+              // 🔒 Certificate verification
+              if (result && result[1]) {
+                try {
+                  const verified = await verifyCertificate(result[1]);
+                  if (!verified) {
+                    console.error(`Certificate verification failed for borrow: ${asset}`);
+                    return;
+                  } else {
+                    console.log(`Certificate verified for borrow: ${asset}`);
+                  }
+                } catch (e) {
+                  console.error(`Error verifying certificate for borrow: ${asset}`, e);
+                  return;
+                }
+              }
+  
               if (result?.Ok !== undefined) {
                 setAssetBorrow(prev => ({
                   ...prev,
@@ -297,22 +375,35 @@ const useAssetData = (searchQuery = "") => {
           }
         } else {
           let dataToUse;
-
+  
           if (assetReserveData?.id) {
-
             dataToUse = assetReserveData;
           } else if (Array.isArray(assetReserveData) &&
             assetReserveData.length > 0 &&
             assetReserveData[0]?.id) {
-
             dataToUse = assetReserveData[0];
           }
-
+  
           if (dataToUse) {
             const result = await backendActor.user_normalized_debt(dataToUse);
-
+  
+            // 🔒 Certificate verification
+            if (result && result[1]) {
+              try {
+                const verified = await verifyCertificate(result[1]);
+                if (!verified) {
+                  console.error(`Certificate verification failed for borrow: ${asset}`);
+                  return;
+                } else {
+                  console.log(`Certificate verified for borrow: ${asset}`);
+                }
+              } catch (e) {
+                console.error(`Error verifying certificate for borrow: ${asset}`, e);
+                return;
+              }
+            }
+  
             if (result?.Ok !== undefined) {
-
               setAssetBorrow(prev => ({
                 ...prev,
                 [asset]: result.Ok
@@ -326,8 +417,9 @@ const useAssetData = (searchQuery = "") => {
         console.error("Error fetching asset borrow:", error.message);
       }
     },
-    [backendActor, isAuthenticated, reserveData, fetchReserveData]
+    [backendActor, isAuthenticated, reserveData, fetchReserveData, verifyCertificate]
   );
+  
 
   /**
    * Fetches asset details and calculates supply, borrow, and reserve factors.

@@ -146,20 +146,21 @@ const useUserData = () => {
           console.error("Invalid principal provided");
           return;
         }
+  
         const reserves = userData?.Ok?.reserves?.[0] || [];
         let assetBalancesObj = [];
         let borrowBalancesObj = [];
-
+  
         reserves.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
-
+  
           const assetBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0n;
           const borrowBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
-
+  
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -173,24 +174,42 @@ const useUserData = () => {
             });
           }
         });
-
+  
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
         const borrowBalancesParam =
           borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
-
+  
         const result = await backendActor.get_user_account_data(
           [],
           assetBalancesParam,
           borrowBalancesParam
         );
-console.log("result",result)
+  
+        // 🔒 Certificate verification
+        if (result && result[1]) {
+          try {
+            const verified = await verifyCertificate(result[1]);
+            if (!verified) {
+              console.error("Certificate verification failed for user account data");
+              return;
+            } else {
+              console.log("Certificate verified for user account data");
+            }
+          } catch (e) {
+            console.error("Error verifying certificate for user account data", e);
+            return;
+          }
+        }
+  
+        console.log("result", result);
+  
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
           setTimeout(fetchUserAccountData, 1000);
           return;
         }
-
+  
         if (result?.Ok && result.Ok[4]) {
           const healthFactor = Number(result.Ok[4]) / 10000000000;
           if (healthFactor) {
@@ -201,7 +220,7 @@ console.log("result",result)
         } else {
           setError("Invalid result format or missing health factor");
         }
-
+  
         if (result?.Ok) {
           setUserAccountData(result);
         }
@@ -210,6 +229,7 @@ console.log("result",result)
       }
     }
   };
+  
 
   useEffect(() => {
     fetchUserData(user);

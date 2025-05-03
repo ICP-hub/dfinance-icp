@@ -117,7 +117,7 @@ export default function App() {
           // Set the asset principal after certificate verification
           setAssetPrincipal((prevState) => ({
             ...prevState,
-            [asset]: result?.Ok?.toText() || null,
+            [asset]: result?.Ok[0]?.toText() || null,
           }));
         });
       } catch (error) {

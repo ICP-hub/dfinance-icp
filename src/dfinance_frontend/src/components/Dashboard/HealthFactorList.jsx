@@ -28,7 +28,7 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const { backendActor, isAuthenticated, createLedgerActor } = useAuth();
+  const { backendActor, isAuthenticated, createLedgerActor ,verifyCertificate } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const filterRef = useRef(null);
@@ -67,26 +67,44 @@ const HealthFactorList = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-
+  
     try {
       const result = await backendActor.guard_admin_only();
-
-      if ("Ok" in result) {
+  
+      if (result && result[1]) {
+        try {
+          const verification = await verifyCertificate(result[1]);
+          if (!verification) {
+            console.error("Certificate verification failed for assets");
+            return; // Don't proceed with unverified data
+          } else {
+            console.log("Assets certificate verified successfully");
+          }
+        } catch (verificationError) {
+          console.error("Error during assets certificate verification:", verificationError);
+          return;
+        }
+      }
+  
+      const responseData = result[0]; // Assuming first item is the actual response
+  
+      if ("Ok" in responseData) {
         setLike(true);
       } else {
-        console.warn("Not an admin:", result.Err);
+        console.warn("Not an admin:", responseData.Err);
         setLike(false);
       }
     } catch (error) {
       console.error("Error checking admin status:", error.message);
       setError(error.message);
       setLike(false);
-
+  
       if (error.message.toLowerCase().includes("freeze canister")) {
         setIsFreezePopupVisible(true);
       }
     }
   };
+  
 
   /**
    * This function retrieves the list of all users from the backend by calling `get_all_users` method.
@@ -97,10 +115,28 @@ const HealthFactorList = () => {
       console.error("Backend actor not initialized");
       return;
     }
-
+  
     try {
       const allUsers = await backendActor.get_all_users();
-
+  
+      // Assuming certificate is the second element in the result, if it exists
+      const cert = allUsers?.[1];
+  
+      if (cert) {
+        try {
+          const verified = await verifyCertificate(cert);
+          if (!verified) {
+            console.error("Certificate verification failed for users data");
+            return; // Don't proceed with unverified data
+          } else {
+            console.log("Users certificate verified successfully");
+          }
+        } catch (verificationError) {
+          console.error("Error verifying certificate for users:", verificationError);
+          return; // Stop execution if verification fails
+        }
+      }
+  
       if (allUsers.length > 0) {
         setUsers(allUsers);
         setHealthFactorLoading(false);
@@ -110,6 +146,7 @@ const HealthFactorList = () => {
       setHealthFactorLoading(false);
     }
   };
+  
 
   const fetchAssetData = async () => {
     const balances = {};

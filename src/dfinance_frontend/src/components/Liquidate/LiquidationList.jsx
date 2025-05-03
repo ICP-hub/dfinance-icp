@@ -56,7 +56,7 @@ const DebtStatus = () => {
     fetchAssetBorrow,
   } = useAssetData();
 
-  const { getAllUsers, user, backendActor, createLedgerActor } = useAuth();
+  const { getAllUsers, user, backendActor, createLedgerActor ,verifyCertificate} = useAuth();
 
   const { batchFetchReserveData } = useReserveData();
 
@@ -71,14 +71,36 @@ const DebtStatus = () => {
       console.error("Error: Backend actor is not initialized.");
       throw new Error("Backend actor not initialized");
     }
+    
     try {
-      const totalUser = await backendActor.get_total_users();
-      setTotalUsers(totalUser);
+      const result = await backendActor.get_total_users();
+  
+      // Assuming result is a tuple: [data, certificate]
+      const userData = result?.[0];
+      const cert = result?.[1];
+  
+      if (cert) {
+        try {
+          const verified = await verifyCertificate(cert);
+          if (!verified) {
+            console.error("Certificate verification failed for total users");
+            return;
+          } else {
+            console.log("Total users certificate verified successfully");
+          }
+        } catch (verificationError) {
+          console.error("Error verifying certificate for total users:", verificationError);
+          return;
+        }
+      }
+  
+      setTotalUsers(userData || 0);
     } catch (error) {
       console.error("Error fetching total users:", error);
       throw error;
     }
   };
+  
 
   /**
    * Fetches a list of users eligible for liquidation.

@@ -50,36 +50,36 @@ pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
         )
     } else if index == Nat::from(2u32) {
         Ok(
-            Principal::from_text(TESTER_2)
+            Principal::from_text(TESTER_4)
                 .unwrap(),
         )
     } else if index == Nat::from(3u32) {
         Ok(
-            Principal::from_text(TESTER_3)
+            Principal::from_text(TESTER_5)
                 .unwrap(),
         )
     } else if index == Nat::from(4u32) {
         Ok(
-            Principal::from_text(TESTER_4)
+            Principal::from_text(TESTER_6)
                 .unwrap(),
         )
     } else if index == Nat::from(5u32) {
         Ok(
-            Principal::from_text(TESTER_5)
+            Principal::from_text(TESTER_7)
                 .unwrap(),
         )
     }else if index == Nat::from(6u32) {
         Ok(
-            Principal::from_text(TESTER_6)
+            Principal::from_text(TESTER_8)
                 .unwrap(),
         )
     }
-    else if index == Nat::from(7u32) {
-        Ok(
-            Principal::from_text(TESTER_7)
-                .unwrap(),
-        )
-    }
+    // else if index == Nat::from(7u32) {
+    //     Ok(
+    //         Principal::from_text(TESTER_7)
+    //             .unwrap(),
+    //     )
+    // }
      else {
         ic_cdk::println!("No valid input.");
         return Err("No valid input".to_string());
@@ -265,36 +265,36 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
 
     // Pushing second user data
     users_with_low_health.push(LowHealthUsersData {
-        user_principal: get_users_principal(Nat::from(4u32)).unwrap(),
+        user_principal: get_users_principal(Nat::from(2u32)).unwrap(),
         asset_supply: "ckETH".to_string(),
         asset_borrow: "ckETH".to_string(),
         supply_tokens: Nat::from(14_000_000u128), // 0.14 cketh
         borrow_tokens: Nat::from(12_000_000u128), // 0.12 cketh
     });
-    // // Pushing third user data
-    // users_with_low_health.push(LowHealthUsersData {
-    //     user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
-    //     asset_supply: "ckBTC".to_string(),
-    //     asset_borrow: "ckBTC".to_string(),
-    //     supply_tokens: Nat::from(450_000u128), // 0.0045 btc
-    //     borrow_tokens: Nat::from(420_000u128), // 0.0042 btc
-    // });
-    // // Pushing 4th user data
-    // users_with_low_health.push(LowHealthUsersData {
-    //     user_principal: get_users_principal(Nat::from(6u32)).unwrap(),
-    //     asset_supply: "ckUSDC".to_string(),
-    //     asset_borrow: "ckUSDC".to_string(),
-    //     supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
-    //     borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
-    // });
+    // Pushing third user data
+    users_with_low_health.push(LowHealthUsersData {
+        user_principal: get_users_principal(Nat::from(3u32)).unwrap(),
+        asset_supply: "ckBTC".to_string(),
+        asset_borrow: "ckBTC".to_string(),
+        supply_tokens: Nat::from(450_000u128), // 0.0045 btc
+        borrow_tokens: Nat::from(420_000u128), // 0.0042 btc
+    });
+    // Pushing 4th user data
+    users_with_low_health.push(LowHealthUsersData {
+        user_principal: get_users_principal(Nat::from(4u32)).unwrap(),
+        asset_supply: "ckUSDC".to_string(),
+        asset_borrow: "ckUSDC".to_string(),
+        supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
+        borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
+    });
     // // Pushing 5th user data
-    // users_with_low_health.push(LowHealthUsersData {
-    //     user_principal: get_users_principal(Nat::from(7u32)).unwrap(),
-    //     asset_supply: "ckUSDT".to_string(),
-    //     asset_borrow: "ckUSDT".to_string(),
-    //     supply_tokens: Nat::from(30_000_000_000u128), // 300 USDT
-    //     borrow_tokens: Nat::from(25_000_000_000u128), // 250 USDT
-    // });
+    users_with_low_health.push(LowHealthUsersData {
+        user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
+        asset_supply: "ckUSDT".to_string(),
+        asset_borrow: "ckUSDT".to_string(),
+        supply_tokens: Nat::from(30_000_000_000u128), // 300 USDT
+        borrow_tokens: Nat::from(25_000_000_000u128), // 250 USDT
+    });
 
     for user in &users_with_low_health {
         let asset_principal =

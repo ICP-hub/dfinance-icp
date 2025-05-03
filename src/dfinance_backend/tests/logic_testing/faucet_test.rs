@@ -46,7 +46,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     }
 
     let test_cases = vec![
-        //  Valid faucet request for each asset
+        // Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(5_000_000_00u128), // 50 ICP
@@ -244,6 +244,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                 encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
             );
 
+
+
             match result {
                 Ok(WasmResult::Reply(reply)) => {
                     let faucet_response: Result<Nat, errors::Error> =
@@ -287,6 +289,11 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 check_ledger_balances(pic, backend_canister, &[get_users_principal(Nat::from(index)).unwrap()], &[case.asset.clone()]);
                             } else {
                                 ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                                ic_cdk::println!(
+                                    "for: {} , requesting: {}",
+                                    get_users_principal(Nat::from(index)).unwrap(),
+                                    case.amount.clone()
+                                );
                                 continue;
                             }
                         }

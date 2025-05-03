@@ -90,10 +90,10 @@ pub const TESTER_4: &str = "7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshc
 pub const TESTER_5: &str = "oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe";
 
 #[allow(dead_code)]
-pub const TESTER_6: &str = "clj2a-c3msl-jp7wq-h6hup-4vvxi-45imw-lm52h-3vepo-pk7fw-rmuki-lae";
+pub const TESTER_6: &str = "3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae";
 
 #[allow(dead_code)]
-pub const TESTER_7: &str = "tq4rk-ehosv-72vbp-goybc-e6pxv-whqnb-6cghw-oopmv-vorbf-lm7wo-sae";
+pub const TESTER_7: &str = "zjufx-s5v2q-jv7jn-a5qra-pw5vc-rt4hf-arhzn-7kzkq-56msw-xhq5o-yae";
 
 #[allow(dead_code)]
-pub const TESTER_8: &str = "hsz7z-z4zj7-uvxyv-tqidx-ktzsm-i6zjx-wacxz-35uwo-xdtta-g6uai-vae";
+pub const TESTER_8: &str = "4jwha-xpj7p-sk2lp-bdo4u-cijhx-xskuu-qj34g-kqty4-n6jhy-ixgjd-aqe";

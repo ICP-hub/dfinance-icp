@@ -64,7 +64,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
             amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
-            on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
+            on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
             reward_amount: Nat::from(220_496u128), // Reward: 0.00220496 ckBTC
             expect_success: true,
             expected_error_message: None,
@@ -120,7 +120,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             debt_asset: "XYZ".to_string(),
             collateral_asset: "XYZ".to_string(),
             amount: Nat::from(40_000_000u128),
-            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
+            on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
             reward_amount: Nat::from(40_400_000u128),
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),
@@ -140,7 +140,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(0u128),
-            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
+            on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
             reward_amount: Nat::from(150u128),
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
@@ -207,7 +207,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
          * @dev Validates approval status and expected outcomes.
          */
         let approved = test_icrc2_aprove(
-            get_users_principal(Nat::from(1u128)).unwrap(),
+            get_user_principal2(),
             asset_principal,
             &pic,
             backend_canister,
@@ -251,7 +251,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
          */
         let result = pic.update_call(
             backend_canister,
-            get_users_principal(Nat::from(1u32)).unwrap(),
+            get_user_principal2(),
             "execute_liquidation",
             encode_one(liquidation_params).unwrap(),
         );

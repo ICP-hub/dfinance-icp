@@ -190,7 +190,7 @@ pub async fn send_log_to_logs_canister(
 }
 
 pub fn clear_temp_log() {
-    let (logs_canister_id, _cer) = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+    let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
         Ok(id) => id,
         Err(_) => return,
     };

@@ -386,15 +386,14 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
 #[query]
-pub fn get_canister_id_by_name(canister_name: String) -> Result<(Principal, Certificate), Error> {
-    let res = read_state(|state| {
+pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
+    read_state(|state| {
         state
             .canister_list
             .get(&canister_name)
             .ok_or(Error::NoCanisterIdFound) // Return error if not found
-    })?;
-    let cert = get_certificate_witness("canister_id".to_string());
-    Ok((res, cert))
+    })
+    
 }
 
 

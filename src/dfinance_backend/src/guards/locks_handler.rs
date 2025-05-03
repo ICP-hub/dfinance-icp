@@ -62,7 +62,7 @@ impl Drop for CallerGuard {
 
 impl Drop for LogFlusher {
     fn drop(&mut self) {
-        let (logs_canister_id, _cer) = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+        let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
             Ok(id) => id,
             Err(_) => return,
         };

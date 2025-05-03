@@ -15,7 +15,7 @@ use ic_cdk::{caller, query, update};
  * @functionality Controller Permissions Check
  */
 pub fn guard_controller_only() -> Result<(), Error> {
-    let (is_controller, _cert) = to_check_controller();
+    let is_controller = to_check_controller();
     if ic_cdk::caller() == Principal::anonymous() || !is_controller {
         return Err(Error::ErrorNotController);
     } else {
@@ -69,10 +69,10 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
  * @functionality Controller Permissions Check
  */
 #[query]
-pub fn to_check_controller() -> (bool, Certificate) {
-    let cert = get_certificate_witness("controller".to_string());
+pub fn to_check_controller() -> bool {
+   
     let res = ic_cdk::api::is_controller(&ic_cdk::api::caller());
-    (res, cert)
+    res
 }
 
 /*

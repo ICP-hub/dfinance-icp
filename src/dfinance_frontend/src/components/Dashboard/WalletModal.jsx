@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Modal } from "@mui/material";
 import icplogo from "../../../public/wallet/icp.png";
 import nfid from "../../../public/wallet/nfid.png";
 import {
-  setIsWalletConnected,
   setWalletModalOpen,
   setConnectedWallet,
 } from "../../redux/reducers/utilityReducer";
@@ -43,20 +42,6 @@ const WalletModal = () => {
     );
   };
 
-  const handleWallet = () => {
-    dispatch(
-      setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
-    );
-    dispatch(setIsWalletConnected(true));
-    navigate("/dashboard");
-  };
-
-  useEffect(() => {
-    if (isWalletCreated) {
-      navigate("/dashboard/wallet-details");
-    }
-  }, [isWalletCreated]);
-
   /**
    * Handles switching the connected wallet.
    * It logs out the current wallet, switches to the new wallet, and authenticates the new wallet.
@@ -85,11 +70,8 @@ const WalletModal = () => {
     dispatch(setUserData(null));
     logout();
   };
-  const [inputValue, setInputValue] = useState("");
 
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
+  // Function to display the wallet name based on the wallet type
   const walletDisplayName = (wallet) => {
     switch (wallet) {
       case "ii":
@@ -104,6 +86,11 @@ const WalletModal = () => {
         return null;
     }
   };
+  useEffect(() => {
+    if (isWalletCreated) {
+      navigate("/dashboard/wallet-details");
+    }
+  }, [isWalletCreated]);
 
   useEffect(() => {
     const savedWallet = localStorage.getItem("connectedWallet");
@@ -146,7 +133,7 @@ const WalletModal = () => {
               <span> is connected</span>
             </>
           ) : (
-            <span></span> // Show this if no wallet is connected
+            <span></span>
           )}
         </h1>
         <div className="flex flex-col gap-2 mt-3 text-sm">

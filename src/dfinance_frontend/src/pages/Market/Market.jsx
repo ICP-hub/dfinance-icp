@@ -1,25 +1,19 @@
 import { ChevronRight, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
-import Button from "../../components/Common/Button";
+import Button from "../../components/Common/button";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
-import ckBTC from "../../../public/assests-icon/ckBTC.png";
-import cekTH from "../../../public/assests-icon/cekTH.png";
-import ckUSDC from "../../../public/assests-icon/ckusdc.svg";
-import ckUSDT from "../../../public/assests-icon/ckUSDT.svg";
-import icp from "../../../public/assests-icon/ICPMARKET.png";
 import useAssetData from "../../components/customHooks/useAssets";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import MiniLoader from "../../components/Common/MiniLoader";
-import Lottie from "../../components/Common/Lottie";
+import MiniLoader from "../../components/Common/miniLoader";
+import Lottie from "../../components/Common/lottie";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
-const ITEMS_PER_PAGE = 8;
 
 /**
  *
@@ -28,13 +22,12 @@ const ITEMS_PER_PAGE = 8;
  *
  * @returns {JSX.Element} - Returns the component.
  */
-const WalletDetails = () => {
+const Market = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
 
   const [Showsearch, setShowSearch] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -47,7 +40,8 @@ const WalletDetails = () => {
 
   const theme = useSelector((state) => state.theme.theme);
   const chevronColor = theme === "dark" ? "#ffffff" : "#3739b4";
-  const { filteredItems, loading } = useAssetData(searchQuery);
+  const { filteredItems, loading, assets, AssetImages } =
+    useAssetData(searchQuery);
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -66,10 +60,7 @@ const WalletDetails = () => {
   );
 
   const { isAuthenticated, principal } = useAuth();
-  const {
-    isFreezePopupVisible,
-    setIsFreezePopupVisible,
-  } = useUserData();
+  const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const {
     totalMarketSize,
     totalSupplySize,
@@ -83,8 +74,6 @@ const WalletDetails = () => {
    * =================================================================================== */
 
   const itemsPerPage = 8;
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const filteredReserveData = Object.fromEntries(filteredItems);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
@@ -93,6 +82,7 @@ const WalletDetails = () => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
+  // Function to convert string values to numbers
   const convertToNumber = (value) => {
     if (typeof value === "string") {
       const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
@@ -107,12 +97,13 @@ const WalletDetails = () => {
     return 0;
   };
 
+  // function to show search bar
   const showSearchBar = () => {
     setShowSearch(!Showsearch);
   };
 
+  // Function to handle the click event for the "Details" button
   const handleDetailsClick = (asset, assetData) => {
-    setSelectedAsset(asset);
     navigate(`/market/asset-details/${asset}`, { state: { assetData } });
   };
 
@@ -120,11 +111,13 @@ const WalletDetails = () => {
     setShowPopup(false);
   };
 
+  // function to handle search input change
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
   };
 
+  // function to handle the click event for the chevron icon
   const handleChevronClick = (assetName) => {
     const selectedAssetData = currentItems.find(
       (item) => item[0] === assetName
@@ -137,12 +130,14 @@ const WalletDetails = () => {
 
   const popupRef = useRef(null);
 
+  // function to close the popup when clicking outside of it
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
       closePopup();
     }
   };
 
+  // function to format value
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
 
@@ -232,6 +227,7 @@ const WalletDetails = () => {
     dashboardRefreshTrigger,
   ]);
 
+  //function to show the wallet modal
   useEffect(() => {
     if (isWalletCreated) {
       navigate("/dashboard/wallet-details");
@@ -266,13 +262,13 @@ const WalletDetails = () => {
   }, [loading]);
   useEffect(() => {
     if (isFreezePopupVisible) {
-      document.body.style.overflow = "hidden"; // Disable scrolling
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "auto"; // Enable scrolling when popup closes
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = "auto"; // Cleanup function to reset scrolling
+      document.body.style.overflow = "auto";
     };
   }, [isFreezePopupVisible]);
 
@@ -294,11 +290,10 @@ const WalletDetails = () => {
               id="search"
               placeholder="Search assets"
               style={{ fontSize: "0.75rem" }}
-              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${
-                Showsearch
-                  ? "animate-fade-left flex"
-                  : "animate-fade-right hidden"
-              }`}
+              className={`placeholder-gray-500 w-[400px] mr-4 md:block hidden z-20 px-4 py-[7px] focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch
+                ? "animate-fade-left flex"
+                : "animate-fade-right hidden"
+                }`}
               value={searchQuery}
               onChange={handleSearchInputChange}
             />
@@ -306,6 +301,7 @@ const WalletDetails = () => {
         </div>
         <svg
           onClick={showSearchBar}
+          data-testid="search-icon"
           className="cursor-pointer button"
           width="25"
           height="25"
@@ -316,16 +312,16 @@ const WalletDetails = () => {
           <path
             d="M7.35437 12.9725C10.4572 12.9725 12.9725 10.4572 12.9725 7.35436C12.9725 4.25156 10.4572 1.73624 7.35437 1.73624C4.25157 1.73624 1.73625 4.25156 1.73625 7.35436C1.73625 10.4572 4.25157 12.9725 7.35437 12.9725Z"
             stroke="url(#paint0_linear_293_865)"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <path
             d="M11.2613 11.5531L13.4638 13.75"
             stroke="url(#paint1_linear_293_865)"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <defs>
             <linearGradient
@@ -336,8 +332,8 @@ const WalletDetails = () => {
               y2="14"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2E28A5" />
-              <stop offset="1" stop-color="#FAAA98" />
+              <stop stopColor="#2E28A5" />
+              <stop offset="1" stopColor="#FAAA98" />
             </linearGradient>
             <linearGradient
               id="paint1_linear_293_865"
@@ -347,7 +343,7 @@ const WalletDetails = () => {
               y2="13.75"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#C88A9B" />
+              <stop stopColor="#C88A9B" />
             </linearGradient>
           </defs>
         </svg>
@@ -358,9 +354,8 @@ const WalletDetails = () => {
           name="search"
           id="search"
           placeholder="Search assets"
-          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${
-            Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
-          }`}
+          className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[7px] mt-5 mb-1  focus:outline-none box bg-transparent text-black dark:text-white ${Showsearch ? "animate-fade-left flex" : "animate-fade-right hidden"
+            }`}
           value={searchQuery}
           onChange={handleSearchInputChange}
         />
@@ -389,11 +384,10 @@ const WalletDetails = () => {
                     {WALLET_ASSETS_TABLE_COL.slice(0, 2).map((item, index) => (
                       <td key={index} className=" whitespace-nowrap">
                         <div
-                          className={`flex ${
-                            index === 0
-                              ? "justify-start sxs3:pl-2 md:pl-2"
-                              : "justify-center"
-                          }`}
+                          className={`flex ${index === 0
+                            ? "justify-start sxs3:pl-2 md:pl-2"
+                            : "justify-center"
+                            }`}
                         >
                           {item.header}
                         </div>
@@ -423,49 +417,21 @@ const WalletDetails = () => {
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => (
+
                     <tr
                       key={index}
-                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${
-                        index !== currentItems.length - 1
-                          ? "gradient-line-bottom"
-                          : ""
-                      }`}
+                      className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${index !== currentItems.length - 1
+                        ? "gradient-line-bottom"
+                        : ""
+                        }`}
                     >
                       <td className=" align-center py-6 sxs3:pl-2dxs:px-2 dxs:py-[2px] ss4:pl-1  md:pl-2 ">
                         <div className="flex items-center  min-w-[120px] gap-3 whitespace-nowrap">
-                          {item[0] === "ckBTC" && (
+                          {assets?.includes(item[0]) && (
                             <img
-                              src={ckBTC}
-                              alt="ckbtc logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ckETH" && (
-                            <img
-                              src={cekTH}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ckUSDC" && (
-                            <img
-                              src={ckUSDC}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ICP" && (
-                            <img
-                              src={icp}
-                              alt="cketh logo"
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          {item[0] === "ckUSDT" && (
-                            <img
-                              src={ckUSDT}
-                              alt="ckusdt logo"
-                              className="w-8 h-8 rounded-full"
+                              src={AssetImages[assets?.indexOf(item[0])]}
+                              alt={`${item[0]} logo`}
+                              className="w-8 h-8 rounded-full mr-2"
                             />
                           )}
                           {item[0]}
@@ -478,7 +444,7 @@ const WalletDetails = () => {
                             <p className="min-w-[70px] text-center">
                               {(() => {
                                 const assetSupply =
-                                  Number(item[1].Ok.asset_supply) / 100000000;
+                                  Number(item[1].Ok[0].asset_supply) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -517,7 +483,7 @@ const WalletDetails = () => {
                             <p className="font-light text-[12px] text-center">
                               {(() => {
                                 const assetSupply =
-                                  Number(item[1].Ok.asset_supply) / 100000000;
+                                  Number(item[1].Ok[0].asset_supply) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -552,7 +518,7 @@ const WalletDetails = () => {
                               })()}
                             </p>
 
-                            {}
+                            { }
                           </div>
                           <div
                             className="lg:hidden justify-center ml-6"
@@ -561,6 +527,7 @@ const WalletDetails = () => {
                             <ChevronRight
                               size={22}
                               color={chevronColor}
+                              data-testid="chevron-right"
                               className="cursor-pointer"
                             />
                           </div>
@@ -569,16 +536,16 @@ const WalletDetails = () => {
 
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
-                          {(Number(item?.[1]?.Ok?.current_liquidity_rate) *
+                          {(Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
                             100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(item?.[1]?.Ok?.current_liquidity_rate) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-2 align-center hidden lg:table-cell">
@@ -588,7 +555,7 @@ const WalletDetails = () => {
                             <p className="min-w-[150px] text-center">
                               {(() => {
                                 const assetBorrow =
-                                  Number(item[1].Ok.asset_borrow) / 100000000;
+                                  Number(item[1].Ok[0].asset_borrow) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -627,7 +594,7 @@ const WalletDetails = () => {
                             <p className="font-light text-[12px] text-center">
                               {(() => {
                                 const assetBorrow =
-                                  Number(item[1].Ok.asset_borrow) / 100000000;
+                                  Number(item[1].Ok[0].asset_borrow) / 100000000;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -668,14 +635,14 @@ const WalletDetails = () => {
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
-                          {(Number(item?.[1]?.Ok?.borrow_rate) * 100) /
+                          {(Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(item?.[1]?.Ok?.borrow_rate) * 100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </div>
                       </td>
                       <td className="p-3 align-center">
@@ -695,7 +662,7 @@ const WalletDetails = () => {
                 </tbody>
               </table>
             </div>
-            {}
+            { }
 
             {showPopup && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -707,45 +674,20 @@ const WalletDetails = () => {
                     className="absolute top-5 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                     onClick={closePopup}
                   >
-                    <X size={30} />
+                    <X size={30} data-testid="x-icon" />
                   </button>
                   <div>
                     <div className="flex gap-2 justify-start items-center ">
-                      {selectedAssetData[0] === "ckBTC" && (
+                      {assets?.includes(selectedAssetData[0]) && (
                         <img
-                          src={ckBTC}
-                          alt="ckBTC logo"
-                          className="w-8 h-8 rounded-full"
+                          src={
+                            AssetImages[assets?.indexOf(selectedAssetData[0])]
+                          }
+                          alt={`${selectedAssetData[0]} logo`}
+                          className="w-8 h-8 rounded-full mr-2"
                         />
                       )}
-                      {selectedAssetData[0] === "ckETH" && (
-                        <img
-                          src={cekTH}
-                          alt="ckETH logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
-                      {selectedAssetData[0] === "ckUSDC" && (
-                        <img
-                          src={ckUSDC}
-                          alt="ckUSDC logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
-                      {selectedAssetData[0] === "ckUSDT" && (
-                        <img
-                          src={ckUSDT}
-                          alt="ckUSDT logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
-                      {selectedAssetData[0] === "ICP" && (
-                        <img
-                          src={icp}
-                          alt="ICP logo"
-                          className="w-8 h-8 rounded-full"
-                        />
-                      )}
+
                       <p className="text-lg flex-1 font-bold text-[#2A1F9D] dark:text-darkText">
                         {selectedAssetData[0]}
                       </p>
@@ -759,17 +701,17 @@ const WalletDetails = () => {
                         <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
-                              Number(selectedAssetData[1].Ok.asset_supply) /
-                                100000000
+                              Number(selectedAssetData[1].Ok[0].asset_supply) /
+                              100000000
                             )}
                           </p>
 
                           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             $
                             {formatValue(
-                              (Number(selectedAssetData[1].Ok.asset_supply) /
+                              (Number(selectedAssetData[1].Ok[0].asset_supply) /
                                 100000000) *
-                                getUsdRate(selectedAssetData[0])
+                              getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -781,19 +723,19 @@ const WalletDetails = () => {
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {" "}
                           {(Number(
-                            selectedAssetData[1].Ok.current_liquidity_rate
+                            selectedAssetData[1].Ok[0].current_liquidity_rate
                           ) *
                             100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(
-                                  selectedAssetData[1].Ok.current_liquidity_rate
-                                ) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(
+                                selectedAssetData[1].Ok[0].current_liquidity_rate
+                              ) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
 
@@ -804,17 +746,17 @@ const WalletDetails = () => {
                         <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
-                              Number(selectedAssetData[1].Ok.asset_borrow) /
-                                100000000
+                              Number(selectedAssetData[1].Ok[0].asset_borrow) /
+                              100000000
                             )}
                           </p>
 
                           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             $
                             {formatValue(
-                              (Number(selectedAssetData[1].Ok.asset_borrow) /
+                              (Number(selectedAssetData[1].Ok[0].asset_borrow) /
                                 100000000) *
-                                getUsdRate(selectedAssetData[0])
+                              getUsdRate(selectedAssetData[0])
                             )}
                           </p>
                         </div>
@@ -824,22 +766,22 @@ const WalletDetails = () => {
                           Borrow APY:
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {(Number(selectedAssetData[1].Ok.borrow_rate) * 100) /
+                          {(Number(selectedAssetData[1].Ok[0].borrow_rate) * 100) /
                             100000000 <
-                          0.01
+                            0.01
                             ? "<0.01%"
                             : `${(
-                                (Number(selectedAssetData[1].Ok.borrow_rate) *
-                                  100) /
-                                100000000
-                              ).toFixed(2)}%`}
+                              (Number(selectedAssetData[1].Ok[0].borrow_rate) *
+                                100) /
+                              100000000
+                            ).toFixed(2)}%`}
                         </p>
                       </div>
                     </div>
                   </div>
                   <div className="flex w-full justify-center">
                     <button
-                      className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg border-b-[1px] shadow-xl"
+                      className="mt-6 bg-gradient-to-tr from-[#4C5FD8] via-[#D379AB] to-[#FCBD78] text-white rounded-lg px-6 py-1 font-semibold w-[100%] text-lg  shadow-xl"
                       onClick={() =>
                         handleDetailsClick(
                           selectedAssetData[0],
@@ -868,4 +810,4 @@ const WalletDetails = () => {
   );
 };
 
-export default WalletDetails;
+export default Market;

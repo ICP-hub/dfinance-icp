@@ -7,7 +7,7 @@ const joyrideSlice = createSlice({
   },
   reducers: {
     joyRideTrigger: (state) => {
-      state.joyRideTrigger = !state.joyRideTrigger; 
+      state.joyRideTrigger = !state.joyRideTrigger;
     },
   },
 });

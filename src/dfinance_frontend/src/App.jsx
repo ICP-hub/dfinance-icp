@@ -9,12 +9,11 @@ import { setLedgerActor } from "./redux/reducers/ledgerRedcuer";
 import { idlFactory as ledgerIdlFactory } from "../../declarations/token_ledger";
 import useAssetData from "./components/customHooks/useAssets";
 import Joyride from "react-joyride";
-import { getSteps, getStyles } from "../src/components/Common/joyrideConfig";
+import { getSteps, getStyles } from "./components/Common/joyrideConfig";
 import { joyRideTrigger } from "./redux/reducers/joyRideReducer";
-import { Suspense, lazy } from "react";
-import MiniLoader from "./components/Common/MiniLoader";
+import { Suspense } from "react";
+import MiniLoader from "./components/Common/miniLoader";
 
-const RoutesComponent = lazy(() => import("./routes/routes"));
 export default function App() {
   /* ===================================================================================
    *                                  HOOKS
@@ -32,6 +31,7 @@ export default function App() {
     backendActor,
     createLedgerActor,
     reloadLogin,
+    verifyCertificate,
   } = useAuth();
 
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
@@ -92,15 +92,30 @@ export default function App() {
       try {
         const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
         const results = await Promise.all(
-          assets.map((asset) => backendActor.get_asset_principal(asset))
+          assets.map((asset) =>
+            backendActor.get_asset_principal_certified(asset)
+          )
         );
 
-        setAssetPrincipal(
-          assets.reduce((acc, asset, index) => {
-            acc[asset] = results[index]?.Ok?.toText() || null;
-            return acc;
-          }, {})
-        );
+        assets.forEach(async (asset, index) => {
+          const result = results[index];
+
+          if ("Ok" in result) {
+            try {
+              const verification = await verifyCertificate(result.Ok[1]);
+              if (!verification) {
+                console.error(`Certificate verification failed for ${asset}`);
+              }
+            } catch (verificationError) {
+              console.error("Error verifying certificate:", verificationError);
+            }
+          }
+
+          setAssetPrincipal((prevState) => ({
+            ...prevState,
+            [asset]: result?.Ok[0]?.toText() || null,
+          }));
+        });
       } catch (error) {
         console.error("Error fetching asset principals:", error);
       }
@@ -163,7 +178,7 @@ export default function App() {
    */
   const handleJoyrideCallback = (data) => {
     const { status } = data;
-    console.log("data.index", data.index);
+
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
         const storedData = localStorage.getItem("userGuideData");

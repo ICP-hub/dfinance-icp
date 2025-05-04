@@ -1,10 +1,13 @@
 import { AuthClient } from "@dfinity/auth-client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { HttpAgent, Actor } from "@dfinity/agent";
+import { HttpAgent, Actor, blsVerify } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import { createActor } from "../../../declarations/dfinance_backend/index";
 import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
+import { Principal } from "@dfinity/principal";
+import { Certificate, Cbor, reconstruct } from "@dfinity/agent";
+
 const AuthContext = createContext();
 
 const defaultOptions = {
@@ -51,13 +54,9 @@ export const useAuthClient = (options = defaultOptions) => {
   const [user, setUser] = useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
-
-  const {
-    isWalletCreated,
-    isWalletModalOpen,
-    isSwitchingWallet,
-    connectedWallet,
-  } = useSelector((state) => state.utility);
+  const [certObj, setCertObj] = useState(null);
+  const [rootKey, setRootKey] = useState(null);
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
 
   useEffect(() => {
     AuthClient.create(options.createOptions).then((client) => {
@@ -119,6 +118,7 @@ export const useAuthClient = (options = defaultOptions) => {
     localStorage.setItem("sessionStart", Date.now());
   };
 
+  // Function to get login options based on the provider
   const getLoginOptions = (provider) => {
     switch (provider) {
       case "ii":
@@ -156,27 +156,28 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   };
 
+  // function to check sessionstart
   const checkSession = () => {
     const sessionStart = localStorage.getItem("sessionStart");
     if (sessionStart) {
       const elapsedTime = Date.now() - parseInt(sessionStart, 10);
       if (elapsedTime > 24 * 60 * 60 * 1000) {
         logout();
-        
       } else if (elapsedTime > 24 * 60 * 60 * 1000) {
         setSessionTimeout();
       }
     }
   };
 
-  checkSession();
+  useEffect(() => {
+    checkSession();
+  }, []);
 
   /**
    * Updates client state with authentication details.
    * @param {AuthClient} client - AuthClient instance.
    */
   const updateClient = async (client) => {
-    console.log("client", client);
     try {
       const isAuthenticated = await client.isAuthenticated();
       setIsAuthenticated(isAuthenticated);
@@ -203,7 +204,7 @@ export const useAuthClient = (options = defaultOptions) => {
       );
       setBackendActor(backendActor);
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
     }
   };
 
@@ -214,6 +215,7 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   }, []);
 
+  // Function to create a ledger actor
   const createLedgerActor = (canisterId, IdlFac) => {
     const agent = new HttpAgent({ identity });
 
@@ -222,7 +224,8 @@ export const useAuthClient = (options = defaultOptions) => {
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
-  
+
+  // Function to reload login
   const reloadLogin = async () => {
     try {
       if (
@@ -233,69 +236,46 @@ export const useAuthClient = (options = defaultOptions) => {
       }
     } catch (error) {}
   };
-
-  // Registers user
-  const checkUser = async () => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
+  const buffersEqual = (buf1, buf2) => {
+    if (!buf1 || !buf2 || buf1.byteLength !== buf2.byteLength) return false;
+    const view1 = new Uint8Array(buf1);
+    const view2 = new Uint8Array(buf2);
+    for (let i = 0; i < view1.length; i++) {
+      if (view1[i] !== view2[i]) return false;
     }
-
-    try {
-      const identity = authClient.getIdentity();
-      if (!identity.getPrincipal().isAnonymous() && isAuthenticated) {
-        const result = await backendActor.register_user();
-        console.log("result in check user", result);
-        if (result.Ok) {
-          if (result.Ok === "User available") {
-          } else if (result.Ok === "User added") {
-          }
-        } else if (result.Err) {
-          console.error("Error from backend:", result.Err);
-          throw new Error(result.Err);
-        }
-        return result;
-      } else {
-        console.error("Anonymous principals are not allowed.");
-        throw new Error("Anonymous principals are not allowed.");
-      }
-    } catch (error) {
-      console.error("Error in checkUser:", error.message);
-      throw error;
-    }
+    return true;
   };
 
-  useEffect(() => {
-    const runCheckUser = async () => {
-      try {
-        if (backendActor && isAuthenticated) {
-          await checkUser();
-          sessionStorage.setItem("hasCheckedUser", "true"); // Persist flag
-        }
-      } catch (error) {
-        console.error("Error in checkUser:", error);
-      }
-    };
-  
-    if (isAuthenticated) {
-      const hasCheckedUser = sessionStorage.getItem("hasCheckedUser");
-      if (!hasCheckedUser) {
-        runCheckUser();
-      }
-    }
-  }, [backendActor, isAuthenticated]);
-  
-  
+  const verifyCertificate = async (certObj) => {
+    const agent = new HttpAgent({ identity });
+    const rootKey = await agent.fetchRootKey();
+    const cert = new Certificate(
+      certObj.certificate,
+      rootKey,
+      process.env.CANISTER_ID_DFINANCE_BACKEND,
+      blsVerify
+    );
+    await cert.verify();
+    const te = new TextEncoder();
+    const canisterId = Principal.fromText(
+      process.env.CANISTER_ID_DFINANCE_BACKEND
+    );
 
-  // Fetches reserve data for a specific asset
-  const fetchReserveData = async (asset) => {
-    if (!backendActor) {
-      throw new Error("Backend actor not initialized");
-    }
-    try {
-      const reserveData = await backendActor.get_reserve_data(asset);
-      return reserveData;
-    } catch (error) {
-      throw error;
+    const pathData = [
+      te.encode("canister"),
+      canisterId.toUint8Array(),
+      te.encode("certified_data"),
+    ];
+
+    const certifiedData = cert.lookup(pathData);
+
+    let witnessTree = Cbor.decode(certObj.witness);
+    let witnessRootHash = await reconstruct(witnessTree);
+
+    if (!certifiedData || !buffersEqual(certifiedData, witnessRootHash)) {
+      return false;
+    } else {
+      return true;
     }
   };
 
@@ -304,10 +284,31 @@ export const useAuthClient = (options = defaultOptions) => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
+
     try {
-      const allUsers = await backendActor.get_all_users();
+      const allUsers = await backendActor.get_all_users_certified();
+
+      const cert = allUsers?.[1];
+
+      if (cert) {
+        try {
+          const verified = await verifyCertificate(cert);
+          if (!verified) {
+            console.error("Certificate verification failed for users data");
+            return [];
+          }
+        } catch (verificationError) {
+          console.error(
+            "Error verifying certificate for users:",
+            verificationError
+          );
+          return [];
+        }
+      }
+
       return allUsers;
     } catch (error) {
+      console.error("Error fetching users:", error);
       throw error;
     }
   };
@@ -326,9 +327,8 @@ export const useAuthClient = (options = defaultOptions) => {
     createLedgerActor,
     reloadLogin,
     accountIdString,
-    fetchReserveData,
-    checkUser,
     getAllUsers,
+    verifyCertificate,
   };
 };
 

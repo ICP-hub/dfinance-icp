@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import { FOOTER_LINK_1, FOOTER_LINK_2 } from "../../utils/constants";
-import Ellipse from "../Common/Ellipse";
+import Ellipse from "../Common/ellipse";
 import { useAuth } from "../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
@@ -9,17 +9,25 @@ import { Plus, Minus, RefreshCw } from "lucide-react";
 import DFinance from "../../../public/home/favicon.png";
 
 const Footer = () => {
+  /* ===================================================================================
+   *                                  HOOKS
+   * =================================================================================== */
   const location = useLocation();
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
+  const ledgerActors = useSelector((state) => state.ledger);
 
-  useEffect(() => {
-    const savedZoom = localStorage.getItem("zoomLevel");
-    if (savedZoom) {
-      setZoomLevel(parseInt(savedZoom));
-      document.documentElement.style.fontSize = `${savedZoom}%`;
-    }
-  }, []);
+  /* ===================================================================================
+   *                                 STATE-MANAGEMENT
+   * =================================================================================== */
+  const [loading, setLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isTester, setIsTester] = useState(false);
+  const { backendActor } = useAuth();
+
+  /* ===================================================================================
+   *                                  FUNCTIONS
+   * =================================================================================== */
 
   const updateZoom = (newZoom) => {
     document.documentElement.style.fontSize = `${newZoom}%`;
@@ -39,8 +47,6 @@ const Footer = () => {
     updateZoom(100);
   };
 
-  const { backendActor } = useAuth();
-
   const handleLogoClick = () => {
     if (location.pathname === "/") {
       window.scrollTo(0, 0);
@@ -51,11 +57,73 @@ const Footer = () => {
       }, 100);
     }
   };
-  const ledgerActors = useSelector((state) => state.ledger);
-  const [loading, setLoading] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
-  const [isTester, setIsTester] = useState(false);
 
+  // Function to handle approval
+  const handleApprove = async () => {
+    const ledgerActor = ledgerActors.ckUSDC;
+    try {
+      setLoading(true);
+      const approval = await ledgerActor.icrc2_approve({
+        fee: [],
+        memo: [],
+        from_subaccount: [],
+        created_at_time: [],
+        amount: 34000000000,
+        expected_allowance: [],
+        expires_at: [],
+        spender: {
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          subaccount: [],
+        },
+      });
+
+      if (approval?.Ok && approval.Ok > 0n) {
+        setIsApproved(true);
+      } else {
+        setIsApproved(false);
+      }
+    } catch (error) {
+      console.error(`Approval failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to create a user reserve
+  const handleCreateUserReserve = async () => {
+    if (!isApproved) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await backendActor.create_user_reserve_with_low_health(
+        "ckUSDC",
+        "ckUSDC",
+        34000000000,
+        29000000000
+      );
+    } catch (error) {
+      console.error(`Error creating reserve: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ===================================================================================
+   *                                  EFFECTS
+   * =================================================================================== */
+
+  // Load the zoom level from local storage on component mount
+  useEffect(() => {
+    const savedZoom = localStorage.getItem("zoomLevel");
+    if (savedZoom) {
+      setZoomLevel(parseInt(savedZoom));
+      document.documentElement.style.fontSize = `${savedZoom}%`;
+    }
+  }, []);
+
+  // Check if the user is a tester
   useEffect(() => {
     const checkTesterStatus = async () => {
       try {
@@ -69,62 +137,9 @@ const Footer = () => {
     checkTesterStatus();
   }, [backendActor]);
 
-  const handleApprove = async () => {
-    const ledgerActor = ledgerActors.ckUSDC;
-    try {
-      setLoading(true);
-      const approval = await ledgerActor.icrc2_approve({
-        fee: [],
-        memo: [],
-        from_subaccount: [],
-        created_at_time: [],
-        amount: 34000000000, // Adjust amount if needed
-        expected_allowance: [],
-        expires_at: [],
-        spender: {
-          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
-          subaccount: [],
-        },
-      });
-
-      if (approval?.Ok && approval.Ok > 0n) {
-        setIsApproved(true);
-        console.log("Approval successful!");
-      } else {
-        setIsApproved(false);
-        console.log("Approval failed!");
-      }
-    } catch (error) {
-      console.error(`Approval failed: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateUserReserve = async () => {
-    if (!isApproved) {
-      console.log("Please approve before creating a reserve!");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await backendActor.create_user_reserve_with_low_health(
-        "ckUSDC",
-        "ckUSDC",
-        34000000000,
-        29000000000
-      );
-      console.log("Reserve created:", response);
-    } catch (error) {
-      console.error(`Error creating reserve: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
-      <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] relative">
+      <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">
         {}
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
@@ -134,11 +149,13 @@ const Footer = () => {
         </div>
         <div className="w-full flex flex-wrap p-4">
           <div className="w-full md:w-3/12 text-white mb-10 md:mb-0 lg:mb-0">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={handleLogoClick}
+            >
               <img
                 src={DFinance}
                 alt="DFinance"
-                onClick={handleLogoClick}
                 className="w-[40px] md:w-[40px] lg:w-[40px] sxs3:w-[40px] cursor-pointer"
               />
               <h1 className="font-semibold text-[1.4rem] md:text-[2rem]">
@@ -233,7 +250,7 @@ const Footer = () => {
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img
-                    src="./social/X.png"
+                    src="./social/x.png"
                     alt="X"
                     className="w-full h-full object-contain"
                   />
@@ -244,25 +261,25 @@ const Footer = () => {
         </div>
 
         {/* Accessibility Zoom Controls */}
-        <div className="absolute top-4 right-4 flex items-center gap-3 bg-[#608BC1] p-2 rounded-lg text-white">
+        <div className="absolute bottom-12 dxl:left-[6.8rem] left-6 flex items-center gap-2 bg-[#233D63]/50 p-2 rounded-lg text-white border border-gray-100/10">
           <button
             onClick={handleZoomOut}
             className="bg-[#2E5077] p-1 rounded-md hover:bg-gray-600"
           >
-            <Minus size={16} />
+            <Minus size={13} />
           </button>
-          <span className="text-sm font-semibold">{zoomLevel}%</span>
+          <span className="text-[12px] font-semibold">{zoomLevel}%</span>
           <button
             onClick={handleZoomIn}
             className="bg-[#2E5077] p-1 rounded-md hover:bg-gray-600"
           >
-            <Plus size={16} />
+            <Plus size={13} />
           </button>
           <button
             onClick={handleReset}
             className="bg-[#2E5077] p-1 rounded-md hover:bg-gray-600"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={13} />
           </button>
         </div>
       </footer>

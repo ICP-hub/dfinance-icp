@@ -6,6 +6,8 @@ import { useSelector } from "react-redux";
 import useAssetData from "./useAssets";
 import { idlFactory } from "../../../../declarations/debttoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/dtoken";
+import { useReserveData } from "../../context/ReserveDataContext";
+
 /**
  * Custom hook to fetch and manage user data from the backend canister.
  * Includes user account data, health factor, and error handling.
@@ -21,9 +23,12 @@ const useUserData = () => {
     principal,
     user,
     isAuthenticated,
-    fetchReserveData,
     createLedgerActor,
+    verifyCertificate,
   } = useAuth();
+
+  const { batchFetchReserveData } = useReserveData();
+
   const [userData, setUserData] = useState(null);
   const [userAccountData, setUserAccountData] = useState(null);
   const [healthFactorBackend, setHealthFactorBackend] = useState(0);
@@ -43,6 +48,12 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
+      if ("Ok" in result) {
+        const verification = await verifyCertificate(result.Ok[1]);
+        if (!verification) {
+          console.error("Certificate verification failed");
+        }
+      }
       return result;
     } catch (error) {
       setError(error.message);
@@ -57,54 +68,63 @@ const useUserData = () => {
     () => Principal.fromText(principal),
     [principal]
   );
-  
+
   const fetchAssetData = async () => {
-    const balances = [];
+    if (!assets || assets.length === 0) return;
 
-    for (const asset of assets) {
-      const reserveDataForAsset = await fetchReserveData(asset);
-      const dtokenId = reserveDataForAsset?.Ok?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok?.debt_token_canister?.[0];
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
+    try {
+      const batchedReserveData = await batchFetchReserveData(assets);
+      const balances = [];
 
-      if (dtokenId) {
-        const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-        if (dtokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await dtokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.dtokenBalance = balance;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
+      for (const asset of assets) {
+        const reserveDataForAsset = batchedReserveData[asset];
+        const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
+        const debtTokenId =
+          reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
+
+        if (dtokenId) {
+          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          if (dtokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await dtokenActor.icrc1_balance_of(account);
+              assetBalance.dtokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching dtoken balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
-      }
 
-      if (debtTokenId) {
-        const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-
-        if (debtTokenActor) {
-          try {
-            const account = { owner: principalObj, subaccount: [] };
-            const balance = await debtTokenActor.icrc1_balance_of(account);
-            const formattedBalance = Number(balance) / 100000000;
-            assetBalance.debtTokenBalance = balance;
-          } catch (error) {
-            console.error(
-              `Error fetching debt token balance for ${asset}:`,
-              error
-            );
+        if (debtTokenId) {
+          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+          if (debtTokenActor) {
+            try {
+              const account = { owner: principalObj, subaccount: [] };
+              const balance = await debtTokenActor.icrc1_balance_of(account);
+              assetBalance.debtTokenBalance = balance;
+            } catch (error) {
+              console.error(
+                `Error fetching debt token balance for ${asset}:`,
+                error
+              );
+            }
           }
         }
+
+        balances.push(assetBalance);
       }
-      balances.push(assetBalance);
+      setAssetBalances(balances);
+    } catch (error) {
+      console.error("Error fetching asset data:", error);
     }
-    setAssetBalances(balances);
   };
 
   const fetchUserData = async (user) => {
@@ -130,19 +150,13 @@ const useUserData = () => {
           console.error("Invalid principal provided");
           return;
         }
-        const principalObj = Principal.fromText(principal);
 
-        // Extract reserves from userData
-        const reserves = userData?.Ok?.reserves?.[0] || [];
-
-        // Separate objects for asset balances and borrow balances
+        const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
         let assetBalancesObj = [];
         let borrowBalancesObj = [];
 
         reserves.forEach((reserveGroup) => {
-          const asset = reserveGroup[0]; // Extract asset name from reserveGroup
-
-          // Match asset with assetBalances
+          const asset = reserveGroup[0];
           const assetBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.dtokenBalance || 0n;
@@ -150,7 +164,6 @@ const useUserData = () => {
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
 
-          // Only include non-zero balances, push into respective arrays
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -165,22 +178,34 @@ const useUserData = () => {
           }
         });
 
-        console.log("Asset Balances Set:", assetBalancesObj);
-        console.log("Borrow Balances Set:", borrowBalancesObj);
-
-        // If no balances exist, pass an empty array instead of null
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
         const borrowBalancesParam =
           borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
 
-        // Call backend with separate sets for asset and borrow balances
         const result = await backendActor.get_user_account_data(
           [],
           assetBalancesParam,
           borrowBalancesParam
         );
-        console.log("result reslut", result);
+
+        if (result?.Ok?.length > 1 && result.Ok[1]) {
+          try {
+            const verified = await verifyCertificate(result.Ok[1]);
+            if (!verified) {
+              console.error(
+                "Certificate verification failed for user account data"
+              );
+              return;
+            }
+          } catch (e) {
+            console.error(
+              "Error verifying certificate for user account data",
+              e
+            );
+            return;
+          }
+        }
 
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
@@ -188,8 +213,8 @@ const useUserData = () => {
           return;
         }
 
-        if (result?.Ok && result.Ok[4]) {
-          const healthFactor = Number(result.Ok[4]) / 10000000000;
+        if (result?.Ok && result.Ok[0]?.[4]) {
+          const healthFactor = Number(result.Ok[0][4]) / 10000000000;
           if (healthFactor) {
             setHealthFactorBackend(healthFactor);
           } else {

@@ -30,7 +30,6 @@ const useFetchBalanceBackend = () => {
    */
   const fetchBalance = useCallback(
     async (assetType) => {
-      console.log("assetType", assetType);
       if (principalObj) {
         try {
           const account = { owner: principalObj, subaccount: [] };
@@ -41,11 +40,11 @@ const useFetchBalanceBackend = () => {
           ) {
             return;
           }
-          console.log("ledgerActor", ledgerActor);
+
           const balance = await ledgerActor.icrc1_balance_of(account);
 
           const formattedBalance = Number(balance) / 100000000;
-          console.log("formattedBalance", formattedBalance);
+
           switch (assetType) {
             case "ckBTC":
               setCkBTCBalance(formattedBalance);
@@ -70,7 +69,7 @@ const useFetchBalanceBackend = () => {
           console.error(error);
         }
       } else {
-        console.log("Error occured in useFetchBalanceBackend Hook");
+        console.error("Error occured in useFetchBalanceBackend Hook");
       }
     },
     [ledgerActors, principalObj, dashboardRefreshTrigger]

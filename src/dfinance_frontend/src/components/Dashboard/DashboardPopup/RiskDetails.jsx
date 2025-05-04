@@ -16,8 +16,7 @@ import { useSelector } from "react-redux";
  * @returns {JSX.Element} - Returns the RiskPopup component, displaying liquidation risk parameters.
  */
 
-const RiskPopup = ({ onClose, userData, userAccountData }) => {
-
+const RiskPopup = ({ onClose, userAccountData }) => {
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
@@ -28,15 +27,24 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
    *                                  FUNCTIONS
    * =================================================================================== */
 
-  const totalCollateral =parseFloat(Number(userAccountData?.Ok?.[0]) / 100000000) || 0;
-  const totalDebt = parseFloat(Number(userAccountData?.Ok?.[1]) / 100000000) || 0;
-  const health_Factor_Value = Number(userAccountData?.Ok?.[4]) / 10000000000 > 100  
-  ? Infinity  
-  : Math.floor(Number(userAccountData?.Ok?.[4]) / 10000000000 * 100) / 100;
+  const totalCollateral =
+    parseFloat(Number(userAccountData?.Ok[0]?.[0]) / 100000000) || 0;
+  const totalDebt =
+    parseFloat(Number(userAccountData?.Ok[0]?.[1]) / 100000000) || 0;
+  const health_Factor_Value =
+    Number(userAccountData?.Ok[0]?.[4]) / 10000000000 > 100
+      ? Infinity
+      : Math.floor((Number(userAccountData?.Ok[0]?.[4]) / 10000000000) * 100) /
+      100;
   const Ltv_Value = (totalDebt / totalCollateral) * 100;
-  const liquidationThreshold_Value =Number(userAccountData?.Ok?.[3]) / 100000000 || 0  ? (Number(userAccountData?.Ok?.[3]) / 100000000).toFixed(2)  : "0.00";
+  const liquidationThreshold_Value =
+    Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0
+      ? (Number(userAccountData?.Ok[0]?.[3]) / 100000000).toFixed(2)
+      : "0.00";
   const healthFactorMinValue = 1;
-  const Max_Ltv = parseFloat(Number(userAccountData?.Ok?.[2]) / 100000000).toFixed(2);
+  const Max_Ltv = parseFloat(
+    Number(userAccountData?.Ok[0]?.[2]) / 100000000
+  ).toFixed(2);
 
   const handleClickOutside = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -123,10 +131,16 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
 
   const thresholdValue = parseThreshold(liquidationThreshold_Value);
   const MaxLtvValue = parseThreshold(Max_Ltv);
-  const healthFactorPosition =calculateHealthFactorPosition(health_Factor_Value);
-  const healthFactorMinPosition =calculateHealthFactorPosition(healthFactorMinValue);
+  const healthFactorPosition =
+    calculateHealthFactorPosition(health_Factor_Value);
+  const healthFactorMinPosition =
+    calculateHealthFactorPosition(healthFactorMinValue);
   const currentLTVPosition = calculateLTVPosition(Ltv_Value, 0, 100);
-  const currentLTVThresholdPosition = calculateLTVPosition(thresholdValue,0,100);
+  const currentLTVThresholdPosition = calculateLTVPosition(
+    thresholdValue,
+    0,
+    100
+  );
   const currentMaxLtvPosition = calculateMaxLTVPosition(MaxLtvValue, 0, 100);
 
   const healthFactorColor =
@@ -134,47 +148,34 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       ? health_Factor_Value > 3
         ? "#2ecc71"
         : health_Factor_Value <= 1
-        ? "#e74c3c"
-        : health_Factor_Value <= 1.5
-        ? "#e67e22"
-        : health_Factor_Value <= 2
-        ? "#f1c40f"
-        : "#d35400"
+          ? "#e74c3c"
+          : health_Factor_Value <= 1.5
+            ? "#e67e22"
+            : health_Factor_Value <= 2
+              ? "#f1c40f"
+              : "#d35400"
       : health_Factor_Value > 3
-      ? "#1e8b47"
-      : health_Factor_Value <= 1
-      ? "red"
-      : health_Factor_Value <= 1.5
-      ? "#fa6e0d"
-      : health_Factor_Value <= 2
-      ? "#ea580c"
-      : "orange";
+        ? "#1e8b47"
+        : health_Factor_Value <= 1
+          ? "red"
+          : health_Factor_Value <= 1.5
+            ? "#fa6e0d"
+            : health_Factor_Value <= 2
+              ? "#ea580c"
+              : "orange";
 
   const ltvColor =
     theme === "dark"
       ? Ltv_Value >= liquidationThreshold_Value
         ? "#e74c3c"
         : Ltv_Value >= Max_Ltv
-        ? "#e67e22"
-        : "#2ecc71"
+          ? "#e67e22"
+          : "#2ecc71"
       : Ltv_Value >= liquidationThreshold_Value
-      ? "red"
-      : Ltv_Value >= Max_Ltv
-      ? "#fa6e0d"
-      : "#1e8b47";
-
-  const MaxltvColor =
-    theme === "dark"
-      ? Ltv_Value >= Max_Ltv
-        ? "#e67e22"
-        : Ltv_Value < Max_Ltv
-        ? "#008000"
-        : "#00FFFF"
-      : Ltv_Value >= Max_Ltv
-      ? "#fa6e0d"
-      : Ltv_Value < Max_Ltv
-      ? "#1e8b47"
-      : "#00FFFF";
+        ? "red"
+        : Ltv_Value >= Max_Ltv
+          ? "#fa6e0d"
+          : "#1e8b47";
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -198,10 +199,11 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
       <div className="absolute inset-0 bg-black opacity-50"></div>
       <div
         ref={popupRef}
-        className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[95vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
+        className="bg-white rounded-lg overflow-y-auto shadow-lg w-full max-w-[400px] lg:max-w-[780px] max-h-[96vh] mx-4 sm:mx-auto z-10 lg:p-4 p-1 relative dark:bg-darkOverlayBackground"
       >
         <div
           className="h-6 absolute top-2 right-2 text-gray-500 hover:text-gray-700 w-6 cursor-pointer button1"
+          role="button"
           onClick={onClose}
         >
           <X className="text-black dark:text-darkText w-6 h-6" />
@@ -304,17 +306,16 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
                   </text>
                 </svg>
                 <span
-                  className={`ml-2 px-4 py-1 font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${
-                    health_Factor_Value > 3
+                  className={`ml-2 px-4 py-1 font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${health_Factor_Value > 3
                       ? "bg-green-200 text-green-700"
                       : health_Factor_Value <= 1
-                      ? "bg-red-200 text-red-700"
-                      : health_Factor_Value <= 1.5
-                      ? "bg-orange-100 text-orange-500"
-                      : health_Factor_Value <= 2
-                      ? "bg-orange-300 text-orange-600"
-                      : "bg-orange-400 text-orange-800"
-                  }`}
+                        ? "bg-red-200 text-red-700"
+                        : health_Factor_Value <= 1.5
+                          ? "bg-orange-100 text-orange-500"
+                          : health_Factor_Value <= 2
+                            ? "bg-orange-300 text-orange-600"
+                            : "bg-orange-400 text-orange-800"
+                    }`}
                 >
                   {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}
                 </span>
@@ -472,20 +473,18 @@ const RiskPopup = ({ onClose, userData, userAccountData }) => {
                 </svg>
                 <span
                   className={`ml-2 px-4 py-1 -mt-3
-                  ${
-                    Ltv_Value >= liquidationThreshold_Value
+                  ${Ltv_Value >= liquidationThreshold_Value
                       ? "bg-red-200"
                       : Ltv_Value >= Max_Ltv
-                      ? "bg-[#fae8b3]"
-                      : "bg-green-200"
-                  } 
-                  font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${
-                    Ltv_Value >= liquidationThreshold_Value
+                        ? "bg-[#fae8b3]"
+                        : "bg-green-200"
+                    } 
+                  font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${Ltv_Value >= liquidationThreshold_Value
                       ? "text-red-700"
                       : Ltv_Value >= Max_Ltv
-                      ? "text-[#fa6e0d]"
-                      : "text-green-700"
-                  }`}
+                        ? "text-[#fa6e0d]"
+                        : "text-green-700"
+                    }`}
                 >
                   {parseFloat(Ltv_Value)?.toFixed(2) || "0.00"}
                 </span>

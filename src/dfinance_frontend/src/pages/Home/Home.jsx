@@ -2,20 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { Tab, Tabs } from "@mui/material";
 import { ChevronRight } from "lucide-react";
-import Button from "../../components/Common/Button";
-import Ellipse from "../../components/Common/Ellipse";
+import Button from "../../components/Common/button";
+import Ellipse from "../../components/Common/ellipse";
 import Navbar from "../../components/Layout/Navbar";
 import Footer from "../../components/Layout/Footer";
 import HeroSection from "../../components/Home/HeroSection";
 import HowITWork from "../../components/Home/HowITWork";
 import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
-import Loading from "../../components/Common/Loading";
-import {
-  MAIN_NAV_LINK,
-  FAQ_QUESTION,
-  TAB_CARD_DATA,
-} from "../../utils/constants";
+import Loading from "../../components/Common/loading";
+import { MAIN_NAV_LINK, FAQ_QUESTION } from "../../utils/constants";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 
 /**
@@ -25,7 +21,6 @@ import { usePageLoading } from "../../components/customHooks/useLoading";
  */
 const Home = () => {
   const intervalRef = useRef();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const theme = useSelector((state) => state.theme.theme);
   const isLoading = usePageLoading();
   const [currentFAQ, setCurrentFAQ] = useState(0);
@@ -94,12 +89,10 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => window.innerWidth <= 768;
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const visibleCards = isMobile ? TAB_CARD_DATA.slice(0, 4) : TAB_CARD_DATA;
 
   if (isLoading) {
     return <Loading isLoading={isLoading} />;
@@ -191,8 +184,6 @@ const Home = () => {
             </p>
 
             <div className="w-full flex justify-center mt-3">
-              {" "}
-              {}
               <a
                 href="https://dfinance.notion.site/DFinance-Points-System-17544afe836e80ffae46f31b676a7ce7"
                 target="_blank"

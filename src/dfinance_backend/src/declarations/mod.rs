@@ -1,4 +1,2 @@
-pub mod assets;
-pub mod state;
-pub mod storable;
-pub mod transfer;
+pub mod structs;
+pub mod datatypes;

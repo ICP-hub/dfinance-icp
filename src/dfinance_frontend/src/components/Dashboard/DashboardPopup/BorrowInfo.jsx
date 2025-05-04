@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import CircularProgress from "../../Common/CircularProgressbar";
+import CircularProgress from "../../Common/circularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { Info } from "lucide-react";
@@ -16,15 +16,20 @@ import { Info } from "lucide-react";
  * @param {number} props.reserveFactor - Reserve factor percentage.
  */
 
-const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reserveFactor}) => {
-
+const BorrowInfo = ({
+  formatNumber,
+  borrowCap,
+  totalBorrowed,
+  borrowRateAPR,
+  reserveFactor,
+}) => {
   /* 
   ============================
   STATE MANAGEMENT
   ============================
   */
-  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] = useState(false);
-   
+  const [isReserveFactorTooltipVis, setIsReserveFactorTooltipVis] =
+    useState(false);
 
   // Calculate borrowing percentages
   const borrowCapNumber = borrowCap ? Number(borrowCap) : 0;
@@ -72,9 +77,10 @@ const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reser
   // Calculate total borrowed asset and cap
   const assetRate = getAssetRate(id);
 
-  const totalBorrowedAsset = assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
-  const totalBorrowedCap = assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
-   
+  const totalBorrowedAsset =
+    assetRate && totalBorrowed ? Number(totalBorrowed) * assetRate : 0;
+  const totalBorrowedCap =
+    assetRate && borrowCap ? Number(borrowCap) / assetRate : 0;
 
   // Format numerical values
   const formatValue = (value) => {
@@ -132,14 +138,12 @@ const BorrowInfo =({ formatNumber, borrowCap, totalBorrowed, borrowRateAPR,reser
               className={`ease-in-out duration-500 bg-[#5B62FE] h-[2px] w-1/5`}
             />
             <p>
-              {" "}
               <span>{formatValue(totalBorrowed)}</span> of{" "}
               <span>
                 {borrowCap ? formatNumber(Number(totalBorrowedCap)) : "N/A"}
               </span>
             </p>
             <p className="text-[12px] -mt-3">
-              {" "}
               <span>${formatNumber(Number(totalBorrowedAsset))}</span> of{" "}
               <span>
                 $

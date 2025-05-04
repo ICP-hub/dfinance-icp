@@ -1,16 +1,8 @@
 import React from "react";
-import { useEffect, useState } from "react";
 import useAssetData from "../customHooks/useAssets";
 
 const HeroSection = () => {
-  const {  totalSupplySize } = useAssetData();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (totalSupplySize !== null && totalSupplySize !== undefined) {
-      setLoading(false);
-    }
-  }, [totalSupplySize]);
+  const { totalSupplySize } = useAssetData();
 
   return (
     <div
@@ -19,11 +11,11 @@ const HeroSection = () => {
     >
       <div className="w-fit xl:w-[700px] gap-2 flex flex-col items-center justify-center px-8">
         <h1 className="text-xl md:text-3xl xl:text-4xl">
-          {}
+          { }
           <span className="font-semibold bg-gradient-to-tr from-[#4659CF]/100 to-[#C562BD]/70 bg-clip-text text-transparent dark:text-darkText">
             Lend,&nbsp;
           </span>
-          {}
+          { }
           <span className="font-semibold bg-gradient-to-tr from-purple-500 to-pink-400 bg-clip-text text-transparent ">
             Borrow
           </span>

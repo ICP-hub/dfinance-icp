@@ -1,32 +1,26 @@
 import { lazy, Suspense } from "react";
-import CreateWallet from "../components/Dashboard/CreateWallet";
+import CreateWallet from "../pages/Dashboard/Dashboard";
 import Market from "../pages/Market/Market";
 import MainDashboard from "../pages/Dashboard/MainDashboard";
 import Home from "../pages/Home/Home";
-import Faucet from "../pages/Faucet/faucet";
+import Faucet from "../pages/Faucet/Faucet";
 import { Outlet } from "react-router-dom";
-import MiniLoader from "../components/Common/MiniLoader";
+import MiniLoader from "../components/Common/miniLoader";
 
 const Error = lazy(() => import("../pages/Error"));
 const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
-const TransactionHistoryBox = lazy(() =>
-  import("../components/Dashboard/TransactionHistory")
-);
-const StakeDetails = lazy(() => import("../pages/Stake/Stake"));
-const TransactionDetail = lazy(() =>
-  import("../components/Dashboard/Transaction")
-);
 const Liquidate = lazy(() => import("../components/Liquidate/Liquidate"));
-const DashboardCards = lazy(() => import("../pages/info/info"));
+const DashboardCards = lazy(() => import("../pages/info/Info"));
 const HealthFactorList = lazy(() =>
-  import("../components/Dashboard/HealthFactorLIst")
+  import("../components/Dashboard/HealthFactorList")
 );
-const DebtStatus = lazy(() => import("../components/Liquidate/DebtStatus"));
+const LiquidationList = lazy(() => import("../components/Liquidate/LiquidationList"));
+const Logs = lazy(() => import("../pages/Logs"));
 
 const ADMIN_ROUTE = process.env.DFX_ADMIN;
 const HEALTH_FACTOR_ROUTE = process.env.DFX_HEALTH_FACTOR_ROUTE;
-
-export default [
+const isProduction = process.env.DFX_PRODUCTION === 'true';
+const routes = [
   {
     path: "/",
     element: <Home />,
@@ -35,13 +29,7 @@ export default [
     path: "*",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
+        <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
           <Error />
         </Suspense>
       </MainDashboard>
@@ -58,13 +46,7 @@ export default [
       {
         index: true,
         element: (
-          <Suspense
-            fallback={
-              <div className="h-[60vh]">
-                <MiniLoader />
-              </div>
-            }
-          >
+          <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
             <DashboardCards />
           </Suspense>
         ),
@@ -72,13 +54,7 @@ export default [
       {
         path: HEALTH_FACTOR_ROUTE.replace(/^\//, ""),
         element: (
-          <Suspense
-            fallback={
-              <div className="h-[60vh]">
-                <MiniLoader />
-              </div>
-            }
-          >
+          <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
             <HealthFactorList />
           </Suspense>
         ),
@@ -94,16 +70,20 @@ export default [
     ),
   },
   {
+    path: "/logs",
+    element: (
+      <MainDashboard includeDashboardNav={false}>
+      <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
+        <Logs />
+      </Suspense>
+      </MainDashboard>
+    ),
+  },
+  {
     path: "/market/asset-details/:id?",
     element: (
       <MainDashboard>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
+        <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
           <AssetDetails />
         </Suspense>
       </MainDashboard>
@@ -113,46 +93,8 @@ export default [
     path: "/dashboard/asset-details/:id?",
     element: (
       <MainDashboard>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
+        <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
           <AssetDetails />
-        </Suspense>
-      </MainDashboard>
-    ),
-  },
-  {
-    path: "/dashboard/transaction-history",
-    element: (
-      <MainDashboard>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <TransactionHistoryBox />
-        </Suspense>
-      </MainDashboard>
-    ),
-  },
-  {
-    path: "/dashboard/transaction/:id",
-    element: (
-      <MainDashboard>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <TransactionDetail />
         </Suspense>
       </MainDashboard>
     ),
@@ -165,23 +107,8 @@ export default [
       </MainDashboard>
     ),
   },
-  {
-    path: "/stake",
-    element: (
-      <MainDashboard includeDashboardNav={false}>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
-          <StakeDetails />
-        </Suspense>
-      </MainDashboard>
-    ),
-  },
-  {
+  // --- Faucet route only when not production ---
+  !isProduction && {
     path: "/Faucet",
     element: (
       <MainDashboard includeDashboardNav={false}>
@@ -193,13 +120,7 @@ export default [
     path: "/Liquidate",
     element: (
       <MainDashboard includeDashboardNav={false}>
-        <Suspense
-          fallback={
-            <div className="h-[60vh]">
-              <MiniLoader />
-            </div>
-          }
-        >
+        <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
           <Liquidate />
         </Suspense>
       </MainDashboard>
@@ -208,17 +129,13 @@ export default [
       {
         path: "debt-users-list",
         element: (
-          <Suspense
-            fallback={
-              <div className="h-[60vh]">
-                <MiniLoader />
-              </div>
-            }
-          >
-            <DebtStatus />
+          <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
+            <LiquidationList />
           </Suspense>
         ),
       },
     ],
   },
 ];
+
+export default routes.filter(Boolean);

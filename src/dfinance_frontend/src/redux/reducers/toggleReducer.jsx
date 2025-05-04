@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  toggles: {}, 
+  toggles: {},
 };
 
 const toggleSlice = createSlice({
@@ -9,7 +9,7 @@ const toggleSlice = createSlice({
   initialState,
   reducers: {
     setToggled(state, action) {
-     
+
       const { toggles } = action.payload;
       state.toggles = { ...state.toggles, ...toggles };
     },

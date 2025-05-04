@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../utils/useAuthClient";
+import { useReserveData } from "../../context/ReserveDataContext";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
-import { idlFactory } from "../../../../declarations/dtoken";
-import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
@@ -13,26 +12,22 @@ import { useDispatch, useSelector } from "react-redux";
  * @returns {Object} - Returns asset data and utility functions.
  */
 const useAssetData = (searchQuery = "") => {
-  const dispatch = useDispatch();
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const {
-    principal,
-    fetchReserveData,
-    backendActor,
-    isAuthenticated,
-    createLedgerActor,
-  } = useAuth();
+
+  const { principal, backendActor, isAuthenticated, verifyCertificate } =
+    useAuth();
+  const { fetchReserveData, batchFetchReserveData } = useReserveData();
 
   const [assets, setAssets] = useState([]);
+  const [AssetImages, setAssetImages] = useState([]);
   const [reserveData, setReserveData] = useState(null);
   const [totalMarketSize, setTotalMarketSize] = useState(0);
   const [totalSupplySize, setTotalSupplySize] = useState(0);
   const [totalBorrowSize, setTotalBorrowSize] = useState(0);
   const [totalReserveFactor, setTotalReserveFactor] = useState(0);
   const [interestAccure, setInterestAccure] = useState(0);
-  const [error, setError] = useState(null);
   const [asset_supply, setAssetSupply] = useState({});
   const [asset_borrow, setAssetBorrow] = useState({});
   const [loading, setLoading] = useState(true);
@@ -49,80 +44,460 @@ const useAssetData = (searchQuery = "") => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
 
-  // Fetch list of all assets from the backend
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
 
       try {
-        const assetNames = await backendActor.get_all_assets();
-        setAssets(assetNames);
+        const result = await backendActor.get_all_assets_certified();
+        if (result && result[1]) {
+          try {
+            const verification = await verifyCertificate(result[1]);
+            if (!verification) {
+              console.error("Certificate verification failed for assets");
+
+              return;
+            }
+          } catch (verificationError) {
+            console.error(
+              "Error during assets certificate verification:",
+              verificationError
+            );
+
+            return;
+          }
+        }
+
+        const assetData = result[0];
+
+        const names = assetData.map((asset) => asset.asset_name);
+        const images = assetData.map((asset) => asset.image);
+
+        setAssets(names);
+        setAssetImages(images);
       } catch (error) {
-        setError(error.message);
+        console.error("Failed to fetch assets:", error.message);
       }
     };
 
     fetchAssets();
-  }, [backendActor, dashboardRefreshTrigger]);
+  }, [backendActor]);
 
- /**
-   * Fetches the total supply of a specific asset.
-   * @param {string} asset - The asset.
+  /**
+   * Optimized to use batch fetching and leverage the cache
    */
-  const fetchAssetSupply = async (asset) => {
-    if (backendActor && isAuthenticated) {
+  const fetchUserPositions = useCallback(
+    async (assetsList = assets) => {
+      if (!backendActor || !isAuthenticated || assetsList.length === 0) return;
+      setLoading(true);
       try {
-        const reserveDataForAsset = await fetchReserveData(asset);
-        if (reserveDataForAsset.Ok?.id) {
-          const result = await backendActor.user_normalized_supply(
-            reserveDataForAsset.Ok
-          );
-          setAssetSupply((prev) => ({ ...prev, [asset]: result.Ok }));
+        const batchedReserveData = await batchFetchReserveData(assetsList);
+        const assetReserveData = {};
+
+        Object.entries(batchedReserveData).forEach(([asset, data]) => {
+          if (data?.Ok?.id || data?.Ok?.[0]?.id) {
+            assetReserveData[asset] = data.Ok?.id ? data.Ok : data.Ok[0];
+          }
+        });
+
+        if (Object.keys(assetReserveData).length === 0) {
+          console.warn("No valid reserve data found for any assets");
+          return null;
+        }
+
+        const supplyPromises = Object.entries(assetReserveData).map(
+          async ([asset, data]) => {
+            try {
+              const result =
+                await backendActor.user_normalized_supply_certified(data);
+
+              if (result && result.Ok[1]) {
+                try {
+                  const verification = await verifyCertificate(result.Ok[1]);
+                  if (!verification) {
+                    console.error(
+                      `Certificate verification failed for asset supply: ${asset}`
+                    );
+                    return { asset, success: false };
+                  }
+                } catch (verificationError) {
+                  console.error(
+                    "Error during certificate verification:",
+                    verificationError
+                  );
+                  return { asset, success: false };
+                }
+              }
+
+              return { asset, supply: result.Ok[0], success: true };
+            } catch (error) {
+              console.error(
+                `Error fetching supply for ${asset}:`,
+                error.message
+              );
+              return { asset, success: false };
+            }
+          }
+        );
+
+        const borrowPromises = Object.entries(assetReserveData).map(
+          async ([asset, data]) => {
+            try {
+              const result = await backendActor.user_normalized_debt_certified(
+                data
+              );
+
+              if (result && result.Ok[1]) {
+                try {
+                  const verification = await verifyCertificate(result.Ok[1]);
+                  if (!verification) {
+                    console.error(
+                      `Certificate verification failed for asset borrow: ${asset}`
+                    );
+                    return { asset, success: false };
+                  }
+                } catch (verificationError) {
+                  console.error(
+                    "Error during certificate verification:",
+                    verificationError
+                  );
+                  return { asset, success: false };
+                }
+              }
+
+              return { asset, borrow: result.Ok[0], success: true };
+            } catch (error) {
+              console.error(
+                `Error fetching borrow for ${asset}:`,
+                error.message
+              );
+              return { asset, success: false };
+            }
+          }
+        );
+
+        const [supplyResults, borrowResults] = await Promise.all([
+          Promise.all(supplyPromises),
+          Promise.all(borrowPromises),
+        ]);
+
+        setAssetSupply((prevSupply) => {
+          const newSupplyData = { ...prevSupply };
+          supplyResults.forEach(({ asset, supply, success }) => {
+            if (success && supply !== undefined) {
+              newSupplyData[asset] = supply;
+            }
+          });
+          return newSupplyData;
+        });
+
+        setAssetBorrow((prevBorrow) => {
+          const newBorrowData = { ...prevBorrow };
+          borrowResults.forEach(({ asset, borrow, success }) => {
+            if (success && borrow !== undefined) {
+              newBorrowData[asset] = borrow;
+            }
+          });
+          return newBorrowData;
+        });
+
+        const newSupplyData = {};
+        const newBorrowData = {};
+
+        supplyResults.forEach(({ asset, supply, success }) => {
+          if (success && supply !== undefined) {
+            newSupplyData[asset] = supply;
+          }
+        });
+
+        borrowResults.forEach(({ asset, borrow, success }) => {
+          if (success && borrow !== undefined) {
+            newBorrowData[asset] = borrow;
+          }
+        });
+
+        return { supplyData: newSupplyData, borrowData: newBorrowData };
+      } catch (error) {
+        console.error("Error fetching user positions:", error.message);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      assets,
+      backendActor,
+      isAuthenticated,
+      batchFetchReserveData,
+      dashboardRefreshTrigger,
+    ]
+  );
+
+  /**
+   * Legacy individual fetch functions - now optimized to use cached data
+   */
+  const fetchAssetSupply = useCallback(
+    async (asset) => {
+      if (!backendActor || !isAuthenticated) return;
+
+      try {
+        let assetReserveData = reserveData?.[asset]?.Ok;
+
+        if (!assetReserveData) {
+          const reserveDataForAsset = await fetchReserveData(asset);
+
+          if (reserveDataForAsset?.Ok) {
+            let dataToUse;
+            if (reserveDataForAsset.Ok?.id) {
+              dataToUse = reserveDataForAsset.Ok;
+            } else if (
+              Array.isArray(reserveDataForAsset.Ok) &&
+              reserveDataForAsset.Ok.length > 0 &&
+              reserveDataForAsset.Ok[0]?.id
+            ) {
+              dataToUse = reserveDataForAsset.Ok[0];
+            }
+            if (dataToUse) {
+              const result =
+                await backendActor.user_normalized_supply_certified(dataToUse);
+
+              if (result && result[1]) {
+                try {
+                  const verified = await verifyCertificate(result[1]);
+                  if (!verified) {
+                    console.error(
+                      `Certificate verification failed for supply: ${asset}`
+                    );
+                    return;
+                  }
+                } catch (e) {
+                  console.error(
+                    `Error verifying certificate for supply: ${asset}`,
+                    e
+                  );
+                  return;
+                }
+              }
+
+              if (result?.Ok !== undefined) {
+                setAssetSupply((prev) => ({
+                  ...prev,
+                  [asset]: result.Ok,
+                }));
+              }
+            } else {
+              console.error(
+                "Missing or invalid id in data:",
+                reserveDataForAsset
+              );
+            }
+          } else {
+            console.error(
+              "Invalid format for reserveDataForAsset:",
+              reserveDataForAsset
+            );
+          }
         } else {
-          console.error("Missing id in reserveDataForAsset.");
+          let dataToUse;
+
+          if (assetReserveData?.id) {
+            dataToUse = assetReserveData;
+          } else if (
+            Array.isArray(assetReserveData) &&
+            assetReserveData.length > 0 &&
+            assetReserveData[0]?.id
+          ) {
+            dataToUse = assetReserveData[0];
+          }
+
+          if (dataToUse) {
+            const result = await backendActor.user_normalized_supply_certified(
+              dataToUse
+            );
+
+            if (result && result[1]) {
+              try {
+                const verified = await verifyCertificate(result[1]);
+                if (!verified) {
+                  console.error(
+                    `Certificate verification failed for supply: ${asset}`
+                  );
+                  return;
+                }
+              } catch (e) {
+                console.error(
+                  `Error verifying certificate for supply: ${asset}`,
+                  e
+                );
+                return;
+              }
+            }
+
+            if (result?.Ok !== undefined) {
+              setAssetSupply((prev) => ({
+                ...prev,
+                [asset]: result.Ok,
+              }));
+            }
+          } else {
+            console.error(
+              "Invalid format in cached reserveData for asset:",
+              asset
+            );
+          }
         }
       } catch (error) {
         console.error("Error fetching asset supply:", error.message);
       }
-    } else {
-      console.warn("Backend actor or authentication missing.");
-    }
-  };
+    },
+    [
+      backendActor,
+      isAuthenticated,
+      reserveData,
+      fetchReserveData,
+      verifyCertificate,
+      dashboardRefreshTrigger,
+    ]
+  );
 
-  /**
-   * Fetches the total borrowed amount of a specific asset.
-   * @param {string} asset - The asset.
-   */
-  const fetchAssetBorrow = async (asset) => {
-    if (backendActor && isAuthenticated) {
+  const fetchAssetBorrow = useCallback(
+    async (asset) => {
+      if (!backendActor || !isAuthenticated) return;
+
       try {
-        const reserveDataForAsset = await fetchReserveData(asset);
-        if (reserveDataForAsset.Ok?.id) {
-          const result = await backendActor.user_normalized_debt(
-            reserveDataForAsset.Ok
-          );
-          setAssetBorrow((prev) => ({ ...prev, [asset]: result.Ok }));
+        let assetReserveData = reserveData?.[asset]?.Ok;
+
+        if (!assetReserveData) {
+          const reserveDataForAsset = await fetchReserveData(asset);
+
+          if (reserveDataForAsset?.Ok) {
+            let dataToUse;
+            if (reserveDataForAsset.Ok?.id) {
+              dataToUse = reserveDataForAsset.Ok;
+            } else if (
+              Array.isArray(reserveDataForAsset.Ok) &&
+              reserveDataForAsset.Ok.length > 0 &&
+              reserveDataForAsset.Ok[0]?.id
+            ) {
+              dataToUse = reserveDataForAsset.Ok[0];
+            }
+
+            if (dataToUse) {
+              const result = await backendActor.user_normalized_debt_certified(
+                dataToUse
+              );
+
+              if (result && result[1]) {
+                try {
+                  const verified = await verifyCertificate(result[1]);
+                  if (!verified) {
+                    console.error(
+                      `Certificate verification failed for borrow: ${asset}`
+                    );
+                    return;
+                  }
+                } catch (e) {
+                  console.error(
+                    `Error verifying certificate for borrow: ${asset}`,
+                    e
+                  );
+                  return;
+                }
+              }
+
+              if (result?.Ok !== undefined) {
+                setAssetBorrow((prev) => ({
+                  ...prev,
+                  [asset]: result.Ok,
+                }));
+              }
+            } else {
+              console.error(
+                "Missing or invalid id in data:",
+                reserveDataForAsset
+              );
+            }
+          } else {
+            console.error(
+              "Invalid format for reserveDataForAsset:",
+              reserveDataForAsset
+            );
+          }
         } else {
-          console.error("Missing id in reserveDataForAsset.");
+          let dataToUse;
+
+          if (assetReserveData?.id) {
+            dataToUse = assetReserveData;
+          } else if (
+            Array.isArray(assetReserveData) &&
+            assetReserveData.length > 0 &&
+            assetReserveData[0]?.id
+          ) {
+            dataToUse = assetReserveData[0];
+          }
+
+          if (dataToUse) {
+            const result = await backendActor.user_normalized_debt_certified(
+              dataToUse
+            );
+
+            if (result && result[1]) {
+              try {
+                const verified = await verifyCertificate(result[1]);
+                if (!verified) {
+                  console.error(
+                    `Certificate verification failed for borrow: ${asset}`
+                  );
+                  return;
+                }
+              } catch (e) {
+                console.error(
+                  `Error verifying certificate for borrow: ${asset}`,
+                  e
+                );
+                return;
+              }
+            }
+
+            if (result?.Ok !== undefined) {
+              setAssetBorrow((prev) => ({
+                ...prev,
+                [asset]: result.Ok,
+              }));
+            }
+          } else {
+            console.error(
+              "Invalid format in cached reserveData for asset:",
+              asset
+            );
+          }
         }
       } catch (error) {
         console.error("Error fetching asset borrow:", error.message);
       }
-    } else {
-      console.warn("Backend actor or authentication missing.");
-    }
-  };
+    },
+    [
+      backendActor,
+      isAuthenticated,
+      reserveData,
+      fetchReserveData,
+      verifyCertificate,
+      dashboardRefreshTrigger,
+    ]
+  );
 
   /**
    * Fetches asset details and calculates supply, borrow, and reserve factors.
+   * Now optimized to use batch fetching
    */
   useEffect(() => {
     const fetchData = async () => {
-      if (assets.length === 0 || !fetchReserveData) {
+      if (assets.length === 0) {
         return;
       }
       setLoading(true);
       try {
+        const batchedData = await batchFetchReserveData(assets);
         const data = {};
         let totalMarketSizeTemp = 0;
         let totalSupplies = 0;
@@ -130,28 +505,13 @@ const useAssetData = (searchQuery = "") => {
         let reserveFactors = 0;
         let totalAccruedValue = 0;
 
-        const results = await Promise.all(
-          assets.map(async (asset) => {
-            try {
-              const reserveDataForAsset = await fetchReserveData(asset);
-              return { asset, reserveDataForAsset };
-            } catch (err) {
-              console.warn(
-                `Error fetching data for asset ${asset}:`,
-                err.message
-              );
-              return null;
-            }
-          })
-        );
+        Object.entries(batchedData).forEach(([asset, reserveDataForAsset]) => {
+          if (!reserveDataForAsset || !reserveDataForAsset.Ok) return;
 
-        results.forEach((result) => {
-          if (!result || !result.reserveDataForAsset) return;
-
-          const { asset, reserveDataForAsset } = result;
           data[asset] = reserveDataForAsset;
 
-          const assetName = reserveDataForAsset.Ok.asset_name.toString();
+          const assetName = reserveDataForAsset.Ok[0].asset_name.toString();
+
           let assetRate = 0;
 
           switch (assetName) {
@@ -175,22 +535,25 @@ const useAssetData = (searchQuery = "") => {
           }
 
           const supplyCap = parseFloat(
-            Number(reserveDataForAsset.Ok.configuration.supply_cap) / 100000000
+            Number(reserveDataForAsset.Ok[0].configuration.supply_cap) /
+              100000000
           );
           const totalSupply = parseFloat(
-            (Number(reserveDataForAsset.Ok.asset_supply) * (assetRate / 1e8)) /
+            (Number(reserveDataForAsset.Ok[0].asset_supply) *
+              (assetRate / 1e8)) /
               100000000
           );
           const totalBorrow = parseFloat(
-            (Number(reserveDataForAsset.Ok.asset_borrow) * (assetRate / 1e8)) /
+            (Number(reserveDataForAsset.Ok[0].asset_borrow) *
+              (assetRate / 1e8)) /
               100000000
           );
           const reserveFactor = parseFloat(
-            Number(reserveDataForAsset.Ok.configuration.reserve_factor) /
+            Number(reserveDataForAsset.Ok[0].configuration.reserve_factor) /
               100000000
           );
           const interestAccure = parseFloat(
-            Number(reserveDataForAsset.Ok.accure_to_platform) / 100000000
+            Number(reserveDataForAsset.Ok[0].accure_to_platform) / 100000000
           );
           const accruedValue = interestAccure * (assetRate / 1e8);
 
@@ -200,27 +563,22 @@ const useAssetData = (searchQuery = "") => {
           totalBorrowes += parseInt(totalBorrow);
           reserveFactors = reserveFactor;
         });
-
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies));
         setTotalBorrowSize(formatNumber(totalBorrowes));
         setTotalReserveFactor(formatNumber(reserveFactors));
         setInterestAccure(formatNumber(totalAccruedValue));
-
-        console.log("Data successfully fetched and state updated.");
       } catch (err) {
         console.error("Error during fetch:", err.message);
-        setError(err.message);
       } finally {
-        console.log("Fetch completed.");
         setLoading(false);
       }
     };
     fetchData();
   }, [
     assets,
-    fetchReserveData,
+    batchFetchReserveData,
     principal,
     ckUSDTUsdRate,
     ckICPUsdRate,
@@ -229,7 +587,6 @@ const useAssetData = (searchQuery = "") => {
     ckBTCUsdRate,
   ]);
 
-  // Filter assets based on search query
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(
@@ -245,9 +602,9 @@ const useAssetData = (searchQuery = "") => {
       : [];
 
   const formatNumber = useFormatNumber();
-
   return {
     assets,
+    AssetImages,
     reserveData,
     filteredItems,
     totalMarketSize,
@@ -261,6 +618,7 @@ const useAssetData = (searchQuery = "") => {
     setLoading,
     fetchAssetBorrow,
     fetchAssetSupply,
+    fetchUserPositions,
   };
 };
 

@@ -1,8 +1,10 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const FreezeCanisterPopup = ({ onClose }) => {
   const navigate = useNavigate();
 
+  //Handle Close function
   const handleClose = () => {
     onClose();
     navigate("/");

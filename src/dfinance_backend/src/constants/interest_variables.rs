@@ -1,5 +1,6 @@
 pub mod constants {
 
+    //TODO: if we try to see the file name then i think most of the constant variable in this file are not justifying their location. 
     // ------------------- Interest Rate Constants -------------------
     pub const CKBTC_OPTIMAL_USAGE_RATIO: u128 = 45;
     pub const CKBTC_MAX_EXCESS_USAGE_RATIO: u128 = 55;
@@ -43,14 +44,14 @@ pub mod constants {
     pub const TRANSFER_FEE: u64 = 0;
     pub const DECIMALS: u8 = 8;
     pub const MAX_MEMO_LENGTH: u16 = 256;
-    pub const MAX_NUMBER_OF_ACCOUNTS: u64 = 1000;
+    pub const MAX_NUMBER_OF_ACCOUNTS: u64 = 1_000;
     pub const ACCOUNTS_OVERFLOW_TRIM_QUANTITY: u64 = 100;
-    pub const NUM_BLOCKS_TO_ARCHIVE: usize = 1000;
-    pub const TRIGGER_THRESHOLD: usize = 2000;
+    pub const NUM_BLOCKS_TO_ARCHIVE: usize = 1_000;
+    pub const TRIGGER_THRESHOLD: usize = 2_000;
     pub const MAX_TRANSACTIONS_PER_RESPONSE: u64 = 200;
     pub const MAX_MESSAGE_SIZE_BYTES: u64 = 1024;
     pub const CYCLES_FOR_ARCHIVE_CREATION: u64 = 100_000_000_000;
-    pub const NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2000;
+    pub const NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2_000;
 
     // ------------------- Test Token Canister Constants -------------------
 
@@ -58,25 +59,24 @@ pub mod constants {
     pub const TEST_TRANSFER_FEE: u64 = 0;
     pub const TEST_DECIMALS: u8 = 8;
     pub const TEST_MAX_MEMO_LENGTH: u16 = 256;
-    pub const TEST_MAX_NUMBER_OF_ACCOUNTS: u64 = 1000;
+    pub const TEST_MAX_NUMBER_OF_ACCOUNTS: u64 = 1_000;
     pub const TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY: u64 = 100;
-    pub const TEST_NUM_BLOCKS_TO_ARCHIVE: usize = 1000;
-    pub const TEST_TRIGGER_THRESHOLD: usize = 2000;
+    pub const TEST_NUM_BLOCKS_TO_ARCHIVE: usize = 1_000;
+    pub const TEST_TRIGGER_THRESHOLD: usize = 2_000;
     pub const TEST_MAX_TRANSACTIONS_PER_RESPONSE: u64 = 200;
     pub const TEST_MAX_MESSAGE_SIZE_BYTES: u64 = 1024;
     pub const TEST_CYCLES_FOR_ARCHIVE_CREATION: u64 = 100_000_000_000;
-    pub const TEST_NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2000;
+    pub const TEST_NODE_MAX_MEMORY_SIZE_BYTES: u64 = 2_000;
 
     // ------------------- General Constants -------------------
-    pub const INITIAL_DEBT_INDEX: u128 = 100000000;
-    pub const SCALING_FACTOR: u128 = 100000000;
+    pub const INITIAL_DEBT_INDEX: u128 = 100_000_000;
+    pub const SCALING_FACTOR: u128 = 100_000_000;
     pub const MIN_BORROW: u128 = 100;
 
+    //TODO: i think we should remove this from this file keep it in other file.
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
 
-    // -------------------Timestamp Constants -------------------
-    pub const CURRENT_TIMESTAMP: u64 = 1_000_000_000;
 
     // -------------------Max Value Constants -------------------
     pub const MAX_VALUE: u128 = 340_282_366_920_938_463_463_374_607_431_768_211_455u128;

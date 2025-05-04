@@ -4,10 +4,10 @@ use serde::Serialize;
 
 #[derive(Debug, CandidType, Deserialize, Clone)]
 pub struct ReserveData {
-    pub asset_name: Option<String>,
+    pub asset_name: String,
     pub id: u16,
-    pub d_token_canister: Option<String>,
-    pub debt_token_canister: Option<String>,
+    pub d_token_canister: Option<Principal>,
+    pub debt_token_canister: Option<Principal>,
     pub borrow_rate: Nat,
     pub current_liquidity_rate: Nat,
     pub asset_supply: Nat,
@@ -21,17 +21,20 @@ pub struct ReserveData {
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct Certificate {
+    pub certificate: Vec<u8>,
+    pub witness: Vec<u8>,
+}
+
+#[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct ReserveConfiguration {
     pub ltv: Nat,
     pub liquidation_threshold: Nat,
     pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: Nat,
-    pub supply_cap: Nat,
+    pub borrow_cap: Nat, //TODO set it according to borrow
+    pub supply_cap: Nat, //set it according to supply
     pub liquidation_protocol_fee: Nat,
-    pub active: bool,
-    pub frozen: bool,
-    pub paused: bool,
     pub reserve_factor: Nat,
 }
 #[derive(CandidType, Deserialize)]
@@ -80,10 +83,10 @@ pub enum TransferFromError {
     InsufficientFunds { balance: Nat },
 }
 
-#[derive(CandidType)]
-pub enum LedgerArgument {
-    Init(InitArgs),
-}
+// #[derive(CandidType)]
+// pub enum LedgerArgument {
+//     Init(InitArgs),
+// }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct Account {
@@ -184,7 +187,6 @@ pub struct ExecuteLiquidationParams {
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
 
@@ -194,13 +196,9 @@ pub struct UserReserveData {
     pub last_update_timestamp: u64,
     pub liquidity_index: Nat,
     pub variable_borrow_index: Nat,
-    pub asset_supply: Nat,
-    pub asset_borrow: Nat,
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
-    pub faucet_usage: Nat,
-    pub faucet_limit: Nat,
     pub d_token_balance: Nat,
     pub debt_token_blance: Nat,
 }
@@ -208,8 +206,8 @@ pub struct UserReserveData {
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    pub total_collateral: Option<Nat>,
-    pub total_debt: Option<Nat>,
+    // pub total_collateral: Option<Nat>,
+    // pub total_debt: Option<Nat>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 
@@ -241,6 +239,7 @@ pub struct ReserveCache {
     pub curr_supply: Nat,
 }
 
+#[allow(dead_code)]
 pub struct AccrueToTreasuryLocalVars {
     pub prev_total_variable_debt: Nat,
     pub curr_total_variable_debt: Nat,

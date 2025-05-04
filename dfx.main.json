@@ -1,0 +1,108 @@
+{
+  "canisters": {
+    "ckbtc_ledger": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "mxzaz-hqaaa-aaaar-qaada-cai"
+        }
+      }
+    },
+    "cketh_ledger": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",
+      "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "ss2fx-dyaaa-aaaar-qacoq-cai"
+        }
+      }
+    },
+    "icp_ledger": {
+      "type": "custom",
+     "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",  
+      "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz", 
+      "remote": {
+        "id": {
+          "ic": "ryjl3-tyaaa-aaaaa-aaaba-cai"
+        }
+      }
+    },
+    "ckusdc_ledger": {
+      "type": "custom",
+     "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",  
+      "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz", 
+      "remote": {
+        "id": {
+          "ic": "xevnm-gaaaa-aaaar-qafnq-cai"
+        }
+      }
+    },
+    "ckusdt_ledger": {
+    "type": "custom",
+    "candid": "https://raw.githubusercontent.com/dfinity/ic/17df8febdb922c3981475035d830f09d9b990a5a/rs/rosetta-api/icrc1/ledger/ledger.did",
+    "wasm": "https://download.dfinity.systems/ic/17df8febdb922c3981475035d830f09d9b990a5a/canisters/ic-icrc1-ledger.wasm.gz",
+    "remote": {
+      "id": {
+        "ic": "mxzaz-hqaaa-aaaar-qaada-cai"
+      }
+    }
+  },    
+    "dfinance_backend": {
+      "candid": "src/dfinance_backend/dfinance_backend.did",
+      "package": "dfinance_backend",
+      "type": "rust"
+    },
+    "xrc": {
+      "type": "custom",
+      "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",
+      "id": "uf6dk-hyaaa-aaaaq-qaaaq-cai",
+      "wasm": "https://github.com/THLO/xrc_demo/raw/refs/heads/main/xrc/xrc.wasm.gz",
+      "remote": {
+        "candid": "https://raw.githubusercontent.com/THLO/xrc_demo/refs/heads/main/xrc/xrc.did",
+        "id": {
+          "ic": "uf6dk-hyaaa-aaaaq-qaaaq-cai"
+        }
+      }
+    },
+    "dtoken": {
+      "candid": "src/dtoken/dtoken.did",
+      "package": "dtoken",
+      "type": "rust"
+    },
+    "debttoken": {
+      "candid": "src/debttoken/debttoken.did",
+      "package": "debttoken",
+      "type": "rust"
+    },
+    "logs": {
+      "candid": "src/logs/logs.did",
+      "package": "logs",
+      "type": "rust"
+    },
+    "dfinance_frontend": {
+      "dependencies": [
+        "dfinance_backend"
+      ],
+      "source": [
+        "src/dfinance_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "dfinance_frontend"
+    },
+    "internet_identity": {
+      "type": "pull",
+      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

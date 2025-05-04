@@ -3,21 +3,32 @@ use crate::utils::structs::*;
 use candid::{decode_one, encode_args, encode_one, Principal};
 use candid::{CandidType, Deserialize, Nat};
 use pocket_ic::{PocketIc, WasmResult};
+use crate::utils::constant_variables::*;
+
 
 /*
  * @title Get User Principal
  * @notice Returns a predefined principal ID.
  * @dev Converts a fixed text representation into a Principal type.
+ * @functionality Returns a predefined principal for the user.
  */
+#[allow(dead_code)]
 pub fn get_user_principal() -> Principal {
-    Principal::from_text("zcfkh-4mzoh-shpaw-tthfa-ak7s5-oavgv-vwjhz-tdupg-3bxbo-2p2je-7ae").unwrap()
+    Principal::from_text(TESTER_2).unwrap()
+}
+
+#[allow(dead_code)]
+pub fn get_user_principal2() -> Principal {
+    Principal::from_text(TESTER_3).unwrap()
 }
 
 /*
  * @title Generate Principals
  * @notice Creates a list of unique Principal IDs.
  * @dev Generates `count` principals using a sequential byte pattern.
+ * @functionality Generates a list of unique Principal IDs based on a count.
  */
+#[allow(dead_code)]
 pub fn generate_principals(count: usize) -> Vec<Principal> {
     (1..=count)
         .map(|i| Principal::from_slice(&[i as u8; 29])) // 29-byte unique Principal
@@ -28,34 +39,48 @@ pub fn generate_principals(count: usize) -> Vec<Principal> {
  * @title Get User Principal
  * @notice Retrieves a predefined Principal based on the given index.
  * @dev Returns an error if the index is out of the predefined range.
+ * @functionality Retrieves a user principal based on an index value.
  */
+#[allow(dead_code)]
 pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
     if index == Nat::from(1u32) {
         Ok(
-            Principal::from_text("d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe")
+            Principal::from_text(TESTER_1)
                 .unwrap(),
         )
     } else if index == Nat::from(2u32) {
         Ok(
-            Principal::from_text("a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae")
+            Principal::from_text(TESTER_4)
                 .unwrap(),
         )
     } else if index == Nat::from(3u32) {
         Ok(
-            Principal::from_text("vgwvq-vfd6w-fphlc-bbw46-uef3k-pgsdk-4pimw-k4cge-gbzts-wxbuu-tae")
+            Principal::from_text(TESTER_5)
                 .unwrap(),
         )
     } else if index == Nat::from(4u32) {
         Ok(
-            Principal::from_text("7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshcl-ggv2m-yae")
+            Principal::from_text(TESTER_6)
                 .unwrap(),
         )
     } else if index == Nat::from(5u32) {
         Ok(
-            Principal::from_text("oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe")
+            Principal::from_text(TESTER_7)
                 .unwrap(),
         )
-    } else {
+    }else if index == Nat::from(6u32) {
+        Ok(
+            Principal::from_text(TESTER_8)
+                .unwrap(),
+        )
+    }
+    // else if index == Nat::from(7u32) {
+    //     Ok(
+    //         Principal::from_text(TESTER_7)
+    //             .unwrap(),
+    //     )
+    // }
+     else {
         ic_cdk::println!("No valid input.");
         return Err("No valid input".to_string());
     }
@@ -65,14 +90,16 @@ pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
  * @title Get Users Principals Vector
  * @notice Returns a vector of predefined Principal identifiers.
  * @dev Filters out any invalid Principal conversions and collects valid ones into a vector.
+ * @functionality Retrieves a vector of predefined user principals.
  */
+#[allow(dead_code)]
 pub fn get_users_principals_vector() -> Vec<Principal> {
     vec![
-        "d3xlc-xvjnt-uj2f3-jfuct-cn2aj-w32qa-qzqc4-jyjiq-sv6qd-s7zr7-vqe",
-        "a4q4s-xga7n-4rdq4-omxar-uoaxs-vugpu-5vd2b-5naaq-62wll-46mir-aae",
-        "vgwvq-vfd6w-fphlc-bbw46-uef3k-pgsdk-4pimw-k4cge-gbzts-wxbuu-tae",
-        "7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshcl-ggv2m-yae",
-        "oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe",
+        TESTER_1,
+        TESTER_2,
+        TESTER_3,
+        TESTER_4,
+        TESTER_5,
     ]
     .into_iter()
     .filter_map(|s| Principal::from_text(s).ok()) // Convert each string into a Principal
@@ -87,7 +114,9 @@ pub fn get_users_principals_vector() -> Vec<Principal> {
  * @param backend_canister The principal of the backend canister handling asset queries.
  * @return An Option<Principal> containing the asset's principal if found, otherwise None.
  * @dev Handles multiple error cases including query rejection, decoding failure, and backend errors.
+ * @functionality Queries the backend canister to get the principal of an asset.
  */
+#[allow(dead_code)]
 pub fn test_get_asset_principal(
     asset: String,
     pic: &PocketIc,
@@ -96,23 +125,21 @@ pub fn test_get_asset_principal(
     let result = pic.query_call(
         backend_canister,
         Principal::anonymous(),
-        "get_asset_principal",
+        "get_asset_principal_certified", // This should return a tuple (Principal, Certificate)
         encode_one(asset.clone()).unwrap(),
     );
 
-    let asset_canister_id = match result {
+    match result {
         Ok(WasmResult::Reply(response_data)) => {
-            match decode_one::<Result<Principal, errors::Error>>(&response_data) {
-                Ok(Ok(principal)) => Some(principal),
+            // Try to decode the tuple: (Principal, Certificate)
+            match decode_one::<Result<(Principal, Certificate), errors::Error>>(&response_data) {
+                Ok(Ok((principal, _certificate))) => Some(principal),
                 Ok(Err(err)) => {
-                    ic_cdk::println!("Output error: Error retrieving asset principal: {:?}", err);
+                    ic_cdk::println!("Error retrieving asset principal: {:?}\n", err.message());
                     None
                 }
                 Err(decode_err) => {
-                    ic_cdk::println!(
-                        "Output error: Error retrieving asset principal with error: {:?}",
-                        decode_err
-                    );
+                    ic_cdk::println!("Error decoding asset principal response: {:?}\n", decode_err);
                     None
                 }
             }
@@ -125,9 +152,9 @@ pub fn test_get_asset_principal(
             println!("Query call failed: {}", call_err);
             None
         }
-    };
-    return asset_canister_id;
+    }
 }
+
 
 /*
  * @title ICRC-2 Approve Function
@@ -140,7 +167,9 @@ pub fn test_get_asset_principal(
  * @return A boolean indicating whether the approval was successful.
  * @dev This function encodes the approval arguments, sends an update call, and processes the response.
  * @dev It handles multiple error scenarios such as rejection, decoding failure, and transaction errors.
+ * @functionality Approves a backend canister to spend a specified amount of an asset on behalf of the user.
  */
+#[allow(dead_code)]
 pub fn test_icrc2_aprove(
     user_principal: Principal,
     asset_principal: Principal,
@@ -161,6 +190,7 @@ pub fn test_icrc2_aprove(
             subaccount: None,
         },
     };
+
     let args_encoded = encode_one(approve_args).expect("Failed to encode approve arguments");
     ic_cdk::println!("🟦 ICRC2 Approving ...");
     let approve_result = pic.update_call(
@@ -176,7 +206,8 @@ pub fn test_icrc2_aprove(
             let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
             match approve_response {
                 Ok(ApproveResult::Ok(block_index)) => {
-                    ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
+                    ic_cdk::println!("☑️  Approve succeeded, block index: {}\n", block_index);
+                    ic_cdk::println!("---------------------------------------------------\n");
                     return true;
                 }
                 Ok(ApproveResult::Err(error)) => {
@@ -198,7 +229,6 @@ pub fn test_icrc2_aprove(
             return false;
         }
     }
-    return false;
 }
 
 /*
@@ -209,7 +239,9 @@ pub fn test_icrc2_aprove(
  * - It ensures that the approval process for ICRC2 transfers is validated before supply operations.
  * - Each user is assigned an asset to supply and borrow with predefined amounts.
  * - The function also verifies the expected behavior and error handling in case of failures.
+ * @functionality Tests creating a user reserve with a low health factor by simulating supply and borrow operations.
  */
+#[allow(dead_code)]
 pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, CandidType, Deserialize, Clone)]
     struct LowHealthUsersData {
@@ -235,8 +267,8 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(2u32)).unwrap(),
         asset_supply: "ckETH".to_string(),
         asset_borrow: "ckETH".to_string(),
-        supply_tokens: Nat::from(14000000u128), // 0.14 cketh
-        borrow_tokens: Nat::from(12000000u128), // 0.12 cketh
+        supply_tokens: Nat::from(14_000_000u128), // 0.14 cketh
+        borrow_tokens: Nat::from(12_000_000u128), // 0.12 cketh
     });
     // Pushing third user data
     users_with_low_health.push(LowHealthUsersData {
@@ -254,7 +286,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
         borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
     });
-    // Pushing 5th user data
+    // // Pushing 5th user data
     users_with_low_health.push(LowHealthUsersData {
         user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
         asset_supply: "ckUSDT".to_string(),
@@ -304,7 +336,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
                         .expect("Failed to decode create_user_reserve_with_low_health response");
 
                 match create_user_response {
-                    Ok(data) => {
+                    Ok(_) => {
                         ic_cdk::println!(
                             "✅ Create_user_reserve_with_low_health function succeeded"
                         );
@@ -340,8 +372,11 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
  * @param backend_canister - Backend canister's principal.
  * @param user_principal - Principal of the caller.
  * @param tester_principal - Principal of the tester to add.
- * Handles errors and panics on failure.
+ * @dev Encodes the tester principal and sends an update call to add the tester.
+ * @dev Handles errors and panics on failure to ensure test visibility.
+ * @functionality Adds a new tester principal to the backend canister and verifies the operation.
  */
+#[allow(dead_code)]
 pub fn test_add_tester(
     pic: &PocketIc,
     backend_canister: Principal,
@@ -385,23 +420,25 @@ pub fn test_add_tester(
  * @param pic - PocketIc instance for executing the query.
  * @param backend_canister - Backend canister's principal.
  * @param asset - Asset identifier.
- * Handles decoding and logs reserve details or errors.
+ * @dev Sends a query to fetch reserve metrics like supply, borrow, and indices.
+ * @functionality Retrieves and logs current reserve state for a specified asset from the backend canister.
  */
+#[allow(dead_code)]
 pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &str) {
     let result = pic.query_call(
         backend_canister,
         get_user_principal(),
-        "get_reserve_data",
+        "get_reserve_data_certified",
         encode_one(asset.to_string()).unwrap(),
     );
 
     match result {
         Ok(WasmResult::Reply(reply)) => {
-            let supply_response: Result<ReserveData, errors::Error> =
-                candid::decode_one(&reply).expect("Failed to decode reserve data response");
+            // Decode as: Result<(ReserveData, Certificate), Error>
+            let decoded_result = decode_one::<Result<(ReserveData, Certificate), errors::Error>>(&reply);
 
-            match supply_response {
-                Ok(balance) => {
+            match decoded_result {
+                Ok(Ok((balance, _certificate))) => {
                     ic_cdk::println!(
                         "Reserve Data - Last Update Timestamp for {}: {:?}",
                         asset,
@@ -427,9 +464,22 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
                         asset,
                         balance.liquidity_index
                     );
+                    ic_cdk::println!(
+                        "Reserve Data - Borrow Rate for {}: {:?}",
+                        asset,
+                        balance.borrow_rate
+                    );
+                    ic_cdk::println!(
+                        "Reserve Data - Current Liquidity Rate for {}: {:?}",
+                        asset,
+                        balance.current_liquidity_rate
+                    );
                 }
-                Err(error) => {
-                    ic_cdk::println!("Failed to retrieve reserve data for {}: {:?}", asset, error);
+                Ok(Err(error)) => {
+                    ic_cdk::println!("Backend returned an error for {}: {:?}", asset, error.message());
+                }
+                Err(decode_error) => {
+                    ic_cdk::println!("Decoding error for {}: {:?}", asset, decode_error);
                 }
             }
         }
@@ -442,14 +492,17 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
     }
 }
 
+
 /*
  * Fetches user data for a given asset.
  * @param pic - PocketIc instance for executing the query.
  * @param backend_canister - Backend canister's principal.
  * @param user_principal - User's principal.
  * @param asset - Asset identifier.
- * Logs user-specific reserve details or errors.
+ * @dev Retrieves user-specific reserve metrics like balances and indices.
+ * @functionality Queries and logs user's asset-related reserve data from the backend canister.
  */
+#[allow(dead_code)]
 pub fn fetch_user_data(
     pic: &PocketIc,
     backend_canister: Principal,
@@ -465,59 +518,275 @@ pub fn fetch_user_data(
 
     match result {
         Ok(WasmResult::Reply(reply)) => {
-            let user_response: Result<UserData, errors::Error> =
-                candid::decode_one(&reply).expect("Failed to decode user data response");
+            // Decode response as Result<(UserData, Certificate), Error>
+            let decoded_result = candid::decode_one::<Result<(UserData, Certificate), errors::Error>>(&reply);
 
-            match user_response {
-                Ok(user_data) => {
+            match decoded_result {
+                Ok(Ok((user_data, _certificate))) => {
                     if let Some(reserves) = &user_data.reserves {
-                        for (reserve_asset, reserve_data) in reserves {
-                            if reserve_asset == asset {
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Last Update Timestamp: {:?}",
-                                    asset,
-                                    reserve_data.last_update_timestamp
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | dToken Balance: {:?}",
-                                    asset,
-                                    reserve_data.d_token_balance
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Debt Token Balance: {:?}",
-                                    asset,
-                                    reserve_data.debt_token_blance
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Liquidity Index: {:?}",
-                                    asset,
-                                    reserve_data.liquidity_index
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Variable Borrow Index: {:?}",
-                                    asset,
-                                    reserve_data.variable_borrow_index
-                                );
-                            }
+                        if let Some((_, reserve_data)) = reserves.iter().find(|(name, _)| name == asset) {
+                            ic_cdk::println!(
+                                "✅ User Data (Certified) for {} | Last Update Timestamp: {:?}",
+                                asset, reserve_data.last_update_timestamp
+                            );
+                            ic_cdk::println!(
+                                "dToken Balance: {:?}, Debt Token Balance: {:?}",
+                                reserve_data.d_token_balance, reserve_data.debt_token_blance
+                            );
+                            ic_cdk::println!(
+                                "Liquidity Index: {:?}, Variable Borrow Index: {:?}",
+                                reserve_data.liquidity_index, reserve_data.variable_borrow_index
+                            );
+                        } else {
+                            ic_cdk::println!("No reserve data found for asset: {}", asset);
                         }
                     } else {
-                        ic_cdk::println!("No reserve data found for user.");
+                        ic_cdk::println!("No reserves found in user data.");
                     }
                 }
-                Err(error) => {
+                Ok(Err(error)) => {
                     ic_cdk::println!(
-                        "Failed to retrieve user data for {}: {:?}",
+                        "❌ Error fetching user data for {}: {}",
                         user_principal,
-                        error
+                        error.message()
+                    );
+                }
+                Err(decode_error) => {
+                    ic_cdk::println!(
+                        "❌ Failed to decode certified user data for {}: {:?}",
+                        user_principal,
+                        decode_error
                     );
                 }
             }
         }
         Ok(WasmResult::Reject(reject_message)) => {
-            ic_cdk::println!("Query rejected for {}: {}", user_principal, reject_message);
+            ic_cdk::println!(
+                "❌ Certified query rejected for {}: {}",
+                user_principal,
+                reject_message
+            );
         }
         Err(e) => {
-            ic_cdk::println!("Error retrieving user data for {}: {:?}", user_principal, e);
+            ic_cdk::println!(
+                "❌ Query call error while retrieving certified user data for {}: {:?}",
+                user_principal,
+                e
+            );
         }
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/// Fetches the ReserveData struct for a specific asset.
+/// Returns Ok(ReserveData) on success, or Err(String) on failure.
+pub fn get_reserve_data_struct(
+    pic: &PocketIc,
+    user_principal: &Principal,
+    backend_canister: Principal,
+    asset: &str,
+) -> Result<ReserveData, String> { 
+    let result = pic.update_call( 
+        backend_canister,
+        *user_principal, 
+        "get_reserve_data",
+        encode_one(asset.to_string()).unwrap(),
+    );
+
+    match result {
+        Ok(WasmResult::Reply(reply)) => {
+            match candid::decode_one::<Result<ReserveData, errors::Error>>(&reply) {
+                Ok(Ok(data)) => Ok(data), 
+                Ok(Err(backend_err)) => Err(format!("Backend returned error for {}: {:?}", asset, backend_err)),
+                Err(decode_err) => Err(format!("Failed to decode ReserveData response for {}: {:?}", asset, decode_err)),
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => Err(format!("Call rejected for {}: {}", asset, reject_message)),
+        Err(e) => Err(format!("Error calling get_reserve_data for {}: {:?}", asset, e)),
+    }
+}
+
+
+
+
+/// Fetches the specific UserReserveData for a user and asset.
+/// Returns Ok(UserReserveData) if found, or Err(String) if user or reserve not found.
+pub fn get_user_reserve_state(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    user_principal: Principal,
+    asset_name: &str,
+) -> Result<UserReserveData, String> {
+
+    // Call get_user_data (assuming it's a query)
+    let result = pic.query_call(
+        backend_canister,
+        user_principal, // Call as the user themselves
+        "get_user_data",
+        encode_one(user_principal).unwrap(),
+    );
+
+    match result {
+        Ok(WasmResult::Reply(reply)) => {
+            match candid::decode_one::<Result<UserData, errors::Error>>(&reply) {
+                Ok(Ok(user_data)) => {
+                    if let Some(reserves) = user_data.reserves {
+                        if let Some((_, reserve_data)) = reserves.iter().find(|(name, _)| name == asset_name) {
+                            Ok(reserve_data.clone()) 
+                        } else {
+                            Err(format!("User reserve data not found for asset '{}'", asset_name))
+                        }
+                    } else {
+                        Err(format!("User has no reserves data structure"))
+                    }
+                }
+                Ok(Err(backend_err)) => Err(format!("Backend error fetching UserData for {}: {:?}", user_principal, backend_err)),
+                Err(decode_err) => Err(format!("Failed to decode UserData response for {}: {:?}", user_principal, decode_err)),
+            }
+        }
+        Ok(WasmResult::Reject(reject_message)) => Err(format!("get_user_data call rejected for {}: {}", user_principal, reject_message)),
+        Err(e) => Err(format!("Error calling get_user_data for {}: {:?}", user_principal, e)),
+    }
+}
+
+
+
+
+
+
+pub fn check_ledger_balances(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    users_to_check: &[Principal],
+    assets_to_check: &[String],
+) {}
+
+/// @title Verify Ledger Balances
+/// @notice Queries the ICRC1 balance for multiple users across multiple assets.
+/// @dev Iterates through users and assets, calls `icrc1_balance_of` on the respective
+///      ledger canister using a query call, and prints the results or errors.
+///
+/// @param pic A reference to the PocketIc instance.
+/// @param backend_canister The principal of the main backend canister (used to find ledger IDs).
+/// @param users_to_check A slice of user Principals whose balances need checking.
+/// @param assets_to_check A slice of asset name Strings to check for each user.
+pub fn fetch_balance(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    users_to_check: &[Principal],
+    assets_to_check: &[String],
+) -> f64 {
+
+    for user_principal in users_to_check {
+        ic_cdk::println!("--- Checking balances for user: {} ---", user_principal);
+        for asset_name in assets_to_check {
+            ic_cdk::println!(" Checking {} balance... ", asset_name);
+
+            //Get the ledger canister Principal for this asset
+            let ledger_principal = match test_get_asset_principal(asset_name.clone(), pic, backend_canister) {
+                Some(p) => p,
+                None => {
+                    ic_cdk::println!("Failed to get ledger principal for {}. Skipping.", asset_name);
+                    continue; 
+                }
+            };
+
+            //Prepare the argument for icrc1_balance_of
+            let account_arg = Account {
+                owner: *user_principal,
+                subaccount: None, 
+            };
+            let encoded_arg = match encode_one(&account_arg) {
+                 Ok(arg) => arg,
+                 Err(e) => {
+                     ic_cdk::println!("Failed to encode account arg for {}: {:?}. Skipping.", asset_name, e);
+                     continue; 
+                 }
+            };
+
+            //Make the query call using the helper
+            let balance_result = pic.update_call( 
+                ledger_principal,
+                Principal::anonymous(), 
+                "icrc1_balance_of",
+                encoded_arg,
+            );
+
+            // 4. Decode and print the result
+            match balance_result {
+                Ok(WasmResult::Reply(reply)) => {
+                    match decode_one::<Nat>(&reply) {
+                        Ok(balance) => {
+                            let amount_u128: u64 = balance.clone().0.try_into().unwrap();
+                            let amount_float = amount_u128 as f64;
+                            return amount_float / 100000000.0;
+                        }
+                        Err(e) => {
+                            ic_cdk::println!("Failed to decode balance response for {}: {:?}", asset_name, e);
+                        }
+                    }
+                }
+                Ok(WasmResult::Reject(msg)) => {
+                    ic_cdk::println!("Balance query rejected for {}: {}", asset_name, msg);
+                }
+                Err(e) => {
+                    ic_cdk::println!("Error calling balance query for {}: {:?}", asset_name, e);
+                }
+            }
+        } 
+    } 
+    0.0
+}
+
+// Ensure Account struct is defined or imported correctly above
+// #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+// pub struct Account {
+//     pub owner: Principal,
+//     pub subaccount: Option<Vec<u8>>,
+// }
+
+// Placeholder for ApproveArgs if not defined in structs.rs
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ApproveArgs {
+   pub fee: Option<Nat>,
+   pub memo: Option<Vec<u8>>,
+   pub from_subaccount: Option<Vec<u8>>,
+   pub created_at_time: Option<u64>,
+   pub amount: Nat,
+   pub expected_allowance: Option<Nat>,
+   pub expires_at: Option<u64>,
+   pub spender: Account,
+}
+
+// Placeholder for ApproveResult if not defined (adjust based on actual implementation)
+#[derive(CandidType, Deserialize, Debug)]
+pub enum ApproveResult {
+   Ok(Nat),
+   Err(ApproveError), // Replace ApproveError with the actual error enum/type
+}
+
+// Placeholder for ApproveError (replace with actual type)
+#[derive(CandidType, Deserialize, Debug)]
+pub enum ApproveError {
+    GenericError{ error_code: Nat, message: String },
+    TemporarilyUnavailable,
+    Duplicate{ duplicate_of: Nat },
+    BadFee{ expected_fee: Nat },
+    AllowanceChanged{ current_allowance: Nat },
+    CreatedInFuture{ ledger_time: u64 },
+    TooOld,
+    Expired{ ledger_time: u64 },
+    InsufficientFunds{ balance: Nat },
 }

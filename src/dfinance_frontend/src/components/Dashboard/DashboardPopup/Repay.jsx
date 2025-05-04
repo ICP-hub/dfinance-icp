@@ -46,50 +46,39 @@ const Repay = ({
   onLoadingChange,
 }) => {
   /* ===================================================================================
-   *                                  HOOKS
+   *                                  HOOKS &  REDUX-SELECTER
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const approveButtonRef = useRef(null);
   const repayButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { userData, healthFactorBackend, refetchUserData } = useUserData();
-  const { conversionRate, error: conversionError } =
-    useRealTimeConversionRate(asset);
+  const { healthFactorBackend } = useUserData();
+  const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
-
-  const [amount, setAmount] = useState(null);
+  const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
-  const [maxUsdValue, setMaxUsdValue] = useState(0);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
-  const [prevHealthFactor, setPrevHealthFactor] = useState(null);
   const [maxAmount, setMaxAmount] = useState("0");
   const [maxClicked, setMaxClicked] = useState(false);
-
-  /* ===================================================================================
-   *                                  REDUX-SELECTER
-   * =================================================================================== */
-
-  const fees = useSelector((state) => state.fees.fees);
   const dispatch = useDispatch();
+  const paymentModalRef = useRef(null);
 
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
 
   const principalObj = useMemo(() => {
-    if (!principal) return null; // ✅ Prevent null values
+    if (!principal) return null;
     try {
       return Principal.fromText(principal);
     } catch (error) {
@@ -101,29 +90,9 @@ const Repay = ({
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
-  const paymentModalRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        paymentModalRef.current &&
-        !paymentModalRef.current.contains(event.target)
-      ) {
-        setIsPaymentDone(false);
-        setIsVisible(false);
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isPaymentDone) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isPaymentDone]);
-
-  const truncateToSevenDecimals = (value) => {
+  // Function to truncate a number to 8 decimal places
+  const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
@@ -187,35 +156,21 @@ const Repay = ({
     if (isNaN(numericAmount) || numericAmount < 0) {
       setAmount("");
       setUsdValue("0.00"); // ✅ Always show 2 decimal places
-      setError("Amount must be a positive number");
+      console.error("Amount must be a positive number");
       return;
     }
     if (numericAmount > assetBorrow) {
-      setError("Amount exceeds the supply balance");
+      console.error("Amount exceeds the supply balance");
       return;
     }
     const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
     const convertedValue = numericAmount * adjustedConversionRate;
     setUsdValue(convertedValue.toFixed(7));
     setAmount(inputAmount);
-    setError("");
   };
-
-  const formatAmountWithCommas = (amount) => {
-    if (!amount) return "0";
-    const parts = amount.toString().split(".");
-    parts[0] = parseInt(parts[0], 10).toLocaleString("en-US");
-    return parts.length > 1 ? parts.join(".") : parts[0];
-  };
-
-  const normalizedAsset = asset ? asset.toLowerCase() : "default";
-
-  if (!fees) {
-    return <p>Error: Fees data not available.</p>;
-  }
 
   const numericBalance = balance;
-  const supplyBalance = Math.max(numericBalance - transferFee, 0);
+  const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
 
@@ -251,7 +206,7 @@ const Repay = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
     let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
     const scaledAmount = amountAsNat64;
     const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
@@ -338,27 +293,14 @@ const Repay = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
-    }
-
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") {
-      ledgerActor = ledgerActors.ckUSDT;
+      return;
     }
 
     try {
       let amountAsNat64 = Math.round(
         amount.replace(/,/g, "") * Math.pow(10, 8)
       );
-      const safeAmount = Number(amount.replace(/,/g, "")) || 0;
+
       const scaledAmount = amountAsNat64;
       const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
       const totalAmount = transferFeeBigInt
@@ -424,8 +366,18 @@ const Repay = ({
           setIsModalOpen(false);
           return;
         }
-
-        if (errorMsg?.AmountSubtractionError === null) {
+        if (errorMsg?.RepayMoreThanDebt === null) {
+          toast.error("Repay failed: You cannot repay more than you owe.", {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        } else if (errorMsg?.AmountSubtractionError === null) {
           toast.error("Repay failed: You cannot repay more than you owe.", {
             className: "custom-toast",
             position: "top-center",
@@ -493,11 +445,13 @@ const Repay = ({
     }
   };
 
+  // Function to close the payment popup
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
+  // Function to handle the click event for the repay button
   const handleClick = async () => {
     setIsLoading(true);
     try {
@@ -511,6 +465,7 @@ const Repay = ({
     }
   };
 
+  // Function to handle the click event for the close button
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -532,17 +487,11 @@ const Repay = ({
     );
   };
 
-  const calculateLTV = (totalCollateralValue, totalDeptValue) => {
-    if (totalCollateralValue === 0) {
-      return 0;
-    }
-    return totalDeptValue / totalCollateralValue;
-  };
-
+  // Function to handle the click event for the Max button
   const handleMaxClick = () => {
-    const truncateToSevenDecimals = (value) => {
+    const truncateToEightDecimals = (value) => {
       const multiplier = Math.pow(10, 8);
-      const truncated = Math.floor(value * multiplier) / multiplier;
+      const truncated = Math.round(value * multiplier) / multiplier;
       return truncated.toFixed(8);
     };
 
@@ -561,21 +510,16 @@ const Repay = ({
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
         ? Number(selectedBalance).toFixed(7)
-        : truncateToSevenDecimals(selectedBalance)
+        : truncateToEightDecimals(selectedBalance)
       : "0";
-
+    "displayBalance", displayBalance;
     setMaxAmount(displayBalance.toString());
+    setAmount(displayBalance);
     setMaxClicked(true);
     updateAmountAndUsdValue(displayBalance.toString());
   };
 
-  const formatValue = (value) => {
-    if (!value) return "0";
-    return Number(value)
-      .toFixed(8)
-      .replace(/\.?0+$/, "");
-  };
-
+  // Function to handle the click event for the close button
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
     return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -586,10 +530,31 @@ const Repay = ({
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        paymentModalRef.current &&
+        !paymentModalRef.current.contains(event.target)
+      ) {
+        setIsPaymentDone(false);
+        setIsVisible(false);
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isPaymentDone) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isPaymentDone]);
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Enter") {
-        event.preventDefault(); // Prevent accidental double triggering
+        event.preventDefault();
 
         if (closeButtonRef.current && !closeButtonRef.current.disabled) {
           closeButtonRef.current.click();
@@ -622,16 +587,6 @@ const Repay = ({
       setUsdValue(truncatedValue);
     } else {
       setUsdValue(0);
-    }
-  }, [amount, conversionRate]);
-
-  useEffect(() => {
-    if (assetBorrow && conversionRate) {
-      const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
-      const convertedMaxValue = Number(assetBorrow) * adjustedConversionRate;
-      setMaxUsdValue(convertedMaxValue);
-    } else {
-      setMaxUsdValue(0);
     }
   }, [amount, conversionRate]);
 
@@ -677,9 +632,7 @@ const Repay = ({
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
     }
-    const ltv = calculateLTV(totalCollateralValue, totalDeptValue);
 
-    setPrevHealthFactor(currentHealthFactor);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);
       return (Math.floor(num * factor) / factor).toFixed(decimals);
@@ -705,7 +658,7 @@ const Repay = ({
   return (
     <>
       {isVisible && (
-        <div className="repay-popup" ref={modalRef}>
+        <div className="repay-popup" role="dialog" ref={modalRef}>
           <h1 className="font-semibold text-xl">Repay {asset} </h1>
 
           <div className="flex flex-col gap-2 mt-5 text-sm">
@@ -713,17 +666,17 @@ const Repay = ({
               <div className="w-full flex justify-between my-2">
                 <h1>Amount</h1>
               </div>
-              <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
-                <div className="flex flex-col items-start w-[45%] gap-8">
+              <div className="w-full flex justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer px-3 py-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
+                <div className="flex flex-col items-start w-[45%] lg:gap-[2rem] gap-[2.5rem]">
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     disabled={supplyBalance === 0 || isApproved}
-                    className="lg:text-[14px] placeholder:text-[10px] lg:placeholder:text-[12px] focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
+                    className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
-                  <p className="text-[11px] text-gray-500 -mb-1">
+                  <p className="text-[12px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
@@ -733,7 +686,7 @@ const Repay = ({
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-3">
-                  <div className="w-auto flex items-center gap-2 lg:mb-5">
+                  <div className="w-auto flex gap-2 items-center">
                     <img
                       src={image}
                       alt="Item Image"
@@ -741,28 +694,23 @@ const Repay = ({
                     />
                     <span className="text-lg">{asset}</span>
                   </div>
-                  <div className="flex flex-col lg1:flex-row gap-1 items-center justify-center">
-                    {/* Wallet Balance label (Always on top in small screens) */}
-                    <p className="text-[10px] text-gray-500 text-right w-full lg1:w-auto font-semibold">
+
+                  <div className="flex flex-col items-center justify-center">
+                    <p className="text-[11px] text-gray-500 text-right w-full font-semibold">
                       Wallet Balance:
                     </p>
 
-                    {/* Value and Max button in same line below on small screens */}
                     <div className="flex gap-1 items-center">
-                      <p className="text-[10px] text-gray-500">
-                        {truncateToSevenDecimals(supplyBalance)}
+                      <p className="text-[12px] text-gray-500 -mb-[3px]">
+                        {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[10px] px-1 py-0 rounded-md button1 ${
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${
                           assetBorrow === 0 || isApproved
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                         }`}
-                        onClick={() => {
-                          if (assetBorrow > 0 && !isApproved) {
-                            handleMaxClick();
-                          }
-                        }}
+                        onClick={handleMaxClick}
                       >
                         Max
                       </p>
@@ -783,7 +731,8 @@ const Repay = ({
                     <div className="w-4/12 flex flex-col items-end text-nowrap">
                       <p className="text-[14px] mt-1">
                         {(
-                          assetBorrow - (amount?.replace(/,/g, "") || "")
+                          Number(assetBorrow).toFixed(8) -
+                          Number(amount?.replace(/,/g, "") || 0)
                         ).toLocaleString(undefined, {
                           minimumFractionDigits: 8,
                           maximumFractionDigits: 8,
@@ -796,7 +745,6 @@ const Repay = ({
                   <div className="w-full flex justify-between items-center mt-1">
                     <p>Health Factor</p>
                     <p>
-                      {console.log("truncatedValue", truncatedValue)}
                       <span
                         className={`${
                           truncatedValue > 3
@@ -902,14 +850,12 @@ const Repay = ({
               ) : null}
 
               <div className="flex flex-col gap-4 mt-4">
-                {/* Approve Button */}
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                     isApproved ||
                     isLoading ||
-                    isButtonDisabled ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
                     amount > supplyBalance
@@ -927,13 +873,11 @@ const Repay = ({
                   Approve {asset} to continue
                 </button>
 
-                {/* Repay Button */}
                 <button
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
                     !isApproved ||
-                    isButtonDisabled ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
@@ -995,7 +939,7 @@ const Repay = ({
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
                       ? Number(assetBorrow).toFixed(7)
-                      : truncateToSevenDecimals(assetBorrow)
+                      : truncateToEightDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}

@@ -9,29 +9,48 @@ const useTransferFee = (asset) => {
 
   useEffect(() => {
     const fetchTransferFee = async () => {
-        try {
-            const feeResponse = await backendActor.get_transfer_fee(asset);
-            const rawFee = feeResponse?.Ok;
-            if (typeof rawFee === "bigint") {
-                if (rawFee === 0n) {
-                    setTransferFee(0); // Set fee as 0 directly
-                    return
-                  }
-                const convertedFee = (Number(rawFee) / 100000000).toFixed(8); 
-              setTransferFee(convertedFee);
-            } else {
-              setError("Invalid fee format received from backend");
+      try {
+        const feeResponse = await backendActor.get_transfer_fee(asset);
+        const rawData = feeResponse.Ok?.[0];
+        const cert = feeResponse.OK?.[1];
+
+        if (cert) {
+          try {
+            const verified = await verifyCertificate(cert);
+            if (!verified) {
+              console.error("Certificate verification failed for transfer fee");
+              return;
             }
-          } catch (err) {
-            setError(err.message || "Failed to fetch transfer fee");
-          } finally {
-            setLoading(false);
+          } catch (verificationError) {
+            console.error(
+              "Error verifying transfer fee certificate:",
+              verificationError
+            );
+            return;
           }
-        };
-    
-        if (asset) {
-          fetchTransferFee();
         }
+
+        const rawFee = rawData;
+        if (typeof rawFee === "bigint") {
+          if (rawFee === 0n) {
+            setTransferFee(0);
+            return;
+          }
+          const convertedFee = (Number(rawFee) / 100000000).toFixed(8);
+          setTransferFee(convertedFee);
+        } else {
+          setError("Invalid fee format received from backend");
+        }
+      } catch (err) {
+        setError(err.message || "Failed to fetch transfer fee");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (asset) {
+      fetchTransferFee();
+    }
   }, [asset, backendActor]);
 
   return { transferFee, loading, error };

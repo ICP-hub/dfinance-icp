@@ -780,7 +780,61 @@ pub async fn initialize(
 
 #[cfg(feature = "mainnet")]
 #[update]
-pub async fn initialize() -> Result<(), Error> {
+pub async fn initialize(
+    token_name: String,
+    mut reserve_data: ReserveData,
+    token_canister_id: Principal,
+    asset_image: String,
+) -> Result<(), Error> {
+    // admin only access check
+    //TODO: add validation for the reserve data.
+    guard_admin_only()?;
+    validate_asset_name(&token_name)?;
+    validate_asset_image_url(&asset_image)?;
+
+    if read_state(|state| state.reserve_list.contains_key(&token_name)) {
+        return Err(Error::TokenAlreadyExist);
+    }
+
+
+    let d_token_name = format!("d{}", token_name.clone());
+    let debt_token_name = format!("debt{}", token_name.clone());
+    let asset_info = AssetInfo {
+        asset_name: token_name.clone(),
+        principal_id: token_canister_id,
+        symbol: token_name.clone(),
+        image: asset_image,
+    };
+
+    reserve_data.asset_name = token_name.clone();
+    reserve_data.d_token_canister =
+        match create_token_canister(d_token_name.clone(), d_token_name).await {
+            Ok(principal) => Some(principal),
+            Err(e) => return Err(e),
+        };
+    reserve_data.debt_token_canister =
+        match create_token_canister(debt_token_name.clone(), debt_token_name).await {
+            Ok(principal) => Some(principal),
+            Err(e) => return Err(e),
+        };
+
+    reserve_data.last_update_timestamp = current_timestamp();
+
+    mutate_state(|state| {
+        state
+            .reserve_list
+            .insert(token_name.clone(), token_canister_id);
+
+        state
+            .asset_records
+            .insert(token_name.clone(), Candid(asset_info));
+
+        let reserve_data_e = &mut state.asset_index;
+
+        reserve_data_e.insert(token_name.clone(), Candid(reserve_data));
+        ic_cdk::println!("Reserve for {} initialized successfully", token_name);
+    });
+
     Ok(())
 }
 

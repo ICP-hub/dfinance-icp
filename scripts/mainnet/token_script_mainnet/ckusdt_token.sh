@@ -62,5 +62,6 @@ RESERVE_DATA="(
 
 ASSET_IMAGE_URL="https://storage.googleapis.com/dfinance/ckUSDT.svg"
 
+
 dfx canister call $CANISTER_NAME initialize \
-  "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")"
+  "(\"$TOKEN_NAME\", $RESERVE_DATA, principal \"$TOKEN_PRINCIPAL\", \"$ASSET_IMAGE_URL\")"

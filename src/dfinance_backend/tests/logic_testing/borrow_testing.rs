@@ -55,31 +55,31 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(200_000_000u128), // 2 ICP
+            amount: Nat::from(200_000_000u128), // 2 ICP (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(10_000u128), // 0.0001 ckBTC
+            amount: Nat::from(10_000u128), // 0.0001 ckBTC (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(5_000_000u128), // 50 USDT
+            amount: Nat::from(5_000_000u128), // 0.05 USDT (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH
+            amount: Nat::from(200u128), //0.000002 ckETH (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(5_000_000u128), // 50 USDC
+            amount: Nat::from(5_000_000u128), //  0.05 USDC (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
@@ -123,7 +123,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(500_000_000_000u128), //5000
+            amount: Nat::from(500_000_000_000u128),
             expect_success: false,
             expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
@@ -160,9 +160,6 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
-
-
-
 
         //checking asset principal
         let asset_principal =
@@ -247,7 +244,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("\n===================  Verifying Reserve after intentional borrow failure ===================]\n");
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional borrow failure ===================\n");
                         fetch_reserve_data(pic, backend_canister, &case.asset);
                         ic_cdk::println!("\n===================  Verifying User data after intentional borrow failure ===================\n");
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);

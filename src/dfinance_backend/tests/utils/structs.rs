@@ -21,6 +21,12 @@ pub struct ReserveData {
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct Certificate {
+    pub certificate: Vec<u8>,
+    pub witness: Vec<u8>,
+}
+
+#[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct ReserveConfiguration {
     pub ltv: Nat,
     pub liquidation_threshold: Nat,

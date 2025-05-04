@@ -2,7 +2,7 @@ use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     fetch_reserve_data, get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+     fetch_reserve_data, get_user_principal2, get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
@@ -41,36 +41,36 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             expect_success: true,
             expected_error_message: None,
         },
-        // TestCase {
-        //     debt_asset: "ckBTC".to_string(),
-        //     collateral_asset: "ckBTC".to_string(),
-        //     amount: Nat::from(210_000u128),
-        //     on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-        //     reward_amount: Nat::from(220_500u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     debt_asset: "ckUSDC".to_string(),
-        //     collateral_asset: "ckUSDC".to_string(),
-        //     amount: Nat::from(200_00_000_000u128),
-        //     on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-        //     reward_amount: Nat::from(210_00_000_000u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
-        // TestCase {
-        //     debt_asset: "ckUSDT".to_string(),
-        //     collateral_asset: "ckUSDT".to_string(),
-        //     amount: Nat::from(12_500_000_000u128),
-        //     on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-        //     reward_amount: Nat::from(13_062_500_000u128),
-        //     expect_success: true,
-        //     expected_error_message: None,
-        // },
+        TestCase {
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(210_000u128),
+            on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
+            reward_amount: Nat::from(220_496u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            debt_asset: "ckUSDC".to_string(),
+            collateral_asset: "ckUSDC".to_string(),
+            amount: Nat::from(200_00_000_000u128),
+            on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
+            reward_amount: Nat::from(20_999_673_926u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            debt_asset: "ckUSDT".to_string(),
+            collateral_asset: "ckUSDT".to_string(),
+            amount: Nat::from(12_500_000_000u128),
+            on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
+            reward_amount: Nat::from(13_062_155_527u128),
+            expect_success: true,
+            expected_error_message: None,
+        },
     ];
 
-    // let user_principal = get_user_principal();
+    let user_principal = get_user_principal2();
     ic_cdk::println!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
@@ -120,7 +120,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 };
 
             let approved = test_icrc2_aprove(
-                get_users_principal(Nat::from(1u128)).unwrap(),
+                user_principal,
                 asset_principal,
                 &pic,
                 backend_canister,
@@ -160,7 +160,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             let msg = pic
                 .submit_call(
                     backend_canister,
-                    get_users_principal(Nat::from(1u32)).unwrap(),
+                    user_principal,
                     "execute_liquidation",
                     encode_one(liquidation_params).unwrap(),
                 )

@@ -52,28 +52,28 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Withdrawals (Direct)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(200_000_000u128), // 2.00 ICP
+            amount: Nat::from(200_000_000u128), // 2.00 ICP (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000u128), // 1.00 ICP (with collateral)
+            amount: Nat::from(100_000_000u128), // 1.00 ICP (with collateral) (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(30_000u128), // 0.03 ckBTC
+            amount: Nat::from(30_000u128), // 0.0003 ckBTC (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(2_000u128), // 2.00 ckETH
+            amount: Nat::from(2_000u128), // 0.00002 ckETH
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -156,7 +156,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000u128),
+            amount: Nat::from(10_000_000u128),// 0.10 ICP
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,

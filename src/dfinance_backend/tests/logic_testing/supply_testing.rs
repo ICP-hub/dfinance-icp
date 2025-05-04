@@ -57,7 +57,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(40_000u128), // 0.4 ckBTC (includes transaction fee)
+            amount: Nat::from(40_000u128), // 0.0004 ckBTC (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -70,7 +70,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckETH".to_string(), // 0.05 ckETH (includes transaction fee)
+            asset: "ckETH".to_string(), // 0.00005 ckETH (includes transaction fee)
             amount: Nat::from(5_000u128),
             is_collateral: true,
             expect_success: true,
@@ -78,28 +78,28 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(300_000_000u128), // 300 ckUSDT (includes transaction fee)
+            amount: Nat::from(300_000_000u128), // 3 ckUSDT (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
-            amount: Nat::from(10_000_000_000u128), // Supply another 100 ckUSDT
+            amount: Nat::from(10_000_000_000u128), // Supply another 100 ckUSDT (includes transaction fee)
             is_collateral: false, // Explicitly keep it non-collateral
             expect_success: true, // Should succeed, just adding to existing non-collateral position
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
-            amount: Nat::from(50_000_000_00u128), // Supply another 50 ckUSDT
+            amount: Nat::from(50_000_000_00u128), // Supply another 50 ckUSDT (includes transaction fee)
             is_collateral: true, // Explicitly keep it collateral
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(20_000_00u128), // 20 ckUSDT (includes transaction fee)
+            amount: Nat::from(20_000_00u128), //  0.02 ckUSDT (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,

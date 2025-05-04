@@ -122,26 +122,24 @@ pub fn test_get_asset_principal(
     pic: &PocketIc,
     backend_canister: Principal,
 ) -> Option<Principal> {
-    let result = pic.update_call(
+    let result = pic.query_call(
         backend_canister,
         Principal::anonymous(),
-        "get_asset_principal",
+        "get_asset_principal_certified", // This should return a tuple (Principal, Certificate)
         encode_one(asset.clone()).unwrap(),
     );
 
-    let asset_canister_id = match result {
+    match result {
         Ok(WasmResult::Reply(response_data)) => {
-            match decode_one::<Result<Principal, errors::Error>>(&response_data) {
-                Ok(Ok(principal)) => Some(principal),
+            // Try to decode the tuple: (Principal, Certificate)
+            match decode_one::<Result<(Principal, Certificate), errors::Error>>(&response_data) {
+                Ok(Ok((principal, _certificate))) => Some(principal),
                 Ok(Err(err)) => {
                     ic_cdk::println!("Error retrieving asset principal: {:?}\n", err.message());
                     None
                 }
                 Err(decode_err) => {
-                    ic_cdk::println!(
-                        "Error retrieving asset principal: {:?}\n",
-                        decode_err
-                    );
+                    ic_cdk::println!("Error decoding asset principal response: {:?}\n", decode_err);
                     None
                 }
             }
@@ -154,9 +152,9 @@ pub fn test_get_asset_principal(
             println!("Query call failed: {}", call_err);
             None
         }
-    };
-    return asset_canister_id;
+    }
 }
+
 
 /*
  * @title ICRC-2 Approve Function
@@ -427,20 +425,20 @@ pub fn test_add_tester(
  */
 #[allow(dead_code)]
 pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &str) {
-    let result = pic.update_call(
+    let result = pic.query_call(
         backend_canister,
         get_user_principal(),
-        "get_reserve_data",
+        "get_reserve_data_certified",
         encode_one(asset.to_string()).unwrap(),
     );
 
     match result {
         Ok(WasmResult::Reply(reply)) => {
-            let supply_response: Result<ReserveData, errors::Error> =
-                candid::decode_one(&reply).expect("Failed to decode reserve data response");
+            // Decode as: Result<(ReserveData, Certificate), Error>
+            let decoded_result = decode_one::<Result<(ReserveData, Certificate), errors::Error>>(&reply);
 
-            match supply_response {
-                Ok(balance) => {
+            match decoded_result {
+                Ok(Ok((balance, _certificate))) => {
                     ic_cdk::println!(
                         "Reserve Data - Last Update Timestamp for {}: {:?}",
                         asset,
@@ -477,8 +475,11 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
                         balance.current_liquidity_rate
                     );
                 }
-                Err(error) => {
-                    ic_cdk::println!("\n=========================================================================\n");
+                Ok(Err(error)) => {
+                    ic_cdk::println!("Backend returned an error for {}: {:?}", asset, error.message());
+                }
+                Err(decode_error) => {
+                    ic_cdk::println!("Decoding error for {}: {:?}", asset, decode_error);
                 }
             }
         }
@@ -490,6 +491,7 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
         }
     }
 }
+
 
 /*
  * Fetches user data for a given asset.
@@ -507,7 +509,7 @@ pub fn fetch_user_data(
     user_principal: &Principal,
     asset: &str,
 ) {
-    let result = pic.update_call(
+    let result = pic.query_call(
         backend_canister,
         *user_principal,
         "get_user_data",
@@ -516,63 +518,65 @@ pub fn fetch_user_data(
 
     match result {
         Ok(WasmResult::Reply(reply)) => {
-            let user_response: Result<UserData, errors::Error> =
-                candid::decode_one(&reply).expect("Failed to decode user data response");
+            // Decode response as Result<(UserData, Certificate), Error>
+            let decoded_result = candid::decode_one::<Result<(UserData, Certificate), errors::Error>>(&reply);
 
-            match user_response {
-                Ok(user_data) => {
+            match decoded_result {
+                Ok(Ok((user_data, _certificate))) => {
                     if let Some(reserves) = &user_data.reserves {
-                        for (reserve_asset, reserve_data) in reserves {
-                            if reserve_asset == asset {
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Last Update Timestamp: {:?}",
-                                    asset,
-                                    reserve_data.last_update_timestamp
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | dToken Balance: {:?}",
-                                    asset,
-                                    reserve_data.d_token_balance
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Debt Token Balance: {:?}",
-                                    asset,
-                                    reserve_data.debt_token_blance
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Liquidity Index: {:?}",
-                                    asset,
-                                    reserve_data.liquidity_index
-                                );
-                                ic_cdk::println!(
-                                    "User Data for Asset: {} | Variable Borrow Index: {:?}",
-                                    asset,
-                                    reserve_data.variable_borrow_index
-                                );
-                            }
+                        if let Some((_, reserve_data)) = reserves.iter().find(|(name, _)| name == asset) {
+                            ic_cdk::println!(
+                                "✅ User Data (Certified) for {} | Last Update Timestamp: {:?}",
+                                asset, reserve_data.last_update_timestamp
+                            );
+                            ic_cdk::println!(
+                                "dToken Balance: {:?}, Debt Token Balance: {:?}",
+                                reserve_data.d_token_balance, reserve_data.debt_token_blance
+                            );
+                            ic_cdk::println!(
+                                "Liquidity Index: {:?}, Variable Borrow Index: {:?}",
+                                reserve_data.liquidity_index, reserve_data.variable_borrow_index
+                            );
+                        } else {
+                            ic_cdk::println!("No reserve data found for asset: {}", asset);
                         }
                     } else {
-                        ic_cdk::println!("No reserve data found for user.");
+                        ic_cdk::println!("No reserves found in user data.");
                     }
                 }
-                Err(error) => {
+                Ok(Err(error)) => {
                     ic_cdk::println!(
-                        "Failed to retrieve user data for {}: {:?}",
+                        "❌ Error fetching user data for {}: {}",
                         user_principal,
-                        error
+                        error.message()
                     );
-
+                }
+                Err(decode_error) => {
+                    ic_cdk::println!(
+                        "❌ Failed to decode certified user data for {}: {:?}",
+                        user_principal,
+                        decode_error
+                    );
                 }
             }
         }
         Ok(WasmResult::Reject(reject_message)) => {
-            ic_cdk::println!("Query rejected for {}: {}", user_principal, reject_message);
+            ic_cdk::println!(
+                "❌ Certified query rejected for {}: {}",
+                user_principal,
+                reject_message
+            );
         }
         Err(e) => {
-            ic_cdk::println!("Error retrieving user data for {}: {:?}", user_principal, e);
+            ic_cdk::println!(
+                "❌ Query call error while retrieving certified user data for {}: {:?}",
+                user_principal,
+                e
+            );
         }
     }
 }
+
 
 
 

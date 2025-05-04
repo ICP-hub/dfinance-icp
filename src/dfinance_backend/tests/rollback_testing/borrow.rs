@@ -69,8 +69,8 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(2_800_000_000u128), // 30 ckUSDT
-            expect_success: true,
+            amount: Nat::from(200_800_000_000u128), // 30 ckUSDT
+            expect_success: false,
             expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
     ];

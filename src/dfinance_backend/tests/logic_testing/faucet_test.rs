@@ -170,9 +170,9 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Faucet successful.",
                             i + 1,
                         );
-                        ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                        // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
+                        // fetch_reserve_data(pic, backend_canister, &case.asset);
+                        // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -190,12 +190,12 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                        ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                        //reserve data fetching
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
-                        //user data fetching
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                        // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
+                        // //reserve data fetching
+                        // fetch_reserve_data(pic, backend_canister, &case.asset);
+                        // ic_cdk::println!("\n---------------------------------------------------------\n");
+                        // //user data fetching
+                        // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
@@ -264,12 +264,12 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 balance
                             );
-                        ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                        //reserve data fetching
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
-                        //user data fetching
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                        // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
+                        // //reserve data fetching
+                        // fetch_reserve_data(pic, backend_canister, &case.asset);
+                        // ic_cdk::println!("\n---------------------------------------------------------\n");
+                        // //user data fetching
+                        // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                             
                         }
                         Err(error) => {
@@ -288,12 +288,12 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                     i + 1,
                                     error
                                 );
-                                ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                                //reserve data fetching
-                                fetch_reserve_data(pic, backend_canister, &case.asset);
-                                ic_cdk::println!("\n---------------------------------------------------------\n");
-                                //user data fetching
-                                fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                                // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
+                                // //reserve data fetching
+                                // fetch_reserve_data(pic, backend_canister, &case.asset);
+                                // ic_cdk::println!("\n---------------------------------------------------------\n");
+                                // //user data fetching
+                                // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                             } else {
                                 ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                                 ic_cdk::println!(

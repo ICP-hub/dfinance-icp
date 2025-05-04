@@ -175,6 +175,7 @@ pub struct InitArgs {
  *
  * @param reserves A vector of tuples containing asset name and corresponding reserve data.
  */
+
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct FaucetReserves {
     pub reserves: Option<Vec<(String, FaucetReserve)>>,

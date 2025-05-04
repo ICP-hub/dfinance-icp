@@ -1,0 +1,47 @@
+{
+  "canisters": {
+    "token_ledger": {
+      "candid": "src/token_ledger/token_ledger.did",
+      "package": "token_ledger",
+      "type": "rust"
+    },
+    "dfinance_backend": {
+      "candid": "src/dfinance_backend/dfinance_backend.did",
+      "package": "dfinance_backend",
+      "type": "rust"
+    },
+    "dtoken": {
+      "candid": "src/dtoken/dtoken.did",
+      "package": "dtoken",
+      "type": "rust"
+    },
+    "debttoken": {
+      "candid": "src/debttoken/debttoken.did",
+      "package": "debttoken",
+      "type": "rust"
+    },
+    "logs": {
+      "candid": "src/logs/logs.did",
+      "package": "logs",
+      "type": "rust"
+    },
+    "dfinance_frontend": {
+      "dependencies": [
+        "dfinance_backend"
+      ],
+      "source": [
+        "src/dfinance_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "dfinance_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

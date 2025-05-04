@@ -93,6 +93,7 @@ pub fn to_check_controller() -> bool {
  *
  * @functionality Add Tester
  */
+#[cfg(feature = "testnet")]
 #[ic_cdk::update]
 pub fn add_tester(username: String, principal: Principal) -> Result<(), Error> {
     guard_principal_not_anonymous(&principal)?;
@@ -114,6 +115,7 @@ pub fn add_tester(username: String, principal: Principal) -> Result<(), Error> {
  *
  * @functionality Get Testers List
  */
+#[cfg(feature = "testnet")]
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
     // Check if the user is anonymous
     guard_prevent_anonymous()?;
@@ -147,6 +149,7 @@ pub fn get_testers() -> Result<Vec<Principal>, Error> {
  *
  * @functionality Check if Caller is Tester
  */
+#[cfg(feature = "testnet")]
 #[ic_cdk::query]
 pub fn check_is_tester() -> bool {
     let testers = match get_testers() {
@@ -193,6 +196,7 @@ pub fn add_admin(name: String, new_admin_id: Principal) -> Result<String, Error>
 
 //TODO: we need to have a flag at the time of deployment of development.
 #[update]
+#[cfg(feature = "testnet")]
 pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, Error> {
     ic_cdk::println!("add_admin_test");
     guard_principal_not_anonymous(&new_admin_id)?;

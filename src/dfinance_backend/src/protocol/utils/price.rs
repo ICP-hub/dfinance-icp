@@ -5,7 +5,10 @@ use crate::stable_storage::state_handler::{get_certificate_witness, insert_certi
 use crate::constants::errors::Error;
 use crate::constants::interest_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
-use crate::guards::access_control::{check_is_tester, guard_controller_only};
+#[cfg(feature = "testnet")]
+use crate::guards::access_control::check_is_tester;
+use crate::guards::access_control::guard_controller_only;
+
 use crate::declarations::datatypes::{CachedPrice, Certificate, PriceCache};
 use candid::Nat;
 use ic_cdk::{query, update};
@@ -240,6 +243,7 @@ pub async fn get_exchange_rates(
  *      - `Err(Error::ExchangeRateError)`: if updating the price cache fails.
  */
 //TODO : CHange name to MOck_price_data
+#[cfg(feature = "testnet")]
 #[update]
 pub async fn update_reserve_price_test() -> Result<(), Error> {
     trace!("update_reserve_price_test called");

@@ -35,6 +35,7 @@ use crate::stable_storage::state_handler::insert_certified_value;
  * # Returns
  * - `Ok(Nat)` - The new balance after the transfer.
  */
+#[cfg(feature = "testnet")]
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     request_limiter()?;

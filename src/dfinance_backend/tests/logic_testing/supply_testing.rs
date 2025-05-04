@@ -284,10 +284,10 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                             continue;
                         }
                         ic_cdk::println!("✅ IC Test Case {} Passed: Supply successful.", i + 1,);
-                        ic_cdk::println!("=================== Checking Reserves After successful supply ===================");
+                        ic_cdk::println!("\n=================== Checking Reserves After successful supply ===================\n");
                         // Check reserves after successful supply
                         fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        ic_cdk::println!("\n=================== Checking User data After successful supply ===================\n");
                         // Check user data after successful supply
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
@@ -307,10 +307,10 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                        ic_cdk::println!("=================== Checking Balance After successful supply ===================");
+                        ic_cdk::println!("\n===================  Verifying Reserve after intentional supply failure ===================\n");
                         // Check reserves after successful supply
                         fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        ic_cdk::println!("\n===================  Verifying User data after intentional supply failure ===================\n");
                         // Check user data after successful supply
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {

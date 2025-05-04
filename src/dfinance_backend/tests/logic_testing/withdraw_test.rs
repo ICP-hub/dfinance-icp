@@ -217,10 +217,10 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Withdraw successful.",
                             i + 1,
                         );
-                        ic_cdk::println!("=================== Checking Reserves After successful Withdrawal ===================");
+                        ic_cdk::println!("\n=================== Checking Reserves After successful Withdrawal ===================\n");
                         // Check reserve data after successful withdraw
                         fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        ic_cdk::println!("\n=================== Checking User data After successful Withdrawal ===================\n");
                         //check user data after successful withdraw
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
@@ -240,10 +240,10 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("=================== Checking Reserves After successful Withdrawal ===================");
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
                             // Check reserve data after successful withdraw
                             fetch_reserve_data(pic, backend_canister, &case.asset);
-                            ic_cdk::println!("\n---------------------------------------------------------\n");
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
                             // check user data after successful withdraw
                             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {

@@ -200,10 +200,10 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                             i + 1,
                     
                         );
-                        ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                        ic_cdk::println!("\n==================== Checking Reserves After successful Borrow ====================\n");
                         // Reserve data fetching
                         fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        ic_cdk::println!("\n==================== Checking User data After successful Borrow ====================\n");
                         //user reserve data fetching
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         ic_cdk::println!("\n---------------------------------------------------------\n");
@@ -224,8 +224,9 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional borrow failure ===================]\n");
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n===================  Verifying User data after intentional borrow failure ===================\n");
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                             
                         } else {

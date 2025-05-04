@@ -78,6 +78,12 @@ pub enum Error {
     FeeExceedsAmount ,
     LiquidationProtocolfeeIsHigher,
     RateLimitExceeded,
+    CaptchaLimitReached,
+    CaptchaAlreadyExists,
+    CaptchaExpired,
+    CaptchaMismatch,
+    CaptchaNotFound,
+    InvalidCaptcha,
     AdminAlreadyExists,
     DeveloperAlreadyExists,
     SupportAlreadyExists,
@@ -97,12 +103,17 @@ pub enum Error {
     ErrorCreatingCanister,
     ErrorUpdateCanisterSetting,
     NoCollateralFound,
-    LowPlatformBalance
+    LowPlatformBalance,
+    
 }
 
 impl Error {
     pub fn message(&self) -> &str {
         match self {
+            Error::CaptchaLimitReached => "CAPTCHA limit reached. Try again later",
+            Error::CaptchaAlreadyExists => "You already have a valid CAPTCHA",
+            Error::CaptchaExpired => "CAPTCHA has expired. Please request a new one",
+            Error::CaptchaMismatch => "CAPTCHA did not match. Please try again",
             Error::MaxAmountPlatform => "Platform is unable to pay right now! Try Again Later",
             Error::InvalidAmount => "Amount must be greater than 0",
             Error::InvalidCanister => "Invalid canister id",
@@ -197,7 +208,9 @@ impl Error {
             Error::NoFaucetReservesFound => "No faucet reserves found",
             Error::NoCollateralFound => "No collateral found",
             Error::LowPlatformBalance => "Platform balance is low",
-            Error::ConnectedWalletInvalid => "connected wallet length is invalid"
+            Error::ConnectedWalletInvalid => "connected wallet length is invalid",
+            Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
+            Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",   
         }
     }
 }

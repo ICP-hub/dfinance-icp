@@ -15,7 +15,7 @@ const useRealTimeConversionRate = (asset) => {
   );
   const [conversionRate, setConversionRate] = useState(0);
   const [error, setError] = useState(null);
-  const { backendActor ,verifyCertificate } = useAuth();
+  const { backendActor, verifyCertificate } = useAuth();
 
   useEffect(() => {
     const fetchConversionRate = async () => {
@@ -23,19 +23,19 @@ const useRealTimeConversionRate = (asset) => {
         if (!backendActor) {
           throw new Error("Backend actor is not available");
         }
-  
-        const result = await backendActor.get_cached_exchange_rate_certified(asset);
-  
+
+        const result = await backendActor.get_cached_exchange_rate_certified(
+          asset
+        );
+
         // Certificate check
         if (result && result[1]) {
           const isVerified = await verifyCertificate(result[1]);
           if (!isVerified) {
             throw new Error("Certificate verification failed");
-          } else {
-            console.log("Certificate verified for", asset);
           }
         }
-  
+
         if (result?.Ok[0] !== undefined) {
           setConversionRate(result.Ok[0]);
         } else {
@@ -46,12 +46,11 @@ const useRealTimeConversionRate = (asset) => {
         console.error("Error fetching conversion rate:", error.message);
       }
     };
-  
+
     if (asset) {
       fetchConversionRate();
     }
   }, [asset, backendActor, dashboardRefreshTrigger]);
-  
 
   return { conversionRate, error };
 };

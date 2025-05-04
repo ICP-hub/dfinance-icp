@@ -13,29 +13,9 @@ const Logs = () => {
       console.error("Backend actor not initialized");
       return;
     }
-  
+
     try {
       const result = await backendActor.get_all_logs();
-  
-      // Assuming certificate is the second element in the result, if it exists
-      const cert = result?.[1]; 
-  
-      if (cert) {
-        try {
-          const verified = await verifyCertificate(cert);
-          if (!verified) {
-            console.error("Certificate verification failed for logs data");
-            return; // Don't proceed with unverified data
-          } else {
-            console.log("Logs certificate verified successfully");
-          }
-        } catch (verificationError) {
-          console.error("Error verifying certificate for logs:", verificationError);
-          return; // Stop execution if verification fails
-        }
-      }
-  
-      console.log("Logs retrieved:", result);
       setLogs(result);
       setFilteredLogs(result);
     } catch (error) {
@@ -44,7 +24,6 @@ const Logs = () => {
       setIsLoading(false);
     }
   };
-  
 
   useEffect(() => {
     getAllLogs();

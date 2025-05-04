@@ -4,8 +4,10 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect
 } from "react";
 import { useAuth } from "../utils/useAuthClient";
+import { useSelector } from "react-redux";
 
 const ReserveDataContext = createContext();
 
@@ -14,8 +16,15 @@ export const ReserveDataProvider = ({ children }) => {
   const [lastFetchTimes, setLastFetchTimes] = useState({});
   const [certificateStatus, setCertificateStatus] = useState({});
   const CACHE_TTL = 5 * 60 * 1000;
+  const dashboardRefreshTrigger = useSelector(
+    (state) => state.dashboardUpdate.refreshDashboardTrigger
+  );
 
-  const { backendActor ,verifyCertificate } = useAuth();
+  const { backendActor, verifyCertificate } = useAuth();
+
+  useEffect(() => {
+    invalidateCache();
+  }, [dashboardRefreshTrigger]);
 
   const fetchReserveData = useCallback(
     async (asset) => {
@@ -31,7 +40,6 @@ export const ReserveDataProvider = ({ children }) => {
       }
 
       try {
-        console.log(`Fetching reserve data for ${asset} from backend`);
         const reserveDataResponse = await backendActor.get_reserve_data_certified(asset);
         
         let reserveData;
@@ -43,15 +51,12 @@ export const ReserveDataProvider = ({ children }) => {
           
           if (!verified) {
             console.error(`Certificate verification failed for ${asset}`);
-          } else {
-            console.log(`Certificate verified successfully for ${asset}`);
           }
           
           reserveData = reserveDataResponse;
         } else if ("Err" in reserveDataResponse) {
           throw new Error(`Backend returned error: ${reserveDataResponse.Err}`);
         } else {
-          // Fallback to non-certified data if needed
           console.warn(`Falling back to non-certified data for ${asset}`);
           reserveData = await backendActor.get_reserve_data(asset);
         }
@@ -101,7 +106,6 @@ export const ReserveDataProvider = ({ children }) => {
         const fetchPromises = assetsToFetch.map(async (asset) => {
           try {
             const reserveDataResponse = await backendActor.get_reserve_data_certified(asset);
-            console.log("reserve data response",reserveDataResponse)
             let data;
             let verified = false;
             
@@ -111,16 +115,13 @@ export const ReserveDataProvider = ({ children }) => {
               
               if (!verified) {
                 console.error(`Certificate verification failed for ${asset}`);
-              } else {
-                console.log(`Certificate verified successfully for ${asset}`);
-              }
+              } 
               
               data = reserveDataResponse;
             } else if ("Err" in reserveDataResponse) {
               console.error(`Backend returned error for ${asset}: ${reserveDataResponse.Err}`);
               data = null;
             } else {
-              // Fallback to non-certified data if needed
               console.warn(`Falling back to non-certified data for ${asset}`);
               data = await backendActor.get_reserve_data(asset);
             }
@@ -182,11 +183,16 @@ export const ReserveDataProvider = ({ children }) => {
     [reserveDataCache, lastFetchTimes, certificateStatus]
   );
 
+  const refreshDashboard = useCallback(() => {
+    invalidateCache();
+  }, [invalidateCache]);
+
   const value = useMemo(
     () => ({
       fetchReserveData,
       batchFetchReserveData,
       invalidateCache,
+      refreshDashboard, 
       reserveDataCache,
       certificateStatus,
     }),
@@ -194,8 +200,9 @@ export const ReserveDataProvider = ({ children }) => {
       fetchReserveData,
       batchFetchReserveData,
       invalidateCache,
+      refreshDashboard,
       reserveDataCache,
-      certificateStatus
+      certificateStatus,
     ]
   );
 

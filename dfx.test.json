@@ -25,11 +25,10 @@
       "package": "token_ledger",
       "type": "rust"
     },
-
     "dfinance_backend": {
       "candid": "src/dfinance_backend/dfinance_backend.did",
       "package": "dfinance_backend",
-      "type": "rust"  
+      "type": "rust"
     },
     "xrc": {
       "type": "custom",
@@ -75,7 +74,7 @@
   },
   "defaults": {
     "build": {
-      "args": "",
+      "args": "--no-default-features --features testnet",
       "packtool": ""
     }
   },

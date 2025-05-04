@@ -9,6 +9,7 @@ use declarations::structs::AssetData;
 use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
+#[cfg(feature = "testnet")]
 use protocol::logic::faucet::reset_faucet_usage;
 use protocol::utils::log::{clear_temp_log, init_logging};
 mod api;

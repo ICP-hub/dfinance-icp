@@ -419,6 +419,7 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
  * @returns The principal ID of the canister or an error.
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
+//TODO: add validation in this.
 #[query]
 pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
     read_state(|state| {

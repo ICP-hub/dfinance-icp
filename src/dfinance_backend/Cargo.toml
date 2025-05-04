@@ -38,6 +38,6 @@ tokio = { version = "1", features = ["full"] }
 
 
 [features]
-default = ["mainnet"] 
+default = ["testnet"] 
 testnet = []
 mainnet = []

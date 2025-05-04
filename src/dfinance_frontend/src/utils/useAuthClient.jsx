@@ -6,9 +6,8 @@ import { createActor } from "../../../declarations/dfinance_backend/index";
 import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
 import { Principal } from "@dfinity/principal";
-// import useCertificateVerification from "../components/customHooks/useVerifiedCetificate";
-
 import { Certificate, Cbor, reconstruct } from "@dfinity/agent";
+
 const AuthContext = createContext();
 
 const defaultOptions = {
@@ -57,10 +56,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [accountId, setAccountId] = useState(null);
   const [certObj, setCertObj] = useState(null);
   const [rootKey, setRootKey] = useState(null);
-  const {
-    isSwitchingWallet,
-  } = useSelector((state) => state.utility);
-  // const { isVerified, error: verificationError } = useCertificateVerification(certObj, rootKey, process.env.CANISTER_ID_DFINANCE_BACKEND, blsVerify);
+  const { isSwitchingWallet } = useSelector((state) => state.utility);
 
   useEffect(() => {
     AuthClient.create(options.createOptions).then((client) => {
@@ -238,7 +234,7 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) { }
+    } catch (error) {}
   };
   const buffersEqual = (buf1, buf2) => {
     if (!buf1 || !buf2 || buf1.byteLength !== buf2.byteLength) return false;
@@ -250,69 +246,72 @@ export const useAuthClient = (options = defaultOptions) => {
     return true;
   };
 
-  
-
-
-  const verifyCertificate = async (certObj)=>{
+  const verifyCertificate = async (certObj) => {
     const agent = new HttpAgent({ identity });
     const rootKey = await agent.fetchRootKey();
-    const cert = new Certificate(certObj.certificate, rootKey, process.env.CANISTER_ID_DFINANCE_BACKEND, blsVerify);
+    const cert = new Certificate(
+      certObj.certificate,
+      rootKey,
+      process.env.CANISTER_ID_DFINANCE_BACKEND,
+      blsVerify
+    );
     await cert.verify();
     const te = new TextEncoder();
-    const canisterId = Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND);
-    
+    const canisterId = Principal.fromText(
+      process.env.CANISTER_ID_DFINANCE_BACKEND
+    );
+
     const pathData = [
       te.encode("canister"),
       canisterId.toUint8Array(),
       te.encode("certified_data"),
     ];
-    
+
     const certifiedData = cert.lookup(pathData);
-    
+
     let witnessTree = Cbor.decode(certObj.witness);
     let witnessRootHash = await reconstruct(witnessTree);
-    
+
     if (!certifiedData || !buffersEqual(certifiedData, witnessRootHash)) {
       return false;
     } else {
       return true;
     }
-  }
-
+  };
 
   // Fetches all registered users
   const getAllUsers = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-  
+
     try {
       const allUsers = await backendActor.get_all_users_certified();
-  
+
       const cert = allUsers?.[1];
-  
+
       if (cert) {
         try {
           const verified = await verifyCertificate(cert);
           if (!verified) {
             console.error("Certificate verification failed for users data");
             return [];
-          } else {
-            console.log("Users certificate verified successfully");
           }
         } catch (verificationError) {
-          console.error("Error verifying certificate for users:", verificationError);
-          return []; 
+          console.error(
+            "Error verifying certificate for users:",
+            verificationError
+          );
+          return [];
         }
       }
-  
-      return allUsers; 
+
+      return allUsers;
     } catch (error) {
       console.error("Error fetching users:", error);
       throw error;
     }
   };
-  
 
   return {
     isAuthenticated,
@@ -329,7 +328,7 @@ export const useAuthClient = (options = defaultOptions) => {
     reloadLogin,
     accountIdString,
     getAllUsers,
-    verifyCertificate
+    verifyCertificate,
   };
 };
 

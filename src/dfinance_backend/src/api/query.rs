@@ -154,19 +154,19 @@ pub fn get_asset_principal_certified(asset_name: String) -> Result<(Principal, C
     // asset name validator
     validate_asset_name(&asset_name)?;
 
-    let asset_principal = read_state(|state| {state.reserve_list.get(&asset_name).ok_or_else(|| Error::NotFoundAssetPrincipal)})?;
+    let asset_principal = get_asset_principal(asset_name.clone())?;
     let cert = get_certificate_witness("asset_principal".to_string());
     Ok((asset_principal, cert))
 }
 
 
-pub fn get_asset_principal(asset_name: String) -> Result<(Principal), Error> {
+pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
     // asset name validator
     validate_asset_name(&asset_name)?;
 
     let asset_principal = read_state(|state| {state.reserve_list.get(&asset_name).ok_or_else(|| Error::NotFoundAssetPrincipal)})?;
     
-    Ok((asset_principal))
+    Ok(asset_principal)
 }
 /*
  * @title Get All Users
@@ -175,7 +175,7 @@ pub fn get_asset_principal(asset_name: String) -> Result<(Principal), Error> {
  * @functionality This function returns a list of all registered users and their respective data.
  */
 #[query]  
-pub async fn get_all_users() -> (Vec<(Principal, UserData)>) {
+pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     let res =read_state(|state| {
         state
             .user_profile
@@ -188,13 +188,7 @@ pub async fn get_all_users() -> (Vec<(Principal, UserData)>) {
 }
 #[query]
 pub async fn get_all_users_certified() -> (Vec<(Principal, UserData)>, Certificate) {
-    let res =read_state(|state| {
-        state
-            .user_profile
-            .iter()
-            .map(|(k, v)| (k.clone(), v.0.clone()))
-            .collect()
-    }); 
+    let res = get_all_users().await;
     let cert = get_certificate_witness("all_users".to_string());
 
     (res, cert)

@@ -50,25 +50,24 @@ use ic_cdk::update;
 #[update]
 pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Error> {
     request_limiter()?;
-    // prevent anonymous call
     guard_prevent_anonymous()?;
+
     let user_principal = ic_cdk::caller();
-    debug!("User principal: {:?}", user_principal.to_text()); //debug
-    //todo- add comment here
+  
     let _guard: CallerGuard = CallerGuard::lock_principal(user_principal.clone())?;
     let _log_flusher = LogFlusher {
         user_key: user_principal.to_text(), // or whatever user_key you need
     };
-    //valid params
+    //valid param
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
-    //fetch param.asset canister id
-    let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
-    //fetch backend canister id
-    let platform_principal = ic_cdk::api::id();
+
+   
+    let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?; //fetch param.asset canister id
+    let platform_principal = ic_cdk::api::id();  //fetch backend canister id
 
     let amount_nat = params.amount.clone(); //check
-                                            //fetch reserve data for the asset
+    //fetch reserve data state for the asset
     let mut reserve_data = mutate_state(|state| {
         state
             .asset_index

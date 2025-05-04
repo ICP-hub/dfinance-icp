@@ -174,8 +174,7 @@ pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
  * @dev Retrieves a list of all registered users along with their data.
  * @returns A vector of tuples containing user principals and their data.
  * @functionality This function returns a list of all registered users and their respective data.
- */
-#[query]  
+ */ 
 pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     let res =read_state(|state| {
         state

@@ -200,6 +200,7 @@ pub async fn create_token_canister(
  * @returns The `Principal` ID of the newly created test token canister.
  * @functionality Creates a test token canister with predefined configurations.
  */
+//TODO - add flag? testnet
 pub async fn create_testtoken_canister(
     token_name: String,
     token_symbol: String,

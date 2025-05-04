@@ -58,7 +58,9 @@ pub fn init(args: Principal) {
         );
     });
     #[cfg(feature = "mainnet")]
-    init_logging(true);
+    init_logging(true); //info, warn, error
+    #[cfg(feature = "testnet")]
+    init_logging(false);
 
     schedule_temp_log_cleanup();
     debug!("function called");

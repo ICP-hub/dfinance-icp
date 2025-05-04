@@ -1,9 +1,9 @@
-use pocket_ic::{PocketIc, WasmResult};
-use candid::Nat;
-use candid::{encode_one, Principal};
+use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-use crate::utils::common_functions::*;
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title IC Withdraw Functionality Test
@@ -134,14 +134,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
         TestCase {
-            asset: "ckUSDT ".to_string(), // Asset name with trailing space
+            asset: "ckUSDT ".to_string(),  // Asset name with trailing space
             amount: Nat::from(10_000u128), // 10 USDT
             is_collateral: false,
-            expect_success: false, 
+            expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
         },
         TestCase {
-            asset: "icp".to_string(), // Lowercase asset name
+            asset: "icp".to_string(),           // Lowercase asset name
             amount: Nat::from(100_000_000u128), // 0.1 ICP
             is_collateral: false,
             expect_success: false, // Assuming asset names are case-sensitive
@@ -156,11 +156,11 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000u128),// 0.10 ICP
+            amount: Nat::from(10_000_000u128), // 0.10 ICP
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
-        }
+        },
     ];
     let user_principal = get_user_principal2();
     ic_cdk::println!(
@@ -180,8 +180,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
-
-        //checking asset principal 
+        //checking asset principal
         let asset_principal =
             match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
                 Some(principal) => principal,
@@ -234,10 +233,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                             );
                             continue;
                         }
-                        ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Withdraw successful.",
-                            i + 1,
-                        );
+                        ic_cdk::println!("✅ IC Test Case {} Passed: Withdraw successful.", i + 1,);
                         ic_cdk::println!("\n=================== Checking Reserves After successful Withdrawal ===================\n");
                         // Check reserve data after successful withdraw
                         fetch_reserve_data(pic, backend_canister, &case.asset);

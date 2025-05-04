@@ -1,13 +1,8 @@
-use candid::{ encode_one, Principal};
-use candid::Nat;
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
-
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title Withdraw Stress Test
@@ -28,7 +23,6 @@ use crate::utils::structs::*;
  * @param backend_canister Backend canister principal where the withdraw function resides.
  * @param random_users List of user principals for whom the withdraw request will be tested.
  */
-
 pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -106,19 +100,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         let mut failure_count = 0;
 
         for user_principal in random_users.clone() {
-            // ic_cdk::println!(
-            //     "\n======================== Initial Reserve Data   ========================\n"
-            // );
-
-            // fetch_reserve_data(pic, backend_canister, &case.asset);
-
-            // ic_cdk::println!(
-            //     "\n======================== Initial User Data  ========================\n"
-            // );
-
-            // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
-            /* Withdraw params */
+            // Withdraw params
             let withdraw_params = ExecuteWithdrawParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
@@ -200,18 +182,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                     failure_count += 1;
                 }
             }
-
-            // ic_cdk::println!(
-            //     "\n======================== Updated Reserve Data   ========================\n"
-            // );
-
-            // fetch_reserve_data(pic, backend_canister, &case.asset);
-
-            // ic_cdk::println!(
-            //     "\n======================== Updated User Data  ========================\n"
-            // );
-
-            // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
         }
 
         ic_cdk::println!("\n------------------------------------------------------------");

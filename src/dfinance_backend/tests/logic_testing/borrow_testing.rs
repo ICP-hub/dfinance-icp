@@ -1,13 +1,9 @@
-use pocket_ic::{PocketIc, WasmResult};
-use candid::Nat;
-use candid::{encode_one, Principal};
+use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-use crate::utils::common_functions::*;
-
-
-
-
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title IC Borrow Functionality Test
@@ -110,24 +106,24 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             asset: "ckETHEREUM".to_string(),
             amount: Nat::from(50u128),
             expect_success: false,
-            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
+            expected_error_message: Some("Length of the asset is invalid".to_string()),
         },
         // Large amount
         TestCase {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(100_000_000_000_000_000u128),
             expect_success: false,
-            expected_error_message: Some(
-                "Platform balance is low".to_string(),
-            ),
+            expected_error_message: Some("Platform balance is low".to_string()),
         },
         TestCase {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(500_000_000_000u128),
             expect_success: false,
-            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
+            expected_error_message: Some(
+                "LTV should be less than Liquidation Threshold".to_string(),
+            ),
         },
-        // tRAILING WHITESPACES
+        // Tailing whitespaces
         TestCase {
             asset: "ckUSDC ".to_string(),
             amount: Nat::from(50_000_000_000u128),
@@ -145,30 +141,31 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
 
     let user_principal = get_user_principal2();
 
+    // Start the borrow tests
     ic_cdk::println!(
         "\n======================== Starting IC Borrow Tests ========================\n"
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset);
+        ic_cdk::println!("Asset: {}", case.asset); // Display asset name for borrow request
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Display amount in human-readable format
+        ic_cdk::println!("Expected Success: {}", case.expect_success); // Log expected outcome of the test
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            ic_cdk::println!("Expected Error Message: {}", msg); // Log expected error message in failure case
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
-        //checking asset principal
+        // Check asset principal before proceeding with borrow
         let asset_principal =
             match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
                 Some(principal) => principal,
                 None => {
                     if !case.expect_success {
                         ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Supply rejected as expected",
+                            "✅ IC Test Case {} Passed: Borrow rejected as expected",
                             i + 1,
                         );
                     } else {
@@ -181,14 +178,12 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                 }
             };
 
-        /* Borrow params */
+        /* Borrow parameters */
         let borrow_params = ExecuteBorrowParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
         };
-        
-        
-        
+
         /*
          * @title Execute Borrow Transaction
          * @notice Calls the backend canister to execute a borrow operation.
@@ -197,7 +192,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         let result = pic.update_call(
             backend_canister,
             user_principal,
-            "execute_borrow",
+            "execute_borrow", // Function to borrow
             encode_one(borrow_params).unwrap(),
         );
 
@@ -213,20 +208,18 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 "❌ IC Test Case {} Failed: Expected failure but got success.",
                                 i + 1
                             );
-                            continue;
+                            continue; // Skip test if failure was expected but success occurred
                         }
-                        ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Borrow successful.",
-                            i + 1,
-                    
-                        );
+                        ic_cdk::println!("✅ IC Test Case {} Passed: Borrow successful.", i + 1,);
                         ic_cdk::println!("\n==================== Checking Reserves After successful Borrow ====================\n");
-                        // Reserve data fetching
+                        // Fetch reserve data after successful borrow
                         fetch_reserve_data(pic, backend_canister, &case.asset);
                         ic_cdk::println!("\n==================== Checking User data After successful Borrow ====================\n");
-                        //user reserve data fetching
+                        // Fetch user data after successful borrow
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        ic_cdk::println!(
+                            "\n---------------------------------------------------------\n"
+                        );
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -245,13 +238,16 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 error
                             );
                             ic_cdk::println!("\n===================  Verifying Reserve after intentional borrow failure ===================\n");
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n===================  Verifying User data after intentional borrow failure ===================\n");
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-                            
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying User data after intentional borrow failure ===================\n");
+                            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
-                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
-                            continue;
+                            ic_cdk::println!(
+                                "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",
+                                i + 1,
+                                error
+                            );
+                            continue; // Skip if success expected but rejection occurred
                         }
                     }
                 }
@@ -262,7 +258,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                     i + 1,
                     reject_message
                 );
-                continue;
+                continue; // Skip if the function call is rejected
             }
             Err(e) => {
                 ic_cdk::println!(
@@ -270,7 +266,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                     i + 1,
                     e
                 );
-                continue;
+                continue; // Skip if an error occurred during borrow function call
             }
         }
     }

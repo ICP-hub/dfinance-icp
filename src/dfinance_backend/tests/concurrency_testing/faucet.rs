@@ -20,40 +20,39 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
     }
 
     let test_cases = vec![
-        //  Valid faucet request for each asset
+        // Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_000_000_000u128), // 50 ICP
+            amount: Nat::from(5_000_000_000u128), // 50 ICP (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(450_000u128), // 0.0045 ckBTC
+            amount: Nat::from(450_000u128), // 0.0045 ckBTC (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(45_000_000_000u128), //   450 usdc
+            amount: Nat::from(45_000_000_000u128), // 450 usdc (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000_000u128), // 300 ckUSDT
+            amount: Nat::from(30_000_000_000u128), // 300 ckUSDT (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14_000_000u128), //  0.14 ckETH
+            amount: Nat::from(14_000_000u128), // 0.14 ckETH (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
     ];
 
-    // let user_principal = get_user_principal();
     ic_cdk::println!(
         "\n======================== Starting IC Faucet Tests ========================\n"
     );
@@ -63,14 +62,14 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Displaying the faucet request amount in human-readable format
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            ic_cdk::println!("Expected Error Message: {}", msg); // Display expected error message
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
-        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
+        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for each faucet request
         for user_principal in random_users.clone() {
             let msg = pic
                 .submit_call(
@@ -85,12 +84,11 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         let mut results = Vec::new();
         for msg_id in msg_ids {
             let res = pic.await_call(msg_id).unwrap();
-            results.push(res);
+            results.push(res); // Store the results of each faucet request
         }
         for result in results {
             match result {
                 WasmResult::Reply(reply) => {
-                    // ic_cdk::println!("Raw response bytes: {:?}", candid::decode_one(&reply));
                     let faucet_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to decode faucet response");
 
@@ -148,9 +146,11 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 }
             }
         }
+
+        // Simulate faucet request for additional users
         for num in 1..=5 {
             let index: u32 = num as u32;
-            // Simulate faucet request
+            // Simulate faucet request for user
             let result = pic.update_call(
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),
@@ -219,7 +219,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             }
         }
 
-        // Simulate faucet request
+        // Final faucet request
         let result = pic.update_call(
             backend_canister,
             get_user_principal2(),

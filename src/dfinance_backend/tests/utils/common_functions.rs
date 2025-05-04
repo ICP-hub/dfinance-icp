@@ -208,7 +208,8 @@ pub fn test_icrc2_aprove(
             let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
             match approve_response {
                 Ok(ApproveResult::Ok(block_index)) => {
-                    ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
+                    ic_cdk::println!("☑️  Approve succeeded, block index: {}\n", block_index);
+                    ic_cdk::println!("---------------------------------------------------\n");
                     return true;
                 }
                 Ok(ApproveResult::Err(error)) => {

@@ -2,7 +2,7 @@ use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
-use candid::{ encode_one, Principal};
+use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 /*
  * @title IC Supply Functionality Test
@@ -86,14 +86,14 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
             amount: Nat::from(10_000_000_000u128), // Supply another 100 ckUSDT (includes transaction fee)
-            is_collateral: false, // Explicitly keep it non-collateral
+            is_collateral: false,                  // Explicitly keep it non-collateral
             expect_success: true, // Should succeed, just adding to existing non-collateral position
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
             amount: Nat::from(50_000_000_00u128), // Supply another 50 ckUSDT (includes transaction fee)
-            is_collateral: true, // Explicitly keep it collateral
+            is_collateral: true,                  // Explicitly keep it collateral
             expect_success: true,
             expected_error_message: None,
         },
@@ -190,7 +190,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
-        
+
         ic_cdk::println!("------------------------------------------------------------\n");
 
         let asset_principal =
@@ -212,9 +212,9 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 }
             };
 
-        ic_cdk::println!("user principal = {:?}",user_principal.to_text());
+        ic_cdk::println!("user principal = {:?}", user_principal.to_text());
         ic_cdk::println!("asset principal = {:?}", asset_principal.to_text());
-        ic_cdk::println!("backend canister = {:?}",backend_canister.to_text());
+        ic_cdk::println!("backend canister = {:?}", backend_canister.to_text());
 
         /*
          * @title Approve ICRC2 Transfer
@@ -307,18 +307,16 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error.message()
                             );
-                        ic_cdk::println!("\n===================  Verifying Reserve after intentional supply failure ===================\n");
-                        // Check reserves after successful supply
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n===================  Verifying User data after intentional supply failure ===================\n");
-                        // Check user data after successful supply
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional supply failure ===================\n");
+                            // Check reserves after successful supply
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying User data after intentional supply failure ===================\n");
+                            // Check user data after successful supply
+                            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
-                        
-                        
                     }
                 }
             }

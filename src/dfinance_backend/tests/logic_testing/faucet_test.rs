@@ -3,6 +3,7 @@ use crate::utils::error as errors;
 use candid::Nat;
 use candid::{encode_args, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+
 /*
  * @title Faucet Functionality Test
  * @description Tests the `faucet` method with various asset and amount combinations to ensure proper token distribution, validation, and error handling.
@@ -44,6 +45,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         expected_error_message: Option<String>,
     }
 
+    // Define a list of valid and invalid test cases to check the faucet functionality
     let test_cases = vec![
         // Valid faucet request for each asset
         TestCase {
@@ -76,12 +78,12 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             expect_success: true,
             expected_error_message: None,
         },
-        // Asset length exceeds 7 characters
+        // Invalid Cases
         TestCase {
             asset: "ckETH_long".to_string(),
             amount: Nat::from(100_000u128),
             expect_success: false,
-            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
+            expected_error_message: Some("Length of the asset is invalid".to_string()),
         },
         // Non-existent asset
         TestCase {
@@ -106,7 +108,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                 "Requested amount exceeds the total faucet limit.".to_string(),
             ),
         },
-        // Boundry amount
+        // Boundary amount
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(100_000_000u128),
@@ -116,19 +118,21 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
     ];
 
     let user_principal = get_user_principal2();
+    // Start testing faucet functionality
     ic_cdk::println!(
         "\n======================== Starting IC Faucet Tests ========================\n"
     );
+
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Faucet Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset);
+        ic_cdk::println!("Asset: {}", case.asset); // Log the asset name for this test case
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Log the amount in a human-readable format
+        ic_cdk::println!("Expected Success: {}", case.expect_success); // Log the expected outcome
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            ic_cdk::println!("Expected Error Message: {}", msg); // Log the expected error message if any
         }
 
         ic_cdk::println!("------------------------------------------------------------\n");
@@ -223,7 +227,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
          */
         for num in 1..=5 {
             let index: u32 = num as u32;
-            // Simulate faucet request
+            // Simulate faucet request for each user
             let result = pic.update_call(
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),

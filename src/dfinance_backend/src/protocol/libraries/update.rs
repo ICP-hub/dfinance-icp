@@ -12,7 +12,7 @@ use crate::declarations::structs::{
 };
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::LogFlusher;
+use crate::protocol::utils::log::LogFlusher;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
 use crate::protocol::utils::log::{log_internal, LogLevel};

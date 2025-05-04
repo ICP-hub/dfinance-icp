@@ -1,15 +1,9 @@
-use candid::{decode_one, encode_one, Principal};
-use candid::Nat;
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
-
-
+use candid::Nat;
+use candid::{decode_one, encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title Supply Stress Test
@@ -150,15 +144,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 continue;
             }
 
-            // ic_cdk::println!("\n======================== Initial Reserve Data   ========================\n");
-
-            // fetch_reserve_data(pic, backend_canister, &case.asset);
-
-            // ic_cdk::println!("\n======================== Initial User Data  ========================\n");
-
-            // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
-            /* Supply params */
+            // Supply params
             let supply_params = ExecuteSupplyParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
@@ -221,18 +207,6 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     failure_count += 1;
                 }
             }
-
-            // ic_cdk::println!(
-            //     "\n======================== Updated Reserve Data   ========================\n"
-            // );
-
-            // fetch_reserve_data(pic, backend_canister, &case.asset);
-
-            // ic_cdk::println!(
-            //     "\n======================== Updated User Data  ========================\n"
-            // );
-
-            // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
         }
 
         ic_cdk::println!("\n------------------------------------------------------------");

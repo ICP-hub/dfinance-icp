@@ -1,22 +1,8 @@
-use candid::{decode_one, encode_args, Principal};
-use candid::Nat;
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+use candid::Nat;
+use candid::{decode_one, encode_args, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title Faucet Stress Test
@@ -46,6 +32,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         expected_error_message: Option<String>,
     }
 
+    // Define test cases with asset names and faucet amounts
     let test_cases = vec![
         TestCase {
             asset: "ICP".to_string(),
@@ -61,7 +48,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(45_000_000_000u128), //   450 usdc
+            amount: Nat::from(45_000_000_000u128), // 450 ckUSDC
             expect_success: true,
             expected_error_message: None,
         },
@@ -80,6 +67,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
     ];
 
     let total_users = random_users.len();
+    // Log the start of the stress test
     ic_cdk::println!(
         "\n======================== Starting IC Faucet Stress Testing ========================\n"
     );
@@ -88,10 +76,12 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         total_users
     );
 
+    // Iterate over each test case to perform faucet requests
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🚀 Test Case {}: Faucet Request Initiated", i + 1);
 
+        // Convert the amount to float for easier display
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         ic_cdk::println!(
@@ -102,6 +92,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         );
         ic_cdk::println!("------------------------------------------------------------\n");
 
+        // Track success and failure counts for the current test case
         let mut success_count = 0;
         let mut failure_count = 0;
 
@@ -118,6 +109,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
          * @param backend_canister Backend canister principal.
          * @param user_principal User's principal.
          */
+        // Simulate faucet requests for each user
         for user_principal in &random_users {
             let result = pic.update_call(
                 backend_canister,
@@ -179,9 +171,10 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
          * @param pic PocketIc instance.
          * @param backend_canister Backend canister principal.
          */
+        // Iterate through user principals to simulate multiple faucet requests
         for num in 1..=5 {
             let index: u32 = num as u32;
-            // Simulate faucet request
+            // Simulate faucet request for a specific user
             let result = pic.update_call(
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),
@@ -250,6 +243,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             }
         }
 
+        // Log summary for the test case
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
         ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
@@ -257,6 +251,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!("------------------------------------------------------------\n");
     }
 
+    // Log the completion of the faucet stress test
     ic_cdk::println!(
         "\n======================== IC Faucet Stress Test Completed ========================\n"
     );

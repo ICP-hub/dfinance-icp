@@ -18,9 +18,9 @@ use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::guards::locks_handler::{CallerGuard, LogFlusher};
+use crate::guards::locks_handler::CallerGuard;
 use crate::guards::api_limiter::request_limiter;
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 
 /*
 -------------------------------------

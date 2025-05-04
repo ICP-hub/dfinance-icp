@@ -11,7 +11,7 @@ use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
 use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
 use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::{CallerGuard, LogFlusher};
+use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
 use crate::protocol::libraries::update::{user_data, user_reserve};
 use crate::protocol::logic::borrow::repay;
@@ -25,7 +25,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::stable_storage::state_handler::insert_certified_value;
 
 /*

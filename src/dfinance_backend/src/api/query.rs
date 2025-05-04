@@ -150,7 +150,7 @@ pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
  * @functionality This function returns the principal ID linked to a particular asset.
  */
 #[query]
-pub fn get_asset_principal(asset_name: String) -> Result<(Principal, Certificate), Error> {
+pub fn get_asset_principal_certified(asset_name: String) -> Result<(Principal, Certificate), Error> {
     // asset name validator
     validate_asset_name(&asset_name)?;
 
@@ -159,6 +159,15 @@ pub fn get_asset_principal(asset_name: String) -> Result<(Principal, Certificate
     Ok((asset_principal, cert))
 }
 
+
+pub fn get_asset_principal(asset_name: String) -> Result<(Principal), Error> {
+    // asset name validator
+    validate_asset_name(&asset_name)?;
+
+    let asset_principal = read_state(|state| {state.reserve_list.get(&asset_name).ok_or_else(|| Error::NotFoundAssetPrincipal)})?;
+    
+    Ok((asset_principal))
+}
 /*
  * @title Get All Users
  * @dev Retrieves a list of all registered users along with their data.
@@ -166,7 +175,19 @@ pub fn get_asset_principal(asset_name: String) -> Result<(Principal, Certificate
  * @functionality This function returns a list of all registered users and their respective data.
  */
 #[query]  
-pub async fn get_all_users() -> (Vec<(Principal, UserData)>, Certificate) {
+pub async fn get_all_users() -> (Vec<(Principal, UserData)>) {
+    let res =read_state(|state| {
+        state
+            .user_profile
+            .iter()
+            .map(|(k, v)| (k.clone(), v.0.clone()))
+            .collect()
+    }); 
+    
+    res
+}
+#[query]
+pub async fn get_all_users_certified() -> (Vec<(Principal, UserData)>, Certificate) {
     let res =read_state(|state| {
         state
             .user_profile
@@ -178,7 +199,6 @@ pub async fn get_all_users() -> (Vec<(Principal, UserData)>, Certificate) {
 
     (res, cert)
 }
-
 /*
  * @title Get All Faucet
  * @dev Retrieves a list of all users with their faucet reserves.

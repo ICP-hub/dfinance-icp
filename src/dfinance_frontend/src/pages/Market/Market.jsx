@@ -416,7 +416,9 @@ const Market = () => {
                   </tr>
                 </thead>
                 <tbody>
+                {console.log("current",currentItems)}
                   {currentItems.map((item, index) => (
+                  
                     <tr
                       key={index}
                       className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg  ${index !== currentItems.length - 1

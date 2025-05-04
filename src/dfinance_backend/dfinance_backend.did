@@ -221,8 +221,12 @@ service : (principal) -> {
   get_all_assets_certified : () -> (vec AssetInfo, Certificate) query;
   get_all_logs : () -> (vec text) query;
   get_all_user_list : (nat64, nat64) -> (Result_5);
-  get_all_users : () -> (vec record { principal; UserData }, Certificate) query;
-  get_asset_principal : (text) -> (Result_6) query;
+  get_all_users : () -> (vec record { principal; UserData }) query;
+  get_all_users_certified : () -> (
+      vec record { principal; UserData },
+      Certificate,
+    ) query;
+  get_asset_principal_certified : (text) -> (Result_6) query;
   get_cached_exchange_rate_certified : (text) -> (Result_3) query;
   get_canister_id_by_name : (text) -> (Result_7) query;
   get_liquidation_users_concurrent : (nat64, nat64) -> (

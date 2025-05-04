@@ -278,63 +278,6 @@ export const useAuthClient = (options = defaultOptions) => {
       return true;
     }
   }
-  // Todo make this function commented 
-  // const getCanisterIdByName = async (canisterName) => {
-  //   if (!backendActor) {
-  //     console.error("Backend actor not initialized");
-  //     throw new Error("Backend actor not initialized");
-  //   }
-  //   try {
-  //     const result = await backendActor.get_canister_id_by_name(canisterName);
-  //     if ("Ok" in result) {
-  //       const [principal, certObj] = result.Ok;
-  //       const agent = new HttpAgent({ identity });
-  //       const rootKey = await agent.fetchRootKey();
-  //       setCertObj(certObj);
-  //       setRootKey(rootKey);
-  //       console.log("Canister ID fetched successfully");
-  //       return {
-  //         principal: Principal.from(principal),
-  //         verified: isVerified,
-  //       };
-  //     } else {
-  //       console.error("Error result received:", result.Err);
-  //       throw new Error(result.Err);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error during getCanisterIdByName execution:", error);
-  //     throw error;
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   const fetchCanisterInfo = async () => {
-  //     try {
-  //       console.log("Fetching canister info...");
-  //       const data = await getCanisterIdByName("xrc");
-  //       console.log("Canister data fetched:", data);
-  //     } catch (err) {
-  //       console.error("Error fetching canister info:", err);
-  //     }
-  //   };
-
-  //   if (backendActor) {
-  //     fetchCanisterInfo();
-  //   }
-  // }, [backendActor]);
-
-  // useEffect(() => {
-  //   if (certObj && rootKey) {
-  //     if (isVerified === null || isVerified === undefined) {
-  //       return;
-  //     }
-  //     if (!isVerified) {
-  //       console.error("Certificate verification failed:", verificationError);
-  //     } else {
-  //       console.log("Certificate verified successfully");
-  //     }
-  //   }
-  // }, [rootKey, verificationError]);
 
 
   // Fetches all registered users
@@ -344,9 +287,8 @@ export const useAuthClient = (options = defaultOptions) => {
     }
   
     try {
-      const allUsers = await backendActor.get_all_users();
+      const allUsers = await backendActor.get_all_users_certified();
   
-      // Assuming certificate is present as the second element of the result
       const cert = allUsers?.[1];
   
       if (cert) {
@@ -354,17 +296,17 @@ export const useAuthClient = (options = defaultOptions) => {
           const verified = await verifyCertificate(cert);
           if (!verified) {
             console.error("Certificate verification failed for users data");
-            return []; // Return empty array if verification fails
+            return [];
           } else {
             console.log("Users certificate verified successfully");
           }
         } catch (verificationError) {
           console.error("Error verifying certificate for users:", verificationError);
-          return []; // Return empty array if verification fails
+          return []; 
         }
       }
   
-      return allUsers; // Return the data after successful verification
+      return allUsers; 
     } catch (error) {
       console.error("Error fetching users:", error);
       throw error;

@@ -738,6 +738,7 @@ const Borrow = ({
                       }
                     }}
                   >
+                    {console.log("borrowableValue", borrowableValue)}
                     {loading &&
                       (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>

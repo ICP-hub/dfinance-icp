@@ -112,24 +112,7 @@ const DashboardCards = () => {
   
     try {
       const result = await backendActor.guard_admin_only();
-  
-      if (result && result[1]) {
-        try {
-          const verification = await verifyCertificate(result[1]);
-          if (!verification) {
-            console.error("Certificate verification failed for assets");
-            return; // Don't proceed with unverified data
-          } else {
-            console.log("Assets certificate verified successfully");
-          }
-        } catch (verificationError) {
-          console.error("Error during assets certificate verification:", verificationError);
-          return;
-        }
-      }
-  
-      const responseData = result[0]; // Assuming first item is the actual response
-  
+      const responseData = result; 
       if ("Ok" in responseData) {
         setLike(true);
       } else {
@@ -168,7 +151,7 @@ const DashboardCards = () => {
     
     try {
       const result = await backendActor.get_total_users();
-  
+  console.log("result in admin page ",result)
       // Assuming result is a tuple: [data, certificate]
       const userData = result?.[0];
       const cert = result?.[1];

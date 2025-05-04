@@ -100,7 +100,12 @@ use crate::utils::structs::*;
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
+        if i%2 != Nat::from(0u128) {
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+        }else{
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
+        }
+        // ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
         ic_cdk::println!("Debt Asset: {}", case.debt_asset);
         ic_cdk::println!("Collateral Asset: {}", case.collateral_asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
@@ -294,10 +299,6 @@ use crate::utils::structs::*;
                 );
                 continue;
             }
-        }
-
-        if i % 2 != Nat::from(0u128) {
-            
         }
         if i%2 == Nat::from(0u128) {
 

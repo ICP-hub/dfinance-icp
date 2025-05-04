@@ -2,9 +2,7 @@ use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     get_users_principal,
-     test_create_user_reserve_with_low_health, test_get_asset_principal,
-     test_icrc2_aprove,
+     fetch_reserve_data, get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
@@ -93,6 +91,12 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
+        
+        ic_cdk::println!("\n====================== Initial Debt Reserves before concurrent Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+        ic_cdk::println!("\n====================== Initial Collateral Reserves before concurrent Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+        ic_cdk::println!("\n---------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for _ in random_users.clone() {
@@ -223,6 +227,11 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 }
             }
         }
+        ic_cdk::println!("\n====================== Initial Debt Reserves before concurrent Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+        ic_cdk::println!("\n====================== Initial Collateral Reserves before concurrent Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+        ic_cdk::println!("\n---------------------------------------------------------\n");
     }
     ic_cdk::println!(
         "\n======================== IC Liquidation Tests Completed ========================\n"

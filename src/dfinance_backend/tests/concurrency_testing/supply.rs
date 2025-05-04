@@ -88,7 +88,7 @@ use crate::utils::structs::*;
         ic_cdk::println!("------------------------------------------------------------\n");
 
         ic_cdk::println!(
-            "\n======================== Reserve data before concurent calls  ========================\n"
+            "\n======================== Initial Reserve data before concurrent calls  ========================\n"
         );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
 
@@ -224,7 +224,7 @@ use crate::utils::structs::*;
         }
 
         ic_cdk::println!(
-            "\n======================== Total reserve data after concurent calls  ========================\n"
+            "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
         ic_cdk::println!("\n---------------------------------------------------------\n");

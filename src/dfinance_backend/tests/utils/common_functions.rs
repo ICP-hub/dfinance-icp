@@ -134,12 +134,12 @@ pub fn test_get_asset_principal(
             match decode_one::<Result<Principal, errors::Error>>(&response_data) {
                 Ok(Ok(principal)) => Some(principal),
                 Ok(Err(err)) => {
-                    ic_cdk::println!("Output error: Error retrieving asset principal: {:?}", err);
+                    ic_cdk::println!("Error retrieving asset principal: {:?}\n", err.message());
                     None
                 }
                 Err(decode_err) => {
                     ic_cdk::println!(
-                        "Output error: Error retrieving asset principal with error: {:?}",
+                        "Error retrieving asset principal: {:?}\n",
                         decode_err
                     );
                     None
@@ -478,7 +478,7 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
                     );
                 }
                 Err(error) => {
-                    ic_cdk::println!("Failed to retrieve reserve data for {}: {:?}", asset, error);
+                    ic_cdk::println!("\n=========================================================================\n");
                 }
             }
         }
@@ -561,6 +561,7 @@ pub fn fetch_user_data(
                         user_principal,
                         error
                     );
+
                 }
             }
         }

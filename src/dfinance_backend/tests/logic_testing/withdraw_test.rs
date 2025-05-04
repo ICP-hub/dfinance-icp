@@ -180,6 +180,27 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
+
+        //checking asset principal 
+        let asset_principal =
+            match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                Some(principal) => principal,
+                None => {
+                    if !case.expect_success {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Supply rejected as expected",
+                            i + 1,
+                        );
+                    } else {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Expected success but got rejection",
+                            i + 1
+                        );
+                    }
+                    continue;
+                }
+            };
+
         /* Withdraw params */
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),

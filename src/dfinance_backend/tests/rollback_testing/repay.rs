@@ -41,7 +41,7 @@ use crate::utils::structs::*;
         // Valid  test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(200_000_000u128), // 2 ICP (includes transaction fee)
+            amount: Nat::from(100_000_000u128), // 2 ICP (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
@@ -84,7 +84,12 @@ use crate::utils::structs::*;
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
+        if i%2 != Nat::from(0u128) {
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+        }else{
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
+        }
+        // ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
@@ -163,6 +168,8 @@ use crate::utils::structs::*;
             ic_cdk::println!("\n======================== Initial User Data Before Roll Backs ========================\n");
 
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+
+            ic_cdk::println!("\n------------------------------------------------------------------------------------\n");
         }
 
         /* Repay params */
@@ -267,6 +274,7 @@ use crate::utils::structs::*;
             "\n======================== Final User Data (No Rollbacks Initiated) ========================\n"
         );
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+            ic_cdk::println!("\n------------------------------------------------------------------------------------\n");
     }else{
         ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
         fetch_reserve_data(pic, backend_canister, &case.asset);
@@ -274,6 +282,7 @@ use crate::utils::structs::*;
             "\n======================== Final User Data After Rollback ========================\n"
         );
         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+        ic_cdk::println!("\n------------------------------------------------------------------------------------\n");
     }
     }
     ic_cdk::println!(

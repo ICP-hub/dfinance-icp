@@ -129,11 +129,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     info!("udpate user data supply called successfully"); //info
 
     //updating the reserve data in the state
-    mutate_state(|state| {
-        state
-            .asset_index
-            .insert(params.asset.clone(), Candid(reserve_data.clone()))
-    });
+    
 
     // Transfers the asset from the user to our backend cansiter
     match asset_transfer_from(
@@ -146,6 +142,11 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     {
         Ok(new_balance) => {
             info!("Asset transfer from user to backend canister executed successfully");
+            mutate_state(|state| {
+                state
+                    .asset_index
+                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            });
             Ok(new_balance)
         }
         Err(_) => {
@@ -169,11 +170,11 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             .await?;
             //revert the reserve data changes
             //TODO: check if we need to revert the reserve data changes
-            mutate_state(|state| {
-                state
-                    .asset_index
-                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
-            });
+            // mutate_state(|state| {
+            //     state
+            //         .asset_index
+            //         .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            // });
             info!("Rollback successfully executed"); //info
 
             return Err(Error::ErrorMintTokens); //TODO: jyotirmay change the error message it should be ErrorSupplyTokens

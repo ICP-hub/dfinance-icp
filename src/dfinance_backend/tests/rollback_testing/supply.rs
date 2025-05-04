@@ -40,7 +40,7 @@ use crate::utils::structs::*;
     let test_cases: Vec<TestCase> = vec![
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_00_000_000u128), // 5 ICP (includes transaction fee)
+            amount: Nat::from(25_00_000_000u128), // 5 ICP (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -94,15 +94,6 @@ use crate::utils::structs::*;
         expect_success: true,
         expected_error_message: None, 
     },
-
-    // // Test Case: Supply Very Small Amount 
-    //  TestCase { 
-    //     asset: "ckUSDC".to_string(), 
-    //     amount: Nat::from(811u128), // Fee + 1 base unit
-    //     is_collateral: true,
-    //     expect_success: false,
-    //     expected_error_message: Some("Fee exceeds the amount".to_string()), 
-    // },
     ];
 
     let user_principal = get_user_principal2();
@@ -115,7 +106,12 @@ use crate::utils::structs::*;
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 Test Case {}: Executing Supply Request", i + 1);
+        if i%2 != Nat::from(0u128) {
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Supply Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+        }else{
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Supply Request", i + 1);
+        }
+        // ic_cdk::println!("🔵 Test Case {}: Executing Supply Request", i + 1);
         ic_cdk::println!(" Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
@@ -195,6 +191,7 @@ use crate::utils::structs::*;
 
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
         }
+        ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
         /* Supply params */
         let supply_params = ExecuteSupplyParams {
             asset: case.asset.clone(),
@@ -301,19 +298,21 @@ use crate::utils::structs::*;
             }
         }
         if i%2 == Nat::from(0u128) {
-            ic_cdk::println!("\n======================== Final Reserve Data (No Rollbacks Initiated) ========================\n");
+            ic_cdk::println!("\n======================== Verifying Reserve Data (No Rollbacks Initiated) ========================\n");
             fetch_reserve_data(pic, backend_canister, &case.asset);
             ic_cdk::println!(
-            "\n======================== Final User Data (No Rollbacks Initiated) ========================\n"
+            "\n======================== Verifying User Data (No Rollbacks Initiated) ========================\n"
         );
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
     }else{
-        ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
+        ic_cdk::println!("\n======================== Verifying Reserve Data After Intended Rollback ========================\n");
         fetch_reserve_data(pic, backend_canister, &case.asset);
         ic_cdk::println!(
-            "\n======================== Final User Data After Rollback ========================\n"
+            "\n======================== Verifying User Data After Intended Rollback ========================\n"
         );
         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+
+        ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
     }
     }
 

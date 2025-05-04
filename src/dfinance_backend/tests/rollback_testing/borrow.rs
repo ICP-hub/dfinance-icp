@@ -39,15 +39,15 @@ use crate::utils::structs::*;
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_00_000_000u128), // 1 ICP
+            amount: Nat::from(5_00_000_000u128), // 1 ICP
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_00_000_000u128), // 1 ICP
+            amount: Nat::from(10_000_000_000u128), // 1 ICP
             expect_success: false,
-            expected_error_message: Some("Insufficient balance".to_string()),
+            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
         TestCase {
             asset: "ckETH".to_string(),
@@ -57,15 +57,21 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH
-            expect_success: true,
-            expected_error_message: None,
+            amount: Nat::from(200_000_000u128), // 0.002 ckETH
+            expect_success: false,
+            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(30_000_000u128), // 30 ckUSDT
             expect_success: true,
             expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(2_800_000_000u128), // 30 ckUSDT
+            expect_success: true,
+            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
     ];
 
@@ -76,7 +82,11 @@ use crate::utils::structs::*;
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
+        if i%2 != Nat::from(0u128) {
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+        }else{
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
+        }
         ic_cdk::println!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
@@ -88,13 +98,15 @@ use crate::utils::structs::*;
         ic_cdk::println!("------------------------------------------------------------\n");
 
 
-        ic_cdk::println!("\n------------------ Initial Reserve Data Before Roll Backs  ----------------------\n");
+        ic_cdk::println!("\n=========================== Initial Reserve Data Before Roll Backs  ===========================\n");
 
             fetch_reserve_data(pic, backend_canister, &case.asset);
 
-            ic_cdk::println!("\n--------------------- Initial User Data Before Roll Backs ---------------------\n");
+            ic_cdk::println!("\n=========================== Initial User Data Before Roll Backs ===========================\n");
 
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+
+            ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
 
         /* Borrow params */
         let borrow_params = ExecuteBorrowParams {
@@ -132,6 +144,7 @@ use crate::utils::structs::*;
                             "✅ IC Test Case {} Passed: Borrow successful.",
                             i + 1,
                         );
+                        
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -153,6 +166,7 @@ use crate::utils::structs::*;
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
+                        
                     }
                 }
             }
@@ -174,17 +188,17 @@ use crate::utils::structs::*;
             }
         }
         if i%2 == Nat::from(0u128) {
-            ic_cdk::println!("\n======================== Final Reserve Data (No Rollbacks Initiated) ========================\n");
+            ic_cdk::println!("\n=========================== Final Reserve Data (No Rollbacks Initiated) ===========================\n");
             fetch_reserve_data(pic, backend_canister, &case.asset);
             ic_cdk::println!(
-            "\n======================== Final User Data (No Rollbacks Initiated) ========================\n"
+            "\n=========================== Final User Data (No Rollbacks Initiated) ===========================\n"
         );
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
     }else{
-        ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
+        ic_cdk::println!("\n=========================== Verifying Reserve Data After Intended Rollback ===========================\n");
         fetch_reserve_data(pic, backend_canister, &case.asset);
         ic_cdk::println!(
-            "\n======================== Final User Data After Rollback ========================\n"
+            "\n=========================== Verifying User Data After Intended Rollback ===========================\n"
         );
         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
     }

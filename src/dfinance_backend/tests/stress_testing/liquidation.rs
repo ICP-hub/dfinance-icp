@@ -137,6 +137,11 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
+        ic_cdk::println!("\n====================== Checking Debt Reserves before Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+        ic_cdk::println!("\n====================== Checking Collateral Reserves before Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+        ic_cdk::println!("\n-----------------------------------------------------------------------------\n");
         for _ in random_users.clone() {
             /* Get asset principal; handle missing cases  */
             let asset_principal =
@@ -226,6 +231,11 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                                     "✅ IC Test Case {} Passed: Liquidation completed successfully",
                                     i + 1
                                 );
+                                ic_cdk::println!("\n====================== Checking Debt Reserves After successful Liquidation ======================\n");
+                                fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+                                ic_cdk::println!("\n====================== Checking Collateral Reserves After successful Liquidation ======================\n");
+                                fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+                                ic_cdk::println!("\n-----------------------------------------------------------------------------\n");
                             } else {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success",

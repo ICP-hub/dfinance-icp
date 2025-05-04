@@ -80,6 +80,13 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
+
+        ic_cdk::println!(
+            "\n======================== Initial reserve data before concurrent calls  ========================\n"
+        );
+        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        ic_cdk::println!("\n---------------------------------------------------------\n");
+
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for user_principal in random_users.clone() {
             let withdraw_params = ExecuteWithdrawParams {
@@ -161,6 +168,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             "\n======================== Total reserve data after concurent calls  ========================\n"
         );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        ic_cdk::println!("\n---------------------------------------------------------\n");
     }
 
     ic_cdk::println!(

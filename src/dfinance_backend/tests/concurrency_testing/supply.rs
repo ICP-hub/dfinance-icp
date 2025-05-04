@@ -42,21 +42,21 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(40_000u128),
+            amount: Nat::from(45_000u128),
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(800_000u128),
+            amount: Nat::from(800_000_000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(5_000u128),
+            amount: Nat::from(6_000u128),
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -185,9 +185,8 @@ use crate::utils::structs::*;
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Supply successful: {}",
+                                "✅ IC Test Case {} Passed: Supply successful",
                                 i + 1,
-                                balance
                             );
                         }
                         Err(error) => {
@@ -228,6 +227,7 @@ use crate::utils::structs::*;
             "\n======================== Total reserve data after concurent calls  ========================\n"
         );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        ic_cdk::println!("\n---------------------------------------------------------\n");
     }
     ic_cdk::println!(
         "\n======================== IC Supply Tests Completed ========================\n"

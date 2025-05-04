@@ -465,6 +465,16 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
                         asset,
                         balance.liquidity_index
                     );
+                    ic_cdk::println!(
+                        "Reserve Data - Borrow Rate for {}: {:?}",
+                        asset,
+                        balance.borrow_rate
+                    );
+                    ic_cdk::println!(
+                        "Reserve Data - Current Liquidity Rate for {}: {:?}",
+                        asset,
+                        balance.current_liquidity_rate
+                    );
                 }
                 Err(error) => {
                     ic_cdk::println!("Failed to retrieve reserve data for {}: {:?}", asset, error);

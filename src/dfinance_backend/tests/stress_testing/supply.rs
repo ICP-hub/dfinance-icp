@@ -49,14 +49,14 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(45_00u128), // 0.045 ckBTC (includes transaction fee)
+            amount: Nat::from(6_000u128), // 0.00006 ckBTC (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(45_00u128), // 0.045 ckBTC (includes transaction fee)
+            amount: Nat::from(4_500u128), // 0.000045 ckBTC (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -77,7 +77,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(5_000u128), // 0.00005 ckETH (includes transaction fee)
+            amount: Nat::from(6_000u128), // 0.00005 ckETH (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,

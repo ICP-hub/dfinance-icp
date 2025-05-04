@@ -285,7 +285,10 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                         }
                         ic_cdk::println!("✅ IC Test Case {} Passed: Supply successful.", i + 1,);
                         ic_cdk::println!("=================== Checking Reserves After successful supply ===================");
+                        // Check reserves after successful supply
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        // Check user data after successful supply
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
@@ -304,8 +307,11 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("=================== Checking Balance After successful supply ===================");
+                        ic_cdk::println!("=================== Checking Balance After successful supply ===================");
+                        // Check reserves after successful supply
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        // Check user data after successful supply
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);

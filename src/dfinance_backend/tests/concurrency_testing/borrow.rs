@@ -114,9 +114,8 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Borrow successful: {}",
+                                "✅ IC Test Case {} Passed: Borrow successful.",
                                 i + 1,
-                                balance
                             );
                         }
                         Err(error) => {

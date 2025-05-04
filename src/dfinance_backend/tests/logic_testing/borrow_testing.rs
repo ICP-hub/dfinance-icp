@@ -201,9 +201,12 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                     
                         );
                         ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                        // Reserve data fetching
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        //user reserve data fetching
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
                     }
                     Err(error) => {
                         if !case.expect_success {

@@ -107,9 +107,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 continue;
                             }
                             ic_cdk::println!(
-                                "✅ IC Test Case {} Passed: Faucet successful. New Balance: {}",
+                                "✅ IC Test Case {} Passed: Faucet successful.",
                                 i + 1,
-                                balance
                             );
                         }
                         Err(error) => {

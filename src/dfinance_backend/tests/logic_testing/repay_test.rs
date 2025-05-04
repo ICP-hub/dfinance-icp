@@ -275,7 +275,10 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                             i + 1,
                         );
                         ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
+                        // Fetch and display reserve data
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        // Fetch and display user data
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
@@ -294,8 +297,11 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
+                        ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
+                        // Fetch and display reserve data
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
+                        // Fetch and display user data
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!(

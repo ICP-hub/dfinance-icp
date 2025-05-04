@@ -49,7 +49,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(4u128), // 0.00004 ckBTC
+            amount: Nat::from(4_000u128), // 0.00004 ckBTC
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -70,14 +70,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(3u128), // 0.03 ckUSDT
+            amount: Nat::from(3_000_000u128), // 0.03 ckUSDT
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(5u128), // 0.00005 ckETH
+            amount: Nat::from(5_000u128), // 0.00005 ckETH
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,

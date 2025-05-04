@@ -110,15 +110,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     }
     //updating params.amount with the actual amount of tokens to be supplied
     params.amount = params.amount.clone() - transfer_token_fee.clone();
-
-    let liq_added = params.amount.clone();
-    let liq_taken = zero_nat_value();
-    //Updating the APYs
-    reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
-        .await?;
-
-    info!("Interest rates updated successfully"); //info
-                                                  //intializing and updating user state and minting the dtokens to the user
     UpdateLogic::update_user_data_supply(
         user_principal,
         &reserve_cache,
@@ -126,7 +117,17 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
+    //ask bhanu for trapping it 
     info!("udpate user data supply called successfully"); //info
+    let liq_added = params.amount.clone();
+    let liq_taken = zero_nat_value();
+    //Updating the APYs
+    reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
+        .await?;
+
+    info!("Interest rates updated successfully");
+    //intializing and updating user state and minting the dtokens to the user
+    
 
     //updating the reserve data in the state
     

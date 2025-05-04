@@ -1,6 +1,7 @@
 use crate::api::inter_canister::asset_transfer;
 use crate::api::inter_canister::get_balance;
 use crate::api::inter_canister::get_total_supply;
+use crate::api::query::user_normalized_supply;
 use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
@@ -226,7 +227,8 @@ pub async fn update_interest_rates(
         .curr_debt
         .clone()
         .scaled_mul(reserve_cache.next_debt_index.clone());
-
+    // let user_normalized_supply = user_normalized_supply(reserve_data.clone())?;
+    let total_supply = reserve_cache.clone().curr_supply.scaled_mul(reserve_cache.next_liquidity_index.clone());
     debug!("curr debt {}", reserve_cache.curr_debt);
     debug!("next debt index {}", reserve_cache.next_debt_index);
 
@@ -239,6 +241,7 @@ pub async fn update_interest_rates(
         liq_added,
         liq_taken,
         total_debt,
+        total_supply,
         &interest_rate_params,
         reserve_cache.reserve_factor.clone(),
         asset,

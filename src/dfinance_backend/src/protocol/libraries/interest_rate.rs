@@ -127,6 +127,7 @@ pub async fn calculate_interest_rates(
     liq_added: Nat,
     liq_taken: Nat,
     total_debt: Nat,
+    total_supply: Nat,
     params: &InterestRateParams,
     reserve_factor: Nat,
     asset: String,
@@ -141,10 +142,6 @@ pub async fn calculate_interest_rates(
     let mut current_liquidity_rate = zero_nat_value();
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
 
-    let reserve = get_reserve_data(asset.clone())?;
-
-    let user_normalized_supply = user_normalized_supply(reserve.clone())?;
-    let total_supply = reserve.clone().asset_supply.scaled_mul(user_normalized_supply);
 
     //TODO: ask should be do this or not --> anshika
     let available_liq = (total_supply + liq_added) - liq_taken;

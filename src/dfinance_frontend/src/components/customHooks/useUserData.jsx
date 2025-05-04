@@ -204,7 +204,7 @@ console.log("baclances",balances)
           }
         }
   
-        console.log("result", result);
+        console.log("result in user account data function ", result);
   
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");

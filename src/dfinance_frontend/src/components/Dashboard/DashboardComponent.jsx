@@ -970,46 +970,42 @@ const DashboardComponent = () => {
   console.log("userAccountData", userAccountData)
   useEffect(() => {
     const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
-    let updatedAvailableBorrow = 0;
-
-    // Early return if userAccountData is missing or malformed
+  
     if (!userAccountData?.Ok?.[0] || userAccountData.Ok[0].length <= 5) {
       setAvailableBorrow(0);
       return;
     }
-
+  
+    let totalBorrow = 0;
+  
     for (const reserveGroup of reserves) {
       const asset = reserveGroup?.[0];
       const reserveData = reserveGroup?.[1];
       const liquidityIndex = Number(reserveData?.liquidity_index || 0);
       const isCollateral = reserveData?.is_collateral ?? true;
-
+  
       const assetBalance =
         assetBalances.find((balance) => balance.asset === asset)
           ?.dtokenBalance || 0;
-
+  
       const assetSupply =
         liquidityIndex > 0
           ? (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-          (liquidityIndex * 1e8)
+            (liquidityIndex * 1e8)
           : 0;
-
-      if (assetSupply > 0) {
+  
+      if (assetSupply > 0 && isCollateral) {
         const borrowValue = Number(userAccountData.Ok[0][5]) / 1e8;
-        updatedAvailableBorrow = isCollateral ? borrowValue : 0;
-        console.log("update", updatedAvailableBorrow)
-        setAvailableBorrow(updatedAvailableBorrow);
-        break; // stop after first eligible asset
+        totalBorrow = borrowValue;
       }
     }
-
+  
     const finalBorrowValue =
-      !updatedAvailableBorrow || updatedAvailableBorrow < 0.01
-        ? 0
-        : updatedAvailableBorrow;
-
+      !totalBorrow || totalBorrow < 0.01 ? 0 : totalBorrow;
+  console.log("total borrow in dashboard",totalBorrow)
     setAvailableBorrow(finalBorrowValue);
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
+  
 
 
   useEffect(() => {

@@ -120,7 +120,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             debt_asset: "XYZ".to_string(),
             collateral_asset: "XYZ".to_string(),
             amount: Nat::from(40_000_000u128),
-            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
+            on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
             reward_amount: Nat::from(40_400_000u128),
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),
@@ -140,7 +140,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(0u128),
-            on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
+            on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
             reward_amount: Nat::from(150u128),
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
@@ -207,7 +207,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
          * @dev Validates approval status and expected outcomes.
          */
         let approved = test_icrc2_aprove(
-            get_users_principal(Nat::from(1u128)).unwrap(),
+            get_user_principal2(),
             asset_principal,
             &pic,
             backend_canister,
@@ -251,7 +251,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
          */
         let result = pic.update_call(
             backend_canister,
-            get_users_principal(Nat::from(1u32)).unwrap(),
+            get_user_principal2(),
             "execute_liquidation",
             encode_one(liquidation_params).unwrap(),
         );
@@ -268,6 +268,19 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 "✅ IC Test Case {} Passed: Liquidation completed successfully",
                                 i + 1
                             );
+                            ic_cdk::println!("====================== Checking Reserves After successful Liquidation ======================");
+                            // Fetch and print reserve data for both debt and collateral assets
+                            ic_cdk::println!("-------------------------- Checking Debt Reserves After successful Liquidation --------------------------");
+                            fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+                            ic_cdk::println!("-------------------------- Checking Collateral Reserves After successful Liquidation --------------------------");
+                            fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+                            ic_cdk::println!("-------------------------- Checking User Reserves for Debt Asset After successful Liquidation --------------------------");
+                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
+                            // Fetch and print on_behalf_of data for both debt and collateral assets
+                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Debt Asset After successful Liquidation --------------------------");
+                            fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.debt_asset);
+                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Collateral Asset After successful Liquidation --------------------------");
+                            fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.collateral_asset);
                         } else {
                             ic_cdk::println!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success",
@@ -291,6 +304,19 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 e
                             );
+                            ic_cdk::println!("====================== Checking Reserves After successful Liquidation ======================");
+                            // Fetch and print reserve data for both debt and collateral assets
+                            ic_cdk::println!("-------------------------- Checking Debt Reserves After successful Liquidation --------------------------");
+                            fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+                            ic_cdk::println!("-------------------------- Checking Collateral Reserves After successful Liquidation --------------------------");
+                            fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+                            ic_cdk::println!("-------------------------- Checking User Reserves for Debt Asset After successful Liquidation --------------------------");
+                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
+                            // Fetch and print on_behalf_of data for both debt and collateral assets
+                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Debt Asset After successful Liquidation --------------------------");
+                            fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.debt_asset);
+                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Collateral Asset After successful Liquidation --------------------------");
+                            fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.collateral_asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                             continue;

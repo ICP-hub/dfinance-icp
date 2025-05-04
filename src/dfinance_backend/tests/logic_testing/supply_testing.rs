@@ -1,9 +1,9 @@
-use pocket_ic::{PocketIc, WasmResult};
-use candid::Nat;
-use candid::{encode_one, Principal};
+use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-use crate::utils::common_functions::*;
+use candid::Nat;
+use candid::{ encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 /*
  * @title IC Supply Functionality Test
  * @description This function tests the `execute_supply` method of the backend canister by simulating valid and invalid supply scenarios.
@@ -64,7 +64,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(200_000_000u128), // 200 ckUSDC (includes transaction fee)
+            amount: Nat::from(200_000_000u128), // 2 ckUSDC (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -78,7 +78,28 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(500_000_000u128), // 500 ckUSDT (includes transaction fee)
+            amount: Nat::from(300_000_000u128), // 300 ckUSDT (includes transaction fee)
+            is_collateral: false,
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
+            amount: Nat::from(10_000_000_000u128), // Supply another 100 ckUSDT
+            is_collateral: false, // Explicitly keep it non-collateral
+            expect_success: true, // Should succeed, just adding to existing non-collateral position
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
+            amount: Nat::from(50_000_000_00u128), // Supply another 50 ckUSDT
+            is_collateral: true, // Explicitly keep it collateral
+            expect_success: true,
+            expected_error_message: None,
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(20_000_00u128), // 20 ckUSDT (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -91,6 +112,21 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             is_collateral: true,
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
+        },
+        //low supply amount
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(1u128), // Supply 1 e8s
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some("Fee exceeds the amount".to_string()),
+        },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(10_001u128), // Supply 10,001 e8s
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some("Fee exceeds the amount".to_string()),
         },
         //  low wallet amount
         TestCase {
@@ -128,9 +164,17 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
         },
+        // TRAILING WHITESPACES
+        TestCase {
+            asset: "ckUSDC ".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            is_collateral: false,
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
     ];
 
-    let user_principal = get_user_principal();
+    let user_principal = get_user_principal2();
     ic_cdk::println!(
         "\n======================== Starting IC Supply Tests ========================\n"
     );
@@ -146,9 +190,9 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
+        
         ic_cdk::println!("------------------------------------------------------------\n");
 
-        /* Get asset principal; handle missing cases  */
         let asset_principal =
             match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
                 Some(principal) => principal,
@@ -167,6 +211,10 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     continue;
                 }
             };
+
+        ic_cdk::println!("user principal = {:?}",user_principal.to_text());
+        ic_cdk::println!("asset principal = {:?}", asset_principal.to_text());
+        ic_cdk::println!("backend canister = {:?}",backend_canister.to_text());
 
         /*
          * @title Approve ICRC2 Transfer
@@ -235,10 +283,10 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                             );
                             continue;
                         }
-                        ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Supply successful.",
-                            i + 1,
-                        );
+                        ic_cdk::println!("✅ IC Test Case {} Passed: Supply successful.", i + 1,);
+                        ic_cdk::println!("=================== Checking Reserves After successful supply ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -256,10 +304,15 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("=================== Checking Balance After successful supply ===================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
+                        
+                        
                     }
                 }
             }

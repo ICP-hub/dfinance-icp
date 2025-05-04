@@ -41,7 +41,7 @@ pub fn setup() -> (PocketIc, Principal) {
     pic.install_canister(
         backend_canister,
         wasm,
-        candid::encode_one(Principal::anonymous()).unwrap(),
+        candid::encode_one(user_principal).unwrap(),
         Some(Principal::anonymous()),
     );
 
@@ -51,29 +51,6 @@ pub fn setup() -> (PocketIc, Principal) {
         Some(Principal::anonymous()),
         vec![user_principal],
     );
-
-    let result = pic.update_call(
-        backend_canister,
-        user_principal,
-        "add_admin_test",
-        encode_args(("new_admin".to_string(), user_principal)).unwrap(),
-    );
-    
-    match result {
-        Ok(wasm_result) => match wasm_result {
-            WasmResult::Reply(bytes) => {
-                println!("Call succeeded. Reply bytes: {:?}", bytes);
-                // Optionally, decode bytes if you know the return type
-                // e.g., let decoded: YourType = decode(&bytes).unwrap();
-            }
-            WasmResult::Reject(reason) => {
-                println!("Call rejected: {}", reason);
-            }
-        },
-        Err(user_error) => {
-            println!("Call failed with user error: {:?}", user_error);
-        }
-    }
     
     test_add_tester(&pic, backend_canister, user_principal, user_principal);
 
@@ -98,9 +75,6 @@ pub fn setup() -> (PocketIc, Principal) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -128,9 +102,6 @@ pub fn setup() -> (PocketIc, Principal) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -158,9 +129,6 @@ pub fn setup() -> (PocketIc, Principal) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -188,9 +156,6 @@ pub fn setup() -> (PocketIc, Principal) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -218,9 +183,6 @@ pub fn setup() -> (PocketIc, Principal) {
             borrow_cap: Nat::from(BORROW_CAP),
             supply_cap: Nat::from(SUPPLY_CAP),
             liquidation_protocol_fee: Nat::from(ZERO_VALUE),
-            frozen: false,
-            active: true,
-            paused: false,
             reserve_factor: Nat::from(RESERVE_FACTOR),
         },
         can_be_collateral: Some(true),
@@ -292,20 +254,6 @@ pub fn setup() -> (PocketIc, Principal) {
         );
     }
 
-    /*
-     * @title Register Users
-     * @notice Registers users to participate in liquidation testing.
-     * @dev Adds the primary user and test users (1 to 5).
-     */
-    // test_register_user(&pic, backend_canister, user_principal);
-    // for num in 1..=5 {
-    //     let index: u32 = num as u32;
-    //     test_register_user(
-    //         &pic,
-    //         backend_canister,
-    //         get_users_principal(Nat::from(index)).unwrap(),
-    //     );
-    // }
 
     /*
      * @title Update Reserve Price

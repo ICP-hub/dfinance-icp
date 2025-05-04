@@ -16,26 +16,6 @@ const Logs = () => {
 
     try {
       const result = await backendActor.get_all_logs();
-
-      // Assuming certificate is the second element in the result, if it exists
-      const cert = result?.[1];
-
-      if (cert) {
-        try {
-          const verified = await verifyCertificate(cert);
-          if (!verified) {
-            console.error("Certificate verification failed for logs data");
-            return;
-          }
-        } catch (verificationError) {
-          console.error(
-            "Error verifying certificate for logs:",
-            verificationError
-          );
-          return;
-        }
-      }
-
       setLogs(result);
       setFilteredLogs(result);
     } catch (error) {

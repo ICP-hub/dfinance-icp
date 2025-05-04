@@ -75,6 +75,12 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
+        ic_cdk::println!(
+            "\n======================== Initial reserve data before concurrent calls  ========================\n"
+        );
+        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        ic_cdk::println!("\n---------------------------------------------------------\n");
+
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
         for user_principal in random_users.clone() {
             let borrow_params = ExecuteBorrowParams {
@@ -92,6 +98,8 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 .unwrap();
             msg_ids.push(msg);
         }
+
+        
 
         let mut results = Vec::new();
         for msg_id in msg_ids {
@@ -152,9 +160,10 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             }
         }
         ic_cdk::println!(
-            "\n======================== Total reserve data after concurent calls  ========================\n"
+            "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
         fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        ic_cdk::println!("\n---------------------------------------------------------\n");
     }
     ic_cdk::println!(
         "\n======================== IC Borrow Tests Completed ========================\n"

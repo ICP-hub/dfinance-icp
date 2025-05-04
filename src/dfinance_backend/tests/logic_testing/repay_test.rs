@@ -1,9 +1,9 @@
-use pocket_ic::{PocketIc, WasmResult};
-use candid::Nat;
-use candid::{encode_one, Principal};
+use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-use crate::utils::common_functions::*;
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 /*
  * @title IC Repay Functionality Test
  * @description This function tests the `execute_repay` method of the backend canister by simulating both valid and invalid repay scenarios.
@@ -201,7 +201,6 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                 }
             };
 
-
         /*
          * @title Approve ICRC2 Transfer
          * @notice Approves ICRC2 transfer before supply operation.
@@ -270,12 +269,12 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                             );
                             continue;
                         }
-                        ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Repay successful.",
-                            i + 1,
-                        );
-                        ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
+                        ic_cdk::println!("✅ IC Test Case {} Passed: Repay successful.", i + 1,);
+                        ic_cdk::println!("\n=================== Checking Reserves After successful Repayment ===================\n");
+                        // Fetch and display reserve data
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n=================== Checking User data After successful Repayment ===================\n");
+                        // Fetch and display user data
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
@@ -294,9 +293,12 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("=================== Checking Reserves After successful Repayment ===================");
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional repay failure ===================\n");
+                            // Fetch and display reserve data
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying User data after intentional repay failure ===================\n");
+                            // Fetch and display user data
+                            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!(
                                 "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",

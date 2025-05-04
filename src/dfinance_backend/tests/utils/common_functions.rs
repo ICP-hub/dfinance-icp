@@ -134,12 +134,12 @@ pub fn test_get_asset_principal(
             match decode_one::<Result<Principal, errors::Error>>(&response_data) {
                 Ok(Ok(principal)) => Some(principal),
                 Ok(Err(err)) => {
-                    ic_cdk::println!("Output error: Error retrieving asset principal: {:?}", err);
+                    ic_cdk::println!("Error retrieving asset principal: {:?}\n", err.message());
                     None
                 }
                 Err(decode_err) => {
                     ic_cdk::println!(
-                        "Output error: Error retrieving asset principal with error: {:?}",
+                        "Error retrieving asset principal: {:?}\n",
                         decode_err
                     );
                     None
@@ -208,7 +208,8 @@ pub fn test_icrc2_aprove(
             let approve_response: Result<ApproveResult, _> = candid::decode_one(&reply);
             match approve_response {
                 Ok(ApproveResult::Ok(block_index)) => {
-                    ic_cdk::println!("☑️  Approve succeeded, block index: {}", block_index);
+                    ic_cdk::println!("☑️  Approve succeeded, block index: {}\n", block_index);
+                    ic_cdk::println!("---------------------------------------------------\n");
                     return true;
                 }
                 Ok(ApproveResult::Err(error)) => {
@@ -465,9 +466,19 @@ pub fn fetch_reserve_data(pic: &PocketIc, backend_canister: Principal, asset: &s
                         asset,
                         balance.liquidity_index
                     );
+                    ic_cdk::println!(
+                        "Reserve Data - Borrow Rate for {}: {:?}",
+                        asset,
+                        balance.borrow_rate
+                    );
+                    ic_cdk::println!(
+                        "Reserve Data - Current Liquidity Rate for {}: {:?}",
+                        asset,
+                        balance.current_liquidity_rate
+                    );
                 }
                 Err(error) => {
-                    ic_cdk::println!("Failed to retrieve reserve data for {}: {:?}", asset, error);
+                    ic_cdk::println!("\n=========================================================================\n");
                 }
             }
         }
@@ -550,6 +561,7 @@ pub fn fetch_user_data(
                         user_principal,
                         error
                     );
+
                 }
             }
         }

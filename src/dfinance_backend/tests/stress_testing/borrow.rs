@@ -1,6 +1,7 @@
 use candid::{encode_one, Principal};
 use candid::Nat;
 use pocket_ic::{PocketIc, WasmResult};
+use crate::utils::common_functions::{fetch_reserve_data, fetch_user_data};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 
@@ -146,6 +147,13 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     "✅ Test Case {} Passed: Borrow rejected as expected. Message: {:?}",
                                     i + 1, error
                                 );
+                                ic_cdk::println!("\n==================== Checking Reserves After successful Borrow ====================\n");
+                                // Reserve data fetching
+                                fetch_reserve_data(pic, backend_canister, &case.asset);
+                                ic_cdk::println!("\n==================== Checking User data After successful Borrow ====================\n");
+                                //user reserve data fetching
+                                fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                                ic_cdk::println!("\n---------------------------------------------------------\n");
                                 success_count += 1;
                             } else {
                                 ic_cdk::println!(

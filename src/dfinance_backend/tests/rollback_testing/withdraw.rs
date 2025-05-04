@@ -44,32 +44,39 @@ use crate::utils::structs::*;
             expected_error_message: None,
         },
         TestCase {
-            asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(200_000_000_000u128), // 0.002 ckETH
             is_collateral: false,
-            expect_success: true,
-            expected_error_message: None,
+            expect_success: false,
+            expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
         TestCase {
-            asset: "ckETH".to_string(),
-            amount: Nat::from(5_000u128), // 0.02 ckETH
+            asset: "ICP".to_string(),
+            amount: Nat::from(1_000_000u128), // 0.02 ckETH
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(200_000_000u128), // 2 ICP
+            amount: Nat::from(20_000_000_000u128), // 2 ICP
+            is_collateral: true,
+            expect_success: false,
+            expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
+        },
+        TestCase {
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(500_000u128), // 0.00000002 ICP
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
-            asset: "ICP".to_string(),
-            amount: Nat::from(50_000u128), // 0.00000002 ICP
+            asset: "ckUSDT".to_string(),
+            amount: Nat::from(500_000_000_000u128), // 0.00000002 ICP
             is_collateral: true,
-            expect_success: true,
-            expected_error_message: None,
+            expect_success: false,
+            expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
     ];
 
@@ -78,7 +85,12 @@ use crate::utils::structs::*;
     );
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
+        if i%2 != Nat::from(0u128) {
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+        }else{
+            ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
+        }
+        // ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
         ic_cdk::println!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
@@ -89,6 +101,16 @@ use crate::utils::structs::*;
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
+
+        ic_cdk::println!("\n=========================== Initial Reserve Data Before Roll Backs  ===========================\n");
+
+        fetch_reserve_data(pic, backend_canister, &case.asset);
+
+        ic_cdk::println!("\n=========================== Initial User Data Before Roll Backs ===========================\n");
+
+        fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.asset);
+
+        ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
 
         /* Withdraw params */
         let withdraw_params = ExecuteWithdrawParams {
@@ -127,6 +149,15 @@ use crate::utils::structs::*;
                             "✅ IC Test Case {} Passed: Withdraw successful.",
                             i + 1,
                         );
+                        ic_cdk::println!("\n=========================== Final Reserve Data (Without Roll Backs)  ===========================\n");
+
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
+
+                            ic_cdk::println!("\n=========================== Final User Data (Without Roll Backs) ===========================\n");
+
+                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.asset);
+
+                            ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -144,10 +175,20 @@ use crate::utils::structs::*;
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("\n=========================== Final Reserve Data After Roll Backs  ===========================\n");
+
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
+
+                            ic_cdk::println!("\n=========================== Final User Data After Roll Backs ===========================\n");
+
+                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.asset);
+
+                            ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
+                        
                     }
                 }
             }

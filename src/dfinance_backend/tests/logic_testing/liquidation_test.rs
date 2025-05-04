@@ -268,19 +268,19 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 "✅ IC Test Case {} Passed: Liquidation completed successfully",
                                 i + 1
                             );
-                            ic_cdk::println!("====================== Checking Reserves After successful Liquidation ======================");
                             // Fetch and print reserve data for both debt and collateral assets
-                            ic_cdk::println!("-------------------------- Checking Debt Reserves After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n====================== Checking Debt Reserves After successful Liquidation ======================\n");
                             fetch_reserve_data(pic, backend_canister, &case.debt_asset);
-                            ic_cdk::println!("-------------------------- Checking Collateral Reserves After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n====================== Checking Collateral Reserves After successful Liquidation ======================\n");
                             fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
-                            ic_cdk::println!("-------------------------- Checking User Reserves for Debt Asset After successful Liquidation --------------------------");
-                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
+                            ic_cdk::println!("\n====================== Checking Liquidator User data for Collateral Asset After successful Liquidation ======================\n");
+                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.collateral_asset);
                             // Fetch and print on_behalf_of data for both debt and collateral assets
-                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Debt Asset After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n====================== Checking User data for Debt Asset After successful Liquidation ======================\n");
                             fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.debt_asset);
-                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Collateral Asset After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n====================== Checking User data for Collateral Asset After successful Liquidation ======================\n");
                             fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.collateral_asset);
+                            ic_cdk::println!("\n---------------------------------------------------------\n");
                         } else {
                             ic_cdk::println!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success",
@@ -304,19 +304,19 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 e
                             );
-                            ic_cdk::println!("====================== Checking Reserves After successful Liquidation ======================");
                             // Fetch and print reserve data for both debt and collateral assets
-                            ic_cdk::println!("-------------------------- Checking Debt Reserves After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n======================  Verifying Debt Reserves After intentional Liquidation failure ======================\n");
                             fetch_reserve_data(pic, backend_canister, &case.debt_asset);
-                            ic_cdk::println!("-------------------------- Checking Collateral Reserves After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n======================  Verifying Collateral Reserves After intentional Liquidation failure ======================\n");
                             fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
-                            ic_cdk::println!("-------------------------- Checking User Reserves for Debt Asset After successful Liquidation --------------------------");
-                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
+                            ic_cdk::println!("\n======================  Verifying Liquidator Reserves for Collateral Asset After intentional Liquidation failure ======================\n");
+                            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.collateral_asset);
                             // Fetch and print on_behalf_of data for both debt and collateral assets
-                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Debt Asset After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n======================  Verifying user Reserves for Debt Asset After intentional Liquidation failure ======================\n");
                             fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.debt_asset);
-                            ic_cdk::println!("-------------------------- Checking on_behalf_of Reserves for Collateral Asset After successful Liquidation --------------------------");
+                            ic_cdk::println!("\n====================== Verifying user Reserves for Collateral Asset After intentional Liquidation failure ======================\n");
                             fetch_user_data(pic, backend_canister, &case.on_behalf_of, &case.collateral_asset);
+                            ic_cdk::println!("\n---------------------------------------------------------\n");
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                             continue;

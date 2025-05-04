@@ -136,7 +136,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         },
         // Lower case asset name
         TestCase {
-            asset: "ckusdc".to_string(),
+            asset: "ckusdc ".to_string(),
             amount: Nat::from(50_000_000_000u128),
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
@@ -160,6 +160,29 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
         ic_cdk::println!("------------------------------------------------------------\n");
+
+
+
+
+        //checking asset principal
+        let asset_principal =
+            match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                Some(principal) => principal,
+                None => {
+                    if !case.expect_success {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Supply rejected as expected",
+                            i + 1,
+                        );
+                    } else {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Expected success but got rejection",
+                            i + 1
+                        );
+                    }
+                    continue;
+                }
+            };
 
         /* Borrow params */
         let borrow_params = ExecuteBorrowParams {
@@ -200,10 +223,13 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                             i + 1,
                     
                         );
-                        ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                        ic_cdk::println!("\n==================== Checking Reserves After successful Borrow ====================\n");
+                        // Reserve data fetching
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n==================== Checking User data After successful Borrow ====================\n");
+                        //user reserve data fetching
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-
+                        ic_cdk::println!("\n---------------------------------------------------------\n");
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -221,8 +247,9 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional borrow failure ===================]\n");
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n===================  Verifying User data after intentional borrow failure ===================\n");
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                             
                         } else {

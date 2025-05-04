@@ -104,7 +104,10 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             amount_float / 100000000.0,
             case.expect_success
         );
-
+        ic_cdk::println!("\n=================== Checking Reserves before Repayment ===================\n");
+        // Fetch and display reserve data
+        fetch_reserve_data(pic, backend_canister, &case.asset);
+        ic_cdk::println!("------------------------------------------------------------\n");
         if let Some(msg) = &case.expected_error_message {
             ic_cdk::println!("⚠️ Expected Error: {}", msg);
         }
@@ -166,6 +169,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                     match repay_response {
                         Ok(balance) => {
                             ic_cdk::println!("✅ Repay successful!");
+                            ic_cdk::println!("\n=================== Checking Reserves After successful Repayment ===================\n");
+                            // Fetch and display reserve data
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
                             success_count += 1;
                         }
                         Err(error) => {

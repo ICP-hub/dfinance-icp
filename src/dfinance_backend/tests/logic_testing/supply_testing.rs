@@ -162,7 +162,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             amount: Nat::from(100u128),
             is_collateral: false,
             expect_success: false,
-            expected_error_message: Some("no canister id found".to_string()),
+            expected_error_message: Some("No principal found for asset".to_string()),
         },
         // TRAILING WHITESPACES
         TestCase {
@@ -170,7 +170,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             amount: Nat::from(50_000_000_000u128),
             is_collateral: false,
             expect_success: false,
-            expected_error_message: Some("no canister id found".to_string()),
+            expected_error_message: Some("No principal found for asset".to_string()),
         },
     ];
 
@@ -284,8 +284,11 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                             continue;
                         }
                         ic_cdk::println!("✅ IC Test Case {} Passed: Supply successful.", i + 1,);
-                        ic_cdk::println!("=================== Checking Reserves After successful supply ===================");
+                        ic_cdk::println!("\n=================== Checking Reserves After successful supply ===================\n");
+                        // Check reserves after successful supply
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n=================== Checking User data After successful supply ===================\n");
+                        // Check user data after successful supply
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
@@ -302,10 +305,13 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                             ic_cdk::println!(
                                 "✅ IC Test Case {} Passed: Supply rejected as expected with message: {:?}",
                                 i + 1,
-                                error
+                                error.message()
                             );
-                            ic_cdk::println!("=================== Checking Balance After successful supply ===================");
+                        ic_cdk::println!("\n===================  Verifying Reserve after intentional supply failure ===================\n");
+                        // Check reserves after successful supply
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n===================  Verifying User data after intentional supply failure ===================\n");
+                        // Check user data after successful supply
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);

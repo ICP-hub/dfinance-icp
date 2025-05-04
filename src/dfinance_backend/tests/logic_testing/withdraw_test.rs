@@ -180,6 +180,27 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         }
         ic_cdk::println!("------------------------------------------------------------\n");
 
+
+        //checking asset principal 
+        let asset_principal =
+            match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                Some(principal) => principal,
+                None => {
+                    if !case.expect_success {
+                        ic_cdk::println!(
+                            "✅ IC Test Case {} Passed: Supply rejected as expected",
+                            i + 1,
+                        );
+                    } else {
+                        ic_cdk::println!(
+                            "❌ IC Test Case {} Failed: Expected success but got rejection",
+                            i + 1
+                        );
+                    }
+                    continue;
+                }
+            };
+
         /* Withdraw params */
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
@@ -217,8 +238,11 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                             "✅ IC Test Case {} Passed: Withdraw successful.",
                             i + 1,
                         );
-                        ic_cdk::println!("=================== Checking Reserves After successful Withdrawal ===================");
+                        ic_cdk::println!("\n=================== Checking Reserves After successful Withdrawal ===================\n");
+                        // Check reserve data after successful withdraw
                         fetch_reserve_data(pic, backend_canister, &case.asset);
+                        ic_cdk::println!("\n=================== Checking User data After successful Withdrawal ===================\n");
+                        //check user data after successful withdraw
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
@@ -237,9 +261,12 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("=================== Checking Reserves After successful Withdrawal ===================");
-                        fetch_reserve_data(pic, backend_canister, &case.asset);
-                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
+                            // Check reserve data after successful withdraw
+                            fetch_reserve_data(pic, backend_canister, &case.asset);
+                            ic_cdk::println!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
+                            // check user data after successful withdraw
+                            fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;

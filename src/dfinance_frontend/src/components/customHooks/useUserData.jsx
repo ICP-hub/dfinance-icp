@@ -18,8 +18,14 @@ const useUserData = () => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  const { backendActor, principal, user, isAuthenticated, createLedgerActor,verifyCertificate } =
-    useAuth();
+  const {
+    backendActor,
+    principal,
+    user,
+    isAuthenticated,
+    createLedgerActor,
+    verifyCertificate,
+  } = useAuth();
 
   const { batchFetchReserveData } = useReserveData();
 
@@ -42,12 +48,10 @@ const useUserData = () => {
     }
     try {
       const result = await backendActor.get_user_data(user);
-      if("Ok" in result){
+      if ("Ok" in result) {
         const verification = await verifyCertificate(result.Ok[1]);
         if (!verification) {
           console.error("Certificate verification failed");
-        } else {
-          console.log("Certificate verified successfully");
         }
       }
       return result;
@@ -72,17 +76,16 @@ const useUserData = () => {
       const batchedReserveData = await batchFetchReserveData(assets);
       const balances = [];
 
-    for (const asset of assets) {
-      const reserveDataForAsset = batchedReserveData[asset];
-      const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
-      const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
-      console.log("debtToken",debtTokenId)
-      console.log("dtokenid ",dtokenId)
-      const assetBalance = {
-        asset,
-        dtokenBalance: null,
-        debtTokenBalance: null,
-      };
+      for (const asset of assets) {
+        const reserveDataForAsset = batchedReserveData[asset];
+        const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
+        const debtTokenId =
+          reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
+        const assetBalance = {
+          asset,
+          dtokenBalance: null,
+          debtTokenBalance: null,
+        };
 
         if (dtokenId) {
           const dtokenActor = createLedgerActor(dtokenId, idlFactory);
@@ -90,7 +93,6 @@ const useUserData = () => {
             try {
               const account = { owner: principalObj, subaccount: [] };
               const balance = await dtokenActor.icrc1_balance_of(account);
-              console.log("asset balance in dtoken",balance)
               assetBalance.dtokenBalance = balance;
             } catch (error) {
               console.error(
@@ -119,7 +121,6 @@ const useUserData = () => {
 
         balances.push(assetBalance);
       }
-console.log("baclances",balances)
       setAssetBalances(balances);
     } catch (error) {
       console.error("Error fetching asset data:", error);
@@ -149,11 +150,11 @@ console.log("baclances",balances)
           console.error("Invalid principal provided");
           return;
         }
-  
+
         const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
         let assetBalancesObj = [];
         let borrowBalancesObj = [];
-  
+
         reserves.forEach((reserveGroup) => {
           const asset = reserveGroup[0];
           const assetBalance =
@@ -162,7 +163,7 @@ console.log("baclances",balances)
           const borrowBalance =
             assetBalances.find((balance) => balance.asset === asset)
               ?.debtTokenBalance || 0n;
-  
+
           if (BigInt(assetBalance) > 0n) {
             assetBalancesObj.push({
               balance: BigInt(assetBalance),
@@ -176,42 +177,42 @@ console.log("baclances",balances)
             });
           }
         });
-  
+
         const assetBalancesParam =
           assetBalancesObj.length > 0 ? [assetBalancesObj] : [];
         const borrowBalancesParam =
           borrowBalancesObj.length > 0 ? [borrowBalancesObj] : [];
-  
+
         const result = await backendActor.get_user_account_data(
           [],
           assetBalancesParam,
           borrowBalancesParam
         );
-  
-        // ✅ Only run certificate check if result.Ok exists and has at least 2 elements
+
         if (result?.Ok?.length > 1 && result.Ok[1]) {
           try {
             const verified = await verifyCertificate(result.Ok[1]);
             if (!verified) {
-              console.error("Certificate verification failed for user account data");
+              console.error(
+                "Certificate verification failed for user account data"
+              );
               return;
-            } else {
-              console.log("Certificate verified for user account data");
             }
           } catch (e) {
-            console.error("Error verifying certificate for user account data", e);
+            console.error(
+              "Error verifying certificate for user account data",
+              e
+            );
             return;
           }
         }
-  
-        console.log("result in user account data function ", result);
-  
+
         if (result?.Err === "ERROR :: Pending") {
           console.warn("Pending state detected. Retrying...");
           setTimeout(fetchUserAccountData, 1000);
           return;
         }
-  
+
         if (result?.Ok && result.Ok[0]?.[4]) {
           const healthFactor = Number(result.Ok[0][4]) / 10000000000;
           if (healthFactor) {
@@ -222,7 +223,7 @@ console.log("baclances",balances)
         } else {
           setError("Invalid result format or missing health factor");
         }
-  
+
         if (result?.Ok) {
           setUserAccountData(result);
         }
@@ -231,8 +232,6 @@ console.log("baclances",balances)
       }
     }
   };
-  
-  
 
   useEffect(() => {
     fetchUserData(user);

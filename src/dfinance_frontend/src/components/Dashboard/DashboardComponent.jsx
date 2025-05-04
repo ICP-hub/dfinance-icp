@@ -82,7 +82,6 @@ const DashboardComponent = () => {
     filteredItems,
     asset_supply,
     asset_borrow,
-    fetchAssetSupply,
     fetchUserPositions,
     loading: filteredDataLoading,
   } = useAssetData();
@@ -967,7 +966,6 @@ const DashboardComponent = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-  console.log("userAccountData", userAccountData)
   useEffect(() => {
     const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
   
@@ -2835,7 +2833,6 @@ const DashboardComponent = () => {
                                 <Button
                                   title={"Borrow"}
                                   onClickHandler={() => {
-                                    dispatch(toggleDashboardRefresh());
                                     handleAssetAction("borrow", item[0]);
                                   }}
                                   disabled={isTableDisabled || isButtonDisabled}
@@ -3019,7 +3016,6 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Borrow"}
                                     onClickHandler={() => {
-                                      dispatch(toggleDashboardRefresh());
                                       handleAssetAction("borrow", item[0]);
                                     }}
                                     disabled={!isEligible}

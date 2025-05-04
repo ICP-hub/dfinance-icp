@@ -65,7 +65,7 @@ const AssetDetails = () => {
     principal,
     backendActor,
     createLedgerActor,
-    verifyCertificate
+    verifyCertificate,
   } = useAuth();
 
   const location = useLocation();
@@ -204,37 +204,50 @@ const AssetDetails = () => {
           debtTokenBalance: null,
         };
 
-        const dtokenPromise = dtokenId ? (async () => {
-          try {
-            const dtokenActor = createLedgerActor(dtokenId, idlFactory);
-            if (dtokenActor) {
-              const account = { owner: principalObj, subaccount: [] };
-              return await dtokenActor.icrc1_balance_of(account);
-            }
-            return null;
-          } catch (error) {
-            console.error(`Error fetching dtoken balance for ${asset}:`, error);
-            return null;
-          }
-        })() : Promise.resolve(null);
+        const dtokenPromise = dtokenId
+          ? (async () => {
+              try {
+                const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+                if (dtokenActor) {
+                  const account = { owner: principalObj, subaccount: [] };
+                  return await dtokenActor.icrc1_balance_of(account);
+                }
+                return null;
+              } catch (error) {
+                console.error(
+                  `Error fetching dtoken balance for ${asset}:`,
+                  error
+                );
+                return null;
+              }
+            })()
+          : Promise.resolve(null);
 
-        const debtTokenPromise = debtTokenId ? (async () => {
-          try {
-            const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
-            if (debtTokenActor) {
-              const account = { owner: principalObj, subaccount: [] };
-              return await debtTokenActor.icrc1_balance_of(account);
-            }
-            return null;
-          } catch (error) {
-            console.error(`Error fetching debt token balance for ${asset}:`, error);
-            return null;
-          }
-        })() : Promise.resolve(null);
+        const debtTokenPromise = debtTokenId
+          ? (async () => {
+              try {
+                const debtTokenActor = createLedgerActor(
+                  debtTokenId,
+                  idlFactory1
+                );
+                if (debtTokenActor) {
+                  const account = { owner: principalObj, subaccount: [] };
+                  return await debtTokenActor.icrc1_balance_of(account);
+                }
+                return null;
+              } catch (error) {
+                console.error(
+                  `Error fetching debt token balance for ${asset}:`,
+                  error
+                );
+                return null;
+              }
+            })()
+          : Promise.resolve(null);
 
         const [dtokenBalance, debtTokenBalance] = await Promise.all([
           dtokenPromise,
-          debtTokenPromise
+          debtTokenPromise,
         ]);
 
         assetBalance.dtokenBalance = dtokenBalance;
@@ -251,10 +264,7 @@ const AssetDetails = () => {
   };
 
   // Calculates borrowable value based on available assets
-  const calculateBorrowableValues = (
-    availableBorrow,
-    remainingBorrowable
-  ) => {
+  const calculateBorrowableValues = (availableBorrow, remainingBorrowable) => {
     let borrowableValue = null;
     let borrowableAssetValue = null;
     const assetRates = {
@@ -339,7 +349,6 @@ const AssetDetails = () => {
             console.error(`Certificate verification failed for ${asset}`);
             return null;
           } else {
-            console.log(`Certificate verified for ${asset}`);
             return principalText?.toText?.() || null;
           }
         } catch (err) {
@@ -356,20 +365,19 @@ const AssetDetails = () => {
     }
   };
 
-
   //balance fetcher
   const ckBalance =
     id === "ckBTC"
       ? ckBTCBalance
       : id === "ckETH"
-        ? ckETHBalance
-        : id === "ckUSDC"
-          ? ckUSDCBalance
-          : id === "ICP"
-            ? ckICPBalance
-            : id === "ckUSDT"
-              ? ckUSDTBalance
-              : null;
+      ? ckETHBalance
+      : id === "ckUSDC"
+      ? ckUSDCBalance
+      : id === "ICP"
+      ? ckICPBalance
+      : id === "ckUSDT"
+      ? ckUSDTBalance
+      : null;
 
   const formatValue = (value) => {
     const numericValue = parseFloat(value);
@@ -441,13 +449,13 @@ const AssetDetails = () => {
       calculatedBalance =
         balance >= 1
           ? balance.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
           : balance.toLocaleString(undefined, {
-            minimumFractionDigits: 7,
-            maximumFractionDigits: 7,
-          });
+              minimumFractionDigits: 7,
+              maximumFractionDigits: 7,
+            });
       calculatedUsdValueFormatted = `$${calculatedUsdValue.toLocaleString(
         undefined,
         {
@@ -512,13 +520,13 @@ const AssetDetails = () => {
       displayedBalance =
         balance >= 1
           ? balance.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
           : balance.toLocaleString(undefined, {
-            minimumFractionDigits: 7,
-            maximumFractionDigits: 7,
-          });
+              minimumFractionDigits: 7,
+              maximumFractionDigits: 7,
+            });
     }
 
     let displayedUsd;
@@ -539,7 +547,6 @@ const AssetDetails = () => {
 
   // Handle which popup to open and data per asset selected
   const handleAssetAction = (actionType, asset) => {
-
     const reserveData = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
@@ -547,8 +554,8 @@ const AssetDetails = () => {
       (reserveGroup) => reserveGroup[0] === asset
     )
       ? userData?.Ok?.[0].reserves[0]?.find(
-        (reserveGroup) => reserveGroup[0] === asset
-      )[1]?.liquidity_index
+          (reserveGroup) => reserveGroup[0] === asset
+        )[1]?.liquidity_index
       : 0;
     const assetBalance =
       assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance ||
@@ -566,8 +573,8 @@ const AssetDetails = () => {
       (reserveGroup) => reserveGroup[0] === asset
     )
       ? userData?.Ok?.[0].reserves[0]?.find(
-        (reserveGroup) => reserveGroup[0] === asset
-      )[1]?.variable_borrow_index
+          (reserveGroup) => reserveGroup[0] === asset
+        )[1]?.variable_borrow_index
       : 0;
 
     const assetBorrowBalance =
@@ -595,14 +602,14 @@ const AssetDetails = () => {
       asset === "ckBTC"
         ? ckBTCBalance
         : asset === "ckETH"
-          ? ckETHBalance
-          : asset === "ckUSDC"
-            ? ckUSDCBalance
-            : asset === "ICP"
-              ? ckICPBalance
-              : asset === "ckUSDT"
-                ? ckUSDTBalance
-                : null;
+        ? ckETHBalance
+        : asset === "ckUSDC"
+        ? ckUSDCBalance
+        : asset === "ICP"
+        ? ckICPBalance
+        : asset === "ckUSDT"
+        ? ckUSDTBalance
+        : null;
     const Ltv = Number(userData?.Ok?.[0].ltv) / 100000000 || 0;
     const assetData = item[1].Ok;
 
@@ -646,8 +653,12 @@ const AssetDetails = () => {
       );
       setTotalBorrowed(Number(assetData.Ok[0].asset_borrow) / 100000000);
       setTotalSupplied(Number(assetData.Ok[0].asset_supply) / 100000000);
-      setBorrowCap(Number(assetData.Ok[0].configuration?.borrow_cap) / 100000000);
-      setSupplyCap(Number(assetData.Ok[0].configuration?.supply_cap) / 100000000);
+      setBorrowCap(
+        Number(assetData.Ok[0].configuration?.borrow_cap) / 100000000
+      );
+      setSupplyCap(
+        Number(assetData.Ok[0].configuration?.supply_cap) / 100000000
+      );
 
       setCanBeCollateral(Number(assetData.Ok[0].can_be_collateral?.[0])) /
         100000000;
@@ -669,7 +680,8 @@ const AssetDetails = () => {
           const liquidation_bonus =
             Number(assetData[0]?.configuration?.liquidation_bonus) / 100000000;
           const liquidation_threshold =
-            Number(assetData[0]?.configuration?.liquidation_threshold) / 100000000;
+            Number(assetData[0]?.configuration?.liquidation_threshold) /
+            100000000;
           setmaxLtv(maxLtv);
           setLiquidationbonus(liquidation_bonus);
           setLiquidationthreshold(liquidation_threshold);
@@ -690,9 +702,9 @@ const AssetDetails = () => {
             Number((total_supply * 0.85).toFixed(8)) < Number(total_borrow)
               ? 0
               : Math.min(
-                Number((total_supply * 0.85 - total_borrow).toFixed(8)),
-                Number(availableBorrow) / rate
-              );
+                  Number((total_supply * 0.85 - total_borrow).toFixed(8)),
+                  Number(availableBorrow) / rate
+                );
 
           if (rate) {
             setBorrowableValue(formattedMaxBorrow);
@@ -718,7 +730,7 @@ const AssetDetails = () => {
     ckICPUsdRate,
     ckUSDTUsdRate,
     availableBorrow,
-    dashboardRefreshTrigger
+    dashboardRefreshTrigger,
   ]);
 
   useEffect(() => {

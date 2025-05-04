@@ -29,7 +29,7 @@ const DashboardCards = () => {
    *                                  HOOKS
    * =================================================================================== */
   const navigate = useNavigate();
-  const { backendActor, isAuthenticated ,verifyCertificate} = useAuth();
+  const { backendActor, isAuthenticated, verifyCertificate } = useAuth();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const formatNumber = useFormatNumber();
 
@@ -109,10 +109,10 @@ const DashboardCards = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-  
+
     try {
       const result = await backendActor.guard_admin_only();
-      const responseData = result; 
+      const responseData = result;
       if ("Ok" in responseData) {
         setLike(true);
       } else {
@@ -123,13 +123,12 @@ const DashboardCards = () => {
       console.error("Error checking admin status:", error.message);
       setError(error.message);
       setLike(false);
-  
+
       if (error.message.toLowerCase().includes("freeze canister")) {
         setIsFreezePopupVisible(true);
       }
     }
   };
-  
 
   useEffect(() => {
     checkController();
@@ -148,36 +147,34 @@ const DashboardCards = () => {
       console.error("Error: Backend actor is not initialized.");
       throw new Error("Backend actor not initialized");
     }
-    
+
     try {
       const result = await backendActor.get_total_users();
-  console.log("result in admin page ",result)
-      // Assuming result is a tuple: [data, certificate]
       const userData = result?.[0];
       const cert = result?.[1];
-  
+
       if (cert) {
         try {
           const verified = await verifyCertificate(cert);
           if (!verified) {
             console.error("Certificate verification failed for total users");
             return;
-          } else {
-            console.log("Total users certificate verified successfully");
           }
         } catch (verificationError) {
-          console.error("Error verifying certificate for total users:", verificationError);
+          console.error(
+            "Error verifying certificate for total users:",
+            verificationError
+          );
           return;
         }
       }
-  
+
       setTotalUsers(userData || 0);
     } catch (error) {
       console.error("Error fetching total users:", error);
       throw error;
     }
   };
-  
 
   const [cardData, setCardData] = useState([
     {
@@ -260,35 +257,35 @@ const DashboardCards = () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
     }
-  
+
     try {
       const result = await backendActor.cycle_checker();
-  
+
       const cycles = result?.Ok[0] ?? "Error retrieving cycles";
       const cert = result?.Ok[1]; // Assuming certificate is the second element in the result, if it exists.
-  
+
       if (cert) {
         try {
           const verified = await verifyCertificate(cert);
           if (!verified) {
             console.error("Certificate verification failed for cycles data");
             return;
-          } else {
-            console.log("Cycles certificate verified successfully");
           }
         } catch (verificationError) {
-          console.error("Error verifying certificate for cycles:", verificationError);
+          console.error(
+            "Error verifying certificate for cycles:",
+            verificationError
+          );
           return;
         }
       }
-  
+
       return cycles.toString();
     } catch (error) {
       console.error("Error fetching cycles:", error);
       throw error;
     }
   };
-  
 
   useEffect(() => {
     const fetchCycles = async () => {

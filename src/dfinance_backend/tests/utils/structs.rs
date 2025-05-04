@@ -26,12 +26,9 @@ pub struct ReserveConfiguration {
     pub liquidation_threshold: Nat,
     pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: Nat,
-    pub supply_cap: Nat,
+    pub borrow_cap: Nat, //TODO set it according to borrow
+    pub supply_cap: Nat, //set it according to supply
     pub liquidation_protocol_fee: Nat,
-    pub active: bool,
-    pub frozen: bool,
-    pub paused: bool,
     pub reserve_factor: Nat,
 }
 #[derive(CandidType, Deserialize)]
@@ -184,7 +181,6 @@ pub struct ExecuteLiquidationParams {
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    // pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
 
@@ -194,13 +190,9 @@ pub struct UserReserveData {
     pub last_update_timestamp: u64,
     pub liquidity_index: Nat,
     pub variable_borrow_index: Nat,
-    pub asset_supply: Nat,
-    pub asset_borrow: Nat,
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
-    pub faucet_usage: Nat,
-    pub faucet_limit: Nat,
     pub d_token_balance: Nat,
     pub debt_token_blance: Nat,
 }
@@ -208,8 +200,8 @@ pub struct UserReserveData {
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    pub total_collateral: Option<Nat>,
-    pub total_debt: Option<Nat>,
+    // pub total_collateral: Option<Nat>,
+    // pub total_debt: Option<Nat>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 

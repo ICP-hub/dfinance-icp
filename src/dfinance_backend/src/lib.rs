@@ -2,6 +2,7 @@ use crate::constants::errors::Error;
 use crate::declarations::datatypes::{
     AssetInfo, FaucetReserves, PriceCache, ReserveData, UserData,
 };
+use protocol::logic::faucet::Challenge;
 use candid::Nat;
 use candid::Principal;
 use declarations::datatypes::InitArgs;

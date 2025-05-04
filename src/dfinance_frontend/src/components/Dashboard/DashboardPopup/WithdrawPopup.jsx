@@ -128,7 +128,7 @@ const WithdrawPopup = ({
 
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
-      inputAmount = truncateToSevenDecimals(assetSupply).toString();
+      inputAmount = truncateToSevenDecimals(assetSupply-transferFee).toString();
     }
 
     setAmount(inputAmount);

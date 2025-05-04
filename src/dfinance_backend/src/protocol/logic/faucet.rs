@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use crate::api::inter_canister::asset_transfer_from;
 use crate::api::inter_canister::get_balance;
 use crate::api::query::get_cached_exchange_rate;
@@ -20,8 +23,27 @@ use crate::stable_storage::state_handler::read_state;
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
 use ic_cdk_macros::update;
+use ic_captcha::CaptchaBuilder;
 use crate::stable_storage::state_handler::insert_certified_value;
+thread_local! {
+    // static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
+    static CAPTCHA_STATE: RefCell<HashMap<Principal, CaptchaEntry>> = RefCell::new(HashMap::new());
 
+}
+const CAPTCHA_LIFETIME: u64 = 1 * 60 * 1_000_000_000; // 1 minutes in nanoseconds
+const CAPTCHA_THRESHOLD: usize = 5;
+const CAPTCHA_HARDNESS: u8 = 32;
+
+#[derive(Debug, Clone)]
+pub struct CaptchaEntry {
+    pub data: String,
+    pub created_at: u64,
+}
+
+#[derive(candid::CandidType, serde::Serialize)]
+pub struct Challenge {
+    pub base64_img: String,
+}
 /*
  * @title Token Faucet
  * @notice This function allows users to request tokens from the faucet for a specified asset and amount.
@@ -210,4 +232,125 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         user_faucet_reserves
     );
     Ok(())
+}
+#[update]
+async fn create_captcha() -> Result<Challenge, Error> {
+    // request_limiter()?;
+    // guard_prevent_anonymous()?;
+    let caller_id = ic_cdk::api::caller();
+    let now = ic_cdk::api::time();
+
+    // Apply CAPTCHA filtering before creating a new CAPTCHA
+    CAPTCHA_STATE.with(|state| {
+        let mut state = state.borrow_mut();
+        ic_cdk::println!("length of the state = {:?}", state.len());
+
+        // Apply filtering based on time and user
+        captcha_filter(&mut state, true, false); // Filter expired CAPTCHAs and retain others
+
+        // Check if the caller already has a valid CAPTCHA
+        if let Some(existing) = state.get(&caller_id) {
+            if existing.created_at + CAPTCHA_LIFETIME > now {
+                return Err(Error::CaptchaAlreadyExists);
+            }
+        }
+
+        // Check threshold limit
+        if state.len() >= CAPTCHA_THRESHOLD {
+            return Err(Error::CaptchaLimitReached);
+        }
+
+        Ok(())
+    })?;
+
+    // Generate CAPTCHA
+    let (seed,) = ic_cdk::api::management_canister::main::raw_rand()
+        .await
+        .unwrap();
+    let captcha = CaptchaBuilder::new().generate(&seed, None);
+    let solution_text = captcha.text();
+    ic_cdk::println!("solution test = {}", solution_text);
+
+    // Store CAPTCHA solution with user principal
+    CAPTCHA_STATE.with(|state| {
+        state.borrow_mut().insert(
+            caller_id,
+            CaptchaEntry {
+                data: solution_text.clone(),
+                created_at: now,
+            },
+        );
+    });
+
+    // Optionally: log the solution for debugging (disable in prod)
+    ic_cdk::println!("CAPTCHA solution for {:?}: {}", caller_id, solution_text);
+
+    Ok(Challenge {
+        base64_img: captcha.to_base64(CAPTCHA_HARDNESS),
+    })
+}
+
+#[update]
+fn verify_captcha(user_input: String) -> Result<(), Error> {
+    let caller_id = ic_cdk::api::caller();
+    let now = ic_cdk::api::time();
+
+    // Debugging print to check caller ID and time
+    ic_cdk::println!("Caller ID: {:?}", caller_id);
+    ic_cdk::println!("Current time: {}", now);
+
+    // Log the user input to console
+    ic_cdk::println!("User input: {:?}", user_input); // This will log the input from the user
+
+    CAPTCHA_STATE.with(|state| {
+        let mut state = state.borrow_mut();
+
+        // Apply CAPTCHA filtering before verifying
+        ic_cdk::println!("Filtering CAPTCHA states...");
+        captcha_filter(&mut state, true, false); // Filter expired CAPTCHAs and retain others
+
+        // Check if CAPTCHA exists for this user
+        if let Some(entry) = state.get(&caller_id) {
+            ic_cdk::println!("Captcha found for caller: {:?}", caller_id);
+
+            // Check if CAPTCHA has expired
+            if entry.created_at + CAPTCHA_LIFETIME <= now {
+                ic_cdk::println!("Captcha expired for caller: {:?}", caller_id);
+                state.remove(&caller_id); // Clean up expired CAPTCHA
+                return Err(Error::CaptchaExpired);
+            }
+
+            // Compare solution text
+            if entry.data == user_input {
+                ic_cdk::println!("Captcha verified successfully for caller: {:?}", caller_id);
+                state.remove(&caller_id); // Clean up on success
+                return Ok(());
+            } else {
+                ic_cdk::println!("Invalid captcha input for caller: {:?}", caller_id);
+                return Err(Error::InvalidCaptcha);
+            }
+        }
+
+        ic_cdk::println!("Captcha not found for caller: {:?}", caller_id);
+        Err(Error::CaptchaNotFound)
+    })
+}
+
+// Function to filter out expired and user-specific CAPTCHA
+pub fn captcha_filter(
+    state: &mut std::collections::HashMap<Principal, CaptchaEntry>,
+    time_based: bool,
+    usr_based: bool,
+) {
+    let now = ic_cdk::api::time();
+
+    if time_based {
+        // Retain only those CAPTCHAs that are still valid (not expired)
+        state.retain(|_, entry| entry.created_at + CAPTCHA_LIFETIME > now);
+    }
+
+    if usr_based {
+        // Remove CAPTCHAs created by the current user (caller)
+        state.retain(|principal, _| *principal != ic_cdk::api::caller());
+    }
 }

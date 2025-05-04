@@ -28,7 +28,12 @@ const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
-  const { backendActor, isAuthenticated, createLedgerActor, verifyCertificate } = useAuth();
+  const {
+    backendActor,
+    isAuthenticated,
+    createLedgerActor,
+    verifyCertificate,
+  } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const filterRef = useRef(null);
@@ -71,7 +76,7 @@ const HealthFactorList = () => {
     try {
       const result = await backendActor.guard_admin_only();
 
-      const responseData = result; // Assuming first item is the actual response
+      const responseData = result; 
 
       if ("Ok" in responseData) {
         setLike(true);
@@ -90,7 +95,6 @@ const HealthFactorList = () => {
     }
   };
 
-
   /**
    * This function retrieves the list of all users from the backend by calling `get_all_users` method.
    * It then sets the retrieved users into the state.
@@ -103,8 +107,6 @@ const HealthFactorList = () => {
 
     try {
       const allUsers = await backendActor.get_all_users_certified();
-
-      // Assuming certificate is the second element in the result, if it exists
       const cert = allUsers?.[1];
 
       if (cert) {
@@ -112,18 +114,19 @@ const HealthFactorList = () => {
           const verified = await verifyCertificate(cert);
           if (!verified) {
             console.error("Certificate verification failed for users data");
-            return; // Don't proceed with unverified data
-          } else {
-            console.log("Users certificate verified successfully");
+            return;
           }
         } catch (verificationError) {
-          console.error("Error verifying certificate for users:", verificationError);
-          return; // Stop execution if verification fails
+          console.error(
+            "Error verifying certificate for users:",
+            verificationError
+          );
+          return;
         }
       }
 
       if (allUsers.length > 0) {
-        setUsers(allUsers);
+        setUsers(allUsers?.[0]);
         setHealthFactorLoading(false);
       }
     } catch (error) {
@@ -131,7 +134,6 @@ const HealthFactorList = () => {
       setHealthFactorLoading(false);
     }
   };
-
 
   const fetchAssetData = async () => {
     const balances = {};
@@ -148,7 +150,6 @@ const HealthFactorList = () => {
         await Promise.all(
           assets.map(async (asset) => {
             const reserveDataForAsset = reserveDataMap[asset]?.Ok[0];
-
             if (!reserveDataForAsset) {
               console.warn(`No valid reserve data found for ${asset}`);
               userBalances[asset] = {
@@ -343,7 +344,7 @@ const HealthFactorList = () => {
   // Function to get the asset supply value
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]);
+      const supplyValue = Number(asset_supply[asset][0]);
       return supplyValue;
     }
     return;
@@ -352,7 +353,7 @@ const HealthFactorList = () => {
   // Function to get the asset borrow value
   const getAssetBorrowValue = (asset) => {
     if (asset_borrow[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]);
+      const borrowValue = Number(asset_borrow[asset][0]);
       return borrowValue;
     }
     return;
@@ -1046,6 +1047,7 @@ const HealthFactorList = () => {
                     const currentLiquidity = Number(
                       assetInfo?.liquidity_index || 0n
                     );
+
                     const currentDebtIndex = Number(
                       assetInfo?.variable_borrow_index || 0n
                     );
@@ -1056,7 +1058,6 @@ const HealthFactorList = () => {
                       dtokenBalance: 0,
                       debtTokenBalance: 0,
                     };
-
                     const assetBalance =
                       Number(userAssetBalance.dtokenBalance) || 0;
                     const debtBalance =
@@ -1064,7 +1065,6 @@ const HealthFactorList = () => {
 
                     const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
                     const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
-
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /

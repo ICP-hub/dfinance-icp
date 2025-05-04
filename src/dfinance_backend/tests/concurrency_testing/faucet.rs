@@ -1,11 +1,8 @@
+use crate::utils::common_functions::{get_user_principal2, get_users_principal};
+use crate::utils::error as errors;
 use candid::Nat;
 use candid::{encode_args, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use crate::utils::common_functions::get_users_principal;
-use crate::utils::error as errors;
-
-
-
 
 /*
  * @title Test Faucet Functionality for Asset Distributions
@@ -179,7 +176,6 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 "✅ IC Test Case {} Passed: Faucet successful.",
                                 i + 1,
                             );
-                                                       
                         }
                         Err(error) => {
                             if !case.expect_success {
@@ -222,7 +218,73 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 }
             }
         }
+
+        // Simulate faucet request
+        let result = pic.update_call(
+            backend_canister,
+            get_user_principal2(),
+            "faucet",
+            encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+        );
+
+        match result {
+            Ok(WasmResult::Reply(reply)) => {
+                let faucet_response: Result<Nat, errors::Error> =
+                    candid::decode_one(&reply).expect("Failed to decode faucet response");
+
+                match faucet_response {
+                    Ok(balance) => {
+                        if !case.expect_success {
+                            ic_cdk::println!(
+                                "❌ IC Test Case {} Failed: Expected failure but got success.",
+                                i + 1
+                            );
+                            continue;
+                        }
+                        ic_cdk::println!("✅ IC Test Case {} Passed: Faucet successful.", i + 1,);
+                    }
+                    Err(error) => {
+                        if !case.expect_success {
+                            if case.expected_error_message.as_deref() != Some(error.message()) {
+                                println!(
+                                        "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
+                                        i + 1,
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        error.message()
+                                    );
+                                continue;
+                            }
+                            ic_cdk::println!(
+                                    "✅ IC Test Case {} Passed: Faucet rejected as expected with message: {:?}",
+                                    i + 1,
+                                    error
+                                );
+                        } else {
+                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            continue;
+                        }
+                    }
+                }
+            }
+            Ok(WasmResult::Reject(reject_message)) => {
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Function call rejected with message: {}",
+                    i + 1,
+                    reject_message
+                );
+                continue;
+            }
+            Err(e) => {
+                ic_cdk::println!(
+                    "❌ IC Test Case {} Failed: Error during faucet function call: {:?}",
+                    i + 1,
+                    e
+                );
+                continue;
+            }
+        }
     }
+
     ic_cdk::println!(
         "\n======================== IC Faucet Tests Completed ========================\n"
     );

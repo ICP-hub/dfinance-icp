@@ -462,7 +462,8 @@ const Borrow = ({
 
   // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableValue).toFixed(8);
+    const maxAmount = parseFloat(borrowableValue- transferFee).toFixed(8);
+    console.log("maxAmount",maxAmount)
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -747,7 +748,7 @@ const Borrow = ({
                     ) : parseFloat(borrowableValue) === 0 ? (
                       "0 Max"
                     ) : (
-                      `${formatValue(Math.max(0, borrowableValue - transferFee))} Max`
+                      `${formatValue(Math.max(0, borrowableValue))} Max`
                     )}
                   </p>
                 </div>

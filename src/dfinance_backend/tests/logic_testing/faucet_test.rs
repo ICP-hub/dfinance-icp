@@ -1,8 +1,8 @@
-use pocket_ic::{PocketIc, WasmResult};
+use crate::utils::common_functions::*;
+use crate::utils::error as errors;
 use candid::Nat;
 use candid::{encode_args, Principal};
-use crate::utils::error as errors;
-use crate::utils::common_functions::*;
+use pocket_ic::{PocketIc, WasmResult};
 /*
  * @title Faucet Functionality Test
  * @description Tests the `faucet` method with various asset and amount combinations to ensure proper token distribution, validation, and error handling.
@@ -130,7 +130,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
         }
-        
+
         ic_cdk::println!("------------------------------------------------------------\n");
 
         /*
@@ -158,7 +158,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                 let faucet_response: Result<Nat, errors::Error> =
                     candid::decode_one(&reply).expect("Failed to decode faucet response");
                 match faucet_response {
-                    Ok(balance) => {
+                    Ok(_) => {
                         if !case.expect_success {
                             ic_cdk::println!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success.",
@@ -166,13 +166,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                             );
                             continue;
                         }
-                        ic_cdk::println!(
-                            "✅ IC Test Case {} Passed: Faucet successful.",
-                            i + 1,
-                        );
-                        // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                        // fetch_reserve_data(pic, backend_canister, &case.asset);
-                        // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                        ic_cdk::println!("✅ IC Test Case {} Passed: Faucet successful.", i + 1,);
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -190,12 +184,6 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
-                        // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                        // //reserve data fetching
-                        // fetch_reserve_data(pic, backend_canister, &case.asset);
-                        // ic_cdk::println!("\n---------------------------------------------------------\n");
-                        // //user data fetching
-                        // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
@@ -243,8 +231,6 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                 encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
             );
 
-
-
             match result {
                 Ok(WasmResult::Reply(reply)) => {
                     let faucet_response: Result<Nat, errors::Error> =
@@ -264,13 +250,6 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 balance
                             );
-                        // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                        // //reserve data fetching
-                        // fetch_reserve_data(pic, backend_canister, &case.asset);
-                        // ic_cdk::println!("\n---------------------------------------------------------\n");
-                        // //user data fetching
-                        // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-                            
                         }
                         Err(error) => {
                             if !case.expect_success {
@@ -288,12 +267,6 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                     i + 1,
                                     error
                                 );
-                                // ic_cdk::println!("========================== Checking Reserves After successful Faucet operation ==========================");
-                                // //reserve data fetching
-                                // fetch_reserve_data(pic, backend_canister, &case.asset);
-                                // ic_cdk::println!("\n---------------------------------------------------------\n");
-                                // //user data fetching
-                                // fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                             } else {
                                 ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                                 ic_cdk::println!(
@@ -326,10 +299,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         }
     }
 
-        ic_cdk::println!(
-            "\n======================== IC Faucet Tests Completed ========================\n"
-        );
+    ic_cdk::println!(
+        "\n======================== IC Faucet Tests Completed ========================\n"
+    );
 }
-
-
-

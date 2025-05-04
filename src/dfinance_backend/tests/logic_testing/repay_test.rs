@@ -65,21 +65,21 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH (includes transaction fee)
+            amount: Nat::from(200u128), //  0.000002 ckETH (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(5_000_000u128), // 500 USDC (includes transaction fee)
+            amount: Nat::from(5_000_000u128), // .05 USDC (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(5_000_000u128), // 500 USDT (includes transaction fee)
+            amount: Nat::from(5_000_000u128), // 0.05 USDT (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
@@ -150,13 +150,13 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: Some("Anonymous principals are not allowed".to_string()),
         },
         // repay on no borrow
-        // TestCase {
-        //     asset: "ICP".to_string(),
-        //     amount: Nat::from(1_000_000_000u128),
-        //     on_behalf_of: None,
-        //     expect_success: false,
-        //     expected_error_message: Some("Repay cannot be more than debt".to_string()),
-        // },
+        TestCase {
+            asset: "ICP".to_string(),
+            amount: Nat::from(1_000_000_000u128),
+            on_behalf_of: None,
+            expect_success: false,
+            expected_error_message: Some("wallet balance is low".to_string()),
+        },
     ];
 
     let user_principal = get_user_principal2();

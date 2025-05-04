@@ -84,7 +84,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             expect_success: true,
             expected_error_message: None,
         },
-        // // Invalid burn amount : with 0 reward
+        // // // Invalid burn amount : with 0 reward
         TestCase {
             debt_asset: "ckETH".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -92,7 +92,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             on_behalf_of: get_users_principal(Nat::from(2u32)).unwrap(),
             reward_amount: Nat::from(0u128),
             expect_success: false,
-            expected_error_message: Some("Invalid burn amount".to_string()),
+            expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
         TestCase {
             debt_asset: "ckETH".to_string(),
@@ -142,7 +142,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         ic_cdk::println!("\n====================== Checking Collateral Reserves before Liquidation ======================\n");
         fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
         ic_cdk::println!("\n-----------------------------------------------------------------------------\n");
-        for _ in random_users.clone() {
+        for user_principal in random_users.clone() {
             /* Get asset principal; handle missing cases  */
             let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {
@@ -169,7 +169,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
              * @dev Validates approval status and expected outcomes.
              */
             let approved = test_icrc2_aprove(
-                get_users_principal(Nat::from(1u128)).unwrap(),
+                user_principal,
                 asset_principal,
                 &pic,
                 backend_canister,
@@ -213,7 +213,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
              */
             let result = pic.update_call(
                 backend_canister,
-                get_users_principal(Nat::from(1u32)).unwrap(),
+                user_principal,
                 "execute_liquidation",
                 encode_one(liquidation_params).unwrap(),
             );

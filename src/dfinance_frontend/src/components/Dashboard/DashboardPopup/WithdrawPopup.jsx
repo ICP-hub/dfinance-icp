@@ -96,6 +96,12 @@ const WithdrawPopup = ({
     return truncated.toFixed(7);
   };
 
+  const truncateToeightDeimals = (value) => {
+    const multiplier = Math.pow(10, 8);
+    const truncated = Math.floor(value * multiplier) / multiplier;
+    return truncated.toFixed(8);
+  };
+
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
@@ -128,7 +134,7 @@ const WithdrawPopup = ({
 
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
-      inputAmount = truncateToSevenDecimals(assetSupply).toString();
+      inputAmount = truncateToeightDeimals(assetSupply-transferFee).toString();
     }
 
     setAmount(inputAmount);
@@ -659,7 +665,7 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    {truncateToSevenDecimals(Math.max(0, assetSupply - transferFee))}{" "}
+                    {truncateToeightDeimals(Math.max(0, assetSupply - transferFee))}{" "}
                     Max
                   </p>
                 </div>
@@ -678,8 +684,8 @@ const WithdrawPopup = ({
                     {(
                       Math.max(0, assetSupply - transferFee - Number(amount.toString().replace(/,/g, "")))
                     ).toLocaleString(undefined, {
-                      minimumFractionDigits: 7,
-                      maximumFractionDigits: 7,
+                      minimumFractionDigits: 8,
+                      maximumFractionDigits: 8,
                     })}{" "}
                     Max
                   </p>

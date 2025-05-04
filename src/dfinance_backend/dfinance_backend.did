@@ -230,7 +230,6 @@ service : (principal) -> {
   get_all_assets_certified : () -> (vec AssetInfo, Certificate) query;
   get_all_logs : () -> (vec text) query;
   get_all_user_list : (nat64, nat64) -> (Result_6);
-  get_all_users : () -> (vec record { principal; UserData }) query;
   get_all_users_certified : () -> (
       vec record { principal; UserData },
       Certificate,

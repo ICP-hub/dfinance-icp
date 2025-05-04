@@ -47,36 +47,36 @@ use crate::utils::structs::*;
         TestCase {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ICP".to_string(),
-            amount: Nat::from(40_000_000u128), // 0.4 ICP (includes transaction fee)
+            amount: Nat::from(40_000_000u128), // 0.4 ICP (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_400_000u128), // 4.04 ICP
+            reward_amount: Nat::from(40_400_000u128), // 0.404 ICP (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
+            amount: Nat::from(210_000u128), // 0.0021 ckBTC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220_500u128), // 0.002205 ckBTC
+            reward_amount: Nat::from(220_500u128), // 0.002205 ckBTC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckUSDC".to_string(),
             collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(200_00_000_000u128), // 2000 ckUSDC (includes transaction fee)
+            amount: Nat::from(200_00_000_000u128), // 2000 ckUSDC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(210_00_000_000u128), // 2100 ckUSDC
+            reward_amount: Nat::from(210_00_000_000u128), // 2100 ckUSDC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckUSDT".to_string(),
             collateral_asset: "ckUSDT".to_string(),
-            amount: Nat::from(12_500_000_000u128), // 1250 ckUSDT (includes transaction fee)
+            amount: Nat::from(12_500_000_000u128), // 1250 ckUSDT (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13_062_500_000u128), // 1306.25 ckUSDT
+            reward_amount: Nat::from(13_062_500_000u128), // 1306.25 ckUSDT (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },

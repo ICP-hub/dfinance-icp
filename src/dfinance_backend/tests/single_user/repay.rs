@@ -89,7 +89,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             asset_principal,
             &pic,
             backend_canister,
-            Nat::from(case.amount.clone()),
+            Nat::from(case.amount.clone()), // Amount ICP (transfer fee included)
         );
         if !approved {
             if !case.expect_success {
@@ -120,7 +120,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             /* Repay params */
             let repay_params = ExecuteRepayParams {
                 asset: case.asset.clone(),
-                amount: case.amount.clone(),
+                amount: case.amount.clone(), // Amount ICP (transfer fee included)
                 on_behalf_of: case.on_behalf_of.clone(),
             };
 

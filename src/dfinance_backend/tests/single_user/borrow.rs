@@ -27,7 +27,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(2_00_000_000u128), // 2 ICP
+            amount: Nat::from(2_00_000_000u128), // 2 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },

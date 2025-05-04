@@ -39,37 +39,37 @@ use crate::utils::structs::*;
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_00_000_000u128), // 1 ICP
+            amount: Nat::from(5_00_000_000u128), // 5 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128), // 1 ICP
+            amount: Nat::from(10_000_000_000u128), // 100 ICP (transfer fee included)
             expect_success: false,
             expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH
+            amount: Nat::from(200u128), // 0.000002 ckETH (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200_000_000u128), // 0.002 ckETH
+            amount: Nat::from(200_000_000u128), // 2 ckETH (transfer fee included)
             expect_success: false,
             expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000u128), // 30 ckUSDT
+            amount: Nat::from(30_000_000u128), // 0.3 ckUSDT (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(200_800_000_000u128), // 30 ckUSDT
+            amount: Nat::from(200_800_000_000u128), // 2008 ckUSDT (transfer fee included)
             expect_success: false,
             expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },

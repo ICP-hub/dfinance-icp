@@ -1,4 +1,3 @@
-
 use candid::{ encode_one, Principal};
 use candid::Nat;
 use pocket_ic::{PocketIc,  WasmResult};
@@ -38,42 +37,42 @@ use crate::utils::structs::*;
         // Valid Withdrawals (Direct)
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(400_000u128), // 100 ckUSDT
+            amount: Nat::from(400_000u128), // 0.004 ckUSDT (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(200_000_000_000u128), // 0.002 ckETH
+            amount: Nat::from(200_000_000_000u128), // 2000 ckUSDT (includes transaction fee)
             is_collateral: false,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_000_000u128), // 0.02 ckETH
+            amount: Nat::from(1_000_000u128), // 0.01 ICP (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(20_000_000_000u128), // 2 ICP
+            amount: Nat::from(20_000_000_000u128), // 200 ICP (includes transaction fee)
             is_collateral: true,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(500_000u128), // 0.00000002 ICP
+            amount: Nat::from(500_000u128), // 0.005 ckUSDT (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(500_000_000_000u128), // 0.00000002 ICP
+            amount: Nat::from(500_000_000_000u128), // 5000 ckUSDT (includes transaction fee)
             is_collateral: true,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),

@@ -26,7 +26,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_00u128),
+            amount: Nat::from(10_000_000_00u128), // 100 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },

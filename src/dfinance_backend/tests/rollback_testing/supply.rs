@@ -40,7 +40,7 @@ use crate::utils::structs::*;
     let test_cases: Vec<TestCase> = vec![
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(25_00_000_000u128), // 5 ICP (includes transaction fee)
+            amount: Nat::from(25_00_000_000u128), // 25 ICP (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -54,7 +54,7 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(10_000_000u128), // 0.10 ckETH (includes transaction fee)
+            amount: Nat::from(10_000_000u128), // 0.1 ckETH (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -89,7 +89,7 @@ use crate::utils::structs::*;
         },
         TestCase { 
         asset: "ICP".to_string(),
-        amount: Nat::from(42_093_186u128), 
+        amount: Nat::from(42_093_186u128), // 0.42093186 ICP (includes transaction fee)
         is_collateral: true,
         expect_success: true,
         expected_error_message: None, 

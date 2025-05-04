@@ -158,11 +158,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     info!("Interest rates updated successfully");
 
     debug!("updated Reserve data: {:?}", reserve_data);
-    mutate_state(|state| {
-        state
-            .asset_index
-            .insert(params.asset.clone(), Candid(reserve_data.clone()))
-    });
+  
 
     // Transfers borrow amount from the pool to the user
     match asset_transfer_from(
@@ -178,6 +174,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                 "Asset transfer from backend to user executed successfully. New balance: {:?}",
                 new_balance
             );
+            mutate_state(|state| {
+                state
+                    .asset_index
+                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            });
             Ok(new_balance)
         }
         Err(_) => {
@@ -197,11 +198,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             )
             .await?;
 
-            mutate_state(|state| {
-                state
-                    .asset_index
-                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
-            });
+            // mutate_state(|state| {
+            //     state
+            //         .asset_index
+            //         .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            // });
             info!("Rollback user and reserve state executed successfully");
             return Err(Error::ErrorMintDebtTokens);
         }
@@ -372,11 +373,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     info!("Interest rates updated successfully");
 
     debug!("Updated Reserve data: {:?}", reserve_data);
-    mutate_state(|state| {
-        state
-            .asset_index
-            .insert(params.asset.clone(), Candid(reserve_data.clone()))
-    });
+  
 
     // Transfers the asset from the user to our backend canister
     match asset_transfer_from(
@@ -392,6 +389,11 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                 "Asset transfer from user to backend executed successfully, new balance: {:?}",
                 new_balance
             );
+            mutate_state(|state| {
+                state
+                    .asset_index
+                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            });
             Ok(new_balance)
         }
         Err(_) => {
@@ -410,11 +412,11 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
             )
             .await?;
 
-            mutate_state(|state| {
-                state
-                    .asset_index
-                    .insert(params.asset.clone(), Candid(reserve_data.clone()));
-            });
+            // mutate_state(|state| {
+            //     state
+            //         .asset_index
+            //         .insert(params.asset.clone(), Candid(reserve_data.clone()));
+            // });
             info!("Rollback user and reserve state executed successfully");
             return Err(Error::ErrorBurnDebtTokens);
         }

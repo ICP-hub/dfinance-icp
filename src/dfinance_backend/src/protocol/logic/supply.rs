@@ -68,7 +68,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let platform_principal = ic_cdk::api::id();
 
     let amount_nat = params.amount.clone(); //check
-                                            //fetch reserve data for the asset
+    //fetch reserve data for the asset
     let mut reserve_data = mutate_state(|state| {
         state
             .asset_index
@@ -80,7 +80,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     //initialize a asset reserve cache for temp changes
     let mut reserve_cache = reserve::cache(&reserve_data);
     info!("Reserve cache fetched successfully: {:?}", reserve_cache); //info
-                                                                      //update the reserve cache state
+    //update the reserve cache state
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
     info!("Reserve state updated successfully"); //info
 
@@ -288,6 +288,15 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
     ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
+     // ----------- Update logic here -------------
+     UpdateLogic::update_user_data_withdraw(
+        user_principal,
+        &reserve_cache,
+        params.clone(),
+        &mut reserve_data,
+    )
+    .await?;
+    info!("User state updated successfully for withdraw asset");
 
     reserve::update_interest_rates(
         &mut reserve_data,
@@ -298,21 +307,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     .await?;
     info!("Interest rates updated successfully");
 
-    // ----------- Update logic here -------------
-    UpdateLogic::update_user_data_withdraw(
-        user_principal,
-        &reserve_cache,
-        params.clone(),
-        &mut reserve_data,
-    )
-    .await?;
-    info!("User state updated successfully for withdraw asset");
+   
 
-    mutate_state(|state| {
-        state
-            .asset_index
-            .insert(params.asset.clone(), Candid(reserve_data.clone()))
-    });
+   
 
     // Transfers the asset from the user to our backend cansiter
     match asset_transfer_from(
@@ -325,6 +322,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     {
         Ok(new_balance) => {
             info!("Asset transfer from backend to user executed successfully");
+            mutate_state(|state| {
+                state
+                    .asset_index
+                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            });
             return Ok(new_balance);
         }
         Err(_) => {
@@ -343,11 +345,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             )
             .await?;
 
-            mutate_state(|state| {
-                state
-                    .asset_index
-                    .insert(params.asset.clone(), Candid(reserve_data.clone()))
-            });
+            // mutate_state(|state| {
+            //     state
+            //         .asset_index
+            //         .insert(params.asset.clone(), Candid(reserve_data.clone()))
+            // });
             info!("Rollback successfully executed"); //info
             return Err(Error::ErrorBurnTokens);
         }

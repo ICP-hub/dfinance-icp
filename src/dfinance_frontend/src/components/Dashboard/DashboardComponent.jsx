@@ -82,7 +82,6 @@ const DashboardComponent = () => {
     filteredItems,
     asset_supply,
     asset_borrow,
-    fetchAssetSupply,
     fetchUserPositions,
     loading: filteredDataLoading,
   } = useAssetData();
@@ -412,7 +411,6 @@ const DashboardComponent = () => {
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset]);
-      console.log("supplyValue", supplyValue)
       return supplyValue;
     }
     return noSupplyMessage;
@@ -471,8 +469,7 @@ const DashboardComponent = () => {
             maximumFractionDigits: 7,
           });
     }
-
-    const liquidityRate = item[1]?.Ok.current_liquidity_rate;
+    const liquidityRate = item[1]?.Ok[0].current_liquidity_rate;
     const apy = liquidityRate
       ? `${((Number(liquidityRate) * 100) / 100000000).toFixed(2)}%`
       : "<0.01%";
@@ -948,7 +945,6 @@ const DashboardComponent = () => {
           ?.debtTokenBalance || 0;
 
       const assetBorrowValue = getAssetBorrowValue(asset);
-      console.log("assetBorrow", assetBorrowValue)
       if (assetBorrowValue == null || isNaN(Number(assetBorrowValue))) {
         console.warn("Invalid supply value for", asset, assetBorrowValue);
         return false;
@@ -967,7 +963,6 @@ const DashboardComponent = () => {
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
-  console.log("userAccountData", userAccountData)
   useEffect(() => {
     const reserves = userData?.Ok?.[0]?.reserves?.[0] || [];
   
@@ -1002,7 +997,6 @@ const DashboardComponent = () => {
   
     const finalBorrowValue =
       !totalBorrow || totalBorrow < 0.01 ? 0 : totalBorrow;
-  console.log("total borrow in dashboard",totalBorrow)
     setAvailableBorrow(finalBorrowValue);
   }, [userAccountData, userData, dashboardRefreshTrigger, assetBalances]);
   
@@ -1376,7 +1370,6 @@ const DashboardComponent = () => {
                       }
                       if (assetSupply >= 0) {
                         totalUsdValueSupply += usdValue;
-                        console.log("totalUsdValueSupply", totalUsdValueSupply)
                         dispatch(setTotalUsdValueSupply(totalUsdValueSupply));
                       }
 
@@ -2835,7 +2828,6 @@ const DashboardComponent = () => {
                                 <Button
                                   title={"Borrow"}
                                   onClickHandler={() => {
-                                    dispatch(toggleDashboardRefresh());
                                     handleAssetAction("borrow", item[0]);
                                   }}
                                   disabled={isTableDisabled || isButtonDisabled}
@@ -3019,7 +3011,6 @@ const DashboardComponent = () => {
                                   <Button
                                     title={"Borrow"}
                                     onClickHandler={() => {
-                                      dispatch(toggleDashboardRefresh());
                                       handleAssetAction("borrow", item[0]);
                                     }}
                                     disabled={!isEligible}

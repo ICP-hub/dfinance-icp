@@ -88,3 +88,12 @@ pub const TESTER_4: &str = "7xhye-kr46o-ar2qe-o6q43-27mej-uicgc-zs5dp-tdp3c-mshc
 
 #[allow(dead_code)]
 pub const TESTER_5: &str = "oy3k4-vldva-7vtsc-ngklb-srvb3-7alpx-neqah-exvie-fbaxl-r2je7-rqe";
+
+#[allow(dead_code)]
+pub const TESTER_6: &str = "3rott-asn2i-gpewt-g3av6-sg2w4-z5q4f-ex4gs-ybgbn-2blcx-b46lg-5ae";
+
+#[allow(dead_code)]
+pub const TESTER_7: &str = "zjufx-s5v2q-jv7jn-a5qra-pw5vc-rt4hf-arhzn-7kzkq-56msw-xhq5o-yae";
+
+#[allow(dead_code)]
+pub const TESTER_8: &str = "4jwha-xpj7p-sk2lp-bdo4u-cijhx-xskuu-qj34g-kqty4-n6jhy-ixgjd-aqe";

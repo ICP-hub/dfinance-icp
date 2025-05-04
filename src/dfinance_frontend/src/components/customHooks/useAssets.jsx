@@ -15,11 +15,10 @@ const useAssetData = (searchQuery = "") => {
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-  console.log(dashboardRefreshTrigger);  // Ensure it's updating in the console
-  
-  const { principal, backendActor, isAuthenticated, verifyCertificate } = useAuth();
-  const { fetchReserveData, batchFetchReserveData, reserveDataCache } =
-    useReserveData();
+
+  const { principal, backendActor, isAuthenticated, verifyCertificate } =
+    useAuth();
+  const { fetchReserveData, batchFetchReserveData } = useReserveData();
 
   const [assets, setAssets] = useState([]);
   const [AssetImages, setAssetImages] = useState([]);
@@ -44,51 +43,45 @@ const useAssetData = (searchQuery = "") => {
   useEffect(() => {
     fetchConversionRate();
   }, [fetchConversionRate, dashboardRefreshTrigger]);
-   
+
   useEffect(() => {
     const fetchAssets = async () => {
       if (!backendActor) return;
-  
+
       try {
-        // Use the certified version of the function
         const result = await backendActor.get_all_assets_certified();
-        console.log("result",result)
-        // Verify certificate
         if (result && result[1]) {
           try {
             const verification = await verifyCertificate(result[1]);
             if (!verification) {
               console.error("Certificate verification failed for assets");
-            
-              return; // Don't proceed with unverified data
-            } else {
-              console.log("Assets certificate verified successfully");
+
+              return;
             }
           } catch (verificationError) {
-            console.error("Error during assets certificate verification:", verificationError);
-            
+            console.error(
+              "Error during assets certificate verification:",
+              verificationError
+            );
+
             return;
           }
         }
-        
-        // Process the assets data after successful verification
-        const assetData = result[0]; // Assets are at index 0
-        
+
+        const assetData = result[0];
+
         const names = assetData.map((asset) => asset.asset_name);
         const images = assetData.map((asset) => asset.image);
-  
+
         setAssets(names);
         setAssetImages(images);
-    
-        
       } catch (error) {
         console.error("Failed to fetch assets:", error.message);
-     
       }
     };
-  
+
     fetchAssets();
-  }, [backendActor, dashboardRefreshTrigger]);
+  }, [backendActor]);
 
   /**
    * Optimized to use batch fetching and leverage the cache
@@ -100,82 +93,95 @@ const useAssetData = (searchQuery = "") => {
       try {
         const batchedReserveData = await batchFetchReserveData(assetsList);
         const assetReserveData = {};
-  
+
         Object.entries(batchedReserveData).forEach(([asset, data]) => {
-          if (data?.Ok?.id || (data?.Ok?.[0]?.id)) {
+          if (data?.Ok?.id || data?.Ok?.[0]?.id) {
             assetReserveData[asset] = data.Ok?.id ? data.Ok : data.Ok[0];
           }
         });
-  
+
         if (Object.keys(assetReserveData).length === 0) {
           console.warn("No valid reserve data found for any assets");
           return null;
         }
-  
+
         const supplyPromises = Object.entries(assetReserveData).map(
           async ([asset, data]) => {
             try {
-              const result = await backendActor.user_normalized_supply_certified(data);
-  console.log("result in normalized supply ",result)
-              // 🔒 Certificate verification step
+              const result =
+                await backendActor.user_normalized_supply_certified(data);
+
               if (result && result.Ok[1]) {
                 try {
                   const verification = await verifyCertificate(result.Ok[1]);
                   if (!verification) {
-                    console.error(`Certificate verification failed for asset supply: ${asset}`);
+                    console.error(
+                      `Certificate verification failed for asset supply: ${asset}`
+                    );
                     return { asset, success: false };
-                  } else {
-                    console.log(`Certificate verified for asset supply: ${asset}`);
                   }
                 } catch (verificationError) {
-                  console.error("Error during certificate verification:", verificationError);
+                  console.error(
+                    "Error during certificate verification:",
+                    verificationError
+                  );
                   return { asset, success: false };
                 }
               }
-  
+
               return { asset, supply: result.Ok[0], success: true };
             } catch (error) {
-              console.error(`Error fetching supply for ${asset}:`, error.message);
+              console.error(
+                `Error fetching supply for ${asset}:`,
+                error.message
+              );
               return { asset, success: false };
             }
           }
         );
-  
+
         const borrowPromises = Object.entries(assetReserveData).map(
           async ([asset, data]) => {
             try {
-              const result = await backendActor.user_normalized_debt_certified(data);
-  
-              // 🔒 Certificate verification step
+              const result = await backendActor.user_normalized_debt_certified(
+                data
+              );
+
               if (result && result.Ok[1]) {
                 try {
                   const verification = await verifyCertificate(result.Ok[1]);
                   if (!verification) {
-                    console.error(`Certificate verification failed for asset borrow: ${asset}`);
+                    console.error(
+                      `Certificate verification failed for asset borrow: ${asset}`
+                    );
                     return { asset, success: false };
-                  } else {
-                    console.log(`Certificate verified for asset borrow: ${asset}`);
                   }
                 } catch (verificationError) {
-                  console.error("Error during certificate verification:", verificationError);
+                  console.error(
+                    "Error during certificate verification:",
+                    verificationError
+                  );
                   return { asset, success: false };
                 }
               }
-  
+
               return { asset, borrow: result.Ok[0], success: true };
             } catch (error) {
-              console.error(`Error fetching borrow for ${asset}:`, error.message);
+              console.error(
+                `Error fetching borrow for ${asset}:`,
+                error.message
+              );
               return { asset, success: false };
             }
           }
         );
-  
+
         const [supplyResults, borrowResults] = await Promise.all([
           Promise.all(supplyPromises),
           Promise.all(borrowPromises),
         ]);
-  
-        setAssetSupply(prevSupply => {
+
+        setAssetSupply((prevSupply) => {
           const newSupplyData = { ...prevSupply };
           supplyResults.forEach(({ asset, supply, success }) => {
             if (success && supply !== undefined) {
@@ -184,8 +190,8 @@ const useAssetData = (searchQuery = "") => {
           });
           return newSupplyData;
         });
-  
-        setAssetBorrow(prevBorrow => {
+
+        setAssetBorrow((prevBorrow) => {
           const newBorrowData = { ...prevBorrow };
           borrowResults.forEach(({ asset, borrow, success }) => {
             if (success && borrow !== undefined) {
@@ -194,22 +200,22 @@ const useAssetData = (searchQuery = "") => {
           });
           return newBorrowData;
         });
-  
+
         const newSupplyData = {};
         const newBorrowData = {};
-  
+
         supplyResults.forEach(({ asset, supply, success }) => {
           if (success && supply !== undefined) {
             newSupplyData[asset] = supply;
           }
         });
-  
+
         borrowResults.forEach(({ asset, borrow, success }) => {
           if (success && borrow !== undefined) {
             newBorrowData[asset] = borrow;
           }
         });
-  
+
         return { supplyData: newSupplyData, borrowData: newBorrowData };
       } catch (error) {
         console.error("Error fetching user positions:", error.message);
@@ -218,9 +224,14 @@ const useAssetData = (searchQuery = "") => {
         setLoading(false);
       }
     },
-    [assets, backendActor, isAuthenticated, batchFetchReserveData]
+    [
+      assets,
+      backendActor,
+      isAuthenticated,
+      batchFetchReserveData,
+      dashboardRefreshTrigger,
+    ]
   );
-  
 
   /**
    * Legacy individual fetch functions - now optimized to use cached data
@@ -228,200 +239,252 @@ const useAssetData = (searchQuery = "") => {
   const fetchAssetSupply = useCallback(
     async (asset) => {
       if (!backendActor || !isAuthenticated) return;
-  
+
       try {
         let assetReserveData = reserveData?.[asset]?.Ok;
-  
+
         if (!assetReserveData) {
           const reserveDataForAsset = await fetchReserveData(asset);
-  
+
           if (reserveDataForAsset?.Ok) {
             let dataToUse;
             if (reserveDataForAsset.Ok?.id) {
               dataToUse = reserveDataForAsset.Ok;
-            } else if (Array.isArray(reserveDataForAsset.Ok) &&
+            } else if (
+              Array.isArray(reserveDataForAsset.Ok) &&
               reserveDataForAsset.Ok.length > 0 &&
-              reserveDataForAsset.Ok[0]?.id) {
+              reserveDataForAsset.Ok[0]?.id
+            ) {
               dataToUse = reserveDataForAsset.Ok[0];
             }
-            console.log("result in this",dataToUse)
             if (dataToUse) {
-              const result = await backendActor.user_normalized_supply_certified(dataToUse);
-  console.log("result in this",result)
-              // 🔒 Certificate verification
+              const result =
+                await backendActor.user_normalized_supply_certified(dataToUse);
+
               if (result && result[1]) {
                 try {
                   const verified = await verifyCertificate(result[1]);
                   if (!verified) {
-                    console.error(`Certificate verification failed for supply: ${asset}`);
+                    console.error(
+                      `Certificate verification failed for supply: ${asset}`
+                    );
                     return;
-                  } else {
-                    console.log(`Certificate verified for supply: ${asset}`);
                   }
                 } catch (e) {
-                  console.error(`Error verifying certificate for supply: ${asset}`, e);
+                  console.error(
+                    `Error verifying certificate for supply: ${asset}`,
+                    e
+                  );
                   return;
                 }
               }
-  
+
               if (result?.Ok !== undefined) {
-                setAssetSupply(prev => ({
+                setAssetSupply((prev) => ({
                   ...prev,
-                  [asset]: result.Ok
+                  [asset]: result.Ok,
                 }));
               }
             } else {
-              console.error("Missing or invalid id in data:", reserveDataForAsset);
+              console.error(
+                "Missing or invalid id in data:",
+                reserveDataForAsset
+              );
             }
           } else {
-            console.error("Invalid format for reserveDataForAsset:", reserveDataForAsset);
+            console.error(
+              "Invalid format for reserveDataForAsset:",
+              reserveDataForAsset
+            );
           }
         } else {
           let dataToUse;
-  
+
           if (assetReserveData?.id) {
             dataToUse = assetReserveData;
-          } else if (Array.isArray(assetReserveData) &&
+          } else if (
+            Array.isArray(assetReserveData) &&
             assetReserveData.length > 0 &&
-            assetReserveData[0]?.id) {
+            assetReserveData[0]?.id
+          ) {
             dataToUse = assetReserveData[0];
           }
-  
+
           if (dataToUse) {
-            const result = await backendActor.user_normalized_supply_certified(dataToUse);
-  
-            // 🔒 Certificate verification
+            const result = await backendActor.user_normalized_supply_certified(
+              dataToUse
+            );
+
             if (result && result[1]) {
               try {
                 const verified = await verifyCertificate(result[1]);
                 if (!verified) {
-                  console.error(`Certificate verification failed for supply: ${asset}`);
+                  console.error(
+                    `Certificate verification failed for supply: ${asset}`
+                  );
                   return;
-                } else {
-                  console.log(`Certificate verified for supply: ${asset}`);
                 }
               } catch (e) {
-                console.error(`Error verifying certificate for supply: ${asset}`, e);
+                console.error(
+                  `Error verifying certificate for supply: ${asset}`,
+                  e
+                );
                 return;
               }
             }
-  
+
             if (result?.Ok !== undefined) {
-              setAssetSupply(prev => ({
+              setAssetSupply((prev) => ({
                 ...prev,
-                [asset]: result.Ok
+                [asset]: result.Ok,
               }));
             }
           } else {
-            console.error("Invalid format in cached reserveData for asset:", asset);
+            console.error(
+              "Invalid format in cached reserveData for asset:",
+              asset
+            );
           }
         }
       } catch (error) {
         console.error("Error fetching asset supply:", error.message);
       }
     },
-    [backendActor, isAuthenticated, reserveData, fetchReserveData, verifyCertificate]
+    [
+      backendActor,
+      isAuthenticated,
+      reserveData,
+      fetchReserveData,
+      verifyCertificate,
+      dashboardRefreshTrigger,
+    ]
   );
-  
 
   const fetchAssetBorrow = useCallback(
     async (asset) => {
       if (!backendActor || !isAuthenticated) return;
-  
+
       try {
         let assetReserveData = reserveData?.[asset]?.Ok;
-  
+
         if (!assetReserveData) {
           const reserveDataForAsset = await fetchReserveData(asset);
-  
+
           if (reserveDataForAsset?.Ok) {
             let dataToUse;
             if (reserveDataForAsset.Ok?.id) {
               dataToUse = reserveDataForAsset.Ok;
-            } else if (Array.isArray(reserveDataForAsset.Ok) &&
+            } else if (
+              Array.isArray(reserveDataForAsset.Ok) &&
               reserveDataForAsset.Ok.length > 0 &&
-              reserveDataForAsset.Ok[0]?.id) {
+              reserveDataForAsset.Ok[0]?.id
+            ) {
               dataToUse = reserveDataForAsset.Ok[0];
             }
-  
+
             if (dataToUse) {
-              const result = await backendActor.user_normalized_debt_certified(dataToUse);
-  
-              // 🔒 Certificate verification
+              const result = await backendActor.user_normalized_debt_certified(
+                dataToUse
+              );
+
               if (result && result[1]) {
                 try {
                   const verified = await verifyCertificate(result[1]);
                   if (!verified) {
-                    console.error(`Certificate verification failed for borrow: ${asset}`);
+                    console.error(
+                      `Certificate verification failed for borrow: ${asset}`
+                    );
                     return;
-                  } else {
-                    console.log(`Certificate verified for borrow: ${asset}`);
                   }
                 } catch (e) {
-                  console.error(`Error verifying certificate for borrow: ${asset}`, e);
+                  console.error(
+                    `Error verifying certificate for borrow: ${asset}`,
+                    e
+                  );
                   return;
                 }
               }
-  
+
               if (result?.Ok !== undefined) {
-                setAssetBorrow(prev => ({
+                setAssetBorrow((prev) => ({
                   ...prev,
-                  [asset]: result.Ok
+                  [asset]: result.Ok,
                 }));
               }
             } else {
-              console.error("Missing or invalid id in data:", reserveDataForAsset);
+              console.error(
+                "Missing or invalid id in data:",
+                reserveDataForAsset
+              );
             }
           } else {
-            console.error("Invalid format for reserveDataForAsset:", reserveDataForAsset);
+            console.error(
+              "Invalid format for reserveDataForAsset:",
+              reserveDataForAsset
+            );
           }
         } else {
           let dataToUse;
-  
+
           if (assetReserveData?.id) {
             dataToUse = assetReserveData;
-          } else if (Array.isArray(assetReserveData) &&
+          } else if (
+            Array.isArray(assetReserveData) &&
             assetReserveData.length > 0 &&
-            assetReserveData[0]?.id) {
+            assetReserveData[0]?.id
+          ) {
             dataToUse = assetReserveData[0];
           }
-  
+
           if (dataToUse) {
-            const result = await backendActor.user_normalized_debt_certified(dataToUse);
-  
-            // 🔒 Certificate verification
+            const result = await backendActor.user_normalized_debt_certified(
+              dataToUse
+            );
+
             if (result && result[1]) {
               try {
                 const verified = await verifyCertificate(result[1]);
                 if (!verified) {
-                  console.error(`Certificate verification failed for borrow: ${asset}`);
+                  console.error(
+                    `Certificate verification failed for borrow: ${asset}`
+                  );
                   return;
-                } else {
-                  console.log(`Certificate verified for borrow: ${asset}`);
                 }
               } catch (e) {
-                console.error(`Error verifying certificate for borrow: ${asset}`, e);
+                console.error(
+                  `Error verifying certificate for borrow: ${asset}`,
+                  e
+                );
                 return;
               }
             }
-  
+
             if (result?.Ok !== undefined) {
-              setAssetBorrow(prev => ({
+              setAssetBorrow((prev) => ({
                 ...prev,
-                [asset]: result.Ok
+                [asset]: result.Ok,
               }));
             }
           } else {
-            console.error("Invalid format in cached reserveData for asset:", asset);
+            console.error(
+              "Invalid format in cached reserveData for asset:",
+              asset
+            );
           }
         }
       } catch (error) {
         console.error("Error fetching asset borrow:", error.message);
       }
     },
-    [backendActor, isAuthenticated, reserveData, fetchReserveData, verifyCertificate]
+    [
+      backendActor,
+      isAuthenticated,
+      reserveData,
+      fetchReserveData,
+      verifyCertificate,
+      dashboardRefreshTrigger,
+    ]
   );
-  
 
   /**
    * Fetches asset details and calculates supply, borrow, and reserve factors.
@@ -472,20 +535,22 @@ const useAssetData = (searchQuery = "") => {
           }
 
           const supplyCap = parseFloat(
-            Number(reserveDataForAsset.Ok[0].configuration.supply_cap) / 100000000
+            Number(reserveDataForAsset.Ok[0].configuration.supply_cap) /
+              100000000
           );
           const totalSupply = parseFloat(
-            (Number(reserveDataForAsset.Ok[0].asset_supply) * (assetRate / 1e8)) /
-            100000000
+            (Number(reserveDataForAsset.Ok[0].asset_supply) *
+              (assetRate / 1e8)) /
+              100000000
           );
-          console.log("totalSupply",totalSupply)
           const totalBorrow = parseFloat(
-            (Number(reserveDataForAsset.Ok[0].asset_borrow) * (assetRate / 1e8)) /
-            100000000
+            (Number(reserveDataForAsset.Ok[0].asset_borrow) *
+              (assetRate / 1e8)) /
+              100000000
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok[0].configuration.reserve_factor) /
-            100000000
+              100000000
           );
           const interestAccure = parseFloat(
             Number(reserveDataForAsset.Ok[0].accure_to_platform) / 100000000
@@ -498,7 +563,6 @@ const useAssetData = (searchQuery = "") => {
           totalBorrowes += parseInt(totalBorrow);
           reserveFactors = reserveFactor;
         });
-        console.log("totalsupplies",totalSupplies)
         setReserveData(data);
         setTotalMarketSize(formatNumber(totalMarketSizeTemp));
         setTotalSupplySize(formatNumber(totalSupplies));
@@ -520,21 +584,21 @@ const useAssetData = (searchQuery = "") => {
     ckICPUsdRate,
     ckUSDCUsdRate,
     ckETHUsdRate,
-    ckBTCUsdRate
+    ckBTCUsdRate,
   ]);
 
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(
-        ([asset, data]) =>
-          asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (data.asset_supply &&
-            data.asset_supply.toString().includes(searchQuery)) ||
-          (data.borrow_rate &&
-            data.borrow_rate.some((rate) =>
-              rate.toString().includes(searchQuery)
-            ))
-      )
+          ([asset, data]) =>
+            asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (data.asset_supply &&
+              data.asset_supply.toString().includes(searchQuery)) ||
+            (data.borrow_rate &&
+              data.borrow_rate.some((rate) =>
+                rate.toString().includes(searchQuery)
+              ))
+        )
       : [];
 
   const formatNumber = useFormatNumber();

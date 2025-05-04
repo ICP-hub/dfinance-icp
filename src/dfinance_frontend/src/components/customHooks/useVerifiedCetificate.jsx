@@ -15,14 +15,14 @@ const buffersEqual = (buf1, buf2) => {
 const useCertificateVerification = (certObj, rootKey, canisterId, blsVerify) => {
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState(null);
-  const hasVerified = useRef(false); // Prevent repeated calls
+  const hasVerified = useRef(false); 
 
   useEffect(() => {
     if (!certObj || !rootKey || !canisterId || hasVerified.current) return;
 
     const verifyCertificate = async () => {
       try {
-        hasVerified.current = true; // Mark as executed
+        hasVerified.current = true; 
 
         const cert = new Certificate(certObj.certificate, rootKey, canisterId, blsVerify);
         await cert.verify();
@@ -40,7 +40,6 @@ const useCertificateVerification = (certObj, rootKey, canisterId, blsVerify) => 
         const witnessRootHash = await reconstruct(witnessTree);
 
         if (certifiedData && buffersEqual(certifiedData, witnessRootHash)) {
-          console.log("✅ Certified data matches!");
           setIsVerified(true);
         } else {
           console.error("❌ Certified data mismatch!");

@@ -28,7 +28,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { isBlocked } = useFunctionBlockStatus();
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { backendActor } = useAuth();
+  const { backendActor,user, verifyCertificate  } = useAuth();
   const { userData } = useUserData();
   const {
     ckBTCUsdRate,
@@ -398,8 +398,65 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     onClose();
   };
 
+  //Fetch faucet data limit and usage
+  const getUserFaucetData = async (user) => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
 
+    setIsFaucetLoading(true);
 
+    try {
+      const result = await backendActor.get_user_faucet_data(user);
+
+      if ("Ok" in result) {
+        const verification = await verifyCertificate(result.Ok[1]);
+        if (!verification) {
+          console.error("Certificate verification failed");
+          setError("Certificate verification failed");
+          return;
+        }
+
+        const reserves = result.Ok[0].reserves;
+        if (reserves && reserves[0]?.length > 0) {
+          const updatedLimits = { ...initialLimits };
+          const updatedUsages = { ...initialUsages };
+
+          reserves[0].forEach((reserveGroup) => {
+            const asset = reserveGroup[0];
+            if (!asset) return;
+
+            const faucetLimitRaw = reserveGroup[1]?.faucet_limit
+              ? Number(reserveGroup[1].faucet_limit)
+              : initialLimits[asset];
+            const faucetUsageRaw = reserveGroup[1]?.faucet_usage
+              ? Number(reserveGroup[1].faucet_usage)
+              : initialUsages[asset];
+
+            const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
+            const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
+
+            updatedLimits[asset] = faucetLimit;
+            updatedUsages[asset] = faucetUsage;
+          });
+
+          setFaucetLimit(updatedLimits);
+          setFaucetUsage(updatedUsages);
+        } else {
+          setFaucetLimit(initialLimits);
+          setFaucetUsage(initialUsages);
+        }
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error(error.message);
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
+    } finally {
+      setIsFaucetLoading(false);
+    }
+  };
 
   /* ===================================================================================
    *                                  EFFECTS

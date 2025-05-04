@@ -4,6 +4,11 @@ use candid::{encode_one, Principal};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::common_functions::*;
+
+
+
+
+
 /*
  * @title IC Borrow Functionality Test
  * @description This function tests the `execute_borrow` method of the backend canister by simulating both valid and invalid borrow scenarios.
@@ -116,9 +121,29 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                 "Platform balance is low".to_string(),
             ),
         },
+        TestCase {
+            asset: "ckUSDC".to_string(),
+            amount: Nat::from(500_000_000_000u128), //5000
+            expect_success: false,
+            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
+        },
+        // tRAILING WHITESPACES
+        TestCase {
+            asset: "ckUSDC ".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
+        // Lower case asset name
+        TestCase {
+            asset: "ckusdc".to_string(),
+            amount: Nat::from(50_000_000_000u128),
+            expect_success: false,
+            expected_error_message: Some("no canister id found".to_string()),
+        },
     ];
 
-    let user_principal = get_user_principal();
+    let user_principal = get_user_principal2();
 
     ic_cdk::println!(
         "\n======================== Starting IC Borrow Tests ========================\n"
@@ -141,7 +166,9 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
         };
-
+        
+        
+        
         /*
          * @title Execute Borrow Transaction
          * @notice Calls the backend canister to execute a borrow operation.
@@ -173,6 +200,10 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                             i + 1,
                     
                         );
+                        ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+
                     }
                     Err(error) => {
                         if !case.expect_success {
@@ -190,6 +221,10 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 i + 1,
                                 error
                             );
+                            ic_cdk::println!("==================== Checking Reserves After successful Borrow ====================");
+                        fetch_reserve_data(pic, backend_canister, &case.asset);
+                        fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
+                            
                         } else {
                             ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;

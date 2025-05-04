@@ -19,6 +19,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/Testnetmode";
+import coinSound from "../../../public/sound/caching_duck_habbo.mp3";
 
 import {
   DASHBOARD_TOP_NAV_LINK,

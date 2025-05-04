@@ -1,17 +1,9 @@
-use candid::{encode_one, Principal};
-use candid::Nat;
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{fetch_reserve_data, fetch_user_data};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
-
-
-
-
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title Borrow Stress Test
@@ -41,8 +33,9 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         expected_error_message: Option<String>,
     }
 
+    // Define test cases with asset names and borrow amounts
     let test_cases = vec![
-        // Valid test case
+        // Valid test cases
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(100_000_000u128), // 1 ICP
@@ -83,6 +76,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
 
     let total_users = random_users.len();
 
+    // Log the start of the stress test
     ic_cdk::println!(
         "\n======================== 🚀 Starting IC Borrow Stress Testing ========================"
     );
@@ -109,6 +103,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         let mut success_count = 0;
         let mut failure_count = 0;
 
+        // Iterate over each user to test borrow functionality
         for user_principal in &random_users {
             /* Borrow params */
             let borrow_params = ExecuteBorrowParams {
@@ -128,6 +123,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 encode_one(borrow_params).unwrap(),
             );
 
+            // Handle the borrow response
             match result {
                 Ok(WasmResult::Reply(reply)) => {
                     let borrow_response: Result<Nat, errors::Error> =
@@ -151,9 +147,16 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 // Reserve data fetching
                                 fetch_reserve_data(pic, backend_canister, &case.asset);
                                 ic_cdk::println!("\n==================== Checking User data After successful Borrow ====================\n");
-                                //user reserve data fetching
-                                fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-                                ic_cdk::println!("\n---------------------------------------------------------\n");
+                                // User reserve data fetching
+                                fetch_user_data(
+                                    pic,
+                                    backend_canister,
+                                    &user_principal,
+                                    &case.asset,
+                                );
+                                ic_cdk::println!(
+                                    "\n---------------------------------------------------------\n"
+                                );
                                 success_count += 1;
                             } else {
                                 ic_cdk::println!(
@@ -201,6 +204,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             }
         }
 
+        // Log test case summary
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
         ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
@@ -208,6 +212,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!("------------------------------------------------------------\n");
     }
 
+    // Log the completion of the stress test
     ic_cdk::println!(
         "\n======================== ✅ IC Borrow Tests Completed ========================"
     );

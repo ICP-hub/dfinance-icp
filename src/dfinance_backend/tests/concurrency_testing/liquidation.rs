@@ -1,15 +1,12 @@
-use candid::Nat;
-use candid::{ encode_one, Principal};
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     fetch_reserve_data, get_user_principal2, get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+    fetch_reserve_data, get_user_principal2, get_users_principal,
+    test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove,
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title Test Liquidation Functionality for Asset Transactions
@@ -35,36 +32,36 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         TestCase {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ICP".to_string(),
-            amount: Nat::from(40_000_000u128),
+            amount: Nat::from(40_000_000u128), // 0.4 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128),
+            reward_amount: Nat::from(40_357_486u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(210_000u128),
+            amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220_496u128),
+            reward_amount: Nat::from(220_496u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckUSDC".to_string(),
             collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(200_00_000_000u128),
+            amount: Nat::from(200_00_000_000u128), // 2,000 ckUSDC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(20_999_673_926u128),
+            reward_amount: Nat::from(20_999_673_926u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckUSDT".to_string(),
             collateral_asset: "ckUSDT".to_string(),
-            amount: Nat::from(12_500_000_000u128),
+            amount: Nat::from(12_500_000_000u128), // 125 ckUSDT (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13_062_155_527u128),
+            reward_amount: Nat::from(13_062_155_527u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
@@ -74,35 +71,35 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
     ic_cdk::println!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
-    test_create_user_reserve_with_low_health(&pic, backend_canister);
+    test_create_user_reserve_with_low_health(&pic, backend_canister); // Create user reserves for liquidation tests
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
-        ic_cdk::println!("Debt Asset: {}", case.debt_asset);
-        ic_cdk::println!("Collateral Asset: {}", case.collateral_asset);
+        ic_cdk::println!("Debt Asset: {}", case.debt_asset); // Log the debt asset involved in liquidation
+        ic_cdk::println!("Collateral Asset: {}", case.collateral_asset); // Log the collateral asset involved in liquidation
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("On Behalf Of: {}", case.on_behalf_of);
-        ic_cdk::println!("Reward Amount: {}", case.reward_amount);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Convert amount to human-readable format (with correct precision)
+        ic_cdk::println!("On Behalf Of: {}", case.on_behalf_of); // Log the principal on whose behalf liquidation is executed
+        ic_cdk::println!("Reward Amount: {}", case.reward_amount); // Log the reward amount calculated for liquidation
+        ic_cdk::println!("Expected Success: {}", case.expect_success); // Log expected outcome of the test
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            ic_cdk::println!("Expected Error Message: {}", msg); // Log expected error message for failure cases
         }
         ic_cdk::println!("------------------------------------------------------------\n");
-        
+
         ic_cdk::println!("\n====================== Initial Debt Reserves before concurrent Liquidation ======================\n");
-        fetch_reserve_data(pic, backend_canister, &case.debt_asset);
+        fetch_reserve_data(pic, backend_canister, &case.debt_asset); // Fetch and log the initial debt reserves before liquidation
         ic_cdk::println!("\n====================== Initial Collateral Reserves before concurrent Liquidation ======================\n");
-        fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+        fetch_reserve_data(pic, backend_canister, &case.collateral_asset); // Fetch and log the initial collateral reserves before liquidation
         ic_cdk::println!("\n---------------------------------------------------------\n");
 
-        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
+        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
         for _ in random_users.clone() {
             let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {
-                    Some(principal) => principal,
+                    Some(principal) => principal, // Get the asset principal for liquidation
                     None => {
                         if !case.expect_success {
                             ic_cdk::println!(
@@ -115,7 +112,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                                 i + 1
                             );
                         }
-                        continue;
+                        continue; // Skip to next test case
                     }
                 };
 
@@ -124,7 +121,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 asset_principal,
                 &pic,
                 backend_canister,
-                Nat::from(case.amount.clone()),
+                Nat::from(case.amount.clone()), // Approve ICRC2 transfer for liquidation
             );
             if !approved {
                 if !case.expect_success {
@@ -134,7 +131,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                             i + 1,
                             case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
                         );
-                        continue;
+                        continue; // Skip to next test case
                     }
                     ic_cdk::println!(
                         "✅ IC Test Case {} Passed: Liquidation rejected as expected",
@@ -162,15 +159,15 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                     backend_canister,
                     user_principal,
                     "execute_liquidation",
-                    encode_one(liquidation_params).unwrap(),
+                    encode_one(liquidation_params).unwrap(), // Submit liquidation request with parameters
                 )
                 .unwrap();
-            msg_ids.push(msg);
+            msg_ids.push(msg); // Store message ID for tracking the request
         }
         let mut results = Vec::new();
         for msg_id in msg_ids {
             let res = pic.await_call(msg_id).unwrap();
-            results.push(res);
+            results.push(res); // Store results of all liquidation requests
         }
 
         for result in results {
@@ -227,10 +224,11 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 }
             }
         }
-        ic_cdk::println!("\n====================== Initial Debt Reserves before concurrent Liquidation ======================\n");
-        fetch_reserve_data(pic, backend_canister, &case.debt_asset);
-        ic_cdk::println!("\n====================== Initial Collateral Reserves before concurrent Liquidation ======================\n");
-        fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
+
+        ic_cdk::println!("\n====================== Final Debt Reserves after Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.debt_asset); // Fetch and log the final debt reserves after liquidation
+        ic_cdk::println!("\n====================== Final Collateral Reserves after Liquidation ======================\n");
+        fetch_reserve_data(pic, backend_canister, &case.collateral_asset); // Fetch and log the final collateral reserves after liquidation
         ic_cdk::println!("\n---------------------------------------------------------\n");
     }
     ic_cdk::println!(

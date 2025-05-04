@@ -1,15 +1,9 @@
-use candid::{ encode_one, Principal};
-use candid::Nat;
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
-
-
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
 
 /*
  * @title Repay Stress Test
@@ -104,7 +98,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             amount_float / 100000000.0,
             case.expect_success
         );
-        ic_cdk::println!("\n=================== Checking Reserves before Repayment ===================\n");
+        ic_cdk::println!(
+            "\n=================== Checking Reserves before Repayment ===================\n"
+        );
         // Fetch and display reserve data
         fetch_reserve_data(pic, backend_canister, &case.asset);
         ic_cdk::println!("------------------------------------------------------------\n");

@@ -213,7 +213,6 @@ type UserReserveData = record {
 service : (principal) -> {
   add_admin : (text, principal) -> (Result);
   add_admin_test : (text, principal) -> (Result);
-  add_controllers : (principal, principal) -> (Result);
   add_developer : (text, principal) -> (Result);
   add_tester : (text, principal) -> (Result_1);
   admin_restart_reset_task : () -> (Result_1);

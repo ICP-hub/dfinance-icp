@@ -10,26 +10,23 @@ export const showCaptchaToUser = (captchaData) => {
 
     const handleSubmit = (userInput) => {
       if (!userInput.trim()) {
-        reject("Captcha input is empty.");
+        root.unmount();
+        document.body.removeChild(container);
+        reject("Captcha canceled");
         return;
       }
-      
+
       resolve({
         userInput,
         unmount: () => {
           root.unmount();
           document.body.removeChild(container);
-        }
+        },
       });
     };
 
-    const handleUnmount = () => {
-      root.unmount();
-      document.body.removeChild(container);
-    };
-
-    root.render(<CaptchaPrompt captchaData={captchaData} onSubmit={handleSubmit} />);
-
-    return handleUnmount;
+    root.render(
+      <CaptchaPrompt captchaData={captchaData} onSubmit={handleSubmit} />
+    );
   });
 };

@@ -10,7 +10,7 @@ const Logs = () => {
   const { backendActor } = useAuth();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const logsPerPage = 30;
+  const logsPerPage = 200;
   const [totalPages, setTotalPages] = useState(1);
   const [paginatedLogs, setPaginatedLogs] = useState([]);
 

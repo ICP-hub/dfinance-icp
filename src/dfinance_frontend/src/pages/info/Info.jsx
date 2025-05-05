@@ -16,6 +16,8 @@ import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
+import { BASE_UNIT } from '../../utils/constants';
+import { HealthFactor_Unit } from '../../utils/constants';
 ChartJS.register(ArcElement, Tooltip);
 
 /**
@@ -582,7 +584,7 @@ const DashboardCards = () => {
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.healthFactor) {
         updatedHealthFactors[principal] =
-          Number(data.healthFactor) / 10000000000;
+          Number(data.healthFactor) / HealthFactor_Unit;
       } else {
         updatedHealthFactors[principal] = null;
       }
@@ -971,8 +973,8 @@ const DashboardCards = () => {
                                     </span>{" "}
                                     {formatValue(
                                       (Number(data[1]?.Ok[0]?.asset_supply) /
-                                        1e8) *
-                                        (assetRate / 1e8)
+                                        BASE_UNIT) *
+                                        (assetRate / BASE_UNIT)
                                     )}
                                   </p>
                                 </div>
@@ -987,8 +989,8 @@ const DashboardCards = () => {
                                     </span>{" "}
                                     {formatValue(
                                       (Number(data[1]?.Ok[0]?.asset_borrow) /
-                                        1e8) *
-                                        (assetRate / 1e8)
+                                        BASE_UNIT) *
+                                        (assetRate / BASE_UNIT)
                                     )}
                                   </p>
                                 </div>

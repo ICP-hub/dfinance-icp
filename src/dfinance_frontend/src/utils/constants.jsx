@@ -467,3 +467,7 @@ export const FAUCET_ASSETS_TABLE_COL = [
     header: "Wallet Balance",
   },
 ];
+
+
+export const BASE_UNIT = 100000000;
+export const HealthFactor_Unit = 10000000000;

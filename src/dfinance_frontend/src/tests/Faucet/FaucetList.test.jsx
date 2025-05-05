@@ -7,7 +7,7 @@ import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
 import useUserData from "../../components/customHooks/useUserData";
-
+import { BASE_UNIT } from '../../utils/constants';
 // Mock all the required dependencies
 jest.mock("react-redux", () => ({
   useSelector: jest.fn(),
@@ -102,11 +102,11 @@ describe("FaucetDetails Component", () => {
     });
 
     useFetchConversionRate.mockReturnValue({
-      ckBTCUsdRate: 40000 * 1e8,
-      ckETHUsdRate: 2500 * 1e8,
-      ckUSDCUsdRate: 1 * 1e8,
-      ckICPUsdRate: 8 * 1e8,
-      ckUSDTUsdRate: 1 * 1e8,
+      ckBTCUsdRate: 40000 * BASE_UNIT,
+      ckETHUsdRate: 2500 * BASE_UNIT,
+      ckUSDCUsdRate: 1 * BASE_UNIT,
+      ckICPUsdRate: 8 * BASE_UNIT,
+      ckUSDTUsdRate: 1 * BASE_UNIT,
       fetchConversionRate: jest.fn(),
       ckBTCBalance: 0.05,
       ckETHBalance: 0.5,
@@ -241,7 +241,7 @@ describe("FaucetDetails Component", () => {
     useFetchConversionRate.mockReturnValue({
       ...useFetchConversionRate(),
       ckBTCBalance: 0.0012345,
-      ckBTCUsdRate: 40000 * 1e8,
+      ckBTCUsdRate: 40000 * BASE_UNIT,
     });
 
     render(<FaucetDetails />);
@@ -306,7 +306,7 @@ describe("FaucetDetails Component", () => {
     useFetchConversionRate.mockReturnValue({
       ...useFetchConversionRate(),
       ckBTCBalance: 0,
-      ckBTCUsdRate: 40000 * 1e8,
+      ckBTCUsdRate: 40000 * BASE_UNIT,
     });
 
     render(<FaucetDetails />);

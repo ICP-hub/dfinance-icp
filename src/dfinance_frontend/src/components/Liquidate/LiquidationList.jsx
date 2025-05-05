@@ -13,7 +13,7 @@ import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import Lottie from "../Common/lottie";
 import { useReserveData } from "../../context/ReserveDataContext";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  * DebtStatus Component
  *
@@ -552,7 +552,7 @@ const DebtStatus = () => {
                           <div className="flex flex-row ml-2 mt-2">
                             <div>
                               <p className="font-medium">
-                                {`$${formatValue(Number(item.debt) / 1e8)}`}
+                                {`$${formatValue(Number(item.debt) / BASE_UNIT)}`}
                               </p>
                             </div>
                           </div>

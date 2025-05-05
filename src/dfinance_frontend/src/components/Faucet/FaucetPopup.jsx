@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import { showCaptchaToUser } from "../Captcha/showCaptchaToUser";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  * FaucetPopup Component
  *
@@ -419,8 +419,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               ? Number(reserveGroup[1].faucet_usage)
               : initialUsages[asset];
 
-            const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
-            const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
+            const faucetLimit = Math.trunc(faucetLimitRaw * BASE_UNIT) / BASE_UNIT;
+            const faucetUsage = Math.trunc(faucetUsageRaw * BASE_UNIT) / BASE_UNIT;
 
             updatedLimits[asset] = faucetLimit;
             updatedUsages[asset] = faucetUsage;
@@ -492,35 +492,35 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
-      const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(btcAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetBTC(truncatedBtcAmount);
     }
 
     if (ckETHUsdRate && ckETHUsdRate > 0) {
       const ethAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckETHUsdRate;
-      const truncatedBtcAmount = Math.trunc(ethAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(ethAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetETH(truncatedBtcAmount);
     }
 
     if (ckUSDCUsdRate && ckUSDCUsdRate > 0) {
       const usdcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDCUsdRate;
-      const truncatedBtcAmount = Math.trunc(usdcAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(usdcAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetUSDC(truncatedBtcAmount);
     }
 
     if (ckICPUsdRate && ckICPUsdRate > 0) {
       const icpAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckICPUsdRate;
-      const truncatedBtcAmount = Math.trunc(icpAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(icpAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetICP(truncatedBtcAmount);
     }
 
     if (ckUSDTUsdRate && ckUSDTUsdRate > 0) {
       const usdTAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
-      const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(usdTAmount * BASE_UNIT) / BASE_UNIT;
 
       setFaucetUSDT(truncatedBtcAmount);
     }
@@ -614,7 +614,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                     <div
                       className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${isFaucetLoading ||
                           Math.floor(
-                            ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            ((FaucetLimit[asset] - FaucetUsage[asset]) / BASE_UNIT) *
                             100
                           ) /
                           100 <=
@@ -625,7 +625,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                       onClick={
                         isFaucetLoading ||
                           Math.floor(
-                            ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            ((FaucetLimit[asset] - FaucetUsage[asset]) / BASE_UNIT) *
                             100
                           ) /
                           100 <=
@@ -644,7 +644,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                           $
                           {(
                             (FaucetLimit[asset] - FaucetUsage[asset]) /
-                            1e8
+                            BASE_UNIT
                           ).toFixed(2)}{" "}
                           Max
                         </>
@@ -657,7 +657,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             <div>
               {(() => {
                 const remainingAmount =
-                  FaucetLimit[asset] / 1e8 - Number(FaucetUsage[asset]) / 1e8;
+                  FaucetLimit[asset] / BASE_UNIT - Number(FaucetUsage[asset]) / BASE_UNIT;
                 const formattedAmount = remainingAmount.toLocaleString(
                   undefined,
                   {

@@ -31,7 +31,7 @@ import MiniLoader from "../Common/miniLoader";
 import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 import { useReserveData } from "../../context/ReserveDataContext";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  * DashboardComponent Component
  *
@@ -251,8 +251,8 @@ const DashboardComponent = () => {
   // Calculate total asset supply and borrow values
   const hasVisibleAssets = filteredItems.some((item) => {
     const assetData = item[1].Ok;
-    const total_supply = Number(assetData.asset_supply || 0) / 100000000;
-    const total_borrow = Number(assetData.asset_borrow || 0) / 100000000;
+    const total_supply = Number(assetData.asset_supply || 0) / BASE_UNIT;
+    const total_borrow = Number(assetData.asset_borrow || 0) / BASE_UNIT;
     const availableBorrowNumber = Number(availableBorrow || 0);
     return availableBorrowNumber > 0 && total_supply > total_borrow;
   });
@@ -389,7 +389,7 @@ const DashboardComponent = () => {
         ckUSDT: ckUSDTUsdRate,
       };
 
-      const rate = assetRates[item[0]] / 1e8;
+      const rate = assetRates[item[0]] / BASE_UNIT;
 
       if (rate) {
         borrowableValue =
@@ -446,7 +446,7 @@ const DashboardComponent = () => {
       ckUSDT: { rate: ckUSDTUsdRate },
     }[item[0]];
 
-    const usdRate = assetRate ? assetRate.rate / 1e8 : 0;
+    const usdRate = assetRate ? assetRate.rate / BASE_UNIT : 0;
     const calculatedUsdValue = balance * usdRate;
 
     let displayedBalance;
@@ -471,7 +471,7 @@ const DashboardComponent = () => {
     }
     const liquidityRate = item[1]?.Ok[0].current_liquidity_rate;
     const apy = liquidityRate
-      ? `${((Number(liquidityRate) * 100) / 100000000).toFixed(2)}%`
+      ? `${((Number(liquidityRate) * 100) / BASE_UNIT).toFixed(2)}%`
       : "<0.01%";
 
     return {
@@ -491,11 +491,11 @@ const DashboardComponent = () => {
   //calculate the asset value
   const formatAssetValue = (asset, assetSupply) => {
     const usdRateMap = {
-      ckBTC: ckBTCUsdRate / 1e8,
-      ckETH: ckETHUsdRate / 1e8,
-      ckUSDC: ckUSDCUsdRate / 1e8,
-      ICP: ckICPUsdRate / 1e8,
-      ckUSDT: ckUSDTUsdRate / 1e8,
+      ckBTC: ckBTCUsdRate / BASE_UNIT,
+      ckETH: ckETHUsdRate / BASE_UNIT,
+      ckUSDC: ckUSDCUsdRate / BASE_UNIT,
+      ICP: ckICPUsdRate / BASE_UNIT,
+      ckUSDT: ckUSDTUsdRate / BASE_UNIT,
     };
 
     const usdRate = usdRateMap[asset] || 0;
@@ -534,11 +534,11 @@ const DashboardComponent = () => {
   // Function to format the asset value in USD
   const formatUsdValue = (asset, assetSupply) => {
     const usdRateMap = {
-      ckBTC: ckBTCUsdRate / 1e8,
-      ckETH: ckETHUsdRate / 1e8,
-      ckUSDC: ckUSDCUsdRate / 1e8,
-      ICP: ckICPUsdRate / 1e8,
-      ckUSDT: ckUSDTUsdRate / 1e8,
+      ckBTC: ckBTCUsdRate / BASE_UNIT,
+      ckETH: ckETHUsdRate / BASE_UNIT,
+      ckUSDC: ckUSDCUsdRate / BASE_UNIT,
+      ICP: ckICPUsdRate / BASE_UNIT,
+      ckUSDT: ckUSDTUsdRate / BASE_UNIT,
     };
 
     const usdRate = usdRateMap[asset] || 0;
@@ -572,12 +572,12 @@ const DashboardComponent = () => {
       0;
 
     const calculated_supply = Math.trunc(
-      (Number(assetBalance) / Number(currentLiquidity)) * 1e8
+      (Number(assetBalance) / Number(currentLiquidity)) * BASE_UNIT
     );
     const assetSupply =
       Math.trunc(
-        (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
-      ) / 1e8;
+        (calculated_supply * Number(getAssetSupplyValue(asset))) / BASE_UNIT
+      ) / BASE_UNIT;
 
     const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
@@ -593,21 +593,21 @@ const DashboardComponent = () => {
 
     const assetBorrow =
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-      (Number(DebtIndex) * 1e8);
+      (Number(DebtIndex) * BASE_UNIT);
 
     const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
     const totalCollateral =
-      parseFloat(Number(userAccountData?.Ok[0]?.[0]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[0]) / BASE_UNIT) || 0;
     const totalDebt =
-      parseFloat(Number(userAccountData?.Ok[0]?.[1]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[1]) / BASE_UNIT) || 0;
     const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
-      Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0;
+      Number(userAccountData?.Ok[0]?.[3]) / BASE_UNIT || 0;
     const reserveliquidationThreshold =
-      Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
-    const supplyRate = (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
-    const borrowRate = (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / 100000000 || 0;
+      Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / BASE_UNIT;
+    const supplyRate = (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / BASE_UNIT || 0;
+    const borrowRate = (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / BASE_UNIT || 0;
 
     const rateApr = actionType === "borrow" ? borrowRate : supplyRate;
 
@@ -623,11 +623,11 @@ const DashboardComponent = () => {
               : asset === "ckUSDT"
                 ? ckUSDTBalance
                 : null;
-    const Ltv = Number(userData?.Ok?.[0].ltv) / 100000000 || 0;
+    const Ltv = Number(userData?.Ok?.[0].ltv) / BASE_UNIT || 0;
     const assetData = item[1].Ok;
 
-    const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-    const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+    const total_supply = Number(assetData?.asset_supply || 0) / BASE_UNIT;
+    const total_borrow = Number(assetData?.asset_borrow || 0) / BASE_UNIT;
 
     const { borrowableValue, borrowableAssetValue } = calculateBorrowableValues(
       item,
@@ -681,21 +681,21 @@ const DashboardComponent = () => {
           ?.dtokenBalance || 0;
 
       const calculated_supply = Math.trunc(
-        (Number(assetBalance) / Number(currentLiquidity)) * 1e8
+        (Number(assetBalance) / Number(currentLiquidity)) * BASE_UNIT
       );
 
       const assetSupply =
         Math.trunc(
-          (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
-        ) / 1e8;
+          (calculated_supply * Number(getAssetSupplyValue(asset))) / BASE_UNIT
+        ) / BASE_UNIT;
 
       const assetBorrow =
         (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-        (Number(DebtIndex) * 1e8);
+        (Number(DebtIndex) * BASE_UNIT);
 
       const assetData = item[1].Ok;
-      const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-      const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+      const total_supply = Number(assetData?.asset_supply || 0) / BASE_UNIT;
+      const total_borrow = Number(assetData?.asset_borrow || 0) / BASE_UNIT;
 
       const { borrowableValue } = calculateBorrowableValues(
         item,
@@ -717,13 +717,13 @@ const DashboardComponent = () => {
                   : null;
 
       const borrowRateApr =
-        (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / 100000000 || 0;
+        (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) / BASE_UNIT || 0;
 
       const liquidationThreshold =
-        Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0;
+        Number(userAccountData?.Ok[0]?.[3]) / BASE_UNIT || 0;
 
       const reserveliquidationThreshold =
-        Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000 ||
+        Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / BASE_UNIT ||
         0;
 
       return {
@@ -746,19 +746,19 @@ const DashboardComponent = () => {
 
     switch (asset) {
       case "ckBTC":
-        usdRate = ckBTCUsdRate / 1e8;
+        usdRate = ckBTCUsdRate / BASE_UNIT;
         break;
       case "ckETH":
-        usdRate = ckETHUsdRate / 1e8;
+        usdRate = ckETHUsdRate / BASE_UNIT;
         break;
       case "ckUSDC":
-        usdRate = ckUSDCUsdRate / 1e8;
+        usdRate = ckUSDCUsdRate / BASE_UNIT;
         break;
       case "ICP":
-        usdRate = ckICPUsdRate / 1e8;
+        usdRate = ckICPUsdRate / BASE_UNIT;
         break;
       case "ckUSDT":
-        usdRate = ckUSDTUsdRate / 1e8;
+        usdRate = ckUSDTUsdRate / BASE_UNIT;
         break;
       default:
         return { debtFormatted: "0.00", usdFormatted: "$0.00" };
@@ -822,7 +822,7 @@ const DashboardComponent = () => {
     if (!assetData)
       return { displayedAsset: "0.00000000", usdFormatted: "$0.00" };
 
-    const usdRate = assetData.rate / 1e8;
+    const usdRate = assetData.rate / BASE_UNIT;
     const maxLendable = Number((Number(total_supply) * 0.85).toFixed(8));
     const formattedMaxBorrow =
       maxLendable < Number(total_borrow)
@@ -867,8 +867,8 @@ const DashboardComponent = () => {
     return filteredItems
       .filter((item) => {
         const assetData = item[1]?.Ok || [];
-        const total_supply = Number(assetData[0]?.asset_supply || 0) / 1e8;
-        const total_borrow = Number(assetData[0]?.asset_borrow || 0) / 1e8;
+        const total_supply = Number(assetData[0]?.asset_supply || 0) / BASE_UNIT;
+        const total_borrow = Number(assetData[0]?.asset_borrow || 0) / BASE_UNIT;
 
         const availableBorrowNumber = Number(availableBorrow || 0);
         const isBorrowAvailable = availableBorrowNumber > 0.01;
@@ -890,11 +890,11 @@ const DashboardComponent = () => {
         const assetDataA = a[1]?.Ok || [];
         const assetDataB = b[1]?.Ok || [];
 
-        const total_supply_A = Number(assetDataA[0]?.asset_supply || 0) / 1e8;
-        const total_borrow_A = Number(assetDataA[0]?.asset_borrow || 0) / 1e8;
+        const total_supply_A = Number(assetDataA[0]?.asset_supply || 0) / BASE_UNIT;
+        const total_borrow_A = Number(assetDataA[0]?.asset_borrow || 0) / BASE_UNIT;
 
-        const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / 1e8;
-        const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / 1e8;
+        const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / BASE_UNIT;
+        const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / BASE_UNIT;
 
         const isEligibleA = total_supply_A * 0.85 > total_borrow_A;
         const isEligibleB = total_supply_B * 0.85 > total_borrow_B;
@@ -986,11 +986,11 @@ const DashboardComponent = () => {
       const assetSupply =
         liquidityIndex > 0
           ? (Number(assetBalance) * Number(getAssetSupplyValue(asset))) /
-            (liquidityIndex * 1e8)
+            (liquidityIndex * BASE_UNIT)
           : 0;
   
       if (assetSupply > 0 && isCollateral) {
-        const borrowValue = Number(userAccountData.Ok[0][5]) / 1e8;
+        const borrowValue = Number(userAccountData.Ok[0][5]) / BASE_UNIT;
         totalBorrow = borrowValue;
       }
     }
@@ -1086,11 +1086,11 @@ const DashboardComponent = () => {
     if (userData?.Ok?.[0].reserves[0]) {
       userData.Ok[0].reserves[0].map((reserveGroup) => {
         const totalCollateralValue =
-          Number(reserveGroup[1]?.asset_supply || 0n) / 100000000;
+          Number(reserveGroup[1]?.asset_supply || 0n) / BASE_UNIT;
         const totalBorrowedValue =
-          Number(reserveGroup[1]?.asset_borrow || 0n) / 100000000;
+          Number(reserveGroup[1]?.asset_borrow || 0n) / BASE_UNIT;
         const liquidationThreshold =
-          Number(userData?.liquidation_threshold) / 100000000 || 0.8;
+          Number(userData?.liquidation_threshold) / BASE_UNIT || 0.8;
 
         const ltv =
           totalCollateralValue === 0
@@ -1347,26 +1347,26 @@ const DashboardComponent = () => {
                         assetBalances.find((balance) => balance.asset === asset)
                           ?.dtokenBalance || 0;
                       const calculated_supply = Math.trunc(
-                        (Number(assetBalance) / Number(currentLiquidity)) * 1e8
+                        (Number(assetBalance) / Number(currentLiquidity)) * BASE_UNIT
                       );
                       const assetSupply =
                         Math.trunc(
                           (calculated_supply *
                             Number(getAssetSupplyValue(asset))) /
-                          1e8
-                        ) / 1e8;
+                          BASE_UNIT
+                        ) / BASE_UNIT;
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
-                        usdValue = assetSupply * (ckBTCUsdRate / 1e8);
+                        usdValue = assetSupply * (ckBTCUsdRate / BASE_UNIT);
                       } else if (asset === "ckETH") {
-                        usdValue = assetSupply * (ckETHUsdRate / 1e8);
+                        usdValue = assetSupply * (ckETHUsdRate / BASE_UNIT);
                       } else if (asset === "ckUSDC") {
-                        usdValue = assetSupply * (ckUSDCUsdRate / 1e8);
+                        usdValue = assetSupply * (ckUSDCUsdRate / BASE_UNIT);
                       } else if (asset === "ICP") {
-                        usdValue = assetSupply * (ckICPUsdRate / 1e8);
+                        usdValue = assetSupply * (ckICPUsdRate / BASE_UNIT);
                       } else if (asset === "ckUSDT") {
-                        usdValue = assetSupply * (ckUSDTUsdRate / 1e8);
+                        usdValue = assetSupply * (ckUSDTUsdRate / BASE_UNIT);
                       }
                       if (assetSupply >= 0) {
                         totalUsdValueSupply += usdValue;
@@ -1433,19 +1433,19 @@ const DashboardComponent = () => {
                             const supplyRateApr =
                               (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) *
                                 100) /
-                              100000000 || 0;
+                              BASE_UNIT || 0;
 
                             const calculated_supply = Math.trunc(
                               (Number(assetBalance) /
                                 Number(currentLiquidity)) *
-                              1e8
+                              BASE_UNIT
                             );
                             const assetSupply =
                               Math.trunc(
                                 (calculated_supply *
                                   Number(getAssetSupplyValue(asset))) /
-                                1e8
-                              ) / 1e8;
+                                BASE_UNIT
+                              ) / BASE_UNIT;
 
                             const ckBalance =
                               asset === "ckBTC"
@@ -1623,14 +1623,14 @@ const DashboardComponent = () => {
                             const calculated_supply = Math.trunc(
                               (Number(assetBalance) /
                                 Number(currentLiquidity)) *
-                              1e8
+                              BASE_UNIT
                             );
                             const assetSupply =
                               Math.trunc(
                                 (calculated_supply *
                                   Number(getAssetSupplyValue(asset))) /
-                                1e8
-                              ) / 1e8;
+                                BASE_UNIT
+                              ) / BASE_UNIT;
                             const item = filteredItems.find(
                               (item) => item[0] === asset
                             );
@@ -1639,7 +1639,7 @@ const DashboardComponent = () => {
                             const supplyRateApr =
                               (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) *
                                 100) /
-                              100000000 || 0;
+                              BASE_UNIT || 0;
                             const ckBalance =
                               asset === "ckBTC"
                                 ? ckBTCBalance
@@ -2087,20 +2087,20 @@ const DashboardComponent = () => {
                       const assetBorrow =
                         (Number(assetBorrowBalance) *
                           Number(getAssetBorrowValue(asset))) /
-                        (Number(DebtIndex) * 1e8);
+                        (Number(DebtIndex) * BASE_UNIT);
 
                       let usdValue = 0;
 
                       if (asset === "ckBTC") {
-                        usdValue = assetBorrow * (ckBTCUsdRate / 1e8);
+                        usdValue = assetBorrow * (ckBTCUsdRate / BASE_UNIT);
                       } else if (asset === "ckETH") {
-                        usdValue = assetBorrow * (ckETHUsdRate / 1e8);
+                        usdValue = assetBorrow * (ckETHUsdRate / BASE_UNIT);
                       } else if (asset === "ckUSDC") {
-                        usdValue = assetBorrow * (ckUSDCUsdRate / 1e8);
+                        usdValue = assetBorrow * (ckUSDCUsdRate / BASE_UNIT);
                       } else if (asset === "ICP") {
-                        usdValue = assetBorrow * (ckICPUsdRate / 1e8);
+                        usdValue = assetBorrow * (ckICPUsdRate / BASE_UNIT);
                       } else if (asset === "ckUSDT") {
-                        usdValue = assetBorrow * (ckUSDTUsdRate / 1e8);
+                        usdValue = assetBorrow * (ckUSDTUsdRate / BASE_UNIT);
                       }
 
                       if (assetBorrow >= 0) {
@@ -2267,7 +2267,7 @@ const DashboardComponent = () => {
                                 const assetBorrow =
                                   (Number(assetBorrowBalance) *
                                     Number(getAssetBorrowValue(asset))) /
-                                  (Number(DebtIndex) * 1e8);
+                                  (Number(DebtIndex) * BASE_UNIT);
 
                                 const item = filteredItems.find(
                                   (item) => item[0] === asset
@@ -2277,10 +2277,10 @@ const DashboardComponent = () => {
 
                                 const total_supply =
                                   Number(assetData?.asset_supply || 0) /
-                                  100000000;
+                                  BASE_UNIT;
                                 const total_borrow =
                                   Number(assetData?.asset_borrow || 0) /
-                                  100000000;
+                                  BASE_UNIT;
 
                                 const { borrowableValue } =
                                   calculateBorrowableValues(
@@ -2305,7 +2305,7 @@ const DashboardComponent = () => {
 
                                 const borrowRateApr =
                                   (Number(item?.[1]?.Ok[0]?.borrow_rate) * 100) /
-                                  100000000 || 0;
+                                  BASE_UNIT || 0;
 
                                 return (
                                   <div
@@ -2709,9 +2709,9 @@ const DashboardComponent = () => {
                         {getFilteredAndSortedItems().map((item, index) => {
                           const assetData = item[1].Ok;
                           const total_supply =
-                            Number(assetData?.[0].asset_supply || 0) / 100000000;
+                            Number(assetData?.[0].asset_supply || 0) / BASE_UNIT;
                           const total_borrow =
-                            Number(assetData?.[0].asset_borrow || 0) / 100000000;
+                            Number(assetData?.[0].asset_borrow || 0) / BASE_UNIT;
                           const availableBorrowNumber = Number(
                             availableBorrow || 0
                           );
@@ -2814,12 +2814,12 @@ const DashboardComponent = () => {
                                 </div>
                                 <p className="text-right text-[#2A1F9D] dark:text-darkText mb-4">
                                   {(Number(item[1].Ok[0].borrow_rate) * 100) /
-                                    100000000 <
+                                    BASE_UNIT <
                                     0.01
                                     ? "<0.01%"
                                     : `${(
                                       (Number(item[1].Ok[0].borrow_rate) * 100) /
-                                      100000000
+                                      BASE_UNIT
                                     ).toFixed(2)}%`}
                                 </p>
                               </div>
@@ -2950,9 +2950,9 @@ const DashboardComponent = () => {
                           {getFilteredAndSortedItems().map((item, index) => {
                             const assetData = item[1].Ok;
                             const total_supply =
-                              Number(assetData?.[0].asset_supply || 0) / 100000000;
+                              Number(assetData?.[0].asset_supply || 0) / BASE_UNIT;
                             const total_borrow =
-                              Number(assetData?.[0].asset_borrow || 0) / 100000000;
+                              Number(assetData?.[0].asset_borrow || 0) / BASE_UNIT;
                             const availableBorrowNumber = Number(
                               availableBorrow || 0
                             );
@@ -2997,13 +2997,13 @@ const DashboardComponent = () => {
                                 <div className="text-left">
                                   <p className="mt-1.5">
                                     {(Number(item[1].Ok[0].borrow_rate) * 100) /
-                                      100000000 <
+                                      BASE_UNIT <
                                       0.01
                                       ? "<0.01%"
                                       : `${(
                                         (Number(item[1].Ok[0].borrow_rate) *
                                           100) /
-                                        100000000
+                                        BASE_UNIT
                                       ).toFixed(2)}%`}
                                   </p>
                                 </div>

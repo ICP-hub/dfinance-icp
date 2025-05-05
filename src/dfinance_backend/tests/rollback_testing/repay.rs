@@ -41,35 +41,35 @@ use crate::utils::structs::*;
         // Valid  test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000u128), // 2 ICP (includes transaction fee)
+            amount: Nat::from(100_000_000u128), // 1 ICP (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000u128), // 1 ICP (includes transaction fee)
+            amount: Nat::from(100_000_000u128), // 1 ICP (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(400u128), // 0.004 ckETH (includes transaction fee)
+            amount: Nat::from(400u128), // 0.004 ckETH (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH (includes transaction fee)
+            amount: Nat::from(200u128), // 0.002 ckETH (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000u128), // 30 ckUSDT (includes transaction fee)
+            amount: Nat::from(30_000_000u128), // 30 ckUSDT (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

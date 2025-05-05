@@ -36,38 +36,38 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         //  Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_000_000_000u128), // 50 ICP
+            amount: Nat::from(5_000_000_000u128), // 50 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(450_000u128), // 0.0045 ckBTC
+            amount: Nat::from(450_000u128), // 0.0045 ckBTC (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(40_000_000_000u128), //   400 usdc
+            amount: Nat::from(40_000_000_000u128), // 400 ckUSDC (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000_000u128), // 300 ckUSDT
+            amount: Nat::from(30_000_000_000u128), // 300 ckUSDT (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14_000_000u128), //  0.14 ckETH
+            amount: Nat::from(14_000_000u128), // 0.14 ckETH (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
         // // Asset length exceeds 7 characters
         TestCase {
             asset: "ckETH_long".to_string(),
-            amount: Nat::from(100_000u128),
+            amount: Nat::from(100_000u128), // 0.001 ckETH (transfer fee included)
             expect_success: false,
             expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
@@ -75,7 +75,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
          // Test Case : Request Exactly $400 USD to check if the the remaining limit is in place
          TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(40_000_000_000u128),
+            amount: Nat::from(40_000_000_000u128), // 400 ckUSDC (transfer fee included)
             expect_success: false,
             expected_error_message: Some("Requested amount exceeds the remaining faucet limit.".to_string()),
         },
@@ -83,21 +83,21 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Test Case : Request Just close to the limit
         TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(50_000_000_00u128), // making the faucet usage 499
+            amount: Nat::from(50_000_000_00u128), // 50 ckUSDC (transfer fee included)
             expect_success: true,
             expected_error_message: None, 
         },
         // Test Case : Request Just Over $500 USD Limit
         TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(2_000_000_00u128), // 2 usd but over 500 limit 
+            amount: Nat::from(2_000_000_00u128), // 2 ckUSDC (transfer fee included)
             expect_success: false,
             expected_error_message: Some("Requested amount exceeds the remaining faucet limit.".to_string()), 
         },
         // Test Case : Request $4500 USD beyond faucet limit
         TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(4500_000_000_00u128), // 4500 USD
+            amount: Nat::from(4500_000_000_00u128), // 4500 ckUSDC (transfer fee included)
             expect_success: false,
             expected_error_message: Some("Requested amount exceeds the total faucet limit.".to_string()), 
         },
@@ -105,35 +105,35 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Test Case : Request extremely small amount
         TestCase { 
             asset: "ICP".to_string(), 
-            amount: Nat::from(1u128), // Request 1 e8s 
+            amount: Nat::from(1u128), // 0.00000001 ICP (transfer fee included)
             expect_success: true, 
             expected_error_message: None, 
         },
         // Test Case : trailing whitespace in asset name
         TestCase { 
             asset: "ICP ".to_string(), // white space after ICP
-            amount: Nat::from(1u128), // Request 1 e8s 
+            amount: Nat::from(1u128), // 0.00000001 ICP (transfer fee included)
             expect_success: false, 
             expected_error_message: Some("no canister id found".to_string()), 
         },
         // Test Case : lower case asset name
         TestCase { 
             asset: "icp".to_string(),  // lower case asset name
-            amount: Nat::from(1u128), // Request 1 e8s 
+            amount: Nat::from(1u128), // 0.00000001 ICP (transfer fee included)
             expect_success: false, 
             expected_error_message: Some("no canister id found".to_string()), 
         },
         // Test Case : empty asset name
         TestCase { 
             asset: "".to_string(), // empty asset name
-            amount: Nat::from(1u128), // Request 1 e8s 
+            amount: Nat::from(1u128), // 0.00000001 unknown (transfer fee included)
             expect_success: false, 
             expected_error_message: Some("Asset cannot be an empty string".to_string()), 
         },
         // Test Case : amount is zero
         TestCase { 
             asset: "ICP".to_string(), 
-            amount: Nat::from(0u128), // Request 0 amount
+            amount: Nat::from(0u128), // 0 ICP (transfer fee included)
             expect_success: false, 
             expected_error_message: Some("Amount must be greater than 0".to_string()), 
         },

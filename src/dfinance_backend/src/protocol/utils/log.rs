@@ -1,6 +1,6 @@
 
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{BATCH_SIZE, LOG_CANISTER_NAME};
+use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME};
 use crate::constants::errors::Error;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
@@ -17,6 +17,10 @@ pub enum LogLevel {
     INFO = 2,
     DEBUG = 3,
     TRACE = 4,
+}
+
+pub struct LogFlusher {
+    pub user_key: String,
 }
 
 impl fmt::Display for LogLevel {
@@ -113,6 +117,36 @@ macro_rules! trace {
     };
 }
 
+impl Drop for LogFlusher {
+    fn drop(&mut self) {
+        let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+            Ok(id) => id,
+            Err(_) => return,
+        };
+
+        let all_logs = get_logs_in_batches();
+        let log_count = read_state(|state| state.log_storage.len());
+        
+        if log_count >= LOGS_LIMIT {
+            // This fires and ignores the result; runs asynchronously but not awaited.
+            ic_cdk::spawn(async move {
+                let result = send_log_to_logs_canister(all_logs.clone(), logs_canister_id).await;
+    
+                if result.is_ok() {
+                    ic_cdk::println!("✅ Batch logs sent successfully.");
+                    mutate_state(|state| {
+                        for user_id in all_logs.keys() {
+                            state.log_storage.remove(user_id);
+                        }
+                    });
+                } else {
+                    ic_cdk::println!("❌ Failed to send batch logs. Logs remain in memory.");
+                }
+            });
+        }
+    }
+}
+
 pub fn get_logs_in_batches() -> HashMap<u32, Vec<String>> {
     let all_logs: HashMap<u32, Vec<String>> = mutate_state(|state| {
         // Convert to vector for easier slicing
@@ -163,8 +197,6 @@ pub fn store_log(
         // Calculate the next log ID
         let next_id = highest_key + 1;
 
-        ic_cdk::println!("total logs ={:?}", log_storage.len());
-
         // Insert the new log entry into the storage
         log_storage.insert(next_id, Candid(vec![formatted_log]));
     });
@@ -179,7 +211,6 @@ pub async fn send_log_to_logs_canister(
         .await
     {
         Ok(()) => {
-            ic_cdk::println!("✅ Logs batch sent successfully.");
             Ok(())
         }
         Err(e) => {
@@ -244,37 +275,18 @@ pub fn get_all_logs() -> Vec<String> {
 }
 
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
-    ic_cdk::println!(
-        "Log level: {:?}, File: {}, Line: {}, Message: {}",
-        level,
-        file,
-        line,
-        msg
-    );
-
-    //TODO: anshika i think we can remove this check.(this is creating trouble in letting debug and trace to go forward)
-    // if level as usize > get_log_level() as usize {
-
-    //     ic_cdk::println!("get log level: {:?}", get_log_level());
-    //     ic_cdk::println!("size of log level: {:?}", get_log_level() as usize);
-    //     ic_cdk::println!("size of log level: {:?}", level as usize);
-    //     ic_cdk::println!("Log level is too low, skipping log{:?}", level);
-    //     return;
-    //
 
     let user_principal = ic_cdk::caller().to_text();
     let file_name = file.split('/').last().unwrap_or(file);
 
-    // let log_message = format!("[{}] [{}:{}] {}", level, file_name, line, msg);
     let log_message = format!(
-        "[{}] [{}:{}] [User: {}] {}",
-        level, file_name, line, user_principal, msg
+        "[{}] [{}:{}] {} [User: {}]",
+        level, file_name, line, msg, user_principal
     );
 
-    ic_cdk::println!("{}", log_message);
-
-    //TODO: do we really need this below validation --> Only store logs at appropriate levels
     if level <= LogLevel::TRACE || level <= get_log_level() {
+        ic_cdk::println!("{}", log_message);
         let _ = store_log(user_principal, level, file, line, msg.to_string());
     }
+
 }

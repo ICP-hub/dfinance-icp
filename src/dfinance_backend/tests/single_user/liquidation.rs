@@ -13,9 +13,9 @@ use crate::utils::structs::*;
 
 /*
  * @title Test Liquidation Functionality for Asset Transactions
- * @notice Validates the liquidation functionality for assets when the borrower’s health factor falls below the liquidation threshold.
+ * @notice Validates the liquidation functionality for assets when the borrower's health factor falls below the liquidation threshold.
  * @dev Ensures that the liquidation process is triggered correctly for assets like ICP, ckBTC, ckETH, etc., under various conditions, including valid and invalid scenarios.
- * @functionality Confirms that the liquidation function processes requests successfully when the borrower is eligible for liquidation and rejects invalid liquidation requests (e.g., if the health factor is above the threshold). Verifies if the correct asset is liquidated and if the borrower’s balance is updated appropriately.
+ * @functionality Confirms that the liquidation function processes requests successfully when the borrower is eligible for liquidation and rejects invalid liquidation requests (e.g., if the health factor is above the threshold). Verifies if the correct asset is liquidated and if the borrower's balance is updated appropriately.
  */
 #[allow(dead_code)]
 pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
@@ -106,7 +106,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             asset_principal,
             &pic,
             backend_canister,
-            Nat::from(case.amount.clone()),
+            Nat::from(case.amount.clone()), // Amount for ICRC2 approval (transfer fee included)
         );
         if !approved {
             if !case.expect_success {
@@ -138,9 +138,9 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             let liquidation_params = ExecuteLiquidationParams {
                 debt_asset: case.debt_asset.clone(),
                 collateral_asset: case.collateral_asset.clone(),
-                amount: case.amount.clone(),
+                amount: case.amount.clone(), // 0.40 ICP (transfer fee included)
                 on_behalf_of: case.on_behalf_of.clone(),
-                reward_amount: case.reward_amount.clone(),
+                reward_amount: case.reward_amount.clone(), // 0.40357486 ICP (liquidation reward)
             };
 
             /*

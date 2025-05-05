@@ -24,27 +24,37 @@ fn get_scaling_value() -> Nat {
  * @dev Computes interest using a simple linear model based on the provided interest rate.
  * @param rate_input The annual interest rate as a `Nat` (percentage basis).
  * @param last_update_timestamp The timestamp (in seconds) when the interest was last updated.
+ * 
+ * @formula interest_factor = 1 + (rate * t / seconds_in_year)
+ * Where:
+ *   - `rate` is the interest rate per second (scaled using SCALING_FACTOR, e.g., 1e8)
+ *   - `t` is the time difference in seconds (current_timestamp - last_update_timestamp)
+ *   - `SCALING_FACTOR` ensures precision for financial operations which is 10^8.
+ * 
+ *          Note: The implementation returns `SCALING_FACTOR + (rate_input * time_delta / SECONDS_PER_YEAR)`.
+ *          This implies `rate_input` already incorporates `SCALING_FACTOR` and the formula calculates
+ *          `scaling_factor * (1 + (annual_rate * time_delta / seconds_in_year))`.
+ *  
  * @returns The linear interest factor as a `Nat`, scaled using `SCALING_FACTOR`.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
-    trace!("calling calculate_linear_interest function");
     let rate = rate_input;
     let current_timestamp = current_timestamp();
-    debug!(
-        "current time in cal_linear function {} and seconds per year {} and last timestamp {}",
-        current_timestamp, SECONDS_PER_YEAR, last_update_timestamp
-    );
+    if last_update_timestamp > current_timestamp {
+        debug!(
+            "Last update timestamp ({}) is greater than current timestamp ({}). Returning 0.",
+            last_update_timestamp, current_timestamp
+        );
+        return Nat::from(0u128);
+    }
     let time_delta = current_timestamp - last_update_timestamp;
     let result = rate.clone() * time_delta / SECONDS_PER_YEAR;
 
     debug!(
-        "time delta {} and result {} and rate {}",
-        time_delta, result, rate
+        "time delta {} and result {} and rate {}, linear interest result: {}",
+        time_delta, result, rate, get_scaling_value() + result.clone() 
     );
-    debug!(
-        "result + get_scaling_value: {}",
-        get_scaling_value() + result.clone() 
-    );
+
     get_scaling_value() + result
 
 }
@@ -58,7 +68,7 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
  *   1 + (rate * t) + (rate^2 * t * (t-1)) / (2) + (rate^3 * t * (t-1) * (t-2)) / (6)
  *
  * Where:
- *   - `rate` is the interest rate per second (scaled using SCALING_FACTOR, e.g., 1e27)
+ *   - `rate` is the interest rate per second (scaled using SCALING_FACTOR, e.g., 1e8)
  *   - `t` is the time difference in seconds (current_timestamp - last_update_timestamp)
  *   - `SCALING_FACTOR` ensures precision for financial operations which is 10^8.
  *
@@ -75,7 +85,6 @@ pub fn calculate_compounded_interest(
     last_update_timestamp: u64,
     current_timestamp: u64,
 ) -> Nat {
-    trace!("calling calculate_compounded_interest function");
     // Ensure that timestamps are valid (underflow check)
     if last_update_timestamp > current_timestamp {
         debug!(
@@ -86,17 +95,14 @@ pub fn calculate_compounded_interest(
     }
 
     let exp = Nat::from(current_timestamp - last_update_timestamp);
-    debug!("exp in cal_compound function {}", exp);
 
     //If no time has passed, interest(Debt index) is 1 (scaled with 10^8)
     if exp == Nat::from(0u128) {
         info!("No time elapsed between timestamps. Returning scaling value.");
         return get_scaling_value();
     }
-
+    debug!("time delta {} and rate_input {}", exp, rate_input);
     let rate = rate_input;
-    debug!("rate in cal_compound function {}", rate);
-
     //First Term: Linear interest (rate * t / SECONDS_PER_YEAR)
     let scaled_rate = if exp > SECONDS_PER_YEAR {
         Nat::from(0u128) // Prevent overflow
@@ -111,11 +117,6 @@ pub fn calculate_compounded_interest(
     } else {
         Nat::from(ZERO_VALUE)
     };
-    debug!(
-        "exp_minus_one and exp_minus_two in cal_compound function {} and {}",
-        exp_minus_one, exp_minus_two
-    );
-
     // Calculate basePowerTwo = (rate^2) / (SECONDS_PER_YEAR^2)
     let base_power_two =
         (rate.clone().scaled_mul(rate.clone())) / (SECONDS_PER_YEAR * SECONDS_PER_YEAR);
@@ -125,10 +126,6 @@ pub fn calculate_compounded_interest(
     } else {
         (base_power_two.clone().scaled_mul(rate)) / SECONDS_PER_YEAR
     };
-    debug!(
-        "base_power_one and base_power_three in cal_compound function {} and {}",
-        base_power_two, base_power_three
-    );
     //Second Term: Quadratic interest (rate^2 * t * (t-1) / 2)
     let second_term = (exp.clone() * exp_minus_one.clone() * base_power_two) / Nat::from(2u128);
 

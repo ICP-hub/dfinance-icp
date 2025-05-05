@@ -18,9 +18,9 @@ use crate::protocol::utils::price::update_token_price;
 use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::guards::locks_handler::{CallerGuard, LogFlusher};
+use crate::guards::locks_handler::CallerGuard;
 use crate::guards::api_limiter::request_limiter;
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 
 /*
 -------------------------------------
@@ -260,7 +260,6 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
-            debug!("On behalf of principal: {:?}", on_behalf_of);
             let user_principal = on_behalf_of;
             (user_principal, Some(ic_cdk::caller()))
         } else {
@@ -268,7 +267,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
         };
 
         let _log_flusher = LogFlusher {
-            user_key: user_principal.to_text(), // or whatever user_key you need
+            user_key: user_principal.to_text(), 
         };
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
@@ -282,15 +281,11 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     // Determines the sender principal
     let transfer_from_principal = if let Some(liquidator) = liquidator_principal {
-        debug!("Liquidator principal: {:?}", liquidator);
         liquidator
     } else {
         user_principal
     };
-    debug!(
-        "Transfer from principal: {:?}",
-        transfer_from_principal.to_string()
-    );
+    
 
     let mut reserve_data = read_state(|state| {
         state
@@ -323,8 +318,6 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     info!("Repay validated successfully");
 
     let _ = update_token_price(params.asset.clone()).await;
-
-    debug!("Asset borrow: {:?}", reserve_data.asset_borrow);
 
     // get exchange rates
     let asset_price= get_cached_exchange_rate(params.asset.clone())?;
@@ -411,12 +404,6 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                 &mut reserve_data,
             )
             .await?;
-
-            // mutate_state(|state| {
-            //     state
-            //         .asset_index
-            //         .insert(params.asset.clone(), Candid(reserve_data.clone()));
-            // });
             info!("Rollback user and reserve state executed successfully");
             return Err(Error::ErrorBurnDebtTokens);
         }

@@ -206,8 +206,6 @@ pub struct UserReserveData {
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    // pub total_collateral: Option<Nat>,
-    // pub total_debt: Option<Nat>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 

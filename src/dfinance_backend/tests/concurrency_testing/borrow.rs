@@ -1,12 +1,9 @@
+use crate::utils::common_functions::fetch_reserve_data;
+use crate::utils::error as errors;
+use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use crate::utils::common_functions::fetch_reserve_data; 
-use crate::utils::error as errors;
-use crate::utils::structs::*;
-
-
-
 
 /*
  * @title Test Borrow Functionality for Asset Transactions
@@ -27,31 +24,31 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_000_000_000u128),
+            amount: Nat::from(1_000_000_000u128), // 10 ICP (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(20_000u128),
+            amount: Nat::from(20_000u128), // 0.0002 ckBTC (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(400_000u128),
+            amount: Nat::from(400_000u128), // 4 ckUSDT (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128),
+            amount: Nat::from(200u128), // 0.0002 ckETH (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(800_000u128),
+            amount: Nat::from(800_000u128), // 8 ckUSDC (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
@@ -68,7 +65,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
+        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Displaying the amount in human-readable form
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
@@ -78,7 +75,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!(
             "\n======================== Initial reserve data before concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch and print reserve data before borrowing
         ic_cdk::println!("\n---------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
@@ -98,8 +95,6 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 .unwrap();
             msg_ids.push(msg);
         }
-
-        
 
         let mut results = Vec::new();
         for msg_id in msg_ids {
@@ -162,7 +157,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch and print reserve data after borrowing
         ic_cdk::println!("\n---------------------------------------------------------\n");
     }
     ic_cdk::println!(

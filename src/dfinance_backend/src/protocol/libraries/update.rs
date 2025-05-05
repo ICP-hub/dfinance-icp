@@ -12,7 +12,7 @@ use crate::declarations::structs::{
 };
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::LogFlusher;
+use crate::protocol::utils::log::LogFlusher;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
 use crate::protocol::utils::log::{log_internal, LogLevel};
@@ -76,10 +76,6 @@ impl UpdateLogic {
                 reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
             }
 
-            debug!(
-                "Updated asset supply for existing reserve: {:?}",
-                reserve_data
-            );
             reserve_data
         } else {
             let new_reserve = UserReserveData {
@@ -360,16 +356,15 @@ impl UpdateLogic {
 
         let mut user_data = user_data(user_principal)?;
 
-        debug!("Repay user update initial data = {:?}", user_data);
-
         let mut user_reserve = user_reserve(&mut user_data, &params.asset);
         let mut user_reserve_data = match user_reserve.as_mut() {
             Some((_, reserve_data)) => reserve_data,
-            None => return Err(Error::NoUserReserveDataFound), // or handle appropriately
+            None => {
+                error!("No User reserve data found");
+                return Err(Error::NoUserReserveDataFound)
+            }, // or handle appropriately
         };
 
-        debug!("Calling burn_scaled with params: amount={}, next_debt_index={:?}, user_principal={:?}, debt_token_canister={:?}, platform_principal={:?}",
-                         params.amount, reserve_cache.next_debt_index, user_principal, reserve.debt_token_canister.clone().unwrap(), platform_principal);
         let debt_token = reserve.debt_token_canister.clone().unwrap();
 
         let _is_collateral = user_reserve_data.is_collateral.clone();
@@ -400,6 +395,7 @@ impl UpdateLogic {
         let debttoken_balance = match balance_result {
             Ok(bal) => bal,
             Err(e) => {
+                error!("Error fetching balance: {:?}", e);
                 return Err(e);
             }
         };
@@ -412,7 +408,7 @@ impl UpdateLogic {
                 }
             }
         } else {
-            error!("No reserve data found");
+            error!("No User reserve data found");
             return Err(Error::NoUserReserveDataFound);
         }
 
@@ -558,7 +554,9 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
             .get(&user_principal)
             .map(|user| user.0.clone())
     })
-    .ok_or_else(|| Error::NoUserReserveDataFound)
+    .ok_or_else(|| {
+        Error::NoUserReserveDataFound
+})
 }
 
 /*

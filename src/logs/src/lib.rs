@@ -44,11 +44,20 @@ pub enum LogLevel {
     INFO,
 }
 
+/*
+ * @title Initialization Function
+ * @dev Initializes the contract and schedules periodic tasks for log cleanup.
+ * @param None
+ * @returns None
+ *
+ * @functionality Sets up the initial state of the contract, initializes the log storage,
+ * and schedules a periodic task to clean up old logs.
+ */
+
 #[init]
 fn init() {
     schedule_log_cleanup();
     // Initialize the log storage
-     // Re-initialize LOG_STORAGE by replacing the existing StableBTreeMap
      LOG_STORAGE.with(|logs| {
         let new_map = StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
@@ -57,25 +66,23 @@ fn init() {
     });
 }
 
+/*
+ * @title Log Storage Function
+ * @dev Receives a batch of logs and stores them in the log storage.
+ * @param batch_logs A HashMap where the key is the log ID and the value is a vector of log messages.
+ * @returns None
+ *
+ * @functionality Receives a batch of logs, serializes them, and stores them in the log storage.
+ */
 #[update]
 #[candid_method(update)]
 pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) {
-    // let caller = ic_cdk::api::caller();
-    // let platform_principal = ic_cdk::api::id();
-
-    //TODO: this validation is not working.
-    // make backend canister controller of the log canister and then validate.
-    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-    //     ic_cdk::println!("Unauthorized access");
-    //     return 
-    // }
 
     LOG_STORAGE.with(|storage| {
         let mut storage = storage.borrow_mut();
 
         // Find the current maximum log ID in storage
         let mut max_id = storage.iter().map(|(key, _)| key).max().map(|key| key).unwrap_or(0);
-        ic_cdk::println!("max id = {:?}",max_id);
 
         for (log_id, new_logs) in batch_logs {
             let final_id = if storage.contains_key(&log_id) {
@@ -96,32 +103,26 @@ pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) {
 }
 
 
+/*
+ * @title Log Cleanup Function
+ * @dev Cleans up old logs based on a retention policy.
+ * @param None
+ * @returns None
+ *
+ * @functionality Iterates through the log storage and removes logs older than the specified retention period.
+ */
 // Main function to clean up old logs
-pub fn process_log_heartbeat() {
+pub fn process_log_schedule() {
     let current_time = api::time() / 1_000_000_000;
     let retention_cutoff = current_time.saturating_sub(LOG_RETENTION_DAYS * SECONDS_PER_DAY);
-    ic_cdk::println!(
-        "Current time: {}, Retention cutoff: {}",
-        current_time,
-        retention_cutoff
-    );
 
     clear_old_logs(retention_cutoff);
 
-    log_internal(
-        LogLevel::DEBUG,
-        file!(),
-        line!(),
-        &format!(
-            "Log cleanup processed, removed logs older than {} seconds ago",
-            LOG_RETENTION_DAYS * SECONDS_PER_DAY
-        ),
-    );
 }
 
 pub fn clear_old_logs(retention_cutoff: u64) {
-    ic_cdk::println!("clear old logs is working ");
-    let removed_count = LOG_STORAGE.with(|state| {
+
+    let _ = LOG_STORAGE.with(|state| {
         let mut state_mut = state.borrow_mut();
 
         let logs_to_remove: Vec<u32> = state_mut
@@ -133,7 +134,7 @@ pub fn clear_old_logs(retention_cutoff: u64) {
                     Err(_) => return Some(key), // Remove corrupted entries
                 };
 
-                // Check if the first log's timestamp is older than cutoff
+            
                 if let Some(log_entry) = logs.first() {
                     if let Some(timestamp_str) = log_entry.split(']').next() {
                         if let Ok(timestamp) = timestamp_str.trim_start_matches('[').parse::<u64>() {
@@ -151,40 +152,33 @@ pub fn clear_old_logs(retention_cutoff: u64) {
 
         let count = logs_to_remove.len();
         for key in logs_to_remove {
-            ic_cdk::println!("🗑️ Removing log entry with ID: {}", key);
             state_mut.remove(&key);
         }
 
         count
     });
 
-    log_internal(
-        LogLevel::INFO,
-        file!(),
-        line!(),
-        &format!(
-            "Removed {} old log entries older than retention period",
-            removed_count
-        ),
-    );
+    
 }
 
+/*
+ * @title Log Cleanup Scheduler
+ * @dev Schedules the log cleanup to run periodically.
+ * @param None
+ * @returns None
+ *
+ * @functionality Sets up a timer to trigger the log cleanup function at regular intervals.
+ */
 pub fn schedule_log_cleanup() {
     // Schedule the log cleanup to run once per day (86400 seconds)
     let interval = Duration::from_secs(SECONDS_PER_DAY);
 
-    // Set up a recurring timer that will call process_log_heartbeat
+    // Set up a recurring timer that will call process_log_schedule
     ic_cdk_timers::set_timer_interval(interval, || {
-        process_log_heartbeat();
+        process_log_schedule();
     });
-
-    log_internal(
-        LogLevel::INFO,
-        file!(),
-        line!(),
-        "Log cleanup scheduled to run once per day",
-    );
 }
+
 
 // access validations.
 #[query]
@@ -209,8 +203,4 @@ pub fn get_logs() -> Vec<LogRecord> {
             })
             .collect()
     })
-}
-
-pub fn log_internal(level: LogLevel, file: &str, line: u32, message: &str) {
-    ic_cdk::print(format!("[{:?}] {}:{} - {}", level, file, line, message));
 }

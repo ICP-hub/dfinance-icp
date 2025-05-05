@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../utils/useAuthClient";
 import Pagination from "../components/Common/pagination";
+import Error from "./Error";
 
 const Logs = () => {
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [like, setLike] = useState(false);
   const { backendActor } = useAuth();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,6 +32,32 @@ const Logs = () => {
       console.error("Error getting logs:", error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+  const checkControllerStatus = async () => {
+    if (!backendActor) {
+      throw new Error("Backend actor not initialized");
+    }
+
+    try {
+      const result = await backendActor.guard_admin_only();
+
+      const responseData = result;
+
+      if ("Ok" in responseData) {
+        setLike(true);
+      } else {
+        console.warn("Not an admin:", responseData.Err);
+        setLike(false);
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error.message);
+      setError(error.message);
+      setLike(false);
+
+      if (error.message.toLowerCase().includes("freeze canister")) {
+        setIsFreezePopupVisible(true);
+      }
     }
   };
 
@@ -61,6 +89,10 @@ const Logs = () => {
     setCurrentPage(newPage);
   };
 
+    useEffect(() => {
+      checkControllerStatus();
+    }, [backendActor]);
+
   const getLogLevelColor = (logText) => {
     if (logText.includes("[DEBUG]")) return "text-blue-500 dark:text-blue-400";
     if (logText.includes("[INFO]")) return "text-green-600 dark:text-green-400";
@@ -85,8 +117,8 @@ const Logs = () => {
 
   const logCounts = getLogCounts();
 
-  return (
-    <div className="min-h-screen text-[#4036A8] dark:text-white rounded-2xl">
+  return like ? (
+    <div className=" min-h-screen text-[#4036A8] dark:text-white rounded-2xl">
       <h1 className="text-2xl md:text-[2xl] font-bold mb-4 sm:mb-5 text-[#4036A8] dark:text-white mt-1">
         Logs
       </h1>
@@ -231,7 +263,9 @@ const Logs = () => {
         </div>
       )}
     </div>
-  );
+ ) : (
+  <Error />
+);
 };
 
 export default Logs;

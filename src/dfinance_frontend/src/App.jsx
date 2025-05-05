@@ -88,7 +88,7 @@ export default function App() {
   useEffect(() => {
     const fetchAssetPrincipals = async () => {
       if (!backendActor) return;
-
+  
       try {
         const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
         const results = await Promise.all(
@@ -96,33 +96,44 @@ export default function App() {
             backendActor.get_asset_principal_certified(asset)
           )
         );
-
+  
         assets.forEach(async (asset, index) => {
           const result = results[index];
-
+  
           if ("Ok" in result) {
+            const [principal, certificate] = result.Ok;
+  
             try {
-              const verification = await verifyCertificate(result.Ok[1]);
+              const verification = await verifyCertificate(certificate);
               if (!verification) {
                 console.error(`Certificate verification failed for ${asset}`);
               }
             } catch (verificationError) {
               console.error("Error verifying certificate:", verificationError);
             }
+  
+            setAssetPrincipal((prevState) => ({
+              ...prevState,
+              [asset]: principal?.toText() || null,
+            }));
+          } else {
+            console.warn(`No principal for ${asset}:`, result.Err);
+  
+            // Still define the key so state shape is consistent
+            setAssetPrincipal((prevState) => ({
+              ...prevState,
+              [asset]: null,
+            }));
           }
-
-          setAssetPrincipal((prevState) => ({
-            ...prevState,
-            [asset]: result?.Ok[0]?.toText() || null,
-          }));
         });
       } catch (error) {
         console.error("Error fetching asset principals:", error);
       }
     };
-
+  
     fetchAssetPrincipals();
   }, [principal, backendActor]);
+  
 
   /**
    * Creates ledger actors for all fetched asset principals.

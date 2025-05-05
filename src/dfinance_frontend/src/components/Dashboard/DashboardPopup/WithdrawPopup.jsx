@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
+import { BASE_UNIT } from '../../../utils/constants';
 /**
  * WithdrawPopup Component
  *
@@ -151,7 +152,7 @@ const WithdrawPopup = ({
   const updateAmountAndUsdValue = (inputAmount) => {
     const Amount = parseFloat(inputAmount.toString().replace(/,/g, ""));
     const truncateTo8Decimals = (num) => {
-      return Math.trunc(num * 1e8) / 1e8;
+      return Math.trunc(num * BASE_UNIT) / BASE_UNIT;
     };
     const numericAmount = truncateTo8Decimals(Amount);
     const truncatedAssetSupply = truncateTo8Decimals(assetSupply);
@@ -225,6 +226,7 @@ const WithdrawPopup = ({
         ? scaledAmount + transferFeeBigInt
 
         : scaledAmount;
+
       const withdrawParams = {
         asset: asset,
         amount: totalAmount,
@@ -241,7 +243,7 @@ const WithdrawPopup = ({
           "Withdraw," +
           asset +
           "," +
-          scaledAmount / 100000000 +
+          scaledAmount / BASE_UNIT +
           "," +
           currentCollateralStatus +
           "," +
@@ -250,7 +252,7 @@ const WithdrawPopup = ({
           "Withdraw," +
           asset +
           "," +
-          scaledAmount / 100000000 +
+          scaledAmount / BASE_UNIT +
           "," +
           currentCollateralStatus +
           ", " +
@@ -387,7 +389,7 @@ const WithdrawPopup = ({
     const amountTaken = currentCollateralStatus
       ? (usdValue || 0).toFixed(8)
       : "0.00000000";
-    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+    const truncateTo8Decimals = (num) => Math.trunc(num * BASE_UNIT) / BASE_UNIT;
 
     let totalCollateralValue = 0;
     if (
@@ -403,7 +405,7 @@ const WithdrawPopup = ({
 
     let avliq = liquidationThreshold * totalCollateral;
     let truncatedVal =
-      Math.trunc(amountTaken * reserveliquidationThreshold * 1e8) / 1e8;
+      Math.trunc(amountTaken * reserveliquidationThreshold * BASE_UNIT) / BASE_UNIT;
     let tempLiq = 0;
     if (
       amountTaken > totalCollateral &&
@@ -414,7 +416,7 @@ const WithdrawPopup = ({
       tempLiq = avliq - truncatedVal;
     }
     if (totalCollateralValue > 0) {
-      tempLiq = Math.floor((tempLiq / totalCollateralValue) * 1e8) / 1e8;
+      tempLiq = Math.floor((tempLiq / totalCollateralValue) * BASE_UNIT) / BASE_UNIT;
     }
 
     let totalDebtValue = parseFloat(totalDebt);
@@ -424,14 +426,14 @@ const WithdrawPopup = ({
       totalDebtValue === 0
         ? Infinity
         : Math.round(
-          ((totalCollateralValue * (tempLiq / 100)) / totalDebtValue) * 1e8
-        ) / 1e8;
+          ((totalCollateralValue * (tempLiq / 100)) / totalDebtValue) * BASE_UNIT
+        ) / BASE_UNIT;
 
     let ltv =
       totalCollateralValue === 0
         ? 0
         : parseFloat(totalDebtValue) / totalCollateralValue;
-    ltv = Math.trunc(ltv * 1e8 * 100) / 1e8; //in percent
+    ltv = Math.trunc(ltv * BASE_UNIT * 100) / BASE_UNIT; //in percent
 
 
     return {
@@ -851,14 +853,14 @@ const WithdrawPopup = ({
                 </strong>{" "}
                 and you have withdrawn{" "}
                 <strong>
-                  {scaledAmount / 100000000
-                    ? scaledAmount / 100000000 >= 1e-8 &&
-                      scaledAmount / 100000000 < 1e-7
-                      ? Number(scaledAmount / 100000000).toFixed(8)
-                      : scaledAmount / 100000000 >= 1e-7 &&
-                        scaledAmount / 100000000 < 1e-6
-                        ? Number(scaledAmount / 100000000).toFixed(7)
-                        : scaledAmount / 100000000
+                  {scaledAmount / BASE_UNIT
+                    ? scaledAmount / BASE_UNIT >= 1e-8 &&
+                      scaledAmount / BASE_UNIT < 1e-7
+                      ? Number(scaledAmount / BASE_UNIT).toFixed(8)
+                      : scaledAmount / BASE_UNIT >= 1e-7 &&
+                        scaledAmount / BASE_UNIT < 1e-6
+                        ? Number(scaledAmount / BASE_UNIT).toFixed(7)
+                        : scaledAmount / BASE_UNIT
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

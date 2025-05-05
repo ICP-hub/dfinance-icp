@@ -12,6 +12,7 @@ import WalletModal from "../Dashboard/WalletModal";
 import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";
+import { BASE_UNIT } from '../../utils/constants';
 const ITEMS_PER_PAGE = 8;
 
 /**
@@ -110,7 +111,7 @@ const FaucetDetails = () => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (
         parseFloat(ckBTCBalance) *
-        (ckBTCUsdRate / 1e8)
+        (ckBTCUsdRate / BASE_UNIT)
       ).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
@@ -118,7 +119,7 @@ const FaucetDetails = () => {
     if (ckETHBalance && ckETHUsdRate) {
       const balanceInUsd = (
         parseFloat(ckETHBalance) *
-        (ckETHUsdRate / 1e8)
+        (ckETHUsdRate / BASE_UNIT)
       ).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
@@ -126,7 +127,7 @@ const FaucetDetails = () => {
     if (ckUSDCBalance && ckUSDCUsdRate) {
       const balanceInUsd = (
         parseFloat(ckUSDCBalance) *
-        (ckUSDCUsdRate / 1e8)
+        (ckUSDCUsdRate / BASE_UNIT)
       ).toFixed(2);
       setCkUSDCUsdBalance(balanceInUsd);
     }
@@ -134,7 +135,7 @@ const FaucetDetails = () => {
     if (ckICPBalance && ckICPUsdRate) {
       const balanceInUsd = (
         parseFloat(ckICPBalance) *
-        (ckICPUsdRate / 1e8)
+        (ckICPUsdRate / BASE_UNIT)
       ).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
@@ -142,7 +143,7 @@ const FaucetDetails = () => {
     if (ckUSDTBalance && ckUSDTUsdRate) {
       const balanceInUsd = (
         parseFloat(ckUSDTBalance) *
-        (ckUSDTUsdRate / 1e8)
+        (ckUSDTUsdRate / BASE_UNIT)
       ).toFixed(2);
       setCkUSDTUsdBalance(balanceInUsd);
     }
@@ -298,7 +299,7 @@ const FaucetDetails = () => {
 
                                 if (!assetData) return null;
                                 const { balance, rate } = assetData;
-                                const usdRate = rate / 1e8;
+                                const usdRate = rate / BASE_UNIT;
                                 const calculatedUsdValue = balance * usdRate;
                                 let displayedBalance;
                                 if (

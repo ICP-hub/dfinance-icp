@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-
+import { BASE_UNIT } from '../../../utils/constants';
 /**
  * SupplyPopup Component
  *
@@ -175,7 +175,7 @@ const SupplyPopup = ({
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount + transferFee <= supplyBalance) {
-        const adjustedConversionRate = Number(conversionRate) / 1e8;
+        const adjustedConversionRate = Number(conversionRate) / BASE_UNIT;
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(convertedValue.toFixed(8));
       } else {
@@ -307,10 +307,10 @@ const SupplyPopup = ({
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${scaledAmount / 100000000
+          `Supply,${asset},${scaledAmount / BASE_UNIT
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${scaledAmount / 100000000
+          `Supply,${asset},${scaledAmount / BASE_UNIT
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
@@ -534,7 +534,7 @@ const SupplyPopup = ({
       (avliq + amountAdded * reserveliquidationThreshold) /
       totalCollateralValue;
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * 1e8) / 1e8;
+    result = Math.round(result * BASE_UNIT) / BASE_UNIT;
     return result;
   };
 
@@ -945,14 +945,14 @@ const SupplyPopup = ({
             <p className=" text-sm  lgx:text-lg text-center">
               You have supplied{" "}
               <strong>
-                {scaledAmount / 100000000
-                  ? scaledAmount / 100000000 >= 1e-8 &&
-                    scaledAmount / 100000000 < 1e-7
-                    ? Number(scaledAmount / 100000000).toFixed(8)
-                    : scaledAmount / 100000000 >= 1e-7 &&
-                      scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
+                {scaledAmount / BASE_UNIT
+                  ? scaledAmount / BASE_UNIT >= 1e-8 &&
+                    scaledAmount / BASE_UNIT < 1e-7
+                    ? Number(scaledAmount / BASE_UNIT).toFixed(8)
+                    : scaledAmount / BASE_UNIT >= 1e-7 &&
+                      scaledAmount / BASE_UNIT < 1e-6
+                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
+                      : scaledAmount / BASE_UNIT
                   : "0"}{" "}
                 {asset}
               </strong>
@@ -960,14 +960,14 @@ const SupplyPopup = ({
             <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               <strong>
-                {scaledAmount / 100000000
-                  ? scaledAmount / 100000000 >= 1e-8 &&
-                    scaledAmount / 100000000 < 1e-7
-                    ? Number(scaledAmount / 100000000).toFixed(8)
-                    : scaledAmount / 100000000 >= 1e-7 &&
-                      scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
+                {scaledAmount / BASE_UNIT
+                  ? scaledAmount / BASE_UNIT >= 1e-8 &&
+                    scaledAmount / BASE_UNIT < 1e-7
+                    ? Number(scaledAmount / BASE_UNIT).toFixed(8)
+                    : scaledAmount / BASE_UNIT >= 1e-7 &&
+                      scaledAmount / BASE_UNIT < 1e-6
+                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
+                      : scaledAmount / BASE_UNIT
                   : "0"}{" "}
                 d{asset}
               </strong>

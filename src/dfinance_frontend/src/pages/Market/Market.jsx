@@ -14,7 +14,7 @@ import MiniLoader from "../../components/Common/miniLoader";
 import Lottie from "../../components/Common/lottie";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  *
  * This component displays asset details in the user's wallet, including available balances,
@@ -158,15 +158,15 @@ const Market = () => {
   function getUsdRate(assetType) {
     switch (assetType) {
       case "ckBTC":
-        return ckBTCUsdRate / 1e8;
+        return ckBTCUsdRate / BASE_UNIT;
       case "ckETH":
-        return ckETHUsdRate / 1e8;
+        return ckETHUsdRate / BASE_UNIT;
       case "ckUSDC":
-        return ckUSDCUsdRate / 1e8;
+        return ckUSDCUsdRate / BASE_UNIT;
       case "ICP":
-        return ckICPUsdRate / 1e8;
+        return ckICPUsdRate / BASE_UNIT;
       case "ckUSDT":
-        return ckUSDTUsdRate / 1e8;
+        return ckUSDTUsdRate / BASE_UNIT;
       default:
         return 0;
     }
@@ -444,24 +444,24 @@ const Market = () => {
                             <p className="min-w-[70px] text-center">
                               {(() => {
                                 const assetSupply =
-                                  Number(item[1].Ok[0].asset_supply) / 100000000;
+                                  Number(item[1].Ok[0].asset_supply) / BASE_UNIT;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
                                   case "ckBTC":
-                                    usdRate = ckBTCUsdRate / 1e8;
+                                    usdRate = ckBTCUsdRate / BASE_UNIT;
                                     break;
                                   case "ckETH":
-                                    usdRate = ckETHUsdRate / 1e8;
+                                    usdRate = ckETHUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDC":
-                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    usdRate = ckUSDCUsdRate / BASE_UNIT;
                                     break;
                                   case "ICP":
-                                    usdRate = ckICPUsdRate / 1e8;
+                                    usdRate = ckICPUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDT":
-                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    usdRate = ckUSDTUsdRate / BASE_UNIT;
                                     break;
                                   default:
                                     return "0.00";
@@ -483,24 +483,24 @@ const Market = () => {
                             <p className="font-light text-[12px] text-center">
                               {(() => {
                                 const assetSupply =
-                                  Number(item[1].Ok[0].asset_supply) / 100000000;
+                                  Number(item[1].Ok[0].asset_supply) / BASE_UNIT;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
                                   case "ckBTC":
-                                    usdRate = ckBTCUsdRate / 1e8;
+                                    usdRate = ckBTCUsdRate / BASE_UNIT;
                                     break;
                                   case "ckETH":
-                                    usdRate = ckETHUsdRate / 1e8;
+                                    usdRate = ckETHUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDC":
-                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    usdRate = ckUSDCUsdRate / BASE_UNIT;
                                     break;
                                   case "ICP":
-                                    usdRate = ckICPUsdRate / 1e8;
+                                    usdRate = ckICPUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDT":
-                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    usdRate = ckUSDTUsdRate / BASE_UNIT;
                                     break;
                                   default:
                                     return "$0.00";
@@ -538,13 +538,13 @@ const Market = () => {
                         <div className="flex justify-center">
                           {(Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
                             100) /
-                            100000000 <
+                            BASE_UNIT <
                             0.01
                             ? "<0.01%"
                             : `${(
                               (Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
                                 100) /
-                              100000000
+                              BASE_UNIT
                             ).toFixed(2)}%`}
                         </div>
                       </td>
@@ -555,24 +555,24 @@ const Market = () => {
                             <p className="min-w-[150px] text-center">
                               {(() => {
                                 const assetBorrow =
-                                  Number(item[1].Ok[0].asset_borrow) / 100000000;
+                                  Number(item[1].Ok[0].asset_borrow) / BASE_UNIT;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
                                   case "ckBTC":
-                                    usdRate = ckBTCUsdRate / 1e8;
+                                    usdRate = ckBTCUsdRate / BASE_UNIT;
                                     break;
                                   case "ckETH":
-                                    usdRate = ckETHUsdRate / 1e8;
+                                    usdRate = ckETHUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDC":
-                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    usdRate = ckUSDCUsdRate / BASE_UNIT;
                                     break;
                                   case "ICP":
-                                    usdRate = ckICPUsdRate / 1e8;
+                                    usdRate = ckICPUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDT":
-                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    usdRate = ckUSDTUsdRate / BASE_UNIT;
                                     break;
                                   default:
                                     return "0.00";
@@ -594,24 +594,24 @@ const Market = () => {
                             <p className="font-light text-[12px] text-center">
                               {(() => {
                                 const assetBorrow =
-                                  Number(item[1].Ok[0].asset_borrow) / 100000000;
+                                  Number(item[1].Ok[0].asset_borrow) / BASE_UNIT;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
                                   case "ckBTC":
-                                    usdRate = ckBTCUsdRate / 1e8;
+                                    usdRate = ckBTCUsdRate / BASE_UNIT;
                                     break;
                                   case "ckETH":
-                                    usdRate = ckETHUsdRate / 1e8;
+                                    usdRate = ckETHUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDC":
-                                    usdRate = ckUSDCUsdRate / 1e8;
+                                    usdRate = ckUSDCUsdRate / BASE_UNIT;
                                     break;
                                   case "ICP":
-                                    usdRate = ckICPUsdRate / 1e8;
+                                    usdRate = ckICPUsdRate / BASE_UNIT;
                                     break;
                                   case "ckUSDT":
-                                    usdRate = ckUSDTUsdRate / 1e8;
+                                    usdRate = ckUSDTUsdRate / BASE_UNIT;
                                     break;
                                   default:
                                     return "$0.00";
@@ -636,12 +636,12 @@ const Market = () => {
                         <div className="flex justify-center">
                           {" "}
                           {(Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
-                            100000000 <
+                            BASE_UNIT <
                             0.01
                             ? "<0.01%"
                             : `${(
                               (Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
-                              100000000
+                              BASE_UNIT
                             ).toFixed(2)}%`}
                         </div>
                       </td>
@@ -702,7 +702,7 @@ const Market = () => {
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
                               Number(selectedAssetData[1].Ok[0].asset_supply) /
-                              100000000
+                              BASE_UNIT
                             )}
                           </p>
 
@@ -710,7 +710,7 @@ const Market = () => {
                             $
                             {formatValue(
                               (Number(selectedAssetData[1].Ok[0].asset_supply) /
-                                100000000) *
+                                BASE_UNIT) *
                               getUsdRate(selectedAssetData[0])
                             )}
                           </p>
@@ -726,7 +726,7 @@ const Market = () => {
                             selectedAssetData[1].Ok[0].current_liquidity_rate
                           ) *
                             100) /
-                            100000000 <
+                            BASE_UNIT <
                             0.01
                             ? "<0.01%"
                             : `${(
@@ -734,7 +734,7 @@ const Market = () => {
                                 selectedAssetData[1].Ok[0].current_liquidity_rate
                               ) *
                                 100) /
-                              100000000
+                              BASE_UNIT
                             ).toFixed(2)}%`}
                         </p>
                       </div>
@@ -747,7 +747,7 @@ const Market = () => {
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
                               Number(selectedAssetData[1].Ok[0].asset_borrow) /
-                              100000000
+                              BASE_UNIT
                             )}
                           </p>
 
@@ -755,7 +755,7 @@ const Market = () => {
                             $
                             {formatValue(
                               (Number(selectedAssetData[1].Ok[0].asset_borrow) /
-                                100000000) *
+                                BASE_UNIT) *
                               getUsdRate(selectedAssetData[0])
                             )}
                           </p>
@@ -767,13 +767,13 @@ const Market = () => {
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {(Number(selectedAssetData[1].Ok[0].borrow_rate) * 100) /
-                            100000000 <
+                            BASE_UNIT <
                             0.01
                             ? "<0.01%"
                             : `${(
                               (Number(selectedAssetData[1].Ok[0].borrow_rate) *
                                 100) /
-                              100000000
+                              BASE_UNIT
                             ).toFixed(2)}%`}
                         </p>
                       </div>

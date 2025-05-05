@@ -4,7 +4,7 @@ import { useReserveData } from "../../context/ReserveDataContext";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
 import { useSelector } from "react-redux";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
  * It integrates with backend actors, fetches conversion rates, and processes financial calculations.
@@ -536,26 +536,26 @@ const useAssetData = (searchQuery = "") => {
 
           const supplyCap = parseFloat(
             Number(reserveDataForAsset.Ok[0].configuration.supply_cap) /
-              100000000
+              BASE_UNIT
           );
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok[0].asset_supply) *
-              (assetRate / 1e8)) /
-              100000000
+              (assetRate / BASE_UNIT)) /
+              BASE_UNIT
           );
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok[0].asset_borrow) *
-              (assetRate / 1e8)) /
-              100000000
+              (assetRate / BASE_UNIT)) /
+              BASE_UNIT
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok[0].configuration.reserve_factor) /
-              100000000
+              BASE_UNIT
           );
           const interestAccure = parseFloat(
-            Number(reserveDataForAsset.Ok[0].accure_to_platform) / 100000000
+            Number(reserveDataForAsset.Ok[0].accure_to_platform) / BASE_UNIT
           );
-          const accruedValue = interestAccure * (assetRate / 1e8);
+          const accruedValue = interestAccure * (assetRate / BASE_UNIT);
 
           totalAccruedValue += accruedValue;
           totalMarketSizeTemp += supplyCap;

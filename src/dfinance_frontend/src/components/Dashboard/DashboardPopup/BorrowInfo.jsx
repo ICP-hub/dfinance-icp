@@ -3,7 +3,7 @@ import CircularProgress from "../../Common/circularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { Info } from "lucide-react";
-
+import { BASE_UNIT } from '../../../utils/constants';
 /**
  * BorrowInfo component displays borrowing-related data such as total borrowed amount,
  * borrowing cap, APY rates, and reserve factor with a tooltip.
@@ -60,15 +60,15 @@ const BorrowInfo = ({
   const getAssetRate = (assetName) => {
     switch (assetName) {
       case "ckBTC":
-        return ckBTCUsdRate / 1e8;
+        return ckBTCUsdRate / BASE_UNIT;
       case "ckETH":
-        return ckETHUsdRate / 1e8;
+        return ckETHUsdRate / BASE_UNIT;
       case "ckUSDC":
-        return ckUSDCUsdRate / 1e8;
+        return ckUSDCUsdRate / BASE_UNIT;
       case "ICP":
-        return ckICPUsdRate / 1e8;
+        return ckICPUsdRate / BASE_UNIT;
       case "ckUSDT":
-        return ckUSDTUsdRate / 1e8;
+        return ckUSDTUsdRate / BASE_UNIT;
       default:
         return 0;
     }

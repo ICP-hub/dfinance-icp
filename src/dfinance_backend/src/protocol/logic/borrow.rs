@@ -308,6 +308,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     // Validates repay using the reserve_data
     ValidationLogic::validate_repay(
+        &reserve_data,
         params.amount.clone(),
         user_principal,
         liquidator_principal,

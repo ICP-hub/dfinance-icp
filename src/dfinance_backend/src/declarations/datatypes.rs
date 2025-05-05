@@ -2,7 +2,7 @@ use crate::constants::constant_variables::constants::FAUCET_LIMIT;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 use std::collections::HashMap;
-//TODO : remove either get_zero_value or zero_value constant
+
 /*
  * @title Reserve Data
  * @notice Stores information about a reserve of an asset.
@@ -66,7 +66,6 @@ pub struct ReserveData {
  */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ReserveCache {
-    pub reserve_configuration: ReserveConfiguration,
     pub curr_liquidity_index: Nat,
     pub next_liquidity_index: Nat,
     pub curr_liquidity_rate: Nat,
@@ -106,8 +105,8 @@ pub struct ReserveConfiguration {
     pub liquidation_threshold: Nat,
     pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: Nat, //TODO set it according to borrow
-    pub supply_cap: Nat, //set it according to supply
+    pub borrow_cap: Nat, 
+    pub supply_cap: Nat, 
     pub liquidation_protocol_fee: Nat,
     pub reserve_factor: Nat,
 }
@@ -142,31 +141,6 @@ pub struct AssetInfo {
 pub struct InitArgs {
     pub controller_id: Principal, // for the test-token and dtoken cannisters which are going to be created dynamically
 }
-
-/*
- * @title Transaction Data Structure
- * @dev Represents a blockchain transaction with relevant details.
- * @functionality Tracks and stores details of blockchain transactions including hash, block, method, age, participants, value and fees.
- */
-// #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
-// pub struct Transaction {
-//     pub transaction_hash: String,
-//     pub block: u64,
-//     pub method: String,
-//     pub age: u32,
-//     pub from: String,
-//     pub to: String,
-//     pub value: f64,
-//     pub transaction_fee: f64,
-// }
-
-/*
- * @title Wrapper for Candid-compatible types
- * @functionality Provides a simple wrapper around any type to enable Candid compatibility for serialization and deserialization.
- */
-// #[derive(Debug)]
-// pub struct Candid<T>(pub T);
-
 
 /*
  * @title Faucet Reserves
@@ -220,8 +194,6 @@ impl Default for FaucetReserve {
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]
 pub struct UserData {
     pub user_id: Option<String>,
-    // pub total_collateral: Option<Nat>,
-    // pub total_debt: Option<Nat>,
     pub reserves: Option<Vec<(String, UserReserveData)>>,
 }
 
@@ -229,8 +201,6 @@ impl Default for UserData {
     fn default() -> Self {
         Self {
             user_id: Default::default(),
-            // total_collateral: Some(Nat::from(ZERO_VALUE)),
-            // total_debt: Some(Nat::from(ZERO_VALUE)),
             reserves: Default::default(),
         }
     }
@@ -269,46 +239,7 @@ impl Default for UserReserveData {
     }
 }
 
-/*
- * @title User State
- * @dev Stores the user's adjusted balance and index.
- * @functionality Tracks a user's current financial state with adjusted balance calculations and relevant index for interest accrual.
- */
-// #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
-// pub struct UserState {
-//     pub adjusted_balance: Nat,
-//     pub index: Nat,
-// }
 
-// impl Default for UserState {
-//     fn default() -> Self {
-//         Self {
-//             adjusted_balance: Default::default(),
-//             index: Default::default(),
-//         }
-//     }
-// }
-
-//TODO: as now we are not using these so need to remove these later (as we have changed our api limiter).
-/*
- * @title Request Tracker
- * @functionality Monitors and limits API usage by tracking request count and timestamps to prevent abuse and rate limit violations.
- */
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct RequestTracker {
-    pub count: u32,
-    pub last_request_time: u64,
-}
-
-//TODO: as now we are not using these so need to remove these later (as we have changed our api limiter).
-/*
- * @title Blocked User Details
- * @functionality Stores information about users who have been blocked from the system, including when the block was applied.
- */
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct BlockedUserDetails {
-    pub blocked_time: u64,
-}
 
 /*
  * @title Session Storage Data

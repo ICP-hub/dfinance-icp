@@ -51,7 +51,6 @@ impl Default for AccrueToTreasuryLocalVars {
  */
 pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
     ReserveCache {
-        reserve_configuration: reserve_data.configuration.clone(), //needed?
         reserve_last_update_timestamp: reserve_data.last_update_timestamp,
 
         curr_liquidity_index: reserve_data.liquidity_index.clone(),
@@ -99,23 +98,21 @@ pub fn update_state(
     trace!("update state function called");
 
     let current_time = current_timestamp();
-    debug!("Current timestamp: {}", current_time);
 
     if reserve_data.last_update_timestamp == current_time {
         return Ok(());
     }
 
     update_indexes(reserve_data, reserve_cache);
-    info!("updated indexes successfully");
-
     accrue_to_treasury(reserve_data, reserve_cache)?;
-    info!("accrued to treasury successfully");
+    
 
     reserve_data.last_update_timestamp = current_time;
     debug!(
         "Updated reserve data last update timestamp to: {}",
         reserve_data.last_update_timestamp
     );
+    info!("Indexes have been updated and accrued to treasury successfully");
     Ok(())
 }
 
@@ -135,60 +132,44 @@ pub fn update_state(
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     trace!("calling update indexes function");
     if reserve_cache.curr_liquidity_rate != zero_nat_value() {
-        debug!(
-            "Current liquidity rate: {}",
-            reserve_cache.curr_liquidity_rate
-        );
-
+        
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_cache.curr_liquidity_rate.clone(),
             reserve_cache.reserve_last_update_timestamp,
         )
         ;
-        info!("called calculate linear interest function in update indexes");
-        debug!(
-            "Cumulated liquidity interest calculated: {}",
-            cumulated_liquidity_interest
-        );
-
+        
         reserve_cache.next_liquidity_index =
-            cumulated_liquidity_interest.scaled_mul(reserve_cache.curr_liquidity_index.clone());
-        debug!(
-            "Next liquidity index of cache updated: {}",
-            reserve_cache.next_liquidity_index
-        );
-
+            cumulated_liquidity_interest.clone().scaled_mul(reserve_cache.curr_liquidity_index.clone());
+       
         reserve_data.liquidity_index = reserve_cache.next_liquidity_index.clone();
+        
         debug!(
-            "Reserve data liquidity index updated to: {}",
+            "[Liquidity Update] curr_rate: {}, cumulated_interest: {}, next_index: {}, updated_index: {}",
+            reserve_cache.curr_liquidity_rate,
+            cumulated_liquidity_interest,
+            reserve_cache.next_liquidity_index,
             reserve_data.liquidity_index
         );
     }
 
     if reserve_cache.curr_debt != zero_nat_value() {
-        debug!("Current debt: {}", reserve_cache.curr_debt);
-
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
             reserve_cache.curr_debt_rate.clone(),
             reserve_cache.reserve_last_update_timestamp,
             current_timestamp(),
         );
-        info!("called calculate compounded interest function in update indexes");
-        debug!(
-            "Cumulated borrow interest calculated: {}",
-            cumulated_borrow_interest
-        );
-
         reserve_cache.next_debt_index =
-            cumulated_borrow_interest.scaled_mul(reserve_cache.curr_debt_index.clone());
-        debug!(
-            "Next debt index of cache updated: {}",
-            reserve_cache.next_debt_index
-        );
-
+            cumulated_borrow_interest.clone().scaled_mul(reserve_cache.curr_debt_index.clone());
+        
         reserve_data.debt_index = reserve_cache.next_debt_index.clone();
+        
         debug!(
-            "Reserve data debt index updated to: {}",
+            "[Debt Update] curr_debt: {}, debt_rate: {}, cumulated_interest: {}, next_index: {}, updated_index: {}",
+            reserve_cache.curr_debt,
+            reserve_cache.curr_debt_rate,
+            cumulated_borrow_interest,
+            reserve_cache.next_debt_index,
             reserve_data.debt_index
         );
     }
@@ -228,15 +209,11 @@ pub async fn update_interest_rates(
         .curr_debt
         .clone()
         .scaled_mul(reserve_cache.next_debt_index.clone());
-    // let user_normalized_supply = user_normalized_supply(reserve_data.clone())?;
     let total_supply = reserve_cache.clone().curr_supply.scaled_mul(reserve_cache.next_liquidity_index.clone());
-    debug!("curr debt {}", reserve_cache.curr_debt);
-    debug!("next debt index {}", reserve_cache.next_debt_index);
 
     let asset = reserve_data.asset_name.clone();
     let interest_rate_params = initialize_interest_rate_params(&asset);
-    debug!("interest rate params {:?}", interest_rate_params);
-    debug!("total debt: {:?}", total_debt);
+
 
     let (next_liquidity_rate, next_debt_rate) = calculate_interest_rates(
         liq_added,
@@ -248,7 +225,7 @@ pub async fn update_interest_rates(
         asset,
     )
     .await?;
-    info!("called calculate interest rate function successfully");
+    trace!("calculate interest rate function executed successfully");
 
     reserve_data.current_liquidity_rate = next_liquidity_rate;
     reserve_data.borrow_rate = next_debt_rate;
@@ -297,11 +274,10 @@ pub async fn burn_scaled(
         debug!("Rounding up due to remainder and amount < 10");
         amount.clone().scaled_div(index.clone()) + Nat::from(ONE_VALUE)
     } else {
-        debug!("No rounding required");
         amount.clone().scaled_div(index.clone())
     };
 
-    debug!("Adjusted amount calculated: {}", adjusted_amount);
+   
 
     if adjusted_amount == zero_nat_value() {
         error!("Error: Adjusted amount is zero");
@@ -310,19 +286,16 @@ pub async fn burn_scaled(
 
     let balance = get_balance(token_canister_principal, user_principal).await?;
 
-    debug!("user balance = {}", balance);
+    debug!("user balance = {}, Adjusted amount calculated: {}", balance, adjusted_amount);
     let balance_increase: Nat;
     if burn_dtoken {
         is_withdraw = true;
-        debug!("Processing DToken burn...");
+        info!("Processing DToken burn...");
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
             .clone()
             .scaled_mul(user_state.liquidity_index.clone());
-        debug!(
-            "balance_increase calculated = {} {}",
-            balance_indexed, balance_user_indexed
-        );
+       
         if balance_indexed < balance_user_indexed {
             error!("Error: Balance indexed is less than user indexed");
             return Err(Error::AmountSubtractionError); // Handle the error gracefully
@@ -330,11 +303,6 @@ pub async fn burn_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        debug!("balance_increase calculated = {}", balance_increase);
-        debug!(
-            "dtoken vs adjusted {} {}",
-            user_state.d_token_balance, adjusted_amount
-        );
 
         if user_state.d_token_balance == adjusted_amount {
             debug!("Setting DToken balance to zero");
@@ -343,32 +311,24 @@ pub async fn burn_scaled(
             error!("DToken balance is less than adjusted amount");
             return Err(Error::ErrorDTokenBalanceLessThan);
         } else {
-            debug!("Subtracting adjusted amount from DToken balance");
+           
             user_state.d_token_balance -= adjusted_amount.clone();
 
-            debug!(
-                "dtoken balance after subtraction = {}",
-                user_state.d_token_balance
-            );
             if user_state.d_token_balance < Nat::from(1000u128) {
                 user_state.d_token_balance = zero_nat_value();
             }
         }
 
-        debug!("Updated DToken balance: {}", user_state.d_token_balance);
 
         user_state.liquidity_index = index.clone();
     } else {
-        debug!("Processing variable borrow burn...");
+        info!("Processing variable borrow burn...");
 
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
             .clone()
             .scaled_mul(user_state.variable_borrow_index.clone());
-        debug!(
-            "balance_increase calculated = {} {}",
-            balance_indexed, balance_user_indexed
-        );
+      
         if balance_indexed < balance_user_indexed {
             error!("Error: Balance indexed is less than user indexed");
             return Err(Error::AmountSubtractionError); // Handle the error gracefully
@@ -376,11 +336,7 @@ pub async fn burn_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        debug!("Balance increase calculated: {}", balance_increase);
-        debug!(
-            "adjusted_amount {} {}",
-            adjusted_amount, user_state.debt_token_blance
-        );
+       
         if user_state.debt_token_blance == adjusted_amount {
             debug!("Setting debt token balance to zero");
             user_state.debt_token_blance = zero_nat_value();
@@ -388,23 +344,14 @@ pub async fn burn_scaled(
             error!("Debt token balance is less than adjusted amount");
             return Err(Error::AmountSubtractionError);
         } else {
-            debug!("Subtracting adjusted amount from debt token balance");
+           
             user_state.debt_token_blance -= adjusted_amount.clone();
-            debug!(
-                "debt token balance after subtraction = {}",
-                user_state.debt_token_blance
-            );
 
             if user_state.debt_token_blance < Nat::from(1000u128) {
                 user_state.debt_token_blance = zero_nat_value();
             }
         }
 
-        debug!(
-            "Updated debt token balance: {}",
-            user_state.debt_token_blance
-        );
-        debug!("before updating asset borrow = {:?}", reserve.asset_borrow);
 
         user_state.variable_borrow_index = index;
     }
@@ -446,7 +393,6 @@ pub async fn burn_scaled(
         if balance.clone() > amount_to_burn.clone()
             && balance.clone() - amount_to_burn.clone() < Nat::from(TOLERANCE_FACTOR)
         {
-            debug!("Adjusting burn amount to balance");
             amount_to_burn = balance.clone();
             if burn_dtoken {
                 user_state.d_token_balance = zero_nat_value();
@@ -455,7 +401,7 @@ pub async fn burn_scaled(
             }
         }
         debug!(
-            "balance_increase is not greater than amount, amount_to_burn = {}",
+            " amount_to_burn = {}",
             amount_to_burn
         );
 
@@ -527,7 +473,7 @@ pub async fn mint_scaled(
         amount.clone().scaled_div(index.clone())
     };
 
-    debug!("Adjusted amount: {}", adjusted_amount);
+   
     //acuire transaction lock
     if adjusted_amount == zero_nat_value() {
         error!("Error: Invalid mint amount");
@@ -535,11 +481,11 @@ pub async fn mint_scaled(
     }
 
     let balance = get_balance(token_canister_principal, user_principal).await?;
-    debug!("Fetched balance in Nat: {:?}", balance);
-
+    
+    debug!("Adjusted amount: {}, previous token balance {}", adjusted_amount, balance);
     let balance_increase: Nat;
     if minting_dtoken {
-        debug!("minting dtoken");
+        trace!("minting dtoken");
 
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
@@ -553,19 +499,19 @@ pub async fn mint_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
 
-        debug!("balance incre dtoken{}", balance_increase);
+       
         if user_state.liquidity_index == zero_nat_value() {
             user_state.d_token_balance = amount.clone();
         } else {
             user_state.d_token_balance += adjusted_amount.clone();
         }
-        debug!("new dtoken balance {}", user_state.d_token_balance);
+       
 
-        debug!("user new dtoken balance {}", user_state.d_token_balance);
         user_state.liquidity_index = index;
-        debug!("user new liq index {}", user_state.liquidity_index);
+        debug!("balance incre dtoken{}, new dtoken balance of user {}, user new liq index {} ", balance_increase, user_state.d_token_balance, user_state.liquidity_index);
+       
     } else {
-        debug!("minting debttoken");
+        trace!("minting debttoken");
         is_supply = false;
         let balance_indexed = balance.clone().scaled_mul(index.clone());
         let balance_user_indexed = balance
@@ -578,22 +524,20 @@ pub async fn mint_scaled(
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
-        debug!("balance incr debttoken{}", balance_increase);
         if user_state.variable_borrow_index == zero_nat_value() {
             user_state.debt_token_blance = amount.clone();
         } else {
             user_state.debt_token_blance += adjusted_amount.clone();
         }
 
-        debug!("new debt balance {}", user_state.debt_token_blance);
-        // reserve.asset_borrow += adjusted_amount;
         user_state.variable_borrow_index = index;
-        debug!("new debt index {}", user_state.variable_borrow_index);
+       
+        debug!("balance increase debttoken {}, new debt balance {}, new debt index {} ", balance_increase, user_state.debt_token_blance, user_state.variable_borrow_index);
     }
 
     let newmint = amount + balance_increase;
     debug!("minted token {}", newmint);
-    // Perform token transfer to the user with the newly minted aTokens
+  
     match asset_transfer(
         user_principal,
         token_canister_principal,
@@ -603,7 +547,6 @@ pub async fn mint_scaled(
     .await
     {
         Ok(_) => {
-            info!("Dtoken transfer from backend to user executed successfully");
             if is_supply {
                 reserve.asset_supply = get_total_supply(token_canister_principal).await?;
             } else {
@@ -631,6 +574,24 @@ pub async fn mint_scaled(
  *
  * @param reserve_data Mutable reference to `ReserveData` (treasury accumulation).
  * @param reserve_cache Reference to `ReserveCache` (current & next debt/liquidity indices).
+ * 
+ * @Formula used in accrue_to_treasury:
+ *
+ * 1. Previous Total Variable Debt:
+ *    prev_total_variable_debt = reserve_cache.curr_debt * reserve_cache.curr_debt_index
+ *
+ * 2. Current Total Variable Debt:
+ *    curr_total_variable_debt = reserve_cache.curr_debt * reserve_cache.next_debt_index
+ *
+ * 3. Total Debt Accrued:
+ *    total_debt_accrued = curr_total_variable_debt - prev_total_variable_debt
+ *
+ * 4. Amount to Mint:
+ *    amount_to_mint = total_debt_accrued * reserve_cache.reserve_factor
+ *
+ * 5. Amount Accrued to Platform:
+ *    amount_to_platform = amount_to_mint * Next Liquidity Index / 100
+ *    reserve_data.accure_to_platform += (amount_to_mint * reserve_cache.next_liquidity_index) / 100
  *
  * @return None. This function modifies `reserve_data`, updating the treasury accumulation.
  *
@@ -643,6 +604,7 @@ pub fn accrue_to_treasury(
     let mut vars = AccrueToTreasuryLocalVars::default();
 
     if reserve_cache.reserve_factor == zero_nat_value() {
+        debug!("Skipping treasury accrual (reserve factor is zero).");
         return Ok(());
     }
 
@@ -650,18 +612,9 @@ pub fn accrue_to_treasury(
         reserve_cache.curr_debt.clone(),
         reserve_cache.curr_debt_index.clone(),
     );
-    debug!(
-        "prev_total_variable_debt in accure: {:?}",
-        vars.prev_total_variable_debt
-    );
-
     vars.curr_total_variable_debt = ScalingMath::scaled_mul(
         reserve_cache.curr_debt.clone(),
         reserve_cache.next_debt_index.clone(),
-    );
-    debug!(
-        "curr_total_variable_debt in accure: {:?}",
-        vars.curr_total_variable_debt
     );
 
     if vars.curr_total_variable_debt < vars.prev_total_variable_debt {
@@ -669,25 +622,21 @@ pub fn accrue_to_treasury(
         return Err(Error::AmountSubtractionError);
     }
 
-    vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
-    debug!(
-        "total_debt_accrued in accure: {:?}",
-        vars.total_debt_accrued
-    );
+    vars.total_debt_accrued = vars.curr_total_variable_debt.clone() - vars.prev_total_variable_debt.clone();
     vars.amount_to_mint = ScalingMath::scaled_mul(
         vars.total_debt_accrued.clone(),
-        reserve_cache.reserve_factor.clone(),
-    ); //percent
-    debug!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
+        reserve_cache.reserve_factor.clone()/Nat::from(100u128),
+    ); 
+
+    debug!(
+        "Treasury Accrual: prev_debt={:?}, curr_debt={:?}, accrued={:?}, accrue_to_platform={:?}",
+        vars.prev_total_variable_debt,
+        vars.curr_total_variable_debt,
+        vars.total_debt_accrued,
+        vars.amount_to_mint
+    );
     if vars.amount_to_mint != zero_nat_value() {
-        reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
-            vars.amount_to_mint,
-            reserve_cache.next_liquidity_index.clone(),
-        )) / 100 as u128;
-        debug!(
-            "updated reserve data accure to platform : {:?}",
-            reserve_data.accure_to_platform
-        );
+        reserve_data.accure_to_platform += vars.amount_to_mint.clone();
     }
     Ok(())
 }
@@ -728,8 +677,14 @@ pub async fn initialize(
 
     let token_canister_id =
         match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
-            Ok(principal) => principal,
-            Err(e) => return Err(e),
+            Ok(principal) =>{
+                info!("Successfully created test token ledger");  //debug?
+                principal
+            },
+            Err(e) =>{ 
+                error!("Failed to create test token ledger : {:?}", e);
+                return Err(e)
+            },
         };
 
     let d_token_name = format!("d{}", token_name.clone());
@@ -744,7 +699,10 @@ pub async fn initialize(
     reserve_data.asset_name = token_name.clone();
     reserve_data.d_token_canister =
         match create_token_canister(d_token_name.clone(), d_token_name).await {
-            Ok(principal) => Some(principal),
+            Ok(principal) => {
+                info!("Successfully created d token canister");
+                Some(principal)
+            },
             Err(e) => {
                 error!("error while calling create token canister = {:?}", e);
                 return Err(e);
@@ -752,7 +710,10 @@ pub async fn initialize(
         };
     reserve_data.debt_token_canister =
         match create_token_canister(debt_token_name.clone(), debt_token_name).await {
-            Ok(principal) => Some(principal),
+            Ok(principal) => {
+                info!("Successfully created debt token canister");
+                Some(principal)
+            },
             Err(e) => {
                 error!("error while calling create token canister = {:?}", e);
                 return Err(e);
@@ -761,7 +722,6 @@ pub async fn initialize(
 
     reserve_data.last_update_timestamp = current_timestamp();
 
-    debug!("reserve list, asset records and reserve data updated successfully");
     mutate_state(|state| {
         state
             .reserve_list
@@ -862,9 +822,11 @@ pub async fn reset_reserve_value(
     variable_name: String,
     reset_value: Nat,
 ) -> Result<(), Error> {
+    trace!("Executing reset_reserve_value");
     guard_admin_only()?;
     validate_asset_name(&asset_name.clone())?;
     if reset_value < zero_nat_value() {
+        error!("Invalid reset value provided: {}", reset_value);
         return Err(Error::InvalidValue);
     }
 
@@ -873,7 +835,9 @@ pub async fn reset_reserve_value(
         asset_index
             .get(&asset_name)
             .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| Error::NoReserveDataFound)
+            .ok_or_else(|| {
+                Error::NoReserveDataFound
+            })
     })?;
 
     match variable_name.as_str() {
@@ -887,8 +851,16 @@ pub async fn reset_reserve_value(
         "liquidation_protocol_fee" => {
             reserve_data.configuration.liquidation_protocol_fee = reset_value
         }
-        _ => return Err(Error::InvalidVariableName),
+        _ => {
+            error!("Reset reserve value failed: Invalid variable name.");
+            return Err(Error::InvalidVariableName)
+        },
     }
+
+    debug!(
+        "Resetting reserve value for variable '{}'",
+        variable_name
+    );
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;

@@ -284,7 +284,7 @@ pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
         level, file_name, line, msg, user_principal
     );
 
-    if level <= get_log_level() {
+    if level <= LogLevel::TRACE || level <= get_log_level() {
         ic_cdk::println!("{}", log_message);
         let _ = store_log(user_principal, level, file, line, msg.to_string());
     }

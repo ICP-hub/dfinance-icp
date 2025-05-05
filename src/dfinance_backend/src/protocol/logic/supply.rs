@@ -73,7 +73,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             .asset_index
             .get(&params.asset.to_string().clone())
             .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| Error::NoReserveDataFound)
+            .ok_or_else(|| {
+                Error::NoReserveDataFound})
     })?;
 
     //initialize a asset reserve cache for temp changes
@@ -181,6 +182,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             // });
             info!("Rollback successfully executed"); //info
 
+            error!("Error in asset transfer from user to backend canister");
             return Err(Error::ErrorMintTokens); //TODO: jyotirmay change the error message it should be ErrorSupplyTokens
         }
     }
@@ -217,24 +219,10 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
     request_limiter()?;
-    // prevent anonymous for caller
     guard_prevent_anonymous()?;
 
-    // prevent anonymous on behalf of
-    // if params.on_behalf_of == Some(Principal::anonymous()) {
-    //     return Err(Error::AnonymousPrincipal);
-    // }
     let user_principal = ic_cdk::caller();
-    // let (user_principal, liquidator_principal) =
-    //     if let Some(on_behalf_of) = params.on_behalf_of.clone() {
-    //         let user_principal = on_behalf_of;
-    //         let liquidator_principal = ic_cdk::caller();
-    //         (user_principal, Some(liquidator_principal))
-    //     } else {
-    //         let user_principal = ic_cdk::caller();
-    //         (user_principal, None)
-    //     };
-
+  
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
     let _log_flusher = LogFlusher {
         user_key: user_principal.to_text(),
@@ -243,7 +231,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     validate_zero_value(&params.amount)?;
     let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
 
-    // let transfer_to_principal: Principal = liquidator_principal.unwrap_or(user_principal);
+    
     let transfer_to_principal: Principal = user_principal.clone();
     let mut reserve_data = read_state(|state| {
         state
@@ -251,7 +239,8 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             .get(&params.asset.to_string().clone())
             .map(|reserve| reserve.0.clone())
     })
-    .ok_or_else(|| Error::NoReserveDataFound)?;
+    .ok_or_else(|| {
+        Error::NoReserveDataFound})?;
 
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
@@ -309,9 +298,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     .await?;
     info!("Interest rates updated successfully");
 
-   
-
-   
 
     // Transfers the asset from the user to our backend cansiter
     match asset_transfer_from(
@@ -332,7 +318,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             return Ok(new_balance);
         }
         Err(_) => {
-            error!("Error in asset transfer from backend to user"); //error
+            
             let supply_param = ExecuteSupplyParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
@@ -347,12 +333,8 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             )
             .await?;
 
-            // mutate_state(|state| {
-            //     state
-            //         .asset_index
-            //         .insert(params.asset.clone(), Candid(reserve_data.clone()))
-            // });
             info!("Rollback successfully executed"); //info
+            error!("Error in asset transfer from backend to user"); //error
             return Err(Error::ErrorBurnTokens);
         }
     }

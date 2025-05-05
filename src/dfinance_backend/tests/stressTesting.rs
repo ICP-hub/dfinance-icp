@@ -1006,7 +1006,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //     struct TestCase {
 //         asset: String,
 //         amount: Nat,
-//         on_behalf_of: Option<Principal>,
 //         is_collateral: bool,
 //         expect_success: bool,
 //         expected_error_message: Option<String>,
@@ -1016,7 +1015,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         TestCase {
 //             asset: "ICP".to_string(),
 //             amount: Nat::from(200_000_000u128), // 2 ICP
-//             on_behalf_of: None,
 //             is_collateral: true,
 //             expect_success: true,
 //             expected_error_message: None,
@@ -1024,7 +1022,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         TestCase {
 //             asset: "ckBTC".to_string(),
 //             amount: Nat::from(4u128), // 0.00004 ckBTC
-//             on_behalf_of: None,
 //             is_collateral: true,
 //             expect_success: true,
 //             expected_error_message: None,
@@ -1032,7 +1029,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         TestCase {
 //             asset: "ckBTC".to_string(),
 //             amount: Nat::from(400u128), // 0.004 ckBTC
-//             on_behalf_of: None,
 //             is_collateral: true,
 //             expect_success: true,
 //             expected_error_message: None,
@@ -1040,7 +1036,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         TestCase {
 //             asset: "ckUSDC".to_string(),
 //             amount: Nat::from(10_000_000u128), // 100 ckUSDC
-//             on_behalf_of: None,
 //             is_collateral: true,
 //             expect_success: true,
 //             expected_error_message: None,
@@ -1048,7 +1043,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         TestCase {
 //             asset: "ckUSDT".to_string(),
 //             amount: Nat::from(3u128), // 0.03 ckUSDT
-//             on_behalf_of: None,
 //             is_collateral: true,
 //             expect_success: true,
 //             expected_error_message: None,
@@ -1056,7 +1050,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         TestCase {
 //             asset: "ckETH".to_string(),
 //             amount: Nat::from(5u128), // 0.00005 ckETH
-//             on_behalf_of: None,
 //             is_collateral: true,
 //             expect_success: true,
 //             expected_error_message: None,
@@ -1076,10 +1069,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //         ic_cdk::println!("🚀 Test Case {}: Withdraw Request Initiated", i + 1);
 //         let amount_float = case.amount.clone().0.try_into().unwrap_or(0u64) as f64 / 100000000.0;
 //         ic_cdk::println!(
-//             "On Behalf Of: {}\n🔹 Asset: {} \n🔹 Amount (Tokens): {:.8} \n🔹 Expected Success: {} \n🔹 Is Collateral: {}",
-//             case.on_behalf_of
-//                 .as_ref()
-//                 .map_or("None".to_string(), |p| p.to_text()),
+//             Asset: {} \n🔹 Amount (Tokens): {:.8} \n🔹 Expected Success: {} \n🔹 Is Collateral: {}",
 //             case.asset,
 //             amount_float,
 //             case.expect_success,
@@ -1111,7 +1101,6 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 //             let withdraw_params = ExecuteWithdrawParams {
 //                 asset: case.asset.clone(),
 //                 amount: case.amount.clone(),
-//                 on_behalf_of: case.on_behalf_of,
 //                 is_collateral: case.is_collateral,
 //             };
 

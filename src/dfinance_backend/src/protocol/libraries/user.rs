@@ -787,18 +787,23 @@ pub fn register_user() -> Result<String, Error> {
     let user_principal: Principal = ic_cdk::api::caller();
 
     let user_data = mutate_state(|state| {
-        // let user_index = &mut state.user_profile;
+
         match state.user_profile.get(&user_principal) {
             Some(_) => Ok("User available".to_string()),
             None => {
-                state
-                    .user_profile
-                    .insert(user_principal.clone(), Candid(UserData::default()));
+                let mut new_user_data = UserData::default();
+                let user_count = state.user_profile.len(); //user_id is starting from 1
+                let new_user_id = (user_count + 1).to_string();
+                new_user_data.user_id = Some(new_user_id);
+                
+                state.user_profile.insert(user_principal.clone(), Candid(new_user_data.clone()));
+                
+                // Insert the user data into the certified storage
+                insert_certified_value(user_principal.to_string(), new_user_data);
                 Ok("User added".to_string())
             }
         }
     });
-    insert_certified_value(user_principal.to_string(), UserData::default());
 
     user_data
 }

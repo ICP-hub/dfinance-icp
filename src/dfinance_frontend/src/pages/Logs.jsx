@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../utils/useAuthClient";
+import Pagination from "../components/Common/pagination";
 
 const Logs = () => {
   const [logs, setLogs] = useState([]);
@@ -7,6 +8,11 @@ const Logs = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const { backendActor } = useAuth();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 30;
+  const [totalPages, setTotalPages] = useState(1);
+  const [paginatedLogs, setPaginatedLogs] = useState([]);
 
   const getAllLogs = async () => {
     if (!backendActor) {
@@ -18,6 +24,8 @@ const Logs = () => {
       const result = await backendActor.get_all_logs();
       setLogs(result);
       setFilteredLogs(result);
+
+      setTotalPages(Math.ceil(result.length / logsPerPage));
     } catch (error) {
       console.error("Error getting logs:", error.message);
     } finally {
@@ -38,7 +46,20 @@ const Logs = () => {
       );
       setFilteredLogs(filtered);
     }
+    setCurrentPage(1);
+    setTotalPages(Math.ceil(filteredLogs.length / logsPerPage));
   }, [searchTerm, logs]);
+
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * logsPerPage;
+    const endIndex = startIndex + logsPerPage;
+    setPaginatedLogs(filteredLogs.slice(startIndex, endIndex));
+    setTotalPages(Math.ceil(filteredLogs.length / logsPerPage));
+  }, [filteredLogs, currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
 
   const getLogLevelColor = (logText) => {
     if (logText.includes("[DEBUG]")) return "text-blue-500 dark:text-blue-400";
@@ -65,7 +86,7 @@ const Logs = () => {
   const logCounts = getLogCounts();
 
   return (
-    <div className=" min-h-screen text-[#4036A8] dark:text-white rounded-2xl">
+    <div className="min-h-screen text-[#4036A8] dark:text-white rounded-2xl">
       <h1 className="text-2xl md:text-[2xl] font-bold mb-4 sm:mb-5 text-[#4036A8] dark:text-white mt-1">
         Logs
       </h1>
@@ -174,15 +195,15 @@ const Logs = () => {
           </p>
         </div>
       ) : (
-        <div className="w-full bg-gray-50 dark:bg-[#131330] rounded-xl p-3 overflow-y-auto shadow border border-gray-200 dark:border-gray-900">
+        <div className="w-full bg-gray-50 dark:bg-[#131330] rounded-xl py-3 px-2 overflow-y-auto shadow border border-gray-200 dark:border-gray-900">
           <div className="font-mono text-xs sm:text-sm">
-            {filteredLogs.map((log, index) => (
+            {paginatedLogs.map((log, index) => (
               <div
                 key={index}
                 className="py-1 border-b border-gray-200 dark:border-gray-800 flex"
               >
                 <span className="text-gray-500 dark:text-gray-500 mr-2 flex-shrink-0 text-right w-6 sm:w-10">
-                  {logs.indexOf(log)}:
+                  {(currentPage - 1) * logsPerPage + index}:
                 </span>
                 <pre
                   className={`${getLogLevelColor(
@@ -193,6 +214,19 @@ const Logs = () => {
                 </pre>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pagination Component */}
+      {filteredLogs.length > 0 && (
+        <div className="w-full flex justify-center mt-10">
+          <div id="pagination" className="flex gap-2">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         </div>
       )}

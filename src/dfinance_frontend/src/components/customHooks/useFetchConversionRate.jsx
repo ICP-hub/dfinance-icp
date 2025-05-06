@@ -69,9 +69,6 @@ const useFetchConversionRate = (
 
   const isMountedRef = useRef(true);
   const lastRefreshRef = useRef(0);
-  const activeInstanceId = useRef(
-    `instance-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-  );
   const requestCount = useRef(0);
   const intervalIdRef = useRef(null);
   const retryCounters = useRef({

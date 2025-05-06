@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
-
+import { BASE_UNIT } from '../../utils/constants';
 const useTransferFee = (asset) => {
   const { backendActor } = useAuth();
   const [transferFee, setTransferFee] = useState(0);
@@ -36,7 +36,7 @@ const useTransferFee = (asset) => {
             setTransferFee(0);
             return;
           }
-          const convertedFee = (Number(rawFee) / 100000000).toFixed(8);
+          const convertedFee = (Number(rawFee) / BASE_UNIT).toFixed(8);
           setTransferFee(convertedFee);
         } else {
           setError("Invalid fee format received from backend");

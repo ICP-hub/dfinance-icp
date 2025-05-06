@@ -255,7 +255,7 @@ export const useAuthClient = (options = defaultOptions) => {
       process.env.CANISTER_ID_DFINANCE_BACKEND,
       blsVerify
     );
-    await cert.verify();
+    await cert.verify;
     const te = new TextEncoder();
     const canisterId = Principal.fromText(
       process.env.CANISTER_ID_DFINANCE_BACKEND

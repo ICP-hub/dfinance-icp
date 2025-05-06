@@ -2,6 +2,7 @@
 use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME};
 use crate::constants::errors::Error;
+use crate::guards::access_control::guard_admin_only;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use ic_cdk::api;
@@ -254,7 +255,8 @@ pub fn clear_temp_log() {
 
 
 #[query]
-pub fn get_all_logs() -> Vec<String> {
+pub fn get_all_logs() -> Result<Vec<String>,Error> {
+    guard_admin_only()?;
     read_state(|state| {
         let log_storage = &state.log_storage;
 
@@ -268,7 +270,7 @@ pub fn get_all_logs() -> Vec<String> {
 
         logs.sort_by_key(|(key, _)| *key);
 
-        logs.into_iter().map(|(_, log)| log).collect()
+        Ok(logs.into_iter().map(|(_, log)| log).collect())
     })
 }
 

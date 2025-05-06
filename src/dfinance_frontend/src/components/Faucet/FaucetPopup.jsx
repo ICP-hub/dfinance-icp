@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import { showCaptchaToUser } from "../Captcha/showCaptchaToUser";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  * FaucetPopup Component
  *
@@ -51,6 +51,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [showFaucetPayment, setShowFaucetPayment] = useState(false);
   const [amount, setAmount] = useState("");
+  const [isCaptchaOpen, setIsCaptchaOpen] = useState(false);
 
   const initialLimits = {
     ckBTC: 50000000000,
@@ -223,56 +224,38 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             progress: undefined,
           });
         } else if ("CaptchaAlreadyExists" in captchaData.Err) {
-          toast.error("Captcha already exists. Please wait a moment and try again.", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
+          toast.error(
+            "Captcha already exists. Please wait a moment and try again.",
+            {
+              className: "custom-toast",
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            }
+          );
         }
 
         setLoading(false);
         return;
       }
 
+      // Close FaucetPopup before showing captcha
+      setIsCaptchaOpen(true);
+
       let captchaVerified = false;
 
       while (!captchaVerified) {
-        const { userInput, unmount } = await showCaptchaToUser(captchaData);
+        try {
+          const { userInput, unmount } = await showCaptchaToUser(captchaData);
 
-        const result = await backendActor.verify_captcha(userInput);
+          const result = await backendActor.verify_captcha(userInput);
 
-        if (result.Ok === null) {
-          toast.success("Captcha verified successfully!", {
-            className: "custom-toast",
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-
-          captchaVerified = true;
-
-          const numericAmount = parseFloat(amount.replace(/,/g, ""));
-
-          if (isNaN(numericAmount)) {
-            toast.error("Invalid amount entered.");
-            setLoading(false);
-            unmount();
-            return;
-          }
-
-          const natAmount = Math.round(numericAmount * Math.pow(10, 8));
-          const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
-
-          if (numericAmount > availableAmount) {
-            toast.error(`Faucet limit exceeded!`, {
+          if (result.Ok === null) {
+            toast.success("Captcha verified successfully!", {
               className: "custom-toast",
               position: "top-center",
               autoClose: 3000,
@@ -281,21 +264,78 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               pauseOnHover: true,
               draggable: true,
             });
-            setLoading(false);
-            dispatch(toggleRefresh());
-            unmount();
-            return;
-          }
 
-          try {
-            const faucetResult = await backendActor.faucet(asset, natAmount);
+            captchaVerified = true;
 
-            unmount(); // ✅ Close captcha prompt
+            const numericAmount = parseFloat(amount.replace(/,/g, ""));
 
-            if (faucetResult.Err) {
-              const errorKey = faucetResult.Err;
-              console.error("Faucet error:", errorKey);
-              toast.error(`Faucet error: ${Object.keys(errorKey)[0]}`, {
+            if (isNaN(numericAmount)) {
+              toast.error("Invalid amount entered.");
+              setLoading(false);
+              unmount();
+              setIsCaptchaOpen(false);
+              return;
+            }
+
+            const natAmount = Math.round(numericAmount * Math.pow(10, 8));
+            const availableAmount = FaucetLimit[asset] - FaucetUsage[asset];
+
+            if (numericAmount > availableAmount) {
+              toast.error(`Faucet limit exceeded!`, {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+              });
+              setLoading(false);
+              dispatch(toggleRefresh());
+              unmount();
+              setIsCaptchaOpen(false);
+              return;
+            }
+
+            try {
+              const faucetResult = await backendActor.faucet(asset, natAmount);
+
+              unmount();
+              setIsCaptchaOpen(false);
+
+              if (faucetResult.Err) {
+                const errorKey = faucetResult.Err;
+                console.error("Faucet error:", errorKey);
+                toast.error(`Faucet error: ${Object.keys(errorKey)[0]}`, {
+                  className: "custom-toast",
+                  position: "top-center",
+                  autoClose: 5000,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                });
+                setLoading(false);
+                dispatch(toggleRefresh());
+                return;
+              }
+
+              setShowFaucetPayment(true);
+
+              toast.success(`Successfully claimed ${amount} ${asset}`, {
+                className: "custom-toast",
+                position: "top-center",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+              });
+
+              dispatch(toggleRefresh());
+            } catch (error) {
+              console.error("Error during faucet transaction:", error);
+              toast.error(`Transaction error: ${error.message}`, {
                 className: "custom-toast",
                 position: "top-center",
                 autoClose: 5000,
@@ -304,59 +344,41 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                 pauseOnHover: true,
                 draggable: true,
               });
-              setLoading(false);
-              dispatch(toggleRefresh());
-              return;
+              unmount();
+              setIsCaptchaOpen(false);
             }
-
-            setShowFaucetPayment(true);
-
-            toast.success(`Successfully claimed ${amount} ${asset}`, {
-              className: "custom-toast",
-              position: "top-center",
-              autoClose: 3000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-            });
-
-            dispatch(toggleRefresh());
-          } catch (error) {
-            console.error("Error during faucet transaction:", error);
-            toast.error(`Transaction error: ${error.message}`, {
-              className: "custom-toast",
-              position: "top-center",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-            });
+          } else {
             unmount();
+            setIsCaptchaOpen(false);
+            toast.dismiss();
+            toast.error("Captcha verification failed. Try again.");
           }
-        } else {
-          unmount();
-          toast.dismiss();
-          toast.error("Captcha verification failed. Try again.");
+        } catch (error) {
+          console.error("Error in captcha process:", error);
+          setIsCaptchaOpen(false);
+          break;
         }
       }
     } catch (error) {
       console.error("Error in faucet process:", error.message);
+      setIsCaptchaOpen(false);
 
       if (
         error.message.includes("out of cycles") ||
         error.message.includes("Reject text: Canister")
       ) {
-        toast.error("Canister is out of cycles. Please wait, the admin has been notified.", {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+        toast.error(
+          "Canister is out of cycles. Please wait, the admin has been notified.",
+          {
+            className: "custom-toast",
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+        );
       } else {
         toast.error(`Error: ${error.message}`, {
           className: "custom-toast",
@@ -372,7 +394,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       setLoading(false);
     }
   };
-
 
   const handleClickOutside = (event) => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -419,8 +440,8 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
               ? Number(reserveGroup[1].faucet_usage)
               : initialUsages[asset];
 
-            const faucetLimit = Math.trunc(faucetLimitRaw * 1e8) / 1e8;
-            const faucetUsage = Math.trunc(faucetUsageRaw * 1e8) / 1e8;
+            const faucetLimit = Math.trunc(faucetLimitRaw * BASE_UNIT) / BASE_UNIT;
+            const faucetUsage = Math.trunc(faucetUsageRaw * BASE_UNIT) / BASE_UNIT;
 
             updatedLimits[asset] = faucetLimit;
             updatedUsages[asset] = faucetUsage;
@@ -443,7 +464,6 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
       setIsFaucetLoading(false);
     }
   };
-
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -492,35 +512,35 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     if (ckBTCUsdRate && ckBTCUsdRate > 0) {
       const btcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckBTCUsdRate;
-      const truncatedBtcAmount = Math.trunc(btcAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(btcAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetBTC(truncatedBtcAmount);
     }
 
     if (ckETHUsdRate && ckETHUsdRate > 0) {
       const ethAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckETHUsdRate;
-      const truncatedBtcAmount = Math.trunc(ethAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(ethAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetETH(truncatedBtcAmount);
     }
 
     if (ckUSDCUsdRate && ckUSDCUsdRate > 0) {
       const usdcAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDCUsdRate;
-      const truncatedBtcAmount = Math.trunc(usdcAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(usdcAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetUSDC(truncatedBtcAmount);
     }
 
     if (ckICPUsdRate && ckICPUsdRate > 0) {
       const icpAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckICPUsdRate;
-      const truncatedBtcAmount = Math.trunc(icpAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(icpAmount * BASE_UNIT) / BASE_UNIT;
       setFaucetICP(truncatedBtcAmount);
     }
 
     if (ckUSDTUsdRate && ckUSDTUsdRate > 0) {
       const usdTAmount =
         (FaucetLimit[asset] - FaucetUsage[asset]) / ckUSDTUsdRate;
-      const truncatedBtcAmount = Math.trunc(usdTAmount * 1e8) / 1e8;
+      const truncatedBtcAmount = Math.trunc(usdTAmount * BASE_UNIT) / BASE_UNIT;
 
       setFaucetUSDT(truncatedBtcAmount);
     }
@@ -569,9 +589,14 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
     };
   }, [onClose]);
 
+  if (isCaptchaOpen) {
+    return null;
+  }
+
   /* ===================================================================================
    *                                  RENDER-COMPONENTS
    * =================================================================================== */
+
   return (
     <>
       {isOpen && !showFaucetPayment && (
@@ -614,20 +639,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                     <div
                       className={`cursor-pointer bg-blue-100 dark:bg-gray-700/45 text-xs mt-4 p-3 py-2 rounded-md ${isFaucetLoading ||
                           Math.floor(
-                            ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            ((FaucetLimit[asset] - FaucetUsage[asset]) / BASE_UNIT) *
                             100
-                          ) /
+                        ) /
                           100 <=
                           0
                           ? "opacity-50 cursor-not-allowed"
                           : ""
-                        }`}
+                      }`}
                       onClick={
                         isFaucetLoading ||
                           Math.floor(
-                            ((FaucetLimit[asset] - FaucetUsage[asset]) / 1e8) *
+                            ((FaucetLimit[asset] - FaucetUsage[asset]) / BASE_UNIT) *
                             100
-                          ) /
+                        ) /
                           100 <=
                           0
                           ? undefined
@@ -644,7 +669,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                           $
                           {(
                             (FaucetLimit[asset] - FaucetUsage[asset]) /
-                            1e8
+                            BASE_UNIT
                           ).toFixed(2)}{" "}
                           Max
                         </>
@@ -657,7 +682,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
             <div>
               {(() => {
                 const remainingAmount =
-                  FaucetLimit[asset] / 1e8 - Number(FaucetUsage[asset]) / 1e8;
+                  FaucetLimit[asset] / BASE_UNIT - Number(FaucetUsage[asset]) / BASE_UNIT;
                 const formattedAmount = remainingAmount.toLocaleString(
                   undefined,
                   {
@@ -668,20 +693,20 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
 
                 return parseFloat(formattedAmount) <= 0;
               })() && (
-                  <div className="w-full flex flex-col my-3 space-y-2">
-                    <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-                      <div className="w-1/12 flex items-center justify-center">
-                        <div className="warning-icon-container">
-                          <TriangleAlert />
-                        </div>
-                      </div>
-                      <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                        Faucet limit has been exceeded. It will reset at 00:00
-                        (UTC).
+                <div className="w-full flex flex-col my-3 space-y-2">
+                  <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                    <div className="w-1/12 flex items-center justify-center">
+                      <div className="warning-icon-container">
+                        <TriangleAlert />
                       </div>
                     </div>
+                    <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                      Faucet limit has been exceeded. It will reset at 00:00
+                      (UTC).
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
               <button
                 ref={faucetButtonRef}
@@ -691,11 +716,12 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   FaucetUsage[asset] >= FaucetLimit ||
                   loading
                 }
-                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${amount.replace(/,/g, "") > 0 &&
-                    FaucetUsage[asset] < FaucetLimit[asset]
+                className={`w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] ${
+                  amount.replace(/,/g, "") > 0 &&
+                  FaucetUsage[asset] < FaucetLimit[asset]
                     ? "opacity-100 cursor-pointer"
                     : "opacity-50 cursor-not-allowed"
-                  }`}
+                }`}
               >
                 {loading ? "Processing..." : `Faucet ${asset}`}
               </button>

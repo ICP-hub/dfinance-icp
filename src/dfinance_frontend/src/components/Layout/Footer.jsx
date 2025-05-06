@@ -16,7 +16,7 @@ const Footer = () => {
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
   const ledgerActors = useSelector((state) => state.ledger);
-
+  const isProduction = process.env.DFX_PRODUCTION === "true";
   /* ===================================================================================
    *                                 STATE-MANAGEMENT
    * =================================================================================== */
@@ -125,6 +125,10 @@ const Footer = () => {
 
   // Check if the user is a tester
   useEffect(() => {
+    const isProduction = process.env.DFX_PRODUCTION === "true";
+  
+    if (isProduction) return; 
+  
     const checkTesterStatus = async () => {
       try {
         const result = await backendActor.check_is_tester();
@@ -133,10 +137,12 @@ const Footer = () => {
         console.error("Error checking tester status:", error);
       }
     };
-
-    checkTesterStatus();
+  
+    if (backendActor) {
+      checkTesterStatus();
+    }
   }, [backendActor]);
-
+  
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">

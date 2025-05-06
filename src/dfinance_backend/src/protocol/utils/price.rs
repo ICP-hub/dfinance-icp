@@ -3,7 +3,7 @@ use crate::{debug, error, info, trace};
 use crate::protocol::utils::math_utils::current_timestamp;
 use crate::stable_storage::state_handler::{get_certificate_witness, insert_certified_value, mutate_state, read_state};
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::SCALING_FACTOR;
+use crate::constants::constant_variables::constants::SCALING_FACTOR;
 use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
@@ -59,11 +59,9 @@ impl PriceCache {
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
  */
-//TODO: i think we can remove this function as we are only using it in the script we can replace this with individual update reserve price.
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
     trace!("update_reserves_price called");
-    request_limiter()?;
 
     guard_controller_only()?;
 
@@ -101,29 +99,6 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
     );
 
     Ok(())
-}
-
-/*
- * @title Query Reserve Prices
- * @functionality Retrieves current cached prices for all reserve assets
- * @dev Fetches the cached price data of all available assets from the state.
- * @returns Vec<PriceCache> - A list of cached prices for each asset.
- */
-//TODO correct the name
-#[query]
-pub fn queary_reserve_price() -> (Vec<PriceCache>, Certificate) {
-    let tokens = read_state(|state| 
-        // let cache_list = &state.price_cache_list;
-        state.price_cache_list
-            .iter()
-            .map(|(_, price_cache)| price_cache.0)
-            .collect::<Vec<PriceCache>>()
-    );
-
-    debug!("all tokens are = {:?}", tokens);
-    let cert = get_certificate_witness("reserve_price".to_string());
-    
-    (tokens, cert)
 }
 
 /*
@@ -242,11 +217,10 @@ pub async fn get_exchange_rates(
  *      - `Err(Error::InvalidUser)`: if the caller is not a valid tester.
  *      - `Err(Error::ExchangeRateError)`: if updating the price cache fails.
  */
-//TODO : CHange name to MOck_price_data
 #[cfg(feature = "testnet")]
 #[update]
-pub async fn update_reserve_price_test() -> Result<(), Error> {
-    trace!("update_reserve_price_test called");
+pub async fn mock_price_data() -> Result<(), Error> {
+    trace!("mock_price_data called");
     if !check_is_tester() {
         error!("Invalid User");
         return Err(Error::InvalidUser);
@@ -282,15 +256,9 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
             let price_cache_result: Result<PriceCache, String> = mutate_state(|state| {
                 let price_cache_data = &mut state.price_cache_list;
                 if let Some(price_cache) = price_cache_data.get(&base_asset) {
-                    // debug!(
-                    //     "Existing price cache found for {}: {:?}",
-                    //     base_asset_symbol,
-                    //     price_cache.0
-                    // );
                     
                     Ok(price_cache.0.clone())
                 } else {
-                    // debug!("Creating new price cache for {}", base_asset_symbol);
                     let new_price_cache: PriceCache = PriceCache {
                         cache: HashMap::new(),
                     };
@@ -312,10 +280,6 @@ pub async fn update_reserve_price_test() -> Result<(), Error> {
                     state
                         .price_cache_list
                         .insert(base_asset.clone(), Candid(price_cache_data.clone()));
-                    // debug!(
-                    //     "Full state after update: {:?}",
-                    //     state.price_cache_list.iter().collect::<Vec<_>>()
-                    // );
                     insert_certified_value("price_cache".to_string(), price_cache_data);
                 });
             } else {
@@ -341,3 +305,36 @@ fn normalize_symbol(symbol: &str) -> String {
     }
 }
 
+
+
+pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
+    trace!("calling get_cached_exchange_rate");
+    // asset validator
+    validate_asset_name(&base_asset_symbol)?;
+    
+    let base_asset = match base_asset_symbol.as_str() {
+        "ckBTC" => "btc",
+        "ckETH" => "eth",
+        "ckUSDC" => "usdc",
+        "ckUSDT" => "usdt",
+        _ => base_asset_symbol.as_str(),
+    };
+
+    debug!("base asset and base_asset_symbol {}, {}", base_asset , base_asset_symbol);
+    
+   read_state(|state| {
+        state
+            .price_cache_list
+            .get(&base_asset.to_string())
+            .map(|price_cache: Candid<PriceCache>| {
+                price_cache
+                    .0
+                    .cache
+                    .get(&base_asset_symbol)
+                    .map(|p| p.price.clone())
+            })
+            .flatten()
+            .ok_or(Error::NoPriceCache)
+    })
+
+}

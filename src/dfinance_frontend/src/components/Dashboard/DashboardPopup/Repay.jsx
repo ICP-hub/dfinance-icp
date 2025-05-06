@@ -14,7 +14,9 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { SCALING_FACTOR } from '../../../utils/constants';
+import { SCALING_FACTOR } from "../../../utils/constants";
+import { Info } from "lucide-react";
+
 /**
  * Repay Component
  *
@@ -46,7 +48,7 @@ const Repay = ({
   onLoadingChange,
 }) => {
   /* ===================================================================================
-   *                                  HOOKS &  REDUX-SELECTER
+   *                                  HOOKS &  REDUX-SELECTER & STATES
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const approveButtonRef = useRef(null);
@@ -64,6 +66,7 @@ const Repay = ({
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
@@ -796,9 +799,26 @@ const Repay = ({
                       </span>
                     </p>
                   </div>
-                  <div className="w-full flex justify-between items-center my-1 mt-2">
-                    <div className="flex items-center gap-1">
-                      <p>Transaction Fee</p>
+                  <div className="w-full flex justify-between items-center my-1">
+                    <div className="flex items-center gap-1 relative">
+                      <div
+                        className="flex items-center cursor-help"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                      >
+                        <Info
+                          size={14}
+                          className="text-blue-800 dark:text-white mr-1"
+                        />
+                        <p>Transaction Fee</p>
+
+                        {showTooltip && (
+                          <div className="absolute bottom-full left-0 mb-2 px-3 py-2 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Information related to transaction fee. This fee is
+                            charged to process your transaction on the network.
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <p>{transferFee}</p>

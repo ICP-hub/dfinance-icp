@@ -3,12 +3,11 @@ use std::collections::HashMap;
 
 use crate::api::inter_canister::asset_transfer_from;
 use crate::api::inter_canister::get_balance;
-use crate::api::query::get_cached_exchange_rate;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::debug;
-use crate::declarations::datatypes::FaucetReserve;
+use crate::declarations::datatypes::{FaucetReserve, FaucetReserves};
 use crate::error;
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
@@ -25,6 +24,10 @@ use candid::{Nat, Principal};
 use ic_cdk_macros::update;
 use ic_captcha::CaptchaBuilder;
 use crate::stable_storage::state_handler::insert_certified_value;
+use crate::protocol::utils::price::get_cached_exchange_rate;
+use crate::stable_storage::state_handler::get_certificate_witness;
+use crate::declarations::datatypes::Certificate;
+
 thread_local! {
     // static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
     static CAPTCHA_STATE: RefCell<HashMap<Principal, CaptchaEntry>> = RefCell::new(HashMap::new());
@@ -61,7 +64,7 @@ pub struct Challenge {
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     request_limiter()?;
-    guard_prevent_anonymous()?;
+    
     let user_principal = ic_cdk::caller();
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
     let _log_flusher = LogFlusher {
@@ -72,7 +75,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     validate_asset_name(&asset)?;
     validate_zero_value(&amount)?;
 
-    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal);
+    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal)?;
     debug!("faucet data = {:?}", user_faucet_reserves);
 
     let ledger_canister_id = read_state(|state| {
@@ -90,10 +93,9 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
 
     debug!("balance of wallet = {}", balance);
 
-    //TODO: error message is not clear.
     if amount > balance {
-        error!("wallet balance is low");
-        return Err(Error::LowWalletBalance);
+        error!("platform have not enough balance");
+        return Err(Error::LowPlatformBalance);
     }
 
     let asset_price = get_cached_exchange_rate(asset.clone())?;
@@ -126,8 +128,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
         info!("updated faucet usage = {}", reserve.faucet_usage);
     } else {
         let mut new_reserve = FaucetReserve {
-            // reserve: asset.clone(),
-            // is_collateral: true,
             ..Default::default()
         };
 
@@ -208,7 +208,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::AnonymousPrincipal);
     }
 
-    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal);
+    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal)?;
 
     // Access and mutate reserves
     if let Some(reserve) = user_faucet_reserves.reserves.as_mut() {
@@ -236,8 +236,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
 }
 #[update]
 async fn create_captcha() -> Result<Challenge, Error> {
-    // request_limiter()?;
-    // guard_prevent_anonymous()?;
+    guard_prevent_anonymous()?;
     let caller_id = ic_cdk::api::caller();
     let now = ic_cdk::api::time();
 
@@ -354,4 +353,24 @@ pub fn captcha_filter(
         // Remove CAPTCHAs created by the current user (caller)
         state.retain(|principal, _| *principal != ic_cdk::api::caller());
     }
+}
+
+/*
+ * @title Get All Faucet
+ * @dev Retrieves a list of all users with their faucet reserves.
+ * @returns A vector of tuples containing user principals and their faucet reserves.
+ * @functionality This function returns a list of all users and their respective faucet reserves.
+ */
+#[cfg(feature = "testnet")]
+pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate) {
+    let res = read_state(|state| {
+        state
+            .faucet_data
+            .iter()
+            .map(|(k, v)| (k.clone(), v.0.clone()))
+            .collect()
+    });
+    let cer = get_certificate_witness("all_faucet".to_string());
+    (res, cer)
+
 }

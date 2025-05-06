@@ -124,7 +124,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                         candid::decode_one(&reply).expect("Failed to get IC withdraw response");
 
                     match withdraw_response {
-                        Ok(balance) => {
+                        Ok(_balance) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",

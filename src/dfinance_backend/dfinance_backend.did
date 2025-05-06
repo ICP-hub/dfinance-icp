@@ -5,7 +5,6 @@ type AssetInfo = record {
   principal_id : principal;
   symbol : text;
 };
-type CachedPrice = record { price : nat };
 type Certificate = record { certificate : blob; witness : blob };
 type Challenge = record { base64_img : text };
 type Error = variant {
@@ -14,6 +13,7 @@ type Error = variant {
   NoCollateralFound;
   NoDebtToRepay;
   InvalidCaptcha;
+  TotalCollateraLessThan;
   NoFaucetReservesFound;
   SupportNotFound;
   FailedToReleaseLock;
@@ -91,6 +91,7 @@ type Error = variant {
   InsufficientLiquidity;
   NotASupport;
   AmountSubtractionError;
+  ErrorSupplyToken;
   RewardIsHigher;
   ErrorEncoding;
   HealthFactorLess;
@@ -133,7 +134,6 @@ type FaucetReserve = record { faucet_limit : nat; faucet_usage : nat };
 type FaucetReserves = record {
   reserves : opt vec record { text; FaucetReserve };
 };
-type PriceCache = record { cache : vec record { text; CachedPrice } };
 type ReserveConfiguration = record {
   ltv : nat;
   liquidation_protocol_fee : nat;
@@ -163,19 +163,15 @@ type ReserveData = record {
 type Result = variant { Ok : text; Err : Error };
 type Result_1 = variant { Ok; Err : Error };
 type Result_10 = variant {
-  Ok : record { ReserveData; Certificate };
-  Err : Error;
-};
-type Result_11 = variant {
   Ok : record { record { nat; nat; nat; nat; nat; nat; bool }; Certificate };
   Err : Error;
 };
-type Result_12 = variant { Ok : record { UserData; Certificate }; Err : Error };
-type Result_13 = variant {
+type Result_11 = variant { Ok : record { UserData; Certificate }; Err : Error };
+type Result_12 = variant {
   Ok : record { FaucetReserves; Certificate };
   Err : Error;
 };
-type Result_14 = variant { Ok : record { bool; Certificate }; Err : Error };
+type Result_13 = variant { Ok : record { bool; Certificate }; Err : Error };
 type Result_2 = variant { Ok : Challenge; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : record { nat; Certificate }; Err : Error };
@@ -186,7 +182,10 @@ type Result_7 = variant {
   Err : Error;
 };
 type Result_8 = variant { Ok : record { principal; Certificate }; Err : Error };
-type Result_9 = variant { Ok : principal; Err : Error };
+type Result_9 = variant {
+  Ok : record { ReserveData; Certificate };
+  Err : Error;
+};
 type UserAccountData = record {
   ltv : nat;
   available_borrow : nat;
@@ -214,7 +213,6 @@ type UserReserveData = record {
 service : (principal) -> {
   add_admin : (text, principal) -> (Result);
   add_admin_test : (text, principal) -> (Result);
-  add_developer : (text, principal) -> (Result);
   add_tester : (text, principal) -> (Result_1);
   admin_restart_reset_task : () -> (Result_1);
   check_is_tester : () -> (bool) query;
@@ -236,33 +234,28 @@ service : (principal) -> {
     ) query;
   get_asset_principal_certified : (text) -> (Result_8) query;
   get_cached_exchange_rate_certified : (text) -> (Result_4) query;
-  get_canister_id_by_name : (text) -> (Result_9) query;
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     );
-  get_reserve_data_certified : (text) -> (Result_10) query;
+  get_reserve_data_certified : (text) -> (Result_9) query;
   get_total_users : () -> (nat64, Certificate) query;
   get_transfer_fee : (text) -> (Result_4) query;
   get_user_account_data : (
       opt principal,
       opt vec AssetData,
       opt vec AssetData,
-    ) -> (Result_11) query;
-  get_user_data : (principal) -> (Result_12) query;
-  get_user_faucet_data : (principal) -> (Result_13) query;
+    ) -> (Result_10) query;
+  get_user_data : (principal) -> (Result_11) query;
+  get_user_faucet_data : (principal) -> (Result_12) query;
   guard_admin_only : () -> (Result_1) query;
-  guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_user_blocked : () -> (Result_14) query;
-  queary_reserve_price : () -> (vec PriceCache, Certificate) query;
+  is_user_blocked : () -> (Result_13) query;
+  mock_price_data : () -> (Result_1);
   remove_admin : (principal) -> (Result);
-  remove_developer : (principal) -> (Result);
-  request_limiter : () -> (Result_1);
   reset_reserve_value : (text, text, nat) -> (Result_1);
   set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
-  update_reserve_price_test : () -> (Result_1);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt_certified : (ReserveData) -> (Result_4) query;
   user_normalized_supply_certified : (ReserveData) -> (Result_4) query;

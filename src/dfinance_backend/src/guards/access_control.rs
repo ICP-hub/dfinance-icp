@@ -1,5 +1,6 @@
 use crate::{
-    constants::errors::Error, declarations::datatypes::Certificate, stable_storage::state_handler::{get_certificate_witness, mutate_state, read_state}
+    constants::errors::Error, 
+    stable_storage::state_handler::{mutate_state, read_state}
 };
 use candid::Principal;
 use ic_cdk::{caller, query, update};
@@ -119,12 +120,6 @@ pub fn add_tester(username: String, principal: Principal) -> Result<(), Error> {
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
     // Check if the user is anonymous
     guard_prevent_anonymous()?;
-    // let user_principal = ic_cdk::caller();
-
-    // if user_principal == Principal::anonymous() {
-    //     ic_cdk::println!("Anonymous principals are not allowed");
-    //     return Err(Error::AnonymousPrincipal);
-    // }
 
     read_state(|state| {
         let mut testers = Vec::new();
@@ -194,7 +189,6 @@ pub fn add_admin(name: String, new_admin_id: Principal) -> Result<String, Error>
     })
 }
 
-//TODO: we need to have a flag at the time of deployment of development.
 #[update]
 #[cfg(feature = "testnet")]
 pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, Error> {
@@ -227,9 +221,8 @@ pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, E
  */
 #[update]
 pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
-    guard_prevent_anonymous()?;
-    guard_principal_not_anonymous(&admin_to_remove)?;
     guard_admin_only()?; // Only an admin can remove another admin
+    guard_principal_not_anonymous(&admin_to_remove)?;
 
     mutate_state(|state| {
         if state.admin_data.remove(&admin_to_remove).is_some() {
@@ -260,92 +253,6 @@ pub fn guard_admin_only() -> Result<(), Error> {
 
     read_state(|state| {
         if state.admin_data.contains_key(&principal) {
-            Ok(())
-        } else {
-            Err(Error::UnauthorizedAccess)
-        }
-    })
-}
-
-/*
- * @title Add Developer to the Project
- * @dev Registers a new developer by storing their name and `Principal` in the developer map. Only admins can add developers.
- *      It prevents adding duplicate entries and ensures proper authentication.
- *
- * @param name A `String` representing the developer's name.
- * @param principal The `Principal` ID of the developer.
- *
- * @returns
- *      - `Ok("Developer added successfully")`: If the developer is added.
- *      - `Err(Error::DeveloperAlreadyExists)`: If the principal is already a developer.
- *
- * @functionality Developer Role Management - Add Developer
- */
-//TODO: ask do i need to have a guard for name as well.
-#[update]
-pub fn add_developer(name: String, developer_id: Principal) -> Result<String, Error> {
-    guard_principal_not_anonymous(&developer_id)?;
-    guard_admin_only()?;
-
-    mutate_state(|state| {
-        if state.developer_data.contains_key(&developer_id) {
-            return Err(Error::DeveloperAlreadyExists);
-        }
-
-        state.developer_data.insert(developer_id, name);
-        Ok("Developer added successfully".to_string())
-    })
-}
-
-/*
- * @title Remove Developer from the Project
- * @dev Removes a developer from the developer map based on their `Principal` ID. Only admins can remove developers.
- *      It checks if the caller is authorized and not anonymous. If the developer exists, they are removed from the state.
- *
- * @param developer_to_remove The `Principal` of the developer to be removed.
- *
- * @returns
- *      - `Ok("Remove developer successfully")`: If the developer is removed successfully.
- *      - `Err(Error::DeveloperNotFound)`: If the developer does not exist.
- *
- * @functionality Developer Role Management - Remove Developer
- */
-#[update]
-pub fn remove_developer(developer_to_remove: Principal) -> Result<String, Error> {
-    guard_prevent_anonymous()?;
-    guard_principal_not_anonymous(&developer_to_remove)?;
-    guard_admin_only()?; // Only an admin can remove another admin
-
-    mutate_state(|state| {
-        if state.developer_data.remove(&developer_to_remove).is_some() {
-            Ok("Remove developer successfully".to_string())
-        } else {
-            Err(Error::DeveloperNotFound)
-        }
-    })
-}
-
-/*
- * @title Developer Access Guard
- * @notice Ensures that the caller is an authenticated and authorized developer.
- * @dev Verifies that the caller is not anonymous and exists in the developer data store.
- * @functionality Access control mechanism to restrict certain operations to developer users only.
- *
- * # Parameters
- * - None
- *
- * # Returns
- * - `Ok(())` - If the caller is a valid developer.
- * - `Err(Error)` - If the caller is anonymous or not listed as a developer.
- */
-//TODO: if we dont need it in the frontend then remove macro.
-#[query]
-pub fn guard_developer_only() -> Result<(), Error> {
-    guard_prevent_anonymous()?;
-    let principal = caller();
-
-    read_state(|state| {
-        if state.developer_data.contains_key(&principal) {
             Ok(())
         } else {
             Err(Error::UnauthorizedAccess)

@@ -2,7 +2,7 @@ use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-    fetch_reserve_data, get_user_principal2, test_get_asset_principal, test_icrc2_aprove
+    get_user_principal2, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
@@ -147,7 +147,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                         candid::decode_one(&reply).expect("Failed to get IC repay response");
 
                     match repay_response {
-                        Ok(balance) => {
+                        Ok(_balance) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",

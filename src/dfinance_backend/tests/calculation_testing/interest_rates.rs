@@ -494,62 +494,6 @@ pub async fn test_calculate_interest_rates() {
     ];
 
 
-
-
-
-
-
-
-
-
-
-
-
-    // let test_cases = vec![TestCase {
-    //     liq_added: Nat::from(1_000u128),
-    //     liq_taken: Nat::from(500u128),
-    //     total_debt: Nat::from(5_000u128),
-    //     params: InterestRateParams {
-    //         base_variable_borrow_rate: Nat::from(3u128),
-    //         optimal_usage_ratio: Nat::from(80u128),
-    //         max_excess_usage_ratio: Nat::from(20u128),
-    //         variable_rate_slope1: Nat::from(2u128),
-    //         variable_rate_slope2: Nat::from(4u128),
-    //     },
-    //     reserve: ReserveData {
-    //         asset_name: "TestAsset".to_string(),
-    //         id: 1,
-    //         d_token_canister: Principal::from_text("canister1").ok(),
-    //         debt_token_canister: Principal::from_text("canister2").ok(),
-    //         borrow_rate: Nat::from(5u128),
-    //         current_liquidity_rate: Nat::from(2u128),
-    //         asset_supply: Nat::from(10_000u128),
-    //         asset_borrow: Nat::from(3_000u128),
-    //         liquidity_index: Nat::from(1_000_000u128),
-    //         debt_index: Nat::from(1_000_000u128),
-    //         configuration: ReserveConfiguration {
-    //             ltv: Nat::from(75u128),
-    //             liquidation_threshold: Nat::from(85u128),
-    //             liquidation_bonus: Nat::from(10u128),
-    //             borrowing_enabled: true,
-    //             borrow_cap: Nat::from(100_000u128),
-    //             supply_cap: Nat::from(200_000u128),
-    //             liquidation_protocol_fee: Nat::from(5u128),
-    //             active: true,
-    //             frozen: false,
-    //             paused: false,
-    //             reserve_factor: Nat::from(10u128),
-    //         },
-    //         can_be_collateral: Some(true),
-    //         last_update_timestamp: 1_700_000_000,
-    //         accure_to_platform: Nat::from(500u128),
-    //     },
-    //     reserve_factor: Nat::from(10u128),
-    //     asset: "TestAsset".to_string(),
-    //     expected_liquidity_rate: Nat::from(15_943_866u128),
-    //     expected_borrow_rate: Nat::from(17_857_131u128),
-    // }];
-
     for (i, case) in test_cases.iter().enumerate() {
         println!("\n------------------------------------------------------------");
         println!("🔵 Test Case {}: Calculating Interest Rates", i + 1);

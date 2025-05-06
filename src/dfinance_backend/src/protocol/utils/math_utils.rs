@@ -1,9 +1,9 @@
 use crate::constants::constant_variables::constants::{NANOS_PER_SECOND, TWO_VALUE, ZERO_VALUE};
-use crate::constants::interest_variables::constants::{
+use crate::constants::constant_variables::constants::{
     MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR,
 };
 use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::{debug, info, trace};
+use crate::{debug, info};
 use candid::Nat;
 use ic_cdk::api::time;
 use std::ops::Mul;

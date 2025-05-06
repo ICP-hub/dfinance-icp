@@ -108,7 +108,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                         candid::decode_one(&reply).expect("Failed to get IC borrow response");
 
                     match borrow_response {
-                        Ok(balance) => {
+                        Ok(_balance) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",

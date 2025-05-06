@@ -27,7 +27,6 @@ thread_local! {
  * - `Ok(bool)` - True if the user is currently rate-limited (blocked), false otherwise.
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
-//TODO: add testing func in concurrency
 #[query]
 pub fn is_user_blocked() -> Result<(bool, Certificate), Error> {
     guard_prevent_anonymous()?;
@@ -88,7 +87,6 @@ pub fn inspect_message() {
 const LIMIT: usize = REQUEST_LIMIT; 
 const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
 
-#[update]
 pub fn request_limiter() -> Result<(), Error> {
     guard_prevent_anonymous()?;
     let caller = ic_cdk::api::caller();

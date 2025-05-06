@@ -181,7 +181,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("------------------------------------------------------------\n");
 
         //checking asset principal
-        let asset_principal =
+        let _asset_principal =
             match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
                 Some(principal) => principal,
                 None => {

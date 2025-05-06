@@ -15,6 +15,7 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../../utils/constants';
+import { Info } from "lucide-react";
 /**
  * SupplyPopup Component
  *
@@ -72,6 +73,7 @@ const SupplyPopup = ({
   const modalRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -732,9 +734,9 @@ const SupplyPopup = ({
                   <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} USD`
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -823,9 +825,26 @@ const SupplyPopup = ({
                       </span>
                     </p>
                   </div>
-                  <div className="w-full flex justify-between items-center my-1 mt-2">
-                    <div className="flex items-center gap-1">
-                      <p>Transaction Fee</p>
+                  <div className="w-full flex justify-between items-center my-1">
+                    <div className="flex items-center gap-1 relative">
+                      <div
+                        className="flex items-center cursor-help"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                      >
+                        <Info
+                          size={14}
+                          className="text-blue-800 dark:text-white mr-1"
+                        />
+                        <p>Transaction Fee</p>
+
+                        {showTooltip && (
+                          <div className="absolute bottom-full left-0 mb-2 px-3 py-2 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Information related to transaction fee. This fee is
+                            charged to process your transaction on the network.
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <p>{transferFee}</p>
@@ -879,8 +898,9 @@ const SupplyPopup = ({
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`text-xs whitespace-nowrap ${
+                  isApproved ? "text-green-500" : "text-red-500"
+                }`}
               >
                 {isApproved
                   ? "Approved with signed message"
@@ -921,7 +941,7 @@ const SupplyPopup = ({
             </button>
           </div>
 
-          { }
+          {}
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"

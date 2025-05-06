@@ -74,34 +74,40 @@ fn init() {
  *
  * @functionality Receives a batch of logs, serializes them, and stores them in the log storage.
  */
-#[update]
-#[candid_method(update)]
-pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) {
-
-    LOG_STORAGE.with(|storage| {
-        let mut storage = storage.borrow_mut();
-
-        // Find the current maximum log ID in storage
-        let mut max_id = storage.iter().map(|(key, _)| key).max().map(|key| key).unwrap_or(0);
-
-        for (log_id, new_logs) in batch_logs {
-            let final_id = if storage.contains_key(&log_id) {
-                max_id += 1;
-                max_id // Use a new ID
-            } else {
-                log_id
-            };
-
-            let serialized_logs = candid::encode_one(&new_logs)
-                .expect("Failed to serialize logs");
-
-            storage.insert(final_id, serialized_logs);
-        }
-
-        ic_cdk::println!("✅ Batch logs received and stored.");
-    });
-}
-
+ #[update]
+ #[candid_method(update)]
+ pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) ->Result<(), String> {
+    //  let caller = ic_cdk::caller();
+ 
+    //  if !ic_cdk::api::is_controller(&caller) {
+    //     ic_cdk::println!("Unauthorized access to logs");
+    //      return Err("Unauthorized access to logs.".to_string());
+    //  }
+     
+     LOG_STORAGE.with(|storage| {
+         let mut storage = storage.borrow_mut();
+ 
+         // Find the current maximum log ID in storage
+         let mut max_id = storage.iter().map(|(key, _)| key).max().map(|key| key).unwrap_or(0);
+ 
+         for (log_id, new_logs) in batch_logs {
+             let final_id = if storage.contains_key(&log_id) {
+                 max_id += 1;
+                 max_id // Use a new ID
+             } else {
+                 log_id
+             };
+ 
+             let serialized_logs = candid::encode_one(&new_logs)
+                 .expect("Failed to serialize logs");
+ 
+             storage.insert(final_id, serialized_logs);
+         }
+ 
+         ic_cdk::println!("✅ Batch logs received and stored.");
+     });
+     Ok(())
+ }
 
 /*
  * @title Log Cleanup Function
@@ -180,27 +186,31 @@ pub fn schedule_log_cleanup() {
 }
 
 
-// access validations.
 #[query]
-#[candid_method(query)]
-pub fn get_logs() -> Vec<LogRecord> {
-    LOG_STORAGE.with(|storage| {
+#[candid::candid_method(query)]
+pub fn get_logs() -> Result<Vec<LogRecord>, String> {
+    let caller = ic_cdk::caller();
+
+    if !ic_cdk::api::is_controller(&caller) {
+        return Err("Unauthorized access to logs.".to_string());
+    }
+
+    let logs = LOG_STORAGE.with(|storage| {
         storage
             .borrow()
             .iter()
             .filter_map(|(id, bytes)| {
-                // Decode the bytes into Vec<String> using candid
-                let deserialized_logs: Vec<String> = match candid::decode_one(&bytes) {
-                    Ok(logs) => logs,
-                    Err(_) => return None, // If deserialization fails, skip the log entry
-                };
-
-                // Return the log record if deserialization is successful
-                Some(LogRecord {
-                    id,
-                    logs: deserialized_logs,
-                })
+                match candid::decode_one::<Vec<String>>(&bytes) {
+                    Ok(deserialized_logs) => Some(LogRecord {
+                        id,
+                        logs: deserialized_logs,
+                    }),
+                    Err(_) => None,
+                }
             })
             .collect()
-    })
+    });
+
+    Ok(logs)
 }
+

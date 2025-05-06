@@ -221,9 +221,8 @@ pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, E
  */
 #[update]
 pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
-    guard_prevent_anonymous()?;
-    guard_principal_not_anonymous(&admin_to_remove)?;
     guard_admin_only()?; // Only an admin can remove another admin
+    guard_principal_not_anonymous(&admin_to_remove)?;
 
     mutate_state(|state| {
         if state.admin_data.remove(&admin_to_remove).is_some() {

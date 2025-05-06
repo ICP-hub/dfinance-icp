@@ -62,7 +62,6 @@ impl PriceCache {
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
     trace!("update_reserves_price called");
-    request_limiter()?;
 
     guard_controller_only()?;
 
@@ -100,28 +99,6 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
     );
 
     Ok(())
-}
-
-/*
- * @title Query Reserve Prices
- * @functionality Retrieves current cached prices for all reserve assets
- * @dev Fetches the cached price data of all available assets from the state.
- * @returns Vec<PriceCache> - A list of cached prices for each asset.
- */
-#[query]
-pub fn query_reserve_price() -> (Vec<PriceCache>, Certificate) {
-    let tokens = read_state(|state| 
-        // let cache_list = &state.price_cache_list;
-        state.price_cache_list
-            .iter()
-            .map(|(_, price_cache)| price_cache.0)
-            .collect::<Vec<PriceCache>>()
-    );
-
-    debug!("all tokens are = {:?}", tokens);
-    let cert = get_certificate_witness("reserve_price".to_string());
-    
-    (tokens, cert)
 }
 
 /*

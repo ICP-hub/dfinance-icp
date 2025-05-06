@@ -68,8 +68,6 @@ use crate::protocol::utils::price::get_cached_exchange_rate;
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
     request_limiter()?;
-    // guard anonymous caller
-    guard_prevent_anonymous()?;
     let liquidator_principal = api::caller();
     let _liquidator_guard = CallerGuard::lock_principal(liquidator_principal.clone())?;
     // guard for user

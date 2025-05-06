@@ -207,6 +207,13 @@ async fn get_user_account_data(
     debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<((Nat, Nat, Nat, Nat, Nat, Nat, bool),Certificate), Error> {
 
+    if on_behalf == Some(Principal::anonymous()) {
+        error!("Anonymous principal detected.");
+        return Err(Error::AnonymousPrincipal);
+    }
+
+    guard_prevent_anonymous()?;
+
     let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await?;
     let cert = get_certificate_witness("user_account_data".to_string());
     info!("calculated user asset data called successfully inide get user account data");
@@ -247,7 +254,6 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
  * @returns The principal ID of the canister or an error.
  * @functionality Retrieves the principal ID associated with a given canister name.
  */
-#[query]
 pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error> {
     guard_prevent_anonymous()?;
     read_state(|state| {

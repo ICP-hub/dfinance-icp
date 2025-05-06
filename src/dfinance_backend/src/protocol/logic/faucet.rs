@@ -64,7 +64,7 @@ pub struct Challenge {
 #[update]
 pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     request_limiter()?;
-    guard_prevent_anonymous()?;
+    
     let user_principal = ic_cdk::caller();
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
     let _log_flusher = LogFlusher {
@@ -75,7 +75,7 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     validate_asset_name(&asset)?;
     validate_zero_value(&amount)?;
 
-    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal);
+    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal)?;
     debug!("faucet data = {:?}", user_faucet_reserves);
 
     let ledger_canister_id = read_state(|state| {
@@ -208,7 +208,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::AnonymousPrincipal);
     }
 
-    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal);
+    let mut user_faucet_reserves = get_user_faucet_reserves(user_principal)?;
 
     // Access and mutate reserves
     if let Some(reserve) = user_faucet_reserves.reserves.as_mut() {
@@ -236,8 +236,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
 }
 #[update]
 async fn create_captcha() -> Result<Challenge, Error> {
-    // request_limiter()?;
-    // guard_prevent_anonymous()?;
+    guard_prevent_anonymous()?;
     let caller_id = ic_cdk::api::caller();
     let now = ic_cdk::api::time();
 

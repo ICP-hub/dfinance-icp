@@ -27,6 +27,7 @@ use ic_cdk::{api, update};
 use crate::stable_storage::state_handler::insert_certified_value;
 use crate::protocol::utils::price::get_cached_exchange_rate;
 use crate::guards::access_control::guard_principal_not_anonymous;
+use crate::protocol::libraries::reserve::get_asset_principal;
 
 /*
  * @title User Account Data Calculation
@@ -264,13 +265,6 @@ pub async fn calculate_user_asset_data(
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-
-    if on_behalf == Some(Principal::anonymous()) {
-        error!("Anonymous principal detected.");
-        return Err(Error::AnonymousPrincipal);
-    }
-
-    guard_prevent_anonymous()?;
 
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
@@ -838,9 +832,12 @@ pub async fn create_user_reserve_with_low_health(
     supply_tokens: Nat,
     borrow_tokens: Nat,
 ) -> Result<UserData, Error> {
-    use crate::protocol::libraries::reserve::get_asset_principal;
 
     trace!("Creating user reserve with low health factor...");
+    if !check_is_tester() {
+        error!("Invalid User");
+        return Err(Error::InvalidUser);
+    }
     // prevent anonymous access
     guard_prevent_anonymous()?;
     validate_asset_name(&asset_supply)?;
@@ -849,10 +846,6 @@ pub async fn create_user_reserve_with_low_health(
     validate_zero_value(&borrow_tokens)?;
 
 
-    if !check_is_tester() {
-        error!("Invalid User");
-        return Err(Error::InvalidUser);
-    }
 
     let user_principal = ic_cdk::caller();
    

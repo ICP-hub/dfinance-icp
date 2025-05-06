@@ -49,7 +49,6 @@ use ic_cdk::update;
 #[update]
 pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Error> {
     request_limiter()?;
-    guard_prevent_anonymous()?;
 
     let user_principal = ic_cdk::caller();
   
@@ -209,7 +208,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
     request_limiter()?;
-    guard_prevent_anonymous()?;
 
     let user_principal = ic_cdk::caller();
   

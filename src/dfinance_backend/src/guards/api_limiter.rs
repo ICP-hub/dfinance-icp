@@ -87,7 +87,6 @@ pub fn inspect_message() {
 const LIMIT: usize = REQUEST_LIMIT; 
 const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
 
-#[update]
 pub fn request_limiter() -> Result<(), Error> {
     guard_prevent_anonymous()?;
     let caller = ic_cdk::api::caller();

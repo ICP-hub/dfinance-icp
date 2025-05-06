@@ -42,7 +42,6 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         },
     ];
 
-    let user_principal = get_user_principal2();
     ic_cdk::println!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
@@ -222,14 +221,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                         reject_message
                     );
                     continue;
-                } // Err(e) => {
-                  //     ic_cdk::println!(
-                  //         "❌ IC Test Case {} Failed: Error during liquidation function call: {:?}",
-                  //         i + 1,
-                  //         e
-                  //     );
-                  //     continue;
-                  // }
+                } 
             }
         }
     }

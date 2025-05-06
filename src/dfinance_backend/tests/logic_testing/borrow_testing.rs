@@ -159,7 +159,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("------------------------------------------------------------\n");
 
         // Check asset principal before proceeding with borrow
-        let asset_principal =
+        let _asset_principal =
             match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
                 Some(principal) => principal,
                 None => {

@@ -104,6 +104,8 @@ pub enum Error {
     ErrorUpdateCanisterSetting,
     NoCollateralFound,
     LowPlatformBalance,
+    ErrorSupplyToken,
+    TotalCollateraLessThan
     
 }
 
@@ -210,7 +212,9 @@ impl Error {
             Error::LowPlatformBalance => "Platform balance is low",
             Error::ConnectedWalletInvalid => "connected wallet length is invalid",
             Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
-            Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",   
+            Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",  
+            Error::ErrorSupplyToken => "Error supplying token",
+            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd"
         }
     }
 }

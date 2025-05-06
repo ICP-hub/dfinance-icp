@@ -74,7 +74,6 @@ pub struct ReserveCache {
     pub next_debt_index: Nat,
     pub curr_debt_rate: Nat,
     pub next_debt_rate: Nat,
-    pub debt_last_update_timestamp: u64,
     pub reserve_factor: Nat,
     pub curr_debt: Nat,
     pub next_debt: Nat,

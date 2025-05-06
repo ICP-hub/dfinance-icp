@@ -89,7 +89,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
         ic_cdk::println!("🚀 Test Case {}: Withdraw Request Initiated", i + 1);
-        let amount_float = case.amount.clone().0.try_into().unwrap_or(0u64) as f64 / 100000000.0;
+        let _amount_float = case.amount.clone().0.try_into().unwrap_or(0u64) as f64 / 100000000.0;
 
         if let Some(msg) = &case.expected_error_message {
             ic_cdk::println!("⚠️ Expected Error: {}", msg);

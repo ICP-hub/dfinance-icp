@@ -263,7 +263,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let result = pic.update_call(
         backend_canister,
         user_principal,
-        "update_reserve_price_test",
+        "mock_price_data",
         encode_one(()).unwrap(),
     );
 

@@ -41,8 +41,6 @@ pub fn init_logging(is_production: bool) {
     } else {
         set_log_level(LogLevel::DEBUG);
     }
-    // schedule_log_cleanup();
-    // init_log_clearing();
 }
 
 static mut CURRENT_LOG_LEVEL: LogLevel = LogLevel::INFO;
@@ -254,7 +252,7 @@ pub fn clear_temp_log() {
     });
 }
 
-//TODO: can remove later.
+
 #[query]
 pub fn get_all_logs() -> Vec<String> {
     read_state(|state| {

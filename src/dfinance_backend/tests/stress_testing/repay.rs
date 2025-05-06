@@ -163,7 +163,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                     let repay_response: Result<Nat, errors::Error> =
                         candid::decode_one(&reply).expect("Failed to decode response");
                     match repay_response {
-                        Ok(balance) => {
+                        Ok(_balance) => {
                             ic_cdk::println!("✅ Repay successful!");
                             ic_cdk::println!("\n=================== Checking Reserves After successful Repayment ===================\n");
                             // Fetch and display reserve data

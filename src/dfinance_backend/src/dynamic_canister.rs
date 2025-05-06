@@ -1,7 +1,7 @@
-use crate::api::query::get_controller;
+
 use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::{
+use crate::constants::constant_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
     MAX_MEMO_LENGTH, MAX_MESSAGE_SIZE_BYTES, MAX_NUMBER_OF_ACCOUNTS, MAX_TRANSACTIONS_PER_RESPONSE,
     NODE_MAX_MEMORY_SIZE_BYTES, NUM_BLOCKS_TO_ARCHIVE, TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY,
@@ -13,18 +13,19 @@ use crate::constants::interest_variables::constants::{
 use crate::declarations::structs::{
     ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg,
 };
-use crate::guards::access_control::guard_admin_only;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::{error, info};
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
-    update_settings, CanisterInstallMode, CanisterSettings,
+     CanisterInstallMode, CanisterSettings,
 };
-use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
-//TODO confirm all constants values of this file from Bhanu
+use crate::stable_storage::state_handler::read_state;
+use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
+use crate::declarations::datatypes::InitArgs;
+
 /*
  * @title Load DToken Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the dtoken ledger.
@@ -200,7 +201,8 @@ pub async fn create_token_canister(
  * @returns The `Principal` ID of the newly created test token canister.
  * @functionality Creates a test token canister with predefined configurations.
  */
-//TODO - add flag? testnet
+
+#[cfg(feature = "testnet")]
 pub async fn create_testtoken_canister(
     token_name: String,
     token_symbol: String,
@@ -318,4 +320,31 @@ pub async fn create_testtoken_canister(
         token_name, canister_id
     );
     Ok(canister_id)
+}
+
+
+/*
+ * @title Get Controller Information
+ * @dev Retrieves the controller ID from the state. The function looks for metadata
+ *      associated with a specific key and returns the `controller_id` from `InitArgs`
+ *      if available. If no controller is found or an error occurs while reading the state,
+ *      an appropriate error is returned.
+ *
+ * @returns
+ *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
+ *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
+ *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ *
+ * @functionality Retrieve Controller Information
+ */
+//Controller for creating dynamic dtoken and debt token canisters
+pub fn get_controller() -> Result<InitArgs, Error> {
+    read_state(|state| {
+        state
+            .meta_data
+            .get(&MAIN_CONTROLLER.to_string()) // use the appropriate string key
+            .map(|candid_val| candid_val.0.clone()) // extract InitArgs from Candid wrapper
+            .ok_or(Error::ControllerNotFound)
+    })
+    .map_err(|_| Error::ErrorNotController)
 }

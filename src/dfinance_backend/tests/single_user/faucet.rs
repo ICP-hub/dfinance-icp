@@ -1,7 +1,7 @@
 use candid::Nat;
 use candid::{encode_args, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use crate::utils::common_functions::{get_user_principal, get_user_principal2, get_users_principal};
+use crate::utils::common_functions::{get_user_principal2, get_users_principal};
 use crate::utils::error as errors;
 
 

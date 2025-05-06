@@ -1,34 +1,33 @@
-use super::update::user_data;
+use super::update::{user_data, user_reserve};
 use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
-use crate::api::query::{
-    get_all_users, reserve_ledger_canister_id, user_normalized_debt, user_normalized_supply,
-};
-use crate::api::query::{get_cached_exchange_rate, get_reserve_data};
 use crate::constants::constant_variables::constants::{
     HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
 };
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::MIN_BORROW;
+use crate::constants::constant_variables::constants::MIN_BORROW;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::datatypes::{UserData, UserReserveData};
+use crate::declarations::datatypes::{UserData, UserReserveData, ReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
 use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
 use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils::{current_timestamp, get_max_value};
+use crate::protocol::utils::math_utils::{current_timestamp, get_max_value, calculate_compounded_interest, calculate_linear_interest};
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info, trace};
 use crate::{
     protocol::utils::math_utils::ScalingMath,
     stable_storage::state_handler::{mutate_state, read_state},
+    protocol::libraries::reserve::get_reserve_data,
 };
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::{api, update};
 use crate::stable_storage::state_handler::insert_certified_value;
-//TODO once the certified query or update usage decided, remove extra functions from this file
+use crate::protocol::utils::price::get_cached_exchange_rate;
+use crate::guards::access_control::guard_principal_not_anonymous;
+
 /*
  * @title User Account Data Calculation
  * @functionality User account metric calculation logic.
@@ -547,12 +546,11 @@ pub async fn get_user_balance_in_base_currency(
         "user_scaled_balanced_normalized = {}",
         user_scaled_balanced_normalized
     );
-    //TODO: Ask : get normalize income function does not exist.
     Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
 }
 
 pub async fn get_user_asset_balance_in_base_currency(
-    user_principal: Principal,
+    _user_principal: Principal,
     reserve: &UserReserveData,
     user_balance: Nat,
     asset_price: Nat,
@@ -840,6 +838,8 @@ pub async fn create_user_reserve_with_low_health(
     supply_tokens: Nat,
     borrow_tokens: Nat,
 ) -> Result<UserData, Error> {
+    use crate::protocol::libraries::reserve::get_asset_principal;
+
     trace!("Creating user reserve with low health factor...");
     // prevent anonymous access
     guard_prevent_anonymous()?;
@@ -904,8 +904,8 @@ pub async fn create_user_reserve_with_low_health(
         (supply_reserve_data, borrow_reserve_data)
     };
 
-    let supply_asset_ledger_canister_id = reserve_ledger_canister_id(asset_supply.clone())?;
-    let debt_asset_ledger_canister_id = reserve_ledger_canister_id(asset_borrow.clone())?;
+    let supply_asset_ledger_canister_id = get_asset_principal(asset_supply.clone())?;
+    let debt_asset_ledger_canister_id = get_asset_principal(asset_borrow.clone())?;
 
     let mut user_data = user_data(user_principal)?;
 
@@ -1203,4 +1203,184 @@ pub async fn get_all_user_list(
     debug!("cycles end = {:?}", cycles_end);
 
     Ok(liq_list)
+}
+
+/*
+ * @title Get All Users
+ * @dev Retrieves a list of all registered users along with their data.
+ * @returns A vector of tuples containing user principals and their data.
+ * @functionality This function returns a list of all registered users and their respective data.
+ */ 
+pub async fn get_all_users() -> Vec<(Principal, UserData)> {
+    let res =read_state(|state| {
+        state
+            .user_profile
+            .iter()
+            .map(|(k, v)| (k.clone(), v.0.clone()))
+            .collect()
+    }); 
+    
+    res
+}
+
+
+/*
+ * @title Get Asset Debt
+ * @dev Retrieves the total debt for a given asset.
+ * @param asset_name The name of the asset.
+ * @param on_behalf (Optional) The principal requesting the asset debt.
+ * @returns The total debt as `Nat`.
+ * @functionality This function calculates and returns the total debt for a given asset, taking into account the user’s borrow status and balance.
+ */
+
+ pub async fn get_asset_debt(
+    asset_name: String,
+    on_behalf: Option<Principal>,
+) -> Result<Nat, Error> {
+
+    if let Some(principal) = on_behalf {
+        // Check if the user is anonymous
+        guard_principal_not_anonymous(&principal)?;
+    }
+    let user_principal = match on_behalf {
+        Some(principal_str) => principal_str,
+        None => ic_cdk::caller(),
+    };
+
+    guard_principal_not_anonymous(&user_principal)?;
+
+
+    let user_data_result = user_data(user_principal);
+
+    let mut user_data = match user_data_result {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Error: {:?}", e);
+            return Err(e);
+        }
+    };
+    debug!("user data = {:?}", user_data);
+    let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
+        Some(data) => data,
+        None => {
+            error!(
+                "Error: User reserve data not found for asset while get asset debt returing 0: {}",
+                asset_name
+            );
+            return Ok(zero_nat_value());
+        }
+    };
+    let (_, user_reserve) = user_reserve_data;
+    if !user_reserve.is_borrowed {
+        debug!("User has no debt for asset: {}", asset_name);
+        return Ok(zero_nat_value());
+    }
+
+    let asset_reserve = match get_reserve_data(asset_name.clone()) {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Error fetching asset reserve data: {:?}", e);
+            return Err(e);
+        }
+    };
+
+    let debt_token_canister_principal = match asset_reserve.debt_token_canister.clone() {
+        Some(principal) => principal,
+        None => {
+            error!("Error: parsing principal");
+            return Err(Error::ErrorParsingPrincipal);
+        }
+    };
+
+    let balance_result = get_balance(debt_token_canister_principal, user_principal).await;
+    let get_balance_value = match balance_result {
+        Ok(bal) => bal,
+        Err(e) => {
+            error!("Error fetching balance from DebtToken canister: {:?}", e);
+            return Err(e);
+        }
+    };
+
+    debug!(
+        "Fetched balance from DebtToken canister: {:?}",
+        get_balance_value
+    );
+
+    let normalized_debt_data = match user_normalized_debt(asset_reserve.clone()) {
+        Ok(data) => data,
+        Err(e) => {
+            error!("Error fetching normalized debt data: {:?}", e);
+            return Err(e);
+        }
+    };
+
+    debug!(
+        "Values in normalized debt data = {:?}",
+        normalized_debt_data
+    );
+
+    Ok(
+        (normalized_debt_data.scaled_div(user_reserve.variable_borrow_index.clone()))
+            .scaled_mul(get_balance_value),
+    )
+}
+
+
+pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
+    trace!("calling user_normalized_supply");
+    guard_prevent_anonymous()?;
+    
+    let current_time = current_timestamp();
+    debug!("Current timestamp: {}", current_time);
+
+    if reserve_data.last_update_timestamp == current_time {
+        debug!("No update needed as timestamps match.");
+        return Ok(reserve_data.liquidity_index);
+    } else {
+        let cumulated_liquidity_interest = calculate_linear_interest(
+            reserve_data.current_liquidity_rate,
+            reserve_data.last_update_timestamp,
+        );
+        info!("calculate linear interest called successfully inside user normalized supply"); 
+
+        debug!(
+            "previoys liquidity index: {} for reserve",
+            reserve_data.liquidity_index
+        );
+        
+        return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
+    }
+}
+
+
+pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
+    trace!("calling user_normalized_debt");
+    guard_prevent_anonymous()?;
+    
+    let current_time = current_timestamp();
+    debug!("Current timestamp: {}", current_time);
+    
+    if reserve_data.last_update_timestamp == current_time {
+        debug!("No update needed as timestamps match.");
+        return Ok(reserve_data.debt_index);
+    } else {
+        debug!(
+            "Previous borrow index & rate: {:?} {:?}",
+            reserve_data.debt_index,
+            reserve_data.borrow_rate
+        );
+        let cumulated_borrow_interest = calculate_compounded_interest(
+            reserve_data.borrow_rate.clone(),
+            reserve_data.last_update_timestamp,
+            current_time,
+        );
+        info!("calculate compounded interest called successfully inside user normalized debt");
+        debug!(
+            "Calculated cumulated borrow interest: {} based on borrow rate: {} and and new debt index {}",
+            cumulated_borrow_interest,
+            reserve_data.borrow_rate, //take it from reserve of asset
+            cumulated_borrow_interest.clone().scaled_mul(reserve_data.debt_index.clone())
+        );
+        return Ok(cumulated_borrow_interest.scaled_mul(reserve_data.debt_index));
+    }
 }

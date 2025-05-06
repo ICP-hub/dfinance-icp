@@ -3,24 +3,24 @@ use crate::{debug, error, info};
 use crate::stable_storage::state_handler::*;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::{
+use crate::constants::constant_variables::constants::{
     INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE,
 };
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::stable_storage::storable::Candid;
 use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
 use crate::guards::access_control::guard_prevent_anonymous;
-use crate::protocol::libraries::reserve::{self};
+use crate::protocol::libraries::reserve::{self, get_asset_principal};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::update_token_price;
-use crate::api::query::{get_asset_debt, get_cached_exchange_rate, reserve_ledger_canister_id};
+use crate::protocol::utils::price::{update_token_price, get_cached_exchange_rate};
 use candid::{Nat, Principal};
 use ic_cdk::update;
 use crate::guards::locks_handler::CallerGuard;
 use crate::guards::api_limiter::request_limiter;
 use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
+use crate::protocol::libraries::user::get_asset_debt;
 
 /*
 -------------------------------------
@@ -83,7 +83,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     let borrow_amount = params.amount.clone();
     debug!("borrow amount = {}", borrow_amount);
 
-    let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
+    let ledger_canister_id = get_asset_principal(params.asset.clone())?;
 
     let platform_principal = ic_cdk::api::id();
 
@@ -197,12 +197,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                 &mut reserve_data,
             )
             .await?;
-
-            // mutate_state(|state| {
-            //     state
-            //         .asset_index
-            //         .insert(params.asset.clone(), Candid(reserve_data.clone()))
-            // });
             info!("Rollback user and reserve state executed successfully");
             return Err(Error::ErrorMintDebtTokens);
         }
@@ -272,7 +266,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
 
-    let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
+    let ledger_canister_id = get_asset_principal(params.asset.clone())?;
 
     let platform_principal = ic_cdk::api::id();
 

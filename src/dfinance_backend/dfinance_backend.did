@@ -14,6 +14,7 @@ type Error = variant {
   NoCollateralFound;
   NoDebtToRepay;
   InvalidCaptcha;
+  TotalCollateraLessThan;
   NoFaucetReservesFound;
   SupportNotFound;
   FailedToReleaseLock;
@@ -91,6 +92,7 @@ type Error = variant {
   InsufficientLiquidity;
   NotASupport;
   AmountSubtractionError;
+  ErrorSupplyToken;
   RewardIsHigher;
   ErrorEncoding;
   HealthFactorLess;
@@ -213,7 +215,6 @@ type UserReserveData = record {
 service : (principal) -> {
   add_admin : (text, principal) -> (Result);
   add_admin_test : (text, principal) -> (Result);
-  add_developer : (text, principal) -> (Result);
   add_tester : (text, principal) -> (Result_1);
   admin_restart_reset_task : () -> (Result_1);
   check_is_tester : () -> (bool) query;
@@ -250,18 +251,16 @@ service : (principal) -> {
   get_user_data : (principal) -> (Result_11) query;
   get_user_faucet_data : (principal) -> (Result_12) query;
   guard_admin_only : () -> (Result_1) query;
-  guard_developer_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
   is_user_blocked : () -> (Result_13) query;
-  queary_reserve_price : () -> (vec PriceCache, Certificate) query;
+  mock_price_data : () -> (Result_1);
+  query_reserve_price : () -> (vec PriceCache, Certificate) query;
   remove_admin : (principal) -> (Result);
-  remove_developer : (principal) -> (Result);
   request_limiter : () -> (Result_1);
   reset_reserve_value : (text, text, nat) -> (Result_1);
   set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
-  update_reserve_price_test : () -> (Result_1);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt_certified : (ReserveData) -> (Result_4) query;
   user_normalized_supply_certified : (ReserveData) -> (Result_4) query;

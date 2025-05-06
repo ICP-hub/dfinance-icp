@@ -31,7 +31,6 @@ pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> R
 }
 
 
-//TODO bring the validation into this function, and in liq add these validations as well if not added
 /*
  * @title Execute Repay
  * @dev Executes the repay function.

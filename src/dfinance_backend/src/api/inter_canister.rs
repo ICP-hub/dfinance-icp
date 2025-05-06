@@ -201,8 +201,6 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
 
 pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     
-
-
     match ic_cdk::api::call::call::<(), (Nat,)>(canister_id, "icrc1_total_supply", ()).await {
         Ok((supply,)) => Ok(supply),
         Err((code, msg)) => {

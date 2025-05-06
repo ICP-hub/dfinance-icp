@@ -1,7 +1,7 @@
 use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use crate::utils::common_functions::{fetch_reserve_data, get_user_principal2, get_users_principal, test_get_asset_principal, test_icrc2_aprove};
+use crate::utils::common_functions::get_user_principal2;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 
@@ -87,7 +87,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                         candid::decode_one(&reply).expect("Failed to get IC withdraw response");
 
                     match withdraw_response {
-                        Ok(balance) => {
+                        Ok(_balance) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",

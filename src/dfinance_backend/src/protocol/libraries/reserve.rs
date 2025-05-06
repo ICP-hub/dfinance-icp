@@ -100,7 +100,7 @@ pub fn update_state(
     if reserve_data.last_update_timestamp == current_time {
         return Ok(());
     }
-
+    
     update_indexes(reserve_data, reserve_cache);
     accrue_to_treasury(reserve_data, reserve_cache)?;
     
@@ -129,13 +129,14 @@ pub fn update_state(
  */
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     trace!("calling update indexes function");
+
+    // Update liquidity index if there's an active liquidity rate
     if reserve_cache.curr_liquidity_rate != zero_nat_value() {
         
         let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
             reserve_cache.curr_liquidity_rate.clone(),
             reserve_cache.reserve_last_update_timestamp,
-        )
-        ;
+        );
         
         reserve_cache.next_liquidity_index =
             cumulated_liquidity_interest.clone().scaled_mul(reserve_cache.curr_liquidity_index.clone());
@@ -151,6 +152,7 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
         );
     }
 
+    // Update debt index if there's outstanding debt
     if reserve_cache.curr_debt != zero_nat_value() {
         let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
             reserve_cache.curr_debt_rate.clone(),
@@ -275,8 +277,6 @@ pub async fn burn_scaled(
         amount.clone().scaled_div(index.clone())
     };
 
-   
-
     if adjusted_amount == zero_nat_value() {
         error!("Error: Adjusted amount is zero");
         return Err(Error::InvalidBurnAmount);
@@ -296,7 +296,7 @@ pub async fn burn_scaled(
        
         if balance_indexed < balance_user_indexed {
             error!("Error: Balance indexed is less than user indexed");
-            return Err(Error::AmountSubtractionError); // Handle the error gracefully
+            return Err(Error::AmountSubtractionError);
         }
 
         balance_increase = balance_indexed - balance_user_indexed;
@@ -317,8 +317,13 @@ pub async fn burn_scaled(
             }
         }
 
-
         user_state.liquidity_index = index.clone();
+        debug!(
+            "balance increase: {}, final_d_token_balance: {}, new_liquidity_index: {}",
+            balance_increase,
+            user_state.d_token_balance,
+            user_state.liquidity_index
+        );
     } else {
         info!("Processing variable borrow burn...");
 
@@ -329,9 +334,8 @@ pub async fn burn_scaled(
       
         if balance_indexed < balance_user_indexed {
             error!("Error: Balance indexed is less than user indexed");
-            return Err(Error::AmountSubtractionError); // Handle the error gracefully
+            return Err(Error::AmountSubtractionError);
         }
-
         balance_increase = balance_indexed - balance_user_indexed;
 
        
@@ -352,6 +356,12 @@ pub async fn burn_scaled(
 
 
         user_state.variable_borrow_index = index;
+        debug!(
+            "balance_increase: {}, final_debt_token_balance: {}, new_variable_borrow_index: {}",
+            balance_increase,
+            user_state.debt_token_blance,
+            user_state.variable_borrow_index
+        );
     }
 
     if balance_increase > amount {
@@ -471,8 +481,6 @@ pub async fn mint_scaled(
         amount.clone().scaled_div(index.clone())
     };
 
-   
-    //acuire transaction lock
     if adjusted_amount == zero_nat_value() {
         error!("Error: Invalid mint amount");
         return Err(Error::InvalidMintAmount);
@@ -662,7 +670,6 @@ pub async fn initialize(
     mut reserve_data: ReserveData,
     asset_image: String,
 ) -> Result<(), Error> {
-    // admin only access check
     guard_admin_only()?;
     validate_asset_name(&token_name)?;
     validate_asset_image_url(&asset_image)?;
@@ -745,7 +752,6 @@ pub async fn initialize(
     token_canister_id: Principal,
     asset_image: String,
 ) -> Result<(), Error> {
-    // admin only access check
     guard_admin_only()?;
     validate_asset_name(&token_name)?;
     validate_asset_image_url(&asset_image)?;
@@ -753,7 +759,6 @@ pub async fn initialize(
     if read_state(|state| state.reserve_list.contains_key(&token_name)) {
         return Err(Error::TokenAlreadyExist);
     }
-
 
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
@@ -790,7 +795,7 @@ pub async fn initialize(
         let reserve_data_e = &mut state.asset_index;
 
         reserve_data_e.insert(token_name.clone(), Candid(reserve_data));
-        ic_cdk::println!("Reserve for {} initialized successfully", token_name);
+        info!("Reserve for {} initialized successfully", token_name);
     });
 
     Ok(())
@@ -835,6 +840,12 @@ pub async fn reset_reserve_value(
             })
     })?;
 
+    debug!(
+        "Resetting reserve value for variable and reset value '{}, {}'",
+        variable_name,
+        reset_value
+    );
+
     match variable_name.as_str() {
         "liquidity_index" => reserve_data.liquidity_index = reset_value,
         "ltv" => reserve_data.configuration.ltv = reset_value,
@@ -851,11 +862,6 @@ pub async fn reset_reserve_value(
             return Err(Error::InvalidVariableName)
         },
     }
-
-    debug!(
-        "Resetting reserve value for variable '{}'",
-        variable_name
-    );
 
     mutate_state(|state| {
         let asset_index = &mut state.asset_index;
@@ -882,8 +888,15 @@ pub async fn reset_reserve_value(
     })
 }
 
+/**
+ * @title Get Asset Principal
+ * @dev Retrieves the principal associated with a given asset name.
+ * @param asset_name The name of the asset whose principal is to be fetched.
+ * @returns The principal linked to the specified asset, or an error if the asset is not found or invalid.
+ *
+ * @functionality Validates the asset name and fetches the corresponding principal from the reserve list.
+ */
 pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
-    // asset name validator
     validate_asset_name(&asset_name)?;
 
     let asset_principal = read_state(|state| {state.reserve_list.get(&asset_name).ok_or_else(|| Error::NotFoundAssetPrincipal)})?;

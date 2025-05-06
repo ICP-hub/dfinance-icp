@@ -42,7 +42,7 @@ pub fn is_user_blocked() -> Result<(bool, Certificate), Error> {
                 let valid_count = queue.iter().filter(|&&t| now - t <= WINDOW_SIZE).count();
                 valid_count >= LIMIT
             }
-            None => false, // No calls logged = not blocked
+            None => false, 
         }
     });
 
@@ -73,7 +73,7 @@ pub fn inspect_message() {
                 let valid_count = queue.iter().filter(|&&t| now - t <= WINDOW_SIZE).count();
                 valid_count < LIMIT
             }
-            None => true, // No history = allow
+            None => true,
         }
     });
 
@@ -87,6 +87,19 @@ pub fn inspect_message() {
 const LIMIT: usize = REQUEST_LIMIT; 
 const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
 
+/**
+ * @title Request Rate Limiter
+ * @dev Prevents users from exceeding a predefined number of requests within a fixed time window.
+ * 
+ * @returns `Ok(())` if the request is allowed; otherwise returns `Err(Error::RateLimitExceeded)`.
+ *
+ * @functionality 
+ * - Ensures the caller is not anonymous.
+ * - Tracks each user's request timestamps using a queue.
+ * - Removes outdated timestamps from the queue that fall outside the configured `WINDOW_SIZE`.
+ * - If the user has made fewer requests than the `LIMIT`, the request is allowed and the timestamp is added to the queue.
+ * - If the limit is exceeded, it returns a rate limit error.
+ */
 pub fn request_limiter() -> Result<(), Error> {
     guard_prevent_anonymous()?;
     let caller = ic_cdk::api::caller();

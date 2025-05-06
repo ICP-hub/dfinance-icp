@@ -1,24 +1,23 @@
 use crate::constants::validators::validate_asset_name;
 use crate::{debug, error, info, trace};
-use crate::protocol::utils::math_utils::current_timestamp;
-use crate::stable_storage::state_handler::{get_certificate_witness, insert_certified_value, mutate_state, read_state};
+use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
 use crate::constants::errors::Error;
-use crate::constants::constant_variables::constants::SCALING_FACTOR;
+use crate::constants::constant_variables::constants::{SCALING_FACTOR, TOKEN_TRANSFER_FEE, XRC_CANISTER_NAME};
 use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
 use crate::guards::access_control::guard_controller_only;
 
-use crate::declarations::datatypes::{CachedPrice, Certificate, PriceCache};
+use crate::declarations::datatypes::{CachedPrice, PriceCache};
 use candid::Nat;
-use ic_cdk::{query, update};
+use ic_cdk::update;
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
 use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{
     ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
 };
-use crate::guards::api_limiter::request_limiter;
 use crate::protocol::utils::log::{log_internal,LogLevel};
 
 /*
@@ -73,10 +72,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
             .collect()
     );
 
-    debug!("Keys (assets) = {:?}", keys);
-
     for asset_name in keys {
-        debug!("Updating price for asset: {}", asset_name);
          get_exchange_rates(asset_name.clone(), None, Nat::from(0u128)).await?;
     }
     Ok(())
@@ -148,8 +144,7 @@ pub async fn get_exchange_rates(
         },
     };
 
-    let xrc_canister_id = get_canister_id_by_name("xrc".to_string()).map_err(|_e| {
-        // error!("Error fetching xrc canister ID: {:?}", e);
+    let xrc_canister_id = get_canister_id_by_name(XRC_CANISTER_NAME.to_string()).map_err(|_e| {
         Error::NoCanisterIdFound
     })?;
     let res = ic_cdk::api::call::call_with_payment128(
@@ -244,8 +239,6 @@ pub async fn mock_price_data() -> Result<(), Error> {
             .collect()
     });
 
-    debug!("Keys (assets) = {:?}", keys);
-
     for base_asset_symbol in keys {
         debug!("Updating test price for asset: {}", base_asset_symbol);
         let base_asset = normalize_symbol(&base_asset_symbol);
@@ -268,11 +261,6 @@ pub async fn mock_price_data() -> Result<(), Error> {
             });
 
             if let Ok(mut price_cache_data) = price_cache_result {
-                debug!(
-                    "Updating price cache for {} with new price: {:?}",
-                    base_asset_symbol,
-                    price
-                );
                 price_cache_data.set_price(base_asset_symbol.clone(), price.clone());
                 debug!("price cache after setting =  {:?}", price_cache_data.cache);
 
@@ -337,4 +325,38 @@ pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error>
             .ok_or(Error::NoPriceCache)
     })
 
+}
+
+
+/**
+ * @title Calculate Transfer Fee
+ * @dev Computes the fee for transferring an asset based on its exchange rate.
+ * 
+ * @params
+ * @param asset_name - Name of the asset (e.g., "ICP", "BTC").
+ * @param amount - Transfer amount.
+ * 
+ * @returns
+ * @return Ok(Nat) - Calculated fee.
+ * @return Err(Error) - If fee exceeds amount or rate fetch fails.
+ * 
+ * @errors
+ * - FeeExceedsAmount
+ * - Errors from `get_cached_exchange_rate`
+ */
+pub fn calculate_transfer_fee(
+    asset_name: &str,
+    amount: Nat,
+) -> Result<Nat, Error> {
+
+    let asset_price = get_cached_exchange_rate(asset_name.to_string())?;
+
+    // Calculate Fee in Asset Terms
+    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price); 
+
+    if amount < transfer_token_fee {
+        return Err(Error::FeeExceedsAmount);
+    }
+
+    Ok(transfer_token_fee)
 }

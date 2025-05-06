@@ -2,13 +2,12 @@ use crate::api::inter_canister::get_balance;
 use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::constant_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::protocol::libraries::user::{register_user, user_normalized_supply};
 use crate::{debug, error, info, trace};
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
-use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
+use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled, get_reserve_data};
@@ -26,7 +25,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{api, update};
 use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::stable_storage::state_handler::insert_certified_value;
-use crate::protocol::utils::price::get_cached_exchange_rate;
+use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
 
 /*
 -------------------------------------
@@ -81,31 +80,25 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let platform_principal = ic_cdk::api::id();
 
-    debug!("amount liq = {}", params.amount.clone());
-    debug!("reward liq = {}", params.reward_amount.clone());
-
     let user_principal = params.on_behalf_of;
     debug!("User Principal (Debt User): {}", user_principal.to_text());
 
     debug!(
-        "params debt_asset and collateral_asset {:?} {:?}",
+        "amount liq = {}, reward liq = {}, User Principal (Debt User) = {}, debt_asset = {:?}, collateral_asset = {:?}",
+        params.amount.clone(),
+        params.reward_amount.clone(),
+        params.on_behalf_of.to_text(),
         params.debt_asset,
         params.collateral_asset
     );
-    debug!("liquidation amount = {}", params.amount.clone());
+    
     let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(), // or whatever user_key you need
+        user_key: user_principal.to_text(),
     };
 
     let repay_reserve_data = get_reserve_data(params.debt_asset.clone())?;
 
-    let mut collateral_reserve_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&params.collateral_asset.to_string())
-            .map(|reserve| reserve.0)
-    })
-    .ok_or_else(|| Error::NoReserveDataFound)?;
+    let mut collateral_reserve_data = get_reserve_data(params.collateral_asset.clone())?;
 
     let mut user_account_data = user_data(user_principal)?;
     debug!("user account data: {:?}", user_account_data);
@@ -115,17 +108,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .and_then(|(_, reserve_data)| Some(reserve_data.clone()))
     .ok_or(Error::NoUserReserveDataFound)?;
 
-
-    let debt_asset_price = get_cached_exchange_rate(params.debt_asset.clone())?;
-
-    debug!("asset price = {}", debt_asset_price);
-    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(debt_asset_price);
-    debug!("Transfer token fee: {:?}", transfer_token_fee);
-
-    if params.amount.clone() < transfer_token_fee {
-        error!("Amount is less than the transfer token fee");
-        return Err(Error::FeeExceedsAmount);
-    }
+    let transfer_token_fee = calculate_transfer_fee(&params.debt_asset, params.amount.clone())?;
 
     let (amount, liquidity_bonus) = to_get_reward_amount(
         params.amount.clone() - transfer_token_fee.clone(),
@@ -139,9 +122,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let earned_rewards = amount;
     let liquidation_bonus_amount = liquidity_bonus;
-
-    debug!("reward amount: {:?}", params.reward_amount);
-    debug!("earned_rewards: {:?}", earned_rewards);
+    debug!("reward amount: {:?}, earned_rewards: {:?}", params.reward_amount, earned_rewards);
 
     if params.reward_amount > earned_rewards
         && (params.reward_amount.clone() % earned_rewards) != Nat::from(ONE_VALUE)
@@ -163,7 +144,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     let collateral_dtoken_principal = dtoken_canister;
 
     let reward_amount: Nat = params.reward_amount.clone();
-    debug!("reward_amount: {}", reward_amount);
 
     let mut collateral_reserve_cache = reserve::cache(&collateral_reserve_data);
     debug!(
@@ -183,8 +163,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .await?;
     info!("Interest rates updated successfully");
 
-    debug!("reward amount validation: {:?}", reward_amount);
-
     ValidationLogic::validate_liquidation(
         params.debt_asset.clone(),
         params.amount.clone() - transfer_token_fee.clone(),
@@ -197,8 +175,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     info!("liquidation validation successful"); //info
 
     let _user_guard = CallerGuard::lock_principal(user_principal.clone())?;
-
-    debug!("burn reward amount: {:?}", reward_amount);
 
     burn_scaled(
         &mut collateral_reserve_data,
@@ -217,11 +193,15 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         .configuration
         .liquidation_protocol_fee
         .clone();
-    debug!("liquidation fee percentage: {:?}", liquidation_fee_percentage);
 
     let protocol_fee_amount =
-        liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage / Nat::from(100u128));
-    debug!("protocol fee amount: {:?}", protocol_fee_amount);
+        liquidation_bonus_amount.scaled_mul(liquidation_fee_percentage.clone() / Nat::from(100u128));
+        debug!(
+            "liquidation fee percentage: {:?}, protocol fee amount: {:?}",
+            liquidation_fee_percentage,
+            protocol_fee_amount
+        );
+        
 
     if reward_amount.clone() < protocol_fee_amount.clone() {
         error!("protocol fee amount is greater than reward amount");
@@ -422,18 +402,11 @@ pub async fn to_get_reward_amount(
     user_reserve_data: UserReserveData,
 ) -> Result<(Nat, Nat), Error> {
     trace!("Starting to_get_reward_amount function");
-    debug!("Received parameters: amount = {:?}, collateral_asset = {:?}, debt_asset = {:?}, user_principal = {:?}", amount, collateral_asset, debt_asset, user_principal);
 
-    let d_token_canister = match collateral_reserve_data.d_token_canister.clone() {
-        Some(canister) => {
-            debug!("Parsed d_token_canister: {:?}", canister);
-            canister
-        }
-        None => {
-            error!("Failed to parse d_token_canister");
-            return Err(Error::ConversionErrorFromTextToPrincipal);
-        }
-    };
+    let d_token_canister = collateral_reserve_data.d_token_canister.clone().ok_or_else(|| {
+        error!("No d token canister ID found.");
+        Error::NoCanisterIdFound
+    })?;
 
     let mut collateral_balance = get_balance(d_token_canister, user_principal).await?;
     let norm_supply = user_normalized_supply(collateral_reserve_data.clone())?;
@@ -441,19 +414,12 @@ pub async fn to_get_reward_amount(
         .scaled_mul(norm_supply))
     .scaled_div(user_reserve_data.liquidity_index);
 
-    debug!("Collateral balance normalized: {:?}", collateral_balance);
-
-    debug!("Fetching cached exchange rates for debt and collateral assets");
-
     let debt_price = get_cached_exchange_rate(debt_asset.clone())?;
-    debug!("asset price = {}", debt_price);
 
     let collateral_price = get_cached_exchange_rate(collateral_asset.clone())?;
 
-    debug!("asset price = {}", collateral_price);
-
     let mut collateral_amount = amount.clone();
-    debug!("Initial collateral amount: {:?}", collateral_amount);
+    debug!("Collateral balance and Initial collateral amount  {:?} ,{:?}", collateral_balance, collateral_amount);
 
     if collateral_asset != debt_asset {
         if debt_price == zero_nat_value() || collateral_price == zero_nat_value() {

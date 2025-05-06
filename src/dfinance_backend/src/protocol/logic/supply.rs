@@ -1,21 +1,18 @@
 use crate::api::inter_canister::asset_transfer_from;
-use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::constant_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
-use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, get_asset_principal};
+use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve_data};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::{update_token_price, get_cached_exchange_rate};
+use crate::protocol::utils::price::{calculate_transfer_fee, update_token_price};
 use crate::stable_storage::storable::Candid;
-use crate::{debug, error, info,};
+use crate::{debug, error, info};
 use candid::{Nat, Principal};
 use ic_cdk::update;
 
@@ -66,14 +63,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 
     let amount_nat = params.amount.clone(); //check
     //fetch reserve data state for the asset
-    let mut reserve_data = mutate_state(|state| {
-        state
-            .asset_index
-            .get(&params.asset.to_string().clone())
-            .map(|reserve| reserve.0.clone())
-            .ok_or_else(|| {
-                Error::NoReserveDataFound})
-    })?;
+
+    let mut reserve_data = get_reserve_data(params.asset.clone())?;
 
     //initialize a asset reserve cache for temp changes
     let mut reserve_cache = reserve::cache(&reserve_data);
@@ -95,16 +86,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     // updating the price cached in the state
     let _ = update_token_price(params.asset.clone()).await;
     //fetching the price of the asset in USD
-    let asset_price = get_cached_exchange_rate(params.asset.clone())?;
 
-    //Calculating Transfer fee in usd
-    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-    debug!("Transfer token fee: {:?}", transfer_token_fee); //debug
-
-    if params.amount.clone() < transfer_token_fee {
-        error!("Amount is less than the transfer token fee"); //error
-        return Err(Error::FeeExceedsAmount);
-    }
+    let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     //updating params.amount with the actual amount of tokens to be supplied
     params.amount = params.amount.clone() - transfer_token_fee.clone();
     UpdateLogic::update_user_data_supply(
@@ -221,15 +204,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     
     let transfer_to_principal: Principal = user_principal.clone();
-    let mut reserve_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&params.asset.to_string().clone())
-            .map(|reserve| reserve.0.clone())
-    })
-    .ok_or_else(|| {
-        Error::NoReserveDataFound})?;
-
+    let mut reserve_data = get_reserve_data(params.asset.clone())?;
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
     info!("Reserve cache fetched successfully: {:?}", reserve_cache);
@@ -249,24 +224,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     if let Err(_) = update_token_price(params.asset.clone()).await {}
 
-    let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-        Ok(price) => price,
-        Err(e) => {
-            ic_cdk::println!("Failed to fetch exchange rate");
-            return Err(e);
-        }
-    };
-
-    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
-
-    if params.amount.clone() < transfer_token_fee {
-        ic_cdk::println!("Amount is less than the transfer token fee");
-        return Err(Error::FeeExceedsAmount);
-    }
-
+    let transfer_token_fee= calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
-    ic_cdk::println!("Withdraw amount: {:?}", withdraw_amount);
+    debug!("Withdraw amount: {:?}", withdraw_amount);
      // ----------- Update logic here -------------
      UpdateLogic::update_user_data_withdraw(
         user_principal,

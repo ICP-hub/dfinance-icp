@@ -472,7 +472,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     ) = calculate_user_account_data(None).await?;
 
     if total_debt != zero_nat_value() {
-        // bhanu should ltv and adjusted_collateral be same as the res from calculate_user_account_data ?
         let mut ltv: Nat;
         if amount != zero_nat_value() {
             let adjusted_collateral: Nat;
@@ -505,7 +504,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         }
     }
 
-    // bhanu else me kuch nhi hona tha ?
     match user_reserve(&mut user_data, &asset) {
         Some((_, user_reserve_data)) => {
             user_reserve_data.is_collateral = !user_reserve_data.is_collateral;

@@ -115,7 +115,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
-    //ask bhanu for trapping it 
     info!("udpate user data supply called successfully"); //info
     let liq_added = params.amount.clone();
     let liq_taken = zero_nat_value();

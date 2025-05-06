@@ -244,7 +244,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     )
     .await
     {
-        // bhanu yaha pe error pe hi hona chahiye mint scaled ?
         mint_scaled(
             &mut collateral_reserve_data,
             &mut user_reserve_data,
@@ -325,7 +324,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                             Some(vec![(params.collateral_asset.clone(), new_reserve)]);
                     }
 
-                    // bhanu handle unwrap
                     match liquidator_data.reserves.as_mut() {
                         Some(reserves) => match reserves
                             .iter_mut()

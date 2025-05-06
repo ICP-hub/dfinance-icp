@@ -24,16 +24,25 @@ const Logs = () => {
 
     try {
       const result = await backendActor.get_all_logs();
-      setLogs(result);
-      setFilteredLogs(result);
+      console.log("Raw logs result:", result);
 
-      setTotalPages(Math.ceil(result.length / logsPerPage));
+
+      if (result?.Ok && Array.isArray(result.Ok)) {
+        setLogs(result.Ok);
+        setFilteredLogs(result.Ok);
+        setTotalPages(Math.ceil(result.Ok.length / logsPerPage));
+      } else {
+        console.error("Unexpected logs format:", result);
+        setLogs([]);
+        setFilteredLogs([]);
+      }
     } catch (error) {
       console.error("Error getting logs:", error.message);
     } finally {
       setIsLoading(false);
     }
   };
+
   const checkControllerStatus = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -89,9 +98,9 @@ const Logs = () => {
     setCurrentPage(newPage);
   };
 
-    useEffect(() => {
-      checkControllerStatus();
-    }, [backendActor]);
+  useEffect(() => {
+    checkControllerStatus();
+  }, [backendActor]);
 
   const getLogLevelColor = (logText) => {
     if (logText.includes("[DEBUG]")) return "text-blue-500 dark:text-blue-400";
@@ -263,9 +272,9 @@ const Logs = () => {
         </div>
       )}
     </div>
- ) : (
-  <Error />
-);
+  ) : (
+    <Error />
+  );
 };
 
 export default Logs;

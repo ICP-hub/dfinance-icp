@@ -1,4 +1,4 @@
-import React from "react";
+import React, {  useEffect } from "react";
 import Button from "../../components/Common/button";
 import { useDispatch, useSelector } from "react-redux";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
@@ -6,7 +6,7 @@ import { useAuth } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import MySupply from "../../components/Dashboard/DashboardComponent";
 import WalletModal from "../../components/Dashboard/WalletModal";
-
+import { useSearchParams } from "react-router-dom";
 const CreateWallet = () => {
   /* ===================================================================================
    *                                  HOOKS
@@ -21,7 +21,13 @@ const CreateWallet = () => {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-
+  const [searchParams] = useSearchParams(); 
+  useEffect(() => {
+    const openWallet = searchParams.get("openWallet"); 
+    if (openWallet === "true") {
+      handleWalletConnect(); 
+    }
+  }, [searchParams]); 
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */

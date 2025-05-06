@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react";
 import { liquidationThresholdLabel } from "../../../utils/constants";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
-import { BASE_UNIT } from '../../../utils/constants';
-import { HealthFactor_Unit } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
+import { PERCENTAGE_FACTOR } from '../../../utils/constants';
 /**
  * RiskPopup Component
  *
@@ -29,22 +29,22 @@ const RiskPopup = ({ onClose, userAccountData }) => {
    * =================================================================================== */
 
   const totalCollateral =
-    parseFloat(Number(userAccountData?.Ok[0]?.[0]) / BASE_UNIT) || 0;
+    parseFloat(Number(userAccountData?.Ok[0]?.[0]) / SCALING_FACTOR) || 0;
   const totalDebt =
-    parseFloat(Number(userAccountData?.Ok[0]?.[1]) / BASE_UNIT) || 0;
+    parseFloat(Number(userAccountData?.Ok[0]?.[1]) / SCALING_FACTOR) || 0;
   const health_Factor_Value =
-    Number(userAccountData?.Ok[0]?.[4]) / HealthFactor_Unit > 100
+    Number(userAccountData?.Ok[0]?.[4]) / (SCALING_FACTOR * PERCENTAGE_FACTOR) > 100
       ? Infinity
-      : Math.floor((Number(userAccountData?.Ok[0]?.[4]) / HealthFactor_Unit) * 100) /
+      : Math.floor((Number(userAccountData?.Ok[0]?.[4]) / (SCALING_FACTOR * PERCENTAGE_FACTOR)) * 100) /
       100;
   const Ltv_Value = (totalDebt / totalCollateral) * 100;
   const liquidationThreshold_Value =
-    Number(userAccountData?.Ok[0]?.[3]) / BASE_UNIT || 0
-      ? (Number(userAccountData?.Ok[0]?.[3]) / BASE_UNIT).toFixed(2)
+    Number(userAccountData?.Ok[0]?.[3]) / SCALING_FACTOR || 0
+      ? (Number(userAccountData?.Ok[0]?.[3]) / SCALING_FACTOR).toFixed(2)
       : "0.00";
   const healthFactorMinValue = 1;
   const Max_Ltv = parseFloat(
-    Number(userAccountData?.Ok[0]?.[2]) / BASE_UNIT
+    Number(userAccountData?.Ok[0]?.[2]) / SCALING_FACTOR
   ).toFixed(2);
 
   const handleClickOutside = (event) => {
@@ -308,14 +308,14 @@ const RiskPopup = ({ onClose, userAccountData }) => {
                 </svg>
                 <span
                   className={`ml-2 px-4 py-1 font-bold rounded-l-2xl rounded-r-2xl cursor-pointer ${health_Factor_Value > 3
-                      ? "bg-green-200 text-green-700"
-                      : health_Factor_Value <= 1
-                        ? "bg-red-200 text-red-700"
-                        : health_Factor_Value <= 1.5
-                          ? "bg-orange-100 text-orange-500"
-                          : health_Factor_Value <= 2
-                            ? "bg-orange-300 text-orange-600"
-                            : "bg-orange-400 text-orange-800"
+                    ? "bg-green-200 text-green-700"
+                    : health_Factor_Value <= 1
+                      ? "bg-red-200 text-red-700"
+                      : health_Factor_Value <= 1.5
+                        ? "bg-orange-100 text-orange-500"
+                        : health_Factor_Value <= 2
+                          ? "bg-orange-300 text-orange-600"
+                          : "bg-orange-400 text-orange-800"
                     }`}
                 >
                   {parseFloat(health_Factor_Value)?.toFixed(2) || "0.00"}

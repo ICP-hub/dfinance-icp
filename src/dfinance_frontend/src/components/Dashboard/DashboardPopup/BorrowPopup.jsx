@@ -16,7 +16,7 @@ import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
  *
@@ -112,8 +112,8 @@ const Borrow = ({
     const item = filteredItems.find((item) => item[0] === asset);
     if (item && item[1]?.Ok) {
       const assetData = item[1].Ok[0];
-      const total_supply = Number(assetData?.asset_supply) / BASE_UNIT;
-      const total_borrow = Number(assetData?.asset_borrow) / BASE_UNIT;
+      const total_supply = Number(assetData?.asset_supply) / SCALING_FACTOR;
+      const total_borrow = Number(assetData?.asset_borrow) / SCALING_FACTOR;
       setTotalSupply(total_supply);
       setTotalBorrow(total_borrow);
     }
@@ -134,7 +134,7 @@ const Borrow = ({
       ICP: ckICPUsdRate,
       ckUSDT: ckUSDTUsdRate,
     };
-    const rate = assetRates[asset] / BASE_UNIT;
+    const rate = assetRates[asset] / SCALING_FACTOR;
     if (rate) {
       borrowableValue =
         remainingBorrowable < Number(availableBorrow) / rate
@@ -201,10 +201,10 @@ const Borrow = ({
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${scaledAmount / BASE_UNIT
+          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${scaledAmount / BASE_UNIT
+          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`
         );
 
@@ -363,7 +363,19 @@ const Borrow = ({
   };
 
 
-  //calculate health factor
+  /**
+  * calculateHealthFactor:
+  * -----------------------
+  * Calculates the health factor of a user's position:
+  *
+  * 1. amountTaken = usdValue (assumes external scope or injected)
+  * 2. totalCollateralValue = max(totalCollateral, 0)
+  * 3. totalDeptValue = max(totalDebt + amountTaken, 0)
+  * 4. If totalDeptValue is 0 → return Infinity (i.e. no debt = safe position)
+  * 5. Formula used:
+  *      Health Factor = (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+  *    - Higher value means safer position.
+  */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -382,7 +394,16 @@ const Borrow = ({
     return result;
   };
 
-  //calculate Ltv
+  /**
+  * calculateLTV:
+  * -------------
+  * Calculates Loan-to-Value ratio:
+  *
+  * 1. If totalCollateral is 0 → return 0 to avoid divide-by-zero.
+  * 2. Formula used:
+  *      LTV = nextTotalDebt / totalCollateral
+  *    - Expresses how much of the collateral is currently borrowed.
+  */
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;
@@ -462,8 +483,7 @@ const Borrow = ({
 
   // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableValue- transferFee).toFixed(8);
-    console.log("maxAmount",maxAmount)
+    const maxAmount = parseFloat(borrowableValue - transferFee).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -544,7 +564,6 @@ const Borrow = ({
       try {
         await fetchAssetData();
         const remainingBorrowable = (totalSupply * 0.85).toFixed(8) - totalBorrow;
-        console.log("remain in borrow ",totalSupply)
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -571,8 +590,7 @@ const Borrow = ({
 
   useEffect(() => {
     if (userAccountData?.Ok[0]?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[0][5]) / BASE_UNIT;
-      console.log("borrowValue",borrowValue)
+      const borrowValue = Number(userAccountData.Ok[0][5]) / SCALING_FACTOR;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -604,6 +622,27 @@ const Borrow = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
+  /**
+ * 1. **Total Collateral Value Calculation:**
+ *    - totalCollateralValue = totalCollateral + amountAdded
+ * 
+ * 2. **Next Total Debt Calculation:**
+ *    - nextTotalDebt = amountTaken + totalDebt
+ * 
+ * 3. **Health Factor Calculation:**
+ *    - healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold)
+ *    - Truncates result to 2 decimals if valid, sets "Infinity" if healthFactor > 100.
+ * 
+ * 4. **Loan-to-Value (LTV) Calculation:**
+ *    - ltv = calculateLTV(nextTotalDebt, totalCollateralValue)
+ *    - LTV is checked against liquidationThreshold.
+ * 
+ * 5. **Button Disabled Condition:**
+ *    - Button disabled if:
+ *      - healthFactor <= 1
+ *      - ltv >= liquidationThreshold
+ *      - acknowledgment required but not given.
+ */
   useEffect(() => {
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
@@ -741,7 +780,6 @@ const Borrow = ({
                       }
                     }}
                   >
-                    {console.log("borrowableValue", borrowableValue)}
                     {loading &&
                       (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
@@ -942,27 +980,27 @@ const Borrow = ({
             <h1 className="font-semibold text-xl">All done!</h1>
             <p className="text-sm  lgx:text-lg text-center">
               You have borrowed{" "}
-              {scaledAmount / BASE_UNIT
-                ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                  scaledAmount / BASE_UNIT < 1e-7
-                  ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                  : scaledAmount / BASE_UNIT >= 1e-7 &&
-                    scaledAmount / BASE_UNIT < 1e-6
-                    ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                    : scaledAmount / BASE_UNIT
+              {scaledAmount / SCALING_FACTOR
+                ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                  scaledAmount / SCALING_FACTOR < 1e-7
+                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                  : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                    scaledAmount / SCALING_FACTOR < 1e-6
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
             <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
-              {scaledAmount / BASE_UNIT
-                ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                  scaledAmount / BASE_UNIT < 1e-7
-                  ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                  : scaledAmount / BASE_UNIT >= 1e-7 &&
-                    scaledAmount / BASE_UNIT < 1e-6
-                    ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                    : scaledAmount / BASE_UNIT
+              {scaledAmount / SCALING_FACTOR
+                ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                  scaledAmount / SCALING_FACTOR < 1e-7
+                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                  : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                    scaledAmount / SCALING_FACTOR < 1e-6
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

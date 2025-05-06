@@ -16,8 +16,8 @@ import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
-import { BASE_UNIT } from '../../utils/constants';
-import { HealthFactor_Unit } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
+import { PERCENTAGE_FACTOR } from '../../utils/constants';
 ChartJS.register(ArcElement, Tooltip);
 
 /**
@@ -584,7 +584,7 @@ const DashboardCards = () => {
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.healthFactor) {
         updatedHealthFactors[principal] =
-          Number(data.healthFactor) / HealthFactor_Unit;
+          Number(data.healthFactor) / (SCALING_FACTOR * PERCENTAGE_FACTOR);
       } else {
         updatedHealthFactors[principal] = null;
       }
@@ -884,11 +884,10 @@ const DashboardCards = () => {
                 </h3>
 
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                  }`}
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -973,8 +972,8 @@ const DashboardCards = () => {
                                     </span>{" "}
                                     {formatValue(
                                       (Number(data[1]?.Ok[0]?.asset_supply) /
-                                        BASE_UNIT) *
-                                        (assetRate / BASE_UNIT)
+                                        SCALING_FACTOR) *
+                                      (assetRate / SCALING_FACTOR)
                                     )}
                                   </p>
                                 </div>
@@ -989,8 +988,8 @@ const DashboardCards = () => {
                                     </span>{" "}
                                     {formatValue(
                                       (Number(data[1]?.Ok[0]?.asset_borrow) /
-                                        BASE_UNIT) *
-                                        (assetRate / BASE_UNIT)
+                                        SCALING_FACTOR) *
+                                      (assetRate / SCALING_FACTOR)
                                     )}
                                   </p>
                                 </div>

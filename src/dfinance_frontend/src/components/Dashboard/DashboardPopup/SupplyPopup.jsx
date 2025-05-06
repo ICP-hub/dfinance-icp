@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
 /**
  * SupplyPopup Component
  *
@@ -175,7 +175,7 @@ const SupplyPopup = ({
 
     if (!isNaN(numericAmount) && numericAmount >= 0) {
       if (numericAmount + transferFee <= supplyBalance) {
-        const adjustedConversionRate = Number(conversionRate) / BASE_UNIT;
+        const adjustedConversionRate = Number(conversionRate) / SCALING_FACTOR;
         const convertedValue = numericAmount * adjustedConversionRate;
         setUsdValue(convertedValue.toFixed(8));
       } else {
@@ -307,10 +307,10 @@ const SupplyPopup = ({
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${scaledAmount / BASE_UNIT
+          `Supply,${asset},${scaledAmount / SCALING_FACTOR
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${scaledAmount / BASE_UNIT
+          `Supply,${asset},${scaledAmount / SCALING_FACTOR
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
@@ -509,7 +509,18 @@ const SupplyPopup = ({
     }
   };
 
-  // Function to calculate the health factor
+  /**
+  * Calculate the Health Factor based on collateral, debt, and liquidation thresholds.
+  * 
+  * 1. Add `usdValue` to `totalCollateral` if `currentCollateralStatus` is true.
+  * 2. Ensure both `totalCollateralValue` and `totalDeptValue` are non-negative.
+  * 3. If `totalDeptValue` is 0, return `Infinity`.
+  * 4. Calculate adjusted liquidation value (`avliq = liquidationThreshold * totalCollateral`).
+  * 5. Adjust liquidation value using reserve liquidation threshold and amount added: 
+  *    `tempLiq = (avliq + amountAdded * reserveliquidationThreshold) / totalCollateralValue`.
+  * 6. Compute Health Factor: `healthFactor = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue`.
+  * 7. Round the result to 8 decimal places and return.
+  */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -534,7 +545,7 @@ const SupplyPopup = ({
       (avliq + amountAdded * reserveliquidationThreshold) /
       totalCollateralValue;
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * BASE_UNIT) / BASE_UNIT;
+    result = Math.round(result * SCALING_FACTOR) / SCALING_FACTOR;
     return result;
   };
 
@@ -558,7 +569,7 @@ const SupplyPopup = ({
 
   const truncateToDecimals = (num, decimals) => {
     const factor = Math.pow(10, decimals);
-    return (Math.floor(num * factor) / factor).toFixed(decimals); 
+    return (Math.floor(num * factor) / factor).toFixed(decimals);
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
@@ -738,8 +749,8 @@ const SupplyPopup = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
@@ -769,8 +780,8 @@ const SupplyPopup = ({
                   <p>Collateralization</p>
                   <p
                     className={`font-semibold ${currentCollateralStatus
-                        ? "text-green-500"
-                        : "text-red-500"
+                      ? "text-green-500"
+                      : "text-red-500"
                       }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
@@ -783,14 +794,14 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -798,14 +809,14 @@ const SupplyPopup = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                            ? "text-green-500"
-                            : value <= 1
-                              ? "text-red-500"
-                              : value <= 1.5
-                                ? "text-orange-600"
-                                : value <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : value <= 1
+                            ? "text-red-500"
+                            : value <= 1.5
+                              ? "text-orange-600"
+                              : value <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -884,8 +895,8 @@ const SupplyPopup = ({
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               disabled={
                 isApproved || isLoading || amount <= 0 || !hasEnoughBalance
@@ -899,8 +910,8 @@ const SupplyPopup = ({
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved || isLoading || amount <= 0 || !hasEnoughBalance
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
@@ -945,14 +956,14 @@ const SupplyPopup = ({
             <p className=" text-sm  lgx:text-lg text-center">
               You have supplied{" "}
               <strong>
-                {scaledAmount / BASE_UNIT
-                  ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                    scaledAmount / BASE_UNIT < 1e-7
-                    ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                    : scaledAmount / BASE_UNIT >= 1e-7 &&
-                      scaledAmount / BASE_UNIT < 1e-6
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                      : scaledAmount / BASE_UNIT
+                {scaledAmount / SCALING_FACTOR
+                  ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                    scaledAmount / SCALING_FACTOR < 1e-7
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                    : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                      scaledAmount / SCALING_FACTOR < 1e-6
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                      : scaledAmount / SCALING_FACTOR
                   : "0"}{" "}
                 {asset}
               </strong>
@@ -960,14 +971,14 @@ const SupplyPopup = ({
             <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
               <strong>
-                {scaledAmount / BASE_UNIT
-                  ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                    scaledAmount / BASE_UNIT < 1e-7
-                    ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                    : scaledAmount / BASE_UNIT >= 1e-7 &&
-                      scaledAmount / BASE_UNIT < 1e-6
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                      : scaledAmount / BASE_UNIT
+                {scaledAmount / SCALING_FACTOR
+                  ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                    scaledAmount / SCALING_FACTOR < 1e-7
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                    : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                      scaledAmount / SCALING_FACTOR < 1e-6
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                      : scaledAmount / SCALING_FACTOR
                   : "0"}{" "}
                 d{asset}
               </strong>

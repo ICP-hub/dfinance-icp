@@ -13,7 +13,8 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
+import { PERCENTAGE_FACTOR } from '../../../utils/constants';
 /**
  * WithdrawPopup Component
  *
@@ -89,7 +90,7 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  HELPERS
    * =================================================================================== */
-  
+
   // This function truncates a number to seven decimal places and returns it as a string.
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 7);
@@ -135,7 +136,7 @@ const WithdrawPopup = ({
 
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
-      inputAmount = truncateToeightDeimals(assetSupply-transferFee).toString();
+      inputAmount = truncateToeightDeimals(assetSupply - transferFee).toString();
     }
 
     setAmount(inputAmount);
@@ -152,7 +153,7 @@ const WithdrawPopup = ({
   const updateAmountAndUsdValue = (inputAmount) => {
     const Amount = parseFloat(inputAmount.toString().replace(/,/g, ""));
     const truncateTo8Decimals = (num) => {
-      return Math.trunc(num * BASE_UNIT) / BASE_UNIT;
+      return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
     };
     const numericAmount = truncateTo8Decimals(Amount);
     const truncatedAssetSupply = truncateTo8Decimals(assetSupply);
@@ -243,7 +244,7 @@ const WithdrawPopup = ({
           "Withdraw," +
           asset +
           "," +
-          scaledAmount / BASE_UNIT +
+          scaledAmount / SCALING_FACTOR +
           "," +
           currentCollateralStatus +
           "," +
@@ -252,7 +253,7 @@ const WithdrawPopup = ({
           "Withdraw," +
           asset +
           "," +
-          scaledAmount / BASE_UNIT +
+          scaledAmount / SCALING_FACTOR +
           "," +
           currentCollateralStatus +
           ", " +
@@ -377,7 +378,27 @@ const WithdrawPopup = ({
     setIsModalOpen(false);
   };
 
-  // This function calculates the health factor and ltv based on the total collateral, total debt, liquidation threshold, and reserve liquidation threshold.
+  /**
+   * Calculates key borrowing metrics:
+   * 
+   * amountTaken:
+   *   - Value of asset used as collateral (if enabled).
+   *   - amountTaken = currentCollateralStatus ? usdValue : 0
+   * 
+   * totalCollateralValue:
+   *   - Remaining collateral = totalCollateral - amountTaken
+   * 
+   * tempLiq (effective liquidation threshold):
+   *   - avliq = liquidationThreshold × totalCollateral
+   *   - truncatedVal = amountTaken × reserveliquidationThreshold
+   *   - tempLiq = (avliq - truncatedVal) / totalCollateralValue
+   * 
+   * healthFactor:
+   *   - Risk buffer = (totalCollateralValue × (tempLiq / 100)) / totalDebt
+   * 
+   * ltv (Loan to Value):
+   *   - ltv = (totalDebt / totalCollateralValue) × 100
+   */
   const calculatedValues = ({
     totalCollateral,
     totalDebt,
@@ -389,7 +410,7 @@ const WithdrawPopup = ({
     const amountTaken = currentCollateralStatus
       ? (usdValue || 0).toFixed(8)
       : "0.00000000";
-    const truncateTo8Decimals = (num) => Math.trunc(num * BASE_UNIT) / BASE_UNIT;
+    const truncateTo8Decimals = (num) => Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
 
     let totalCollateralValue = 0;
     if (
@@ -405,7 +426,7 @@ const WithdrawPopup = ({
 
     let avliq = liquidationThreshold * totalCollateral;
     let truncatedVal =
-      Math.trunc(amountTaken * reserveliquidationThreshold * BASE_UNIT) / BASE_UNIT;
+      Math.trunc(amountTaken * reserveliquidationThreshold * SCALING_FACTOR) / SCALING_FACTOR;
     let tempLiq = 0;
     if (
       amountTaken > totalCollateral &&
@@ -416,7 +437,7 @@ const WithdrawPopup = ({
       tempLiq = avliq - truncatedVal;
     }
     if (totalCollateralValue > 0) {
-      tempLiq = Math.floor((tempLiq / totalCollateralValue) * BASE_UNIT) / BASE_UNIT;
+      tempLiq = Math.floor((tempLiq / totalCollateralValue) * SCALING_FACTOR) / SCALING_FACTOR;
     }
 
     let totalDebtValue = parseFloat(totalDebt);
@@ -426,14 +447,14 @@ const WithdrawPopup = ({
       totalDebtValue === 0
         ? Infinity
         : Math.round(
-          ((totalCollateralValue * (tempLiq / 100)) / totalDebtValue) * BASE_UNIT
-        ) / BASE_UNIT;
+          ((totalCollateralValue * (tempLiq / PERCENTAGE_FACTOR)) / totalDebtValue) * SCALING_FACTOR
+        ) / SCALING_FACTOR;
 
     let ltv =
       totalCollateralValue === 0
         ? 0
         : parseFloat(totalDebtValue) / totalCollateralValue;
-    ltv = Math.trunc(ltv * BASE_UNIT * 100) / BASE_UNIT; //in percent
+    ltv = Math.trunc(ltv * (SCALING_FACTOR * PERCENTAGE_FACTOR)) / SCALING_FACTOR; //in percent
 
 
     return {
@@ -853,14 +874,14 @@ const WithdrawPopup = ({
                 </strong>{" "}
                 and you have withdrawn{" "}
                 <strong>
-                  {scaledAmount / BASE_UNIT
-                    ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                      scaledAmount / BASE_UNIT < 1e-7
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                      : scaledAmount / BASE_UNIT >= 1e-7 &&
-                        scaledAmount / BASE_UNIT < 1e-6
-                        ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                        : scaledAmount / BASE_UNIT
+                  {scaledAmount / SCALING_FACTOR
+                    ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                      scaledAmount / SCALING_FACTOR < 1e-7
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                      : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                        scaledAmount / SCALING_FACTOR < 1e-6
+                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                        : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

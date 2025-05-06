@@ -14,7 +14,7 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
 /**
  * Repay Component
  *
@@ -317,18 +317,18 @@ const Repay = ({
       if ("Ok" in repayResult) {
         trackEvent(
           "Repay," +
-            asset +
-            "," +
-            totalAmount / BASE_UNIT +
-            "," +
-            principalObj.toString(),
+          asset +
+          "," +
+          totalAmount / SCALING_FACTOR +
+          "," +
+          principalObj.toString(),
           "Assets",
           "Repay," +
-            asset +
-            "," +
-            totalAmount / BASE_UNIT +
-            ", " +
-            principalObj.toString()
+          asset +
+          "," +
+          totalAmount / SCALING_FACTOR +
+          ", " +
+          principalObj.toString()
         );
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -465,7 +465,17 @@ const Repay = ({
     }
   };
 
-  // Function to handle the click event for the close button
+  /**
+  * calculateHealthFactor:
+  * -----------------------
+  * Formula:
+  *   healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
+  *
+  * Adjustments:
+  * - amountAdded (e.g., debt repaid) is subtracted from totalDebt.
+  * - totalDebt floored to zero if negative.
+  * - If totalDebt becomes zero → return Infinity.
+  */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -509,8 +519,8 @@ const Repay = ({
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
-        ? Number(selectedBalance).toFixed(7)
-        : truncateToEightDecimals(selectedBalance)
+          ? Number(selectedBalance).toFixed(7)
+          : truncateToEightDecimals(selectedBalance)
       : "0";
     "displayBalance", displayBalance;
     setMaxAmount(displayBalance.toString());
@@ -615,6 +625,17 @@ const Repay = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
+  /**
+  * Health Factor Calculation Summary:
+  * ----------------------------------
+  * - Get health factor using formula:
+  *     healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
+  * - Adjust debt:
+  *     totalDebt = totalDebt - usdValue  (removing some debt)
+  * - Ensure collateral and debt are non-negative.
+  * - Truncate health factor to 2 decimals.
+  * - If healthFactor > 100 → display as "Infinity".
+  */
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
@@ -679,9 +700,9 @@ const Repay = ({
                   <p className="text-[12px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -705,11 +726,10 @@ const Repay = ({
                         {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[12px] px-2 py-0 rounded-md button1 ${
-                          assetBorrow === 0 || isApproved
-                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
-                        }`}
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
+                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                          }`}
                         onClick={handleMaxClick}
                       >
                         Max
@@ -746,33 +766,31 @@ const Repay = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -853,15 +871,14 @@ const Repay = ({
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    isApproved ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
                     amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                    }`}
                   disabled={
                     isApproved ||
                     isLoading ||
@@ -876,15 +893,14 @@ const Repay = ({
                 <button
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    !isApproved ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
                     amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                    }`}
                   disabled={
                     !isApproved ||
                     isLoading ||
@@ -938,20 +954,20 @@ const Repay = ({
                     ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
-                      ? Number(assetBorrow).toFixed(7)
-                      : truncateToEightDecimals(assetBorrow)
+                        ? Number(assetBorrow).toFixed(7)
+                        : truncateToEightDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}
                 <strong>
-                  {scaledAmount / BASE_UNIT
-                    ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                      scaledAmount / BASE_UNIT < 1e-7
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                      : scaledAmount / BASE_UNIT >= 1e-7 &&
-                        scaledAmount / BASE_UNIT < 1e-6
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                      : scaledAmount / BASE_UNIT
+                  {scaledAmount / SCALING_FACTOR
+                    ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                      scaledAmount / SCALING_FACTOR < 1e-7
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                      : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                        scaledAmount / SCALING_FACTOR < 1e-6
+                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                        : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

@@ -1,7 +1,7 @@
 use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use crate::utils::common_functions::{fetch_reserve_data, get_user_principal2, get_users_principal, test_get_asset_principal, test_icrc2_aprove};
+use crate::utils::common_functions::get_user_principal2;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 
@@ -20,7 +20,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     struct TestCase {
         asset: String,
         amount: Nat,
-        on_behalf_of: Option<Principal>,
         is_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
@@ -31,7 +30,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(1_50_000_000u128), // 1.50 ICP (transfer fee included)
-            on_behalf_of: None,
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -48,12 +46,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!(
-            "On Behalf Of: {}",
-            case.on_behalf_of
-                .as_ref()
-                .map_or("None".to_string(), |p| p.to_text())
-        );
         ic_cdk::println!("Is Collateral: {}", case.is_collateral);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
@@ -95,7 +87,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                         candid::decode_one(&reply).expect("Failed to get IC withdraw response");
 
                     match withdraw_response {
-                        Ok(balance) => {
+                        Ok(_balance) => {
                             if !case.expect_success {
                                 ic_cdk::println!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",

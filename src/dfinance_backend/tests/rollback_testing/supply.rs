@@ -98,7 +98,7 @@ use crate::utils::structs::*;
 
     let user_principal = get_user_principal2();
     let mut passed_tests = 0;
-    let mut failed_tests = 0;
+    let mut failed_tests: i32 = 0;
 
     ic_cdk::println!(
         "\n======================== Starting IC Supply Tests ========================\n"
@@ -217,7 +217,7 @@ use crate::utils::structs::*;
                     candid::decode_one(&reply).expect("Failed to decode supply response");
                 ic_cdk::println!("Supply response: {:?}", supply_response);
                 match supply_response {
-                    Ok(balance) => {
+                    Ok(_balance) => {
                         if !case.expect_success {
                             ic_cdk::println!(
                                 "❌ Test Case {} Failed: Expected failure but got success.",

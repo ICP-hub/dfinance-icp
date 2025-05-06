@@ -10,7 +10,7 @@ use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
-use crate::guards::access_control::guard_prevent_anonymous;
+use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
 use crate::guards::api_limiter::request_limiter;
 use crate::protocol::utils::log::LogFlusher;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
@@ -25,6 +25,7 @@ use crate::stable_storage::{
 };
 use crate::{debug, error, info};
 use candid::{Nat, Principal};
+use futures::future::ok;
 use ic_cdk::update;
 
 pub struct UpdateLogic;
@@ -443,8 +444,6 @@ impl UpdateLogic {
 #[update]
 pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) -> Result<(), Error> {
     request_limiter()?;
-    // prevent anonymous access
-    guard_prevent_anonymous()?;
     validate_asset_name(&asset)?;
     validate_negatige_value(&amount)?;
     validate_negatige_value(&added_amount)?;
@@ -472,7 +471,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     ) = calculate_user_account_data(None).await?;
 
     if total_debt != zero_nat_value() {
-        // bhanu should ltv and adjusted_collateral be same as the res from calculate_user_account_data ?
         let mut ltv: Nat;
         if amount != zero_nat_value() {
             let adjusted_collateral: Nat;
@@ -505,7 +503,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
         }
     }
 
-    // bhanu else me kuch nhi hona tha ?
     match user_reserve(&mut user_data, &asset) {
         Some((_, user_reserve_data)) => {
             user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
@@ -568,15 +565,17 @@ pub fn user_data(user_principal: Principal) -> Result<UserData, Error> {
  *
  * @return `FaucetReserves` if found, otherwise default reserves.
  */
-pub fn get_user_faucet_reserves(user_principal: Principal) -> FaucetReserves {
-    read_state(|state| {
-        if let Some(reserves) = state.faucet_data.get(&user_principal) {
-            reserves.0.clone()
-        } else {
-            FaucetReserves::default()
-        }
-    })
+pub fn get_user_faucet_reserves(user_principal: Principal) -> Result<FaucetReserves, Error> {
+    guard_principal_not_anonymous(&user_principal)?;
+    Ok(read_state(|state| {
+        state
+            .faucet_data
+            .get(&user_principal)
+            .map(|res| res.0.clone())
+            .unwrap_or_default()
+    }))
 }
+
 
 /*
  * @functionality user-reserve-access

@@ -32,8 +32,8 @@ pub struct ReserveConfiguration {
     pub liquidation_threshold: Nat,
     pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: Nat, //TODO set it according to borrow
-    pub supply_cap: Nat, //set it according to supply
+    pub borrow_cap: Nat, 
+    pub supply_cap: Nat, 
     pub liquidation_protocol_fee: Nat,
     pub reserve_factor: Nat,
 }
@@ -82,11 +82,6 @@ pub enum TransferFromError {
     TooOld,
     InsufficientFunds { balance: Nat },
 }
-
-// #[derive(CandidType)]
-// pub enum LedgerArgument {
-//     Init(InitArgs),
-// }
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct Account {

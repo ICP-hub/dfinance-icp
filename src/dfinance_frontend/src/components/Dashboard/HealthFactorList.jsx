@@ -16,7 +16,7 @@ import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useLocation } from "react-router-dom";
 import Pagination from "../Common/pagination";
 import { useReserveData } from "../../context/ReserveDataContext";
-
+import { BASE_UNIT } from '../../utils/constants';
 /**
  * HealthFactorList Component
  *
@@ -76,7 +76,7 @@ const HealthFactorList = () => {
     try {
       const result = await backendActor.guard_admin_only();
 
-      const responseData = result; 
+      const responseData = result;
 
       if ("Ok" in responseData) {
         setLike(true);
@@ -331,10 +331,10 @@ const HealthFactorList = () => {
 
     const extractedData = {
       principal,
-      totalCollateral: Number(data.collateral) / 1e8,
-      totalDebt: Number(data.debt) / 1e8,
-      liquidationThreshold: Number(data.liquidationThreshold) / 1e8,
-      availableBorrow: Number(data.availableBorrow) / 1e8,
+      totalCollateral: Number(data.collateral) / BASE_UNIT,
+      totalDebt: Number(data.debt) / BASE_UNIT,
+      liquidationThreshold: Number(data.liquidationThreshold) / BASE_UNIT,
+      availableBorrow: Number(data.availableBorrow) / BASE_UNIT,
       healthFactor: rawHealthFactor < 100 ? rawHealthFactor : "Infinity",
     };
 
@@ -415,14 +415,14 @@ const HealthFactorList = () => {
       return {
         Principal: principal,
         "Total Collateral": user.collateral
-          ? (Number(user.collateral) / 1e8).toFixed(2)
+          ? (Number(user.collateral) / BASE_UNIT).toFixed(2)
           : "0",
-        "Total Debt": user.debt ? (Number(user.debt) / 1e8).toFixed(2) : "0",
+        "Total Debt": user.debt ? (Number(user.debt) / BASE_UNIT).toFixed(2) : "0",
         "Available Borrow": user.availableBorrow
-          ? (Number(user.availableBorrow) / 1e8).toFixed(2)
+          ? (Number(user.availableBorrow) / BASE_UNIT).toFixed(2)
           : "0",
         "Liquidation Threshold": user.liquidationThreshold
-          ? (Number(user.liquidationThreshold) / 1e8).toFixed(2)
+          ? (Number(user.liquidationThreshold) / BASE_UNIT).toFixed(2)
           : "0",
         "Health Factor":
           user.healthFactor &&
@@ -498,9 +498,9 @@ const HealthFactorList = () => {
     const reserves = userData?.reserves || [];
 
     const data = reserves.flat().map(([asset, assetInfo]) => {
-      const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n) / 1e8;
+      const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n) / BASE_UNIT;
       const currentDebtIndex =
-        Number(assetInfo?.variable_borrow_index ?? 0n) / 1e8;
+        Number(assetInfo?.variable_borrow_index ?? 0n) / BASE_UNIT;
 
       const userAssetBalance = assetBalances[selectedUser.principal]?.[
         asset
@@ -509,8 +509,8 @@ const HealthFactorList = () => {
         debtTokenBalance: 0,
       };
 
-      const assetBalance = Number(userAssetBalance.dtokenBalance) / 1e8 || 0;
-      const debtBalance = Number(userAssetBalance.debtTokenBalance) / 1e8 || 0;
+      const assetBalance = Number(userAssetBalance.dtokenBalance) / BASE_UNIT || 0;
+      const debtBalance = Number(userAssetBalance.debtTokenBalance) / BASE_UNIT || 0;
 
       const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
       const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
@@ -518,15 +518,15 @@ const HealthFactorList = () => {
       const assetSupply =
         currentLiquidity > 0
           ? Math.trunc(
-            (Math.trunc((assetBalance / currentLiquidity) * 1e8) *
+            (Math.trunc((assetBalance / currentLiquidity) * BASE_UNIT) *
               supplyValue) /
-            1e8
+            BASE_UNIT
           )
           : 0;
 
       const assetBorrow =
         currentDebtIndex > 0
-          ? (debtBalance * borrowValue) / (currentDebtIndex * 1e8)
+          ? (debtBalance * borrowValue) / (currentDebtIndex * BASE_UNIT)
           : 0;
 
       return {
@@ -814,8 +814,8 @@ const HealthFactorList = () => {
                 id="search"
                 placeholder="Search assets"
                 className={`placeholder-gray-500 ml-[5px] w-[95%] block md:hidden z-20 px-6 py-[3px]  mb-3  focus:outline-none box bg-transparent text-black dark:text-white ${showSearch
-                    ? "animate-fade-left flex"
-                    : "animate-fade-right hidden"
+                  ? "animate-fade-left flex"
+                  : "animate-fade-right hidden"
                   }`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -929,8 +929,8 @@ const HealthFactorList = () => {
                   {paginatedUsers.map(([principal, data], index) => {
                     if (!data) return null;
 
-                    const totalCollateral = Number(data.collateral) / 1e8;
-                    const totalDebt = Number(data.debt) / 1e8;
+                    const totalCollateral = Number(data.collateral) / BASE_UNIT;
+                    const totalDebt = Number(data.debt) / BASE_UNIT;
                     const healthFactor =
                       Math.trunc((Number(data.healthFactor) / 1e10) * 100) /
                       100;
@@ -954,18 +954,18 @@ const HealthFactorList = () => {
                         <td className="px-3 py-6 text-center">
                           <span
                             className={`flex items-center justify-center gap-1 ${healthFactor > 100
-                                ? "text-yellow-500"
-                                : healthFactor === 0
-                                  ? "text-red-500"
-                                  : healthFactor > 3
-                                    ? "text-green-500"
-                                    : healthFactor <= 1
-                                      ? "text-red-500"
-                                      : healthFactor <= 1.5
-                                        ? "text-orange-600"
-                                        : healthFactor <= 2
-                                          ? "text-orange-400"
-                                          : "text-orange-300"
+                              ? "text-yellow-500"
+                              : healthFactor === 0
+                                ? "text-red-500"
+                                : healthFactor > 3
+                                  ? "text-green-500"
+                                  : healthFactor <= 1
+                                    ? "text-red-500"
+                                    : healthFactor <= 1.5
+                                      ? "text-orange-600"
+                                      : healthFactor <= 2
+                                        ? "text-orange-400"
+                                        : "text-orange-300"
                               }`}
                           >
                             {healthFactor > 100 ? (
@@ -1068,12 +1068,12 @@ const HealthFactorList = () => {
                     const assetSupply =
                       currentLiquidity > 0
                         ? (assetBalance * supplyValue) /
-                        (currentLiquidity * 1e8)
+                        (currentLiquidity * BASE_UNIT)
                         : 0;
 
                     const assetBorrow =
                       currentDebtIndex > 0
-                        ? (debtBalance * borrowValue) / (currentDebtIndex * 1e8)
+                        ? (debtBalance * borrowValue) / (currentDebtIndex * BASE_UNIT)
                         : 0;
                     const assetIndex = assets.indexOf(asset);
                     return (

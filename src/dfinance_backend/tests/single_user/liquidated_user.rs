@@ -2,7 +2,7 @@ use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     get_user_principal2, get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+     get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;

@@ -16,7 +16,7 @@ import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-
+import { BASE_UNIT } from '../../../utils/constants';
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
  *
@@ -112,8 +112,8 @@ const Borrow = ({
     const item = filteredItems.find((item) => item[0] === asset);
     if (item && item[1]?.Ok) {
       const assetData = item[1].Ok[0];
-      const total_supply = Number(assetData?.asset_supply) / 100000000;
-      const total_borrow = Number(assetData?.asset_borrow) / 100000000;
+      const total_supply = Number(assetData?.asset_supply) / BASE_UNIT;
+      const total_borrow = Number(assetData?.asset_borrow) / BASE_UNIT;
       setTotalSupply(total_supply);
       setTotalBorrow(total_borrow);
     }
@@ -134,7 +134,7 @@ const Borrow = ({
       ICP: ckICPUsdRate,
       ckUSDT: ckUSDTUsdRate,
     };
-    const rate = assetRates[asset] / 1e8;
+    const rate = assetRates[asset] / BASE_UNIT;
     if (rate) {
       borrowableValue =
         remainingBorrowable < Number(availableBorrow) / rate
@@ -201,10 +201,10 @@ const Borrow = ({
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${scaledAmount / 100000000
+          `Borrow,${asset},${scaledAmount / BASE_UNIT
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${scaledAmount / 100000000
+          `Borrow,${asset},${scaledAmount / BASE_UNIT
           }, ${principalObj.toString()}`
         );
 
@@ -571,7 +571,7 @@ const Borrow = ({
 
   useEffect(() => {
     if (userAccountData?.Ok[0]?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[0][5]) / 100000000;
+      const borrowValue = Number(userAccountData.Ok[0][5]) / BASE_UNIT;
       console.log("borrowValue",borrowValue)
       setAvailableBorrow(borrowValue);
     } else {
@@ -942,27 +942,27 @@ const Borrow = ({
             <h1 className="font-semibold text-xl">All done!</h1>
             <p className="text-sm  lgx:text-lg text-center">
               You have borrowed{" "}
-              {scaledAmount / 100000000
-                ? scaledAmount / 100000000 >= 1e-8 &&
-                  scaledAmount / 100000000 < 1e-7
-                  ? Number(scaledAmount / 100000000).toFixed(8)
-                  : scaledAmount / 100000000 >= 1e-7 &&
-                    scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+              {scaledAmount / BASE_UNIT
+                ? scaledAmount / BASE_UNIT >= 1e-8 &&
+                  scaledAmount / BASE_UNIT < 1e-7
+                  ? Number(scaledAmount / BASE_UNIT).toFixed(8)
+                  : scaledAmount / BASE_UNIT >= 1e-7 &&
+                    scaledAmount / BASE_UNIT < 1e-6
+                    ? Number(scaledAmount / BASE_UNIT).toFixed(7)
+                    : scaledAmount / BASE_UNIT
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
             <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
-              {scaledAmount / 100000000
-                ? scaledAmount / 100000000 >= 1e-8 &&
-                  scaledAmount / 100000000 < 1e-7
-                  ? Number(scaledAmount / 100000000).toFixed(8)
-                  : scaledAmount / 100000000 >= 1e-7 &&
-                    scaledAmount / 100000000 < 1e-6
-                    ? Number(scaledAmount / 100000000).toFixed(7)
-                    : scaledAmount / 100000000
+              {scaledAmount / BASE_UNIT
+                ? scaledAmount / BASE_UNIT >= 1e-8 &&
+                  scaledAmount / BASE_UNIT < 1e-7
+                  ? Number(scaledAmount / BASE_UNIT).toFixed(8)
+                  : scaledAmount / BASE_UNIT >= 1e-7 &&
+                    scaledAmount / BASE_UNIT < 1e-6
+                    ? Number(scaledAmount / BASE_UNIT).toFixed(7)
+                    : scaledAmount / BASE_UNIT
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

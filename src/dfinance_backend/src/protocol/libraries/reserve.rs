@@ -1,7 +1,6 @@
 use crate::api::inter_canister::asset_transfer;
 use crate::api::inter_canister::get_balance;
 use crate::api::inter_canister::get_total_supply;
-use crate::api::query::user_normalized_supply;
 use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
@@ -61,13 +60,12 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
         curr_debt_rate: reserve_data.borrow_rate.clone(),
         next_debt_rate: reserve_data.borrow_rate.clone(),
         next_debt_index: reserve_data.debt_index.clone(),
-        debt_last_update_timestamp: 0,
 
         reserve_factor: reserve_data.configuration.reserve_factor.clone(),
 
-        curr_debt: reserve_data.asset_borrow.clone(), //TODO take from total_supply of debt token or update this while minting and burning the tokens
+        curr_debt: reserve_data.asset_borrow.clone(),
         next_debt: reserve_data.asset_borrow.clone(),
-        curr_supply: reserve_data.asset_supply.clone(), //TODO take from total_supply of d token or update this while minting and burning the tokens
+        curr_supply: reserve_data.asset_supply.clone(), 
     }
 }
 
@@ -657,7 +655,6 @@ pub fn accrue_to_treasury(
  *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
-//TODO: add validation of the params.
 #[cfg(feature = "testnet")]
 #[update]
 pub async fn initialize(
@@ -666,7 +663,6 @@ pub async fn initialize(
     asset_image: String,
 ) -> Result<(), Error> {
     // admin only access check
-    //TODO: add validation for the reserve data.
     guard_admin_only()?;
     validate_asset_name(&token_name)?;
     validate_asset_image_url(&asset_image)?;
@@ -750,7 +746,6 @@ pub async fn initialize(
     asset_image: String,
 ) -> Result<(), Error> {
     // admin only access check
-    //TODO: add validation for the reserve data.
     guard_admin_only()?;
     validate_asset_name(&token_name)?;
     validate_asset_image_url(&asset_image)?;
@@ -867,4 +862,31 @@ pub async fn reset_reserve_value(
         asset_index.insert(asset_name, Candid(reserve_data));
     });
     Ok(())
+}
+
+/*
+ * @title Get Reserve Data
+ * @dev Fetches the reserve data for a specific asset.
+ * @param asset The asset name.
+ * @returns The reserve data if found.
+ *  @functionality Retrieve Reserve Data for a Specified Asset
+ */
+
+ pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {
+    read_state(|state| {
+        state
+            .asset_index
+            .get(&asset.to_string())
+            .map(|reserve| reserve.0.clone())
+            .ok_or_else(|| Error::NoReserveDataFound)
+    })
+}
+
+pub fn get_asset_principal(asset_name: String) -> Result<Principal, Error> {
+    // asset name validator
+    validate_asset_name(&asset_name)?;
+
+    let asset_principal = read_state(|state| {state.reserve_list.get(&asset_name).ok_or_else(|| Error::NotFoundAssetPrincipal)})?;
+    
+    Ok(asset_principal)
 }

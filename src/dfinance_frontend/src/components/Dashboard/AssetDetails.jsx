@@ -25,7 +25,7 @@ import { lazy, Suspense } from "react";
 import MiniLoader from "../Common/miniLoader";
 import { useReserveData } from "../../context/ReserveDataContext";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
-
+import { BASE_UNIT } from '../../utils/constants';
 const SupplyInfo = lazy(() => import("./DashboardPopup/SupplyInfo"));
 const BorrowInfo = lazy(() => import("./DashboardPopup/BorrowInfo"));
 const MySupplyModal = lazy(() => import("./MySupplyModal"));
@@ -274,7 +274,7 @@ const AssetDetails = () => {
       ICP: ckICPUsdRate,
       ckUSDT: ckUSDTUsdRate,
     };
-    const rate = assetRates[id] / 1e8;
+    const rate = assetRates[id] / BASE_UNIT;
     if (rate) {
       borrowableValue =
         remainingBorrowable < Number(availableBorrow) / rate
@@ -300,7 +300,7 @@ const AssetDetails = () => {
   // Fetches asset supply data
   const getAssetSupplyValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset]) / 1e8;
+      const supplyValue = Number(asset_supply[asset]) / BASE_UNIT;
       return supplyValue;
     }
     return `noSupply`;
@@ -309,7 +309,7 @@ const AssetDetails = () => {
   // Fetches asset borrow data
   const getAssetBorrowValue = (asset) => {
     if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset]) / 1e8;
+      const borrowValue = Number(asset_borrow[asset]) / BASE_UNIT;
       return borrowValue;
     }
     return `noBorrow`;
@@ -431,7 +431,7 @@ const AssetDetails = () => {
     }
 
     const { balance, rate } = assetInfo;
-    const usdRate = rate / 1e8;
+    const usdRate = rate / BASE_UNIT;
     const calculatedUsdValue = balance * usdRate;
 
     let calculatedBalance, calculatedUsdValueFormatted;
@@ -478,27 +478,27 @@ const AssetDetails = () => {
       case "ckBTC":
         balance = borrowableValue;
         usdBalance = borrowableAssetValue;
-        usdRate = ckBTCUsdRate / 1e8;
+        usdRate = ckBTCUsdRate / BASE_UNIT;
         break;
       case "ckETH":
         balance = borrowableValue;
         usdBalance = borrowableAssetValue;
-        usdRate = ckETHUsdRate / 1e8;
+        usdRate = ckETHUsdRate / BASE_UNIT;
         break;
       case "ckUSDC":
         balance = borrowableValue;
         usdBalance = borrowableAssetValue;
-        usdRate = ckUSDCUsdRate / 1e8;
+        usdRate = ckUSDCUsdRate / BASE_UNIT;
         break;
       case "ICP":
         balance = borrowableValue;
         usdBalance = borrowableAssetValue;
-        usdRate = ckICPUsdRate / 1e8;
+        usdRate = ckICPUsdRate / BASE_UNIT;
         break;
       case "ckUSDT":
         balance = borrowableValue;
         usdBalance = borrowableAssetValue;
-        usdRate = ckUSDTUsdRate / 1e8;
+        usdRate = ckUSDTUsdRate / BASE_UNIT;
         break;
       default:
         balance = 0;
@@ -562,12 +562,12 @@ const AssetDetails = () => {
       0;
 
     const calculated_supply = Math.trunc(
-      (Number(assetBalance) / Number(currentLiquidity)) * 1e8
+      (Number(assetBalance) / Number(currentLiquidity)) * BASE_UNIT
     );
     const assetSupply =
       Math.trunc(
-        (calculated_supply * Number(getAssetSupplyValue(asset))) / 1e8
-      ) / 1e8;
+        (calculated_supply * Number(getAssetSupplyValue(asset))) / BASE_UNIT
+      ) / BASE_UNIT;
 
     const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
@@ -583,21 +583,21 @@ const AssetDetails = () => {
 
     const assetBorrow =
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
-      (Number(DebtIndex) * 1e8);
+      (Number(DebtIndex) * BASE_UNIT);
 
     const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
 
     const totalCollateral =
-      parseFloat(Number(userAccountData?.Ok[0]?.[0]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[0]) / BASE_UNIT) || 0;
     const totalDebt =
-      parseFloat(Number(userAccountData?.Ok[0]?.[1]) / 100000000) || 0;
+      parseFloat(Number(userAccountData?.Ok[0]?.[1]) / BASE_UNIT) || 0;
     const item = filteredItems.find((item) => item[0] === asset);
     const liquidationThreshold =
-      Number(userAccountData?.Ok[0]?.[3]) / 100000000 || 0;
+      Number(userAccountData?.Ok[0]?.[3]) / BASE_UNIT || 0;
     const reserveliquidationThreshold =
-      Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / 100000000;
+      Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / BASE_UNIT;
     const supplyRateApr =
-      (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / 100000000 || 0;
+      (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * 100) / BASE_UNIT || 0;
     const ckBalance =
       asset === "ckBTC"
         ? ckBTCBalance
@@ -610,11 +610,11 @@ const AssetDetails = () => {
         : asset === "ckUSDT"
         ? ckUSDTBalance
         : null;
-    const Ltv = Number(userData?.Ok?.[0].ltv) / 100000000 || 0;
+    const Ltv = Number(userData?.Ok?.[0].ltv) / BASE_UNIT || 0;
     const assetData = item[1].Ok;
 
-    const total_supply = Number(assetData?.asset_supply || 0) / 100000000;
-    const total_borrow = Number(assetData?.asset_borrow || 0) / 100000000;
+    const total_supply = Number(assetData?.asset_supply || 0) / BASE_UNIT;
+    const total_borrow = Number(assetData?.asset_borrow || 0) / BASE_UNIT;
 
     const { borrowableValue, borrowableAssetValue } = calculateBorrowableValues(
       availableBorrow,
@@ -649,19 +649,19 @@ const AssetDetails = () => {
   useEffect(() => {
     if (assetData?.Ok) {
       setReserveFactor(
-        Number(assetData.Ok[0].configuration.reserve_factor) / 100000000
+        Number(assetData.Ok[0].configuration.reserve_factor) / BASE_UNIT
       );
-      setTotalBorrowed(Number(assetData.Ok[0].asset_borrow) / 100000000);
-      setTotalSupplied(Number(assetData.Ok[0].asset_supply) / 100000000);
+      setTotalBorrowed(Number(assetData.Ok[0].asset_borrow) / BASE_UNIT);
+      setTotalSupplied(Number(assetData.Ok[0].asset_supply) / BASE_UNIT);
       setBorrowCap(
-        Number(assetData.Ok[0].configuration?.borrow_cap) / 100000000
+        Number(assetData.Ok[0].configuration?.borrow_cap) / BASE_UNIT
       );
       setSupplyCap(
-        Number(assetData.Ok[0].configuration?.supply_cap) / 100000000
+        Number(assetData.Ok[0].configuration?.supply_cap) / BASE_UNIT
       );
 
       setCanBeCollateral(Number(assetData.Ok[0].can_be_collateral?.[0])) /
-        100000000;
+        BASE_UNIT;
     }
   }, [assetData, dashboardRefreshTrigger, totalBorrowed, totalSupplied]);
 
@@ -671,17 +671,17 @@ const AssetDetails = () => {
         const item = filteredItems.find((item) => item[0] === id);
         if (item && item[1]?.Ok) {
           const assetData = item[1].Ok;
-          const total_supply = Number(assetData[0]?.asset_supply) / 100000000;
-          const total_borrow = Number(assetData[0]?.asset_borrow) / 100000000;
-          const borrow_rate = Number(assetData[0]?.borrow_rate) / 100000000;
+          const total_supply = Number(assetData[0]?.asset_supply) / BASE_UNIT;
+          const total_borrow = Number(assetData[0]?.asset_borrow) / BASE_UNIT;
+          const borrow_rate = Number(assetData[0]?.borrow_rate) / BASE_UNIT;
           const supply_rate =
-            Number(assetData[0]?.current_liquidity_rate) / 100000000;
-          const maxLtv = Number(assetData[0]?.configuration?.ltv) / 100000000;
+            Number(assetData[0]?.current_liquidity_rate) / BASE_UNIT;
+          const maxLtv = Number(assetData[0]?.configuration?.ltv) / BASE_UNIT;
           const liquidation_bonus =
-            Number(assetData[0]?.configuration?.liquidation_bonus) / 100000000;
+            Number(assetData[0]?.configuration?.liquidation_bonus) / BASE_UNIT;
           const liquidation_threshold =
             Number(assetData[0]?.configuration?.liquidation_threshold) /
-            100000000;
+            BASE_UNIT;
           setmaxLtv(maxLtv);
           setLiquidationbonus(liquidation_bonus);
           setLiquidationthreshold(liquidation_threshold);
@@ -697,7 +697,7 @@ const AssetDetails = () => {
             ICP: ckICPUsdRate,
             ckUSDT: ckUSDTUsdRate,
           };
-          const rate = assetRates[id] / 1e8;
+          const rate = assetRates[id] / BASE_UNIT;
           const formattedMaxBorrow =
             Number((total_supply * 0.85).toFixed(8)) < Number(total_borrow)
               ? 0
@@ -735,7 +735,7 @@ const AssetDetails = () => {
 
   useEffect(() => {
     if (userAccountData?.Ok[0]?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[0][5]) / 100000000;
+      const borrowValue = Number(userAccountData.Ok[0][5]) / BASE_UNIT;
       if (totalSupply - totalBorrow < 0) {
         setAvailableBorrow(0);
         console.warn(
@@ -781,7 +781,7 @@ const AssetDetails = () => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (
         (parseFloat(ckBTCBalance) * ckBTCUsdRate) /
-        1e8
+        BASE_UNIT
       ).toFixed(7);
       setCkBTCUsdBalance(balanceInUsd);
     }
@@ -789,7 +789,7 @@ const AssetDetails = () => {
     if (ckETHBalance && ckETHUsdRate) {
       const balanceInUsd = (
         parseFloat(ckETHBalance) *
-        (ckETHUsdRate / 1e8)
+        (ckETHUsdRate / BASE_UNIT)
       ).toFixed(7);
       setCkETHUsdBalance(balanceInUsd);
     }

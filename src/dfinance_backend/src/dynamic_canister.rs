@@ -1,7 +1,7 @@
-use crate::api::query::get_controller;
+
 use crate::constants::constant_variables::constants::INITIAL_TEST_TOKEN_BALANCE;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::{
+use crate::constants::constant_variables::constants::{
     ACCOUNTS_OVERFLOW_TRIM_QUANTITY, CYCLES_FOR_ARCHIVE_CREATION, DECIMALS, DEFAULT_CYCLES,
     MAX_MEMO_LENGTH, MAX_MESSAGE_SIZE_BYTES, MAX_NUMBER_OF_ACCOUNTS, MAX_TRANSACTIONS_PER_RESPONSE,
     NODE_MAX_MEMORY_SIZE_BYTES, NUM_BLOCKS_TO_ARCHIVE, TEST_ACCOUNTS_OVERFLOW_TRIM_QUANTITY,
@@ -13,18 +13,19 @@ use crate::constants::interest_variables::constants::{
 use crate::declarations::structs::{
     ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg,
 };
-use crate::guards::access_control::guard_admin_only;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::{error, info};
 use candid::{Encode, Nat, Principal};
 use ic_cdk::api::management_canister::main::{
-    update_settings, CanisterInstallMode, CanisterSettings,
+     CanisterInstallMode, CanisterSettings,
 };
-use ic_cdk_macros::update;
 use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
-//TODO confirm all constants values of this file from Bhanu
+use crate::stable_storage::state_handler::read_state;
+use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
+use crate::declarations::datatypes::InitArgs;
+
 /*
  * @title Load DToken Ledger WASM
  * @dev Loads the compiled WebAssembly binary for the dtoken ledger.
@@ -200,7 +201,8 @@ pub async fn create_token_canister(
  * @returns The `Principal` ID of the newly created test token canister.
  * @functionality Creates a test token canister with predefined configurations.
  */
-//TODO - add flag? testnet
+
+#[cfg(feature = "testnet")]
 pub async fn create_testtoken_canister(
     token_name: String,
     token_symbol: String,
@@ -320,54 +322,29 @@ pub async fn create_testtoken_canister(
     Ok(canister_id)
 }
 
+
 /*
- * @title Add Controllers to Canister
- * @dev This function allows adding a user as a controller to a specific canister.
- *      Only the current controller of the canister can invoke this function.
- *      The function updates the canister settings to include the new user as a controller,
- *      alongside the caller.
- *
- * @param canister_id The principal ID of the canister to which the controllers should be added.
- * @param user The principal ID of the user to be added as a controller.
+ * @title Get Controller Information
+ * @dev Retrieves the controller ID from the state. The function looks for metadata
+ *      associated with a specific key and returns the `controller_id` from `InitArgs`
+ *      if available. If no controller is found or an error occurs while reading the state,
+ *      an appropriate error is returned.
  *
  * @returns
- *      - `Ok("done")`: If the controllers were successfully added.
- *      - `Ok("principals are not allowed")`: If the caller is not a controller of the canister.
- * @functionality Adds a new user as a controller of the specified canister.
+ *      - `Ok(InitArgs)`: Returns the `InitArgs` struct containing the `controller_id` of the controller.
+ *      - `Err(Error::UserNotFound)`: If the controller metadata does not exist.
+ *      - `Err(Error::ErrorNotController)`: If an error occurs during the state retrieval.
+ *
+ * @functionality Retrieve Controller Information
  */
-//TODO - no need of this in production
-#[update]
-pub async fn add_controllers(canister_id: Principal, user: Principal) -> Result<String, Error> {
-    guard_admin_only()?;
-    // if !to_check_controller() {
-    //     debugln!("principals are not allowed");
-    //     return Ok("principals are not allowed".to_string());
-    // }
-
-    let update_canister_args = ic_cdk::api::management_canister::main::UpdateSettingsArgument {
-        canister_id,
-        settings: CanisterSettings {
-            controllers: Some(vec![user, ic_cdk::api::id()]),
-            compute_allocation: None,
-            memory_allocation: None,
-            freezing_threshold: None,
-            reserved_cycles_limit: None,
-            log_visibility: None,
-            wasm_memory_limit: None,
-        },
-    };
-
-    match update_settings(update_canister_args).await {
-        Ok(_) => {}
-        Err(e) => {
-            error!("update_settings failed: {:?}", e);
-            return Err(Error::ErrorUpdateCanisterSetting);
-        }
-    }
-    info!(
-        "Added user {} as a controller to canister {}",
-        user.to_text(),
-        canister_id.to_text()
-    );
-    Ok("done".to_string())
+//Controller for creating dynamic dtoken and debt token canisters
+pub fn get_controller() -> Result<InitArgs, Error> {
+    read_state(|state| {
+        state
+            .meta_data
+            .get(&MAIN_CONTROLLER.to_string()) // use the appropriate string key
+            .map(|candid_val| candid_val.0.clone()) // extract InitArgs from Candid wrapper
+            .ok_or(Error::ControllerNotFound)
+    })
+    .map_err(|_| Error::ErrorNotController)
 }

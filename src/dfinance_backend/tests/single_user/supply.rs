@@ -1,4 +1,4 @@
-use candid::{encode_args, Nat};
+use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
@@ -127,7 +127,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                             candid::decode_one(&reply).expect("Failed to decode supply response");
     
                         match response {
-                            Ok(balance) => {
+                            Ok(_balance) => {
                                 if case.expect_success {
                                     ic_cdk::println!(
                                         "✅ Call {} Success: Supply succeeded.\n",
@@ -176,9 +176,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     }
                     WasmResult::Reject(reason) => {
                         ic_cdk::println!("❌ Call {} Rejected: Rejection message: {}", j + 1, reason);
-                    } // Err(e) => {
-                      //     ic_cdk::println!("❌ Call {} Failed: Supply execution error: {:?}", j + 1, e);
-                      // }
+                    } 
                 }
             }
         }

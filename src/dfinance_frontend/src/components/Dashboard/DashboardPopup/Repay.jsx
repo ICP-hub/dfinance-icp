@@ -14,7 +14,7 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-
+import { BASE_UNIT } from '../../../utils/constants';
 /**
  * Repay Component
  *
@@ -319,14 +319,14 @@ const Repay = ({
           "Repay," +
             asset +
             "," +
-            totalAmount / 100000000 +
+            totalAmount / BASE_UNIT +
             "," +
             principalObj.toString(),
           "Assets",
           "Repay," +
             asset +
             "," +
-            totalAmount / 100000000 +
+            totalAmount / BASE_UNIT +
             ", " +
             principalObj.toString()
         );
@@ -944,14 +944,14 @@ const Repay = ({
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}
                 <strong>
-                  {scaledAmount / 100000000
-                    ? scaledAmount / 100000000 >= 1e-8 &&
-                      scaledAmount / 100000000 < 1e-7
-                      ? Number(scaledAmount / 100000000).toFixed(8)
-                      : scaledAmount / 100000000 >= 1e-7 &&
-                        scaledAmount / 100000000 < 1e-6
-                      ? Number(scaledAmount / 100000000).toFixed(7)
-                      : scaledAmount / 100000000
+                  {scaledAmount / BASE_UNIT
+                    ? scaledAmount / BASE_UNIT >= 1e-8 &&
+                      scaledAmount / BASE_UNIT < 1e-7
+                      ? Number(scaledAmount / BASE_UNIT).toFixed(8)
+                      : scaledAmount / BASE_UNIT >= 1e-7 &&
+                        scaledAmount / BASE_UNIT < 1e-6
+                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
+                      : scaledAmount / BASE_UNIT
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

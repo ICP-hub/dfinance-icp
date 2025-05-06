@@ -1,18 +1,17 @@
 use crate::api::inter_canister::get_balance;
-use crate::api::query::{get_cached_exchange_rate, get_reserve_data, user_normalized_supply};
 use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
+use crate::constants::constant_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::protocol::libraries::user::register_user;
+use crate::protocol::libraries::user::{register_user, user_normalized_supply};
 use crate::{debug, error, info, trace};
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
 use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled};
+use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled, get_reserve_data};
 use crate::protocol::libraries::update::{user_data, user_reserve};
 use crate::protocol::logic::borrow::repay;
 use crate::protocol::logic::validation::ValidationLogic;
@@ -27,6 +26,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{api, update};
 use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::stable_storage::state_handler::insert_certified_value;
+use crate::protocol::utils::price::get_cached_exchange_rate;
 
 /*
 -------------------------------------
@@ -68,8 +68,6 @@ use crate::stable_storage::state_handler::insert_certified_value;
 #[update]
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
     request_limiter()?;
-    // guard anonymous caller
-    guard_prevent_anonymous()?;
     let liquidator_principal = api::caller();
     let _liquidator_guard = CallerGuard::lock_principal(liquidator_principal.clone())?;
     // guard for user
@@ -244,7 +242,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     )
     .await
     {
-        // bhanu yaha pe error pe hi hona chahiye mint scaled ?
         mint_scaled(
             &mut collateral_reserve_data,
             &mut user_reserve_data,
@@ -266,22 +263,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             Candid(collateral_reserve_data.clone()),
         )
     });
-
-    // if let Some(ref mut reserves) = user_account_data.reserves {
-    //     if let Some(reserve) = reserves
-    //         .iter_mut()
-    //         .find(|(asset, _)| asset == &params.collateral_asset)
-    //     {
-    //         reserve.1 = user_reserve_data.clone();
-    //     } else {
-    //         reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
-    //     }
-    // } else {
-    //     user_account_data.reserves = Some(vec![(
-    //         params.collateral_asset.clone(),
-    //         user_reserve_data.clone(),
-    //     )]);
-    // }
 
     match user_account_data.reserves.as_mut() {
         Some(reserves) => {
@@ -341,7 +322,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                             Some(vec![(params.collateral_asset.clone(), new_reserve)]);
                     }
 
-                    // bhanu handle unwrap
                     match liquidator_data.reserves.as_mut() {
                         Some(reserves) => match reserves
                             .iter_mut()

@@ -281,13 +281,13 @@ fn setup() -> (PocketIc, Principal) {
 
     /*
      * @title Update Reserve Price
-     * @notice Calls `update_reserve_price_test` to update the reserve price cache.
+     * @notice Calls `mock_price_data` to update the reserve price cache.
      * @dev Sends an update call and decodes the response.
      */
     let result = pic.update_call(
         backend_canister,
         user_principal,
-        "update_reserve_price_test",
+        "mock_price_data",
         encode_one(()).unwrap(),
     );
 

@@ -3,63 +3,96 @@ import ReactDOM from "react-dom";
 
 const CaptchaPrompt = ({ captchaData, onSubmit }) => {
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);  
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef();
+  const modalRef = useRef();
 
   useEffect(() => {
-    inputRef.current?.focus(); 
-  }, []);
+    inputRef.current?.focus();
+
+    const handleOutsideClick = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        onSubmit("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [onSubmit]);
 
   const handleSubmit = async () => {
-    if (!input.trim()) return; 
+    if (!input.trim()) return;
 
-    setLoading(true);  
+    setLoading(true);
 
     try {
-      
       await onSubmit(input.trim());
-      await new Promise(resolve => setTimeout(resolve, 1500));  
+      await new Promise((resolve) => setTimeout(resolve, 1500));
     } finally {
-      setLoading(false);  
+      setLoading(false);
     }
   };
 
-
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSubmit();
+    }
+  };
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-      <div className="bg-white dark:bg-[#252347] shadow-xl rounded-xl p-6  w-[325px] lg1:w-[420px]">
-        <h3 className="text-lg font-medium text-[#2A1F9D] dark:text-darkText mb-4">
-          Please verify you are human
-        </h3>
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-gray-900 opacity-50"
+        style={{ pointerEvents: "all" }}
+      />
 
-        <div className="bg-gray-100 dark:bg-darkBackground/30 text-[#2A1F9D] dark:text-darkText p-3 rounded-md mb-4 text-center font-mono text-2xl tracking-widest">
-          {captchaData.Ok?.base64_img && (
-            <img
-              src={captchaData.Ok.base64_img}
-              alt="Captcha"
-              style={{ maxWidth: '100%', height: 'auto' }}
-            />
-          )}
-        </div>
-
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Enter captcha text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="w-full bg-gray-100 dark:bg-darkBackground/30 text-[#2A1F9D] dark:text-darkText px-3 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-600 mb-4"
-        />
-        <button
-          className={`w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 transition duration-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={handleSubmit}
-          disabled={loading}  
+      {/* Modal content */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div
+          ref={modalRef}
+          className="bg-white dark:bg-[#252347] shadow-xl rounded-xl p-6 w-full max-w-sm lg:max-w-md"
         >
-          {loading ? 'Submitting...' : 'Submit'} 
-        </button>
+          <h3 className="text-lg font-medium text-[#2A1F9D] dark:text-darkText mb-4">
+            Please verify you are human
+          </h3>
+
+          <div className="bg-gray-100 dark:bg-darkBackground/30 text-[#2A1F9D] dark:text-darkText p-3 rounded-md mb-4 text-center font-mono text-2xl tracking-widest">
+            {captchaData.Ok?.base64_img && (
+              <img
+                src={captchaData.Ok.base64_img}
+                alt="Captcha"
+                style={{ maxWidth: "100%", height: "auto" }}
+              />
+            )}
+          </div>
+
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Enter captcha text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="w-full bg-gray-100 dark:bg-darkBackground/30 text-[#2A1F9D] dark:text-darkText px-3 py-2 border border-gray-800 rounded-md focus:outline-none mb-4"
+            onKeyDown={handleKeyPress}
+          />
+
+          <button
+            className={`w-full bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-md p-2 px-6 shadow-md font-semibold text-sm mt-4 transition duration-500 ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        </div>
       </div>
-    </div>,
+    </>,
     document.body
   );
 };

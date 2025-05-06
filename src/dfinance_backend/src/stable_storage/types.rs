@@ -19,7 +19,6 @@ pub type CanisterList =  StableBTreeMap<String,Principal, VMem>;
 pub type TesterList =  StableBTreeMap<String,Principal, VMem>;
 pub type MetaData =  StableBTreeMap<String,Candid<InitArgs>, VMem>;
 pub type AdminData = StableBTreeMap<Principal, String, VMem>;
-pub type DeveloperData = StableBTreeMap<Principal, String, VMem>;
 pub type AssetRecords = StableBTreeMap<String, Candid<AssetInfo>, VMem>;
 pub type LogStorage = StableBTreeMap<u32, Candid<Vec<String>>, VMem>;
 

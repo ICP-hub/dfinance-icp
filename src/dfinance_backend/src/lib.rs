@@ -29,7 +29,7 @@ use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
-use api::query::get_all_faucet;
+use crate::protocol::logic::faucet::get_all_faucet;
 use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
@@ -65,7 +65,6 @@ pub fn init(args: Principal) {
     init_logging(false);
 
     schedule_temp_log_cleanup();
-    debug!("function called");
 }
 /* @title Schedule Midnight Task
  * @dev This function schedules a task to reset faucet usage at midnight.
@@ -114,7 +113,6 @@ pub fn schedule_temp_log_cleanup() {
  * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.
  * @functionality Resets faucet usage for all users at midnight.
  */
-//TODO check faucet reset at midnight
 #[cfg(feature = "testnet")]
 async fn run_midnight_reset() {
     let (vector_faucet_data, _cer) = get_all_faucet().await;

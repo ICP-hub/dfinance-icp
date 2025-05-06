@@ -1,18 +1,18 @@
 use crate::api::inter_canister::{get_balance, get_total_supply};
-use crate::api::query::{get_asset_principal, get_cached_exchange_rate, user_normalized_debt, user_normalized_supply};
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::SCALING_FACTOR;
-use crate::protocol::libraries::user::calculate_user_account_data;
+use crate::constants::constant_variables::constants::SCALING_FACTOR;
+use crate::protocol::libraries::user::{calculate_user_account_data, user_normalized_debt, user_normalized_supply};
 use crate::{debug, error, info, trace};
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::declarations::datatypes::ReserveData;
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::update_token_price;
+use crate::protocol::utils::price::{update_token_price, get_cached_exchange_rate};
 use candid::{Nat, Principal};
 use crate::protocol::libraries::update::user_reserve;
 pub struct ValidationLogic;
 use crate::protocol::libraries::update::user_data;
+use crate::protocol::libraries::reserve::get_asset_principal;
 
 impl ValidationLogic {
     /*
@@ -172,7 +172,7 @@ impl ValidationLogic {
         let _ = update_token_price(reserve.asset_name.clone()).await;
         info!("updating token price"); //info
         
-        debug!("going inside calculate user account data"); //info
+        debug!("going inside calculate user account data"); //debug
 
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
@@ -209,7 +209,7 @@ impl ValidationLogic {
             //checking for substration error
             if total_collateral < usd_withdrawl {
                 error!("total collateral is less than withdrawl amount");
-                return Err(Error::AmountSubtractionError);//TODO specify the error
+                return Err(Error::TotalCollateraLessThan);
             } else {
                 adjusted_collateral = total_collateral.clone() - usd_withdrawl.clone();
             }
@@ -225,13 +225,12 @@ impl ValidationLogic {
             }
 
             //checking if the LTV is greater than the liquidation threshold
-            if new_ltv >= liquidation_threshold_var { //TODO '=' will be there?, check 
+            if new_ltv >= liquidation_threshold_var { 
             error!("LTV is greater than liquidation threshold"); //error
                 return Err(Error::LTVGreaterThanThreshold);
             }
 
             if total_debt != Nat::from(0u128) {
-                //TODO : new_liq_thres calculation?
                 let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold_var);
                 new_health_factor = new_health_factor.scaled_div(total_debt).scaled_div(Nat::from(PERCENTAGE_FACTOR));
                 debug!("new health factor = {}", new_health_factor);   //debug
@@ -293,11 +292,6 @@ impl ValidationLogic {
             error!("Borrow amount exceeds platform balance."); //error
             return Err(Error::LowPlatformBalance);
         }
-
-        //updating token price and store latest price in price cache
-        // if let Err(e) = update_token_price(reserve.asset_name.clone()).await {
-        //     ic_cdk::println!("Failed to update reserves price: {:?}", e);  //error
-        // }
 
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
@@ -396,7 +390,7 @@ impl ValidationLogic {
      * and ensures the user's outstanding debt allows for repayment.
      */
     pub async fn validate_repay(
-        reserve: &ReserveData,
+        _reserve: &ReserveData,
         amount: Nat,
         user: Principal,
         liquidator: Option<Principal>,

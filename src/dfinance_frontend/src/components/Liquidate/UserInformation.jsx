@@ -13,7 +13,8 @@ import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../customHooks/useTransferFee";
-
+import { BASE_UNIT } from '../../utils/constants';
+import { HealthFactor_Unit } from '../../utils/constants';
 const UserInformationPopup = ({
   onClose,
   mappedItem,
@@ -146,8 +147,8 @@ const getAssetBorrowValue = useCallback((asset) => {
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    const amountTaken = calculatedData?.maxCollateral / 1e8 || 0;
-    const amountAdded = calculatedData?.maxDebtToLiq / 1e8 || 0;
+    const amountTaken = calculatedData?.maxCollateral / BASE_UNIT || 0;
+    const amountAdded = calculatedData?.maxDebtToLiq / BASE_UNIT || 0;
 
     const assetRates = {
       ckETH: ckETHUsdRate,
@@ -160,9 +161,9 @@ const getAssetBorrowValue = useCallback((asset) => {
     let totalCollateralValue =
       Math.trunc(
         (parseFloat(totalCollateral) -
-          parseFloat(amountTaken * (assetRates[selectedAsset] / 1e8))) *
-          1e8
-      ) / 1e8;
+          parseFloat(amountTaken * (assetRates[selectedAsset] / BASE_UNIT))) *
+          BASE_UNIT
+      ) / BASE_UNIT;
 
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
@@ -171,9 +172,9 @@ const getAssetBorrowValue = useCallback((asset) => {
     let totalDeptValue =
       Math.trunc(
         (parseFloat(totalDebt) -
-          parseFloat(amountAdded * (assetRates[selectedDebtAsset] / 1e8))) *
-          1e8
-      ) / 1e8;
+          parseFloat(amountAdded * (assetRates[selectedDebtAsset] / BASE_UNIT))) *
+          BASE_UNIT
+      ) / BASE_UNIT;
 
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
@@ -182,12 +183,12 @@ const getAssetBorrowValue = useCallback((asset) => {
       return Infinity;
     }
 
-    let avliq = Math.trunc(liquidationThreshold * totalCollateral * 1e8) / 1e8;
+    let avliq = Math.trunc(liquidationThreshold * totalCollateral * BASE_UNIT) / BASE_UNIT;
 
     let tempLiq =
       avliq -
       amountTaken *
-        (assetRates[selectedAsset] / 1e8) *
+        (assetRates[selectedAsset] / BASE_UNIT) *
         reserveliquidationThreshold;
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
@@ -197,7 +198,7 @@ const getAssetBorrowValue = useCallback((asset) => {
     }
 
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * 1e8) / 1e8;
+    result = Math.round(result * BASE_UNIT) / BASE_UNIT;
 
     return result;
   };
@@ -339,8 +340,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       ledgerActor = ledgerActors.ckUSDT;
     }
 
-    const supplyAmount = BigInt(Math.round(amountToRepay * 100000000));
-    const totalAmount = supplyAmount + BigInt(Math.round(transferFee * 1e8));
+    const supplyAmount = BigInt(Math.round(amountToRepay * BASE_UNIT));
+    const totalAmount = supplyAmount + BigInt(Math.round(transferFee * BASE_UNIT));
 
     try {
       setIsLoading(true);
@@ -407,10 +408,10 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     };
 
     const usdRate = assetRates[selectedAsset]
-      ? assetRates[selectedAsset] / 1e8
+      ? assetRates[selectedAsset] / BASE_UNIT
       : null;
     const debtPrice = assetRates[selectedDebtAsset]
-      ? assetRates[selectedDebtAsset] / 1e8
+      ? assetRates[selectedDebtAsset] / BASE_UNIT
       : null;
     if (!debtPrice)
       console.error(
@@ -418,14 +419,14 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
         selectedDebtAsset
       );
 
-    const truncateToEightDecimals = (value) => Math.floor(value * 1e8) / 1e8;
+    const truncateToEightDecimals = (value) => Math.floor(value * BASE_UNIT) / BASE_UNIT;
     const truncatedCollateral = truncateToEightDecimals(collateralAmount);
     const truncatedCollateralBalance =
       truncateToEightDecimals(collateralBalance);
 
     let finalCollateralAmount = truncateToEightDecimals(
       (truncatedCollateral + truncatedCollateral * (liquidation_bonus / 100)) *
-        1e8
+        BASE_UNIT
     );
 
     finalCollateralAmount = Math.trunc(finalCollateralAmount);
@@ -457,8 +458,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   //Function to calculate max collateral
   const handleMaxCollateral = async () => {
     try {
-      const supplyAmount = Math.trunc(amountToRepay * 100000000);
-      const totalDebt = Number(mappedItem.debt) * 1e8;
+      const supplyAmount = Math.trunc(amountToRepay * BASE_UNIT);
+      const totalDebt = Number(mappedItem.debt) * BASE_UNIT;
       const selectedAssetsupply = Math.trunc(selectedAssetSupply);
 
       const response = cal_max_collateral_to_liq(
@@ -521,18 +522,18 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     setIsLoading(true);
     try {
       const truncateToEightDecimals = (num) => {
-        return Math.trunc(num * 1e8) / 1e8;
+        return Math.trunc(num * BASE_UNIT) / BASE_UNIT;
       };
       const maxDebtToLiqValue = calculatedData?.maxDebtToLiq
-        ? calculatedData.maxDebtToLiq / 1e8
+        ? calculatedData.maxDebtToLiq / BASE_UNIT
         : 0;
 
       const truncatedMaxDebtToLiq = truncateToEightDecimals(maxDebtToLiqValue);
       let supplyAmount = truncateToEightDecimals(truncatedMaxDebtToLiq);
-      supplyAmount = Math.trunc(supplyAmount * 100000000);
+      supplyAmount = Math.trunc(supplyAmount * BASE_UNIT);
 
       const maxCollateralValue = calculatedData?.maxCollateral
-        ? calculatedData.maxCollateral / 1e8
+        ? calculatedData.maxCollateral / BASE_UNIT
         : 0;
 
       const truncatedMaxCollateral =
@@ -547,9 +548,9 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        amount: supplyAmount + transferfee * 1e8,
+        amount: supplyAmount + transferfee * BASE_UNIT,
         on_behalf_of: mappedItem?.principal?._arr,
-        reward_amount: Math.trunc(rewardAmount * 1e8),
+        reward_amount: Math.trunc(rewardAmount * BASE_UNIT),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
 
@@ -837,20 +838,20 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       ckUSDT: ckUSDTUsdRate,
     };
 
-    const usdRate = assetRates[asset] ? assetRates[asset] / 1e8 : null;
+    const usdRate = assetRates[asset] ? assetRates[asset] / BASE_UNIT : null;
     const adjustedRewardAmount =
-      rewardAmount !== calculatedData?.maxCollateral / 1e8
-        ? calculatedData?.maxCollateral / 1e8
+      rewardAmount !== calculatedData?.maxCollateral / BASE_UNIT
+        ? calculatedData?.maxCollateral / BASE_UNIT
         : rewardAmount;
     const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : null;
     const DebtusdRate = assetRates[selectedDebtAsset]
-      ? assetRates[selectedDebtAsset] / 1e8
+      ? assetRates[selectedDebtAsset] / BASE_UNIT
       : 0;
     const DebtAmount =
       selectedAsset == selectedDebtAsset
         ? calculatedData?.maxDebtToLiq
         : Math.trunc((calculatedData?.maxDebtToLiq * DebtusdRate) / usdRate);
-    const bonusValue = ((DebtAmount / 1e8) * liquidation_bonus) / 100;
+    const bonusValue = ((DebtAmount / BASE_UNIT) * liquidation_bonus) / 100;
 
     const assetIndex = assets.indexOf(asset);
     const DebtassetIndex = assets.indexOf(selectedDebtAsset);
@@ -1013,7 +1014,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   if (selectedItem && selectedItem[1]?.Ok) {
     const item = selectedItem[1].Ok;
     liquidation_bonus =
-      Number(item?.configuration?.liquidation_bonus || "0") / 100000000;
+      Number(item?.configuration?.liquidation_bonus || "0") / BASE_UNIT;
   }
 
   // Function to truncate value to 8 decimals
@@ -1055,12 +1056,12 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   }, [assets, liquidateTrigger]);
 
   useEffect(() => {
-    const totalCollateral = Number(mappedItem.collateral) / 1e8 || 0;
+    const totalCollateral = Number(mappedItem.collateral) / BASE_UNIT || 0;
 
-    const totalDebt = Number(mappedItem.debt) / 1e8 || 0;
+    const totalDebt = Number(mappedItem.debt) / BASE_UNIT || 0;
 
     const liquidationThreshold =
-      Number(mappedItem.liquidationThreshold) / 1e8 || 0;
+      Number(mappedItem.liquidationThreshold) / BASE_UNIT || 0;
 
     const assetLiquidationThresholds = Array.isArray(
       mappedItem.userData?.reserves?.[0]
@@ -1072,7 +1073,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
 
           const liquidationThreshold =
             Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
-              1e8 || 0;
+              BASE_UNIT || 0;
 
           return { assetName, liquidationThreshold };
         })
@@ -1148,7 +1149,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
       return;
     }
-    const truncateTo8Decimals = (num) => Math.trunc(num * 1e8) / 1e8;
+    const truncateTo8Decimals = (num) => Math.trunc(num * BASE_UNIT) / BASE_UNIT;
     const newCollateralAmount =
       selectedAsset === selectedDebtAsset
         ? amountToRepay
@@ -1190,7 +1191,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   ]);
 
   useEffect(() => {
-    const newValue = Number(mappedItem.healthFactor) / 10000000000;
+    const newValue = Number(mappedItem.healthFactor) / HealthFactor_Unit;
     setValue(newValue);
   }, [liquidateTrigger]);
 
@@ -1230,7 +1231,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   ]);
 
   useEffect(() => {
-    const value = Number(mappedItem.healthFactor) / 10000000000;
+    const value = Number(mappedItem.healthFactor) / HealthFactor_Unit;
 
     if (value > 100) {
       setFactor("50");
@@ -1311,19 +1312,19 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
             </strong>
             "?{" "}
             <strong className="font-bold text-red-500">
-              {amountToRepay === calculatedData.maxDebtToLiq / 1e8
+              {amountToRepay === calculatedData.maxDebtToLiq / BASE_UNIT
                 ? truncateToEightDecimals(amountToRepay)
                 : truncateToEightDecimals(
-                    calculatedData.maxDebtToLiq / 1e8
+                    calculatedData.maxDebtToLiq / BASE_UNIT
                   )}{" "}
             </strong>
             <span className="font-bold">{selectedDebtAsset}</span> will be{" "}
             <strong className="underline">deducted</strong> from your account &{" "}
             <strong className="font-bold text-green-500">
-              {rewardAmount === calculatedData?.maxCollateral / 1e8
+              {rewardAmount === calculatedData?.maxCollateral / BASE_UNIT
                 ? truncateToEightDecimals(rewardAmount)
                 : truncateToEightDecimals(
-                    calculatedData?.maxCollateral / 1e8
+                    calculatedData?.maxCollateral / BASE_UNIT
                   )}{" "}
             </strong>
             <span className="font-bold">{selectedAsset}</span> will be rewarded.
@@ -1449,25 +1450,25 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
 
                       const assetBorrowAmount =
                         Math.trunc(
-                          Number((assetBorrow * (factor / 100)) / 1e8) * 1e8
-                        ) / 1e8;
+                          Number((assetBorrow * (factor / 100)) / BASE_UNIT) * BASE_UNIT
+                        ) / BASE_UNIT;
 
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckBTCUsdRate / 1e8);
+                          assetBorrowAmount * (ckBTCUsdRate / BASE_UNIT);
                       } else if (assetName === "ckETH" && ckETHUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckETHUsdRate / 1e8);
+                          assetBorrowAmount * (ckETHUsdRate / BASE_UNIT);
                       } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckUSDCUsdRate / 1e8);
+                          assetBorrowAmount * (ckUSDCUsdRate / BASE_UNIT);
                       } else if (assetName === "ICP" && ckICPUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckICPUsdRate / 1e8);
+                          assetBorrowAmount * (ckICPUsdRate / BASE_UNIT);
                       } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckUSDTUsdRate / 1e8);
+                          assetBorrowAmount * (ckUSDTUsdRate / BASE_UNIT);
                       }
                       const assetIndex = assets.indexOf(asset);
                       if (assetBorrow > 0) {
@@ -1537,12 +1538,12 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                           };
 
                           const usdRate = assetRates[selectedDebtAsset]
-                            ? assetRates[selectedDebtAsset] / 1e8
+                            ? assetRates[selectedDebtAsset] / BASE_UNIT
                             : null;
 
                           const adjustedAmountToRepay =
                             calculatedData?.maxDebtToLiq > 0
-                              ? calculatedData.maxDebtToLiq / 1e8
+                              ? calculatedData.maxDebtToLiq / BASE_UNIT
                               : amountToRepay;
 
                           const repayInUSD = usdRate
@@ -1618,15 +1619,15 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                   );
                   let collateralRate = 0;
                   if (assetName === "ckBTC" && ckBTCUsdRate) {
-                    collateralRate = ckBTCUsdRate / 1e8;
+                    collateralRate = ckBTCUsdRate / BASE_UNIT;
                   } else if (assetName === "ckETH" && ckETHUsdRate) {
-                    collateralRate = ckETHUsdRate / 1e8;
+                    collateralRate = ckETHUsdRate / BASE_UNIT;
                   } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
-                    collateralRate = ckUSDCUsdRate / 1e8;
+                    collateralRate = ckUSDCUsdRate / BASE_UNIT;
                   } else if (assetName === "ICP" && ckICPUsdRate) {
-                    collateralRate = ckICPUsdRate / 1e8;
+                    collateralRate = ckICPUsdRate / BASE_UNIT;
                   } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
-                    collateralRate = ckUSDTUsdRate / 1e8;
+                    collateralRate = ckUSDTUsdRate / BASE_UNIT;
                   }
                   const collateralAmount =
                     selectedAsset === selectedDebtAsset
@@ -1672,7 +1673,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
               {(!isCollateralAssetSelected ||
                 (amountToRepay !== calculatedData?.maxDebtToLiq &&
                   !(
-                    calculatedData?.maxDebtToLiq / 1e8 <=
+                    calculatedData?.maxDebtToLiq / BASE_UNIT <=
                     selectedAssetBalance
                   ))) && (
                 <div className="w-full flex flex-col my-3 space-y-2">
@@ -1719,7 +1720,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                     !info &&
                     isDebtAssetSelected &&
                     (amountToRepay !== calculatedData?.maxDebtToLiq
-                      ? calculatedData?.maxDebtToLiq / 1e8 <=
+                      ? calculatedData?.maxDebtToLiq / BASE_UNIT <=
                         selectedAssetBalance
                       : amountToRepay <= selectedAssetBalance)
                       ? "opacity-100 cursor-pointer"
@@ -1734,7 +1735,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                     !isDebtAssetSelected ||
                     info ||
                     !(amountToRepay !== calculatedData?.maxDebtToLiq
-                      ? calculatedData?.maxDebtToLiq / 1e8 <=
+                      ? calculatedData?.maxDebtToLiq / BASE_UNIT <=
                         selectedAssetBalance
                       : amountToRepay <= selectedAssetBalance)
                   }

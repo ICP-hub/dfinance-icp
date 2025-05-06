@@ -83,7 +83,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             asset: "ckETH_long".to_string(),
             amount: Nat::from(100_000u128),
             expect_success: false,
-            expected_error_message: Some("Length of the asset is invalid".to_string()),
+            expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
         // Non-existent asset
         TestCase {

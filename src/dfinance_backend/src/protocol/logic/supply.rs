@@ -1,20 +1,19 @@
 use crate::api::inter_canister::asset_transfer_from;
-use crate::api::query::{get_cached_exchange_rate, reserve_ledger_canister_id};
 use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::interest_variables::constants::TOKEN_TRANSFER_FEE;
+use crate::constants::constant_variables::constants::TOKEN_TRANSFER_FEE;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self};
+use crate::protocol::libraries::reserve::{self, get_asset_principal};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::update_token_price;
+use crate::protocol::utils::price::{update_token_price, get_cached_exchange_rate};
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info,};
 use candid::{Nat, Principal};
@@ -50,7 +49,6 @@ use ic_cdk::update;
 #[update]
 pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Error> {
     request_limiter()?;
-    guard_prevent_anonymous()?;
 
     let user_principal = ic_cdk::caller();
   
@@ -63,7 +61,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     validate_zero_value(&params.amount)?;
 
    
-    let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?; //fetch param.asset canister id
+    let ledger_canister_id = get_asset_principal(params.asset.clone())?; //fetch param.asset canister id
     let platform_principal = ic_cdk::api::id();  //fetch backend canister id
 
     let amount_nat = params.amount.clone(); //check
@@ -99,7 +97,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     //fetching the price of the asset in USD
     let asset_price = get_cached_exchange_rate(params.asset.clone())?;
 
-    //TODO : 96 to 104 can be common
     //Calculating Transfer fee in usd
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
     debug!("Transfer token fee: {:?}", transfer_token_fee); //debug
@@ -117,7 +114,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
-    //ask bhanu for trapping it 
     info!("udpate user data supply called successfully"); //info
     let liq_added = params.amount.clone();
     let liq_taken = zero_nat_value();
@@ -157,8 +153,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         Err(_) => {
             error!("Error in asset transfer from user to backend canister"); //error
                                                                              //Rollback user state and burning dtokens
-                                                                             //NOTE: transfer fee is not returned to the user
-                                                                             //TODO: ask from vinayak sir whether to keep the transfer fee or return it back to the user
+                                                                            
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
                 is_collateral: params.is_collateral,
@@ -173,17 +168,11 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                 &mut reserve_data,
             )
             .await?;
-            //revert the reserve data changes
-            //TODO: check if we need to revert the reserve data changes
-            // mutate_state(|state| {
-            //     state
-            //         .asset_index
-            //         .insert(params.asset.clone(), Candid(reserve_data.clone()))
-            // });
+            
             info!("Rollback successfully executed"); //info
 
             error!("Error in asset transfer from user to backend canister");
-            return Err(Error::ErrorMintTokens); //TODO: jyotirmay change the error message it should be ErrorSupplyTokens
+            return Err(Error::ErrorSupplyToken);
         }
     }
 }
@@ -219,7 +208,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 #[update]
 pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Error> {
     request_limiter()?;
-    guard_prevent_anonymous()?;
 
     let user_principal = ic_cdk::caller();
   
@@ -229,7 +217,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     };
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
-    let ledger_canister_id = reserve_ledger_canister_id(params.asset.clone())?;
+    let ledger_canister_id = get_asset_principal(params.asset.clone())?;
 
     
     let transfer_to_principal: Principal = user_principal.clone();

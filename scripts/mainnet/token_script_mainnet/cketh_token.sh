@@ -33,7 +33,7 @@ reserve_factor=$(awk -v data=$reserve_factor -v scale=${SCALING_FACTOR//_/} 'BEG
 # Set the RESERVE_DATA
 RESERVE_DATA="(
   record {
-    asset_name = $ESCAPED_TOKEN_NAME; 
+    asset_name = "$ESCAPED_TOKEN_NAME"; 
     id = 2;
     \"d_token_canister\" = null;
     \"debt_token_canister\" = null;
@@ -61,6 +61,10 @@ RESERVE_DATA="(
 
 ASSET_IMAGE_URL="https://storage.googleapis.com/dfinance/CKETH.svg"
 
+if [[ ! "$ASSET_IMAGE_URL" =~ ^https://storage.googleapis.com ]]; then
+  echo "Error: Invalid URL. Only URLs from 'storage.googleapis.com' are allowed."
+  exit 1
+fi
 
-dfx canister call $CANISTER_NAME initialize \
+dfx canister call "$CANISTER_NAME" initialize \
   "(\"$TOKEN_NAME\", $RESERVE_DATA, principal \"$TOKEN_PRINCIPAL\", \"$ASSET_IMAGE_URL\")" --network ic

@@ -553,7 +553,77 @@ const DashboardComponent = () => {
       maximumFractionDigits: 2,
     })}`;
   };
+  /**
+  * Calculates the maximum lendable value and its USD equivalent for an asset.
+  * 
+  * 1. Retrieves the asset's USD rate.
+  * 2. Calculates the maximum lendable as 85% of total supply.
+  * 3. Computes the borrowable amount ensuring it doesn’t exceed available borrow.
+  * 4. Converts to USD and formats the values for display.
+  *
+  * @param {Array} item - Asset data.
+  * @param {string} item[0] - Asset identifier (e.g., "ckBTC").
+  * @param {string} total_supply - Total supply of the asset.
+  * @param {string} total_borrow - Total borrowed amount for the asset.
+  * @param {string} availableBorrow - Available borrowing amount in USD.
+  * @returns {Object} - { displayedAsset, usdFormatted }
+  */
+  const calculateAssetValue = (
+    item,
+    total_supply,
+    total_borrow,
+    availableBorrow
+  ) => {
+    const assetData = {
+      ckBTC: { rate: ckBTCUsdRate },
+      ckETH: { rate: ckETHUsdRate },
+      ckUSDC: { rate: ckUSDCUsdRate },
+      ICP: { rate: ckICPUsdRate },
+      ckUSDT: { rate: ckUSDTUsdRate },
+    }[item[0]];
 
+    if (!assetData)
+      return { displayedAsset: "0.00000000", usdFormatted: "$0.00" };
+
+    const usdRate = assetData.rate / SCALING_FACTOR;
+    const maxLendable = Number((Number(total_supply) * 0.85).toFixed(8));
+    const formattedMaxBorrow =
+      maxLendable < Number(total_borrow)
+        ? 0
+        : Math.min(
+          maxLendable - Number(total_borrow),
+          Number(availableBorrow) / usdRate
+        );
+
+    const usdValue = formattedMaxBorrow * usdRate;
+
+    let displayedAsset;
+    if (!isFinite(usdValue) || usdValue === 0) {
+      displayedAsset = "0.00000000";
+    } else if (usdValue < 0.01) {
+      displayedAsset = `<${(0.01 / usdRate).toLocaleString(undefined, {
+        minimumFractionDigits: 8,
+        maximumFractionDigits: 8,
+      })}`;
+    } else {
+      displayedAsset = formattedMaxBorrow.toLocaleString(undefined, {
+        minimumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
+        maximumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
+      });
+    }
+
+    const usdFormatted =
+      usdValue === 0
+        ? "$0.00"
+        : usdValue < 0.01
+          ? "<0.01$"
+          : `$${usdValue.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
+
+    return { displayedAsset, usdFormatted };
+  };
   // conditional rendering of jsx update model value for supply and borrow repay withdraw
   const handleAssetAction = (actionType, asset) => {
     fetchUserAccountData()
@@ -694,15 +764,23 @@ const DashboardComponent = () => {
         (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
         (Number(DebtIndex) * SCALING_FACTOR);
 
-      const assetData = item[1].Ok;
-      const total_supply = Number(assetData?.asset_supply || 0) / SCALING_FACTOR;
-      const total_borrow = Number(assetData?.asset_borrow || 0) / SCALING_FACTOR;
-
-      const { borrowableValue } = calculateBorrowableValues(
-        item,
-        availableBorrow,
-        Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
+      const items = filteredItems.find(
+        (item) => item[0] === asset
       );
+
+      const assetData = items[1].Ok;
+      const total_supply =
+        Number(assetData?.[0].asset_supply || 0) / SCALING_FACTOR;
+      const total_borrow =
+        Number(assetData?.[0].asset_borrow || 0) / SCALING_FACTOR;
+
+      const { displayedAsset } =
+        calculateAssetValue(
+          item,
+          total_supply,
+          total_borrow,
+          availableBorrow
+        );
 
       const ckBalance =
         asset === "ckBTC"
@@ -730,7 +808,7 @@ const DashboardComponent = () => {
       return {
         asset,
         item,
-        borrowableValue,
+        displayedAsset,
         ckBalance,
         borrowRateApr,
         liquidationThreshold,
@@ -805,77 +883,7 @@ const DashboardComponent = () => {
     return { debtFormatted, usdFormatted };
   };
 
-  /**
- * Calculates the maximum lendable value and its USD equivalent for an asset.
- * 
- * 1. Retrieves the asset's USD rate.
- * 2. Calculates the maximum lendable as 85% of total supply.
- * 3. Computes the borrowable amount ensuring it doesn’t exceed available borrow.
- * 4. Converts to USD and formats the values for display.
- *
- * @param {Array} item - Asset data.
- * @param {string} item[0] - Asset identifier (e.g., "ckBTC").
- * @param {string} total_supply - Total supply of the asset.
- * @param {string} total_borrow - Total borrowed amount for the asset.
- * @param {string} availableBorrow - Available borrowing amount in USD.
- * @returns {Object} - { displayedAsset, usdFormatted }
- */
-  const calculateAssetValue = (
-    item,
-    total_supply,
-    total_borrow,
-    availableBorrow
-  ) => {
-    const assetData = {
-      ckBTC: { rate: ckBTCUsdRate },
-      ckETH: { rate: ckETHUsdRate },
-      ckUSDC: { rate: ckUSDCUsdRate },
-      ICP: { rate: ckICPUsdRate },
-      ckUSDT: { rate: ckUSDTUsdRate },
-    }[item[0]];
 
-    if (!assetData)
-      return { displayedAsset: "0.00000000", usdFormatted: "$0.00" };
-
-    const usdRate = assetData.rate / SCALING_FACTOR;
-    const maxLendable = Number((Number(total_supply) * 0.85).toFixed(8));
-    const formattedMaxBorrow =
-      maxLendable < Number(total_borrow)
-        ? 0
-        : Math.min(
-          maxLendable - Number(total_borrow),
-          Number(availableBorrow) / usdRate
-        );
-
-    const usdValue = formattedMaxBorrow * usdRate;
-
-    let displayedAsset;
-    if (!isFinite(usdValue) || usdValue === 0) {
-      displayedAsset = "0.00000000";
-    } else if (usdValue < 0.01) {
-      displayedAsset = `<${(0.01 / usdRate).toLocaleString(undefined, {
-        minimumFractionDigits: 8,
-        maximumFractionDigits: 8,
-      })}`;
-    } else {
-      displayedAsset = formattedMaxBorrow.toLocaleString(undefined, {
-        minimumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
-        maximumFractionDigits: formattedMaxBorrow > 1 ? 2 : 8,
-      });
-    }
-
-    const usdFormatted =
-      usdValue === 0
-        ? "$0.00"
-        : usdValue < 0.01
-          ? "<0.01$"
-          : `$${usdValue.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`;
-
-    return { displayedAsset, usdFormatted };
-  };
 
   /**
   * Filters and sorts assets based on their borrow eligibility and supply-to-borrow ratio.
@@ -2302,22 +2310,20 @@ const DashboardComponent = () => {
                                 );
 
                                 const assetData = item[1].Ok;
-
                                 const total_supply =
-                                  Number(assetData?.asset_supply || 0) /
-                                  SCALING_FACTOR;
+                                  Number(assetData?.[0].asset_supply || 0) / SCALING_FACTOR;
                                 const total_borrow =
-                                  Number(assetData?.asset_borrow || 0) /
-                                  SCALING_FACTOR;
+                                  Number(assetData?.[0].asset_borrow || 0) / SCALING_FACTOR;
 
-                                const { borrowableValue } =
-                                  calculateBorrowableValues(
+                                const { displayedAsset, usdFormatted } =
+                                  calculateAssetValue(
                                     item,
-                                    availableBorrow,
-                                    Number((total_supply * 0.85).toFixed(8)) -
-                                    Number(total_borrow)
+                                    total_supply,
+                                    total_borrow,
+                                    availableBorrow
                                   );
 
+                                console.log("borrow", displayedAsset)
                                 const ckBalance =
                                   asset === "ckBTC"
                                     ? ckBTCBalance
@@ -2414,7 +2420,7 @@ const DashboardComponent = () => {
                                       <Button
                                         title={"Borrow"}
                                         onClickHandler={() => {
-                                          if (parseFloat(borrowableValue) <= 0) {
+                                          if (parseFloat(displayedAsset) <= 0) {
                                             toast.dismiss();
                                             toast.info(
                                               "Insufficient asset supply or balance to allow borrow request",
@@ -2437,7 +2443,7 @@ const DashboardComponent = () => {
                                         disabled={
                                           isTableDisabled ||
                                           isButtonDisabled ||
-                                          parseFloat(borrowableValue) <= 0
+                                          parseFloat(displayedAsset) <= 0
                                         }
                                         className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-lg shadow-md px-7 py-2 text-[14px] w-1/2 font-semibold"
                                       />
@@ -2533,6 +2539,7 @@ const DashboardComponent = () => {
                       >
                         <div className="w-full text-[#2A1F9D] text-xs md:text-sm lg:text-base dark:text-darkText mt-5">
                           {filteredReserves?.map((reserveData, index) => (
+
                             <div
                               key={index}
                               className="grid grid-cols-[1.6fr_1.2fr_1fr_1fr_2fr] gap-2 items-center font-semibold hover:bg-[#ddf5ff8f] rounded-lg text-xs mt-2"
@@ -2582,11 +2589,12 @@ const DashboardComponent = () => {
                                 <div className="w-full flex">variable</div>
                               </div>
                               <div className="p-3 flex gap-2">
+
                                 <Button
                                   title={"Borrow"}
                                   onClickHandler={() => {
                                     if (
-                                      parseFloat(reserveData.borrowableValue) <=
+                                      parseFloat(reserveData.displayedAsset) <=
                                       0
                                     ) {
                                       toast.info(
@@ -2613,7 +2621,7 @@ const DashboardComponent = () => {
                                   disabled={
                                     isTableDisabled ||
                                     isButtonDisabled ||
-                                    parseFloat(reserveData.borrowableValue) <= 0
+                                    parseFloat(reserveData.displayedAsset) <= 0
                                   }
                                   className="bg-gradient-to-tr from-[#4659CF] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-md px-3 py-1.5 shadow-md shadow-[#00000040] font-semibold text-xs font-inter"
                                 />

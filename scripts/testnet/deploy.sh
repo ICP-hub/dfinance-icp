@@ -197,6 +197,11 @@ dfx deploy dfinance_backend --network ic --argument "(
     principal \"$admin_principal\"
 )" || exit 1
 
+# -----------------------------
+# Add backend canister the controller of the logs canister
+# -----------------------------
+BACKEND_CANISTER_ID=$(dfx canister id dfinance_backend --network ic)
+dfx canister update-settings logs --add-controller "$BACKEND_CANISTER_ID" --network ic
 
 # -------------------------------
 # Set xrc and log canister ID

@@ -77,12 +77,12 @@ fn init() {
  #[update]
  #[candid_method(update)]
  pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) ->Result<(), String> {
-    //  let caller = ic_cdk::caller();
+     let caller = ic_cdk::caller();
  
-    //  if !ic_cdk::api::is_controller(&caller) {
-    //     ic_cdk::println!("Unauthorized access to logs");
-    //      return Err("Unauthorized access to logs.".to_string());
-    //  }
+     if !ic_cdk::api::is_controller(&caller) {
+        ic_cdk::println!("Unauthorized access to logs");
+         return Err("Unauthorized access to logs.".to_string());
+     }
      
      LOG_STORAGE.with(|storage| {
          let mut storage = storage.borrow_mut();

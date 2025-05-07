@@ -18,7 +18,6 @@ import {
   setTotalUsdValueBorrow,
   setTotalUsdValueSupply,
 } from "../../redux/reducers/borrowSupplyReducer";
-import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import MySupplyModal from "./MySupplyModal";
 import WithdrawPopup from "./DashboardPopup/WithdrawPopup";
 import SupplyPopup from "./DashboardPopup/SupplyPopup";
@@ -33,6 +32,7 @@ import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 import { useReserveData } from "../../context/ReserveDataContext";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
+
 /**
  * DashboardComponent Component
  *
@@ -2323,7 +2323,6 @@ const DashboardComponent = () => {
                                     availableBorrow
                                   );
 
-                                console.log("borrow", displayedAsset)
                                 const ckBalance =
                                   asset === "ckBTC"
                                     ? ckBTCBalance

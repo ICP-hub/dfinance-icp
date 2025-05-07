@@ -600,6 +600,7 @@ const AssetDetails = () => {
       Number(item?.[1]?.Ok[0].configuration.liquidation_threshold) / SCALING_FACTOR;
     const supplyRateApr =
       (Number(item?.[1]?.Ok[0]?.current_liquidity_rate) * PERCENTAGE_FACTOR) / SCALING_FACTOR || 0;
+
     const ckBalance =
       asset === "ckBTC"
         ? ckBTCBalance
@@ -612,6 +613,7 @@ const AssetDetails = () => {
         : asset === "ckUSDT"
         ? ckUSDTBalance
         : null;
+        
     const Ltv = Number(userData?.Ok?.[0].ltv) / SCALING_FACTOR || 0;
     const assetData = item[1].Ok;
 

@@ -12,9 +12,9 @@ const CaptchaPrompt = ({ captchaData, onSubmit, isVerified }) => {
 
     setLoading(true);
     try {
-      await onSubmit(input.trim()); // Parent handles toast + sets `isVerified`
+      await onSubmit(input.trim()); 
     } catch (error) {
-      // Optional: show error state here
+      console.error(error.message);
     }
   };
 
@@ -26,13 +26,11 @@ const CaptchaPrompt = ({ captchaData, onSubmit, isVerified }) => {
     }
   };
 
-  // Reset form when captcha changes or modal reopens
   useEffect(() => {
     setInput("");
     setLoading(false);
   }, [captchaData]);
 
-  // If verified, stop loading
   useEffect(() => {
     if (isVerified && loading) {
       setLoading(false);

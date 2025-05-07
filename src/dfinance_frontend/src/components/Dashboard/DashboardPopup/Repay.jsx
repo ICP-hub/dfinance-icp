@@ -57,8 +57,12 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
+  const [ledgerFee, setLedgerFee] = useState(null);
+
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
+  const transferFee =
+    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -194,31 +198,32 @@ const Repay = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") {
-      ledgerActor = ledgerActors.ckUSDT;
-    }
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    const scaledAmount = amountAsNat64;
-    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
-    const totalAmount = transferFeeBigInt
-      ? scaledAmount + transferFeeBigInt
-      : scaledAmount;
+    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
+    const fee = await ledgerActor.icrc1_fee();
+    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
+
+
+    setLedgerFee(fee);
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
+
     try {
+
+
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+        fee: fee ? [feeBigInt] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -269,6 +274,7 @@ const Repay = ({
       });
     }
   };
+
 
   const errorMessages = {
     NoCanisterIdFound:
@@ -801,21 +807,17 @@ const Repay = ({
                   </div>
                   <div className="w-full flex justify-between items-center my-1">
                     <div className="flex items-center gap-1 relative">
-                      <div
-                        className="flex items-center cursor-help"
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                      >
+                      <div className="flex items-center">
+                        <p>Transaction Fee</p>
                         <Info
                           size={14}
-                          className="text-blue-800 dark:text-white mr-1"
+                          className="text-blue-800 dark:text-white ml-1 cursor-help"
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
                         />
-                        <p>Transaction Fee</p>
-
                         {showTooltip && (
-                          <div className="absolute bottom-full left-0 mb-2 px-3 py-2 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                            Information related to transaction fee. This fee is
-                            charged to process your transaction on the network.
+                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Platform fee + Ledger Transfer fee
                           </div>
                         )}
                       </div>
@@ -895,7 +897,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
+                    amount + transferFee > supplyBalance
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                     }`}
@@ -904,7 +906,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
+                    amount + transferFee > supplyBalance
                   }
                 >
                   Approve {asset} to continue
@@ -917,7 +919,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
+                    (amount + transferFee) > supplyBalance
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                     }`}
@@ -926,7 +928,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
+                    (amount + transferFee) > supplyBalance
                   }
                 >
                   Repay {asset}

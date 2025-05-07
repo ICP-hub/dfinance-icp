@@ -50,14 +50,14 @@ const WithdrawPopup = ({
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
+
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
-
+  const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -72,6 +72,9 @@ const WithdrawPopup = ({
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [ledgerFee, setLedgerFee] = useState(null);
+  const transferFee =
+    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -216,6 +219,17 @@ const WithdrawPopup = ({
     }
 
     setIsLoading(true);
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+
+    const fee = await ledgerActor.icrc1_fee();
+    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
+    setLedgerFee(feeBigInt);
 
     try {
       const safeAmount =
@@ -479,8 +493,8 @@ const WithdrawPopup = ({
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
         ? parseFloat(Number(assetSupply).toFixed(8))
         : assetSupply >= 1e-7 && assetSupply < 1e-6
-        ? parseFloat(Number(assetSupply).toFixed(7))
-        : truncateToSevenDecimals(assetSupply)
+          ? parseFloat(Number(assetSupply).toFixed(7))
+          : truncateToSevenDecimals(assetSupply)
       : 0;
     const maxAmount = asset_supply - fee;
     const formattedAmount =
@@ -711,8 +725,8 @@ const WithdrawPopup = ({
                     {Math.max(
                       0,
                       assetSupply -
-                        transferFee -
-                        Number(amount.toString().replace(/,/g, ""))
+                      transferFee -
+                      Number(amount.toString().replace(/,/g, ""))
                     ).toLocaleString(undefined, {
                       minimumFractionDigits: 8,
                       maximumFractionDigits: 8,
@@ -737,9 +751,8 @@ const WithdrawPopup = ({
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>
                 <p
-                  className={`font-semibold ${
-                    currentCollateralStatus ? "text-green-500" : "text-red-500"
-                  }`}
+                  className={`font-semibold ${currentCollateralStatus ? "text-green-500" : "text-red-500"
+                    }`}
                 >
                   {currentCollateralStatus ? "Enabled" : "Disabled"}
                 </p>
@@ -749,33 +762,31 @@ const WithdrawPopup = ({
                   <p>Health Factor</p>
                   <p>
                     <span
-                      className={`${
-                        truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
+                      className={`${truncatedValue > 3
+                        ? "text-green-500"
+                        : truncatedValue <= 1
                           ? "text-red-500"
                           : truncatedValue <= 1.5
-                          ? "text-orange-600"
-                          : truncatedValue <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
-                      }`}
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
+                        }`}
                     >
                       {truncatedValue > 100 ? "Infinity" : truncatedValue}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
-                      className={`${
-                        currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
+                      className={`${currentHealthFactor > 3
+                        ? "text-green-500"
+                        : currentHealthFactor <= 1
                           ? "text-red-500"
                           : currentHealthFactor <= 1.5
-                          ? "text-orange-600"
-                          : currentHealthFactor <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
-                      }`}
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                              ? "text-orange-400"
+                              : "text-orange-300"
+                        }`}
                     >
                       {currentHealthFactor}
                     </span>
@@ -783,21 +794,17 @@ const WithdrawPopup = ({
                 </div>
                 <div className="w-full flex justify-between items-center my-1">
                   <div className="flex items-center gap-1 relative">
-                    <div
-                      className="flex items-center cursor-help"
-                      onMouseEnter={() => setShowTooltip(true)}
-                      onMouseLeave={() => setShowTooltip(false)}
-                    >
+                    <div className="flex items-center">
+                      <p>Transaction Fee</p>
                       <Info
                         size={14}
-                        className="text-blue-800 dark:text-white mr-1"
+                        className="text-blue-800 dark:text-white ml-1 cursor-help"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
                       />
-                      <p>Transaction Fee</p>
-
                       {showTooltip && (
-                        <div className="absolute bottom-full left-0 mb-2 px-3 py-2 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                          Information related to transaction fee. This fee is
-                          charged to process your transaction on the network.
+                        <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                          Platform fee + Ledger Transfer fee
                         </div>
                       )}
                     </div>
@@ -838,14 +845,14 @@ const WithdrawPopup = ({
             {parseFloat(
               assetSupply - amount.toString().replace(/,/g, "")
             ).toFixed(7) === "0.0000000" && (
-              <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
-                <p className="text-yellow-800 text-[13px] font-medium">
-                  <span className="font-semibold">Warning: </span>
-                  Due to interest rates, a small amount might still remain even
-                  after the maximum withdraw.
-                </p>
-              </div>
-            )}
+                <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
+                  <p className="text-yellow-800 text-[13px] font-medium">
+                    <span className="font-semibold">Warning: </span>
+                    Due to interest rates, a small amount might still remain even
+                    after the maximum withdraw.
+                  </p>
+                </div>
+              )}
           </div>
           <div>
             <button
@@ -855,11 +862,10 @@ const WithdrawPopup = ({
                   ? null
                   : handleWithdraw
               }
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
-                isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+                }`}
             >
               Withdraw
             </button>

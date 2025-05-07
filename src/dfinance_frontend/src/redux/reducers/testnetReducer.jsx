@@ -1,9 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
+const isProduction = process.env.DFX_PRODUCTION === 'true';
 
-  isTestnetMode: true,
+const initialState = {
+  isTestnetMode: !isProduction, // true if not production, false if production
 };
+
 
 const testnetSlice = createSlice({
   name: 'testnet',

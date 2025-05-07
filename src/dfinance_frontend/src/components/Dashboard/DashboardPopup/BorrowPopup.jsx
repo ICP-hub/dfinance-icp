@@ -16,7 +16,7 @@ import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import useAssetData from "../../customHooks/useAssets";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from "../../../utils/constants";
+import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
 
 /**
@@ -59,8 +59,9 @@ const Borrow = ({
     ckUSDTUsdRate,
   } = useFetchConversionRate();
   const { isBlocked } = useFunctionBlockStatus();
+
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
+  
   const borrowButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { filteredItems } = useAssetData();
@@ -90,7 +91,11 @@ const Borrow = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [ledgerFee, setLedgerFee] = useState(null);
+  const transferFee = 
+  (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
+const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
@@ -115,8 +120,8 @@ const Borrow = ({
     const item = filteredItems.find((item) => item[0] === asset);
     if (item && item[1]?.Ok) {
       const assetData = item[1].Ok[0];
-      const total_supply = Number(assetData?.asset_supply) / BASE_UNIT;
-      const total_borrow = Number(assetData?.asset_borrow) / BASE_UNIT;
+      const total_supply = Number(assetData?.asset_supply) / SCALING_FACTOR;
+      const total_borrow = Number(assetData?.asset_borrow) / SCALING_FACTOR;
       setTotalSupply(total_supply);
       setTotalBorrow(total_borrow);
     }
@@ -137,7 +142,7 @@ const Borrow = ({
       ICP: ckICPUsdRate,
       ckUSDT: ckUSDTUsdRate,
     };
-    const rate = assetRates[asset] / BASE_UNIT;
+    const rate = assetRates[asset] / SCALING_FACTOR;
     if (rate) {
       borrowableValue =
         remainingBorrowable < Number(availableBorrow) / rate
@@ -197,19 +202,27 @@ const Borrow = ({
       asset: asset,
       amount: totalAmount,
     };
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
+    const fee = await ledgerActor.icrc1_fee();
+    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
+    setLedgerFee(feeBigInt); 
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${
-            scaledAmount / BASE_UNIT
+          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${
-            scaledAmount / BASE_UNIT
+          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`
         );
 
@@ -367,7 +380,20 @@ const Borrow = ({
     setIsModalOpen(false);
   };
 
-  //calculate health factor
+
+  /**
+  * calculateHealthFactor:
+  * -----------------------
+  * Calculates the health factor of a user's position:
+  *
+  * 1. amountTaken = usdValue (assumes external scope or injected)
+  * 2. totalCollateralValue = max(totalCollateral, 0)
+  * 3. totalDeptValue = max(totalDebt + amountTaken, 0)
+  * 4. If totalDeptValue is 0 → return Infinity (i.e. no debt = safe position)
+  * 5. Formula used:
+  *      Health Factor = (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+  *    - Higher value means safer position.
+  */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -386,7 +412,16 @@ const Borrow = ({
     return result;
   };
 
-  //calculate Ltv
+  /**
+  * calculateLTV:
+  * -------------
+  * Calculates Loan-to-Value ratio:
+  *
+  * 1. If totalCollateral is 0 → return 0 to avoid divide-by-zero.
+  * 2. Formula used:
+  *      LTV = nextTotalDebt / totalCollateral
+  *    - Expresses how much of the collateral is currently borrowed.
+  */
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;
@@ -466,8 +501,7 @@ const Borrow = ({
 
   // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableValue - transferFee).toFixed(8);
-    console.log("maxAmount", maxAmount);
+    const maxAmount = parseFloat(borrowableValue- transferFee).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -547,9 +581,7 @@ const Borrow = ({
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable =
-          (totalSupply * 0.85).toFixed(8) - totalBorrow;
-        console.log("remain in borrow ", totalSupply);
+        const remainingBorrowable = (totalSupply * 0.85).toFixed(8) - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -576,8 +608,7 @@ const Borrow = ({
 
   useEffect(() => {
     if (userAccountData?.Ok[0]?.length > 5) {
-      const borrowValue = Number(userAccountData.Ok[0][5]) / BASE_UNIT;
-      console.log("borrowValue", borrowValue);
+      const borrowValue = Number(userAccountData.Ok[0][5]) / SCALING_FACTOR;
       setAvailableBorrow(borrowValue);
     } else {
       setAvailableBorrow(0);
@@ -609,6 +640,27 @@ const Borrow = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
+  /**
+ * 1. **Total Collateral Value Calculation:**
+ *    - totalCollateralValue = totalCollateral + amountAdded
+ * 
+ * 2. **Next Total Debt Calculation:**
+ *    - nextTotalDebt = amountTaken + totalDebt
+ * 
+ * 3. **Health Factor Calculation:**
+ *    - healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold)
+ *    - Truncates result to 2 decimals if valid, sets "Infinity" if healthFactor > 100.
+ * 
+ * 4. **Loan-to-Value (LTV) Calculation:**
+ *    - ltv = calculateLTV(nextTotalDebt, totalCollateralValue)
+ *    - LTV is checked against liquidationThreshold.
+ * 
+ * 5. **Button Disabled Condition:**
+ *    - Button disabled if:
+ *      - healthFactor <= 1
+ *      - ltv >= liquidationThreshold
+ *      - acknowledgment required but not given.
+ */
   useEffect(() => {
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
@@ -747,7 +799,6 @@ const Borrow = ({
                       }
                     }}
                   >
-                    {console.log("borrowableValue", borrowableValue)}
                     {loading &&
                     (borrowableValue == null || borrowableValue === "0") ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
@@ -815,21 +866,17 @@ const Borrow = ({
                   </div>
                   <div className="w-full flex justify-between items-center my-1">
                     <div className="flex items-center gap-1 relative">
-                      <div
-                        className="flex items-center cursor-help"
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                      >
+                      <div className="flex items-center">
+                        <p>Transaction Fee</p>
                         <Info
                           size={14}
-                          className="text-blue-800 dark:text-white mr-1"
+                          className="text-blue-800 dark:text-white ml-1 cursor-help"
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
                         />
-                        <p>Transaction Fee</p>
-
                         {showTooltip && (
-                          <div className="absolute bottom-full left-0 mb-2 px-3 py-2 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                            Information related to transaction fee. This fee is
-                            charged to process your transaction on the network.
+                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Platform fee + Ledger Transfer fee
                           </div>
                         )}
                       </div>
@@ -968,27 +1015,27 @@ const Borrow = ({
             <h1 className="font-semibold text-xl">All done!</h1>
             <p className="text-sm  lgx:text-lg text-center">
               You have borrowed{" "}
-              {scaledAmount / BASE_UNIT
-                ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                  scaledAmount / BASE_UNIT < 1e-7
-                  ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                  : scaledAmount / BASE_UNIT >= 1e-7 &&
-                    scaledAmount / BASE_UNIT < 1e-6
-                  ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                  : scaledAmount / BASE_UNIT
+              {scaledAmount / SCALING_FACTOR
+                ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                  scaledAmount / SCALING_FACTOR < 1e-7
+                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                  : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                    scaledAmount / SCALING_FACTOR < 1e-6
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
             <p className="text-sm  lgx:text-lg text-center">
               You have received{" "}
-              {scaledAmount / BASE_UNIT
-                ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                  scaledAmount / BASE_UNIT < 1e-7
-                  ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                  : scaledAmount / BASE_UNIT >= 1e-7 &&
-                    scaledAmount / BASE_UNIT < 1e-6
-                  ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                  : scaledAmount / BASE_UNIT
+              {scaledAmount / SCALING_FACTOR
+                ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                  scaledAmount / SCALING_FACTOR < 1e-7
+                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                  : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                    scaledAmount / SCALING_FACTOR < 1e-6
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Principal } from "@dfinity/principal";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { BASE_UNIT } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
 /**
  * Custom hook to fetch and store balances for multiple ckAssets.
  * @param {Object} ledgerActors - An object mapping asset types to their respective ledger actor instances.
@@ -42,7 +42,7 @@ const useFetchBalance = (ledgerActors, principal) => {
             return;
           }
           const balance = await ledgerActor.icrc1_balance_of(account);
-          const formattedBalance = Number(balance) / BASE_UNIT;
+          const formattedBalance = Number(balance) / SCALING_FACTOR;
           switch (assetType) {
             case "ckBTC":
               setCkBTCBalance(formattedBalance);

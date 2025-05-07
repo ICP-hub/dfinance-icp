@@ -4,7 +4,7 @@ import { useReserveData } from "../../context/ReserveDataContext";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
 import { useSelector } from "react-redux";
-import { BASE_UNIT } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
  * It integrates with backend actors, fetches conversion rates, and processes financial calculations.
@@ -536,31 +536,31 @@ const useAssetData = (searchQuery = "") => {
 
           const supplyCap = parseFloat(
             Number(reserveDataForAsset.Ok[0].configuration.supply_cap) /
-              BASE_UNIT
+            SCALING_FACTOR
           );
           const totalSupply = parseFloat(
             (Number(reserveDataForAsset.Ok[0].asset_supply) *
-              (assetRate / BASE_UNIT)) /
-              BASE_UNIT
+              (assetRate / SCALING_FACTOR)) /
+            SCALING_FACTOR
           );
           const totalBorrow = parseFloat(
             (Number(reserveDataForAsset.Ok[0].asset_borrow) *
-              (assetRate / BASE_UNIT)) /
-              BASE_UNIT
+              (assetRate / SCALING_FACTOR)) /
+            SCALING_FACTOR
           );
           const reserveFactor = parseFloat(
             Number(reserveDataForAsset.Ok[0].configuration.reserve_factor) /
-              BASE_UNIT
+            SCALING_FACTOR
           );
           const interestAccure = parseFloat(
-            Number(reserveDataForAsset.Ok[0].accure_to_platform) / BASE_UNIT
+            Number(reserveDataForAsset.Ok[0].accure_to_platform) / SCALING_FACTOR
           );
-          const accruedValue = interestAccure * (assetRate / BASE_UNIT);
+          const accruedValue = interestAccure * (assetRate / SCALING_FACTOR);
 
           totalAccruedValue += accruedValue;
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += parseInt(totalSupply);
-          totalBorrowes += parseInt(totalBorrow);
+          totalSupplies += parseFloat(totalSupply);
+          totalBorrowes += parseFloat(totalBorrow);
           reserveFactors = reserveFactor;
         });
         setReserveData(data);
@@ -590,15 +590,15 @@ const useAssetData = (searchQuery = "") => {
   const filteredItems =
     reserveData && Object.keys(reserveData).length > 0
       ? Object.entries(reserveData).filter(
-          ([asset, data]) =>
-            asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (data.asset_supply &&
-              data.asset_supply.toString().includes(searchQuery)) ||
-            (data.borrow_rate &&
-              data.borrow_rate.some((rate) =>
-                rate.toString().includes(searchQuery)
-              ))
-        )
+        ([asset, data]) =>
+          asset.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (data.asset_supply &&
+            data.asset_supply.toString().includes(searchQuery)) ||
+          (data.borrow_rate &&
+            data.borrow_rate.some((rate) =>
+              rate.toString().includes(searchQuery)
+            ))
+      )
       : [];
 
   const formatNumber = useFormatNumber();

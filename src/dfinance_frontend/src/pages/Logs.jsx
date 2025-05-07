@@ -24,9 +24,6 @@ const Logs = () => {
 
     try {
       const result = await backendActor.get_all_logs();
-      console.log("Raw logs result:", result);
-
-
       if (result?.Ok && Array.isArray(result.Ok)) {
         setLogs(result.Ok);
         setFilteredLogs(result.Ok);

@@ -58,6 +58,19 @@ const MobileTopNav = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
+  const isProduction = process.env.DFX_PRODUCTION === 'true';
+
+const handleTestnetModeToggle = () => {
+
+  if (!isProduction) {
+    const url = `https://cszmy-vyaaa-aaaak-quhea-cai.icp0.io/dashboard/?openWallet=true`;
+    console.log("Redirecting to:", url);
+    window.location.replace(url);
+  } else {
+    console.log("Production mode — redirection blocked.");
+  }
+};
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
@@ -138,7 +151,7 @@ const MobileTopNav = ({
       setIsLoading(false);
     }
   };
-
+ 
   const errorMessages = {
     NoReserveDataFound:
       "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
@@ -842,6 +855,7 @@ const MobileTopNav = ({
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
+                      onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>
@@ -977,7 +991,7 @@ const MobileTopNav = ({
                           >
                             {asset && (
                               <img
-                                src={AssetImages[assets.indexOf(asset)]} 
+                                src={AssetImages[assets.indexOf(asset)]}
                                 alt={asset}
                                 className="object-fill w-6 h-6 rounded-full"
                               />

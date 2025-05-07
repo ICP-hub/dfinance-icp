@@ -9,7 +9,7 @@ import useUserData from "../../customHooks/useUserData";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import { useDispatch } from "react-redux";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
 /**
  * ColateralPopup Component
  *
@@ -88,9 +88,9 @@ const ColateralPopup = ({
       }
       const addedAmount = currentCollateralStatus
         ? BigInt(0)
-        : BigInt(Math.round(assetSupply * BASE_UNIT));
+        : BigInt(Math.round(assetSupply * SCALING_FACTOR));
       const amount = currentCollateralStatus
-        ? BigInt(Math.round(assetSupply * BASE_UNIT))
+        ? BigInt(Math.round(assetSupply * SCALING_FACTOR))
         : BigInt(0);
 
       const response = await backendActor.toggle_collateral(
@@ -274,7 +274,7 @@ const ColateralPopup = ({
     if (assetSupply && conversionRate) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = parseFloat(assetSupply) * adjustedConversionRate;
-      const truncatedValue = Math.trunc(convertedValue * BASE_UNIT) / BASE_UNIT;
+      const truncatedValue = Math.trunc(convertedValue * SCALING_FACTOR) / SCALING_FACTOR;
       setUsdValue(truncatedValue);
     } else {
       setUsdValue(0);
@@ -304,7 +304,7 @@ const ColateralPopup = ({
     const Collateral = currentCollateralStatus
       ? Math.max(totalCollateral - usdValue, 0)
       : Math.max(totalCollateral + usdValue, 0);
-    const adjustedCollateral = Math.trunc(Collateral * BASE_UNIT) / BASE_UNIT;
+    const adjustedCollateral = Math.trunc(Collateral * SCALING_FACTOR) / SCALING_FACTOR;
     const totalCollateralValue = parseFloat(adjustedCollateral);
     const totalDeptValue = parseFloat(totalDebt);
     let result;
@@ -320,7 +320,7 @@ const ColateralPopup = ({
         tempLiq = tempLiq / totalCollateralValue;
       }
       result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-      result = Math.round(result * BASE_UNIT) / BASE_UNIT;
+      result = Math.round(result * SCALING_FACTOR) / SCALING_FACTOR;
     }
 
     const healthFactor = result;

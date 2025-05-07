@@ -12,7 +12,7 @@ import WalletModal from "../Dashboard/WalletModal";
 import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
 import useUserData from "../customHooks/useUserData";
-import { BASE_UNIT } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
 const ITEMS_PER_PAGE = 8;
 
 /**
@@ -111,7 +111,7 @@ const FaucetDetails = () => {
     if (ckBTCBalance && ckBTCUsdRate) {
       const balanceInUsd = (
         parseFloat(ckBTCBalance) *
-        (ckBTCUsdRate / BASE_UNIT)
+        (ckBTCUsdRate / SCALING_FACTOR)
       ).toFixed(2);
       setCkBTCUsdBalance(balanceInUsd);
     }
@@ -119,7 +119,7 @@ const FaucetDetails = () => {
     if (ckETHBalance && ckETHUsdRate) {
       const balanceInUsd = (
         parseFloat(ckETHBalance) *
-        (ckETHUsdRate / BASE_UNIT)
+        (ckETHUsdRate / SCALING_FACTOR)
       ).toFixed(2);
       setCkETHUsdBalance(balanceInUsd);
     }
@@ -127,7 +127,7 @@ const FaucetDetails = () => {
     if (ckUSDCBalance && ckUSDCUsdRate) {
       const balanceInUsd = (
         parseFloat(ckUSDCBalance) *
-        (ckUSDCUsdRate / BASE_UNIT)
+        (ckUSDCUsdRate / SCALING_FACTOR)
       ).toFixed(2);
       setCkUSDCUsdBalance(balanceInUsd);
     }
@@ -135,7 +135,7 @@ const FaucetDetails = () => {
     if (ckICPBalance && ckICPUsdRate) {
       const balanceInUsd = (
         parseFloat(ckICPBalance) *
-        (ckICPUsdRate / BASE_UNIT)
+        (ckICPUsdRate / SCALING_FACTOR)
       ).toFixed(2);
       setCkICPUsdBalance(balanceInUsd);
     }
@@ -143,7 +143,7 @@ const FaucetDetails = () => {
     if (ckUSDTBalance && ckUSDTUsdRate) {
       const balanceInUsd = (
         parseFloat(ckUSDTBalance) *
-        (ckUSDTUsdRate / BASE_UNIT)
+        (ckUSDTUsdRate / SCALING_FACTOR)
       ).toFixed(2);
       setCkUSDTUsdBalance(balanceInUsd);
     }
@@ -299,7 +299,7 @@ const FaucetDetails = () => {
 
                                 if (!assetData) return null;
                                 const { balance, rate } = assetData;
-                                const usdRate = rate / BASE_UNIT;
+                                const usdRate = rate / SCALING_FACTOR;
                                 const calculatedUsdValue = balance * usdRate;
                                 let displayedBalance;
                                 if (

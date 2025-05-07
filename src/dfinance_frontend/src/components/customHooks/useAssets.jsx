@@ -4,7 +4,7 @@ import { useReserveData } from "../../context/ReserveDataContext";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
 import { useSelector } from "react-redux";
-import { BASE_UNIT } from '../../utils/constants';
+import { BASE_UNIT } from "../../utils/constants";
 /**
  * Custom hook to fetch and manage asset data, including supply, borrow, and market details.
  * It integrates with backend actors, fetches conversion rates, and processes financial calculations.
@@ -559,8 +559,8 @@ const useAssetData = (searchQuery = "") => {
 
           totalAccruedValue += accruedValue;
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += parseInt(totalSupply);
-          totalBorrowes += parseInt(totalBorrow);
+          totalSupplies += parseFloat(totalSupply);
+          totalBorrowes += parseFloat(totalBorrow);
           reserveFactors = reserveFactor;
         });
         setReserveData(data);

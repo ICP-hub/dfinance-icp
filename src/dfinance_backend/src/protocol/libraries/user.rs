@@ -64,13 +64,12 @@ pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     trace!("calling calculate user account data");
-    // prevent anonymous user
+
     if on_behalf == Some(Principal::anonymous()) {
         error!("Anonymous principal detected.");
         return Err(Error::AnonymousPrincipal);
     }
 
-    // prevent anonymous caller
     guard_prevent_anonymous()?;
 
     let user_principal = match on_behalf {
@@ -122,15 +121,7 @@ pub async fn calculate_user_account_data(
             continue;
         }
 
-        let reserve_data = read_state(|state| {
-            state
-                .asset_index
-                .get(&reserve_name.to_string())
-                .map(|reserve| reserve.0)
-        })
-        .ok_or_else(   || {
-            Error::NoReserveDataFound
-    })?;
+        let reserve_data = get_reserve_data(reserve_name.clone())?;
 
         let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
@@ -147,11 +138,8 @@ pub async fn calculate_user_account_data(
             .await?;
             info!("get user balance in base currency called");
 
-           
-
             total_collateral += user_balance.clone();
            
-
             if reserve_data.configuration.ltv != zero_nat_value() {
                 avg_ltv += user_balance
                     .clone()
@@ -280,19 +268,7 @@ pub async fn calculate_user_asset_data(
 
     let max = get_max_value();
 
-    let user_data_result = user_data(user_principal);
-    debug!("Fetching user data...");
-
-    let user_data = match user_data_result {
-        Ok(data) => {
-            debug!("User data found");
-            data
-        }
-        Err(e) => {
-            error!("Error fetching user data: {:?}", e);
-            return Err(e);
-        }
-    };
+    let user_data = user_data(user_principal)?;
 
     if user_data.reserves.is_none() {
         debug!("No reserves found for the user.");
@@ -327,33 +303,12 @@ pub async fn calculate_user_asset_data(
          
             continue;
         }
-        let reserve_data_result = mutate_state(|state| {
-            let asset_index = &mut state.asset_index;
-            asset_index
-                .get(&reserve_name.to_string().clone())
-                .map(|reserve| reserve.0.clone())
-                .ok_or_else(|| {
-                    Error::NoReserveDataFound})
-        });
 
-        let reserve_data = match reserve_data_result {
-            Ok(data) => {
-                debug!("Reserve data found for asset");
-                data
-            }
-            Err(e) => {
-                error!("Error: {:?}", e);
-                return Err(e);
-            }
-        };
+        let reserve_data = get_reserve_data(reserve_name.clone())?;
 
-        let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-            Ok(price) => price,
-            Err(e) => {
-                error!("Failed to fetch exchange rate");
-                return Err(e);
-            }
-        };
+
+
+        let rate =  get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
         
         let asset_price = rate;
         if user_reserve_data.is_collateral {
@@ -365,24 +320,13 @@ pub async fn calculate_user_asset_data(
                 .map(|asset| asset.balance.clone())
                 .unwrap_or(zero_nat_value());
 
-            let user_balance_in_base_currency = get_user_asset_balance_in_base_currency(
+            let user_balance = get_user_asset_balance_in_base_currency(
                 user_principal,
                 &user_reserve_data,
                 balance.clone(),
                 asset_price.clone(),
             )
-            .await;
-
-            let user_balance = match user_balance_in_base_currency {
-                Ok(data) => {
-                    debug!("user_balance_in_base_currency: {:?}", data);
-                    data
-                }
-                Err(e) => {
-                    error!("Failed to fetch user balance in base currency, error: {:?}", e);
-                    return Err(e);
-                }
-            };
+            .await?;
 
             total_collateral += user_balance.clone();
           
@@ -413,13 +357,7 @@ pub async fn calculate_user_asset_data(
         if user_reserve_data.is_borrowed {
           
 
-            let rate = match get_cached_exchange_rate(user_reserve_data.reserve.clone()) {
-                Ok(price) => price,
-                Err(e) => {
-                    error!("Failed to fetch exchange rate");
-                    return Err(e);
-                }
-            };
+            let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
             let asset_price = rate;
 
@@ -543,6 +481,17 @@ pub async fn get_user_balance_in_base_currency(
     Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
 }
 
+/**
+ * @title Get User Asset Balance in Base Currency
+ * @dev Calculates the user's asset balance normalized to a base currency value.
+ * @param _user_principal The principal of the user whose balance is being calculated.
+ * @param reserve The reserve data associated with the asset.
+ * @param user_balance The user's raw asset balance.
+ * @param asset_price The current price of the asset in the base currency.
+ * @returns The user's asset balance converted into the base currency, or an error if reserve data is not available.
+ *
+ * @functionality Normalizes and scales the user's asset balance using the liquidity index and reserve's normalized supply, then converts it into the base currency using the asset price.
+ */
 pub async fn get_user_asset_balance_in_base_currency(
     _user_principal: Principal,
     reserve: &UserReserveData,
@@ -714,10 +663,6 @@ pub async fn get_liquidation_users_concurrent(
             .map(|(user_principal, user_data)| async move {
                 match calculate_user_account_data(Some(user_principal)).await {
                     Ok(user_account_data_tuple) => {
-                        debug!(
-                            "User {:?} data: {:?}",
-                            user_principal.to_string(), user_account_data_tuple
-                        );
                         let user_account_data = UserAccountData {
                             collateral: user_account_data_tuple.0,
                             debt: user_account_data_tuple.1,
@@ -735,10 +680,6 @@ pub async fn get_liquidation_users_concurrent(
                         if user_account_data.health_factor.clone() / Nat::from(PERCENTAGE_FACTOR)
                             < Nat::from(HEALTH_FACTOR_BARRIER)
                         {
-                            debug!(
-                                "Low health factor user: {:?}, Health Factor: {:?}",
-                                user_principal.to_string(), user_account_data.health_factor
-                            );
                             Some((user_principal, user_account_data, user_data))
                         } else {
                             None
@@ -757,9 +698,6 @@ pub async fn get_liquidation_users_concurrent(
         liq_list.extend(page_liq_list.into_iter().flatten());
       
     }
-
-
-
     liq_list
 }
 
@@ -773,7 +711,6 @@ pub async fn get_liquidation_users_concurrent(
  * @returns A string message indicating success or failure.
  */
 pub fn register_user() -> Result<String, Error> {
-    // prevent anonymous registrations
     guard_prevent_anonymous()?;
 
     let user_principal: Principal = ic_cdk::api::caller();
@@ -870,26 +807,13 @@ pub async fn create_user_reserve_with_low_health(
         reserve_data.debt_index = Nat::from(SCALING_FACTOR);
         (reserve_data.clone(), reserve_data)
     } else {
-        let mut supply_reserve_data = mutate_state(|state| {
-            state
-                .asset_index
-                .get(&asset_supply)
-                .map(|reserve| reserve.0.clone())
-                .ok_or({
-                    Error::NoReserveDataFound})
-        })?;
+
+        let mut supply_reserve_data = get_reserve_data(asset_supply.clone())?;
 
         supply_reserve_data.asset_supply += supply_tokens.clone();
         supply_reserve_data.debt_index = Nat::from(SCALING_FACTOR);
 
-        let mut borrow_reserve_data = mutate_state(|state| {
-            state
-                .asset_index
-                .get(&asset_borrow)
-                .map(|reserve| reserve.0.clone())
-                .ok_or(
-                    Error::NoReserveDataFound)
-        })?;
+        let mut borrow_reserve_data = get_reserve_data(asset_borrow.clone())?;
 
         borrow_reserve_data.asset_borrow += borrow_tokens.clone();
         borrow_reserve_data.debt_index = Nat::from(SCALING_FACTOR);
@@ -1142,8 +1066,6 @@ pub async fn get_all_user_list(
     debug!("Total users: {}", total_users);
 
     let mut liq_list = Vec::new();
-    let cycles_start = Nat::from(api::canister_balance128());
-    debug!("cycles start = {:?}", cycles_start);
 
     for page in 0..total_pages {
         let users_to_process = vector_user_data
@@ -1152,8 +1074,6 @@ pub async fn get_all_user_list(
             .take(page_size)
             .cloned()
             .collect::<Vec<_>>();
-
-        debug!("Processing page: {}", page + 1);
 
         let page_liq_list = stream::iter(users_to_process)
             .map(|(user_principal, user_data)| async move {
@@ -1187,13 +1107,7 @@ pub async fn get_all_user_list(
             .await;
 
         liq_list.extend(page_liq_list.into_iter().flatten());
-
-        let cycles_end = Nat::from(api::canister_balance128());
-        debug!("cycles middle = {:?}", cycles_end);
     }
-
-    let cycles_end = Nat::from(api::canister_balance128());
-    debug!("cycles end = {:?}", cycles_end);
 
     Ok(liq_list)
 }
@@ -1232,7 +1146,6 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
 ) -> Result<Nat, Error> {
 
     if let Some(principal) = on_behalf {
-        // Check if the user is anonymous
         guard_principal_not_anonymous(&principal)?;
     }
     let user_principal = match on_behalf {
@@ -1243,15 +1156,8 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
     guard_principal_not_anonymous(&user_principal)?;
 
 
-    let user_data_result = user_data(user_principal);
+    let mut user_data = user_data(user_principal)?;
 
-    let mut user_data = match user_data_result {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Error: {:?}", e);
-            return Err(e);
-        }
-    };
     debug!("user data = {:?}", user_data);
     let user_reserve_data = match user_reserve(&mut user_data, &asset_name) {
         Some(data) => data,
@@ -1269,47 +1175,20 @@ pub async fn get_all_users() -> Vec<(Principal, UserData)> {
         return Ok(zero_nat_value());
     }
 
-    let asset_reserve = match get_reserve_data(asset_name.clone()) {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Error fetching asset reserve data: {:?}", e);
-            return Err(e);
-        }
-    };
+    let asset_reserve =  get_reserve_data(asset_name.clone())?;
 
-    let debt_token_canister_principal = match asset_reserve.debt_token_canister.clone() {
-        Some(principal) => principal,
-        None => {
-            error!("Error: parsing principal");
-            return Err(Error::ErrorParsingPrincipal);
-        }
-    };
 
-    let balance_result = get_balance(debt_token_canister_principal, user_principal).await;
-    let get_balance_value = match balance_result {
-        Ok(bal) => bal,
-        Err(e) => {
-            error!("Error fetching balance from DebtToken canister: {:?}", e);
-            return Err(e);
-        }
-    };
+    let debt_token_canister_principal = asset_reserve.debt_token_canister.clone().ok_or_else(|| {
+        error!("No debt token canister ID found.");
+        Error::NoCanisterIdFound
+    })?;
 
+    let get_balance_value = get_balance(debt_token_canister_principal, user_principal).await?;
+
+    let normalized_debt_data =  user_normalized_debt(asset_reserve.clone())?;
     debug!(
-        "Fetched balance from DebtToken canister: {:?}",
-        get_balance_value
-    );
-
-    let normalized_debt_data = match user_normalized_debt(asset_reserve.clone()) {
-        Ok(data) => data,
-        Err(e) => {
-            error!("Error fetching normalized debt data: {:?}", e);
-            return Err(e);
-        }
-    };
-
-    debug!(
-        "Values in normalized debt data = {:?}",
-        normalized_debt_data
+        "Values in normalized debt data and get balance value {:?}, {:?}",
+        normalized_debt_data, get_balance_value
     );
 
     Ok(

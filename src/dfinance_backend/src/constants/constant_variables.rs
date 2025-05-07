@@ -36,6 +36,7 @@ pub mod constants {
 
     // ------------------- XRC Service Fee -------------------
     pub const XRC_CYCLES_FEE: u128 = 1_000_000_000u128;
+    pub const XRC_CANISTER_NAME: &str = "xrc";
 
     // ------------------- Logs Constants -------------------
     pub const BATCH_SIZE: usize = 1000;

@@ -20,7 +20,6 @@ liquidation_bonus=5
 # The values will multiplied by SCALING_FACTOR to avoid floating point issues
 borrow_cap=10_000_000_000     
 supply_cap=10_000_000_000     
-
 reserve_factor=15
 
 # Perform the multiplication using bash arithmetic
@@ -35,7 +34,7 @@ reserve_factor=$(awk -v data=$reserve_factor -v scale=${SCALING_FACTOR//_/} 'BEG
 # Set the RESERVE_DATA
 RESERVE_DATA="(
   record {
-    asset_name = $ESCAPED_TOKEN_NAME; 
+    asset_name = "$ESCAPED_TOKEN_NAME"; 
     id = 1;
     \"d_token_canister\" = null;
     \"debt_token_canister\" = null;
@@ -63,5 +62,11 @@ RESERVE_DATA="(
 
 ASSET_IMAGE_URL="https://storage.googleapis.com/dfinance/ckBTC.png"
 
-dfx canister call $CANISTER_NAME initialize \
+if [[ ! "$ASSET_IMAGE_URL" =~ ^https://storage.googleapis.com ]]; then
+  echo "Error: Invalid URL. Only URLs from 'storage.googleapis.com' are allowed."
+  exit 1
+fi
+
+
+dfx canister call "$CANISTER_NAME" initialize \
   "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")"

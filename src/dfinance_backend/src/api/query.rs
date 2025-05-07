@@ -1,5 +1,4 @@
 
-use crate::debug;
 use crate::declarations::datatypes::{AssetInfo,FaucetReserves, ReserveData};
 use crate::constants::errors::Error;
 use crate::error;
@@ -31,10 +30,20 @@ use crate::protocol::libraries::reserve::{get_reserve_data,get_asset_principal};
 use crate::protocol::libraries::user::{user_normalized_debt, user_normalized_supply};
 
 
+/**
+ * @title Get Certified Reserve Data
+ * @dev Retrieves the certified reserve data and its corresponding certificate for a given asset.
+ * @param asset The name of the asset for which reserve data is to be retrieved.
+ * @returns A tuple containing the reserve data and the certificate.
+ *
+ * @functionality Retrieves reserve data along with its certification for the specified asset.
+ */
 #[query]
 pub fn get_reserve_data_certified(asset: String) -> Result<(ReserveData,Certificate), Error> {
     validate_asset_name(&asset.clone())?;
     let reserved_data = get_reserve_data(asset.clone())?;
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let certificate = get_certificate_witness(asset);
     return Ok((reserved_data,certificate));
 }
@@ -59,6 +68,8 @@ fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
             .map(|reserve| reserve.0.clone())
             .ok_or_else(|| Error::UserNotFound)
     })?;
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let certificate = get_certificate_witness(user.to_string());
     return Ok((user_data, certificate));
 }
@@ -85,12 +96,18 @@ fn get_user_faucet_data(user: Principal) -> Result<(FaucetReserves, Certificate)
             .ok_or_else(|| Error::UserNotFound)
     })?;
 
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let certificate = get_certificate_witness(user.to_string());
     return Ok((user_faucet_data, certificate));
 }
 
-
-
+/**
+ * @title Get All Certified Assets
+ * @dev Retrieves a list of all asset information along with a certificate for verification.
+ * @returns A tuple containing a vector of asset information and the certificate.
+ *
+ * @functionality Retrieves all stored asset data with a certification for integrity verification.
+ */
 #[query]
 pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
     read_state(|state| {
@@ -116,14 +133,21 @@ pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
  */
 #[query]
 pub fn get_asset_principal_certified(asset_name: String) -> Result<(Principal, Certificate), Error> {
-    // asset name validator
     validate_asset_name(&asset_name)?;
 
     let asset_principal = get_asset_principal(asset_name.clone())?;
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("asset_principal".to_string());
     Ok((asset_principal, cert))
 }
 
+/**
+ * @title Get All Certified Users
+ * @dev Asynchronously retrieves all user data along with a certificate for verification.
+ * @returns A tuple containing a vector of principal-user data pairs and the certificate.
+ *
+ * @functionality Retrieves all registered users and their associated data with certification for data authenticity.
+ */
 #[query]
 pub async fn get_all_users_certified() -> (Vec<(Principal, UserData)>, Certificate) {
     let res = get_all_users().await;
@@ -144,6 +168,8 @@ pub async fn get_all_users_certified() -> (Vec<(Principal, UserData)>, Certifica
 pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(Nat, Certificate), Error> {
    
     let res = get_cached_exchange_rate(base_asset_symbol)?;
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("price_cache".to_string());
     
     Ok((res, cert)) 
@@ -159,6 +185,8 @@ pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(
  */
 #[query]
 pub fn user_normalized_supply_certified(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("user_normalized_supply".to_string());
     let res = user_normalized_supply(reserve_data.clone())?;
     Ok((res, cert))
@@ -174,6 +202,8 @@ pub fn user_normalized_supply_certified(reserve_data: ReserveData) -> Result<(Na
  */
 #[query]
 pub fn user_normalized_debt_certified(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("user_normalized_debt".to_string());
     let res = user_normalized_debt(reserve_data.clone())?;
     Ok((res, cert))
@@ -189,6 +219,7 @@ pub fn user_normalized_debt_certified(reserve_data: ReserveData) -> Result<(Nat,
 pub fn get_total_users() -> (usize, Certificate) {
     let res =read_state(|state| state.user_profile.len().try_into().unwrap());
     
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("total_users".to_string());
     (res, cert)
 }
@@ -215,9 +246,10 @@ async fn get_user_account_data(
     guard_prevent_anonymous()?;
 
     let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await?;
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("user_account_data".to_string());
     info!("calculated user asset data called successfully inide get user account data");
-    debug!("get_user_account_data result: {:?}", result);
     Ok((result, cert))
 }
 
@@ -233,15 +265,11 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
     trace!("calling get_transfer_fee");
     validate_asset_name(&asset_name)?;
     guard_prevent_anonymous()?;
+
+    //Generates a Certificate with a CBOR-encoded witness for the given key.
     let cert = get_certificate_witness("transfer_fee".to_string());
 
-    let asset_price = match get_cached_exchange_rate(asset_name.clone()) {
-        Ok(price) => price,
-        Err(e) => {
-            error!("Failed to fetch cache exchange rate");
-            return Err(e);
-        }
-    };
+    let asset_price =  get_cached_exchange_rate(asset_name.clone())?;
 
     let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
     Ok((transfer_token_fee, cert))
@@ -260,7 +288,7 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
         state
             .canister_list
             .get(&canister_name)
-            .ok_or(Error::NoCanisterIdFound) // Return error if not found
+            .ok_or(Error::NoCanisterIdFound)
     })
     
 }
@@ -277,7 +305,6 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
  */
 #[query] //update
 pub async fn cycle_checker() -> Result<(Nat, Certificate), Error> {
-    // only the admin can access this function.
     guard_admin_only()?;
     let cert = get_certificate_witness("cycle_checker".to_string());
     Ok((Nat::from(api::canister_balance128()), cert))

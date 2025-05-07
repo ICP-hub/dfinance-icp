@@ -116,6 +116,18 @@ macro_rules! trace {
     };
 }
 
+/**
+ * @title LogFlusher Drop Handler
+ * @dev Automatically triggers log flushing to a remote canister when the `LogFlusher` is dropped, if log count exceeds `LOGS_LIMIT`.
+ *
+ * @functionality
+ * - Attempts to resolve the target canister ID using a predefined name.
+ * - Checks the total number of stored logs.
+ * - If the log count exceeds the defined `LOGS_LIMIT`, triggers an asynchronous flush operation.
+ * - Uses `ic_cdk::spawn` to call `send_log_to_logs_canister` without awaiting.
+ * - Upon successful transmission, removes flushed logs from local memory.
+ * - On failure, logs the error and retains logs in memory for future attempts.
+ */
 impl Drop for LogFlusher {
     fn drop(&mut self) {
         let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
@@ -295,7 +307,20 @@ pub fn clear_temp_log() {
     });
 }
 
-
+/**
+ * @title Get All Logs
+ * @dev Returns all log entries stored in the canister in ascending order by their keys.
+ *
+ * @access Requires admin privileges via `guard_admin_only`.
+ * 
+ * @functionality
+ * - Accesses the internal state to retrieve the log storage.
+ * - Iterates over the log storage and extracts the first entry from each `Candid<Vec<String>>` value.
+ * - Sorts the logs by their log IDs (keys) in ascending order.
+ * - Returns a flat vector of log strings.
+ *
+ * @return `Result<Vec<String>, Error>` containing all logs or an error if access is unauthorized.
+ */
 #[query]
 pub fn get_all_logs() -> Result<Vec<String>,Error> {
     guard_admin_only()?;
@@ -316,6 +341,22 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
     })
 }
 
+/**
+ * @title Internal Logging Utility
+ * @dev Logs a message to the internal log storage if the level is appropriate.
+ *
+ * @functionality
+ * - Retrieves the caller's principal as a string.
+ * - Checks if the provided log level is at or below the configured system log level.
+ * - If allowed, formats and stores the log message using `store_log`.
+ * - Used for recording internal operations, errors, or debug information.
+ *
+ * @params
+ * @param level `LogLevel` - The severity level of the log (e.g., INFO, DEBUG, ERROR).
+ * @param file `&str` - The source file name from which the log was emitted.
+ * @param line `u32` - The line number in the source file.
+ * @param msg `&str` - The message content to be logged.
+ */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
 
     let user_principal = ic_cdk::caller().to_text();

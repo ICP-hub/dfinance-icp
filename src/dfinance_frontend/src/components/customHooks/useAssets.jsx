@@ -559,8 +559,8 @@ const useAssetData = (searchQuery = "") => {
 
           totalAccruedValue += accruedValue;
           totalMarketSizeTemp += supplyCap;
-          totalSupplies += parseInt(totalSupply);
-          totalBorrowes += parseInt(totalBorrow);
+          totalSupplies += parseFloat(totalSupply);
+          totalBorrowes += parseFloat(totalBorrow);
           reserveFactors = reserveFactor;
         });
         setReserveData(data);

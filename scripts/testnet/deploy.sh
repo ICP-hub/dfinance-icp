@@ -1,86 +1,58 @@
 set -e
 
-# Basic sanitization: Checks for typical principal format and disallowed characters
-sanitize_principal() {
-    local principal_str="$1"
-    local sanitized_principal=""
-
-    # Basic check: Length
-    if [ ${#principal_str} -lt 5 ] || [ ${#principal_str} -gt 70 ]; then
-        echo "Error: Principal '$principal_str' has unusual length." >&2 
-        return 1 
-    fi
-
-    # Check if it roughly looks like a principal (alphanumeric and dashes)
-    if [[ "$principal_str" =~ ^[a-zA-Z0-9-]+$ ]]; then
-        echo "$principal_str" 
-        return 0 
-    else
-        echo "Error: Principal '$principal_str' contains unexpected characters." >&2
-        return 1 
-    fi
-}
-
-
+# -------------------------------
+# Create new identity for minter
+# -------------------------------
+#TODO: i think we need to avoid using plain test in principal
 dfx identity new minter --storage-mode=plaintext || true
 
+# -------------------------------
+# Create canisters
+# -------------------------------
 dfx canister create dtoken --network ic || exit 1
 dfx canister create debttoken --network ic || exit 1
 dfx canister create token_ledger --network ic || exit 1
 
 
+# -------------------------------
+# Build all canisters
+# -------------------------------
 dfx build dtoken --network ic || exit 1
 dfx build debttoken --network ic || exit 1
 dfx build token_ledger --network ic || exit 1
 
 
-
-# FOR ICP LEDGER
-MINTER_ACCOUNT_ID=$(dfx --identity anonymous ledger account-id --network ic)
-DEFAULT_ACCOUNT_ID=$(dfx --identity default ledger account-id --network ic)
-backend=$CANISTER_ID_DFINANCE_BACKEND
-
-
-
-MINTER_PRINCIPAL_RAW=$(dfx --identity minter identity get-principal --network ic)
-# --- Sanitize Minter Principal ---
-MINTER=$(sanitize_principal "$MINTER_PRINCIPAL_RAW") || exit 1 
-
-DEFAULT_PRINCIPAL_RAW=$(dfx --identity default identity get-principal --network ic)
-# --- Sanitize Default Principal ---
-DEFAULT=$(sanitize_principal "$DEFAULT_PRINCIPAL_RAW") || exit 1 
-
-
-
-
-MINTER_PRINCIPAL_RAW=$(dfx identity get-principal --network ic)
-# --- Sanitize Minter Principal ---
-export MINTER=$(sanitize_principal "$MINTER_PRINCIPAL_RAW") || exit 1 
+# -----------------------------
+# Set common environment variables
+# -----------------------------
+export MINTER="$(dfx identity get-principal)"
+export USER="$(dfx identity get-principal)"
 echo "Minter Principal: $MINTER"
-
-export TOKEN_NAME="ckBTC"
-export TOKEN_SYMBOL="ckBTC"
-export PRE_MINTED_TOKENS=10_000_000_000
-export TRANSFER_FEE=0
-echo "Token Name: $TOKEN_NAME"
-
-
-USER_PRINCIPAL_RAW=$(dfx identity get-principal --network ic)
-export USER=$(sanitize_principal "$USER_PRINCIPAL_RAW") || exit 1 
 echo "User Principal: $USER"
 
+
+
+export PRE_MINTED_TOKENS=10_000_000_000
+export TRANSFER_FEE=0
 export ARCHIVE_CONTROLLER=$USER
 export TRIGGER_THRESHOLD=2_000
 export NUM_OF_BLOCK_TO_ARCHIVE=1_000
 export CYCLE_FOR_ARCHIVE_CREATION=10_000_000_000_000
 export FEATURE_FLAGS=true
 
+
+# -----------------------------
+# Deploy ckBTC ledger
+# -----------------------------
+export TOKEN_NAME="ckBTC"
+export TOKEN_SYMBOL="ckBTC"
+
 dfx deploy ckbtc_ledger --network ic --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
      minting_account = record { owner = principal \"${MINTER}\" };
-     transfer_fee = ${TRANSFER_FEE};
+     transfer_fee = "${TRANSFER_FEE}";
      metadata = vec {};
      feature_flags = opt record { icrc2 = "${FEATURE_FLAGS}" };
     
@@ -93,26 +65,13 @@ record {
      };
  }
 })"
+echo "ckBTC got deployed"
 
-echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"
-
-
+# -----------------------------
+# Deploy ckETH ledger
+# -----------------------------
 export TOKEN_NAME="ckETH"
 export TOKEN_SYMBOL="ckETH"
-export PRE_MINTED_TOKENS=10_000_000_000
-export TRANSFER_FEE=0
-
-
-USER_PRINCIPAL_RAW=$(dfx identity get-principal --network ic)
-export USER=$(sanitize_principal "$USER_PRINCIPAL_RAW") || exit 1 
-echo "User Principal: $USER"
-
-export ARCHIVE_CONTROLLER=$USER
-
-export TRIGGER_THRESHOLD=2_000
-export NUM_OF_BLOCK_TO_ARCHIVE=1_000
-export CYCLE_FOR_ARCHIVE_CREATION=10_000_000_000_000
-export FEATURE_FLAGS=true
 
 dfx deploy cketh_ledger --network ic --argument "(variant {Init =
 record {
@@ -132,10 +91,11 @@ record {
      };
  }
 })"
+echo "ckBTC got deployed"
 
-echo "ckBTC got deployed with a transfer fee of ${TRANSFER_FEE}"
-
-
+# -----------------------------
+# Deploy token_ledger
+# -----------------------------
 export TOKEN_NAME="token_ledger"
 export TOKEN_SYMBOL="token_ledger"
 echo "Token Name: $TOKEN_NAME"
@@ -158,6 +118,9 @@ dfx deploy token_ledger --network ic --argument "(variant { Init = record {
  }})"
 
 
+# -----------------------------
+# Deploy dtoken
+# -----------------------------
 export TOKEN_NAME="dtoken"
 export TOKEN_SYMBOL="dtoken"
 echo "Token Name: $TOKEN_NAME"
@@ -180,6 +143,9 @@ echo "Token Name: $TOKEN_NAME"
  }})"
 
 
+# -----------------------------
+# Deploy debttoken
+# -----------------------------
 export TOKEN_SYMBOL="debttoken"
 export TOKEN_NAME="debttoken"
 echo "Token Name: $TOKEN_NAME"
@@ -201,23 +167,45 @@ echo "Token Name: $TOKEN_NAME"
      };
  }})"
 
+
+# -----------------------------
+# Deploy logs canister
+# -----------------------------
+dfx canister create logs --network ic || exit 1
+dfx build logs --network ic || exit 1
+dfx deploy logs --network ic || exit 1
+
+
+# -------------------------------
+# Create, build, and deploy xrc canister
+# -------------------------------
 dfx canister create xrc --network ic || exit 1
 dfx build xrc --network ic || exit 1
 dfx deploy xrc --network ic || exit 1
+
+# -----------------------------
+# Switch to default identity and deploy backend
+# -----------------------------
 dfx identity use default
 
 
-# Get the admin principal and export it
-admin_principal_raw=$(dfx identity get-principal --network ic)
-export admin_principal=$(sanitize_principal "$admin_principal_raw") || exit 1 
-
-# Deploy the canister with the principal as an argument
+# -------------------------------
+# Deploy backend
+# -------------------------------
+export admin_principal="$(dfx identity get-principal)"
 dfx deploy dfinance_backend --network ic --argument "(
     principal \"$admin_principal\"
 )" || exit 1
 
-XRC_CANISTER_ID=$(dfx canister id xrc --network ic)
-dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"  --network ic || exit 1
 
+# -------------------------------
+# Set xrc and log canister ID
+# -------------------------------
+XRC_CANISTER_ID=$(dfx canister id xrc --network ic)
+LOGS_CANISTER_ID=$(dfx canister id logs --network ic)
+dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"  --network ic || exit 1
+dfx canister call dfinance_backend set_canister_id "(\"logs\", principal \"$LOGS_CANISTER_ID\")" --network ic || exit 1
+
+# Final deployment step
 dfx deploy --network ic || exit 1
  

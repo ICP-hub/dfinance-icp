@@ -2,8 +2,8 @@ set -e
 
 #!/bin/bash
 
-SOURCE_FILE="../../dfx.test.json"
-DEST_FILE="../../dfx.json"
+SOURCE_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/dfx.test.json"
+DEST_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/dfx.json" 
 
 
 if [[ ! -f "$SOURCE_FILE" ]]; then

@@ -16,6 +16,19 @@ import useUserData from "../customHooks/useUserData";
 import { Info } from "lucide-react";
 import { useReserveData } from "../../context/ReserveDataContext";
 import { SCALING_FACTOR } from '../../utils/constants';
+
+/**
+ * DashboardNav Component
+ *
+ * This component serves as the navigation header, displaying key financial metrics.
+ * 
+ * Features:
+ * - Displays market statistics (total market size, available liquidity, total borrows)
+ * - Shows metrics like (net worth, net APY, health factor)
+ * - Provides risk assessment information with Risk Details popup
+ * 
+ * @returns {JSX.Element} - Returns the DashboardNav component with relevant financial metrics and navigation options.
+ */
 const DashboardNav = () => {
   /* ===================================================================================
    *                                  HOOKS

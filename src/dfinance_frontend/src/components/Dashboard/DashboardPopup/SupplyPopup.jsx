@@ -141,7 +141,6 @@ const SupplyPopup = ({
       return;
     }
 
-    // Convert to number only if it's valid
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
       console.error(
@@ -582,6 +581,7 @@ const SupplyPopup = ({
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
+  
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */

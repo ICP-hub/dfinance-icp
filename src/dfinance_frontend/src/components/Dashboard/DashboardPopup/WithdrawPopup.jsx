@@ -16,6 +16,7 @@ import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../../utils/constants';
 import { Info } from "lucide-react";
+
 /**
  * WithdrawPopup Component
  *
@@ -24,7 +25,6 @@ import { Info } from "lucide-react";
  *
  * @returns {JSX.Element} - Returns the WithdrawPopup component.
  */
-
 const WithdrawPopup = ({
   asset,
   image,
@@ -50,7 +50,6 @@ const WithdrawPopup = ({
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
   const transferFeRetrive = useTransferFee(asset);
-
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
@@ -58,10 +57,10 @@ const WithdrawPopup = ({
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const ledgerActors = useSelector((state) => state.ledger);
+
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
-
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [amount, setAmount] = useState("");
@@ -77,15 +76,10 @@ const WithdrawPopup = ({
     (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
   /* ===================================================================================
-   *                                  REDUX-SELECTER
+   *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
-
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
-
-  /* ===================================================================================
-   *                                  MEMOIZATION
-   * =================================================================================== */
 
   const principalObj = useMemo(
     () => Principal.fromText(principal),
@@ -177,6 +171,7 @@ const WithdrawPopup = ({
       console.error("Amount must be a positive number");
     }
   };
+
   const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;

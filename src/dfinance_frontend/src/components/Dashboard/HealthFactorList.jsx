@@ -17,13 +17,13 @@ import { useLocation } from "react-router-dom";
 import Pagination from "../Common/pagination";
 import { useReserveData } from "../../context/ReserveDataContext";
 import { SCALING_FACTOR } from '../../utils/constants';
+
 /**
  * HealthFactorList Component
  *
  * Fetches and displays a list of users with their associated health factors
  * @returns {JSX.Element} - Returns the HealthFactorList component displaying users' health factors and additional details.
  */
-
 const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -34,12 +34,14 @@ const HealthFactorList = () => {
     createLedgerActor,
     verifyCertificate,
   } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
   const { batchFetchReserveData } = useReserveData();
+  
   const {
     assets,
     AssetImages,

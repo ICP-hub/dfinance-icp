@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import useAssetData from "../../components/customHooks/useAssets";
+import useAssetData from "../customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 
 export const DashboardDataProvider = ({ children }) => {

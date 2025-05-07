@@ -16,7 +16,6 @@ const Footer = () => {
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
   const ledgerActors = useSelector((state) => state.ledger);
-  const isProduction = process.env.DFX_PRODUCTION === "true";
   /* ===================================================================================
    *                                 STATE-MANAGEMENT
    * =================================================================================== */

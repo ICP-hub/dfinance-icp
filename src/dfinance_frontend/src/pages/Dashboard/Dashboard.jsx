@@ -7,6 +7,7 @@ import Element from "../../../public/element/elements.svg";
 import MySupply from "../../components/Dashboard/DashboardComponent";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import { useSearchParams } from "react-router-dom";
+
 const CreateWallet = () => {
   /* ===================================================================================
    *                                  HOOKS

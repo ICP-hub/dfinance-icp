@@ -262,9 +262,8 @@ const DashboardCards = () => {
 
     try {
       const result = await backendActor.cycle_checker();
-
       const cycles = result?.Ok[0] ?? "Error retrieving cycles";
-      const cert = result?.Ok[1]; // Assuming certificate is the second element in the result, if it exists.
+      const cert = result?.Ok[1]; 
 
       if (cert) {
         try {

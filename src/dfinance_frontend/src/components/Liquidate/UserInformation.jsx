@@ -15,6 +15,7 @@ import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
+
 const UserInformationPopup = ({
   onClose,
   mappedItem,

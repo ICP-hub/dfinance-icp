@@ -9,6 +9,7 @@ import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import { showCaptchaToUser } from "../Captcha/showCaptchaToUser";
 import { SCALING_FACTOR } from '../../utils/constants';
+
 /**
  * FaucetPopup Component
  *

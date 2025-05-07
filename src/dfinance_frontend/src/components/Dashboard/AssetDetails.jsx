@@ -27,6 +27,7 @@ import { useReserveData } from "../../context/ReserveDataContext";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import { SCALING_FACTOR } from '../../utils/constants';
 import {PERCENTAGE_FACTOR} from "../../utils/constants"
+
 const SupplyInfo = lazy(() => import("./DashboardPopup/SupplyInfo"));
 const BorrowInfo = lazy(() => import("./DashboardPopup/BorrowInfo"));
 const MySupplyModal = lazy(() => import("./MySupplyModal"));

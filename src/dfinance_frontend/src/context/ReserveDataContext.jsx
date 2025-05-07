@@ -41,7 +41,6 @@ export const ReserveDataProvider = ({ children }) => {
 
       try {
         const reserveDataResponse = await backendActor.get_reserve_data_certified(asset);
-        
         let reserveData;
         let verified = false;
         

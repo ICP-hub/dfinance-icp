@@ -213,15 +213,11 @@ const Repay = ({
     const fee = await ledgerActor.icrc1_fee();
     const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
     const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-
-
     setLedgerFee(fee);
 
     const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
 
     try {
-
-
       const approval = await ledgerActor.icrc2_approve({
         fee: fee ? [feeBigInt] : [],
         memo: [],

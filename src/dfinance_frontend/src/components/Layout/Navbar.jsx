@@ -31,7 +31,6 @@ import ThemeToggle from "../Common/themeToggle";
 import settingsIcon from "../../../public/helper/settings.svg";
 import Popup from "../Dashboard/DashboardPopup/Morepopup";
 import CustomizedSwitches from "../Common/materialUISwitch";
-import { toggleTestnetMode } from "../../redux/reducers/testnetReducer";
 import icplogo from "../../../public/wallet/icp.png";
 import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
@@ -63,10 +62,12 @@ export default function Navbar({ isHomeNav }) {
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const theme = useSelector((state) => state.theme.theme);
   const { assets, AssetImages } = useAssetData();
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
+  
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1115);
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;

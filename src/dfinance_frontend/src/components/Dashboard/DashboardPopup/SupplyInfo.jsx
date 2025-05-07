@@ -27,17 +27,14 @@ const SupplyInfo = ({
   liquidationBonus,
   liquidationThreshold,
 }) => {
+
   /* ===================================================================================
-   *                                  REDUX-SELECTER
+   *                                  HOOKS & REDUX-SELECTER
    * =================================================================================== */
 
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-
-  /* ===================================================================================
-   *                                  HOOKS
-   * =================================================================================== */
 
   const {
     ckBTCUsdRate,
@@ -55,12 +52,13 @@ const SupplyInfo = ({
    * =================================================================================== */
 
   const [supplied, setSupplied] = useState(totalSupplied);
-
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
+
   const [
     isLiquidationThresholdTooltipVisible,
     setLiquidationThresholdTooltipVisible,
   ] = useState(false);
+
   const [
     isLiquidationPenaltyTooltipVisible,
     setLiquidationPenaltyTooltipVisible,

@@ -23,7 +23,7 @@ const isProduction = process.env.DFX_PRODUCTION === 'true';
 const routes = [
   {
     path: "/",
-    element: <Home />,
+    element: (<MainDashboard dataOnly={true}><Home /></MainDashboard>),
   },
   {
     path: "*",

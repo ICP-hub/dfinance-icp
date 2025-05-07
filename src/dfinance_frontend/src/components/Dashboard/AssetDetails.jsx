@@ -552,6 +552,7 @@ const AssetDetails = () => {
     const reserveData = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     );
+    
     const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
       (reserveGroup) => reserveGroup[0] === asset
     )
@@ -559,6 +560,7 @@ const AssetDetails = () => {
           (reserveGroup) => reserveGroup[0] === asset
         )[1]?.liquidity_index
       : 0;
+      
     const assetBalance =
       assetBalances.find((balance) => balance.asset === asset)?.dtokenBalance ||
       0;
@@ -566,6 +568,7 @@ const AssetDetails = () => {
     const calculated_supply = Math.trunc(
       (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
     );
+
     const assetSupply =
       Math.trunc(
         (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
@@ -616,7 +619,6 @@ const AssetDetails = () => {
         
     const Ltv = Number(userData?.Ok?.[0].ltv) / SCALING_FACTOR || 0;
     const assetData = item[1].Ok;
-
     const total_supply = Number(assetData?.asset_supply || 0) / SCALING_FACTOR;
     const total_borrow = Number(assetData?.asset_borrow || 0) / SCALING_FACTOR;
 
@@ -624,6 +626,7 @@ const AssetDetails = () => {
       availableBorrow,
       Number((total_supply * 0.85).toFixed(8)) - Number(total_borrow)
     );
+
     handleModalOpen(
       actionType,
       asset,

@@ -25,7 +25,7 @@ use std::collections::HashMap;
  *
  * @functionality Stores and tracks complete reserve metadata and on-chain accounting values.
  */
-#[derive(Debug, CandidType, Deserialize, Clone,  Serialize)]
+#[derive(Debug, CandidType, Deserialize, Clone, Serialize)]
 pub struct ReserveData {
     pub asset_name: String,
     pub id: u16,
@@ -104,8 +104,8 @@ pub struct ReserveConfiguration {
     pub liquidation_threshold: Nat,
     pub liquidation_bonus: Nat,
     pub borrowing_enabled: bool,
-    pub borrow_cap: Nat, 
-    pub supply_cap: Nat, 
+    pub borrow_cap: Nat,
+    pub supply_cap: Nat,
     pub liquidation_protocol_fee: Nat,
     pub reserve_factor: Nat,
 }
@@ -160,7 +160,6 @@ impl Default for FaucetReserves {
         }
     }
 }
-
 
 /*
  * @title Faucet Reserve
@@ -238,18 +237,6 @@ impl Default for UserReserveData {
     }
 }
 
-
-
-/*
- * @title Session Storage Data
- * @functionality Maintains user session information including connected wallet address and session start time for authentication purposes.
- */
-#[derive(Debug, Clone, Serialize, Deserialize, CandidType)]
-pub struct SessionStorageData {
-    pub connected_wallet: String,
-    pub session_start: Nat,
-}
-
 /*
  * @title Cached Price
  * @functionality Stores asset price data temporarily to reduce external oracle calls and improve performance.
@@ -268,6 +255,14 @@ pub struct PriceCache {
     pub cache: HashMap<String, CachedPrice>,
 }
 
+/*  Certificate used for query call verification in the Internet Computer (ICP).
+*
+* # Fields
+* - `certificate`: CBOR-encoded certificate proving authenticity of the response.
+* - `witness`: Merkle proof showing data inclusion in the IC state tree.
+*
+* Used to verify that query responses haven't been tampered with using IC's certified variables mechanism.
+ */
 #[derive(CandidType)]
 pub struct Certificate {
     pub certificate: Vec<u8>,

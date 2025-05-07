@@ -20,10 +20,8 @@ use crate::stable_storage::state_handler::insert_certified_value;
  */
 #[update]
 pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
-    // only the admin can access this function.
     guard_admin_only()?;
 
-    // Validate non-empty canister name
     if canister_name.trim().is_empty() {
         return Err(Error::EmptyAsset);
     }

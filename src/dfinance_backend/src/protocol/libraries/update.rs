@@ -10,7 +10,7 @@ use crate::declarations::datatypes::{UserData, UserReserveData};
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
 };
-use crate::guards::access_control::{guard_prevent_anonymous, guard_principal_not_anonymous};
+use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::protocol::utils::log::LogFlusher;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
@@ -25,7 +25,6 @@ use crate::stable_storage::{
 };
 use crate::{debug, error, info};
 use candid::{Nat, Principal};
-use futures::future::ok;
 use ic_cdk::update;
 
 pub struct UpdateLogic;
@@ -106,6 +105,7 @@ impl UpdateLogic {
             };
             new_reserve_data
         };
+        debug!("updated supply user reserve data {:?}",user_reserve_data);
 
         let minted_result = mint_scaled(
             reserve,
@@ -168,7 +168,6 @@ impl UpdateLogic {
         let mut user_data = user_data(user_principal)?;
 
         let user_reserve = user_reserve(&mut user_data, &params.asset);
-        debug!("User reserve: {:?}", user_reserve);
 
         let mut user_reserve_data = match user_reserve {
             Some((_, reserve_data)) => {
@@ -212,6 +211,7 @@ impl UpdateLogic {
                 new_reserve_data
             }
         };
+        debug!("updated user reserve data = {:?}",user_reserve_data);
 
         mint_scaled(
             reserve,
@@ -274,8 +274,6 @@ impl UpdateLogic {
             None => return Err(Error::NoUserReserveDataFound),
         };
 
-        debug!("Update user state before burn: {:?}", user_reserve_data);
-
         burn_scaled(
             reserve,
             &mut user_reserve_data,
@@ -301,15 +299,19 @@ impl UpdateLogic {
                 } else {
                     reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
                 }
+                debug!("Update user reserve data: {:?}", reserve_data);
             }
             None => {
                 error!("No reserve data found");
                 return Err(Error::NoReserveDataFound);
             }
         }
-
+        let d_token_canister_id = reserve.d_token_canister.clone().ok_or_else(|| {
+            error!("No d_token canister ID found.");
+            Error::NoCanisterIdFound
+        })?;
         let dtoken_balance =
-            get_balance(reserve.d_token_canister.clone().unwrap(), user_principal).await?;
+            get_balance(d_token_canister_id, user_principal).await?;
 
         if params.is_collateral == false && dtoken_balance == zero_nat_value() {
             if let Some((_, reserve_data)) = user_reserve {
@@ -325,7 +327,8 @@ impl UpdateLogic {
         });
         insert_certified_value(user_principal.to_string(), user_data.clone());
 
-        info!("User data updated successfully: {:?}", user_data);
+        debug!("User data updated successfully: {:?}", user_data);
+        info!("User data updated successfully");
         Ok(())
     }
 
@@ -363,10 +366,14 @@ impl UpdateLogic {
             None => {
                 error!("No User reserve data found");
                 return Err(Error::NoUserReserveDataFound)
-            }, // or handle appropriately
+            },
         };
 
-        let debt_token = reserve.debt_token_canister.clone().unwrap();
+  
+        let debt_token = reserve.debt_token_canister.clone().ok_or_else(|| {
+            error!("No debt_token canister ID found.");
+            Error::NoCanisterIdFound
+        })?;
 
         let _is_collateral = user_reserve_data.is_collateral.clone();
         let burn_scaled_result = burn_scaled(
@@ -390,16 +397,8 @@ impl UpdateLogic {
                 return Err(e);
             }
         };
-        let balance_result =
-            get_balance(reserve.debt_token_canister.clone().unwrap(), user_principal).await;
+        let debttoken_balance = get_balance(debt_token, user_principal).await?;
 
-        let debttoken_balance = match balance_result {
-            Ok(bal) => bal,
-            Err(e) => {
-                error!("Error fetching balance: {:?}", e);
-                return Err(e);
-            }
-        };
         if let Some((_, reserve_data)) = user_reserve {
             reserve_data.last_update_timestamp = reserve.last_update_timestamp;
             if debttoken_balance == zero_nat_value() {
@@ -483,8 +482,15 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
             if total_debt == zero_nat_value() {
                 ltv = zero_nat_value();
             } else {
-                ltv = total_debt.scaled_div(adjusted_collateral);
+                ltv = total_debt.clone().scaled_div(adjusted_collateral.clone());
             }
+            debug!(
+                "Total Collateral: {}, USD Amount: {}, Adjusted Collateral: {}, Total Debt: {}",
+                total_collateral,
+                usd_amount,
+                adjusted_collateral,
+                total_debt,
+            );
         } else {
             let adjusted_collateral = total_collateral.clone() + added_usd_amount;
             debug!("adjusted amount = {}", adjusted_collateral);
@@ -517,13 +523,12 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
                 user_reserve_data.is_using_as_collateral_or_borrow =
                     user_reserve_data.is_collateral;
             }
+            debug!("updated User reserve data: {:?}", user_reserve_data);
         }
         None => {
-            // else logic to be placed here
         }
     }
 
-    debug!("User data updated successfully: {:?}", user_data);
     // Save the updated user data back to state
     mutate_state(|state| {
         state

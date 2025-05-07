@@ -64,4 +64,4 @@ RESERVE_DATA="(
 ASSET_IMAGE_URL="https://storage.googleapis.com/dfinance/ckBTC.png"
 
 dfx canister call $CANISTER_NAME initialize \
-  "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")"
+  "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")" --network ic

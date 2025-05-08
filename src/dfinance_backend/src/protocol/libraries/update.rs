@@ -63,18 +63,9 @@ impl UpdateLogic {
 
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
-            reserve_data.is_collateral = params.is_collateral;
+            reserve_data.is_collateral = true;
             reserve_data.last_update_timestamp = current_timestamp();
-
-            if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
-                if reserve_data.is_borrowed {
-                    reserve_data.is_using_as_collateral_or_borrow = true;
-                } else {
-                    reserve_data.is_using_as_collateral_or_borrow = false;
-                }
-            } else {
-                reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
-            }
+            reserve_data.is_using_as_collateral_or_borrow = true;
 
             reserve_data
         } else {
@@ -285,27 +276,11 @@ impl UpdateLogic {
             true,
         )
         .await?;
+        user_reserve_data.last_update_timestamp = reserve.last_update_timestamp;
+        user_reserve_data.is_collateral = params.is_collateral;
+        // user_reserve_data.is_collateral = params.is_collateral;    
 
-        match user_reserve {
-            Some((_, reserve_data)) => {
-                reserve_data.is_collateral = params.is_collateral;
-                reserve_data.last_update_timestamp = reserve.last_update_timestamp;
-                if reserve_data.is_using_as_collateral_or_borrow && !reserve_data.is_collateral {
-                    if reserve_data.is_borrowed {
-                        reserve_data.is_using_as_collateral_or_borrow = true;
-                    } else {
-                        reserve_data.is_using_as_collateral_or_borrow = false;
-                    }
-                } else {
-                    reserve_data.is_using_as_collateral_or_borrow = reserve_data.is_collateral;
-                }
-                debug!("Update user reserve data: {:?}", reserve_data);
-            }
-            None => {
-                error!("No reserve data found");
-                return Err(Error::NoReserveDataFound);
-            }
-        }
+        debug!("Update user reserve data: {:?}", user_reserve_data);
         let d_token_canister_id = reserve.d_token_canister.clone().ok_or_else(|| {
             error!("No d_token canister ID found.");
             Error::NoCanisterIdFound
@@ -313,11 +288,12 @@ impl UpdateLogic {
         let dtoken_balance =
             get_balance(d_token_canister_id, user_principal).await?;
 
-        if params.is_collateral == false && dtoken_balance == zero_nat_value() {
-            if let Some((_, reserve_data)) = user_reserve {
-                reserve_data.is_collateral = true;
-            }
+        if dtoken_balance == zero_nat_value() {
+            user_reserve_data.is_collateral= false;
         }
+        // Set is_using_as_collateral_or_borrow based on is_collateral and is_borrowed
+        user_reserve_data.is_using_as_collateral_or_borrow =
+            user_reserve_data.is_collateral || user_reserve_data.is_borrowed;
 
         // Save the updated user data back to state
         mutate_state(|state| {
@@ -375,7 +351,6 @@ impl UpdateLogic {
             Error::NoCanisterIdFound
         })?;
 
-        let _is_collateral = user_reserve_data.is_collateral.clone();
         let burn_scaled_result = burn_scaled(
             reserve,
             &mut user_reserve_data,

@@ -2,7 +2,7 @@ use crate::api::inter_canister::{get_balance, get_total_supply};
 use crate::constants::constant_variables::constants::SCALING_FACTOR;
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
-use crate::declarations::datatypes::ReserveData;
+use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
 use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::libraries::user::{
     calculate_user_account_data, user_normalized_debt, user_normalized_supply,
@@ -443,6 +443,8 @@ impl ValidationLogic {
         liquidator: Principal,
         user: Principal,
         repay_reserve_data: ReserveData,
+        reward_reserve_data: ReserveData,
+        user_reserve_data: UserReserveData,
     ) -> Result<(), Error> {
         // Get the repay asset's debt token canister
         // let repay_asset_principal = match repay_reserve_data.debt_token_canister.clone() {
@@ -453,6 +455,20 @@ impl ValidationLogic {
             error!("No debt token canister ID found.");
             Error::NoCanisterIdFound
         })?;
+        let reward_asset_principal = reward_reserve_data.d_token_canister.clone().ok_or_else(|| {
+            error!("No d_token canister ID found.");
+            Error::NoCanisterIdFound
+        })?;
+        if !user_reserve_data.is_collateral{
+            error!("User reserve asset is not collateral.");
+            return Err(Error::NoCollateralFound);
+        }
+        
+        let user_dtoken_balance = get_balance(reward_asset_principal, user.clone()).await?;
+        if user_dtoken_balance < reward_amount {
+            error!("User collateral amount is less than the reward amount.");
+            return Err(Error::UserCollateralLessThanReward);
+        }
 
         // Fetch the user's total debt balance for the repay asset
         let debt_amount = get_balance(repay_asset_principal, user.clone()).await?;
@@ -488,7 +504,7 @@ impl ValidationLogic {
         }
 
         // Fetch user's total collateral and health factor
-        let (total_collateral, health_factor) = match calculate_user_account_data(Some(user)).await
+        let (_total_collateral, health_factor) = match calculate_user_account_data(Some(user)).await
         {
             Ok((
                 t_collateral,
@@ -501,12 +517,6 @@ impl ValidationLogic {
             )) => (t_collateral, h_factor),
             Err(e) => return Err(e),
         };
-
-        // Check if reward amount is valid against total collateral
-        if total_collateral < reward_amount {
-            error!("Total collateral is less than reward amount.");
-            return Err(Error::RewardIsHigher);
-        }
 
         // Check if user can be liquidated (health factor must be ≤ 1)
         debug!(

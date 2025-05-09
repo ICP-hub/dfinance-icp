@@ -110,6 +110,7 @@ type Error = variant {
   ControllerNotFound;
   AdminAlreadyExists;
   NormalizedDebt;
+  UserCollateralLessThanReward;
   CaptchaAlreadyExists;
 };
 type ExecuteBorrowParams = record { asset : text; amount : nat };

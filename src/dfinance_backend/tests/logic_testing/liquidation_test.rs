@@ -145,6 +145,34 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
+        TestCase {
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "INV".to_string(),
+            amount: Nat::from(50_000_000u128),  // 0.5 ICP (includes transaction fee)
+            on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
+            reward_amount: Nat::from(50_000_000u128),  // Expected reward: 0.5 ICP
+            expect_success: false,
+            expected_error_message: Some("no reserve data found of the given asset".to_string()), // Expecting failure due to invalid collateral asset
+        },
+        TestCase {
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(100_000_000u128), // 1 ckBTC (includes transaction fee) higher than debt
+            on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
+            reward_amount: Nat::from(100_000u128),  // No reward since liquidation request exceeds collateral
+            expect_success: false,
+            expected_error_message: Some("Repay cannot be more than debt".to_string()), // Expecting failure due to insufficient collateral
+        },
+        TestCase {
+            debt_asset: "ckUSDT".to_string(),
+            collateral_asset: "ckUSDT".to_string(),
+            amount: Nat::from(1_000_000_000_000_000_000u128), // 1 million ckUSDC (includes transaction fee)
+            on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
+            reward_amount: Nat::from(1_050_000_000_000_000_000u128),  // Expected reward: 1.05 million ckUSDC
+            expect_success: false,
+            expected_error_message: Some("Reward is higher than expected".to_string()), // Stress test should pass if the system can handle the large amount
+        },
+
     ];
 
     // let user_principal = get_user_principal();

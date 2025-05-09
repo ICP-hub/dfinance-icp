@@ -61,10 +61,10 @@ const Borrow = ({
   const { isBlocked } = useFunctionBlockStatus();
 
   const transferFeRetrive = useTransferFee(asset);
-  
+
   const borrowButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { filteredItems } = useAssetData();
+  const { filteredItems, loading: loadinBorrow } = useAssetData();
   const { backendActor, principal } = useAuth();
   const { userData, userAccountData } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
@@ -92,10 +92,10 @@ const Borrow = ({
   const [loading, setLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
-  const transferFee = 
-  (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+  const transferFee =
+    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
-const ledgerActors = useSelector((state) => state.ledger);
+  const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
@@ -212,17 +212,19 @@ const ledgerActors = useSelector((state) => state.ledger);
     const fee = await ledgerActor.icrc1_fee();
     const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
     const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(feeBigInt); 
+    setLedgerFee(feeBigInt);
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
+          `Borrow,${asset},${
+            scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
+          `Borrow,${asset},${
+            scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`
         );
 
@@ -374,26 +376,24 @@ const ledgerActors = useSelector((state) => state.ledger);
     }
   };
 
-  // Handles the close action of the payment popup.
   const handleClosePaymentPopup = () => {
     setIsPaymentDone(false);
     setIsModalOpen(false);
   };
 
-
   /**
-  * calculateHealthFactor:
-  * -----------------------
-  * Calculates the health factor of a user's position:
-  *
-  * 1. amountTaken = usdValue (assumes external scope or injected)
-  * 2. totalCollateralValue = max(totalCollateral, 0)
-  * 3. totalDeptValue = max(totalDebt + amountTaken, 0)
-  * 4. If totalDeptValue is 0 → return Infinity (i.e. no debt = safe position)
-  * 5. Formula used:
-  *      Health Factor = (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
-  *    - Higher value means safer position.
-  */
+   * calculateHealthFactor:
+   * -----------------------
+   * Calculates the health factor of a user's position:
+   *
+   * 1. amountTaken = usdValue (assumes external scope or injected)
+   * 2. totalCollateralValue = max(totalCollateral, 0)
+   * 3. totalDeptValue = max(totalDebt + amountTaken, 0)
+   * 4. If totalDeptValue is 0 → return Infinity (i.e. no debt = safe position)
+   * 5. Formula used:
+   *      Health Factor = (totalCollateralValue * (liquidationThreshold / 100)) / totalDeptValue
+   *    - Higher value means safer position.
+   */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -413,15 +413,15 @@ const ledgerActors = useSelector((state) => state.ledger);
   };
 
   /**
-  * calculateLTV:
-  * -------------
-  * Calculates Loan-to-Value ratio:
-  *
-  * 1. If totalCollateral is 0 → return 0 to avoid divide-by-zero.
-  * 2. Formula used:
-  *      LTV = nextTotalDebt / totalCollateral
-  *    - Expresses how much of the collateral is currently borrowed.
-  */
+   * calculateLTV:
+   * -------------
+   * Calculates Loan-to-Value ratio:
+   *
+   * 1. If totalCollateral is 0 → return 0 to avoid divide-by-zero.
+   * 2. Formula used:
+   *      LTV = nextTotalDebt / totalCollateral
+   *    - Expresses how much of the collateral is currently borrowed.
+   */
   const calculateLTV = (nextTotalDebt, totalCollateral) => {
     if (totalCollateral === 0) {
       return 0;
@@ -501,7 +501,7 @@ const ledgerActors = useSelector((state) => state.ledger);
 
   // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableValue- transferFee).toFixed(8);
+    const maxAmount = parseFloat(borrowableValue - transferFee).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -581,7 +581,8 @@ const ledgerActors = useSelector((state) => state.ledger);
       setLoading(true);
       try {
         await fetchAssetData();
-        const remainingBorrowable = (totalSupply * 0.85).toFixed(8) - totalBorrow;
+        const remainingBorrowable =
+          (totalSupply * 0.85).toFixed(8) - totalBorrow;
         const updatedValues = calculateBorrowableValues(
           asset,
           availableBorrow,
@@ -641,26 +642,26 @@ const ledgerActors = useSelector((state) => state.ledger);
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
   /**
- * 1. **Total Collateral Value Calculation:**
- *    - totalCollateralValue = totalCollateral + amountAdded
- * 
- * 2. **Next Total Debt Calculation:**
- *    - nextTotalDebt = amountTaken + totalDebt
- * 
- * 3. **Health Factor Calculation:**
- *    - healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold)
- *    - Truncates result to 2 decimals if valid, sets "Infinity" if healthFactor > 100.
- * 
- * 4. **Loan-to-Value (LTV) Calculation:**
- *    - ltv = calculateLTV(nextTotalDebt, totalCollateralValue)
- *    - LTV is checked against liquidationThreshold.
- * 
- * 5. **Button Disabled Condition:**
- *    - Button disabled if:
- *      - healthFactor <= 1
- *      - ltv >= liquidationThreshold
- *      - acknowledgment required but not given.
- */
+   * 1. **Total Collateral Value Calculation:**
+   *    - totalCollateralValue = totalCollateral + amountAdded
+   *
+   * 2. **Next Total Debt Calculation:**
+   *    - nextTotalDebt = amountTaken + totalDebt
+   *
+   * 3. **Health Factor Calculation:**
+   *    - healthFactor = calculateHealthFactor(totalCollateral, totalDebt, liquidationThreshold)
+   *    - Truncates result to 2 decimals if valid, sets "Infinity" if healthFactor > 100.
+   *
+   * 4. **Loan-to-Value (LTV) Calculation:**
+   *    - ltv = calculateLTV(nextTotalDebt, totalCollateralValue)
+   *    - LTV is checked against liquidationThreshold.
+   *
+   * 5. **Button Disabled Condition:**
+   *    - Button disabled if:
+   *      - healthFactor <= 1
+   *      - ltv >= liquidationThreshold
+   *      - acknowledgment required but not given.
+   */
   useEffect(() => {
     const amountTaken = usdValue || 0;
     const amountAdded = 0;
@@ -749,7 +750,6 @@ const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
-
   return (
     <>
       {isVisible && (
@@ -800,9 +800,12 @@ const ledgerActors = useSelector((state) => state.ledger);
                     }}
                   >
                     {loading &&
-                    (borrowableValue == null || borrowableValue === "0") ? (
+                    (borrowableValue === null ||
+                      borrowableValue === undefined ||
+                      borrowableValue === "0" ||
+                      borrowableValue === 0) ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
-                    ) : parseFloat(borrowableValue) === 0 ? (
+                    ) : parseFloat(borrowableValue || 0) === 0 ? (
                       "0 Max"
                     ) : (
                       `${formatValue(Math.max(0, borrowableValue))} Max`
@@ -1021,8 +1024,8 @@ const ledgerActors = useSelector((state) => state.ledger);
                   ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                   : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                     scaledAmount / SCALING_FACTOR < 1e-6
-                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                    : scaledAmount / SCALING_FACTOR
+                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                  : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -1034,8 +1037,8 @@ const ledgerActors = useSelector((state) => state.ledger);
                   ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                   : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                     scaledAmount / SCALING_FACTOR < 1e-6
-                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                    : scaledAmount / SCALING_FACTOR
+                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                  : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

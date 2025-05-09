@@ -29,7 +29,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Valid Withdrawals (Direct)
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_50_000_000u128), // 1.50 ICP (transfer fee included)
+            amount: Nat::from(150_000_000u128), // 1.50 ICP (transfer fee included)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,

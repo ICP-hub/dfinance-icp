@@ -30,7 +30,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Valid  test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_20_000_000u128), // 1.2 ICP (includes transaction fee)
+            amount: Nat::from(120_000_000u128), // 1.2 ICP (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

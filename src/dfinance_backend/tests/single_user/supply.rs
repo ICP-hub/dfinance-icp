@@ -34,7 +34,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             // ✅ Valid Test Case (only one active for now, uncomment others as needed)
             TestCase {
                 asset: "ICP".to_string(),
-                amount: Nat::from(5_00_000_000u128), // 5 ICP (includes transaction fee)
+                amount: Nat::from(500_000_000u128), // 5 ICP (includes transaction fee)
                 is_collateral: true,
                 expect_success: true,
                 expected_error_message: None,

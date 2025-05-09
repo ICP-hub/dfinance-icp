@@ -9,6 +9,7 @@ use ic_stable_structures::{
 use core::cell::RefCell;
 use std::time::Duration;
 use std::collections::HashMap;
+use ic_stable_structures::storable::{Bound, Storable};
 
 // Define the virtual memory type
 type VMem = ic_stable_structures::memory_manager::VirtualMemory<DefaultMemoryImpl>;
@@ -21,6 +22,11 @@ thread_local! {
     static LOG_STORAGE: RefCell<StableBTreeMap<u32, Vec<u8>, VMem>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0)))
+        )
+    );
+    static DATA_BACKUP_STORAGE: RefCell<StableBTreeMap<u64, BackupData, VMem>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1)))
         )
     );
 }
@@ -43,6 +49,25 @@ pub enum LogLevel {
     DEBUG,
     INFO,
 }
+#[derive(CandidType, Deserialize, Clone)]
+pub struct BackupData {
+    pub load_time: u64,
+    pub data: String,
+}
+
+// Implement the Storable trait for BackupData
+impl Storable for BackupData {
+    const BOUND: Bound = Bound::Unbounded;
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        let serialized = candid::encode_one(self).expect("Failed to serialize BackupData");
+        std::borrow::Cow::Owned(serialized)
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).expect("Failed to deserialize BackupData")
+    }
+}
+
 
 /*
  * @title Initialization Function
@@ -214,3 +239,39 @@ pub fn get_logs() -> Result<Vec<LogRecord>, String> {
     Ok(logs)
 }
 
+
+#[update]
+#[candid_method(update)]
+pub fn receive_data_backup(data: BackupData) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+
+    if !ic_cdk::api::is_controller(&caller) {
+        return Err("Unauthorized access to logs.".to_string());
+    }
+
+    DATA_BACKUP_STORAGE.with(|storage| {
+        let mut storage = storage.borrow_mut();
+        // let serialized_data = candid::encode_one(&data).expect("Failed to serialize BackupData");
+        storage.insert(1000u64 , data);
+    });
+
+    Ok(())
+}
+
+#[query]
+#[candid_method(query)]
+pub fn get_data_backup(id : u64) -> Result<BackupData, String> {
+    let caller = ic_cdk::caller();
+
+    if !ic_cdk::api::is_controller(&caller) {
+        return Err("Unauthorized access to logs.".to_string());
+    }
+
+    //get the data from the storage of given id
+    let data = DATA_BACKUP_STORAGE.with(|storage| {
+        let storage = storage.borrow();
+        storage.get(&id).map(|data| data.clone()).ok_or_else(|| "Data not found".to_string())
+    });
+
+    return data;
+}

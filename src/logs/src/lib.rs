@@ -28,6 +28,7 @@ thread_local! {
 // Constants
 const LOG_RETENTION_DAYS: u64 = 7; // Number of days to retain logs
 const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
+const MAX_LOG_COUNT: u64 = 15000; // Maximum number of logs before cleanup
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct LogRecord {
@@ -84,7 +85,7 @@ fn init() {
          return Err("Unauthorized access to logs.".to_string());
      }
      
-     LOG_STORAGE.with(|storage| {
+    let log_count = LOG_STORAGE.with(|storage| {
          let mut storage = storage.borrow_mut();
  
          // Find the current maximum log ID in storage
@@ -105,7 +106,17 @@ fn init() {
          }
  
          ic_cdk::println!("✅ Batch logs received and stored.");
-     });
+         // Return the current log count after insertion
+         storage.len()
+        });
+        
+        // Check if we need to clean up logs based on count
+        if log_count > MAX_LOG_COUNT {
+            ic_cdk::println!("Log count ({}) exceeds limit ({}). Cleaning up logs.", log_count, MAX_LOG_COUNT);
+            ic_cdk::spawn(async {
+                clear_old_logs_above_limit();
+            });
+        }
      Ok(())
  }
 
@@ -214,3 +225,51 @@ pub fn get_logs() -> Result<Vec<LogRecord>, String> {
     Ok(logs)
 }
 
+
+pub fn clear_old_logs_above_limit() {
+
+    let deleted_count = LOG_STORAGE.with(|state| {
+        let mut state_mut = state.borrow_mut();
+        let mut timestamped_entries: Vec<(u32, u64)> = Vec::new(); // (key, timestamp)
+
+        for (key, bytes) in state_mut.iter() {
+            let logs: Vec<String> = match candid::decode_one(&bytes) {
+                Ok(l) => l,
+                Err(_) => {
+                    timestamped_entries.push((key, 0)); // corrupted logs get lowest timestamp
+                    continue;
+                }
+            };
+
+            if let Some(log_entry) = logs.first() {
+                if let Some(timestamp_str) = log_entry.split(']').next() {
+                    if let Ok(ts) = timestamp_str.trim_start_matches('[').parse::<u64>() {
+                        timestamped_entries.push((key, ts));
+                        continue;
+                    }
+                }
+            }
+
+            // If timestamp couldn't be parsed, treat as very old
+            timestamped_entries.push((key, 0));
+        }
+
+        // Sort by timestamp (oldest first)
+        timestamped_entries.sort_by_key(|&(_, ts)| ts);
+
+        // Take oldest DELETE_COUNT entries
+        let to_delete: Vec<u32> = timestamped_entries
+            .into_iter()
+            .take(MAX_LOG_COUNT as usize)
+            .map(|(key, _)| key)
+            .collect();
+
+        for key in &to_delete {
+            state_mut.remove(key);
+        }
+
+        to_delete.len()
+    });
+
+    ic_cdk::println!("Deleted {} logs older logs", deleted_count);
+}

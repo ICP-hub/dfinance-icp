@@ -123,9 +123,10 @@ const UserInformationPopup = ({
     if (asset_supply[asset] !== undefined) {
       const supplyValue = Number(asset_supply[asset][0]);
       return supplyValue;
-    }else{
-    console.warn(`No supply value found for ${asset}`);
-    return 0;}
+    } else {
+      console.warn(`No supply value found for ${asset}`);
+      return 0;
+    }
   }, [asset_supply]);
 
   const getAssetBorrowValue = useCallback((asset) => {
@@ -520,7 +521,7 @@ const UserInformationPopup = ({
     ExchangeRateError: "Failed to fetch price data. Try again later.",
     CryptoBaseAssetNotFound: "Failed to fetch price data. Try again later.",
     HealthFactorLess: "Health Factor is less than one.",
-    USERCANNOTBELIQUIDATED:
+    UserCannotBeLiquidated:
       "Health Factor is too high to proceed with liquidation",
     InterestRateUpdateFailed:
       "Interest rates could not be updated. Please retry.",
@@ -617,7 +618,7 @@ const UserInformationPopup = ({
       } else if ("Err" in result) {
         const errorKey = result.Err;
         const errorMessage = String(errorKey).toLowerCase();
-        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+        if (errorKey && "BlockedForOneHour" in errorKey) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -898,7 +899,6 @@ const UserInformationPopup = ({
         ? calculatedData?.maxDebtToLiq
         : Math.trunc((calculatedData?.maxDebtToLiq * DebtusdRate) / usdRate);
     const bonusValue = ((DebtAmount / SCALING_FACTOR) * liquidation_bonus) / 100;
-
     const assetIndex = assets.indexOf(asset);
     const DebtassetIndex = assets.indexOf(selectedDebtAsset);
     return (
@@ -981,14 +981,14 @@ const UserInformationPopup = ({
             <div className="flex items-center gap-1">
               <span
                 className={`${value > 3
-                    ? "text-green-500"
-                    : value <= 1
-                      ? "text-red-500"
-                      : value <= 1.5
-                        ? "text-orange-600"
-                        : value <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
+                  ? "text-green-500"
+                  : value <= 1
+                    ? "text-red-500"
+                    : value <= 1.5
+                      ? "text-orange-600"
+                      : value <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
                   }`}
               >
                 {value > 100 ? "∞" : value.toFixed(2)}
@@ -996,14 +996,14 @@ const UserInformationPopup = ({
               <span className="text-gray-500">→</span>
               <span
                 className={`${currentHealthFactor > 3
-                    ? "text-green-500"
-                    : currentHealthFactor <= 1
-                      ? "text-red-500"
-                      : currentHealthFactor <= 1.5
-                        ? "text-orange-600"
-                        : currentHealthFactor <= 2
-                          ? "text-orange-400"
-                          : "text-orange-300"
+                  ? "text-green-500"
+                  : currentHealthFactor <= 1
+                    ? "text-red-500"
+                    : currentHealthFactor <= 1.5
+                      ? "text-orange-600"
+                      : currentHealthFactor <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
                   }`}
               >
                 {currentHealthFactor}
@@ -1049,14 +1049,13 @@ const UserInformationPopup = ({
   let liquidation_bonus = "";
 
   const selectedItem = filteredItems?.find((item) => {
-    const assetName = item[1].Ok.asset_name
-      ? item[1].Ok.asset_name[0]
+    const assetName = item[1].Ok[0].asset_name
+      ? item[1].Ok[0].asset_name
       : "Unknown";
     return assetName === selectedAsset;
   });
-
-  if (selectedItem && selectedItem[1]?.Ok) {
-    const item = selectedItem[1].Ok;
+  if (selectedItem && selectedItem[1]?.Ok[0]) {
+    const item = selectedItem[1].Ok[0];
     liquidation_bonus =
       Number(item?.configuration?.liquidation_bonus || "0") / SCALING_FACTOR;
   }
@@ -1722,8 +1721,8 @@ const UserInformationPopup = ({
                   <div className="w-full flex flex-col my-3 space-y-2">
                     <div
                       className={`w-full flex p-2 rounded-lg text-white ${!isCollateralAssetSelected
-                          ? "bg-[#6e3d17]"
-                          : "bg-[#BA5858]"
+                        ? "bg-[#6e3d17]"
+                        : "bg-[#BA5858]"
                         }`}
                     >
                       <div className=" flex items-center justify-center">
@@ -1758,14 +1757,14 @@ const UserInformationPopup = ({
                 </button>
                 <button
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
-                      !info &&
-                      isDebtAssetSelected &&
-                      (amountToRepay !== calculatedData?.maxDebtToLiq
-                        ? calculatedData?.maxDebtToLiq / SCALING_FACTOR <=
-                        selectedAssetBalance
-                        : amountToRepay <= selectedAssetBalance)
-                      ? "opacity-100 cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
+                    !info &&
+                    isDebtAssetSelected &&
+                    (amountToRepay !== calculatedData?.maxDebtToLiq
+                      ? calculatedData?.maxDebtToLiq / SCALING_FACTOR <=
+                      selectedAssetBalance
+                      : amountToRepay <= selectedAssetBalance)
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
                     }`}
                   onClick={() => {
                     isApproved ? handleCallLiquidation() : handleApprove();

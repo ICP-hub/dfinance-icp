@@ -50,7 +50,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_000_000_00u128), // 50 ICP
+            amount: Nat::from(500_000_000u128), // 50 ICP
             expect_success: true,
             expected_error_message: None,
         },
@@ -154,7 +154,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             backend_canister,
             user_principal,
             "faucet",
-            encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+            encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
+
         );
 
         match result {
@@ -178,7 +179,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                 continue;
@@ -232,7 +233,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),
                 "faucet",
-                encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+                encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
             );
 
             match result {
@@ -261,7 +262,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue;

@@ -82,7 +82,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         ic_cdk::println!(
             "\n======================== Initial reserve data before concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone());
 
         ic_cdk::println!(
             "\n======================================================================================\n"
@@ -94,7 +94,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             let withdraw_params = ExecuteWithdrawParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
-                is_collateral: case.is_collateral.clone(),
+                is_collateral: case.is_collateral,
             };
 
             // Submit the withdraw request to backend canister
@@ -143,7 +143,8 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
+
                                         error.message()
                                     );
                                     continue; // Skip this test case if error message does not match
@@ -179,7 +180,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         ic_cdk::println!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone());
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone());
         ic_cdk::println!("\n---------------------------------------------------------\n");
     }
 

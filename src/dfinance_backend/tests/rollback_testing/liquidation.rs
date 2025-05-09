@@ -65,9 +65,9 @@ use crate::utils::structs::*;
         TestCase {
             debt_asset: "ckUSDC".to_string(),
             collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(200_00_000_000u128), // 2000 ckUSDC (transferfee included)
+            amount: Nat::from(20_000_000_000u128), // 2000 ckUSDC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(210_00_000_000u128), // 2100 ckUSDC (liquidation reward)
+            reward_amount: Nat::from(21_000_000_000u128), // 2100 ckUSDC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -96,7 +96,7 @@ use crate::utils::structs::*;
      * - Each user is assigned an asset to supply and borrow with predefined amounts.
      * - The function also verifies the expected behavior and error handling in case of failures.
      */
-    test_create_user_reserve_with_low_health(&pic, backend_canister);
+    test_create_user_reserve_with_low_health(pic, backend_canister);
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
@@ -121,7 +121,7 @@ use crate::utils::structs::*;
 
         if i % 2 == Nat::from(0u128) {
             let asset_principal =
-                match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
@@ -147,9 +147,10 @@ use crate::utils::structs::*;
             let approved = test_icrc2_aprove(
                 get_users_principal(Nat::from(1u128)).unwrap(),
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
-                Nat::from(case.amount.clone()),
+                case.amount.clone()
+
             );
             if !approved {
                 if !case.expect_success {
@@ -157,7 +158,8 @@ use crate::utils::structs::*;
                         println!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
-                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
+
                     );
                         continue;
                     }
@@ -208,7 +210,7 @@ use crate::utils::structs::*;
             debt_asset: case.debt_asset.clone(),
             collateral_asset: case.collateral_asset.clone(),
             amount: case.amount.clone(),
-            on_behalf_of: case.on_behalf_of.clone(),
+            on_behalf_of: case.on_behalf_of,
             reward_amount: case.reward_amount.clone(),
         };
 

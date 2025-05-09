@@ -61,7 +61,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     
             // Get the asset principal (fail fast if None)
             let asset_principal =
-                match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
@@ -77,7 +77,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
                 case.amount.clone(), // 5 ICP (transfer fee included)
             );

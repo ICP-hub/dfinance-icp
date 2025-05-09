@@ -68,7 +68,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 backend_canister,
                 user_principal,
                 "faucet",
-                encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+                encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
+
             );
             msg_ids.push(msg_id);
         }
@@ -102,7 +103,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                     continue;
@@ -160,7 +161,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),
                 "faucet",
-                encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+                encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
+
             );
 
             match result {
@@ -189,7 +191,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue;
@@ -231,7 +233,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 backend_canister,
                 user_principal,
                 "faucet",
-                encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+                encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
+
             );
 
             match result {
@@ -260,7 +263,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue;

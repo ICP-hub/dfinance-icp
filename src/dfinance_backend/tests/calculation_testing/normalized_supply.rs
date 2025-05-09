@@ -33,7 +33,7 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::
 
     if reserve_data.last_update_timestamp == current_time {
         ic_cdk::println!("No update needed as timestamps match.");
-        return Ok(reserve_data.liquidity_index);
+         Ok(reserve_data.liquidity_index)
     } else {
         let cumulated_liquidity_interest = calculate_linear_interest(
             reserve_data.current_liquidity_rate,
@@ -44,6 +44,6 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::
             reserve_data.liquidity_index
         );
         //  user_reserve_data.liquidity_index =
-        return Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index));
+        Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index))
     }
 }

@@ -67,7 +67,7 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  
+
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1115);
   const isMobile2 = window.innerWidth <= 640;
   const renderThemeToggle = !isMobile;
@@ -336,7 +336,7 @@ export default function Navbar({ isHomeNav }) {
     const errorMsg = errorKey?.toString() || "An unexpected error occurred";
     console.error("Error:", errorKey);
 
-    if (typeof errorKey === "object" && "BLOCKEDFORONEHOUR" in errorKey) {
+    if (typeof errorKey === "object" && "BlockedForOneHour" in errorKey) {
       toast.error("You are temporarily blocked from using this function", {
         className: "custom-toast",
         position: "top-center",
@@ -457,7 +457,45 @@ export default function Navbar({ isHomeNav }) {
 
   //funtion for handle amount change
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    let inputAmount = e.target.value;
+
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    }
+
+    if (inputAmount === "") {
+      setAmount("");
+      return;
+    }
+
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      return;
+    }
+
+    const numericAmount = parseFloat(inputAmount);
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
+      toast.error(
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
+          "en-US"
+        )}`
+      );
+      return;
+    } else {
+    }
+
+    let formattedAmount;
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
+    } else {
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
+    }
+
+    setAmount(formattedAmount);
   };
 
   // Function to handle the click event on the "Max" button
@@ -587,19 +625,6 @@ export default function Navbar({ isHomeNav }) {
     setIsPopupVisible(false);
   };
 
-  // Function to handle the resize event
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
@@ -685,6 +710,19 @@ export default function Navbar({ isHomeNav }) {
    *                                  EFFECTS
    * =================================================================================== */
 
+  // Function to handle the resize event
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   // Close the dropdown when the user scrolls
   useEffect(() => {
     window.addEventListener("scroll", handleCloseDropdownOnScroll);
@@ -1130,8 +1168,8 @@ export default function Navbar({ isHomeNav }) {
                                         </p>
                                         <p
                                           className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                              ? "text-gray-400 cursor-not-allowed"
-                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                                             }`}
                                           onClick={() => {
                                             if (
@@ -1201,13 +1239,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => !isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                        isLoading ||
-                                        isButtonDisabled ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isLoading ||
+                                      isButtonDisabled ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       isApproved ||
@@ -1223,13 +1261,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                        isButtonDisabled ||
-                                        isLoading ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isButtonDisabled ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       !isApproved ||

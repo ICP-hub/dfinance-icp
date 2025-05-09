@@ -520,7 +520,7 @@ const UserInformationPopup = ({
     ExchangeRateError: "Failed to fetch price data. Try again later.",
     CryptoBaseAssetNotFound: "Failed to fetch price data. Try again later.",
     HealthFactorLess: "Health Factor is less than one.",
-    USERCANNOTBELIQUIDATED:
+    UserCannotBeLiquidated:
       "Health Factor is too high to proceed with liquidation",
     InterestRateUpdateFailed:
       "Interest rates could not be updated. Please retry.",
@@ -617,7 +617,7 @@ const UserInformationPopup = ({
       } else if ("Err" in result) {
         const errorKey = result.Err;
         const errorMessage = String(errorKey).toLowerCase();
-        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+        if (errorKey && "BlockedForOneHour" in errorKey) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {

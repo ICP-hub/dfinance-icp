@@ -353,7 +353,7 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
-        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+        if (errorMsg && "BlockedForOneHour" in errorMsg) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {

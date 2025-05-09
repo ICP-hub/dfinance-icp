@@ -61,7 +61,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
 
         /* Get asset principal; handle missing cases  */
         let asset_principal =
-            match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+            match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                 Some(principal) => principal,
                 None => {
                     if !case.expect_success {
@@ -87,7 +87,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         let approved = test_icrc2_aprove(
             user_principal,
             asset_principal,
-            &pic,
+            pic,
             backend_canister,
             Nat::from(case.amount.clone()), // Amount ICP (transfer fee included)
         );
@@ -97,7 +97,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                     println!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
-                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                     );
                     continue;
                 }
@@ -121,7 +121,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             let repay_params = ExecuteRepayParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(), // Amount ICP (transfer fee included)
-                on_behalf_of: case.on_behalf_of.clone(),
+                on_behalf_of: case.on_behalf_of,
             };
 
             /*
@@ -163,7 +163,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                                     println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                     continue;

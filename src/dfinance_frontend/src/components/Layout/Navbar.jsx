@@ -67,9 +67,9 @@ export default function Navbar({ isHomeNav }) {
     const savedTheme = localStorage.getItem("isDarkMode");
     return savedTheme ? JSON.parse(savedTheme) : theme === "dark";
   });
-  
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1115);
+  const isMobile = window.innerWidth <= 1115;
   const isMobile2 = window.innerWidth <= 640;
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth <= 760);
   const renderThemeToggle = !isMobile;
   const dispatch = useDispatch();
   const { isWalletModalOpen } = useSelector((state) => state.utility);
@@ -457,7 +457,46 @@ export default function Navbar({ isHomeNav }) {
 
   //funtion for handle amount change
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    let inputAmount = e.target.value;
+
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    }
+
+    if (inputAmount === "") {
+      setAmount("");
+      return;
+    }
+
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      return;
+    }
+
+    const numericAmount = parseFloat(inputAmount);
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
+      toast.dismiss();
+      toast.error(
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
+          "en-US"
+        )}`
+      );
+      return;
+    } else {
+    }
+
+    let formattedAmount;
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
+    } else {
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
+    }
+
+    setAmount(formattedAmount);
   };
 
   // Function to handle the click event on the "Max" button
@@ -565,9 +604,7 @@ export default function Navbar({ isHomeNav }) {
   };
 
   // Function to handle the click event on the "TestnetMode" button
-
   const handleTestnetModeToggle = () => {
-
     if (!isProduction) {
       const url = `https://cszmy-vyaaa-aaaak-quhea-cai.icp0.io/dashboard/?openWallet=true`;
       console.log("Redirecting to:", url);
@@ -577,8 +614,6 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-
-
   // Function to handle the dropdown to open
   const handleDropdownToggle = () => {
     setDropdownVisible((prevVisible) => !prevVisible);
@@ -587,19 +622,18 @@ export default function Navbar({ isHomeNav }) {
     setIsPopupVisible(false);
   };
 
-  // Function to handle the resize event
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
+  };
 
+  useEffect(() => {
     window.addEventListener("resize", handleResize);
-    handleResize();
 
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
 
   // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
@@ -1579,7 +1613,6 @@ export default function Navbar({ isHomeNav }) {
                                   checked={isTestnetMode}
                                   onChange={handleTestnetModeToggle}
                                 />
-
                               </div>
                             </div>
 
@@ -1719,7 +1752,6 @@ export default function Navbar({ isHomeNav }) {
                               checked={isTestnetMode}
                               onChange={handleTestnetModeToggle}
                             />
-
                           </div>
                         </div>
                       </div>

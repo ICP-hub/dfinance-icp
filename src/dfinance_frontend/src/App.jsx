@@ -88,7 +88,7 @@ export default function App() {
   useEffect(() => {
     const fetchAssetPrincipals = async () => {
       if (!backendActor) return;
-  
+
       try {
         const assets = ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"];
         const results = await Promise.all(
@@ -96,13 +96,13 @@ export default function App() {
             backendActor.get_asset_principal_certified(asset)
           )
         );
-  
+
         assets.forEach(async (asset, index) => {
           const result = results[index];
-  
+
           if ("Ok" in result) {
             const [principal, certificate] = result.Ok;
-  
+
             try {
               const verification = await verifyCertificate(certificate);
               if (!verification) {
@@ -111,15 +111,14 @@ export default function App() {
             } catch (verificationError) {
               console.error("Error verifying certificate:", verificationError);
             }
-  
+
             setAssetPrincipal((prevState) => ({
               ...prevState,
               [asset]: principal?.toText() || null,
             }));
           } else {
             console.warn(`No principal for ${asset}:`, result.Err);
-  
-            // Still define the key so state shape is consistent
+
             setAssetPrincipal((prevState) => ({
               ...prevState,
               [asset]: null,
@@ -130,10 +129,9 @@ export default function App() {
         console.error("Error fetching asset principals:", error);
       }
     };
-  
+
     fetchAssetPrincipals();
   }, [principal, backendActor]);
-  
 
   /**
    * Creates ledger actors for all fetched asset principals.
@@ -189,6 +187,7 @@ export default function App() {
    */
   const handleJoyrideCallback = (data) => {
     const { status } = data;
+    const isProduction = process.env.DFX_PRODUCTION === "true";
 
     if (status === "finished" || status === "skipped") {
       if (isAuthenticated && principal) {
@@ -205,61 +204,106 @@ export default function App() {
       }
     }
 
-    if (data.action === "next" && data.index === 0) {
-      navigate("/Faucet");
-    }
-    if (data.action === "next" && data.index === 2) {
-      navigate("/dashboard");
-    }
-    if (data.index === 10) {
-      navigate("/market");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-    if (data.action === "next" && data.index === 12) {
-      navigate("/liquidate");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-    if (data.action === "next" && data.index === 13) {
-      navigate("/liquidate");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
+    if (isProduction) {
+      if (data.action === "next") {
+        if (data.index === 0) {
+          navigate("/dashboard");
+        } else if (data.index === 8) {
+          navigate("/market");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 10) {
+          navigate("/liquidate");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 13) {
+          navigate("/liquidate");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }
+      }
 
-    if (data.action === "prev" && data.index === 1) {
-      navigate("/dashboard");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-    if (data.action === "prev" && data.index === 3) {
-      navigate("/Faucet");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-    if (data.action === "prev" && data.index === 10) {
-      navigate("/dashboard");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-    if (data.action === "prev" && data.index === 12) {
-      navigate("/market");
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+      if (data.action === "prev") {
+        if (data.index === 3) {
+          navigate("/dashboard");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 10) {
+          navigate("/dashboard");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 12) {
+          navigate("/market");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }
+      }
+    } else {
+      if (data.action === "next") {
+        if (data.index === 0) {
+          navigate("/Faucet");
+        } else if (data.index === 2) {
+          navigate("/dashboard");
+        } else if (data.index === 10) {
+          navigate("/market");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 12) {
+          navigate("/liquidate");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 13) {
+          navigate("/liquidate");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }
+      }
+
+      if (data.action === "prev") {
+        if (data.index === 1) {
+          navigate("/dashboard");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 3) {
+          navigate("/Faucet");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 10) {
+          navigate("/dashboard");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        } else if (data.index === 12) {
+          navigate("/market");
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
+        }
+      }
     }
 
     if (status === "paused") {

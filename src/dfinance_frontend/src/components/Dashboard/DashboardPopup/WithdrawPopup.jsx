@@ -71,9 +71,7 @@ const WithdrawPopup = ({
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
 
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) ;
-
+  const transferFee = transferFeRetrive?.transferFee;
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */

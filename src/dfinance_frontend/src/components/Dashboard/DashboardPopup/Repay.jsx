@@ -59,8 +59,7 @@ const Repay = ({
   const { backendActor, principal } = useAuth();
 
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0);
+  const transferFee = transferFeRetrive?.transferFee;
 
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);

@@ -82,9 +82,7 @@ const SupplyPopup = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
-
+  const transferFee = transferFeRetrive?.transferFee;
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -210,9 +208,8 @@ const SupplyPopup = ({
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
-    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-
+    const amountAsNat64 = Math.round(amount.replace(/,/g, "") * SCALING_FACTOR);
+    const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
     const totalAmount = amountAsNat64 + transferFeeBigInt;
 
     try {

@@ -91,10 +91,10 @@ const Borrow = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0);
+   
+  const transferFee = transferFeRetrive?.transferFee;
 
-  const ledgerActors = useSelector((state) => state.ledger);
+  
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
@@ -201,12 +201,7 @@ const Borrow = ({
       asset: asset,
       amount: totalAmount,
     };
-    let ledgerActor;
-    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
-    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
-    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
-    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
-    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());

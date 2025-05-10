@@ -90,10 +90,9 @@ const Borrow = ({
   const [borrowableValue, setBorrowableValue] = useState("0.00000000");
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [ledgerFee, setLedgerFee] = useState(null);
+
   const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+    (Number(transferFeRetrive?.transferFee) || 0);
 
   const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
@@ -208,23 +207,16 @@ const Borrow = ({
     else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
-
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(feeBigInt);
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
 
       if ("Ok" in borrowResult) {
         trackEvent(
-          `Borrow,${asset},${
-            scaledAmount / SCALING_FACTOR
+          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`,
           "Assets",
-          `Borrow,${asset},${
-            scaledAmount / SCALING_FACTOR
+          `Borrow,${asset},${scaledAmount / SCALING_FACTOR
           }, ${principalObj.toString()}`
         );
 
@@ -772,9 +764,9 @@ const Borrow = ({
                   <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -788,11 +780,10 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                      }`}
                     onClick={() => {
                       if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();
@@ -800,10 +791,10 @@ const Borrow = ({
                     }}
                   >
                     {loading &&
-                    (borrowableValue === null ||
-                      borrowableValue === undefined ||
-                      borrowableValue === "0" ||
-                      borrowableValue === 0) ? (
+                      (borrowableValue === null ||
+                        borrowableValue === undefined ||
+                        borrowableValue === "0" ||
+                        borrowableValue === 0) ? (
                       <span className="spinner-border animate-spin inline-block w-4 h-4 border-2 rounded-full"></span>
                     ) : parseFloat(borrowableValue || 0) === 0 ? (
                       "0 Max"
@@ -833,17 +824,16 @@ const Borrow = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
+                        className={`${truncatedValue > 3
                             ? "text-green-500"
                             : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {parseFloat(
                           truncatedValue > 100 ? "Infinity" : truncatedValue
@@ -851,17 +841,16 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
+                        className={`${currentHealthFactor > 3
                             ? "text-green-500"
                             : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -871,17 +860,6 @@ const Borrow = ({
                     <div className="flex items-center gap-1 relative">
                       <div className="flex items-center">
                         <p>Transaction Fee</p>
-                        <Info
-                          size={14}
-                          className="text-blue-800 dark:text-white ml-1 cursor-help"
-                          onMouseEnter={() => setShowTooltip(true)}
-                          onMouseLeave={() => setShowTooltip(false)}
-                        />
-                        {showTooltip && (
-                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                            Platform fee + Ledger Transfer fee
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -975,11 +953,10 @@ const Borrow = ({
               <button
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >
                 Borrow {asset}
@@ -1024,8 +1001,8 @@ const Borrow = ({
                   ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                   : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                     scaledAmount / SCALING_FACTOR < 1e-6
-                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                  : scaledAmount / SCALING_FACTOR
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>{asset}</strong>
             </p>
@@ -1037,8 +1014,8 @@ const Borrow = ({
                   ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                   : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                     scaledAmount / SCALING_FACTOR < 1e-6
-                  ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                  : scaledAmount / SCALING_FACTOR
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                 : "0"}{" "}
               <strong>debt{asset}</strong>
             </p>

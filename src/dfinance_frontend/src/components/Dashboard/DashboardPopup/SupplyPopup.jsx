@@ -212,18 +212,14 @@ const SupplyPopup = ({
 
     const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(fee);
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
+    const totalAmount = amountAsNat64 + transferFeeBigInt;
 
     try {
 
 
       const approval = await ledgerActor.icrc2_approve({
-        fee: fee ? [feeBigInt] : [],
+        fee: [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -581,7 +577,7 @@ const SupplyPopup = ({
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
-  
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -836,17 +832,6 @@ const SupplyPopup = ({
                     <div className="flex items-center gap-1 relative">
                       <div className="flex items-center">
                         <p>Transaction Fee</p>
-                        <Info
-                          size={14}
-                          className="text-blue-800 dark:text-white ml-1 cursor-help"
-                          onMouseEnter={() => setShowTooltip(true)}
-                          onMouseLeave={() => setShowTooltip(false)}
-                        />
-                        {showTooltip && (
-                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                            Platform fee + Ledger Transfer fee
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -905,8 +890,8 @@ const SupplyPopup = ({
                   }`}
               >
                 {isApproved
-                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(4)} ${asset} `
-                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(4)} ${asset} `}
+                  ? `Approved with signed message `
+                  : `Approve with sign message `}
 
               </p>
             </div>

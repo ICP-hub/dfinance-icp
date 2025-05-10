@@ -70,10 +70,9 @@ const WithdrawPopup = ({
   const [isVisible, setIsVisible] = useState(true);
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [ledgerFee, setLedgerFee] = useState(null);
+
   const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+    (Number(transferFeRetrive?.transferFee) || 0) ;
 
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
@@ -220,11 +219,6 @@ const WithdrawPopup = ({
     else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
-
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(feeBigInt);
 
     try {
       const safeAmount =
@@ -791,17 +785,6 @@ const WithdrawPopup = ({
                   <div className="flex items-center gap-1 relative">
                     <div className="flex items-center">
                       <p>Transaction Fee</p>
-                      <Info
-                        size={14}
-                        className="text-blue-800 dark:text-white ml-1 cursor-help"
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
-                      />
-                      {showTooltip && (
-                        <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                          Platform fee + Ledger Transfer fee
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-1">

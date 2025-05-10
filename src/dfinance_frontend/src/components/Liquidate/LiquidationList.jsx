@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
 import Button from "../Common/button";
 import { useSelector } from "react-redux";
@@ -88,18 +88,19 @@ const DebtStatus = () => {
           const verified = await verifyCertificate(cert);
           if (!verified) {
             console.error("Certificate verification failed for total users");
-            return;
+            return null;
           }
         } catch (verificationError) {
           console.error(
             "Error verifying certificate for total users:",
             verificationError
           );
-          return;
+          return null;
         }
       }
 
       setTotalUsers(userData || 0);
+      return userData || 0;
     } catch (error) {
       console.error("Error fetching total users:", error);
       throw error;
@@ -156,20 +157,44 @@ const DebtStatus = () => {
   };
 
   //Function to filter the users based on the search query
-  const relevantItems = liquidationUsers.filter((item) => {
-    return (
-      item.principal?._arr.toText() !== user.toString() &&
-      item.debt !== 0n &&
-      item.collateral !== 0n
-    );
-  });
+  const { relevantItems, currentItems, totalPages } = useMemo(() => {
+    if (liquidationLoading || !liquidationUsers || !liquidationUsers.length) {
+      console.log("Data not ready for processing yet");
+      return { relevantItems: [], currentItems: [], totalPages: 0 };
+    }
 
-  const ITEMS_PER_PAGE = 8;
-  const totalPages = Math.ceil(relevantItems.length / ITEMS_PER_PAGE);
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentItems = relevantItems.slice(indexOfFirstItem, indexOfLastItem);
+    console.log("Processing liquidation users data");
 
+    // Filter users based on criteria
+    const filtered = liquidationUsers.filter((item) => {
+      return (
+        item.principal?._arr?.toText() !== user?.toString() &&
+        typeof item.debt !== 'undefined' && item.debt !== 0n &&
+        typeof item.collateral !== 'undefined' && item.collateral !== 0n
+      );
+    });
+
+    const ITEMS_PER_PAGE = 8;
+    const pages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+
+    const validPage = Math.min(Math.max(1, currentPage), pages);
+    if (validPage !== currentPage) {
+      setCurrentPage(validPage);
+    }
+
+    const lastIndex = validPage * ITEMS_PER_PAGE;
+    const firstIndex = lastIndex - ITEMS_PER_PAGE;
+    const items = filtered.slice(firstIndex, lastIndex);
+
+    console.log(`Showing ${items.length} items on page ${validPage} of ${pages}`);
+
+    return {
+      relevantItems: filtered,
+      currentItems: items,
+      totalPages: pages
+    };
+  }, [liquidationUsers, liquidationLoading, currentPage, user]);
+  console.log("currentItems", currentItems)
   // Function to fetch asset data for each user
   const fetchAssetData = async () => {
     const reserveDataMap = await batchFetchReserveData(assets);
@@ -277,7 +302,6 @@ const DebtStatus = () => {
         const supplyValue = Number(asset_supply[asset][0]);
         return supplyValue;
       }
-      console.warn(`No supply value found for ${asset}`);
       return 0;
     },
     [asset_supply]
@@ -286,14 +310,13 @@ const DebtStatus = () => {
   // Function to get asset borrow value
   const getAssetBorrowValue = useCallback(
     (asset) => {
-      if (asset_supply[asset] !== undefined) {
+      if (asset_borrow[asset] !== undefined) {
         const borrowValue = Number(asset_borrow[asset][0]);
         return borrowValue;
       }
-      console.warn(`No supply value found for ${asset}`);
       return 0;
     },
-    [asset_supply]
+    [asset_borrow]
   );
 
   // Function to calculate asset supply
@@ -347,7 +370,7 @@ const DebtStatus = () => {
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-        Number(debtIndex)
+      Number(debtIndex)
     );
   };
 
@@ -408,25 +431,42 @@ const DebtStatus = () => {
 
   //Function to fetch  data for each user
   useEffect(() => {
-    const loadUsers = async () => {
+    console.log("Starting liquidation data loading process");
+
+    const loadData = async () => {
       setLiquidationLoading(true);
 
       try {
-        const usersPerPage = 10;
-        const totalPages = Math.ceil(Number(totalUsers) / usersPerPage);
-        const data = await fetchLiquidationUsers(totalPages, usersPerPage);
-        setLiquidationUsers(data);
-      } catch (err) {
-        console.error("Failed to load liquidation users:", err);
+        let userCount = totalUsers;
+        if (userCount === null || userCount === undefined) {
+          userCount = await getTotalUser();
+        }
+
+        if (userCount !== null && userCount !== undefined) {
+          const usersPerPage = 10;
+          const calculatedPages = Math.ceil(Number(userCount) / usersPerPage);
+
+          const userData = await fetchLiquidationUsers(calculatedPages, usersPerPage);
+
+          if (userData && userData.length >= 0) {
+            setLiquidationUsers(userData);
+          }
+        } else {
+          console.warn("Invalid user count, cannot proceed with fetching liquidation users");
+        }
+      } catch (error) {
+        console.error("Failed to load liquidation data:", error);
       } finally {
         setTimeout(() => {
           setLiquidationLoading(false);
-        }, 1200);
+        }, 200);
       }
     };
 
-    loadUsers();
+    loadData();
   }, [totalUsers, liquidateTrigger]);
+
+
 
   useEffect(() => {
     if (currentItems.length > 0) {
@@ -532,11 +572,10 @@ const DebtStatus = () => {
                     return (
                       <tr
                         key={index}
-                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${
-                          index !== liquidationUsers.length - 1
-                            ? "gradient-line-bottom"
-                            : ""
-                        }`}
+                        className={`w-full font-bold hover:bg-[#ddf5ff8f]  rounded-lg ${index !== liquidationUsers.length - 1
+                          ? "gradient-line-bottom"
+                          : ""
+                          }`}
                       >
                         <td className="p-2 align-top py-8 ">
                           <div className="flex items-center justify-start min-w-[120px] gap-3 whitespace-nowrap mt-2">
@@ -563,12 +602,10 @@ const DebtStatus = () => {
                               item?.userData?.reserves?.[0].map(
                                 (mappedItem, index) => {
                                   const assetName = mappedItem?.[0];
-
                                   const assetBorrow = calculateAssetBorrow(
                                     assetName,
                                     item
                                   );
-
                                   if (assetBorrow > 0) {
                                     const assetIndex =
                                       assets.indexOf(assetName);
@@ -624,7 +661,7 @@ const DebtStatus = () => {
                               )}
                           </div>
                         </td>
-                        {}
+                        { }
                         <td className="p-3 align-top flex py-8">
                           <div className="w-full flex justify-end align-center">
                             <Button

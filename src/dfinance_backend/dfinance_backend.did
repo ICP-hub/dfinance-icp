@@ -250,7 +250,7 @@ service : (principal) -> {
   get_user_faucet_data : (principal) -> (Result_12) query;
   guard_admin_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_transfer_allowed : (principal, text, nat) -> (bool) query;
+  is_transfer_allowed : (principal, text, nat) -> (bool);
   is_user_blocked : () -> (Result_13) query;
   mock_price_data : () -> (Result_1);
   remove_admin : (principal) -> (Result);

@@ -535,6 +535,13 @@ async fn icrc1_transfer(
     };
 
     if !ic_cdk::api::is_controller(&caller) {
+        // if caller != from_principal {
+        //     return Err(TransferError::GenericError {
+        //         message: "Caller is not authorized to transfer from this account.".to_string(),
+        //         error_code: Nat::from(6u32),
+        //     });
+        // }
+
         let asset_name = icrc1_name();
 
         let backend_canister_id = match icrc1_minting_account() {
@@ -598,19 +605,65 @@ async fn icrc1_transfer(
 #[candid_method(update)]
 async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
     let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
+    // let platform_principal = ic_cdk::api::id();
 
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(TransferFromError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     return Err(TransferFromError::GenericError {
+    //         message: "Unauthorized access.".to_string(),
+    //         error_code: Nat::from(2u32),
+    //     });
+    // }
 
     let spender_account = Account {
         owner: ic_cdk::api::caller(),
         subaccount: arg.spender_subaccount,
     };
+
+    if !ic_cdk::api::is_controller(&caller) {
+        // if caller != arg.from.owner {
+        //     return Err(TransferFromError::GenericError {
+        //         message: "Caller is not authorized to transfer from this account.".to_string(),
+        //         error_code: Nat::from(6u32),
+        //     });
+        // }
+
+        let asset_name = icrc1_name();
+
+        let backend_canister_id = match icrc1_minting_account() {
+            Some(account) => account.owner,
+            None => {
+                return Err(TransferFromError::GenericError {
+                    message: "Failed to fetch backend canister ID.".to_string(),
+                    error_code: Nat::from(3u32),
+                });
+            }
+        };
+
+        let result: Result<(bool,), _> = call(
+            backend_canister_id,
+            "is_transfer_allowed",
+            (arg.from.owner, asset_name.clone(), arg.amount.clone()),
+        )
+        .await;
+
+        let (transfer_ok,): (bool,) = match result {
+            Ok(ok) => ok,
+            Err(err) => {
+                return Err(TransferFromError::GenericError {
+                    message: format!("Failed to check transfer permission: {:?}", err),
+                    error_code: Nat::from(4u32),
+                });
+            }
+        };
+
+        if !transfer_ok {
+            return Err(TransferFromError::GenericError {
+                message: "Transfer not allowed due to low health factor.".to_string(),
+                error_code: Nat::from(5u32),
+            });
+        }
+    }
+
     execute_transfer(
         arg.from,
         arg.to,

@@ -1,10 +1,9 @@
 use super::update::{user_data, user_reserve};
 use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
-use crate::api::query;
 use crate::constants::constant_variables::constants::{
     HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
 };
-use crate::constants::constant_variables::constants::{MIN_BORROW, ZERO_VALUE};
+use crate::constants::constant_variables::constants::MIN_BORROW;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
@@ -29,9 +28,8 @@ use crate::{
     stable_storage::state_handler::{mutate_state, read_state},
 };
 use candid::{Nat, Principal};
-use futures::future::ok;
 use futures::stream::{self, StreamExt};
-use ic_cdk::{api, query, update};
+use ic_cdk::update;
 
 /*
  * @title User Account Data Calculation
@@ -765,7 +763,7 @@ pub async fn create_user_reserve_with_low_health(
                 .asset_index
                 .get(&asset_supply)
                 .map(|reserve| reserve.0.clone())
-                .ok_or({ Error::NoReserveDataFound })
+                .ok_or(Error::NoReserveDataFound)
         })?;
 
         reserve_data.asset_supply += supply_tokens.clone();
@@ -1219,9 +1217,8 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-#[query]
+#[update]
 pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Nat) -> bool {
-    debug!("Checking transfer permission for user: {}, asset: {}, amount: {}", user, asset_name, amount);
 
     let (total_collateral, total_debt, _avg_ltv, liquidation_threshold, _health_factor) =
         match calculate_user_account_data(Some(user)).await {
@@ -1233,34 +1230,18 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
                 h_factor,
                 _a_borrow,
                 _zero_ltv_collateral,
-            )) => {
-                debug!(
-                    "Account data - Collateral: {}, Debt: {}, LTV: {}, Liquidation Threshold: {}, Health Factor: {}",
-                    t_collateral, t_debt, ltv, liquidation_threshold, h_factor
-                );
-                (t_collateral, t_debt, ltv, liquidation_threshold, h_factor)
-            }
+            )) => (t_collateral, t_debt, ltv, liquidation_threshold, h_factor),
             Err(e) => {
                 error!("Failed to calculate user account data: {:?}", e);
                 return false;
             }
         };
 
-    if total_debt == Nat::from(0u128) {
-        debug!("User has zero debt. Transfer allowed.");
-        return true;
-    }
-
     let base_asset = asset_name.trim_start_matches('d').to_string();
-    debug!("Base asset extracted from {}: {}", asset_name, base_asset);
 
     let rate = match get_cached_exchange_rate(base_asset.clone()) {
-        Ok(rate) => {
-            debug!("Exchange rate for {}: {}", base_asset, rate);
-            rate
-        }
-        Err(e) => {
-            error!("Failed to get exchange rate for {}: {:?}", base_asset, e);
+        Ok(rate) => rate,
+        Err(_) => {
             return false;
         }
     };
@@ -1277,14 +1258,15 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
     }
 
     let adjusted_collateral = total_collateral.clone() - usd_withdrawal.clone();
-    debug!(
-        "Adjusted collateral after withdrawal: {} (Original: {} - Withdrawal: {})",
-        adjusted_collateral, total_collateral, usd_withdrawal
-    );
+    debug!("adjusted collateral = {:?}",adjusted_collateral);
 
-    let new_health_factor = adjusted_collateral
-        .scaled_mul(liquidation_threshold.clone())
-        .scaled_div(total_debt.clone())
+    if total_debt == Nat::from(0u128) {
+        return true;
+    }
+
+    let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold.clone());
+    new_health_factor = new_health_factor
+        .scaled_div(total_debt)
         .scaled_div(Nat::from(PERCENTAGE_FACTOR));
 
     debug!(
@@ -1297,4 +1279,3 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
 
     allowed
 }
-

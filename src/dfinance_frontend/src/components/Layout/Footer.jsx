@@ -125,9 +125,9 @@ const Footer = () => {
   // Check if the user is a tester
   useEffect(() => {
     const isProduction = process.env.DFX_PRODUCTION === "true";
-  
-    if (isProduction) return; 
-  
+
+    if (isProduction) return;
+
     const checkTesterStatus = async () => {
       try {
         const result = await backendActor.check_is_tester();
@@ -136,16 +136,16 @@ const Footer = () => {
         console.error("Error checking tester status:", error);
       }
     };
-  
+
     if (backendActor) {
       checkTesterStatus();
     }
   }, [backendActor]);
-  
+
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">
-        {}
+        { }
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"bottom-left"}
@@ -199,23 +199,25 @@ const Footer = () => {
               <div>
                 <button
                   onClick={handleApprove}
-                  className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 transition rounded text-white"
+                  className="mt-4 px-6 py-2 bg-gradient-to-r from-[#4659CF] to-[#2A1F9D] text-white rounded-md  shadow-md font-semibold text-xs"
                   disabled={loading || isApproved}
                 >
                   {isApproved
                     ? "Approved"
                     : loading
-                    ? "Approving..."
-                    : "Approve"}
+                      ? "Approving..."
+                      : "Approve"}
                 </button>
+
 
                 <button
                   onClick={handleCreateUserReserve}
-                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 transition rounded text-white"
+                  className="mt-4 px-8 py-2 bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md shadow-md font-semibold text-sm flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   disabled={loading || !isApproved}
                 >
                   {loading ? "Processing..." : "Create Reserve"}
                 </button>
+
               </div>
             )}
           </div>
@@ -238,7 +240,7 @@ const Footer = () => {
           <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
             <h1 className="font-semibold">Follow us on</h1>
             <div className="flex gap-2 mt-6">
-              {}
+              { }
               <a
                 target="_blank"
                 href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all"
@@ -251,7 +253,7 @@ const Footer = () => {
                   />
                 </span>
               </a>
-              {}
+              { }
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img

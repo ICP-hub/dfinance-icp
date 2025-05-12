@@ -207,6 +207,7 @@ XRC_CANISTER_ID=$(dfx canister id xrc)
 LOGS_CANISTER_ID=$(dfx canister id logs)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
 dfx canister call dfinance_backend set_canister_id "(\"logs\", principal \"$LOGS_CANISTER_ID\")"
+dfx canister call dfinance_backend admin_restart_reset_task
 
 # Final deploy
 dfx deploy

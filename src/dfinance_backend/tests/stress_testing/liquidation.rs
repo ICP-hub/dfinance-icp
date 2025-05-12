@@ -103,6 +103,33 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             expect_success: true,
             expected_error_message: None,
         },
+        TestCase {
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "INV".to_string(),
+            amount: Nat::from(50_000_000u128),  // 0.5 ICP (includes transaction fee)
+            on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
+            reward_amount: Nat::from(50_000_000u128),  // Expected reward: 0.5 ICP
+            expect_success: false,
+            expected_error_message: Some("no reserve data found of the given asset".to_string()), // Expecting failure due to invalid collateral asset
+        },
+        TestCase {
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(100_000_000u128), // 1 ckBTC (includes transaction fee) higher than debt
+            on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
+            reward_amount: Nat::from(10_000u128),  // No reward since liquidation request exceeds collateral
+            expect_success: false,
+            expected_error_message: Some("Reward is higher than expected".to_string()), // Expecting failure due to insufficient collateral
+        },
+        TestCase {
+            debt_asset: "ckUSDT".to_string(),
+            collateral_asset: "ckUSDT".to_string(),
+            amount: Nat::from(1_000_000_000_000_000_000u128), // 1 million ckUSDC (includes transaction fee)
+            on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
+            reward_amount: Nat::from(1_050_000_000_000_000_000u128),  // Expected reward: 1.05 million ckUSDC
+            expect_success: false,
+            expected_error_message: Some("Reward is higher than expected".to_string()), // Stress test should pass if the system can handle the large amount
+        },
     ];
 
     // let user_principal = get_user_principal();
@@ -130,7 +157,9 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         let amount_float = amount_u128 as f64;
         ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
         ic_cdk::println!("On Behalf Of: {}", case.on_behalf_of);
-        ic_cdk::println!("Reward Amount: {}", case.reward_amount);
+        let reward_amount_u128: u64 = case.reward_amount.clone().0.try_into().unwrap();
+        let reward_amount_float = reward_amount_u128 as f64;
+        ic_cdk::println!("Reward Amount: {}", reward_amount_float / 100000000.0);
         ic_cdk::println!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
             ic_cdk::println!("Expected Error Message: {}", msg);
@@ -143,6 +172,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
         ic_cdk::println!("\n-----------------------------------------------------------------------------\n");
         for user_principal in random_users.clone() {
+            ic_cdk::println!("\nPerforming Test: {} for user:   {:?}\n", (i+1), user_principal );
             /* Get asset principal; handle missing cases  */
             let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {

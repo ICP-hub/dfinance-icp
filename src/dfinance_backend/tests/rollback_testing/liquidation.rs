@@ -80,6 +80,24 @@ use crate::utils::structs::*;
             expect_success: true,
             expected_error_message: None,
         },
+        TestCase {
+            debt_asset: "ICP".to_string(),
+            collateral_asset: "INV".to_string(),
+            amount: Nat::from(50_000_000u128),  // 0.5 ICP (includes transaction fee)
+            on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
+            reward_amount: Nat::from(50_000_000u128),  // Expected reward: 0.5 ICP
+            expect_success: false,
+            expected_error_message: Some("no reserve data found of the given asset".to_string()), // Expecting failure due to invalid collateral asset
+        },
+        TestCase {
+            debt_asset: "ckBTC".to_string(),
+            collateral_asset: "ckBTC".to_string(),
+            amount: Nat::from(100_000_000u128), // 1 ckBTC (includes transaction fee) higher than debt
+            on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
+            reward_amount: Nat::from(100_000u128),  // No reward since liquidation request exceeds collateral
+            expect_success: false,
+            expected_error_message: Some("Repay cannot be more than debt".to_string()), // Expecting failure due to insufficient collateral
+        },
     ];
 
     let user_principal = get_user_principal();

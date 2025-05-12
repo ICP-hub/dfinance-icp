@@ -4,7 +4,7 @@ use crate::declarations::datatypes::Certificate;
 use crate::protocol::utils::math_utils::current_timestamp;
 use crate::stable_storage::state_handler::get_certificate_witness;
 use candid::Principal;
-use ic_cdk::{query};
+use ic_cdk::query;
 use crate::guards::access_control::guard_prevent_anonymous;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};

@@ -57,11 +57,9 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-  const [ledgerFee, setLedgerFee] = useState(null);
 
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+  const transferFee = transferFeRetrive?.transferFee;
 
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
@@ -137,11 +135,37 @@ const Repay = ({
     if (isNaN(numericAmount)) numericAmount = 0;
 
     if (numericAmount > assetBorrow) {
-      numericAmount = assetBorrow;
+
+      const truncateToEightDecimals = (value) => {
+        const multiplier = Math.pow(10, 8);
+        const truncated = Math.round(value * multiplier) / multiplier;
+        return truncated.toFixed(8);
+      };
+
+      const fee = transferFee ? Number(transferFee) : 0;
+      let selectedBalance;
+      if (supplyBalance >= assetBorrow + fee) {
+        selectedBalance = Number(assetBorrow);
+      } else {
+        selectedBalance = supplyBalance - fee;
+      }
+
+      if (selectedBalance < 0) selectedBalance = 0;
+
+      const displayBalance = selectedBalance
+        ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
+          ? Number(selectedBalance).toFixed(8)
+          : selectedBalance >= 1e-7 && selectedBalance < 1e-6
+            ? Number(selectedBalance).toFixed(7)
+            : truncateToEightDecimals(selectedBalance)
+        : "0";
+
+      setAmount(displayBalance.toString());
+      setMaxClicked(true);
+      updateAmountAndUsdValue(displayBalance.toString());
+      return;
     }
-
     let formattedAmount = numericAmount.toFixed(8).replace(/\.?0+$/, "");
-
     if (inputAmount.endsWith(".")) {
       formattedAmount += ".";
     }
@@ -150,6 +174,7 @@ const Repay = ({
     setMaxClicked(formattedAmount === assetBorrow.toString());
     updateAmountAndUsdValue(formattedAmount);
   };
+
 
   /**
    * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
@@ -208,18 +233,15 @@ const Repay = ({
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(fee);
-
-    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
+    const totalAmount = amountAsNat64 + transferFeeBigInt;
 
     try {
       const approval = await ledgerActor.icrc2_approve({
-        fee: fee ? [feeBigInt] : [],
+        fee: [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -270,7 +292,6 @@ const Repay = ({
       });
     }
   };
-
 
   const errorMessages = {
     NoCanisterIdFound:
@@ -471,16 +492,16 @@ const Repay = ({
   };
 
   /**
-  * calculateHealthFactor:
-  * -----------------------
-  * Formula:
-  *   healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
-  *
-  * Adjustments:
-  * - amountAdded (e.g., debt repaid) is subtracted from totalDebt.
-  * - totalDebt floored to zero if negative.
-  * - If totalDebt becomes zero → return Infinity.
-  */
+   * calculateHealthFactor:
+   * -----------------------
+   * Formula:
+   *   healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
+   *
+   * Adjustments:
+   * - amountAdded (e.g., debt repaid) is subtracted from totalDebt.
+   * - totalDebt floored to zero if negative.
+   * - If totalDebt becomes zero → return Infinity.
+   */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -631,16 +652,16 @@ const Repay = ({
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
   /**
-  * Health Factor Calculation Summary:
-  * ----------------------------------
-  * - Get health factor using formula:
-  *     healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
-  * - Adjust debt:
-  *     totalDebt = totalDebt - usdValue  (removing some debt)
-  * - Ensure collateral and debt are non-negative.
-  * - Truncate health factor to 2 decimals.
-  * - If healthFactor > 100 → display as "Infinity".
-  */
+   * Health Factor Calculation Summary:
+   * ----------------------------------
+   * - Get health factor using formula:
+   *     healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
+   * - Adjust debt:
+   *     totalDebt = totalDebt - usdValue  (removing some debt)
+   * - Ensure collateral and debt are non-negative.
+   * - Truncate health factor to 2 decimals.
+   * - If healthFactor > 100 → display as "Infinity".
+   */
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
@@ -805,17 +826,7 @@ const Repay = ({
                     <div className="flex items-center gap-1 relative">
                       <div className="flex items-center">
                         <p>Transaction Fee</p>
-                        <Info
-                          size={14}
-                          className="text-blue-800 dark:text-white ml-1 cursor-help"
-                          onMouseEnter={() => setShowTooltip(true)}
-                          onMouseLeave={() => setShowTooltip(false)}
-                        />
-                        {showTooltip && (
-                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                            Platform fee + Ledger Transfer fee
-                          </div>
-                        )}
+
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -893,7 +904,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount + transferFee > supplyBalance
+                    Number(amount) + transferFee > supplyBalance
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                     }`}
@@ -902,7 +913,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount + transferFee > supplyBalance
+                    Number(amount) + transferFee > supplyBalance
                   }
                 >
                   Approve {asset} to continue
@@ -915,7 +926,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    (amount + transferFee) > supplyBalance
+                    Number(amount) + transferFee > supplyBalance
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                     }`}
@@ -924,7 +935,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    (amount + transferFee) > supplyBalance
+                    Number(amount) + transferFee > supplyBalance
                   }
                 >
                   Repay {asset}

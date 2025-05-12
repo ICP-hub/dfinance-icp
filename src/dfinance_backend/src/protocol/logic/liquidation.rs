@@ -19,7 +19,7 @@ use crate::stable_storage::storable::Candid;
 use crate::{
     declarations::structs::ExecuteSupplyParams,
     protocol::libraries::update::UpdateLogic,
-    stable_storage::state_handler::{mutate_state, read_state},
+    stable_storage::state_handler::mutate_state,
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
@@ -110,7 +110,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let transfer_token_fee = calculate_transfer_fee(&params.debt_asset, params.amount.clone())?;
 
-    let (amount, liquidity_bonus) = to_get_reward_amount(
+    let (earned_rewards, liquidity_bonus) = to_get_reward_amount(
         params.amount.clone() - transfer_token_fee.clone(),
         params.collateral_asset.clone(),
         params.debt_asset.clone(),
@@ -120,7 +120,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     )
     .await?;
 
-    let earned_rewards = amount;
     let liquidation_bonus_amount = liquidity_bonus;
     debug!("reward amount: {:?}, earned_rewards: {:?}", params.reward_amount, earned_rewards);
 
@@ -133,15 +132,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     register_user()?;
     let mut liquidator_data = user_data(liquidator_principal)?;
 
-    let dtoken_canister = read_state(|state| {
-        state
-            .asset_index
-            .get(&params.collateral_asset.to_string())
-            .and_then(|reserve_data| reserve_data.d_token_canister.clone())
-    })
-    .ok_or_else(|| Error::NoCanisterIdFound)?;
-
-    let collateral_dtoken_principal = dtoken_canister;
+    let collateral_dtoken_principal = collateral_reserve_data.d_token_canister.clone().ok_or_else(|| {
+        error!("No d token canister ID found.");
+        Error::NoCanisterIdFound
+    })?;
 
     let reward_amount: Nat = params.reward_amount.clone();
 
@@ -170,6 +164,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         liquidator_principal,
         user_principal,
         repay_reserve_data,
+        collateral_reserve_data.clone(),
+        user_reserve_data.clone()
     )
     .await?;
     info!("liquidation validation successful"); //info

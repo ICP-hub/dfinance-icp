@@ -145,7 +145,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             let repay_params = ExecuteRepayParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
-                on_behalf_of: case.on_behalf_of.clone(),
+                on_behalf_of: case.on_behalf_of,
             };
 
             /*

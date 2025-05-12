@@ -50,7 +50,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         TestCase {
             debt_asset: "ckUSDC".to_string(),
             collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(200_00_000_000u128), // 2,000 ckUSDC (includes transaction fee)
+            amount: Nat::from(20_000_000_000u128), // 2,000 ckUSDC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
             reward_amount: Nat::from(20_999_673_926u128), // Reward calculated accordingly
             expect_success: true,
@@ -71,7 +71,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
     ic_cdk::println!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
-    test_create_user_reserve_with_low_health(&pic, backend_canister); // Create user reserves for liquidation tests
+    test_create_user_reserve_with_low_health(pic, backend_canister); // Create user reserves for liquidation tests
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
@@ -98,7 +98,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
         for _ in random_users.clone() {
             let asset_principal =
-                match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
                     Some(principal) => principal, // Get the asset principal for liquidation
                     None => {
                         if !case.expect_success {
@@ -119,9 +119,9 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
-                Nat::from(case.amount.clone()), // Approve ICRC2 transfer for liquidation
+                case.amount.clone(), // Approve ICRC2 transfer for liquidation
             );
             if !approved {
                 if !case.expect_success {
@@ -129,7 +129,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                         println!(
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
-                            case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                            case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                         );
                         continue; // Skip to next test case
                     }
@@ -150,7 +150,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 debt_asset: case.debt_asset.clone(),
                 collateral_asset: case.collateral_asset.clone(),
                 amount: case.amount.clone(),
-                on_behalf_of: case.on_behalf_of.clone(),
+                on_behalf_of: case.on_behalf_of,
                 reward_amount: case.reward_amount.clone(),
             };
 
@@ -197,7 +197,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         e.message()
                                     );
                                     continue;

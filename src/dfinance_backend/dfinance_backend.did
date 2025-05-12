@@ -9,6 +9,7 @@ type Certificate = record { certificate : blob; witness : blob };
 type Challenge = record { base64_img : text };
 type Error = variant {
   NormalizedSupply;
+  TooManyRequests;
   ConversionErrorToU128;
   NoCollateralFound;
   NoDebtToRepay;
@@ -22,9 +23,9 @@ type Error = variant {
   SupplyCapExceeded;
   ErrorDecoding;
   InvalidAmount;
-  BLOCKEDFORONEHOUR;
   ErrorInterestRate;
   AuditorNotFound;
+  UserCannotBeLiquidated;
   AmountTooMuch;
   CaptchaMismatch;
   ErrorMintDebtTokens;
@@ -54,7 +55,6 @@ type Error = variant {
   NoReserveDataFound;
   LiquidationProtocolfeeIsHigher;
   LowWalletBalance;
-  USERCANNOTBELIQUIDATED;
   InvalidBurnAmount;
   CaptchaLimitReached;
   AnonymousPrincipal;
@@ -89,6 +89,7 @@ type Error = variant {
   ExceedsRemainingLimit;
   BorrowCapExceeded;
   InsufficientLiquidity;
+  BlockedForOneHour;
   NotASupport;
   AmountSubtractionError;
   ErrorSupplyToken;
@@ -104,7 +105,6 @@ type Error = variant {
   RepayMoreThanDebt;
   InvalidMintAmount;
   ErrorRawResponse;
-  TOOMANYREQUESTS;
   UserNotFound;
   CalculateUserAccountDataError;
   ControllerNotFound;

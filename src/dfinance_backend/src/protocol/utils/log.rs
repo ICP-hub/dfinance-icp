@@ -6,7 +6,7 @@ use crate::guards::access_control::guard_admin_only;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use ic_cdk::api;
-use candid::{candid_method, Principal};
+use candid::{ Principal};
 use ic_cdk::{call,query};
 use std::collections::HashMap;
 use std::fmt;

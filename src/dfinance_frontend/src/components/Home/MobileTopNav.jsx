@@ -343,7 +343,7 @@ const handleTestnetModeToggle = () => {
     const errorMsg = errorKey?.toString() || "An unexpected error occurred";
     console.error("Error:", errorKey);
 
-    if (typeof errorKey === "object" && "BLOCKEDFORONEHOUR" in errorKey) {
+    if (typeof errorKey === "object" && "BlockedForOneHour" in errorKey) {
       toast.error("You are temporarily blocked from using this function", {
         className: "custom-toast",
         position: "top-center",

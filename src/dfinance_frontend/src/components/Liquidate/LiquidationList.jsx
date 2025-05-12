@@ -158,26 +158,30 @@ const DebtStatus = () => {
 
   //Function to filter the users based on the search query
   const { relevantItems, currentItems, totalPages } = useMemo(() => {
-    if (liquidationLoading || !liquidationUsers || !liquidationUsers.length) {
-      console.log("Data not ready for processing yet");
+    // Early return if data isn't ready
+    if (liquidationLoading || !Array.isArray(liquidationUsers) || liquidationUsers.length === 0) {
       return { relevantItems: [], currentItems: [], totalPages: 0 };
     }
 
-    console.log("Processing liquidation users data");
-
-    // Filter users based on criteria
+    // Step 1: Filter valid users
     const filtered = liquidationUsers.filter((item) => {
       return (
         item.principal?._arr?.toText() !== user?.toString() &&
-        typeof item.debt !== 'undefined' && item.debt !== 0n &&
-        typeof item.collateral !== 'undefined' && item.collateral !== 0n
+        typeof item.debt !== "undefined" &&
+        item.debt !== 0n &&
+        typeof item.collateral !== "undefined" &&
+        item.collateral !== 0n &&
+        Array.isArray(item.userData?.reserves) && // ensures reserves exists
+        item.userData.reserves.length > 0         // ensures at least one reserve
       );
     });
 
+    // Step 2: Pagination
     const ITEMS_PER_PAGE = 8;
     const pages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-
     const validPage = Math.min(Math.max(1, currentPage), pages);
+
+    // Prevent stale page numbers
     if (validPage !== currentPage) {
       setCurrentPage(validPage);
     }
@@ -186,15 +190,14 @@ const DebtStatus = () => {
     const firstIndex = lastIndex - ITEMS_PER_PAGE;
     const items = filtered.slice(firstIndex, lastIndex);
 
-    console.log(`Showing ${items.length} items on page ${validPage} of ${pages}`);
-
+    // Final structured return
     return {
       relevantItems: filtered,
       currentItems: items,
       totalPages: pages
     };
-  }, [liquidationUsers, liquidationLoading, currentPage, user]);
-  console.log("currentItems", currentItems)
+  }, [liquidationUsers, liquidationLoading, currentPage, user, setCurrentPage]);
+
   // Function to fetch asset data for each user
   const fetchAssetData = async () => {
     const reserveDataMap = await batchFetchReserveData(assets);

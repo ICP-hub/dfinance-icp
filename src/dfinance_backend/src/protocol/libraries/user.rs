@@ -29,7 +29,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
-use ic_cdk::{api, update};
+use ic_cdk:: update;
 
 /*
  * @title User Account Data Calculation

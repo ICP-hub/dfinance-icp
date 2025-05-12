@@ -83,21 +83,21 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Test Case : Request Just close to the limit
         TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(50_000_000_00u128), // 50 ckUSDC (transfer fee included)
+            amount: Nat::from(5_000_000_000u128), // 50 ckUSDC (transfer fee included)
             expect_success: true,
             expected_error_message: None, 
         },
         // Test Case : Request Just Over $500 USD Limit
         TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(2_000_000_00u128), // 2 ckUSDC (transfer fee included)
+            amount: Nat::from(200_000_000u128), // 2 ckUSDC (transfer fee included)
             expect_success: false,
             expected_error_message: Some("Requested amount exceeds the remaining faucet limit.".to_string()), 
         },
         // Test Case : Request $4500 USD beyond faucet limit
         TestCase { 
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(4500_000_000_00u128), // 4500 ckUSDC (transfer fee included)
+            amount: Nat::from(450_000_000_000u128), // 4500 ckUSDC (transfer fee included)
             expect_success: false,
             expected_error_message: Some("Requested amount exceeds the total faucet limit.".to_string()), 
         },
@@ -173,7 +173,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             backend_canister,
             user_principal,
             "faucet",
-            encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+            encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
+
         );
 
         match result {
@@ -202,7 +203,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                 println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                 continue;
@@ -256,7 +257,8 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                 backend_canister,
                 get_users_principal(Nat::from(index)).unwrap(),
                 "faucet",
-                encode_args((case.asset.clone(), Nat::from(case.amount.clone()))).unwrap(),
+                encode_args((case.asset.clone(), case.amount.clone())).unwrap(),
+
             );
 
             match result {
@@ -285,7 +287,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue;

@@ -89,13 +89,13 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
         ic_cdk::println!(
             "\n======================== Initial reserve data before concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch reserve data for the asset before repayment
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch reserve data for the asset before repayment
         ic_cdk::println!("\n---------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for each repay request
         for user_principal in random_users.clone() {
             let asset_principal =
-                match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal, // Get the asset principal for repayment
                     None => {
                         if !case.expect_success {
@@ -116,9 +116,9 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
-                Nat::from(case.amount.clone()), // Approve ICRC2 transfer for repayment
+                case.amount.clone() // Approve ICRC2 transfer for repayment
             );
             if !approved {
                 if !case.expect_success {
@@ -126,7 +126,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                         println!(
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
-                            case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                            case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                         );
                         continue; // Skip the current iteration if the approval fails
                     }
@@ -146,7 +146,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             let repay_params = ExecuteRepayParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
-                on_behalf_of: case.on_behalf_of.clone(),
+                on_behalf_of: case.on_behalf_of,
             };
 
             // Now call the repay function with parameters
@@ -192,7 +192,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue;
@@ -228,7 +228,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
         ic_cdk::println!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch updated reserve data after repayment
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch updated reserve data after repayment
         ic_cdk::println!("\n---------------------------------------------------------\n");
     }
 

@@ -19,7 +19,7 @@ use crate::stable_storage::storable::Candid;
 use crate::{
     declarations::structs::ExecuteSupplyParams,
     protocol::libraries::update::UpdateLogic,
-    stable_storage::state_handler::{mutate_state, read_state},
+    stable_storage::state_handler::mutate_state,
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};

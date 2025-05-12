@@ -2,7 +2,7 @@ use crate::api::inter_canister::{get_balance, get_total_supply};
 use crate::constants::constant_variables::constants::SCALING_FACTOR;
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
-use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
+use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::protocol::libraries::update::user_reserve;
 use crate::protocol::libraries::user::{
     calculate_user_account_data, user_normalized_debt, user_normalized_supply,

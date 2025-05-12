@@ -23,7 +23,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
-use ic_cdk::{api, update};
+use ic_cdk::update;
 use crate::stable_storage::state_handler::insert_certified_value;
 use crate::protocol::utils::price::get_cached_exchange_rate;
 use crate::guards::access_control::guard_principal_not_anonymous;

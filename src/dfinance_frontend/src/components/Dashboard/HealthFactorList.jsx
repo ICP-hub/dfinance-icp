@@ -41,7 +41,7 @@ const HealthFactorList = () => {
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
   const { batchFetchReserveData } = useReserveData();
-  
+
   const {
     assets,
     AssetImages,
@@ -500,9 +500,9 @@ const HealthFactorList = () => {
     const reserves = userData?.reserves || [];
 
     const data = reserves.flat().map(([asset, assetInfo]) => {
-      const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n) / SCALING_FACTOR;
+      const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n)
       const currentDebtIndex =
-        Number(assetInfo?.variable_borrow_index ?? 0n) / SCALING_FACTOR;
+        Number(assetInfo?.variable_borrow_index ?? 0n);
 
       const userAssetBalance = assetBalances[selectedUser.principal]?.[
         asset
@@ -511,21 +511,19 @@ const HealthFactorList = () => {
         debtTokenBalance: 0,
       };
 
-      const assetBalance = Number(userAssetBalance.dtokenBalance) / SCALING_FACTOR || 0;
-      const debtBalance = Number(userAssetBalance.debtTokenBalance) / SCALING_FACTOR || 0;
+      const assetBalance = Number(userAssetBalance.dtokenBalance) || 0;
+      const debtBalance = Number(userAssetBalance.debtTokenBalance) || 0;
 
       const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
       const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
 
+      const calculated_supply = Math.trunc(
+        (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
+      );
       const assetSupply =
-        currentLiquidity > 0
-          ? Math.trunc(
-            (Math.trunc((assetBalance / currentLiquidity) * SCALING_FACTOR) *
-              supplyValue) /
-            SCALING_FACTOR
-          )
-          : 0;
-
+        Math.trunc(
+          (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
+        ) / SCALING_FACTOR;
       const assetBorrow =
         currentDebtIndex > 0
           ? (debtBalance * borrowValue) / (currentDebtIndex * SCALING_FACTOR)
@@ -534,8 +532,8 @@ const HealthFactorList = () => {
       return {
         Principal: selectedUser.principal,
         Asset: asset,
-        "Liquidity Index": currentLiquidity || 0,
-        "Variable Borrow Index": currentDebtIndex || 0,
+        "Liquidity Index": (currentLiquidity) / SCALING_FACTOR || 0,
+        "Variable Borrow Index": (currentDebtIndex) / SCALING_FACTOR || 0,
         "Total Asset Supply": formatValue(assetSupply),
         "Total Asset Borrow": formatValue(assetBorrow),
       };
@@ -1049,7 +1047,6 @@ const HealthFactorList = () => {
                     const currentLiquidity = Number(
                       assetInfo?.liquidity_index || 0n
                     );
-
                     const currentDebtIndex = Number(
                       assetInfo?.variable_borrow_index || 0n
                     );
@@ -1067,11 +1064,13 @@ const HealthFactorList = () => {
 
                     const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
                     const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
+                    const calculated_supply = Math.trunc(
+                      (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
+                    );
                     const assetSupply =
-                      currentLiquidity > 0
-                        ? (assetBalance * supplyValue) /
-                        (currentLiquidity * SCALING_FACTOR)
-                        : 0;
+                      Math.trunc(
+                        (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
+                      ) / SCALING_FACTOR;
 
                     const assetBorrow =
                       currentDebtIndex > 0

@@ -57,9 +57,11 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
+  const [ledgerFee, setLedgerFee] = useState(null);
 
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
+  const transferFee =
+    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
@@ -237,11 +239,16 @@ const Repay = ({
       Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
     );
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const totalAmount = amountAsNat64 + transferFeeBigInt;
+    const fee = await ledgerActor.icrc1_fee();
+    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
+    setLedgerFee(fee);
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
 
     try {
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+        fee: fee ? [feeBigInt] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -374,7 +381,7 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
-        if (errorMsg && "BlockedForOneHour" in errorMsg) {
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -753,8 +760,8 @@ const Repay = ({
                       </p>
                       <p
                         className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                           }`}
                         onClick={handleMaxClick}
                       >
@@ -793,14 +800,14 @@ const Repay = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : truncatedValue <= 1
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -808,14 +815,14 @@ const Repay = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -826,7 +833,17 @@ const Repay = ({
                     <div className="flex items-center gap-1 relative">
                       <div className="flex items-center">
                         <p>Transaction Fee</p>
-
+                        <Info
+                          size={14}
+                          className="text-blue-800 dark:text-white ml-1 cursor-help"
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
+                        />
+                        {showTooltip && (
+                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Platform fee + Ledger Transfer fee
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
@@ -901,12 +918,12 @@ const Repay = ({
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                    isLoading ||
-                    amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                      isLoading ||
+                      amount <= 0 ||
+                      supplyBalance <= 0 ||
+                      Number(amount) + transferFee > supplyBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                     }`}
                   disabled={
                     isApproved ||
@@ -923,12 +940,12 @@ const Repay = ({
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                    isLoading ||
-                    amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                      isLoading ||
+                      amount <= 0 ||
+                      supplyBalance <= 0 ||
+                      Number(amount) + transferFee > supplyBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                     }`}
                   disabled={
                     !isApproved ||

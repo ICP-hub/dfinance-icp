@@ -325,7 +325,7 @@ impl ValidationLogic {
         //calculating the liquidation threshold
         let avliq= liquidation_threshold_var.clone().scaled_mul(total_collateral.clone());
 
-        let mut templiq = avliq - usd_borrow.clone().scaled_mul(reserve.configuration.liquidation_threshold.clone());
+        let mut templiq = avliq + usd_borrow.clone().scaled_mul(reserve.configuration.liquidation_threshold.clone());
         templiq =  templiq.scaled_div(adjusted_debt.clone());
         
 

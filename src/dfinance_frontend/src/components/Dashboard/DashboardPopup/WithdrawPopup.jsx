@@ -16,7 +16,7 @@ import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../../utils/constants';
 import { Info } from "lucide-react";
-
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * WithdrawPopup Component
  *
@@ -57,7 +57,7 @@ const WithdrawPopup = ({
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const ledgerActors = useSelector((state) => state.ledger);
-
+const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -139,6 +139,23 @@ const WithdrawPopup = ({
     updateAmountAndUsdValue(inputAmount);
   };
 
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
   /**
    * This function updates the USD equivalent of the withdrawal amount based on the conversion rate. It also checks if the
    * amount is valid and less than or equal to the asset supply, providing error messages when necessary.
@@ -239,7 +256,9 @@ const WithdrawPopup = ({
         withdrawParams
       );
       dispatch(toggleDashboardRefresh());
-
+ const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in withdrawResult) {
         trackEvent(
           "Withdraw," +

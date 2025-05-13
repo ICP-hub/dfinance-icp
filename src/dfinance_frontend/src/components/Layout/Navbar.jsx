@@ -41,7 +41,7 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import { Principal } from "@dfinity/principal";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
-
+import useNotificationSystem from "../customHooks/useNotification";
 /**
  * Navbar Component
  *
@@ -94,6 +94,7 @@ export default function Navbar({ isHomeNav }) {
     fetchBalance,
   } = useFetchConversionRate();
 
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -154,6 +155,24 @@ export default function Navbar({ isHomeNav }) {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
     }
   };
   //error messages
@@ -304,10 +323,13 @@ export default function Navbar({ isHomeNav }) {
 
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
-
+      const statusData = await fetchStatusFromBackend();
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in response) {
         setIsTransferDropDownOpen(false);
-
+        setAmount("");
+        setReceiverAddress("");
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
@@ -1164,8 +1186,8 @@ export default function Navbar({ isHomeNav }) {
                                         </p>
                                         <p
                                           className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                              ? "text-gray-400 cursor-not-allowed"
-                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                                             }`}
                                           onClick={() => {
                                             if (
@@ -1235,13 +1257,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => !isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                        isLoading ||
-                                        isButtonDisabled ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isLoading ||
+                                      isButtonDisabled ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       isApproved ||
@@ -1257,13 +1279,13 @@ export default function Navbar({ isHomeNav }) {
                                   <button
                                     onClick={() => isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                        isButtonDisabled ||
-                                        isLoading ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isButtonDisabled ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       !isApproved ||

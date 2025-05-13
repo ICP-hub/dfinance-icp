@@ -15,7 +15,7 @@ import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
-
+import useNotificationSystem from "../customHooks/useNotification";
 const UserInformationPopup = ({
   onClose,
   mappedItem,
@@ -95,7 +95,7 @@ const UserInformationPopup = ({
   };
 
   const [value, setValue] = useState(0);
-
+const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
@@ -322,7 +322,23 @@ const UserInformationPopup = ({
   const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
   };
+ const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
 
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -592,7 +608,9 @@ const UserInformationPopup = ({
         reward_amount: Math.trunc(rewardAmount * SCALING_FACTOR),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
-
+ const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in result) {
         trackEvent(
           `Liq:${selectedDebtAsset},${selectedAsset},${Number(

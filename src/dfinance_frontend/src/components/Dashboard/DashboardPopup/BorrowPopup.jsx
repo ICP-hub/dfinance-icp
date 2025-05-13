@@ -18,7 +18,7 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
  *
@@ -91,10 +91,9 @@ const Borrow = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
-   
-  const transferFee = transferFeRetrive?.transferFee;
 
-  
+  const transferFee = transferFeRetrive?.transferFee;
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
@@ -123,6 +122,24 @@ const Borrow = ({
       const total_borrow = Number(assetData?.asset_borrow) / SCALING_FACTOR;
       setTotalSupply(total_supply);
       setTotalBorrow(total_borrow);
+    }
+  };
+
+  const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
     }
   };
 
@@ -201,11 +218,13 @@ const Borrow = ({
       asset: asset,
       amount: totalAmount,
     };
-    
+
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
-      dispatch(toggleDashboardRefresh());
+      // dispatch(toggleDashboardRefresh());
 
+      const statusData = await fetchStatusFromBackend();
+      await checkAndNotify(statusData);
       if ("Ok" in borrowResult) {
         trackEvent(
           `Borrow,${asset},${scaledAmount / SCALING_FACTOR
@@ -776,8 +795,8 @@ const Borrow = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (parseFloat(borrowableValue) > 0) {
@@ -820,14 +839,14 @@ const Borrow = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {parseFloat(
@@ -837,14 +856,14 @@ const Borrow = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -949,8 +968,8 @@ const Borrow = ({
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                   }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >

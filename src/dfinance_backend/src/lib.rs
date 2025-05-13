@@ -6,7 +6,7 @@ use protocol::logic::faucet::Challenge;
 use candid::Nat;
 use candid::Principal;
 use declarations::datatypes::InitArgs;
-use declarations::structs::AssetData;
+use declarations::structs::{AssetData, CycleAlert, TokenAlert};
 use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;

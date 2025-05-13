@@ -25,10 +25,10 @@ const useNotificationSystem = () => {
         message: htmlMessage,
       };
       await emailjs.send(
-        "service_msxxewo",
-        "template_tl2dbma",
+        "service_7pu7uvh",
+        "template_1k2eq7a",
         templateParams,
-        "mmhqb3NN9Xl8cXM3b"
+        "uWDc83b20aMxTTyrz"
       );
     } catch (err) {
       console.error("Failed to send email:", err);
@@ -50,22 +50,22 @@ const useNotificationSystem = () => {
   const checkAndNotify = useCallback(async (statusData) => {
     const oneDay = 24 * 60 * 60 * 1000;
     const currentTime = Date.now();
-    
+
     // Check cycle status
     if (statusData.cycle) {
       // Handle cycle exhausted
-      if (statusData.cycle.is_exhausted && 
-          (currentTime - lastCycleExhaustedEmailTimestamp.current > oneDay)) {
+      if (statusData.cycle.is_exhausted &&
+        (currentTime - lastCycleExhaustedEmailTimestamp.current > oneDay)) {
         const htmlMessage = `
         Your cycles are exhausted! Please renew your cycles immediately to continue services.
         `;
         await sendEmailNotification("Cycle Exhausted", htmlMessage);
         lastCycleExhaustedEmailTimestamp.current = currentTime;
       }
-      
+
       // Handle cycle warning
-      else if (statusData.cycle.is_warning && 
-               (currentTime - lastCycleWarningEmailTimestamp.current > oneDay)) {
+      else if (statusData.cycle.is_warning &&
+        (currentTime - lastCycleWarningEmailTimestamp.current > oneDay)) {
         const htmlMessage = `
         Your cycles are close to the threshold value. Please renew your cycles to avoid interruption.
         `;
@@ -73,24 +73,24 @@ const useNotificationSystem = () => {
         lastCycleWarningEmailTimestamp.current = currentTime;
       }
     }
-    
+
     // Check token status
     if (statusData.token) {
       const assetName = statusData.token.assetName;
-      
+
       // Handle token exhausted
-      if (statusData.token.is_exhausted && 
-          (currentTime - lastTokenExhaustedEmailTimestamp.current > oneDay)) {
+      if (statusData.token.is_exhausted &&
+        (currentTime - lastTokenExhaustedEmailTimestamp.current > oneDay)) {
         const htmlMessage = `
         Your balance of ${assetName} is exhausted! Please mint ${assetName} above threshold value.
         `;
         await sendEmailNotification(`${assetName} Exhausted`, htmlMessage);
         lastTokenExhaustedEmailTimestamp.current = currentTime;
       }
-      
+
       // Handle token warning
-      else if (statusData.token.is_warning && 
-               (currentTime - lastTokenWarningEmailTimestamp.current > oneDay)) {
+      else if (statusData.token.is_warning &&
+        (currentTime - lastTokenWarningEmailTimestamp.current > oneDay)) {
         const htmlMessage = `
         Your balance of ${assetName} is approaching the threshold. Please mint ${assetName} above threshold value.
         `;

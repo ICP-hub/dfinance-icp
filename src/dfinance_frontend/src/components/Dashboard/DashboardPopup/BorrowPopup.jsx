@@ -221,7 +221,7 @@ const Borrow = ({
 
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       const statusData = await fetchStatusFromBackend();
       await checkAndNotify(statusData);

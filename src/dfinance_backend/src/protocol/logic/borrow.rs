@@ -87,7 +87,8 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     let mut reserve_data = get_reserve_data(params.asset.clone())?;
 
     if reserve_data.asset_borrow == zero_nat_value() {
-        *&mut reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
+        reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
+
     }
 
     let mut reserve_cache = reserve::cache(&reserve_data);
@@ -179,7 +180,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 ------------ REPAY LOGIC ------------
 -------------------------------------
  */
-
 /**
  * @notice Executes the repay operation for a given asset and amount.
  *         This function validates parameters, checks asset conditions,
@@ -211,7 +211,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
  *      - Transfers assets from user or liquidator and ensures consistency.
  *      - Rolls back any changes if any step fails during the repayment process.
  */
-
 pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {

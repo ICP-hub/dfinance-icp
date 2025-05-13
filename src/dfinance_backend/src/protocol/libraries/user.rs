@@ -1,33 +1,35 @@
 use super::update::{user_data, user_reserve};
 use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
+use crate::constants::constant_variables::constants::MIN_BORROW;
 use crate::constants::constant_variables::constants::{
     HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
 };
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
-use crate::constants::constant_variables::constants::MIN_BORROW;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::datatypes::{UserData, UserReserveData, ReserveData};
+use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
-use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils::{current_timestamp, get_max_value, calculate_compounded_interest, calculate_linear_interest};
+use crate::guards::access_control::guard_principal_not_anonymous;
+use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
+use crate::protocol::libraries::reserve::get_asset_principal;
+use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
+use crate::protocol::utils::math_utils::{
+    calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
+};
+use crate::protocol::utils::price::get_cached_exchange_rate;
+use crate::stable_storage::state_handler::insert_certified_value;
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info, trace};
 use crate::{
+    protocol::libraries::reserve::get_reserve_data,
     protocol::utils::math_utils::ScalingMath,
     stable_storage::state_handler::{mutate_state, read_state},
-    protocol::libraries::reserve::get_reserve_data,
 };
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
-use ic_cdk::update;
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::protocol::utils::price::get_cached_exchange_rate;
-use crate::guards::access_control::guard_principal_not_anonymous;
-use crate::protocol::libraries::reserve::get_asset_principal;
+use ic_cdk:: update;
 
 /*
  * @title User Account Data Calculation
@@ -79,6 +81,10 @@ pub async fn calculate_user_account_data(
             user_principal
         }
     };
+
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(),
+    };
    
 
     let max = get_max_value();
@@ -98,13 +104,10 @@ pub async fn calculate_user_account_data(
         ));
     }
 
-    let user_data_reserves = user_data
-        .reserves
-        .as_ref()
-        .ok_or_else(|| {
-            error!("User data reserves not found.");
-            Error::NoUserReserveDataFound
-})?;
+    let user_data_reserves = user_data.reserves.as_ref().ok_or_else(|| {
+        error!("User data reserves not found.");
+        Error::NoUserReserveDataFound
+    })?;
 
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
@@ -114,17 +117,13 @@ pub async fn calculate_user_account_data(
     let mut available_borrow = zero_nat_value();
 
     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
-      
-
         if !user_reserve_data.is_using_as_collateral_or_borrow {
-           
             continue;
         }
 
         let reserve_data = get_reserve_data(reserve_name.clone())?;
 
         let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
 
         let asset_price = rate;
         if user_reserve_data.is_collateral {
@@ -136,32 +135,29 @@ pub async fn calculate_user_account_data(
                 asset_price.clone(),
             )
             .await?;
+            debug!("user balance in account data = {}", user_balance);
+
             info!("get user balance in base currency called");
 
             total_collateral += user_balance.clone();
-           
+
             if reserve_data.configuration.ltv != zero_nat_value() {
                 avg_ltv += user_balance
                     .clone()
                     .scaled_mul(reserve_data.configuration.ltv.clone());
-               
             } else {
                 has_zero_ltv_collateral = true;
-               
             }
 
             avg_liquidation_threshold += user_balance
                 .clone()
                 .scaled_mul(reserve_data.configuration.liquidation_threshold);
-           
 
             available_borrow += user_balance.scaled_mul(reserve_data.configuration.ltv)
                 / Nat::from(PERCENTAGE_FACTOR);
-           
         }
 
         if user_reserve_data.is_borrowed {
-         
             let user_debt = get_user_debt_in_base_currency(
                 user_principal,
                 &user_reserve_data,
@@ -169,9 +165,8 @@ pub async fn calculate_user_account_data(
             )
             .await?;
             info!("get user debt in base currency called");
-      
+
             total_debt += user_debt.clone();
-          
         }
     }
 
@@ -187,7 +182,7 @@ pub async fn calculate_user_account_data(
     } else {
         zero_nat_value()
     };
-  
+
     avg_liquidation_threshold = if total_collateral != zero_nat_value() {
         avg_liquidation_threshold.scaled_div(total_collateral.clone())
     } else {
@@ -200,7 +195,6 @@ pub async fn calculate_user_account_data(
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-  
 
     debug!(
             "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
@@ -253,7 +247,6 @@ pub async fn calculate_user_asset_data(
     dtoken_balance: Option<Vec<AssetData>>,
     debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
         None => {
@@ -264,7 +257,6 @@ pub async fn calculate_user_asset_data(
 
     let dtoken_balance = dtoken_balance.unwrap_or_default();
     let debt_token_balance = debt_token_balance.unwrap_or_default();
-
 
     let max = get_max_value();
 
@@ -283,13 +275,10 @@ pub async fn calculate_user_asset_data(
         ));
     }
 
-    let user_data_reserves = user_data
-        .reserves
-        .as_ref()
-        .ok_or_else(||{
-            error!("User data reserves not found.");
-             Error::NoUserReserveDataFound
-})?;
+    let user_data_reserves = user_data.reserves.as_ref().ok_or_else(|| {
+        error!("User data reserves not found.");
+        Error::NoUserReserveDataFound
+    })?;
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
     let mut avg_ltv = zero_nat_value();
@@ -298,22 +287,16 @@ pub async fn calculate_user_asset_data(
     let mut available_borrow = zero_nat_value();
 
     for (reserve_name, user_reserve_data) in user_data_reserves.iter() {
-       
         if !user_reserve_data.is_using_as_collateral_or_borrow {
-         
             continue;
         }
 
         let reserve_data = get_reserve_data(reserve_name.clone())?;
 
+        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
-
-        let rate =  get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-        
         let asset_price = rate;
         if user_reserve_data.is_collateral {
-           
-
             let balance: Nat = dtoken_balance
                 .iter()
                 .find(|asset| asset.name == user_reserve_data.reserve)
@@ -329,22 +312,18 @@ pub async fn calculate_user_asset_data(
             .await?;
 
             total_collateral += user_balance.clone();
-          
 
             if reserve_data.configuration.ltv != zero_nat_value() {
                 avg_ltv += user_balance
                     .clone()
                     .scaled_mul(reserve_data.configuration.ltv.clone());
-               
             } else {
                 has_zero_ltv_collateral = true;
-               
             }
 
             avg_liquidation_threshold += user_balance
                 .clone()
                 .scaled_mul(reserve_data.configuration.liquidation_threshold);
-            
 
             available_borrow += user_balance.scaled_mul(reserve_data.configuration.ltv)
                 / Nat::from(PERCENTAGE_FACTOR);
@@ -355,8 +334,6 @@ pub async fn calculate_user_asset_data(
         }
 
         if user_reserve_data.is_borrowed {
-          
-
             let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
             let asset_price = rate;
@@ -373,9 +350,8 @@ pub async fn calculate_user_asset_data(
                 asset_price.clone(),
             )
             .await?;
-   
+
             total_debt += user_debt.clone();
-           
         }
     }
     if available_borrow < total_debt.clone() || available_borrow < Nat::from(MIN_BORROW) {

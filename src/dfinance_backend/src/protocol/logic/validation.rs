@@ -540,7 +540,7 @@ impl ValidationLogic {
         );
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             error!("User health factor is greater than 1.");
-            return Err(Error::USERCANNOTBELIQUIDATED);
+            return Err(Error::UserCannotBeLiquidated);
         }
 
         Ok(())

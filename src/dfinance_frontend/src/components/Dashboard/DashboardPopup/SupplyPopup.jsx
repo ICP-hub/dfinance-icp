@@ -373,7 +373,7 @@ const SupplyPopup = ({
           const errorMsg =
             errorKey?.toString() || "An unexpected error occurred";
 
-          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+          if (errorKey && "BlockedForOneHour" in errorKey) {
             console.error(
               "You are temporarily blocked from using this function"
             );

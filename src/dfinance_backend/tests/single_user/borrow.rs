@@ -27,7 +27,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(2_00_000_000u128), // 2 ICP (transfer fee included)
+            amount: Nat::from(200_000_000u128), // 2 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
@@ -101,7 +101,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                     println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                     continue;

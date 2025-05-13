@@ -140,7 +140,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
                 is_collateral: params.is_collateral,
-                // on_behalf_of: None,
                 amount: params.amount.clone(),
             };
             //for burning and reverting the supplied amount

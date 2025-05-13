@@ -151,7 +151,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                 fetch_user_data(
                                     pic,
                                     backend_canister,
-                                    &user_principal,
+                                    user_principal,
                                     &case.asset,
                                 );
                                 ic_cdk::println!(

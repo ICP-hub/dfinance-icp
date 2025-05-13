@@ -16,7 +16,7 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * Repay Component
  *
@@ -177,6 +177,23 @@ const Repay = ({
     updateAmountAndUsdValue(formattedAmount);
   };
 
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
 
   /**
    * This function updates the USD equivalent of the repayment amount based on the entered amount and conversion rate.
@@ -347,6 +364,9 @@ const Repay = ({
 
       const repayResult = await backendActor.execute_repay(repayParams);
       dispatch(toggleDashboardRefresh());
+       const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in repayResult) {
         trackEvent(
           "Repay," +

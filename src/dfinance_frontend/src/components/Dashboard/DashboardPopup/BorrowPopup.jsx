@@ -18,7 +18,7 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
  *
@@ -127,6 +127,24 @@ const Borrow = ({
     }
   };
 
+  const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
+
   //   Calculates borrowable values based on conversion rates.
   const calculateBorrowableValues = (
     asset,
@@ -217,6 +235,8 @@ const Borrow = ({
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
 
+      const statusData = await fetchStatusFromBackend();
+      await checkAndNotify(statusData);
       if ("Ok" in borrowResult) {
         trackEvent(
           `Borrow,${asset},${
@@ -851,6 +871,16 @@ const Borrow = ({
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                         className={`${
                           currentHealthFactor > 3
                             ? "text-green-500"

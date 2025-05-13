@@ -431,79 +431,6 @@ async fn execute_transfer(
     Ok(Nat::from(block_idx))
 }
 
-// #[update]
-// #[candid_method(update)]
-// async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
-
-//     let caller = ic_cdk::api::caller();
-//     let platform_principal = ic_cdk::api::id();
-
-//     if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-//         return Err(TransferError::GenericError {
-//             message: "Unauthorized access.".to_string(),
-//             error_code: Nat::from(2u32),
-//         });
-//     }
-
-//     if lock {
-//         return Err(TransferError::GenericError {
-//             message: "Transfers are currently locked.".to_string(),
-//             error_code: Nat::from(1u32),
-//         });
-//     }
-//     let from_principal = from_principal.unwrap_or_else(ic_cdk::api::caller);
-//     let from_account = Account {
-//                 owner: from_principal,
-//                 subaccount: None,
-//             };
-
-//     let asset_name = icrc1_name();
-
-//     // Step 2: Get backend canister ID dynamically by fetching minting account
-//     let backend_canister_id = match icrc1_minting_account() {
-//         Some(account) => account.owner, // Get the principal from minting account
-//         None => {
-//             return Err(TransferError::GenericError {
-//                 message: "Failed to fetch backend canister ID.".to_string(),
-//                 error_code: Nat::from(3u32),
-//             });
-//         }
-//     };
-
-//     let (transfer_ok,): (bool,) = call(
-//         backend_canister_id,
-//         "is_transfer_allowed",
-//         (from_principal, asset_name.clone(), arg.amount.clone())
-//     ).await.map_err(|err| format!("Failed to check transfer permission: {:?}", err))?;
-
-//     // Step 4: Validate transfer permission
-//     if !transfer_ok {
-//         return Err(TransferError::GenericError {
-//             message: "Transfer not allowed due to low health factor.".to_string(),
-//             error_code: Nat::from(5u32),
-//         });
-//     }
-
-//     execute_transfer(
-//         from_account,
-//         arg.to,
-//         None,
-//         arg.fee,
-//         arg.amount,
-//         arg.memo,
-//         arg.created_at_time,
-//     )
-//     .await
-//     .map_err(convert_transfer_error)
-//     .map_err(|err| {
-//         let err: TransferError = match err.try_into() {
-//             Ok(err) => err,
-//             Err(err) => ic_cdk::trap(&err),
-//         };
-//         err
-//     })
-// }
-
 #[update]
 #[candid_method(update)]
 async fn icrc1_transfer(
@@ -528,19 +455,33 @@ async fn icrc1_transfer(
         });
     }
 
+    if arg.amount == Nat::from(0u32) {
+        return Err(TransferError::GenericError {
+            message: "Transfer amount must be greater than zero.".to_string(),
+            error_code: Nat::from(7u32),
+        });
+    }
+
     let from_principal = from_principal.unwrap_or_else(ic_cdk::api::caller);
     let from_account = Account {
         owner: from_principal,
         subaccount: None,
     };
 
+    if from_account == arg.to {
+        return Err(TransferError::GenericError {
+            message: "Cannot transfer to the same account.".to_string(),
+            error_code: Nat::from(8u32),
+        });
+    }
+
     if !ic_cdk::api::is_controller(&caller) {
-        // if caller != from_principal {
-        //     return Err(TransferError::GenericError {
-        //         message: "Caller is not authorized to transfer from this account.".to_string(),
-        //         error_code: Nat::from(6u32),
-        //     });
-        // }
+        if caller != from_principal {
+            return Err(TransferError::GenericError {
+                message: "Caller is not authorized to transfer from this account.".to_string(),
+                error_code: Nat::from(6u32),
+            });
+        }
 
         let asset_name = icrc1_name();
 
@@ -619,13 +560,29 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
         subaccount: arg.spender_subaccount,
     };
 
+    // Reject zero-value transfer
+    if arg.amount == Nat::from(0u32) {
+        return Err(TransferFromError::GenericError {
+            message: "Transfer amount must be greater than zero.".to_string(),
+            error_code: Nat::from(7u32),
+        });
+    }
+
+    // Prevent same account transfers
+    if arg.from == arg.to {
+        return Err(TransferFromError::GenericError {
+            message: "Sender and recipient cannot be the same.".to_string(),
+            error_code: Nat::from(8u32),
+        });
+    }
+
     if !ic_cdk::api::is_controller(&caller) {
-        // if caller != arg.from.owner {
-        //     return Err(TransferFromError::GenericError {
-        //         message: "Caller is not authorized to transfer from this account.".to_string(),
-        //         error_code: Nat::from(6u32),
-        //     });
-        // }
+        if caller != arg.from.owner {
+            return Err(TransferFromError::GenericError {
+                message: "Caller is not authorized to transfer from this account.".to_string(),
+                error_code: Nat::from(6u32),
+            });
+        }
 
         let asset_name = icrc1_name();
 

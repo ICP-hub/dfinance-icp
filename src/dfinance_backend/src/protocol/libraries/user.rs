@@ -1,9 +1,9 @@
 use super::update::{user_data, user_reserve};
 use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
+use crate::constants::constant_variables::constants::MIN_BORROW;
 use crate::constants::constant_variables::constants::{
     HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
 };
-use crate::constants::constant_variables::constants::MIN_BORROW;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
@@ -18,7 +18,7 @@ use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
 use crate::protocol::utils::math_utils::{
     calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
 };
-use crate::protocol::utils::price::get_cached_exchange_rate;
+use crate::protocol::utils::price::{get_cached_exchange_rate, update_token_price};
 use crate::stable_storage::state_handler::insert_certified_value;
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info, trace};
@@ -29,7 +29,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
-use ic_cdk:: update;
+use ic_cdk::update;
 
 /*
  * @title User Account Data Calculation
@@ -1217,8 +1217,26 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+
+/*
+ * @title Check Transfer Eligibility
+ * @dev Determines whether a user is allowed to transfer a specified amount of a particular asset.
+ * @param user The Principal of the user initiating the transfer.
+ * @param asset_name The name of the asset (typically prefixed with 'd').
+ * @param amount The amount of the asset to be transferred.
+ * @returns A boolean value indicating whether the transfer is allowed.
+ * @functionality This function checks if the transfer is allowed by verifying if the user's 
+ *                post-transfer health factor remains above the required threshold. 
+ *                It updates the token price, retrieves collateral and debt data, computes 
+ *                adjusted collateral, and recalculates the health factor before deciding.
+ */
 #[update]
 pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Nat) -> bool {
+
+    // Remove 'd' prefix to get the base asset name
+    let base_asset = asset_name.trim_start_matches('d').to_string();
+
+    let _ = update_token_price(base_asset.clone()).await;
 
     let (total_collateral, total_debt, _avg_ltv, liquidation_threshold, _health_factor) =
         match calculate_user_account_data(Some(user)).await {
@@ -1237,7 +1255,6 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
             }
         };
 
-    let base_asset = asset_name.trim_start_matches('d').to_string();
 
     let rate = match get_cached_exchange_rate(base_asset.clone()) {
         Ok(rate) => rate,
@@ -1258,24 +1275,38 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
     }
 
     let adjusted_collateral = total_collateral.clone() - usd_withdrawal.clone();
-    debug!("adjusted collateral = {:?}",adjusted_collateral);
+    debug!("adjusted collateral = {:?}", adjusted_collateral);
 
+    // Allow transfer if there's no outstanding debt
     if total_debt == Nat::from(0u128) {
         return true;
     }
 
-    let mut new_health_factor = adjusted_collateral.scaled_mul(liquidation_threshold.clone());
-    new_health_factor = new_health_factor
-        .scaled_div(total_debt)
-        .scaled_div(Nat::from(PERCENTAGE_FACTOR));
+    let reserve = match get_reserve_data(base_asset) {
+        Ok(data) => data,
+        Err(_) => return false,
+    };
+
+    //calculating the liquidation threshold
+    let avliq = liquidation_threshold
+        .clone()
+        .scaled_mul(total_collateral.clone());
+
+    let mut templiq =
+        avliq - usd_withdrawal.scaled_mul(reserve.configuration.liquidation_threshold.clone());
+    templiq = templiq.scaled_div(adjusted_collateral.clone());
+
+    let mut new_health_factor =
+        adjusted_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
+    new_health_factor = new_health_factor.scaled_div(total_debt);
 
     debug!(
         "New health factor: {} | Required minimum: {}",
         new_health_factor, SCALING_FACTOR
     );
 
+    // Determine whether transfer is allowed based on health factor
     let allowed = new_health_factor >= Nat::from(SCALING_FACTOR);
-    debug!("Transfer allowed: {}", allowed);
 
     allowed
 }

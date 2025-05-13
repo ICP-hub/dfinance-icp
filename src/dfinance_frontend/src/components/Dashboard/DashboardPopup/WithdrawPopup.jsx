@@ -283,7 +283,7 @@ const WithdrawPopup = ({
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
-        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
+        if (errorObject && "BlockedForOneHour" in errorObject) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {

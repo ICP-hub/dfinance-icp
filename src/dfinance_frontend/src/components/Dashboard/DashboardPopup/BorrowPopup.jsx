@@ -240,7 +240,7 @@ const Borrow = ({
 
         console.error("errorKey", errorKey);
 
-        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+        if (errorKey && "BlockedForOneHour" in errorKey) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {

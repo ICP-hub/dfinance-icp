@@ -9,7 +9,7 @@ use crate::protocol::libraries::user::{
 };
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::{get_cached_exchange_rate, update_token_price};
+use crate::protocol::utils::price::{get_cached_exchange_rate, calculate_transfer_fee, update_token_price};
 use crate::{debug, error, trace};
 use candid::{Nat, Principal};
 pub struct ValidationLogic;
@@ -106,7 +106,7 @@ impl ValidationLogic {
      */
     pub async fn validate_withdraw(
         reserve: &ReserveData,
-        amount: Nat,
+        mut amount: Nat,
         user: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
@@ -176,13 +176,17 @@ impl ValidationLogic {
                     _a_borrow,
                     _zero_ltv_collateral,
                 )) => {
-                    debug!("total collateral = {}, total debt = {}", t_collateral, t_debt);
+                    debug!("total collateral = {}, total debt = {}, liquidation_threshold_var = {}", t_collateral, t_debt, liquidation_threshold); //debug
                     (t_collateral, t_debt, ltv, liquidation_threshold, h_factor)
                 }
                 Err(e) => return Err(e),
             };
 
         if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
+            let transfer_token_fee= calculate_transfer_fee(&reserve.asset_name.clone(),amount.clone())?;
+
+            amount = amount.clone() - transfer_token_fee.clone();
+
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
@@ -204,28 +208,32 @@ impl ValidationLogic {
                 adjusted_collateral
             );
             
+            //calculating the liquidation threshold
+            let avliq= liquidation_threshold_var.clone().scaled_mul(total_collateral.clone());
 
+            let mut templiq = avliq - usd_withdrawl.scaled_mul(reserve.configuration.liquidation_threshold.clone());
+            templiq =  templiq.scaled_div(adjusted_collateral.clone());
+            
             let mut new_ltv = Nat::from(ZERO_VALUE);
 
             //calculating the newe LTV wiht adjusted collateral
             if adjusted_collateral != Nat::from(0u128) {
                 new_ltv = total_debt.clone().scaled_div(adjusted_collateral.clone());
                 new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
-                debug!("New ltv: {}", new_ltv); //debug
+                debug!("New ltv {} and templiq : {}", new_ltv, templiq); //debug
             }
 
             //checking if the LTV is greater than the liquidation threshold
-            if new_ltv >= liquidation_threshold_var {
+            if new_ltv >= templiq {
                 error!("LTV is greater than liquidation threshold"); //error
                 return Err(Error::LTVGreaterThanThreshold);
             }
 
             if total_debt != Nat::from(0u128) {
                 let mut new_health_factor =
-                    adjusted_collateral.scaled_mul(liquidation_threshold_var);
-                new_health_factor = new_health_factor
-                    .scaled_div(total_debt)
-                    .scaled_div(Nat::from(PERCENTAGE_FACTOR));
+                    adjusted_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
+
+                new_health_factor = new_health_factor.scaled_div(total_debt);
                 debug!("new health factor = {}", new_health_factor); //debug
 
                 //checking if the health factor
@@ -314,6 +322,13 @@ impl ValidationLogic {
         //adjusted is the final amount after borrow amount is added
         let adjusted_debt = total_debt.clone() + usd_borrow.clone();
 
+        //calculating the liquidation threshold
+        let avliq= liquidation_threshold_var.clone().scaled_mul(total_collateral.clone());
+
+        let mut templiq = avliq - usd_borrow.clone().scaled_mul(reserve.configuration.liquidation_threshold.clone());
+        templiq =  templiq.scaled_div(adjusted_debt.clone());
+        
+
         //calculating the new LTV with adjusted debt
         let mut new_ltv: Nat;
         new_ltv = adjusted_debt.clone().scaled_div(total_collateral.clone());
@@ -328,13 +343,13 @@ impl ValidationLogic {
         
 
         //checking if the LTV is greater than the liquidation threshold
-        if new_ltv >= liquidation_threshold_var {
+        if new_ltv >= templiq {
             error!("LTV is greater than liquidation threshold"); //error
             return Err(Error::LTVGreaterThanThreshold);
         }
 
         //checking the health factor
-        let mut new_health_factor = total_collateral.scaled_mul(liquidation_threshold_var);
+        let mut new_health_factor = total_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
         new_health_factor = new_health_factor
             .scaled_div(adjusted_debt)
             .scaled_div(Nat::from(PERCENTAGE_FACTOR));
@@ -525,7 +540,7 @@ impl ValidationLogic {
         );
         if health_factor / Nat::from(PERCENTAGE_FACTOR) > Nat::from(SCALING_FACTOR) {
             error!("User health factor is greater than 1.");
-            return Err(Error::USERCANNOTBELIQUIDATED);
+            return Err(Error::UserCannotBeLiquidated);
         }
 
         Ok(())

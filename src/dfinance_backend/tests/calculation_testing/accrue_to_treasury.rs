@@ -48,7 +48,7 @@ pub fn accrue_to_treasury(
 ) -> Result<(), errors::Error> {
     let mut vars = AccrueToTreasuryLocalVars::default();
 
-    if reserve_cache.reserve_factor == Nat::from(ZERO_VALUE) {
+    if reserve_cache.reserve_factor == ZERO_VALUE {
         return Ok(());
     }
 
@@ -84,11 +84,11 @@ pub fn accrue_to_treasury(
         reserve_cache.reserve_factor.clone(),
     ); //percent
     ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
-    if vars.amount_to_mint != Nat::from(ZERO_VALUE) {
+    if vars.amount_to_mint != ZERO_VALUE {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
             reserve_cache.next_liquidity_index.clone(),
-        )) / 100 as u128;
+        )) / 100_u128;
         ic_cdk::println!(
             "accure_to_platform in accure: {:?}",
             reserve_data.accure_to_platform

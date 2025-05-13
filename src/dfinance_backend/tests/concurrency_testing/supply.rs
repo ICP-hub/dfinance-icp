@@ -87,7 +87,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!(
             "\n======================== Initial Reserve data before concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch reserve data for the asset before supply
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch reserve data for the asset before supply
         ic_cdk::println!(
             "\n======================================================================================\n"
         );
@@ -95,7 +95,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for each supply request
         for user_principal in random_users.clone() {
             let asset_principal =
-                match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal, // Get the asset principal for supply operation
                     None => {
                         if !case.expect_success {
@@ -117,7 +117,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
                 case.amount.clone(),
             );
@@ -127,7 +127,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                         println!(
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
-                            case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                            case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                         );
                         continue; // Skip if the approval fails and the expected error message is different
                     }
@@ -194,7 +194,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue; // Skip the test case if the error message doesn't match the expected one
@@ -230,7 +230,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch updated reserve data after supply
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch updated reserve data after supply
         ic_cdk::println!("\n---------------------------------------------------------\n");
     }
 

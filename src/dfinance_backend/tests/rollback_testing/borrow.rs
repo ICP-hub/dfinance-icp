@@ -39,7 +39,7 @@ use crate::utils::structs::*;
         // valid test cases
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(5_00_000_000u128), // 5 ICP (transfer fee included)
+            amount: Nat::from(500_000_000u128), // 5 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
@@ -152,7 +152,7 @@ use crate::utils::structs::*;
                                 println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                 continue;

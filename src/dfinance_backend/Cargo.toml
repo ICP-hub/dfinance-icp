@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 # regex.workspace = true
 time = { workspace = true }
-canbench-rs = { workspace = true }
+canbench-rs = { workspace = true,optional = true }
 serde_bytes = { workspace = true }
 uint = { workspace = true }
 serde = { workspace = true }
@@ -41,3 +41,4 @@ tokio = { version = "1", features = ["full"] }
 default = ["testnet"] 
 testnet = []
 mainnet = []
+canbench = ["canbench-rs"]

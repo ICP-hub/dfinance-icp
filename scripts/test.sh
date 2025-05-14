@@ -28,7 +28,7 @@ for ((i=1; i<=NUM_USERS; i++)); do
   echo "User #$i - Principal: $PRINCIPAL"
 
   # Call the faucet function
-  faucet_result=$(dfx canister call "$backend_canister" "$faucet_method" '("ICP", 100059085)')
+  faucet_result=$(dfx canister call "$backend_canister" "$faucet_method" '("ICP", 110059085)')
   echo "Faucet result: $faucet_result"
 
   # Approve the backend canister to spend tokens

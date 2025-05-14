@@ -88,8 +88,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     //fetching the price of the asset in USD
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
+    let ledger_fee = get_transfer_fee(ledger_canister_id).await?;
     //updating params.amount with the actual amount of tokens to be supplied
-    params.amount = params.amount.clone() - transfer_token_fee.clone();
+    params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
     UpdateLogic::update_user_data_supply(
         user_principal,
         &reserve_cache,
@@ -120,19 +121,19 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         ledger_canister_id,
         user_principal,
         platform_principal,
-        amount_nat.clone(), 
+        amount_nat.clone() - ledger_fee.clone(), 
         //pass transfer fee as well
     )
     .await
     {
-        Ok(new_balance) => {
+        Ok(block_index) => {
             info!("Asset transfer from user to backend canister executed successfully");
             mutate_state(|state| {
                 state
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
-            Ok(new_balance)
+            Ok(block_index)
         }
         Err(_) => {
             error!("Error in asset transfer from user to backend canister"); //error

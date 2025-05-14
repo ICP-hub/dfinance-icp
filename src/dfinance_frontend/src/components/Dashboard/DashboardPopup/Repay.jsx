@@ -57,17 +57,27 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-const checkAndNotify = useNotificationSystem();  
-const [ledgerFee, setLedgerFee] = useState(null);
+  const checkAndNotify = useNotificationSystem();
+  const [ledgerFee, setLedgerFee] = useState(null);
 
   const transferFeRetrive = useTransferFee(asset);
- const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+  const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
   const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+
+  // Calculate total fees
   const transactionFee = transferFee + ledgerFeeNumber;
-  const parts = transactionFee.toString().split('.');
-  const integerPart = parts[0];
-  const decimalPart = parts[1] || '';
-  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  // Format transactionFee and approvalFee up to 8 decimal places
+  const formatFee = (fee) => {
+    const parts = fee.toString().split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || '';
+    return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
+  const formattedApprovalFee = formatFee(approvalFee);
+
 
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
@@ -183,7 +193,7 @@ const [ledgerFee, setLedgerFee] = useState(null);
     updateAmountAndUsdValue(formattedAmount);
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
       console.log("cycleStatus", cycleStatus)
@@ -230,7 +240,9 @@ const [ledgerFee, setLedgerFee] = useState(null);
   const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
-
+  const hasEnoughBalance =
+    supplyBalance >= formattedApprovalFee &&
+    (+amount + (+formattedApprovalFee || 0)) <= +supplyBalance;
   /**
    * This function handles the approval process before executing a repayment. It checks the asset type and uses the appropriate
    * ledger actor to approve the repayment amount for the selected asset.
@@ -258,17 +270,17 @@ const [ledgerFee, setLedgerFee] = useState(null);
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-   const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
+    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
 
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee ;
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
 
 
 
     try {
       const approval = await ledgerActor.icrc2_approve({
-         fee: ledgerFee ? [ledgerFee] : [],
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -350,25 +362,28 @@ const [ledgerFee, setLedgerFee] = useState(null);
     }
 
     try {
-      let amountAsNat64 = Math.round(
-        amount.replace(/,/g, "") * Math.pow(10, 8)
-      );
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
 
       const scaledAmount = amountAsNat64;
-      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
-      const totalAmount = transferFeeBigInt
-        ? scaledAmount + transferFeeBigInt
-        : scaledAmount;
+
+      // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
+      const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
+      const totalAmount = (+amount + (+formattedTransactionFee || 0)) * 1e8
+
+
       const repayParams = {
         asset: asset,
         amount: totalAmount,
         on_behalf_of: [],
       };
-
+      console.log("repayPrams", (+amount + (+formattedTransactionFee || 0)) * 1e8)
       const repayResult = await backendActor.execute_repay(repayParams);
       dispatch(toggleDashboardRefresh());
-       const statusData = await fetchStatusFromBackend();            
-      // Check status and send notifications if needed      
+      const statusData = await fetchStatusFromBackend();
+      // Check status and send notifications if needed  
+      console.log("repayresult", repayResult)
       await checkAndNotify(statusData);
       if ("Ok" in repayResult) {
         trackEvent(
@@ -727,7 +742,7 @@ const [ledgerFee, setLedgerFee] = useState(null);
     amount,
     usdValue,
   ]);
-useEffect(() => {
+  useEffect(() => {
     // Skip if there's no asset selected or no ledgerActors
     if (!asset || !ledgerActors) return;
 
@@ -757,7 +772,7 @@ useEffect(() => {
 
     // Call the async function
     fetchFee();
-    
+
   }, [asset]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
@@ -814,8 +829,8 @@ useEffect(() => {
                       </p>
                       <p
                         className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                           }`}
                         onClick={handleMaxClick}
                       >
@@ -854,14 +869,14 @@ useEffect(() => {
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
-                              ? "text-red-500"
-                              : truncatedValue <= 1.5
-                                ? "text-orange-600"
-                                : truncatedValue <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : truncatedValue <= 1
+                            ? "text-red-500"
+                            : truncatedValue <= 1.5
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -869,14 +884,14 @@ useEffect(() => {
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
-                              ? "text-red-500"
-                              : currentHealthFactor <= 1.5
-                                ? "text-orange-600"
-                                : currentHealthFactor <= 2
-                                  ? "text-orange-400"
-                                  : "text-orange-300"
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
+                            ? "text-red-500"
+                            : currentHealthFactor <= 1.5
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -912,6 +927,7 @@ useEffect(() => {
                   <div className="w-full flex justify-between items-center">
                     <p>Final amount</p>
                     <div className="flex items-center gap-2">
+                      {console.log("amount", amount)}
                       <p>
                         {(amount
                           ? (+amount || 0) + (+formattedTransactionFee || 0)
@@ -931,7 +947,7 @@ useEffect(() => {
                 </div>
               </div>
             </div>
-
+            {console.log("hasenough", hasEnoughBalance)}
             <div className="w-full mt-3">
               {amount > 0 && amount > supplyBalance ? (
                 <div className="bg-[#BA5858] p-2 rounded-lg my-2">
@@ -939,7 +955,7 @@ useEffect(() => {
                     Amount exceeds your wallet balance.
                   </div>
                 </div>
-              ) : supplyBalance <= 0 ? (
+              ) : !hasEnoughBalance ? (
                 <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                   <div className="text-white text-[12px]">
                     You do not have enough {asset} in your account to pay for
@@ -971,20 +987,16 @@ useEffect(() => {
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                      isLoading ||
-                      amount <= 0 ||
-                      supplyBalance <= 0 ||
-                      Number(amount) + formattedTransactionFee > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || amount <= 0 ||
+                    (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                     }`}
                   disabled={
                     isApproved ||
                     isLoading ||
                     amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    Number(amount) + formattedTransactionFee > supplyBalance
+                    (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
                   }
                 >
                   Approve {asset} to continue
@@ -994,19 +1006,19 @@ useEffect(() => {
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                      isLoading ||
-                      amount <= 0 ||
-                      supplyBalance <= 0 ||
-                      Number(amount) + formattedTransactionFee > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
+                    isLoading ||
+                    amount <= 0 ||
+                    supplyBalance <= 0 ||
+                    Number(amount) + formattedApprovalFee > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                     }`}
                   disabled={
                     !isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + formattedTransactionFee > supplyBalance
+                    Number(amount) + formattedApprovalFee > supplyBalance
                   }
                 >
                   Repay {asset}

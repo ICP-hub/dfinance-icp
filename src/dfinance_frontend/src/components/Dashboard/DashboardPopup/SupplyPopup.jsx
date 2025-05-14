@@ -84,13 +84,22 @@ const SupplyPopup = ({
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
-  const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+   const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
   const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+
+  // Calculate total fees
   const transactionFee = transferFee + ledgerFeeNumber;
-  const parts = transactionFee.toString().split('.');
-  const integerPart = parts[0];
-  const decimalPart = parts[1] || '';
-  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  // Format transactionFee and approvalFee up to 8 decimal places
+  const formatFee = (fee) => {
+    const parts = fee.toString().split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || '';
+    return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
+  const formattedApprovalFee = formatFee(approvalFee);
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -121,8 +130,8 @@ const SupplyPopup = ({
   const supplyBalance = Math.max(numericBalance - formattedTransactionFee, 0);
   console.log("numeric",numericBalance,formattedTransactionFee)
   const hasEnoughBalance = 
-  balance >= formattedTransactionFee &&
-  (+amount + (+formattedTransactionFee || 0)) <= +supplyBalance;
+  balance >= formattedApprovalFee &&
+  (+amount + (+formattedApprovalFee || 0)) <= +supplyBalance;
 
   const value = currentHealthFactor;
 
@@ -982,7 +991,7 @@ console.log("total amount",supplyParams)
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0 ||
-                  (+amount + (+formattedTransactionFee || 0)) > +supplyBalance
+                  (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
                   ? "opacity-50 cursor-not-allowed"
                   : ""
                 }`}
@@ -991,7 +1000,7 @@ console.log("total amount",supplyParams)
                 isLoading ||
                 amount <= 0 ||
                 !hasEnoughBalance ||
-                (+amount + (+formattedTransactionFee || 0)) > +supplyBalance
+                (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
               }
             >
               Approve {asset} to continue

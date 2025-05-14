@@ -57,7 +57,7 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-  const [ledgerFee, setLedgerFee] = useState(null);
+const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee] = useState(null);
 
   const transferFeRetrive = useTransferFee(asset);
   const transferFee =

@@ -63,7 +63,7 @@ pub mod constants {
     // ------------------- Test Token Canister Constants -------------------
 
     pub const TEST_DEFAULT_CYCLES: u128 = 900_000_000_000;
-    pub const TEST_TRANSFER_FEE: u64 = 0;
+    pub const TEST_TRANSFER_FEE: u64 = 10;
     pub const TEST_DECIMALS: u8 = 8;
     pub const TEST_MAX_MEMO_LENGTH: u16 = 256;
     pub const TEST_MAX_NUMBER_OF_ACCOUNTS: u64 = 1_000;

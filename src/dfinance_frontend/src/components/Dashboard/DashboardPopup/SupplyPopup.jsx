@@ -83,9 +83,10 @@ const SupplyPopup = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
-
+ 
+const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+const ledgerFeeNumber = ledgerFee ? Number(ledgerFee) / 1e8 : 0;
+const transactionFee = transferFee + ledgerFeeNumber;
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -231,18 +232,15 @@ const SupplyPopup = ({
 
     const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(fee);
+    
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
+    const totalAmount = amountAsNat64 + transferFeeBigInt +ledgerFee;
 
     try {
 
 
       const approval = await ledgerActor.icrc2_approve({
-        fee: fee ? [feeBigInt] : [],
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -254,7 +252,7 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-
+console.log("aproval",approval)
       if (approval?.Ok) {
         setIsApproved(true);
         toast.success(`Approval successful!`, {
@@ -303,7 +301,7 @@ const SupplyPopup = ({
   const scaledAmount = amountAsNat64;
 
   const totalAmount = transferFeeBigInt
-    ? scaledAmount + transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt +ledgerFee
     : scaledAmount;
 
   // Function to handle the supply process
@@ -330,7 +328,7 @@ const SupplyPopup = ({
       };
 
       const response = await backendActor.execute_supply(supplyParams);
-      dispatch(toggleDashboardRefresh());
+      // dispatch(toggleDashboardRefresh());
       
       const statusData = await fetchStatusFromBackend();            
       // Check status and send notifications if needed      
@@ -655,7 +653,38 @@ const SupplyPopup = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+useEffect(() => {
+    // Skip if there's no asset selected or no ledgerActors
+    if (!asset || !ledgerActors) return;
 
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+        console.log("fee", feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+    
+  }, [asset]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -674,6 +703,7 @@ const SupplyPopup = ({
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
+
 
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
@@ -873,7 +903,7 @@ const SupplyPopup = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transferFee}</p>
+                      <p>{transactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -886,7 +916,7 @@ const SupplyPopup = ({
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transferFee || 0)
+                          ? (+amount || 0) + (+transactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -928,8 +958,8 @@ const SupplyPopup = ({
                   }`}
               >
                 {isApproved
-                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(4)} ${asset} `
-                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(4)} ${asset} `}
+                  ? `Approved with ${(Number(ledgerFee)/1e8 ).toFixed(8)} ${asset} `
+                  : `Approve with ${(Number(ledgerFee)/1e8).toFixed(8)} ${asset} `}
 
               </p>
             </div>

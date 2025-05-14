@@ -12,11 +12,11 @@ candid = { workspace = true }
 ciborium = { workspace = true }
 hex = { workspace = true }
 ic-cdk = { workspace = true }
+ic-cdk-macros = { workspace = true }
+ic-metrics-encoder = { workspace = true }
 num-traits = { workspace = true }
 serde = { workspace = true }
 serde_bytes = { workspace = true }
-ic-cdk-macros = { workspace = true }
-ic-metrics-encoder = { workspace = true }
 ic-base-types = { git = "https://github.com/dfinity/ic.git" }
 ic-canister-log = { git = "https://github.com/dfinity/ic.git" }
 ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git" }
@@ -32,9 +32,9 @@ icrc-ledger-client = { git = "https://github.com/dfinity/ic.git"}
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git"}
 
 [dev-dependencies]
+cddl = "0.9.4"
 leb128 = "0.2.4"
 proptest = "1.0"
-cddl = "0.9.4"
 candid_parser = { workspace = true }
 ic-icrc1-ledger-sm-tests = { git = "https://github.com/dfinity/ic.git"}
 ic-state-machine-tests = { git = "https://github.com/dfinity/ic.git"}

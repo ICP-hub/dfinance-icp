@@ -1,5 +1,5 @@
-use crate::api::inter_canister::asset_transfer_from;
-use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
+use crate::api::inter_canister::{asset_transfer_from, get_transfer_fee};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
@@ -68,10 +68,10 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 
     //initialize a asset reserve cache for temp changes
     let mut reserve_cache = reserve::cache(&reserve_data);
-    info!("Reserve cache fetched successfully: {:?}", reserve_cache); //info
+    info!("Reserve cache fetched successfully: {:?}", reserve_cache); 
     //update the reserve cache state
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
-    info!("Reserve state updated successfully"); //info
+    info!("Reserve state updated successfully"); 
 
     //validat the supply request
     ValidationLogic::validate_supply(
@@ -120,7 +120,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         ledger_canister_id,
         user_principal,
         platform_principal,
-        amount_nat.clone(),
+        amount_nat.clone(), 
+        //pass transfer fee as well
     )
     .await
     {

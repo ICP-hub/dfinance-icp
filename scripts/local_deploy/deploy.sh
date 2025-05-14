@@ -29,13 +29,13 @@ echo "Minter Principal: $MINTER"
 echo "User Principal: $USER"
 
 export PRE_MINTED_TOKENS=10_000_000_000
-export TRANSFER_FEE=0
+export TRANSFER_FEE=10
 export ARCHIVE_CONTROLLER="$USER"
 export TRIGGER_THRESHOLD=2_000
 export NUM_OF_BLOCK_TO_ARCHIVE=1_000
 export CYCLE_FOR_ARCHIVE_CREATION=10_000_000_000_000
 export FEATURE_FLAGS=true
-
+export TRANSFER_FEE_TOKEN=0
 # -----------------------------
 # Deploy ckBTC ledger
 # -----------------------------
@@ -126,7 +126,7 @@ echo "Token Name: $TOKEN_NAME"
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
      minting_account = record { owner = principal \"${USER}\" };
-     transfer_fee = "${TRANSFER_FEE}";
+     transfer_fee = "${TRANSFER_FEE_TOKEN}";
      metadata = vec {};
      feature_flags = opt record { icrc2 = "${FEATURE_FLAGS}" };
     
@@ -151,7 +151,7 @@ echo "Token Name: $TOKEN_NAME"
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
      minting_account = record { owner = principal \"${USER}\" };
-     transfer_fee = "${TRANSFER_FEE}";
+     transfer_fee = "${TRANSFER_FEE_TOKEN}";
      metadata = vec {};
      feature_flags = opt record { icrc2 = "${FEATURE_FLAGS}" };
     

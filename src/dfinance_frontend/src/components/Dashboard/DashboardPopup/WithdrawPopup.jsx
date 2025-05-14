@@ -72,8 +72,9 @@ const checkAndNotify = useNotificationSystem();
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+ const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+const ledgerFeeNumber = ledgerFee ? Number(ledgerFee) / 1e8 : 0;
+const transactionFee = transferFee + ledgerFeeNumber;
 
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
@@ -238,10 +239,7 @@ const checkAndNotify = useNotificationSystem();
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(feeBigInt);
+    
 
     try {
       const safeAmount =
@@ -251,7 +249,7 @@ const checkAndNotify = useNotificationSystem();
       const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
 
       const totalAmount = transferFeeBigInt
-        ? scaledAmount + transferFeeBigInt
+        ? scaledAmount + transferFeeBigInt +ledgerFee
         : scaledAmount;
 
       const withdrawParams = {
@@ -573,6 +571,38 @@ const checkAndNotify = useNotificationSystem();
   }, []);
 
   useEffect(() => {
+    // Skip if there's no asset selected or no ledgerActors
+    if (!asset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+        console.log("fee", feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+    
+  }, [asset]);
+  useEffect(() => {
     const { tempLiq, healthFactor, ltv } = calculatedValues({
       totalCollateral,
       totalDebt,
@@ -806,48 +836,48 @@ const checkAndNotify = useNotificationSystem();
                     </span>
                   </p>
                 </div>
-                <div className="w-full flex justify-between items-center my-1">
-                  <div className="flex items-center gap-1 relative">
-                    <div className="flex items-center">
-                      <p>Transaction Fee</p>
-                      <Info
-                        size={14}
-                        className="text-blue-800 dark:text-white ml-1 cursor-help"
-                        onMouseEnter={() => setShowTooltip(true)}
-                        onMouseLeave={() => setShowTooltip(false)}
+               <div className="w-full flex justify-between items-center my-1">
+                    <div className="flex items-center gap-1 relative">
+                      <div className="flex items-center">
+                        <p>Transaction Fee</p>
+                        <Info
+                          size={14}
+                          className="text-blue-800 dark:text-white ml-1 cursor-help"
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
+                        />
+                        {showTooltip && (
+                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Platform fee + Ledger Transfer fee
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p>{transactionFee}</p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
                       />
-                      {showTooltip && (
-                        <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                          Platform fee + Ledger Transfer fee
-                        </div>
-                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p>{transferFee}</p>
-                    <img
-                      src={image}
-                      alt="connect_wallet_icon"
-                      className="object-cover w-4 h-4 rounded-full"
-                    />
+                  <div className="w-full flex justify-between items-center">
+                    <p>Final amount</p>
+                    <div className="flex items-center gap-2">
+                      <p>
+                        {(amount
+                          ? (+amount || 0) + (+transactionFee || 0)
+                          : 0
+                        ).toFixed(8)}{" "}
+                      </p>
+                      <img
+                        src={image}
+                        alt="connect_wallet_icon"
+                        className="object-cover w-4 h-4 rounded-full"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="w-full flex justify-between items-center">
-                  <p>Final amount</p>
-                  <div className="flex items-center gap-2">
-                    <p>
-                      {(amount
-                        ? (+amount || 0) + (+transferFee || 0)
-                        : 0
-                      ).toFixed(8)}{" "}
-                    </p>
-                    <img
-                      src={image}
-                      alt="connect_wallet_icon"
-                      className="object-cover w-4 h-4 rounded-full"
-                    />
-                  </div>
-                </div>
                 <div className="w-full flex justify-end items-center mt-1">
                   <p className="text-gray-500">liquidation at &lt;1</p>
                 </div>

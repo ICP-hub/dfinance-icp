@@ -2,6 +2,8 @@ use crate::constants::errors::Error;
 use crate::declarations::datatypes::{
     AssetInfo, FaucetReserves, ReserveData, UserData,
 };
+
+#[cfg(feature = "testnet")]
 use protocol::logic::faucet::Challenge;
 use candid::Nat;
 use candid::Principal;

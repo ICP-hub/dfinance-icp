@@ -1,4 +1,4 @@
-use crate::api::inter_canister::{get_balance, get_total_supply};
+use crate::api::inter_canister::{get_balance, get_icrc2_allowance, get_total_supply};
 use crate::constants::constant_variables::constants::SCALING_FACTOR;
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
@@ -54,11 +54,33 @@ impl ValidationLogic {
         let user_balance = get_balance(ledger_canister, user).await?;
 
         //checking if the user has enough wallet balance
+    
+
         if amount > user_balance {
-            error!("Supply amount exceeds user balance."); //error
+            error!("Supply amount exceeds user balance.");
             return Err(Error::MaxAmount);
         }
 
+        let platform_principal = ic_cdk::api::id();
+        let allowance = get_icrc2_allowance(ledger_canister, user, platform_principal)
+            .await
+            .map_err(|e| {
+                error!("Allowance query failed: {:?}", e);
+                Error::AllowanceQueryFailed
+            })?;
+
+        debug!(
+            "Allowance from user {} to platform {} is {}",
+            user, platform_principal, allowance.allowance
+        );
+
+        if amount > allowance.allowance {
+            error!(
+                "Insufficient allowance: required {}, allowed {}",
+                amount, allowance.allowance
+            );
+            return Err(Error::AllowanceTooLow);
+        }
         let supply_cap = reserve.configuration.supply_cap.clone();
 
         let d_token_canister_id = reserve.d_token_canister.clone().ok_or_else(|| {
@@ -274,11 +296,13 @@ impl ValidationLogic {
         trace!("validating borrow");
         //checking if the borrowing is enabled or not
         if !reserve.configuration.borrowing_enabled {
-            error!("Borrowing is not enabled for this reserve."); //error
+            error!("Borrowing is not enabled for this reserve.");
             return Err(Error::BorrowingNotEnabled);
         }
 
         let platform_principal = ic_cdk::api::id();
+
+
 
         //fetching the platform balance
         let platform_balance = get_balance(ledger_canister, platform_principal).await?;
@@ -310,7 +334,7 @@ impl ValidationLogic {
             };
         //checking if the user has some collateral
         if total_collateral <= Nat::from(0u128) {
-            error!("No collateral found for the user."); //error
+            error!("No collateral found for the user.");
             return Err(Error::NoCollateralFound);
         }
         //fetching the exchange rate from cache
@@ -356,7 +380,7 @@ impl ValidationLogic {
 
         //checking if the health factor
         if new_health_factor < Nat::from(SCALING_FACTOR) {
-            error!("Health factor is less than 1"); //error
+            error!("Health factor is less than 1");
             return Err(Error::HealthFactorLess);
         }
 
@@ -377,7 +401,7 @@ impl ValidationLogic {
 
         // Validating borrow cap limit
         if final_total_borrow >= borrow_cap {
-            error!("Borrow cap exceeded: Final total borrow exceeds the borrow cap."); //error
+            error!("Borrow cap exceeded: Final total borrow exceeds the borrow cap. final_total_borrow : {:?}", final_total_borrow);
             return Err(Error::BorrowCapExceeded);
         };
         Ok(())
@@ -418,7 +442,7 @@ impl ValidationLogic {
             user_balance = get_balance(ledger_canister, liquidator.unwrap().clone()).await?;
         }
 
-        debug!("User balance: {:?}", user_balance); //debug
+        debug!("User balance: {:?}", user_balance);
 
         //checking if the user has enough wallet balance
         if amount > user_balance {

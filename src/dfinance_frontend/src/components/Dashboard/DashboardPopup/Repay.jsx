@@ -57,11 +57,17 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee] = useState(null);
+const checkAndNotify = useNotificationSystem();  
+const [ledgerFee, setLedgerFee] = useState(null);
 
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+ const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+  const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const parts = transactionFee.toString().split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] || '';
+  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
 
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
@@ -144,7 +150,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
         return truncated.toFixed(8);
       };
 
-      const fee = transferFee ? Number(transferFee) : 0;
+      const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
       let selectedBalance;
       if (supplyBalance >= assetBorrow + fee) {
         selectedBalance = Number(assetBorrow);
@@ -252,20 +258,17 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    const amountAsNat64 = BigInt(
-      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
-    );
+   const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(fee);
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee ;
+
+
 
     try {
       const approval = await ledgerActor.icrc2_approve({
-        fee: fee ? [feeBigInt] : [],
+         fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -558,7 +561,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
       return truncated.toFixed(8);
     };
 
-    const fee = transferFee ? Number(transferFee) : 0;
+    const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
 
     let selectedBalance;
     if (supplyBalance >= assetBorrow + fee) {
@@ -724,7 +727,38 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
     amount,
     usdValue,
   ]);
+useEffect(() => {
+    // Skip if there's no asset selected or no ledgerActors
+    if (!asset || !ledgerActors) return;
 
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+        console.log("fee", feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+    
+  }, [asset]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -867,7 +901,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transferFee}</p>
+                      <p>{formattedTransactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -880,7 +914,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transferFee || 0)
+                          ? (+amount || 0) + (+formattedTransactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -941,7 +975,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
                       isLoading ||
                       amount <= 0 ||
                       supplyBalance <= 0 ||
-                      Number(amount) + transferFee > supplyBalance
+                      Number(amount) + formattedTransactionFee > supplyBalance
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                     }`}
@@ -950,7 +984,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
+                    Number(amount) + formattedTransactionFee > supplyBalance
                   }
                 >
                   Approve {asset} to continue
@@ -963,7 +997,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
                       isLoading ||
                       amount <= 0 ||
                       supplyBalance <= 0 ||
-                      Number(amount) + transferFee > supplyBalance
+                      Number(amount) + formattedTransactionFee > supplyBalance
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                     }`}
@@ -972,7 +1006,7 @@ const checkAndNotify = useNotificationSystem();  const [ledgerFee, setLedgerFee]
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
+                    Number(amount) + formattedTransactionFee > supplyBalance
                   }
                 >
                   Repay {asset}

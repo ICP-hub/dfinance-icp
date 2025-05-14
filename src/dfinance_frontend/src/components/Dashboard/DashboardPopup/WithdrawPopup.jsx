@@ -57,7 +57,7 @@ const WithdrawPopup = ({
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const ledgerActors = useSelector((state) => state.ledger);
-const checkAndNotify = useNotificationSystem();
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -72,9 +72,13 @@ const checkAndNotify = useNotificationSystem();
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
- const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
-const ledgerFeeNumber = ledgerFee ? Number(ledgerFee) / 1e8 : 0;
-const transactionFee = transferFee + ledgerFeeNumber;
+  const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+  const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const parts = transactionFee.toString().split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] || '';
+  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
 
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
@@ -136,14 +140,14 @@ const transactionFee = transferFee + ledgerFeeNumber;
 
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
-      inputAmount = truncateToeightDeimals(assetSupply - transferFee).toString();
+      inputAmount = truncateToeightDeimals(assetSupply - formattedTransactionFee).toString();
     }
 
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
       console.log("cycleStatus", cycleStatus)
@@ -239,19 +243,20 @@ const transactionFee = transferFee + ledgerFeeNumber;
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    
+
 
     try {
-      const safeAmount =
-        Number((amount.toString() || "").replace(/,/g, "")) || 0;
-      let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+
       const scaledAmount = amountAsNat64;
-      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+
+      const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
 
       const totalAmount = transferFeeBigInt
-        ? scaledAmount + transferFeeBigInt +ledgerFee
+        ? scaledAmount + transferFeeBigInt + ledgerFeeNumber
         : scaledAmount;
-
       const withdrawParams = {
         asset: asset,
         amount: totalAmount,
@@ -262,8 +267,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
         withdrawParams
       );
       dispatch(toggleDashboardRefresh());
- const statusData = await fetchStatusFromBackend();            
-      // Check status and send notifications if needed      
+      const statusData = await fetchStatusFromBackend();
       await checkAndNotify(statusData);
       if ("Ok" in withdrawResult) {
         trackEvent(
@@ -500,7 +504,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
       const truncated = Math.floor(value * multiplier) / multiplier;
       return truncated;
     };
-    const fee = transferFee ? Number(transferFee) : 0;
+    const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
         ? parseFloat(Number(assetSupply).toFixed(8))
@@ -600,7 +604,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
 
     // Call the async function
     fetchFee();
-    
+
   }, [asset]);
   useEffect(() => {
     const { tempLiq, healthFactor, ltv } = calculatedValues({
@@ -749,7 +753,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
                     }}
                   >
                     {truncateToeightDeimals(
-                      Math.max(0, assetSupply - transferFee)
+                      Math.max(0, assetSupply - formattedTransactionFee)
                     )}{" "}
                     Max
                   </p>
@@ -769,7 +773,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
                     {Math.max(
                       0,
                       assetSupply -
-                      transferFee -
+                      formattedTransactionFee -
                       Number(amount.toString().replace(/,/g, ""))
                     ).toLocaleString(undefined, {
                       minimumFractionDigits: 8,
@@ -836,48 +840,48 @@ const transactionFee = transferFee + ledgerFeeNumber;
                     </span>
                   </p>
                 </div>
-               <div className="w-full flex justify-between items-center my-1">
-                    <div className="flex items-center gap-1 relative">
-                      <div className="flex items-center">
-                        <p>Transaction Fee</p>
-                        <Info
-                          size={14}
-                          className="text-blue-800 dark:text-white ml-1 cursor-help"
-                          onMouseEnter={() => setShowTooltip(true)}
-                          onMouseLeave={() => setShowTooltip(false)}
-                        />
-                        {showTooltip && (
-                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
-                            Platform fee + Ledger Transfer fee
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p>{transactionFee}</p>
-                      <img
-                        src={image}
-                        alt="connect_wallet_icon"
-                        className="object-cover w-4 h-4 rounded-full"
+                <div className="w-full flex justify-between items-center my-1">
+                  <div className="flex items-center gap-1 relative">
+                    <div className="flex items-center">
+                      <p>Transaction Fee</p>
+                      <Info
+                        size={14}
+                        className="text-blue-800 dark:text-white ml-1 cursor-help"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
                       />
+                      {showTooltip && (
+                        <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                          Platform fee + Ledger Transfer fee
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="w-full flex justify-between items-center">
-                    <p>Final amount</p>
-                    <div className="flex items-center gap-2">
-                      <p>
-                        {(amount
-                          ? (+amount || 0) + (+transactionFee || 0)
-                          : 0
-                        ).toFixed(8)}{" "}
-                      </p>
-                      <img
-                        src={image}
-                        alt="connect_wallet_icon"
-                        className="object-cover w-4 h-4 rounded-full"
-                      />
-                    </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p>{formattedTransactionFee}</p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
                   </div>
+                </div>
+                <div className="w-full flex justify-between items-center">
+                  <p>Final amount</p>
+                  <div className="flex items-center gap-2">
+                    <p>
+                      {(amount
+                        ? (+amount || 0) + (+formattedTransactionFee || 0)
+                        : 0
+                      ).toFixed(8)}{" "}
+                    </p>
+                    <img
+                      src={image}
+                      alt="connect_wallet_icon"
+                      className="object-cover w-4 h-4 rounded-full"
+                    />
+                  </div>
+                </div>
                 <div className="w-full flex justify-end items-center mt-1">
                   <p className="text-gray-500">liquidation at &lt;1</p>
                 </div>

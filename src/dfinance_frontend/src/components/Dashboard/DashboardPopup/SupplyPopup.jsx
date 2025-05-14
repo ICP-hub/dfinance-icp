@@ -83,10 +83,14 @@ const SupplyPopup = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
- 
-const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
-const ledgerFeeNumber = ledgerFee ? Number(ledgerFee) / 1e8 : 0;
-const transactionFee = transferFee + ledgerFeeNumber;
+
+  const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+  const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const parts = transactionFee.toString().split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] || '';
+  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -114,8 +118,12 @@ const transactionFee = transferFee + ledgerFeeNumber;
   };
 
   const numericBalance = parseFloat(balance);
-  const supplyBalance = Math.max(numericBalance - transferFee, 0);
-  const hasEnoughBalance = balance >= transferFee;
+  const supplyBalance = Math.max(numericBalance - formattedTransactionFee, 0);
+  console.log("numeric",numericBalance,formattedTransactionFee)
+  const hasEnoughBalance = 
+  balance >= formattedTransactionFee &&
+  (+amount + (+formattedTransactionFee || 0)) <= +supplyBalance;
+
   const value = currentHealthFactor;
 
   /* ===================================================================================
@@ -190,7 +198,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
     }
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
       console.log("cycleStatus", cycleStatus)
@@ -232,9 +240,9 @@ const transactionFee = transferFee + ledgerFeeNumber;
 
     const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt +ledgerFee;
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee +10n;
 
     try {
 
@@ -252,7 +260,7 @@ const transactionFee = transferFee + ledgerFeeNumber;
           subaccount: [],
         },
       });
-console.log("aproval",approval)
+      console.log("aproval", approval)
       if (approval?.Ok) {
         setIsApproved(true);
         toast.success(`Approval successful!`, {
@@ -300,8 +308,11 @@ console.log("aproval",approval)
 
   const scaledAmount = amountAsNat64;
 
+  // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
+  const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
+
   const totalAmount = transferFeeBigInt
-    ? scaledAmount + transferFeeBigInt +ledgerFee
+    ? scaledAmount + transferFeeBigInt + ledgerFeenumber
     : scaledAmount;
 
   // Function to handle the supply process
@@ -326,11 +337,11 @@ console.log("aproval",approval)
         is_collateral: currentCollateralStatus,
         amount: totalAmount,
       };
-
+console.log("total amount",supplyParams)
       const response = await backendActor.execute_supply(supplyParams);
       // dispatch(toggleDashboardRefresh());
-      
-      const statusData = await fetchStatusFromBackend();            
+
+      const statusData = await fetchStatusFromBackend();
       // Check status and send notifications if needed      
       await checkAndNotify(statusData);
 
@@ -602,7 +613,7 @@ console.log("aproval",approval)
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
-  
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -653,7 +664,7 @@ console.log("aproval",approval)
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-useEffect(() => {
+  useEffect(() => {
     // Skip if there's no asset selected or no ledgerActors
     if (!asset || !ledgerActors) return;
 
@@ -683,7 +694,7 @@ useEffect(() => {
 
     // Call the async function
     fetchFee();
-    
+
   }, [asset]);
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -903,7 +914,7 @@ useEffect(() => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transactionFee}</p>
+                      <p>{formattedTransactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -916,7 +927,7 @@ useEffect(() => {
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transactionFee || 0)
+                          ? (+amount || 0) + (+formattedTransactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -958,8 +969,8 @@ useEffect(() => {
                   }`}
               >
                 {isApproved
-                  ? `Approved with ${(Number(ledgerFee)/1e8 ).toFixed(8)} ${asset} `
-                  : `Approve with ${(Number(ledgerFee)/1e8).toFixed(8)} ${asset} `}
+                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(8)} ${asset} `
+                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(8)} ${asset} `}
 
               </p>
             </div>
@@ -970,16 +981,22 @@ useEffect(() => {
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0 ||
+                  (+amount + (+formattedTransactionFee || 0)) > +supplyBalance
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                 }`}
               disabled={
-                isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                isApproved ||
+                isLoading ||
+                amount <= 0 ||
+                !hasEnoughBalance ||
+                (+amount + (+formattedTransactionFee || 0)) > +supplyBalance
               }
             >
               Approve {asset} to continue
             </button>
+
 
             {/* Supply Button */}
             <button

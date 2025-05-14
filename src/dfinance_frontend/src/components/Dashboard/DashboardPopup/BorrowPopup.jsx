@@ -18,7 +18,7 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.
  *
@@ -96,6 +96,7 @@ const Borrow = ({
     (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
   const ledgerActors = useSelector((state) => state.ledger);
+    const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
@@ -124,6 +125,24 @@ const Borrow = ({
       const total_borrow = Number(assetData?.asset_borrow) / SCALING_FACTOR;
       setTotalSupply(total_supply);
       setTotalBorrow(total_borrow);
+    }
+  };
+
+  const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
     }
   };
 
@@ -217,6 +236,8 @@ const Borrow = ({
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
 
+      const statusData = await fetchStatusFromBackend();
+      await checkAndNotify(statusData);
       if ("Ok" in borrowResult) {
         trackEvent(
           `Borrow,${asset},${
@@ -788,11 +809,10 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                      }`}
                     onClick={() => {
                       if (parseFloat(borrowableValue) > 0) {
                         handleMaxClick();

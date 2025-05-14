@@ -16,6 +16,7 @@ import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../../utils/constants';
 import { Info } from "lucide-react";
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * SupplyPopup Component
  *
@@ -58,7 +59,7 @@ const SupplyPopup = ({
   const { healthFactorBackend } = useUserData();
   const { backendActor, principal } = useAuth();
   const { conversionRate } = useRealTimeConversionRate(asset);
-
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -187,6 +188,24 @@ const SupplyPopup = ({
       console.error("Amount must be a positive number");
     }
   };
+
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
   // Function to handle the approval process
   const handleApprove = async () => {
     if (isBlocked) {
@@ -312,6 +331,10 @@ const SupplyPopup = ({
 
       const response = await backendActor.execute_supply(supplyParams);
       dispatch(toggleDashboardRefresh());
+      
+      const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
 
       if ("Ok" in response) {
         trackEvent(

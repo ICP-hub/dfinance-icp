@@ -238,3 +238,19 @@ pub struct UserAccountData {
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
 }
+
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct CycleAlert {
+    pub is_warning : bool,
+    pub is_exhausted : bool,
+    pub current_cycle: Nat
+}
+
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct TokenAlert {
+    pub asset_name: String,
+    pub is_exhausted: bool,
+    pub is_warning: bool,
+    pub balance: Nat
+
+}

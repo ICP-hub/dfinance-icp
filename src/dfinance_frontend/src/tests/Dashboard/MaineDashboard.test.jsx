@@ -5,7 +5,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "../../redux/store";
 import { useAuth } from "../../utils/useAuthClient";
-import useAssetData from "../../components/customHooks/useAssets";
+import useAssetData from "../../components/CustomHooks/useAssets";
 
 // Mocking the useAuth hook to control authentication state in the tests
 jest.mock("../../utils/useAuthClient", () => ({

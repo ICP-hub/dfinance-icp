@@ -152,7 +152,7 @@ const useFetchConversionRate = (
 
       setTimeout(() => {
         if (isMountedRef.current && !assetsInProgress.current.has(asset)) {
-          fetchSingleRate(asset, true).catch(() => {});
+          fetchSingleRate(asset, true).catch(() => { });
         }
       }, RETRY_DELAY);
     } else {
@@ -250,13 +250,13 @@ const useFetchConversionRate = (
         const assetsToFetch = forceRefresh
           ? ASSETS
           : ASSETS.filter((asset) => {
-              const cachedRate = GLOBAL_RATES_CACHE.data[asset];
-              const needsUpdate =
-                !cachedRate?.lastUpdated ||
-                cachedRate.value === null ||
-                now - cachedRate.lastUpdated >= cacheTimeout;
-              return needsUpdate;
-            });
+            const cachedRate = GLOBAL_RATES_CACHE.data[asset];
+            const needsUpdate =
+              !cachedRate?.lastUpdated ||
+              cachedRate.value === null ||
+              now - cachedRate.lastUpdated >= cacheTimeout;
+            return needsUpdate;
+          });
 
         if (assetsToFetch.length > 0) {
           const promises = assetsToFetch.map((asset) => fetchSingleRate(asset));
@@ -285,9 +285,9 @@ const useFetchConversionRate = (
   );
 
   useEffect(() => {
-    fetchConversionRate(true).catch(() => {});
+    fetchConversionRate(true).catch(() => { });
 
-    return () => {};
+    return () => { };
   }, [dashboardRefreshTrigger, fetchConversionRate]);
 
   useEffect(() => {
@@ -298,7 +298,7 @@ const useFetchConversionRate = (
     if (refreshInterval > 0) {
       intervalIdRef.current = setInterval(() => {
         if (isMountedRef.current) {
-          fetchConversionRate().catch(() => {});
+          fetchConversionRate().catch(() => { });
         }
       }, refreshInterval);
     }

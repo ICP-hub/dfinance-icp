@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import BorrowInfo from "../../components/Dashboard/DashboardPopup/BorrowInfo";
 import { useParams } from "react-router-dom";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
 import { SCALING_FACTOR } from '../../utils/constants';
 // Mocking react-router's useParams to return a fake ID
 jest.mock("react-router-dom", () => ({

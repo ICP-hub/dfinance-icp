@@ -24,12 +24,12 @@ import icplogo from "../../../public/wallet/icp.png";
 import { GrCopy } from "react-icons/gr";
 import { CiShare1 } from "react-icons/ci";
 import { joyRideTrigger } from "../../redux/reducers/joyRideReducer";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { Principal } from "@dfinity/principal";
-import useAssetData from "../customHooks/useAssets";
-import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
+import useAssetData from "../CustomHooks/useAssets";
+import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
-import useNotificationSystem from "../customHooks/useNotification";
+import useNotificationSystem from "../CustomHooks/useNotification";
 
 const MobileTopNav = ({
   isMobileNav,

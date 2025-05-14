@@ -6,16 +6,16 @@ import cross from "../../../public/assests-icon/cross.png";
 import { Principal } from "@dfinity/principal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import { useDispatch, useSelector } from "react-redux";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
-import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../customHooks/useTransferFee";
+import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
-import useNotificationSystem from "../customHooks/useNotification";
+import useNotificationSystem from "../CustomHooks/useNotification";
 const UserInformationPopup = ({
   onClose,
   mappedItem,

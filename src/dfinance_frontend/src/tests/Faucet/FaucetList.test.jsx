@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import FaucetDetails from "../../components/Faucet/FaucetList";
 import { useSelector } from "react-redux";
-import useAssetData from "../../components/customHooks/useAssets";
+import useAssetData from "../../components/CustomHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import useUserData from "../../components/customHooks/useUserData";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
+import useUserData from "../../components/CustomHooks/useUserData";
 import { SCALING_FACTOR } from '../../utils/constants';
 // Mock all the required dependencies
 jest.mock("react-redux", () => ({

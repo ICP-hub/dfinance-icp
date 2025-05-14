@@ -10,10 +10,10 @@ import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import CustomizedSwitches from "../Common/materialUISwitch";
 import Button from "../Common/button";
-import useAssetData from "../customHooks/useAssets";
-import useFormatNumber from "../customHooks/useFormatNumber";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import useUserData from "../customHooks/useUserData";
+import useAssetData from "../CustomHooks/useAssets";
+import useFormatNumber from "../CustomHooks/useFormatNumber";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
+import useUserData from "../CustomHooks/useUserData";
 import {
   setTotalUsdValueBorrow,
   setTotalUsdValueSupply,

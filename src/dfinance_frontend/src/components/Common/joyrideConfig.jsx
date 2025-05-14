@@ -655,7 +655,6 @@ export const getSteps = (theme, isMobile2, isMobile) => {
           </p>
           <div className="text-center mb-4">
             <span className="text-green-500 text-[40px]">&#10003;</span>{" "}
-            {/* Checkmark symbol */}
           </div>
         </div>
       ),

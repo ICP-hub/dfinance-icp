@@ -7,7 +7,7 @@ import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../Common/pagination";
 import UserInformationPopup from "./UserInformation";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import MiniLoader from "../Common/miniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";

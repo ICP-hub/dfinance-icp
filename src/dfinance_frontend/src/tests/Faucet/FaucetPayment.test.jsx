@@ -67,7 +67,7 @@ describe("FaucetPopup Component", () => {
     });
 
     const useFetchConversionRate =
-      require("../../components/customHooks/useFetchConversionRate").default;
+      require("../../components/CustomHooks/useFetchConversionRate").default;
     useFetchConversionRate.mockReturnValue({
       ckBTCUsdRate: 50000,
       ckETHUsdRate: 4000,
@@ -79,7 +79,7 @@ describe("FaucetPopup Component", () => {
     });
 
     const useUserData =
-      require("../../components/customHooks/useUserData").default;
+      require("../../components/CustomHooks/useUserData").default;
     useUserData.mockReturnValue({
       userData: {
         Ok: {
@@ -127,7 +127,7 @@ describe("FaucetPopup Component", () => {
     });
 
     const useFunctionBlockStatus =
-      require("../../components/customHooks/useFunctionBlockStatus").default;
+      require("../../components/CustomHooks/useFunctionBlockStatus").default;
     useFunctionBlockStatus.mockReturnValue({
       isBlocked: false,
     });
@@ -264,7 +264,7 @@ describe("FaucetPopup Component", () => {
   test("handles temporary block status", async () => {
     // Override the mocks for function block status
     const useFunctionBlockStatus =
-      require("../../components/customHooks/useFunctionBlockStatus").default;
+      require("../../components/CustomHooks/useFunctionBlockStatus").default;
     useFunctionBlockStatus.mockReturnValue({
       isBlocked: true,
     });

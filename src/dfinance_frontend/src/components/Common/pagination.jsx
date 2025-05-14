@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const [jumpToPage, setJumpToPage] = useState("");
-  const numVisiblePages = 5; 
+  const numVisiblePages = 5;
 
   const getPageRange = () => {
     let startPage, endPage;
@@ -63,15 +63,13 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
       <nav aria-label="Page navigation" className="flex items-center">
         <ul className="inline-flex -space-x-px text-sm">
-          {/* First Page Button */}
           <li>
             <button
               onClick={handleFirstPage}
-              className={`hidden sm:flex items-center justify-center px-3 h-8 ms-0 leading-tight bg-white border border-e-0 border-gray-300 rounded-s-lg dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${
-                currentPage === 1
+              className={`hidden sm:flex items-center justify-center px-3 h-8 ms-0 leading-tight bg-white border border-e-0 border-gray-300 rounded-s-lg dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${currentPage === 1
                   ? "text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-              }`}
+                }`}
               disabled={currentPage === 1}
               aria-label="Go to first page"
             >
@@ -80,16 +78,13 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               </svg>
             </button>
           </li>
-          
-          {/* Previous Button */}
           <li>
             <button
               onClick={handlePreviousPage}
-              className={`flex items-center justify-center px-3 h-8 leading-tight bg-white border border-e-0 border-gray-300 ${!startPage === 1 ? "rounded-s-lg" : ""} dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${
-                currentPage === 1
+              className={`flex items-center justify-center px-3 h-8 leading-tight bg-white border border-e-0 border-gray-300 ${!startPage === 1 ? "rounded-s-lg" : ""} dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${currentPage === 1
                   ? "text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-              }`}
+                }`}
               disabled={currentPage === 1}
               aria-label="Previous page"
             >
@@ -99,8 +94,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               PREV
             </button>
           </li>
-          
-          {/* Show ellipsis if we're not starting from page 1 */}
+
           {startPage > 1 && (
             <li>
               <span className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
@@ -108,8 +102,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               </span>
             </li>
           )}
-          
-          {/* Page Numbers */}
           {Array.from({ length: endPage - startPage + 1 }, (_, index) => {
             const pageNum = startPage + index;
             return (
@@ -117,19 +109,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                 <button
                   onClick={() => onPageChange(pageNum)}
                   aria-current={currentPage === pageNum ? "page" : undefined}
-                  className={`flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white ${
-                    currentPage === pageNum
+                  className={`flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white ${currentPage === pageNum
                       ? "font-medium text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                       : ""
-                  }`}
+                    }`}
                 >
                   {pageNum}
                 </button>
               </li>
             );
           })}
-          
-          {/* Show ellipsis if we're not ending at the last page */}
+
           {endPage < totalPages && (
             <li>
               <span className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
@@ -137,16 +127,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               </span>
             </li>
           )}
-          
-          {/* Next Button */}
+
           <li>
             <button
               onClick={handleNextPage}
-              className={`flex items-center justify-center px-3 h-8 leading-tight bg-white border border-gray-300 ${endPage === totalPages ? "rounded-e-lg" : ""} dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${
-                currentPage === totalPages
+              className={`flex items-center justify-center px-3 h-8 leading-tight bg-white border border-gray-300 ${endPage === totalPages ? "rounded-e-lg" : ""} dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${currentPage === totalPages
                   ? "text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-              }`}
+                }`}
               disabled={currentPage === totalPages}
               aria-label="Next page"
             >
@@ -156,16 +144,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
               </svg>
             </button>
           </li>
-          
-          {/* Last Page Button */}
+
           <li>
             <button
               onClick={handleLastPage}
-              className={`hidden sm:flex items-center justify-center px-3 h-8 leading-tight bg-white border border-gray-300 rounded-e-lg dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${
-                currentPage === totalPages
+              className={`hidden sm:flex items-center justify-center px-3 h-8 leading-tight bg-white border border-gray-300 rounded-e-lg dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${currentPage === totalPages
                   ? "text-gray-300 bg-gray-100 dark:text-gray-700 dark:bg-gray-700 cursor-not-allowed"
                   : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
-              }`}
+                }`}
               disabled={currentPage === totalPages}
               aria-label="Go to last page"
             >
@@ -176,8 +162,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           </li>
         </ul>
       </nav>
-      
-      {/* Jump to page form - only show on larger screens */}
+
       <div className="hidden sm:flex items-center">
         <form onSubmit={handleJumpToPage} className="flex items-center">
           <span className="text-xs text-gray-600 dark:text-gray-400 mr-2">Page {currentPage} of {totalPages}</span>

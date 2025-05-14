@@ -39,12 +39,12 @@ const useNotificationSystem = () => {
    * Main notification function to be called during transactions
    * @param {Object} statusData - Status data from backend
    * @param {Object} statusData.cycle - Cycle status flags
-   * @param {boolean} statusData.cycle.isExhausted - Whether cycles are exhausted
-   * @param {boolean} statusData.cycle.isWarning - Whether cycles are at warning level
+   * @param {boolean} statusData.cycle.is_exhausted - Whether cycles are exhausted
+   * @param {boolean} statusData.cycle.is_warning - Whether cycles are at warning level
    * @param {Object} statusData.token - Token status flags
    * @param {string} statusData.token.assetName - Name of the token
-   * @param {boolean} statusData.token.isExhausted - Whether token is exhausted
-   * @param {boolean} statusData.token.isWarning - Whether token is at warning level
+   * @param {boolean} statusData.token.is_exhausted - Whether token is exhausted
+   * @param {boolean} statusData.token.is_warning - Whether token is at warning level
    * @returns {Promise<void>}
    */
   const checkAndNotify = useCallback(async (statusData) => {

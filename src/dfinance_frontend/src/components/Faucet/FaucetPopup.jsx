@@ -3,10 +3,10 @@ import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
 import { useDispatch } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
-import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
+import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { showCaptchaToUser } from "../Captcha/showCaptchaToUser";
 import { SCALING_FACTOR } from '../../utils/constants';
 

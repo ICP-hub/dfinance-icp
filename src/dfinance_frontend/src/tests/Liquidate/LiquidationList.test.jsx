@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import DebtStatus from "../../components/Liquidate/LiquidationList";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
-import useAssetData from "../../components/customHooks/useAssets";
+import useAssetData from "../../components/CustomHooks/useAssets";
 
 // Mock the hooks and modules
 jest.mock("react-redux", () => ({

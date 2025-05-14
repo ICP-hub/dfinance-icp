@@ -36,12 +36,12 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import useAssetData from "../customHooks/useAssets";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useAssetData from "../CustomHooks/useAssets";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { Principal } from "@dfinity/principal";
-import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
+import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
-import useNotificationSystem from "../customHooks/useNotification";
+import useNotificationSystem from "../CustomHooks/useNotification";
 /**
  * Navbar Component
  *

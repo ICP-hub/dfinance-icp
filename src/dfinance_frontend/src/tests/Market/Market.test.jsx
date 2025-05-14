@@ -4,9 +4,9 @@ import Market from "../../pages/Market/Market";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
-import useAssetData from "../../components/customHooks/useAssets";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import useUserData from "../../components/customHooks/useUserData";
+import useAssetData from "../../components/CustomHooks/useAssets";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
+import useUserData from "../../components/CustomHooks/useUserData";
 
 jest.mock("react-redux", () => ({
   useSelector: jest.fn(),

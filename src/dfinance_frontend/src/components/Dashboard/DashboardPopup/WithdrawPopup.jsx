@@ -4,19 +4,19 @@ import { Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
-import useUserData from "../../customHooks/useUserData";
+import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
+import useUserData from "../../CustomHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
-import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../../customHooks/useTransferFee";
+import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../../utils/constants';
 import { Info } from "lucide-react";
-import useNotificationSystem from "../../customHooks/useNotification";
+import useNotificationSystem from "../../CustomHooks/useNotification";
 /**
  * WithdrawPopup Component
  *

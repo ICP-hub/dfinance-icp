@@ -242,7 +242,7 @@ const SupplyPopup = ({
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
 
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee +10n;
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
 
     try {
 
@@ -339,7 +339,7 @@ const SupplyPopup = ({
       };
 console.log("total amount",supplyParams)
       const response = await backendActor.execute_supply(supplyParams);
-      // dispatch(toggleDashboardRefresh());
+      dispatch(toggleDashboardRefresh());
 
       const statusData = await fetchStatusFromBackend();
       // Check status and send notifications if needed      

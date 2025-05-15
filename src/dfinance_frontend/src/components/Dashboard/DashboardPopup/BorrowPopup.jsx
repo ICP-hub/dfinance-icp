@@ -69,7 +69,7 @@ const Borrow = ({
   const { userData, userAccountData } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();
-
+  const ledgerActors = useSelector((state) => state.ledger);
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -92,10 +92,14 @@ const Borrow = ({
   const [loading, setLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
+  const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+  const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const parts = transactionFee.toString().split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] || '';
+  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
 
-  const ledgerActors = useSelector((state) => state.ledger);
   const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
@@ -183,11 +187,15 @@ const Borrow = ({
   };
   const value = currentHealthFactor;
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
-  let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+  let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+  const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+
   const scaledAmount = amountAsNat64;
-  const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+
+  const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
+
   const totalAmount = transferFeeBigInt
-    ? scaledAmount + transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt + ledgerFeenumber
     : scaledAmount;
 
   const borrowErrorMessages = {
@@ -228,11 +236,6 @@ const Borrow = ({
     else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
-
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(feeBigInt);
     try {
       const borrowResult = await backendActor.execute_borrow(borrowParams);
       dispatch(toggleDashboardRefresh());
@@ -521,7 +524,7 @@ const Borrow = ({
 
   // Handles the click event for the "Max" button.
   const handleMaxClick = () => {
-    const maxAmount = parseFloat(borrowableValue - transferFee).toFixed(8);
+    const maxAmount = parseFloat(borrowableValue - formattedTransactionFee).toFixed(8);
     const [integerPart, decimalPart] = maxAmount.split(".");
     const formattedAmount = `${parseInt(integerPart).toLocaleString(
       "en-US"
@@ -642,6 +645,38 @@ const Borrow = ({
     }
   }, [isLoading, onLoadingChange]);
 
+  useEffect(() => {
+    // Skip if there's no asset selected or no ledgerActors
+    if (!asset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+        console.log("fee", feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+
+  }, [asset]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -853,14 +888,14 @@ const Borrow = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : truncatedValue <= 1
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {parseFloat(
@@ -870,14 +905,14 @@ const Borrow = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -902,7 +937,7 @@ const Borrow = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transferFee}</p>
+                      <p>{formattedTransactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -915,7 +950,7 @@ const Borrow = ({
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transferFee || 0)
+                          ? (+amount || 0) + (+formattedTransactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -993,8 +1028,8 @@ const Borrow = ({
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
                 className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isButtonDisabled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
                   }`}
                 disabled={isLoading || amount <= 0 || null || isButtonDisabled}
               >

@@ -55,6 +55,7 @@ type Error = variant {
   NotAnAuditor;
   CaptchaNotFound;
   InvalidPrincipal;
+  AllowanceQueryFailed;
   DeveloperNotFound;
   ErrorNotController;
   NoReserveDataFound;
@@ -72,6 +73,7 @@ type Error = variant {
   NotADeveloper;
   InvalidAssetImageUrl;
   InvalidUser;
+  AllowanceTooLow;
   EmptyAsset;
   InvalidValue;
   TokenAlreadyExist;

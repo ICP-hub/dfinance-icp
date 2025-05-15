@@ -1,5 +1,5 @@
-use crate::api::inter_canister::asset_transfer_from;
-use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
+use crate::api::inter_canister::{asset_transfer_from, get_transfer_fee};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
@@ -68,10 +68,10 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
 
     //initialize a asset reserve cache for temp changes
     let mut reserve_cache = reserve::cache(&reserve_data);
-    info!("Reserve cache fetched successfully: {:?}", reserve_cache); //info
+    info!("Reserve cache fetched successfully: {:?}", reserve_cache); 
     //update the reserve cache state
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
-    info!("Reserve state updated successfully"); //info
+    info!("Reserve state updated successfully"); 
 
     //validat the supply request
     ValidationLogic::validate_supply(
@@ -88,8 +88,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     //fetching the price of the asset in USD
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
+    let ledger_fee = get_transfer_fee(ledger_canister_id).await?;
     //updating params.amount with the actual amount of tokens to be supplied
-    params.amount = params.amount.clone() - transfer_token_fee.clone();
+    params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
     UpdateLogic::update_user_data_supply(
         user_principal,
         &reserve_cache,
@@ -120,18 +121,19 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         ledger_canister_id,
         user_principal,
         platform_principal,
-        amount_nat.clone(),
+        amount_nat.clone() - ledger_fee.clone(), 
+        //pass transfer fee as well
     )
     .await
     {
-        Ok(new_balance) => {
+        Ok(block_index) => {
             info!("Asset transfer from user to backend canister executed successfully");
             mutate_state(|state| {
                 state
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
-            Ok(new_balance)
+            Ok(block_index)
         }
         Err(_) => {
             error!("Error in asset transfer from user to backend canister"); //error

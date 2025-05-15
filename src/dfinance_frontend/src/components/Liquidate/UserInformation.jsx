@@ -326,7 +326,7 @@ const checkAndNotify = useNotificationSystem();
     try {
       const cycleStatus = await backendActor.cycle_alert();
       console.log("cycleStatus", cycleStatus)
-      const tokenStatus = await backendActor.token_balance_alert(asset);
+      const tokenStatus = await backendActor.token_balance_alert(selectedAsset);
       console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,

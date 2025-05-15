@@ -83,9 +83,23 @@ const SupplyPopup = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
-  const transferFee =
-    (Number(transferFeRetrive?.transferFee) || 0) + (Number(ledgerFee) || 0);
 
+   const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+  const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+
+  // Calculate total fees
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  // Format transactionFee and approvalFee up to 8 decimal places
+  const formatFee = (fee) => {
+    const parts = fee.toString().split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || '';
+    return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
+  const formattedApprovalFee = formatFee(approvalFee);
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -113,8 +127,12 @@ const SupplyPopup = ({
   };
 
   const numericBalance = parseFloat(balance);
-  const supplyBalance = Math.max(numericBalance - transferFee, 0);
-  const hasEnoughBalance = balance >= transferFee;
+  const supplyBalance = Math.max(numericBalance - formattedTransactionFee, 0);
+  console.log("numeric",numericBalance,formattedTransactionFee)
+  const hasEnoughBalance = 
+  balance >= formattedApprovalFee &&
+  (+amount + (+formattedApprovalFee || 0)) <= +supplyBalance;
+
   const value = currentHealthFactor;
 
   /* ===================================================================================
@@ -189,7 +207,7 @@ const SupplyPopup = ({
     }
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
       console.log("cycleStatus", cycleStatus)
@@ -231,18 +249,15 @@ const SupplyPopup = ({
 
     const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const fee = await ledgerActor.icrc1_fee();
-    const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-    const feeBigInt = BigInt(Math.round(feeAsNumber * 1e8));
-    setLedgerFee(fee);
 
-    const totalAmount = amountAsNat64 + transferFeeBigInt + feeBigInt;
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
 
     try {
 
 
       const approval = await ledgerActor.icrc2_approve({
-        fee: fee ? [feeBigInt] : [],
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -254,7 +269,7 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-
+      console.log("aproval", approval)
       if (approval?.Ok) {
         setIsApproved(true);
         toast.success(`Approval successful!`, {
@@ -302,8 +317,11 @@ const SupplyPopup = ({
 
   const scaledAmount = amountAsNat64;
 
+  // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
+  const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
+
   const totalAmount = transferFeeBigInt
-    ? scaledAmount + transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt + ledgerFeenumber
     : scaledAmount;
 
   // Function to handle the supply process
@@ -328,11 +346,11 @@ const SupplyPopup = ({
         is_collateral: currentCollateralStatus,
         amount: totalAmount,
       };
-
+console.log("total amount",supplyParams)
       const response = await backendActor.execute_supply(supplyParams);
       dispatch(toggleDashboardRefresh());
-      
-      const statusData = await fetchStatusFromBackend();            
+
+      const statusData = await fetchStatusFromBackend();
       // Check status and send notifications if needed      
       await checkAndNotify(statusData);
 
@@ -604,7 +622,7 @@ const SupplyPopup = ({
   };
 
   const truncatedValue = truncateToDecimals(Number(healthFactorBackend), 2);
-  
+
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
@@ -655,7 +673,38 @@ const SupplyPopup = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+  useEffect(() => {
+    // Skip if there's no asset selected or no ledgerActors
+    if (!asset || !ledgerActors) return;
 
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+        console.log("fee", feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+
+  }, [asset]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -674,6 +723,7 @@ const SupplyPopup = ({
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
+
 
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
@@ -873,7 +923,7 @@ const SupplyPopup = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transferFee}</p>
+                      <p>{formattedTransactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -886,7 +936,7 @@ const SupplyPopup = ({
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transferFee || 0)
+                          ? (+amount || 0) + (+formattedTransactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -928,8 +978,8 @@ const SupplyPopup = ({
                   }`}
               >
                 {isApproved
-                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(4)} ${asset} `
-                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(4)} ${asset} `}
+                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(8)} ${asset} `
+                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(8)} ${asset} `}
 
               </p>
             </div>
@@ -940,16 +990,22 @@ const SupplyPopup = ({
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0 ||
+                  (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                 }`}
               disabled={
-                isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                isApproved ||
+                isLoading ||
+                amount <= 0 ||
+                !hasEnoughBalance ||
+                (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
               }
             >
               Approve {asset} to continue
             </button>
+
 
             {/* Supply Button */}
             <button

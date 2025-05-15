@@ -471,11 +471,11 @@ const DebtStatus = () => {
 
 
 
-  useEffect(() => {
-    if (currentItems.length > 0) {
-      fetchAssetData();
-    }
-  }, [liquidationUsers, assets, users, liquidateTrigger]);
+ useEffect(() => {
+  if (currentItems.length > 0 && assets.length > 0) {
+    fetchAssetData();
+  }
+}, [currentItems, assets, liquidationUsers]);
 
   //Funtion to fetch asset supply and borrow data
   useEffect(() => {

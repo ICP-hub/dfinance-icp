@@ -69,8 +69,9 @@ const Repay = ({
   const approvalFee = transactionFee + ledgerFeeNumber;
 
   // Format transactionFee and approvalFee up to 8 decimal places
-  const formatFee = (fee) => {
-    const parts = fee.toString().split('.');
+ const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split('.');
     const integerPart = parts[0];
     const decimalPart = parts[1] || '';
     return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;

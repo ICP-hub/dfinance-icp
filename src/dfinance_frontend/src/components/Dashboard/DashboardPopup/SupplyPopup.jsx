@@ -7,16 +7,16 @@ import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
-import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
-import useUserData from "../../CustomHooks/useUserData";
+import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
+import useUserData from "../../customHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
-import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
-import useTransferFee from "../../CustomHooks/useTransferFee";
+import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useTransferFee from "../../customHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../../utils/constants';
 import { Info } from "lucide-react";
-import useNotificationSystem from "../../CustomHooks/useNotification";
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * SupplyPopup Component
  *
@@ -91,15 +91,19 @@ const SupplyPopup = ({
   const transactionFee = transferFee + ledgerFeeNumber;
   const approvalFee = transactionFee + ledgerFeeNumber;
 
+  console.log("transactionFee", transactionFee)
+
   // Format transactionFee and approvalFee up to 8 decimal places
-  const formatFee = (fee) => {
-    const parts = fee.toString().split('.');
+ const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split('.');
     const integerPart = parts[0];
     const decimalPart = parts[1] || '';
     return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
   };
   const formattedTransactionFee = formatFee(transactionFee);
   const formattedApprovalFee = formatFee(approvalFee);
+  
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */

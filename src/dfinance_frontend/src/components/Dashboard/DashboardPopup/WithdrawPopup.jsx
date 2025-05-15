@@ -78,7 +78,15 @@ const WithdrawPopup = ({
   const parts = transactionFee.toString().split('.');
   const integerPart = parts[0];
   const decimalPart = parts[1] || '';
-  const formattedTransactionFee = `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split('.');
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || '';
+    return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION

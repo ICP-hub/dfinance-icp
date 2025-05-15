@@ -75,7 +75,7 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen } = useSelector((state) => state.utility);
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-  const { isAuthenticated, login, logout, principal, accountIdString } =
+  const { isAuthenticated, login, logout, principal, accountIdString, backendActor } =
     useAuth();
   const [asset, setAsset] = useState("ICP");
   const [amount, setAmount] = useState("");
@@ -201,51 +201,94 @@ export default function Navbar({ isHomeNav }) {
   const supplyBalance = assetBalances[asset] || 0;
 
   // Function to handle the click event on the "Approve" button
-  const handleApprove = async () => {
-    if (isBlocked) {
-      toast.error("You are temporarily blocked from using this function", {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-      return;
-    }
+const handleApprove = async () => {
+  // Check if receiverAddress is empty
+  if (!receiverAddress.trim()) {
+    toast.dismiss(); // Dismiss any existing toasts
+    toast.error("Please enter a valid receiver address", {
+      className: "custom-toast",
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+    return;
+  }
+  
+  // Check if the receiver address is the same as the current user's principal
+  if (receiverAddress.trim() === principal.toString()) {
+    toast.dismiss(); // Dismiss any existing toasts
+    toast.error("You cannot approve transfers to your own address", {
+      className: "custom-toast",
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+     setAmount("");
+        setReceiverAddress("");
+    return;
+  }
 
-    let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") {
-      ledgerActor = ledgerActors.ckUSDT;
-    }
-    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    const scaledAmount = amountAsNat64;
+  if (isBlocked) {
+    toast.dismiss(); // Dismiss any existing toasts
+    toast.error("You are temporarily blocked from using this function", {
+      className: "custom-toast",
+      position: "top-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+     setAmount("");
+        setReceiverAddress("");
+    return;
+  }
 
-    try {
-      await ledgerActor.icrc2_approve({
-        fee: [],
-        memo: [],
-        from_subaccount: [],
-        created_at_time: [],
-        amount: scaledAmount,
-        expected_allowance: [],
-        expires_at: [],
-        spender: {
-          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
-          subaccount: [],
-        },
-      });
+  let ledgerActor;
+  if (asset === "ckBTC") {
+    ledgerActor = ledgerActors.ckBTC;
+  } else if (asset === "ckETH") {
+    ledgerActor = ledgerActors.ckETH;
+  } else if (asset === "ckUSDC") {
+    ledgerActor = ledgerActors.ckUSDC;
+  } else if (asset === "ICP") {
+    ledgerActor = ledgerActors.ICP;
+  } else if (asset === "ckUSDT") {
+    ledgerActor = ledgerActors.ckUSDT;
+  }
+
+  let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
+  const scaledAmount = amountAsNat64;
+
+  try {
+    const response = await ledgerActor.icrc2_approve({
+      fee: [],
+      memo: [],
+      from_subaccount: [],
+      created_at_time: [],
+      amount: scaledAmount,
+      expected_allowance: [],
+      expires_at: [],
+      spender: {
+        owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+        subaccount: [],
+      },
+    });
+    console.log("Aprove in transfer", response)
+    
+    // Handle response (Ok or Err)
+    if ("Ok" in response) {
       setIsApproved(true);
+      toast.dismiss(); // Dismiss any existing toasts
       toast.success(`Approval successful!`, {
         className: "custom-toast",
         position: "top-center",
@@ -256,19 +299,20 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
-    } catch (error) {
-      toast.error(`Error: ${error.message || "Approval failed!"}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      dispatch(toggleDashboardRefresh());
+    } else if ("Err" in response) {
+      console.error(response.Err);
+      setIsApproved(false);
+       setAmount("");
+        setReceiverAddress("");
     }
-  };
+  } catch (error) {
+    console.error(error);
+    setIsApproved(false);
+     setAmount("");
+        setReceiverAddress("");
+  }
+};
 
   // Function to handle the transfer action
   const handleTransfer = async () => {
@@ -347,9 +391,13 @@ export default function Navbar({ isHomeNav }) {
         });
       } else if ("Err" in response) {
         handleTransferError(response.Err);
+         setAmount("");
+        setReceiverAddress("");
       }
     } catch (error) {
       handleTransferException(error);
+       setAmount("");
+        setReceiverAddress("");
     }
   };
 

@@ -1,8 +1,10 @@
 use candid::candid_method;
 use candid::types::number::Nat;
+use candid::Principal;
 use ic_canister_log::{declare_log_buffer, export};
 use ic_canisters_http_types::{HttpRequest, HttpResponse, HttpResponseBuilder};
 use ic_cdk::api::stable::{StableReader, StableWriter};
+use ic_cdk::call;
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 use ic_icrc1::{
     endpoints::{convert_transfer_error, StandardRecord},
@@ -22,7 +24,6 @@ use icrc_ledger_types::icrc21::{
     requests::ConsentMessageRequest, responses::ConsentInfo,
 };
 use icrc_ledger_types::icrc3::blocks::DataCertificate;
-use candid::Principal;
 #[cfg(not(feature = "get-blocks-disabled"))]
 use icrc_ledger_types::icrc3::blocks::GetBlocksResponse;
 use icrc_ledger_types::{
@@ -50,7 +51,7 @@ use icrc_ledger_types::{
 };
 use num_traits::{bounds::Bounded, ToPrimitive};
 use serde_bytes::ByteBuf;
-use std::cell::RefCell;
+use std::{cell::RefCell, error::Error};
 
 const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 
@@ -432,17 +433,20 @@ async fn execute_transfer(
 
 #[update]
 #[candid_method(update)]
-async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Principal>) -> Result<Nat, TransferError> {
-    
+async fn icrc1_transfer(
+    arg: TransferArg,
+    lock: bool,
+    from_principal: Option<Principal>,
+) -> Result<Nat, TransferError> {
     let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
+    // let platform_principal = ic_cdk::api::id();
 
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(TransferError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     return Err(TransferError::GenericError {
+    //         message: "Unauthorized access.".to_string(),
+    //         error_code: Nat::from(2u32),
+    //     });
+    // }
 
     if lock {
         return Err(TransferError::GenericError {
@@ -450,14 +454,74 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
             error_code: Nat::from(1u32),
         });
     }
+
+    if arg.amount == Nat::from(0u32) {
+        return Err(TransferError::GenericError {
+            message: "Transfer amount must be greater than zero.".to_string(),
+            error_code: Nat::from(7u32),
+        });
+    }
+
     let from_principal = from_principal.unwrap_or_else(ic_cdk::api::caller);
     let from_account = Account {
-                owner: from_principal,
-                subaccount: None,
-            };
-    
+        owner: from_principal,
+        subaccount: None,
+    };
 
+    if from_account == arg.to {
+        return Err(TransferError::GenericError {
+            message: "Cannot transfer to the same account.".to_string(),
+            error_code: Nat::from(8u32),
+        });
+    }
 
+    if !ic_cdk::api::is_controller(&caller) {
+        if caller != from_principal {
+            return Err(TransferError::GenericError {
+                message: "Caller is not authorized to transfer from this account.".to_string(),
+                error_code: Nat::from(6u32),
+            });
+        }
+
+        let asset_name = icrc1_name();
+
+        let backend_canister_id = match icrc1_minting_account() {
+            Some(account) => account.owner,
+            None => {
+                return Err(TransferError::GenericError {
+                    message: "Failed to fetch backend canister ID.".to_string(),
+                    error_code: Nat::from(3u32),
+                });
+            }
+        };
+
+        let result: Result<(bool,), _> = call(
+            backend_canister_id,
+            "is_transfer_allowed",
+            (from_principal, asset_name.clone(), arg.amount.clone()),
+        )
+        .await;
+
+        let (transfer_ok,): (bool,) = match result {
+            Ok(ok) => ok,
+            Err(err) => {
+                return Err(TransferError::GenericError {
+                    message: format!("Failed to check transfer permission: {:?}", err),
+                    error_code: Nat::from(4u32),
+                });
+            }
+        };
+
+        // Step 4: Validate transfer permission
+        if !transfer_ok {
+            return Err(TransferError::GenericError {
+                message: "Transfer not allowed due to low health factor.".to_string(),
+                error_code: Nat::from(5u32),
+            });
+        }
+    }
+
+    // Proceed with the transfer
     execute_transfer(
         from_account,
         arg.to,
@@ -478,25 +542,85 @@ async fn icrc1_transfer(arg: TransferArg, lock: bool, from_principal: Option<Pri
     })
 }
 
-
 #[update]
 #[candid_method(update)]
 async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromError> {
-
     let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
+    // let platform_principal = ic_cdk::api::id();
 
-    if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-        return Err(TransferFromError::GenericError {
-            message: "Unauthorized access.".to_string(),
-            error_code: Nat::from(2u32),
-        });
-    }
+    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
+    //     return Err(TransferFromError::GenericError {
+    //         message: "Unauthorized access.".to_string(),
+    //         error_code: Nat::from(2u32),
+    //     });
+    // }
 
     let spender_account = Account {
         owner: ic_cdk::api::caller(),
         subaccount: arg.spender_subaccount,
     };
+
+    // Reject zero-value transfer
+    if arg.amount == Nat::from(0u32) {
+        return Err(TransferFromError::GenericError {
+            message: "Transfer amount must be greater than zero.".to_string(),
+            error_code: Nat::from(7u32),
+        });
+    }
+
+    // Prevent same account transfers
+    if arg.from == arg.to {
+        return Err(TransferFromError::GenericError {
+            message: "Sender and recipient cannot be the same.".to_string(),
+            error_code: Nat::from(8u32),
+        });
+    }
+
+    if !ic_cdk::api::is_controller(&caller) {
+        if caller != arg.from.owner {
+            return Err(TransferFromError::GenericError {
+                message: "Caller is not authorized to transfer from this account.".to_string(),
+                error_code: Nat::from(6u32),
+            });
+        }
+
+        let asset_name = icrc1_name();
+
+        let backend_canister_id = match icrc1_minting_account() {
+            Some(account) => account.owner,
+            None => {
+                return Err(TransferFromError::GenericError {
+                    message: "Failed to fetch backend canister ID.".to_string(),
+                    error_code: Nat::from(3u32),
+                });
+            }
+        };
+
+        let result: Result<(bool,), _> = call(
+            backend_canister_id,
+            "is_transfer_allowed",
+            (arg.from.owner, asset_name.clone(), arg.amount.clone()),
+        )
+        .await;
+
+        let (transfer_ok,): (bool,) = match result {
+            Ok(ok) => ok,
+            Err(err) => {
+                return Err(TransferFromError::GenericError {
+                    message: format!("Failed to check transfer permission: {:?}", err),
+                    error_code: Nat::from(4u32),
+                });
+            }
+        };
+
+        if !transfer_ok {
+            return Err(TransferFromError::GenericError {
+                message: "Transfer not allowed due to low health factor.".to_string(),
+                error_code: Nat::from(5u32),
+            });
+        }
+    }
+
     execute_transfer(
         arg.from,
         arg.to,
@@ -599,7 +723,6 @@ fn get_data_certificate() -> DataCertificate {
 #[update]
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
-
     let caller = ic_cdk::api::caller();
     let platform_principal = ic_cdk::api::id();
 
@@ -781,7 +904,7 @@ fn icrc21_canister_call_consent_message(
         consent_msg_request,
         caller_principal,
         ledger_fee,
-        token_symbol
+        token_symbol,
     )
 }
 

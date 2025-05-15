@@ -5,7 +5,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import SupplyInfo from "../../components/Dashboard/DashboardPopup/SupplyInfo";
 import { useParams } from "react-router-dom";
 import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import { BASE_UNIT } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
 // Mocking react-router's useParams hook for routing functionality
 jest.mock("react-router-dom", () => ({
   useParams: jest.fn(),
@@ -49,11 +49,11 @@ describe("SupplyInfo Component", () => {
   beforeEach(() => {
     useParams.mockReturnValue({ id: "ckBTC" }); 
     useFetchConversionRate.mockReturnValue({
-      ckBTCUsdRate: 50000 * BASE_UNIT, 
-      ckETHUsdRate: 3000 * BASE_UNIT, 
-      ckUSDCUsdRate: 1 * BASE_UNIT, 
-      ckICPUsdRate: 5 * BASE_UNIT, 
-      ckUSDTUsdRate: 1 * BASE_UNIT, 
+      ckBTCUsdRate: 50000 * SCALING_FACTOR, 
+      ckETHUsdRate: 3000 * SCALING_FACTOR, 
+      ckUSDCUsdRate: 1 * SCALING_FACTOR, 
+      ckICPUsdRate: 5 * SCALING_FACTOR, 
+      ckUSDTUsdRate: 1 * SCALING_FACTOR, 
     });
   });
 

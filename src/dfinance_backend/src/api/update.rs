@@ -1,6 +1,6 @@
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::{constants::errors::Error, guards::api_limiter::request_limiter};
-use crate::declarations::structs::ExecuteRepayParams;
+use crate::declarations::structs::{ExecuteRepayParams, TokenAlert};
 use crate::guards::access_control::{guard_admin_only, guard_principal_not_anonymous};
 
 use crate::guards::locks_handler::CallerGuard;
@@ -9,6 +9,9 @@ use crate::stable_storage::state_handler::mutate_state;
 use candid::{Principal, Nat};
 use ic_cdk::update;
 use crate::stable_storage::state_handler::insert_certified_value;
+use crate::constants::constant_variables::constants::{TOKEN_BALANCE_EXHAUSTED_LIMIT, TOKEN_BALANCE_THRESHOLD_LIMIT};
+use crate::api::inter_canister::get_balance;
+use crate::protocol::libraries::reserve::get_asset_principal;
 
 /*
  * @title Set Canister ID
@@ -20,10 +23,8 @@ use crate::stable_storage::state_handler::insert_certified_value;
  */
 #[update]
 pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> Result<(), Error> {
-    // only the admin can access this function.
     guard_admin_only()?;
 
-    // Validate non-empty canister name
     if canister_name.trim().is_empty() {
         return Err(Error::EmptyAsset);
     }
@@ -68,4 +69,25 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     let result = repay(params).await;
     result
+}
+
+
+#[update]
+pub async fn token_balance_alert(asset_name: String) -> Result<TokenAlert, Error>{
+
+    let asset_principal = get_asset_principal(asset_name.clone())?;
+    let balance = get_balance(asset_principal.clone(), ic_cdk::api::id()).await?;
+    
+    let (is_exhausted, is_warning) = match balance.clone() {
+        b if b <= Nat::from(TOKEN_BALANCE_EXHAUSTED_LIMIT) => (true, false),
+        b if b < Nat::from(TOKEN_BALANCE_THRESHOLD_LIMIT) => (false, true),
+        _ => (false, false),
+    };
+
+    Ok(TokenAlert{
+        asset_name : asset_name.clone(),
+        is_exhausted,
+        is_warning,
+        balance
+    })
 }

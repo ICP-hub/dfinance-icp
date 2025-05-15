@@ -104,7 +104,8 @@ export const useAuthClient = (options = defaultOptions) => {
           });
         }
       } catch (error) {
-        reject(error);
+        console.error(error)
+        throw(error);
       }
     });
   };
@@ -220,7 +221,7 @@ export const useAuthClient = (options = defaultOptions) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => {});
+      agent.fetchRootKey().catch((err) => {console.error(err)});
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
@@ -234,7 +235,9 @@ export const useAuthClient = (options = defaultOptions) => {
       ) {
         updateClient(authClient);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error)
+    }
   };
   const buffersEqual = (buf1, buf2) => {
     if (!buf1 || !buf2 || buf1.byteLength !== buf2.byteLength) return false;

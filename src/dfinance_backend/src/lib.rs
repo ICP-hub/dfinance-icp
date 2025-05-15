@@ -1,12 +1,12 @@
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::{
-    AssetInfo, FaucetReserves, PriceCache, ReserveData, UserData,
+    AssetInfo, FaucetReserves, ReserveData, UserData,
 };
 use protocol::logic::faucet::Challenge;
 use candid::Nat;
 use candid::Principal;
 use declarations::datatypes::InitArgs;
-use declarations::structs::AssetData;
+use declarations::structs::{AssetData, CycleAlert, TokenAlert};
 use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
@@ -46,7 +46,6 @@ use crate::declarations::datatypes::Certificate;
 
 #[init]
 pub fn init(args: Principal) {
-    ic_cdk::println!("init function = {:?}", args.to_text());
     // This controller ID will be used for setting the controller
     // of other canisters (e.g., asset reserves) dynamically created
     // by the admin during initialization.
@@ -87,24 +86,17 @@ pub async fn schedule_midnight_task() {
     });
 }
 
+/**
+ * @title Schedule Temporary Log Cleanup
+ * @dev Schedules a recurring task to clean up temporary logs once per day.
+ * @functionality Sets up a timer that triggers log cleanup at daily intervals (86400 seconds), clears the temporary logs, and logs the scheduling action.
+ */
 pub fn schedule_temp_log_cleanup() {
-    // Schedule the log cleanup to run once per day (86400 seconds)
     let interval = Duration::from_secs(SECONDS_PER_DAY);
 
-    // Set up a recurring timer that will call process_log_heartbeat
     ic_cdk_timers::set_timer_interval(interval, || {
-        // process_log_heartbeat();
         clear_temp_log();
     });
-
-    ic_cdk::println!("logs cleaned up");
-
-    log_internal(
-        LogLevel::INFO,
-        file!(),
-        line!(),
-        "Log cleanup scheduled to run once per day",
-    );
 }
 
 /* @title Run Midnight Reset

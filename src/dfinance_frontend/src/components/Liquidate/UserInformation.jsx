@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState ,useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Info, X, TriangleAlert } from "lucide-react";
 import { useAuth } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
@@ -13,8 +13,9 @@ import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../utils/constants';
-import { HealthFactor_Unit } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
+import { PERCENTAGE_FACTOR } from '../../utils/constants';
+import useNotificationSystem from "../customHooks/useNotification";
 const UserInformationPopup = ({
   onClose,
   mappedItem,
@@ -94,7 +95,7 @@ const UserInformationPopup = ({
   };
 
   const [value, setValue] = useState(0);
-
+const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
@@ -118,37 +119,49 @@ const UserInformationPopup = ({
    * =================================================================================== */
 
   // Fetch asset supply and borrow data
-const getAssetSupplyValue = useCallback((asset) => {
-  if (asset_supply[asset] !== undefined) {
-    const supplyValue = Number(asset_supply[asset][0]);
-    console.log(`Supply value for ${asset}:`, asset_supply[asset][0]);
-    return supplyValue;
-  }
-  console.warn(`No supply value found for ${asset}`);
-  return 0;
-}, [asset_supply]);
+  const getAssetSupplyValue = useCallback((asset) => {
+    if (asset_supply[asset] !== undefined) {
+      const supplyValue = Number(asset_supply[asset][0]);
+      return supplyValue;
+    } else {
+      console.warn(`No supply value found for ${asset}`);
+      return 0;
+    }
+  }, [asset_supply]);
 
-const getAssetBorrowValue = useCallback((asset) => {
-  if (asset_borrow[asset] !== undefined) { 
-    const borrowValue = Number(asset_borrow[asset][0]);
-    console.log(`Borrow value for ${asset}:`, asset_borrow[asset][0]);
-    return borrowValue;
-  }
-  console.warn(`No borrow value found for ${asset}`);
-  return 0;
-}, [asset_borrow]);
+  const getAssetBorrowValue = useCallback((asset) => {
+    if (asset_borrow[asset] !== undefined) {
+      const borrowValue = Number(asset_borrow[asset][0]);
+      return borrowValue;
+    }
+    console.warn(`No borrow value found for ${asset}`);
+    return 0;
+  }, [asset_borrow]);
 
-  
 
-  //Function to calculate health factor
+
+  /**
+ * Calculate the Health Factor based on total collateral, total debt, and liquidation thresholds.
+ * 
+ * 1. Retrieve `amountTaken` and `amountAdded` from `calculatedData`, scaled by 1e8.
+ * 2. Define asset rates for `ckETH`, `ckBTC`, `ckUSDC`, `ICP`, and `ckUSDT`.
+ * 3. Compute `totalCollateralValue`, adjusting for `amountTaken` and the selected asset's rate.
+ * 4. Ensure `totalCollateralValue` and `totalDeptValue` are non-negative.
+ * 5. If `totalDeptValue` is 0, return `Infinity`.
+ * 6. Calculate adjusted liquidation value (`avliq = liquidationThreshold * totalCollateral`).
+ * 7. Adjust liquidation value (`tempLiq`), factoring in `amountTaken` and `reserveliquidationThreshold`.
+ * 8. Normalize `tempLiq` based on `totalCollateralValue`.
+ * 9. Compute the health factor as `(totalCollateralValue * (tempLiq / 100)) / totalDeptValue`.
+ * 10. Round and return the health factor, ensuring 8 decimal places.
+ */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    const amountTaken = calculatedData?.maxCollateral / BASE_UNIT || 0;
-    const amountAdded = calculatedData?.maxDebtToLiq / BASE_UNIT || 0;
+    const amountTaken = calculatedData?.maxCollateral / SCALING_FACTOR || 0;
+    const amountAdded = calculatedData?.maxDebtToLiq / SCALING_FACTOR || 0;
 
     const assetRates = {
       ckETH: ckETHUsdRate,
@@ -161,9 +174,9 @@ const getAssetBorrowValue = useCallback((asset) => {
     let totalCollateralValue =
       Math.trunc(
         (parseFloat(totalCollateral) -
-          parseFloat(amountTaken * (assetRates[selectedAsset] / BASE_UNIT))) *
-          BASE_UNIT
-      ) / BASE_UNIT;
+          parseFloat(amountTaken * (assetRates[selectedAsset] / SCALING_FACTOR))) *
+        SCALING_FACTOR
+      ) / SCALING_FACTOR;
 
     if (totalCollateralValue < 0) {
       totalCollateralValue = 0;
@@ -172,9 +185,9 @@ const getAssetBorrowValue = useCallback((asset) => {
     let totalDeptValue =
       Math.trunc(
         (parseFloat(totalDebt) -
-          parseFloat(amountAdded * (assetRates[selectedDebtAsset] / BASE_UNIT))) *
-          BASE_UNIT
-      ) / BASE_UNIT;
+          parseFloat(amountAdded * (assetRates[selectedDebtAsset] / SCALING_FACTOR))) *
+        SCALING_FACTOR
+      ) / SCALING_FACTOR;
 
     if (totalDeptValue < 0) {
       totalDeptValue = 0;
@@ -183,13 +196,13 @@ const getAssetBorrowValue = useCallback((asset) => {
       return Infinity;
     }
 
-    let avliq = Math.trunc(liquidationThreshold * totalCollateral * BASE_UNIT) / BASE_UNIT;
+    let avliq = Math.trunc(liquidationThreshold * totalCollateral * SCALING_FACTOR) / SCALING_FACTOR;
 
     let tempLiq =
       avliq -
       amountTaken *
-        (assetRates[selectedAsset] / BASE_UNIT) *
-        reserveliquidationThreshold;
+      (assetRates[selectedAsset] / SCALING_FACTOR) *
+      reserveliquidationThreshold;
     if (totalCollateralValue > 0) {
       tempLiq = tempLiq / totalCollateralValue;
 
@@ -198,7 +211,7 @@ const getAssetBorrowValue = useCallback((asset) => {
     }
 
     let result = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue;
-    result = Math.round(result * BASE_UNIT) / BASE_UNIT;
+    result = Math.round(result * SCALING_FACTOR) / SCALING_FACTOR;
 
     return result;
   };
@@ -223,19 +236,16 @@ const getAssetBorrowValue = useCallback((asset) => {
         currentLiquidity = reserveGroup[1]?.liquidity_index || 0;
       }
     });
-console.log("currentLiquidty in user info",currentLiquidity)
     const assetBalance =
       getBalanceForPrincipalAndAsset(
         mappedItem.principal?._arr,
         assetName,
         "dtokenBalance"
       ) || 0;
-console.log("assetBalance",assetBalance)
     if (!currentLiquidity) return 0;
-console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     return Math.trunc(
       Math.trunc(Number(assetBalance) / Number(currentLiquidity)) *
-        Number(getAssetSupplyValue(assetName))
+      Number(getAssetSupplyValue(assetName))
     );
   };
   //asset borrow calculated
@@ -259,7 +269,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
 
     return Math.trunc(
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(assetName))) /
-        Number(debtIndex)
+      Number(debtIndex)
     );
   };
 
@@ -312,7 +322,23 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
   };
+ const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
 
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
   const handleApprove = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -340,8 +366,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       ledgerActor = ledgerActors.ckUSDT;
     }
 
-    const supplyAmount = BigInt(Math.round(amountToRepay * BASE_UNIT));
-    const totalAmount = supplyAmount + BigInt(Math.round(transferFee * BASE_UNIT));
+    const supplyAmount = BigInt(Math.round(amountToRepay * SCALING_FACTOR));
+    const totalAmount = supplyAmount + BigInt(Math.round(transferFee * SCALING_FACTOR));
 
     try {
       setIsLoading(true);
@@ -386,7 +412,23 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     }
   };
 
-  //Function to calculate max collateral and max debt to liq
+  /**
+  * Calculates max collateral to liquidity and max debt to liquidity.
+  *
+  * 1. **Validation**: Check if `supplyAmount`, `totalDebt`, and `collateralBalance` are valid numbers.
+  * 2. **Asset Rates**: Fetch rates for `selectedAsset` and `selectedDebtAsset`.
+  * 3. **Truncate Values**: Ensure precision by truncating collateral and debt values to 8 decimal places.
+  * 4. **Final Collateral Amount**: Add `liquidation_bonus` to collateral and truncate the result:
+  *    finalCollateralAmount = truncatedCollateral + (truncatedCollateral * (liquidation_bonus / 100))
+  * 5. **Max Collateral**: 
+  *    - If `finalCollateralAmount > collateralBalance`, set `maxCollateral` to `collateralBalance`.
+  *    - Otherwise, use `finalCollateralAmount`.
+  * 6. **Max Debt to Liquidity**:
+  *    - If `maxCollateral` equals `collateralBalance`, calculate the `maxDebtToLiq`:
+  *    maxDebtToLiq = ((collateralBalance * usdRate) / debtPrice) * (10000 / generalLiquidityBonus)
+  *    - Otherwise, use the `supplyAmount` as `maxDebtToLiq`.
+  * 7. **Return**: Return `maxCollateral` and `maxDebtToLiq`.
+  */
   function cal_max_collateral_to_liq(
     supplyAmount,
     totalDebt,
@@ -408,10 +450,10 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     };
 
     const usdRate = assetRates[selectedAsset]
-      ? assetRates[selectedAsset] / BASE_UNIT
+      ? assetRates[selectedAsset] / SCALING_FACTOR
       : null;
     const debtPrice = assetRates[selectedDebtAsset]
-      ? assetRates[selectedDebtAsset] / BASE_UNIT
+      ? assetRates[selectedDebtAsset] / SCALING_FACTOR
       : null;
     if (!debtPrice)
       console.error(
@@ -419,14 +461,14 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
         selectedDebtAsset
       );
 
-    const truncateToEightDecimals = (value) => Math.floor(value * BASE_UNIT) / BASE_UNIT;
+    const truncateToEightDecimals = (value) => Math.floor(value * SCALING_FACTOR) / SCALING_FACTOR;
     const truncatedCollateral = truncateToEightDecimals(collateralAmount);
     const truncatedCollateralBalance =
       truncateToEightDecimals(collateralBalance);
 
     let finalCollateralAmount = truncateToEightDecimals(
       (truncatedCollateral + truncatedCollateral * (liquidation_bonus / 100)) *
-        BASE_UNIT
+      SCALING_FACTOR
     );
 
     finalCollateralAmount = Math.trunc(finalCollateralAmount);
@@ -458,8 +500,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   //Function to calculate max collateral
   const handleMaxCollateral = async () => {
     try {
-      const supplyAmount = Math.trunc(amountToRepay * BASE_UNIT);
-      const totalDebt = Number(mappedItem.debt) * BASE_UNIT;
+      const supplyAmount = Math.trunc(amountToRepay * SCALING_FACTOR);
+      const totalDebt = Number(mappedItem.debt) * SCALING_FACTOR;
       const selectedAssetsupply = Math.trunc(selectedAssetSupply);
 
       const response = cal_max_collateral_to_liq(
@@ -495,7 +537,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     ExchangeRateError: "Failed to fetch price data. Try again later.",
     CryptoBaseAssetNotFound: "Failed to fetch price data. Try again later.",
     HealthFactorLess: "Health Factor is less than one.",
-    USERCANNOTBELIQUIDATED:
+    UserCannotBeLiquidated:
       "Health Factor is too high to proceed with liquidation",
     InterestRateUpdateFailed:
       "Interest rates could not be updated. Please retry.",
@@ -504,7 +546,21 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     Default: "An unexpected error occurred. Please try again later.",
   };
 
-  //Liquidation main function call
+  /**
+ * This function handles the liquidation process by executing several calculations 
+ * and interacting with the backend actor. 
+ * 
+ * Key Calculations:
+ * 1. Truncates debt and collateral values to eight decimal places for precision.
+ * 2. Converts the values into their smallest units (for example, converting tokens to wei-like units).
+ * 3. Prepares the liquidation parameters by calculating the supply amount (debt) and reward amount (collateral).
+ * 4. Sends the liquidation request to the backend actor, along with the necessary parameters.
+ * 
+ * The function also handles errors by checking for specific error codes and 
+ * displaying appropriate error messages via toasts to inform the user about 
+ * issues like being blocked, exchange rate errors, health factor issues, 
+ * or maximum liquidation amounts.
+ */
   const handleConfirmLiquidation = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -522,18 +578,18 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     setIsLoading(true);
     try {
       const truncateToEightDecimals = (num) => {
-        return Math.trunc(num * BASE_UNIT) / BASE_UNIT;
+        return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
       };
       const maxDebtToLiqValue = calculatedData?.maxDebtToLiq
-        ? calculatedData.maxDebtToLiq / BASE_UNIT
+        ? calculatedData.maxDebtToLiq / SCALING_FACTOR
         : 0;
 
       const truncatedMaxDebtToLiq = truncateToEightDecimals(maxDebtToLiqValue);
       let supplyAmount = truncateToEightDecimals(truncatedMaxDebtToLiq);
-      supplyAmount = Math.trunc(supplyAmount * BASE_UNIT);
+      supplyAmount = Math.trunc(supplyAmount * SCALING_FACTOR);
 
       const maxCollateralValue = calculatedData?.maxCollateral
-        ? calculatedData.maxCollateral / BASE_UNIT
+        ? calculatedData.maxCollateral / SCALING_FACTOR
         : 0;
 
       const truncatedMaxCollateral =
@@ -544,16 +600,17 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       if (!backendActor) {
         throw new Error("Backend actor is not initialized");
       }
-
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        amount: supplyAmount + transferfee * BASE_UNIT,
+        amount: supplyAmount + transferfee * SCALING_FACTOR,
         on_behalf_of: mappedItem?.principal?._arr,
-        reward_amount: Math.trunc(rewardAmount * BASE_UNIT),
+        reward_amount: Math.trunc(rewardAmount * SCALING_FACTOR),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
-
+ const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in result) {
         trackEvent(
           `Liq:${selectedDebtAsset},${selectedAsset},${Number(
@@ -579,7 +636,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       } else if ("Err" in result) {
         const errorKey = result.Err;
         const errorMessage = String(errorKey).toLowerCase();
-        if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
+        if (errorKey && "BlockedForOneHour" in errorKey) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -777,7 +834,15 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     dispatch(toggleRefreshLiquidate());
   };
 
-  //Function to render Asset details
+  /**
+  * Renders asset details including:
+  * - Reward amount in USD
+  * - Adjusted reward amount and bonus (calculated as DebtAmount * liquidation_bonus / 100)
+  * - User health factor and transaction fee
+  * 
+  * Calculates the bonus based on DebtAmount and liquidation bonus percentage:
+  *    bonusValue = (DebtAmount / 1e8) * liquidation_bonus / 100
+  */
   const renderDebtAssetDetails = (asset) => {
     const assetBalances = {
       ckETH: ckETHBalance,
@@ -838,21 +903,20 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
       ckUSDT: ckUSDTUsdRate,
     };
 
-    const usdRate = assetRates[asset] ? assetRates[asset] / BASE_UNIT : null;
+    const usdRate = assetRates[asset] ? assetRates[asset] / SCALING_FACTOR : null;
     const adjustedRewardAmount =
-      rewardAmount !== calculatedData?.maxCollateral / BASE_UNIT
-        ? calculatedData?.maxCollateral / BASE_UNIT
+      rewardAmount !== calculatedData?.maxCollateral / SCALING_FACTOR
+        ? calculatedData?.maxCollateral / SCALING_FACTOR
         : rewardAmount;
     const rewardInUSD = usdRate ? adjustedRewardAmount * usdRate : null;
     const DebtusdRate = assetRates[selectedDebtAsset]
-      ? assetRates[selectedDebtAsset] / BASE_UNIT
+      ? assetRates[selectedDebtAsset] / SCALING_FACTOR
       : 0;
     const DebtAmount =
       selectedAsset == selectedDebtAsset
         ? calculatedData?.maxDebtToLiq
         : Math.trunc((calculatedData?.maxDebtToLiq * DebtusdRate) / usdRate);
-    const bonusValue = ((DebtAmount / BASE_UNIT) * liquidation_bonus) / 100;
-
+    const bonusValue = ((DebtAmount / SCALING_FACTOR) * liquidation_bonus) / 100;
     const assetIndex = assets.indexOf(asset);
     const DebtassetIndex = assets.indexOf(selectedDebtAsset);
     return (
@@ -894,8 +958,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                       {rewardInUSD === 0
                         ? "$0.00"
                         : rewardInUSD < 0.01
-                        ? "<0.01$"
-                        : `$${rewardInUSD.toLocaleString(undefined, {
+                          ? "<0.01$"
+                          : `$${rewardInUSD.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}`}
@@ -934,33 +998,31 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
             <p className="opacity-80">User Health Factor:</p>
             <div className="flex items-center gap-1">
               <span
-                className={`${
-                  value > 3
-                    ? "text-green-500"
-                    : value <= 1
+                className={`${value > 3
+                  ? "text-green-500"
+                  : value <= 1
                     ? "text-red-500"
                     : value <= 1.5
-                    ? "text-orange-600"
-                    : value <= 2
-                    ? "text-orange-400"
-                    : "text-orange-300"
-                }`}
+                      ? "text-orange-600"
+                      : value <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
+                  }`}
               >
                 {value > 100 ? "∞" : value.toFixed(2)}
               </span>
               <span className="text-gray-500">→</span>
               <span
-                className={`${
-                  currentHealthFactor > 3
-                    ? "text-green-500"
-                    : currentHealthFactor <= 1
+                className={`${currentHealthFactor > 3
+                  ? "text-green-500"
+                  : currentHealthFactor <= 1
                     ? "text-red-500"
                     : currentHealthFactor <= 1.5
-                    ? "text-orange-600"
-                    : currentHealthFactor <= 2
-                    ? "text-orange-400"
-                    : "text-orange-300"
-                }`}
+                      ? "text-orange-600"
+                      : currentHealthFactor <= 2
+                        ? "text-orange-400"
+                        : "text-orange-300"
+                  }`}
               >
                 {currentHealthFactor}
               </span>
@@ -1005,16 +1067,15 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   let liquidation_bonus = "";
 
   const selectedItem = filteredItems?.find((item) => {
-    const assetName = item[1].Ok.asset_name
-      ? item[1].Ok.asset_name[0]
+    const assetName = item[1].Ok[0].asset_name
+      ? item[1].Ok[0].asset_name
       : "Unknown";
     return assetName === selectedAsset;
   });
-
-  if (selectedItem && selectedItem[1]?.Ok) {
-    const item = selectedItem[1].Ok;
+  if (selectedItem && selectedItem[1]?.Ok[0]) {
+    const item = selectedItem[1].Ok[0];
     liquidation_bonus =
-      Number(item?.configuration?.liquidation_bonus || "0") / BASE_UNIT;
+      Number(item?.configuration?.liquidation_bonus || "0") / SCALING_FACTOR;
   }
 
   // Function to truncate value to 8 decimals
@@ -1056,27 +1117,27 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   }, [assets, liquidateTrigger]);
 
   useEffect(() => {
-    const totalCollateral = Number(mappedItem.collateral) / BASE_UNIT || 0;
+    const totalCollateral = Number(mappedItem.collateral) / SCALING_FACTOR || 0;
 
-    const totalDebt = Number(mappedItem.debt) / BASE_UNIT || 0;
+    const totalDebt = Number(mappedItem.debt) / SCALING_FACTOR || 0;
 
     const liquidationThreshold =
-      Number(mappedItem.liquidationThreshold) / BASE_UNIT || 0;
+      Number(mappedItem.liquidationThreshold) / SCALING_FACTOR || 0;
 
     const assetLiquidationThresholds = Array.isArray(
       mappedItem.userData?.reserves?.[0]
     )
       ? mappedItem.userData?.reserves?.[0].map((mappedItem) => {
-          const assetName = mappedItem?.[0];
+        const assetName = mappedItem?.[0];
 
-          const item1 = filteredItems?.find((item) => item[0] === assetName);
+        const item1 = filteredItems?.find((item) => item[0] === assetName);
 
-          const liquidationThreshold =
-            Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
-              BASE_UNIT || 0;
+        const liquidationThreshold =
+          Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
+          SCALING_FACTOR || 0;
 
-          return { assetName, liquidationThreshold };
-        })
+        return { assetName, liquidationThreshold };
+      })
       : [];
 
     const reserveliquidationThreshold =
@@ -1149,7 +1210,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
     if (!selectedAsset || !selectedDebtAsset || !collateralRate) {
       return;
     }
-    const truncateTo8Decimals = (num) => Math.trunc(num * BASE_UNIT) / BASE_UNIT;
+    const truncateTo8Decimals = (num) => Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
     const newCollateralAmount =
       selectedAsset === selectedDebtAsset
         ? amountToRepay
@@ -1191,13 +1252,13 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   ]);
 
   useEffect(() => {
-    const newValue = Number(mappedItem.healthFactor) / HealthFactor_Unit;
+    const newValue = Number(mappedItem.healthFactor) / (SCALING_FACTOR * PERCENTAGE_FACTOR);
     setValue(newValue);
   }, [liquidateTrigger]);
 
   useEffect(() => {
     const calculatedRewardAmount =
-      collateral + collateral * (liquidation_bonus / 100);
+      collateral + collateral * (liquidation_bonus / PERCENTAGE_FACTOR);
     setRewardAmount(calculatedRewardAmount);
   }, [collateral, liquidation_bonus]);
 
@@ -1231,7 +1292,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
   ]);
 
   useEffect(() => {
-    const value = Number(mappedItem.healthFactor) / HealthFactor_Unit;
+    const value = Number(mappedItem.healthFactor) / (SCALING_FACTOR * PERCENTAGE_FACTOR);
 
     if (value > 100) {
       setFactor("50");
@@ -1312,20 +1373,20 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
             </strong>
             "?{" "}
             <strong className="font-bold text-red-500">
-              {amountToRepay === calculatedData.maxDebtToLiq / BASE_UNIT
+              {amountToRepay === calculatedData.maxDebtToLiq / SCALING_FACTOR
                 ? truncateToEightDecimals(amountToRepay)
                 : truncateToEightDecimals(
-                    calculatedData.maxDebtToLiq / BASE_UNIT
-                  )}{" "}
+                  calculatedData.maxDebtToLiq / SCALING_FACTOR
+                )}{" "}
             </strong>
             <span className="font-bold">{selectedDebtAsset}</span> will be{" "}
             <strong className="underline">deducted</strong> from your account &{" "}
             <strong className="font-bold text-green-500">
-              {rewardAmount === calculatedData?.maxCollateral / BASE_UNIT
+              {rewardAmount === calculatedData?.maxCollateral / SCALING_FACTOR
                 ? truncateToEightDecimals(rewardAmount)
                 : truncateToEightDecimals(
-                    calculatedData?.maxCollateral / BASE_UNIT
-                  )}{" "}
+                  calculatedData?.maxCollateral / SCALING_FACTOR
+                )}{" "}
             </strong>
             <span className="font-bold">{selectedAsset}</span> will be rewarded.
           </p>
@@ -1345,9 +1406,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
           <div className="flex justify-center mt-6 ">
             {isCheckboxChecked ? (
               <button
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E]  text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E]  text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] text-sm cursor-pointer px-6 py-2 relative ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 onClick={handleConfirmLiquidation}
                 disabled={isLoading}
               >
@@ -1450,25 +1510,25 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
 
                       const assetBorrowAmount =
                         Math.trunc(
-                          Number((assetBorrow * (factor / 100)) / BASE_UNIT) * BASE_UNIT
-                        ) / BASE_UNIT;
+                          Number((assetBorrow * (factor / 100)) / SCALING_FACTOR) * SCALING_FACTOR
+                        ) / SCALING_FACTOR;
 
                       let assetBorrowAmountInUSD = 0;
                       if (assetName === "ckBTC" && ckBTCUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckBTCUsdRate / BASE_UNIT);
+                          assetBorrowAmount * (ckBTCUsdRate / SCALING_FACTOR);
                       } else if (assetName === "ckETH" && ckETHUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckETHUsdRate / BASE_UNIT);
+                          assetBorrowAmount * (ckETHUsdRate / SCALING_FACTOR);
                       } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckUSDCUsdRate / BASE_UNIT);
+                          assetBorrowAmount * (ckUSDCUsdRate / SCALING_FACTOR);
                       } else if (assetName === "ICP" && ckICPUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckICPUsdRate / BASE_UNIT);
+                          assetBorrowAmount * (ckICPUsdRate / SCALING_FACTOR);
                       } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
                         assetBorrowAmountInUSD =
-                          assetBorrowAmount * (ckUSDTUsdRate / BASE_UNIT);
+                          assetBorrowAmount * (ckUSDTUsdRate / SCALING_FACTOR);
                       }
                       const assetIndex = assets.indexOf(asset);
                       if (assetBorrow > 0) {
@@ -1538,12 +1598,12 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                           };
 
                           const usdRate = assetRates[selectedDebtAsset]
-                            ? assetRates[selectedDebtAsset] / BASE_UNIT
+                            ? assetRates[selectedDebtAsset] / SCALING_FACTOR
                             : null;
 
                           const adjustedAmountToRepay =
                             calculatedData?.maxDebtToLiq > 0
-                              ? calculatedData.maxDebtToLiq / BASE_UNIT
+                              ? calculatedData.maxDebtToLiq / SCALING_FACTOR
                               : amountToRepay;
 
                           const repayInUSD = usdRate
@@ -1584,8 +1644,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                                   ? repayInUSD === 0
                                     ? "$0.00"
                                     : repayInUSD < 0.01
-                                    ? "<0.01$"
-                                    : `$${repayInUSD.toLocaleString(undefined, {
+                                      ? "<0.01$"
+                                      : `$${repayInUSD.toLocaleString(undefined, {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
                                       })}`
@@ -1607,7 +1667,7 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
               <h3 className="text-sm font-normal font-Poppins text-[#2A1F9D] dark:text-darkText mb-2">
                 Collateral Asset
               </h3>
-              {}
+              { }
 
               <div className="flex items-center space-x-4 mb-4">
                 {mappedItem.userData?.reserves?.[0].map((item, index) => {
@@ -1619,15 +1679,15 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                   );
                   let collateralRate = 0;
                   if (assetName === "ckBTC" && ckBTCUsdRate) {
-                    collateralRate = ckBTCUsdRate / BASE_UNIT;
+                    collateralRate = ckBTCUsdRate / SCALING_FACTOR;
                   } else if (assetName === "ckETH" && ckETHUsdRate) {
-                    collateralRate = ckETHUsdRate / BASE_UNIT;
+                    collateralRate = ckETHUsdRate / SCALING_FACTOR;
                   } else if (assetName === "ckUSDC" && ckUSDCUsdRate) {
-                    collateralRate = ckUSDCUsdRate / BASE_UNIT;
+                    collateralRate = ckUSDCUsdRate / SCALING_FACTOR;
                   } else if (assetName === "ICP" && ckICPUsdRate) {
-                    collateralRate = ckICPUsdRate / BASE_UNIT;
+                    collateralRate = ckICPUsdRate / SCALING_FACTOR;
                   } else if (assetName === "ckUSDT" && ckUSDTUsdRate) {
-                    collateralRate = ckUSDTUsdRate / BASE_UNIT;
+                    collateralRate = ckUSDTUsdRate / SCALING_FACTOR;
                   }
                   const collateralAmount =
                     selectedAsset === selectedDebtAsset
@@ -1673,38 +1733,37 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
               {(!isCollateralAssetSelected ||
                 (amountToRepay !== calculatedData?.maxDebtToLiq &&
                   !(
-                    calculatedData?.maxDebtToLiq / BASE_UNIT <=
+                    calculatedData?.maxDebtToLiq / SCALING_FACTOR <=
                     selectedAssetBalance
                   ))) && (
-                <div className="w-full flex flex-col my-3 space-y-2">
-                  <div
-                    className={`w-full flex p-2 rounded-lg text-white ${
-                      !isCollateralAssetSelected
+                  <div className="w-full flex flex-col my-3 space-y-2">
+                    <div
+                      className={`w-full flex p-2 rounded-lg text-white ${!isCollateralAssetSelected
                         ? "bg-[#6e3d17]"
                         : "bg-[#BA5858]"
-                    }`}
-                  >
-                    <div className=" flex items-center justify-center">
-                      <div className="warning-icon-container">
-                        {isCollateralAssetSelected ? (
-                          <div className="warning-icon-container">
-                            <TriangleAlert />
-                          </div>
-                        ) : (
-                          <div className="info-icon-container">
-                            <Info className="text-[#f6ba43]   w-3 h-4 mb-0.2" />
-                          </div>
-                        )}
+                        }`}
+                    >
+                      <div className=" flex items-center justify-center">
+                        <div className="warning-icon-container">
+                          {isCollateralAssetSelected ? (
+                            <div className="warning-icon-container">
+                              <TriangleAlert />
+                            </div>
+                          ) : (
+                            <div className="info-icon-container">
+                              <Info className="text-[#f6ba43]   w-3 h-4 mb-0.2" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="w-11/12 text-[12px] flex items-center text-white ml-1">
+                        {!isCollateralAssetSelected
+                          ? "Select a collateral asset to see reward"
+                          : "Amount to repay exceeds available balance of the selected asset"}
                       </div>
                     </div>
-                    <div className="w-11/12 text-[12px] flex items-center text-white ml-1">
-                      {!isCollateralAssetSelected
-                        ? "Select a collateral asset to see reward"
-                        : "Amount to repay exceeds available balance of the selected asset"}
-                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div className="flex justify-between mt-4">
                 <button
@@ -1715,17 +1774,16 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                   Back
                 </button>
                 <button
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${
-                    isCollateralAssetSelected &&
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] text-white rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20 shadow-[#00000040] sxs3:text-[12px] md:text-sm px-6 py-2 sxs3:p-1 sxs3:px-4 relative ${isCollateralAssetSelected &&
                     !info &&
                     isDebtAssetSelected &&
                     (amountToRepay !== calculatedData?.maxDebtToLiq
-                      ? calculatedData?.maxDebtToLiq / BASE_UNIT <=
-                        selectedAssetBalance
+                      ? calculatedData?.maxDebtToLiq / SCALING_FACTOR <=
+                      selectedAssetBalance
                       : amountToRepay <= selectedAssetBalance)
-                      ? "opacity-100 cursor-pointer"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
+                    ? "opacity-100 cursor-pointer"
+                    : "opacity-50 cursor-not-allowed"
+                    }`}
                   onClick={() => {
                     isApproved ? handleCallLiquidation() : handleApprove();
                   }}
@@ -1735,8 +1793,8 @@ console.log("getAssetSupplyValue",getAssetSupplyValue(assetName))
                     !isDebtAssetSelected ||
                     info ||
                     !(amountToRepay !== calculatedData?.maxDebtToLiq
-                      ? calculatedData?.maxDebtToLiq / BASE_UNIT <=
-                        selectedAssetBalance
+                      ? calculatedData?.maxDebtToLiq / SCALING_FACTOR <=
+                      selectedAssetBalance
                       : amountToRepay <= selectedAssetBalance)
                   }
                 >

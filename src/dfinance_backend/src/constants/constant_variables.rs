@@ -36,6 +36,7 @@ pub mod constants {
 
     // ------------------- XRC Service Fee -------------------
     pub const XRC_CYCLES_FEE: u128 = 1_000_000_000u128;
+    pub const XRC_CANISTER_NAME: &str = "xrc";
 
     // ------------------- Logs Constants -------------------
     pub const BATCH_SIZE: usize = 1000;
@@ -88,4 +89,10 @@ pub mod constants {
     // -------------------Seconds Per Year Constants -------------------
     pub const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
                                                           //leap year calculation left
+    // ------------------- Threshold limit Constants -------------------
+    pub const CYCLE_EXHAUSTED_LIMIT: u128 = 5_000_000_000_000u128;
+    pub const CYCLE_THRESHOLD_LIMIT: u128 = 7_000_000_000_000u128;
+
+    pub const TOKEN_BALANCE_EXHAUSTED_LIMIT: u128 = 10_000u128;
+    pub const TOKEN_BALANCE_THRESHOLD_LIMIT: u128 = 11_000u128;
 }

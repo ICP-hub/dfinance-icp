@@ -92,14 +92,14 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
-            amount: Nat::from(50_000_000_00u128), // Supply another 50 ckUSDT (includes transaction fee)
+            amount: Nat::from(5_000_000_000u128), // Supply another 50 ckUSDT (includes transaction fee)
             is_collateral: true,                  // Explicitly keep it collateral
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(20_000_00u128), //  0.02 ckUSDT (includes transaction fee)
+            amount: Nat::from(2_000_000u128), //  0.02 ckUSDT (includes transaction fee)
             is_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -194,7 +194,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         ic_cdk::println!("------------------------------------------------------------\n");
 
         let asset_principal =
-            match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+            match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                 Some(principal) => principal,
                 None => {
                     if !case.expect_success {
@@ -224,7 +224,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         let approved = test_icrc2_aprove(
             user_principal,
             asset_principal,
-            &pic,
+            pic,
             backend_canister,
             case.amount.clone(),
         );
@@ -234,7 +234,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     println!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
-                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                        case.expected_error_message.as_deref().unwrap_or("Error msg not given")
                     );
                     continue;
                 }
@@ -297,7 +297,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                 continue;

@@ -24,16 +24,27 @@ const Logs = () => {
 
     try {
       const result = await backendActor.get_all_logs();
-      setLogs(result);
-      setFilteredLogs(result);
-
-      setTotalPages(Math.ceil(result.length / logsPerPage));
+      console.log("get_all_logs", result)
+      if (result?.Ok && Array.isArray(result.Ok)) {
+        const indexedLogs = result.Ok.map((log, index) => ({
+          originalIndex: index,
+          content: log
+        }));
+        setLogs(indexedLogs);
+        setFilteredLogs(indexedLogs);
+        setTotalPages(Math.ceil(indexedLogs.length / logsPerPage));
+      } else {
+        console.error("Unexpected logs format:", result);
+        setLogs([]);
+        setFilteredLogs([]);
+      }
     } catch (error) {
       console.error("Error getting logs:", error.message);
     } finally {
       setIsLoading(false);
     }
   };
+
   const checkControllerStatus = async () => {
     if (!backendActor) {
       throw new Error("Backend actor not initialized");
@@ -69,8 +80,8 @@ const Logs = () => {
     if (searchTerm.trim() === "") {
       setFilteredLogs(logs);
     } else {
-      const filtered = logs.filter((log) =>
-        log.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = logs.filter((logObj) =>
+        logObj.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredLogs(filtered);
     }
@@ -89,9 +100,9 @@ const Logs = () => {
     setCurrentPage(newPage);
   };
 
-    useEffect(() => {
-      checkControllerStatus();
-    }, [backendActor]);
+  useEffect(() => {
+    checkControllerStatus();
+  }, [backendActor]);
 
   const getLogLevelColor = (logText) => {
     if (logText.includes("[DEBUG]")) return "text-blue-500 dark:text-blue-400";
@@ -107,11 +118,11 @@ const Logs = () => {
   const getLogCounts = () => {
     return {
       total: logs.length,
-      debug: logs.filter((log) => log.includes("[DEBUG]")).length,
-      info: logs.filter((log) => log.includes("[INFO]")).length,
-      trace: logs.filter((log) => log.includes("[TRACE]")).length,
-      warn: logs.filter((log) => log.includes("[WARN]")).length,
-      error: logs.filter((log) => log.includes("[ERROR]")).length,
+      debug: logs.filter((logObj) => logObj.content.includes("[DEBUG]")).length,
+      info: logs.filter((logObj) => logObj.content.includes("[INFO]")).length,
+      trace: logs.filter((logObj) => logObj.content.includes("[TRACE]")).length,
+      warn: logs.filter((logObj) => logObj.content.includes("[WARN]")).length,
+      error: logs.filter((logObj) => logObj.content.includes("[ERROR]")).length,
     };
   };
 
@@ -229,20 +240,20 @@ const Logs = () => {
       ) : (
         <div className="w-full bg-gray-50 dark:bg-[#131330] rounded-xl py-3 px-2 overflow-y-auto shadow border border-gray-200 dark:border-gray-900">
           <div className="font-mono text-xs sm:text-sm">
-            {paginatedLogs.map((log, index) => (
+            {paginatedLogs.map((logObj) => (
               <div
-                key={index}
+                key={logObj.originalIndex}
                 className="py-1 border-b border-gray-200 dark:border-gray-800 flex"
               >
                 <span className="text-gray-500 dark:text-gray-500 mr-2 flex-shrink-0 text-right w-6 sm:w-10">
-                  {(currentPage - 1) * logsPerPage + index}:
+                  {logObj.originalIndex}:
                 </span>
                 <pre
                   className={`${getLogLevelColor(
-                    log
+                    logObj.content
                   )} whitespace-pre-wrap break-words w-full`}
                 >
-                  {log}
+                  {logObj.content}
                 </pre>
               </div>
             ))}
@@ -263,9 +274,9 @@ const Logs = () => {
         </div>
       )}
     </div>
- ) : (
-  <Error />
-);
+  ) : (
+    <Error />
+  );
 };
 
 export default Logs;

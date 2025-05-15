@@ -11,15 +11,10 @@ use crate::constants::errors::Error;
 pub fn validate_asset_name(asset_name: &str) -> Result<(), Error> {
   
   if asset_name.trim().is_empty() {
-      ic_cdk::println!("Asset cannot be an empty string");
       return Err(Error::EmptyAsset);
   }
 
     if asset_name.len() > MAX_ASSET_LENGTH {
-        ic_cdk::println!(
-            "Asset must have a maximum length of {} characters",
-            MAX_ASSET_LENGTH
-        );
         return Err(Error::InvalidAssetLength);
     }
 
@@ -51,23 +46,24 @@ pub fn validate_asset_image_url(asset_image_url: &str) -> Result<(), Error> {
  */
 pub fn validate_zero_value(value: &candid::Nat) -> Result<(), Error> {
   if value <= &zero_nat_value() {
-      ic_cdk::println!("Amount must be greater than 0");
       return Err(Error::InvalidAmount);
   }
-
-
 
   Ok(())
 }
 
-// to validate zero value
+/**
+ * @title Validate Negative Value
+ * @dev Validates that the given value is not negative.
+ * @param value The value to be validated, represented as a `candid::Nat`.
+ * @returns An `Ok(())` if the value is non-negative, or an error if the value is negative.
+ *
+ * @functionality Ensures that the provided value is not less than zero to avoid invalid negative amounts.
+ */
 pub fn validate_negatige_value(value: &candid::Nat) -> Result<(), Error> {
   if value < &zero_nat_value() {
-      ic_cdk::println!("value must be positive");
       return Err(Error::NegativeAmount);
   }
-
-
 
     Ok(())
 }

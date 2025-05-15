@@ -1,23 +1,23 @@
 use crate::api::inter_canister::asset_transfer_from;
-use crate::constants::constant_variables::constants::{INITIAL_DEBT_INDEX, TOKEN_TRANSFER_FEE};
+use crate::constants::constant_variables::constants::INITIAL_DEBT_INDEX;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, get_asset_principal};
+use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve_data};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::libraries::user::get_asset_debt;
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::{get_cached_exchange_rate, update_token_price};
+use crate::protocol::utils::price::{
+ calculate_transfer_fee, update_token_price
+};
 use crate::stable_storage::state_handler::*;
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info};
-use candid::{Nat, Principal};
+use candid::Nat;
 use ic_cdk::update;
 
 /*
@@ -84,16 +84,11 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
     let platform_principal = ic_cdk::api::id();
 
-    let mut reserve_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&params.asset.to_string())
-            .map(|res| res.0)
-    })
-    .ok_or_else(|| Error::NoReserveDataFound)?;
+    let mut reserve_data = get_reserve_data(params.asset.clone())?;
 
     if reserve_data.asset_borrow == zero_nat_value() {
-        *&mut reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
+        reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
+
     }
 
     let mut reserve_cache = reserve::cache(&reserve_data);
@@ -106,27 +101,12 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     ValidationLogic::validate_borrow(&reserve_data, params.amount.clone(), ledger_canister_id)
         .await?;
 
-    if let Err(e) = update_token_price(params.asset.clone()).await {
-        ic_cdk::println!("Failed to update reserves price: {:?}", e); //error
-    }
+    let _ = update_token_price(params.asset.clone()).await;
 
-    let asset_price = match get_cached_exchange_rate(params.asset.clone()) {
-        Ok(price) => price,
-        Err(e) => {
-            ic_cdk::println!("Failed to fetch exchange rate");
-            return Err(e);
-        }
-    };
-    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-    ic_cdk::println!("Transfer token fee: {:?}", transfer_token_fee);
 
-    if params.amount.clone() < transfer_token_fee {
-        ic_cdk::println!("Amount is less than the transfer token fee");
-        return Err(Error::FeeExceedsAmount);
-    }
-    // let amount_requested = params.amount.clone();
+    let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let borrow_amount = params.amount.clone() - transfer_token_fee.clone();
-    ic_cdk::println!("borrow amount = {}", borrow_amount);
+    debug!("borrow amount = {}", borrow_amount);
 
     // ----------- Update logic here -------------
     UpdateLogic::update_user_data_borrow(
@@ -200,7 +180,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 ------------ REPAY LOGIC ------------
 -------------------------------------
  */
-
 /**
  * @notice Executes the repay operation for a given asset and amount.
  *         This function validates parameters, checks asset conditions,
@@ -232,7 +211,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
  *      - Transfers assets from user or liquidator and ensures consistency.
  *      - Rolls back any changes if any step fails during the repayment process.
  */
-
 pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
@@ -260,13 +238,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
         user_principal
     };
 
-    let mut reserve_data = read_state(|state| {
-        state
-            .asset_index
-            .get(&params.asset.to_string())
-            .map(|reserve| reserve.0.clone())
-    })
-    .ok_or_else(|| Error::NoReserveDataFound)?;
+    let mut reserve_data = get_reserve_data(params.asset.clone())?;
 
     if reserve_data.debt_index == zero_nat_value() {
         reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
@@ -291,16 +263,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     info!("Repay validated successfully");
 
     let _ = update_token_price(params.asset.clone()).await;
-
-    // get exchange rates
-    let asset_price = get_cached_exchange_rate(params.asset.clone())?;
-
-    let transfer_token_fee = Nat::from(TOKEN_TRANSFER_FEE).scaled_div(asset_price);
-
-    if params.amount.clone() < transfer_token_fee {
-        error!("Repay amount is less than transfer token fee");
-        return Err(Error::FeeExceedsAmount);
-    }
+    let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     params.amount = params.amount - transfer_token_fee.clone();
 
     let user_current_debt: Nat = get_asset_debt(params.asset.clone(), Some(user_principal)).await?;

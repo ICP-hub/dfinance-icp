@@ -28,6 +28,7 @@ thread_local! {
 // Constants
 const LOG_RETENTION_DAYS: u64 = 7; // Number of days to retain logs
 const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
+const MAX_LOG_COUNT: u64 = 15000; // Maximum number of logs before cleanup
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct LogRecord {
@@ -74,34 +75,50 @@ fn init() {
  *
  * @functionality Receives a batch of logs, serializes them, and stores them in the log storage.
  */
-#[update]
-#[candid_method(update)]
-pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) {
-
-    LOG_STORAGE.with(|storage| {
-        let mut storage = storage.borrow_mut();
-
-        // Find the current maximum log ID in storage
-        let mut max_id = storage.iter().map(|(key, _)| key).max().map(|key| key).unwrap_or(0);
-
-        for (log_id, new_logs) in batch_logs {
-            let final_id = if storage.contains_key(&log_id) {
-                max_id += 1;
-                max_id // Use a new ID
-            } else {
-                log_id
-            };
-
-            let serialized_logs = candid::encode_one(&new_logs)
-                .expect("Failed to serialize logs");
-
-            storage.insert(final_id, serialized_logs);
+ #[update]
+ #[candid_method(update)]
+ pub fn receive_logs_batch(batch_logs: HashMap<u32, Vec<String>>) ->Result<(), String> {
+     let caller = ic_cdk::caller();
+ 
+     if !ic_cdk::api::is_controller(&caller) {
+        ic_cdk::println!("Unauthorized access to logs");
+         return Err("Unauthorized access to logs.".to_string());
+     }
+     
+    let log_count = LOG_STORAGE.with(|storage| {
+         let mut storage = storage.borrow_mut();
+ 
+         // Find the current maximum log ID in storage
+         let mut max_id = storage.iter().map(|(key, _)| key).max().map(|key| key).unwrap_or(0);
+ 
+         for (log_id, new_logs) in batch_logs {
+             let final_id = if storage.contains_key(&log_id) {
+                 max_id += 1;
+                 max_id // Use a new ID
+             } else {
+                 log_id
+             };
+ 
+             let serialized_logs = candid::encode_one(&new_logs)
+                 .expect("Failed to serialize logs");
+ 
+             storage.insert(final_id, serialized_logs);
+         }
+ 
+         ic_cdk::println!("✅ Batch logs received and stored.");
+         // Return the current log count after insertion
+         storage.len()
+        });
+        
+        // Check if we need to clean up logs based on count
+        if log_count > MAX_LOG_COUNT {
+            ic_cdk::println!("Log count ({}) exceeds limit ({}). Cleaning up logs.", log_count, MAX_LOG_COUNT);
+            ic_cdk::spawn(async {
+                clear_old_logs_above_limit();
+            });
         }
-
-        ic_cdk::println!("✅ Batch logs received and stored.");
-    });
-}
-
+     Ok(())
+ }
 
 /*
  * @title Log Cleanup Function
@@ -180,27 +197,79 @@ pub fn schedule_log_cleanup() {
 }
 
 
-// access validations.
 #[query]
-#[candid_method(query)]
-pub fn get_logs() -> Vec<LogRecord> {
-    LOG_STORAGE.with(|storage| {
+#[candid::candid_method(query)]
+pub fn get_logs() -> Result<Vec<LogRecord>, String> {
+    let caller = ic_cdk::caller();
+
+    if !ic_cdk::api::is_controller(&caller) {
+        return Err("Unauthorized access to logs.".to_string());
+    }
+
+    let logs = LOG_STORAGE.with(|storage| {
         storage
             .borrow()
             .iter()
             .filter_map(|(id, bytes)| {
-                // Decode the bytes into Vec<String> using candid
-                let deserialized_logs: Vec<String> = match candid::decode_one(&bytes) {
-                    Ok(logs) => logs,
-                    Err(_) => return None, // If deserialization fails, skip the log entry
-                };
-
-                // Return the log record if deserialization is successful
-                Some(LogRecord {
-                    id,
-                    logs: deserialized_logs,
-                })
+                match candid::decode_one::<Vec<String>>(&bytes) {
+                    Ok(deserialized_logs) => Some(LogRecord {
+                        id,
+                        logs: deserialized_logs,
+                    }),
+                    Err(_) => None,
+                }
             })
             .collect()
-    })
+    });
+
+    Ok(logs)
+}
+
+
+pub fn clear_old_logs_above_limit() {
+
+    let deleted_count = LOG_STORAGE.with(|state| {
+        let mut state_mut = state.borrow_mut();
+        let mut timestamped_entries: Vec<(u32, u64)> = Vec::new(); // (key, timestamp)
+
+        for (key, bytes) in state_mut.iter() {
+            let logs: Vec<String> = match candid::decode_one(&bytes) {
+                Ok(l) => l,
+                Err(_) => {
+                    timestamped_entries.push((key, 0)); // corrupted logs get lowest timestamp
+                    continue;
+                }
+            };
+
+            if let Some(log_entry) = logs.first() {
+                if let Some(timestamp_str) = log_entry.split(']').next() {
+                    if let Ok(ts) = timestamp_str.trim_start_matches('[').parse::<u64>() {
+                        timestamped_entries.push((key, ts));
+                        continue;
+                    }
+                }
+            }
+
+            // If timestamp couldn't be parsed, treat as very old
+            timestamped_entries.push((key, 0));
+        }
+
+        // Sort by timestamp (oldest first)
+        timestamped_entries.sort_by_key(|&(_, ts)| ts);
+
+        // Take oldest DELETE_COUNT entries
+        let to_delete: Vec<u32> = timestamped_entries
+            .into_iter()
+            .take(MAX_LOG_COUNT as usize)
+            .map(|(key, _)| key)
+            .collect();
+
+        for key in &to_delete {
+            state_mut.remove(key);
+        }
+
+        to_delete.len()
+    });
+
+    ic_cdk::println!("Deleted {} logs older logs", deleted_count);
 }

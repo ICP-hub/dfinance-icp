@@ -67,7 +67,6 @@ pub struct ExecuteRepayParams {
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    // pub on_behalf_of: Option<Principal>,
     pub is_collateral: bool,
 }
 
@@ -115,22 +114,6 @@ pub struct AccrueToTreasuryLocalVars {
     pub total_debt_accrued: Nat,
     pub amount_to_mint: Nat,
 }
-
-/* 
- * @title Interest Rate Calculation Parameters
- * @dev Parameters required for calculating interest rates.
- * @functionality Provides the necessary data points to calculate dynamic interest rates based on liquidity utilization, total debt, and current borrowing rates.
-//  */
-// #[derive(Debug, CandidType, Deserialize, Serialize)]
-// pub struct CalculateInterestRatesParams {
-//     pub liquidity_added: Nat,
-//     pub liquidity_taken: Nat,
-//     pub total_stable_debt: Nat,
-//     pub total_variable_debt: Nat,
-//     pub average_stable_borrow_rate: Nat,
-//     pub reserve: String,
-//     pub d_token: Option<String>,
-// }
 
 /* 
  * @title Interest Rate Parameters
@@ -254,4 +237,20 @@ pub struct UserAccountData {
     pub health_factor: Nat,
     pub available_borrow: Nat,
     pub has_zero_ltv_collateral: bool,
+}
+
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct CycleAlert {
+    pub is_warning : bool,
+    pub is_exhausted : bool,
+    pub current_cycle: Nat
+}
+
+#[derive(Debug, Clone, CandidType, Deserialize)]
+pub struct TokenAlert {
+    pub asset_name: String,
+    pub is_exhausted: bool,
+    pub is_warning: bool,
+    pub balance: Nat
+
 }

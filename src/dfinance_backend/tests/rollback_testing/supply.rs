@@ -40,14 +40,14 @@ use crate::utils::structs::*;
     let test_cases: Vec<TestCase> = vec![
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(25_00_000_000u128), // 25 ICP (includes transaction fee)
+            amount: Nat::from(2_500_000_000u128), // 25 ICP (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(4_00_000_000u128), // 4 ICP (includes transaction fee)
+            amount: Nat::from(400_000_000u128), // 4 ICP (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -61,7 +61,7 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(1_00_000u128), // 0.001 ckETH (includes transaction fee)
+            amount: Nat::from(100_000u128), // 0.001 ckETH (includes transaction fee)
             is_collateral: true,
             expect_success: true,
             expected_error_message: None,
@@ -126,7 +126,7 @@ use crate::utils::structs::*;
         if i % 2 == Nat::from(0u128) {
             /* Get asset principal; handle missing cases  */
             let asset_principal =
-                match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
@@ -152,7 +152,7 @@ use crate::utils::structs::*;
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
                 case.amount.clone(),
             );
@@ -162,7 +162,7 @@ use crate::utils::structs::*;
                         println!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
-                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                     );
                         continue;
                     }

@@ -15,7 +15,20 @@ import useFetchConversionRate from "../customHooks/useFetchConversionRate";
 import useUserData from "../customHooks/useUserData";
 import { Info } from "lucide-react";
 import { useReserveData } from "../../context/ReserveDataContext";
-import { BASE_UNIT } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
+
+/**
+ * DashboardNav Component
+ *
+ * This component serves as the navigation header, displaying key financial metrics.
+ * 
+ * Features:
+ * - Displays market statistics (total market size, available liquidity, total borrows)
+ * - Shows metrics like (net worth, net APY, health factor)
+ * - Provides risk assessment information with Risk Details popup
+ * 
+ * @returns {JSX.Element} - Returns the DashboardNav component with relevant financial metrics and navigation options.
+ */
 const DashboardNav = () => {
   /* ===================================================================================
    *                                  HOOKS
@@ -320,8 +333,8 @@ const DashboardNav = () => {
 
         const conversionRate = getConversionRate(assetKey) || 0;
 
-        const supplyApy = (Number(reserveData[assetKey].Ok[0].current_liquidity_rate) || 0) / BASE_UNIT;
-        const debtApy = (Number(reserveData[assetKey].Ok[0].borrow_rate) || 0) / BASE_UNIT;
+        const supplyApy = (Number(reserveData[assetKey].Ok[0].current_liquidity_rate) || 0) / SCALING_FACTOR;
+        const debtApy = (Number(reserveData[assetKey].Ok[0].borrow_rate) || 0) / SCALING_FACTOR;
 
         const currentLiquidity =
           userData?.Ok?.[0].reserves[0]?.find(
@@ -338,9 +351,9 @@ const DashboardNav = () => {
         const supplyValue = getAssetSupplyValue(assetKey);
         const safeSupplyValue = typeof supplyValue === "bigint" ? Number(supplyValue) : supplyValue;
 
-        const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * BASE_UNIT);
+        const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * SCALING_FACTOR);
 
-        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / BASE_UNIT);
+        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / SCALING_FACTOR);
 
         const assetSupplyInUSD = assetSupply * conversionRate;
 

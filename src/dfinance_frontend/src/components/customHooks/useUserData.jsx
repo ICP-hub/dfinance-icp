@@ -7,7 +7,8 @@ import useAssetData from "./useAssets";
 import { idlFactory } from "../../../../declarations/debttoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/dtoken";
 import { useReserveData } from "../../context/ReserveDataContext";
-import { HealthFactor_Unit } from '../../utils/constants';
+import { SCALING_FACTOR} from '../../utils/constants';
+import { PERCENTAGE_FACTOR} from '../../utils/constants';
 /**
  * Custom hook to fetch and manage user data from the backend canister.
  * Includes user account data, health factor, and error handling.
@@ -214,7 +215,7 @@ const useUserData = () => {
         }
 
         if (result?.Ok && result.Ok[0]?.[4]) {
-          const healthFactor = Number(result.Ok[0][4]) / HealthFactor_Unit;
+          const healthFactor = Number(result.Ok[0][4]) / (SCALING_FACTOR *PERCENTAGE_FACTOR);
           if (healthFactor) {
             setHealthFactorBackend(healthFactor);
           } else {

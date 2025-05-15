@@ -73,7 +73,7 @@ pub async fn calculate_interest_rates(
 
     ic_cdk::println!("Available Liquidity: {:?}", available_liq);
 
-    if total_debt.clone() != Nat::from(ZERO_VALUE) {
+    if total_debt != ZERO_VALUE {
         let utilization_ratio = total_debt
             .clone()
             .scaled_div(total_debt.clone() + available_liq.clone());

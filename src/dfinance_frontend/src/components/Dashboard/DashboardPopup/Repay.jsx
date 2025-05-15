@@ -14,7 +14,9 @@ import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from "../../../utils/constants";
+import { Info } from "lucide-react";
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * Repay Component
  *
@@ -46,7 +48,7 @@ const Repay = ({
   onLoadingChange,
 }) => {
   /* ===================================================================================
-   *                                  HOOKS &  REDUX-SELECTER
+   *                                  HOOKS &  REDUX-SELECTER & STATES
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus("execute_repay");
   const approveButtonRef = useRef(null);
@@ -55,8 +57,10 @@ const Repay = ({
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
+const checkAndNotify = useNotificationSystem();
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = transferFeRetrive?.transferFee;
+
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
   const [isApproved, setIsApproved] = useState(false);
@@ -64,6 +68,7 @@ const Repay = ({
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
+  const [showTooltip, setShowTooltip] = useState(false);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
@@ -130,11 +135,37 @@ const Repay = ({
     if (isNaN(numericAmount)) numericAmount = 0;
 
     if (numericAmount > assetBorrow) {
-      numericAmount = assetBorrow;
+
+      const truncateToEightDecimals = (value) => {
+        const multiplier = Math.pow(10, 8);
+        const truncated = Math.round(value * multiplier) / multiplier;
+        return truncated.toFixed(8);
+      };
+
+      const fee = transferFee ? Number(transferFee) : 0;
+      let selectedBalance;
+      if (supplyBalance >= assetBorrow + fee) {
+        selectedBalance = Number(assetBorrow);
+      } else {
+        selectedBalance = supplyBalance - fee;
+      }
+
+      if (selectedBalance < 0) selectedBalance = 0;
+
+      const displayBalance = selectedBalance
+        ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
+          ? Number(selectedBalance).toFixed(8)
+          : selectedBalance >= 1e-7 && selectedBalance < 1e-6
+            ? Number(selectedBalance).toFixed(7)
+            : truncateToEightDecimals(selectedBalance)
+        : "0";
+
+      setAmount(displayBalance.toString());
+      setMaxClicked(true);
+      updateAmountAndUsdValue(displayBalance.toString());
+      return;
     }
-
     let formattedAmount = numericAmount.toFixed(8).replace(/\.?0+$/, "");
-
     if (inputAmount.endsWith(".")) {
       formattedAmount += ".";
     }
@@ -142,6 +173,24 @@ const Repay = ({
     setAmount(formattedAmount);
     setMaxClicked(formattedAmount === assetBorrow.toString());
     updateAmountAndUsdValue(formattedAmount);
+  };
+
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
   };
 
   /**
@@ -191,28 +240,22 @@ const Repay = ({
         draggable: true,
         progress: undefined,
       });
-      return; // Prevent function execution
+      return;
     }
 
     let ledgerActor;
-    if (asset === "ckBTC") {
-      ledgerActor = ledgerActors.ckBTC;
-    } else if (asset === "ckETH") {
-      ledgerActor = ledgerActors.ckETH;
-    } else if (asset === "ckUSDC") {
-      ledgerActor = ledgerActors.ckUSDC;
-    } else if (asset === "ICP") {
-      ledgerActor = ledgerActors.ICP;
-    } else if (asset === "ckUSDT") {
-      ledgerActor = ledgerActors.ckUSDT;
-    }
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    const scaledAmount = amountAsNat64;
-    const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
-    const totalAmount = transferFeeBigInt
-      ? scaledAmount + transferFeeBigInt
-      : scaledAmount;
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
+    const totalAmount = amountAsNat64 + transferFeeBigInt;
+
     try {
       const approval = await ledgerActor.icrc2_approve({
         fee: [],
@@ -314,21 +357,24 @@ const Repay = ({
 
       const repayResult = await backendActor.execute_repay(repayParams);
       dispatch(toggleDashboardRefresh());
+       const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in repayResult) {
         trackEvent(
           "Repay," +
-            asset +
-            "," +
-            totalAmount / BASE_UNIT +
-            "," +
-            principalObj.toString(),
+          asset +
+          "," +
+          totalAmount / SCALING_FACTOR +
+          "," +
+          principalObj.toString(),
           "Assets",
           "Repay," +
-            asset +
-            "," +
-            totalAmount / BASE_UNIT +
-            ", " +
-            principalObj.toString()
+          asset +
+          "," +
+          totalAmount / SCALING_FACTOR +
+          ", " +
+          principalObj.toString()
         );
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -348,7 +394,7 @@ const Repay = ({
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
-        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
+        if (errorMsg && "BlockedForOneHour" in errorMsg) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -465,7 +511,17 @@ const Repay = ({
     }
   };
 
-  // Function to handle the click event for the close button
+  /**
+   * calculateHealthFactor:
+   * -----------------------
+   * Formula:
+   *   healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
+   *
+   * Adjustments:
+   * - amountAdded (e.g., debt repaid) is subtracted from totalDebt.
+   * - totalDebt floored to zero if negative.
+   * - If totalDebt becomes zero → return Infinity.
+   */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -509,8 +565,8 @@ const Repay = ({
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
-        ? Number(selectedBalance).toFixed(7)
-        : truncateToEightDecimals(selectedBalance)
+          ? Number(selectedBalance).toFixed(7)
+          : truncateToEightDecimals(selectedBalance)
       : "0";
     "displayBalance", displayBalance;
     setMaxAmount(displayBalance.toString());
@@ -615,6 +671,17 @@ const Repay = ({
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
 
+  /**
+   * Health Factor Calculation Summary:
+   * ----------------------------------
+   * - Get health factor using formula:
+   *     healthFactor = (totalCollateral × (liquidationThreshold / 100)) / totalDebt
+   * - Adjust debt:
+   *     totalDebt = totalDebt - usdValue  (removing some debt)
+   * - Ensure collateral and debt are non-negative.
+   * - Truncate health factor to 2 decimals.
+   * - If healthFactor > 100 → display as "Infinity".
+   */
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
       totalCollateral,
@@ -679,9 +746,9 @@ const Repay = ({
                   <p className="text-[12px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -705,11 +772,10 @@ const Repay = ({
                         {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[12px] px-2 py-0 rounded-md button1 ${
-                          assetBorrow === 0 || isApproved
-                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
-                        }`}
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
+                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                          }`}
                         onClick={handleMaxClick}
                       >
                         Max
@@ -746,41 +812,42 @@ const Repay = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
-                            ? "text-green-500"
-                            : truncatedValue <= 1
+                        className={`${truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : truncatedValue <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
-                            ? "text-green-500"
-                            : currentHealthFactor <= 1
+                        className={`${currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-orange-600"
+                              : currentHealthFactor <= 2
+                                ? "text-orange-400"
+                                : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
                     </p>
                   </div>
-                  <div className="w-full flex justify-between items-center my-1 mt-2">
-                    <div className="flex items-center gap-1">
-                      <p>Transaction Fee</p>
+                  <div className="w-full flex justify-between items-center my-1">
+                    <div className="flex items-center gap-1 relative">
+                      <div className="flex items-center">
+                        <p>Transaction Fee</p>
+
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <p>{transferFee}</p>
@@ -853,21 +920,20 @@ const Repay = ({
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    isApproved ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                    Number(amount) + transferFee > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                    }`}
                   disabled={
                     isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
+                    Number(amount) + transferFee > supplyBalance
                   }
                 >
                   Approve {asset} to continue
@@ -876,21 +942,20 @@ const Repay = ({
                 <button
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    !isApproved ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                    Number(amount) + transferFee > supplyBalance
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                    }`}
                   disabled={
                     !isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    amount > supplyBalance
+                    Number(amount) + transferFee > supplyBalance
                   }
                 >
                   Repay {asset}
@@ -938,20 +1003,20 @@ const Repay = ({
                     ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
-                      ? Number(assetBorrow).toFixed(7)
-                      : truncateToEightDecimals(assetBorrow)
+                        ? Number(assetBorrow).toFixed(7)
+                        : truncateToEightDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}
                 <strong>
-                  {scaledAmount / BASE_UNIT
-                    ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                      scaledAmount / BASE_UNIT < 1e-7
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                      : scaledAmount / BASE_UNIT >= 1e-7 &&
-                        scaledAmount / BASE_UNIT < 1e-6
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                      : scaledAmount / BASE_UNIT
+                  {scaledAmount / SCALING_FACTOR
+                    ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                      scaledAmount / SCALING_FACTOR < 1e-7
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                      : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                        scaledAmount / SCALING_FACTOR < 1e-6
+                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                        : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

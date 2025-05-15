@@ -5,7 +5,7 @@ import CircularProgress from "../../Common/circularProgressbar";
 import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
 /**
  * SupplyInfo Component
  *
@@ -27,17 +27,14 @@ const SupplyInfo = ({
   liquidationBonus,
   liquidationThreshold,
 }) => {
+
   /* ===================================================================================
-   *                                  REDUX-SELECTER
+   *                                  HOOKS & REDUX-SELECTER
    * =================================================================================== */
 
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
-
-  /* ===================================================================================
-   *                                  HOOKS
-   * =================================================================================== */
 
   const {
     ckBTCUsdRate,
@@ -55,12 +52,13 @@ const SupplyInfo = ({
    * =================================================================================== */
 
   const [supplied, setSupplied] = useState(totalSupplied);
-
   const [isLTVTooltipVisible, setLTVTooltipVisible] = useState(false);
+
   const [
     isLiquidationThresholdTooltipVisible,
     setLiquidationThresholdTooltipVisible,
   ] = useState(false);
+
   const [
     isLiquidationPenaltyTooltipVisible,
     setLiquidationPenaltyTooltipVisible,
@@ -77,15 +75,15 @@ const SupplyInfo = ({
   const getAssetRate = (assetName) => {
     switch (assetName) {
       case "ckBTC":
-        return ckBTCUsdRate / BASE_UNIT;
+        return ckBTCUsdRate / SCALING_FACTOR;
       case "ckETH":
-        return ckETHUsdRate / BASE_UNIT;
+        return ckETHUsdRate / SCALING_FACTOR;
       case "ckUSDC":
-        return ckUSDCUsdRate / BASE_UNIT;
+        return ckUSDCUsdRate / SCALING_FACTOR;
       case "ICP":
-        return ckICPUsdRate / BASE_UNIT;
+        return ckICPUsdRate / SCALING_FACTOR;
       case "ckUSDT":
-        return ckUSDTUsdRate / BASE_UNIT;
+        return ckUSDTUsdRate / SCALING_FACTOR;
       default:
         return 0;
     }

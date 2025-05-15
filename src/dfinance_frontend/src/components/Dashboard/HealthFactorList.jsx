@@ -16,14 +16,14 @@ import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { useLocation } from "react-router-dom";
 import Pagination from "../Common/pagination";
 import { useReserveData } from "../../context/ReserveDataContext";
-import { BASE_UNIT } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
+
 /**
  * HealthFactorList Component
  *
  * Fetches and displays a list of users with their associated health factors
  * @returns {JSX.Element} - Returns the HealthFactorList component displaying users' health factors and additional details.
  */
-
 const HealthFactorList = () => {
   /* ===================================================================================
    *                                  STATE MANAGEMENT
@@ -34,12 +34,14 @@ const HealthFactorList = () => {
     createLedgerActor,
     verifyCertificate,
   } = useAuth();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);
   const filterRef = useRef(null);
   const [like, setLike] = useState(false);
   const [healthFactorLoading, setHealthFactorLoading] = useState(true);
   const { batchFetchReserveData } = useReserveData();
+
   const {
     assets,
     AssetImages,
@@ -331,10 +333,10 @@ const HealthFactorList = () => {
 
     const extractedData = {
       principal,
-      totalCollateral: Number(data.collateral) / BASE_UNIT,
-      totalDebt: Number(data.debt) / BASE_UNIT,
-      liquidationThreshold: Number(data.liquidationThreshold) / BASE_UNIT,
-      availableBorrow: Number(data.availableBorrow) / BASE_UNIT,
+      totalCollateral: Number(data.collateral) / SCALING_FACTOR,
+      totalDebt: Number(data.debt) / SCALING_FACTOR,
+      liquidationThreshold: Number(data.liquidationThreshold) / SCALING_FACTOR,
+      availableBorrow: Number(data.availableBorrow) / SCALING_FACTOR,
       healthFactor: rawHealthFactor < 100 ? rawHealthFactor : "Infinity",
     };
 
@@ -415,14 +417,14 @@ const HealthFactorList = () => {
       return {
         Principal: principal,
         "Total Collateral": user.collateral
-          ? (Number(user.collateral) / BASE_UNIT).toFixed(2)
+          ? (Number(user.collateral) / SCALING_FACTOR).toFixed(2)
           : "0",
-        "Total Debt": user.debt ? (Number(user.debt) / BASE_UNIT).toFixed(2) : "0",
+        "Total Debt": user.debt ? (Number(user.debt) / SCALING_FACTOR).toFixed(2) : "0",
         "Available Borrow": user.availableBorrow
-          ? (Number(user.availableBorrow) / BASE_UNIT).toFixed(2)
+          ? (Number(user.availableBorrow) / SCALING_FACTOR).toFixed(2)
           : "0",
         "Liquidation Threshold": user.liquidationThreshold
-          ? (Number(user.liquidationThreshold) / BASE_UNIT).toFixed(2)
+          ? (Number(user.liquidationThreshold) / SCALING_FACTOR).toFixed(2)
           : "0",
         "Health Factor":
           user.healthFactor &&
@@ -498,9 +500,9 @@ const HealthFactorList = () => {
     const reserves = userData?.reserves || [];
 
     const data = reserves.flat().map(([asset, assetInfo]) => {
-      const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n) / BASE_UNIT;
+      const currentLiquidity = Number(assetInfo?.liquidity_index ?? 0n)
       const currentDebtIndex =
-        Number(assetInfo?.variable_borrow_index ?? 0n) / BASE_UNIT;
+        Number(assetInfo?.variable_borrow_index ?? 0n);
 
       const userAssetBalance = assetBalances[selectedUser.principal]?.[
         asset
@@ -509,31 +511,31 @@ const HealthFactorList = () => {
         debtTokenBalance: 0,
       };
 
-      const assetBalance = Number(userAssetBalance.dtokenBalance) / BASE_UNIT || 0;
-      const debtBalance = Number(userAssetBalance.debtTokenBalance) / BASE_UNIT || 0;
+      const assetBalance = Number(userAssetBalance.dtokenBalance) || 0;
+      const debtBalance = Number(userAssetBalance.debtTokenBalance) || 0;
 
       const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
       const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
 
+      const calculated_supply = Math.trunc(
+        (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
+      );
       const assetSupply =
         currentLiquidity > 0
           ? Math.trunc(
-            (Math.trunc((assetBalance / currentLiquidity) * BASE_UNIT) *
-              supplyValue) /
-            BASE_UNIT
-          )
+            (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
+          ) / SCALING_FACTOR
           : 0;
-
       const assetBorrow =
         currentDebtIndex > 0
-          ? (debtBalance * borrowValue) / (currentDebtIndex * BASE_UNIT)
+          ? (debtBalance * borrowValue) / (currentDebtIndex * SCALING_FACTOR)
           : 0;
 
       return {
         Principal: selectedUser.principal,
         Asset: asset,
-        "Liquidity Index": currentLiquidity || 0,
-        "Variable Borrow Index": currentDebtIndex || 0,
+        "Liquidity Index": (currentLiquidity) / SCALING_FACTOR || 0,
+        "Variable Borrow Index": (currentDebtIndex) / SCALING_FACTOR || 0,
         "Total Asset Supply": formatValue(assetSupply),
         "Total Asset Borrow": formatValue(assetBorrow),
       };
@@ -929,8 +931,8 @@ const HealthFactorList = () => {
                   {paginatedUsers.map(([principal, data], index) => {
                     if (!data) return null;
 
-                    const totalCollateral = Number(data.collateral) / BASE_UNIT;
-                    const totalDebt = Number(data.debt) / BASE_UNIT;
+                    const totalCollateral = Number(data.collateral) / SCALING_FACTOR;
+                    const totalDebt = Number(data.debt) / SCALING_FACTOR;
                     const healthFactor =
                       Math.trunc((Number(data.healthFactor) / 1e10) * 100) /
                       100;
@@ -1047,7 +1049,6 @@ const HealthFactorList = () => {
                     const currentLiquidity = Number(
                       assetInfo?.liquidity_index || 0n
                     );
-
                     const currentDebtIndex = Number(
                       assetInfo?.variable_borrow_index || 0n
                     );
@@ -1065,15 +1066,17 @@ const HealthFactorList = () => {
 
                     const supplyValue = Number(getAssetSupplyValue(asset)) || 0;
                     const borrowValue = Number(getAssetBorrowValue(asset)) || 0;
+                    const calculated_supply = Math.trunc(
+                      (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
+                    );
                     const assetSupply =
                       currentLiquidity > 0
-                        ? (assetBalance * supplyValue) /
-                        (currentLiquidity * BASE_UNIT)
+                        ? Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR) / SCALING_FACTOR
                         : 0;
 
                     const assetBorrow =
                       currentDebtIndex > 0
-                        ? (debtBalance * borrowValue) / (currentDebtIndex * BASE_UNIT)
+                        ? (debtBalance * borrowValue) / (currentDebtIndex * SCALING_FACTOR)
                         : 0;
                     const assetIndex = assets.indexOf(asset);
                     return (

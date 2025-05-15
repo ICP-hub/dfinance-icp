@@ -160,7 +160,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
 
         // Check asset principal before proceeding with borrow
         let _asset_principal =
-            match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+            match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                 Some(principal) => principal,
                 None => {
                     if !case.expect_success {
@@ -227,7 +227,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
                                 println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                 continue;

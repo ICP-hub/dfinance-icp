@@ -29,6 +29,7 @@ import { Principal } from "@dfinity/principal";
 import useAssetData from "../customHooks/useAssets";
 import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
+import useNotificationSystem from "../customHooks/useNotification";
 
 const MobileTopNav = ({
   isMobileNav,
@@ -46,6 +47,7 @@ const MobileTopNav = ({
   const { assets, AssetImages } = useAssetData();
   const { isAuthenticated, principal, accountIdString } = useAuth();
   const ledgerActors = useSelector((state) => state.ledger);
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  STATE MANAGEMENT
    * =================================================================================== */
@@ -58,6 +60,19 @@ const MobileTopNav = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
+  const isProduction = process.env.DFX_PRODUCTION === 'true';
+
+  const handleTestnetModeToggle = () => {
+
+    if (!isProduction) {
+      const url = `https://cszmy-vyaaa-aaaak-quhea-cai.icp0.io/dashboard/?openWallet=true`;
+      console.log("Redirecting to:", url);
+      window.location.replace(url);
+    } else {
+      console.log("Production mode — redirection blocked.");
+    }
+  };
+
   const dashboardRefreshTrigger = useSelector(
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
@@ -139,6 +154,23 @@ const MobileTopNav = ({
     }
   };
 
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
   const errorMessages = {
     NoReserveDataFound:
       "The reserve data for the selected asset could not be found. Please check the asset or try again later.",
@@ -298,9 +330,13 @@ const MobileTopNav = ({
 
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
-
+      const statusData = await fetchStatusFromBackend();
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in response) {
         setIsTransferDropDownOpen(false);
+        setAmount("");
+        setReceiverAddress("");
 
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -330,7 +366,7 @@ const MobileTopNav = ({
     const errorMsg = errorKey?.toString() || "An unexpected error occurred";
     console.error("Error:", errorKey);
 
-    if (typeof errorKey === "object" && "BLOCKEDFORONEHOUR" in errorKey) {
+    if (typeof errorKey === "object" && "BlockedForOneHour" in errorKey) {
       toast.error("You are temporarily blocked from using this function", {
         className: "custom-toast",
         position: "top-center",
@@ -450,7 +486,46 @@ const MobileTopNav = ({
     }
   };
   const handleAmountChange = (e) => {
-    setAmount(e.target.value);
+    let inputAmount = e.target.value;
+
+    inputAmount = inputAmount.replace(/[^0-9.]/g, "");
+    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
+      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
+    }
+
+    if (inputAmount === "") {
+      setAmount("");
+      return;
+    }
+
+    if (inputAmount === "." || inputAmount === "0.") {
+      setAmount(inputAmount);
+      return;
+    }
+
+    const numericAmount = parseFloat(inputAmount);
+    if (!isNaN(numericAmount) && numericAmount > supplyBalance) {
+      toast.dismiss();
+      toast.error(
+        `Amount cannot exceed your available supply balance of ${supplyBalance.toLocaleString(
+          "en-US"
+        )}`
+      );
+      return;
+    } else {
+    }
+
+    let formattedAmount;
+    if (inputAmount.includes(".")) {
+      const [integerPart, decimalPart] = inputAmount.split(".");
+      formattedAmount = `${parseInt(integerPart || "0").toLocaleString(
+        "en-US"
+      )}.${decimalPart.slice(0, 8)}`;
+    } else {
+      formattedAmount = parseInt(inputAmount || "0").toLocaleString("en-US");
+    }
+
+    setAmount(formattedAmount);
   };
   const handleMaxClick = () => {
     setAmount(supplyBalance.toString());
@@ -842,6 +917,7 @@ const MobileTopNav = ({
                   <div className="-mr-4">
                     <CustomizedSwitches
                       checked={isTestnetMode}
+                      onChange={handleTestnetModeToggle}
                     />
                   </div>
                 </div>
@@ -977,7 +1053,7 @@ const MobileTopNav = ({
                           >
                             {asset && (
                               <img
-                                src={AssetImages[assets.indexOf(asset)]} 
+                                src={AssetImages[assets.indexOf(asset)]}
                                 alt={asset}
                                 className="object-fill w-6 h-6 rounded-full"
                               />

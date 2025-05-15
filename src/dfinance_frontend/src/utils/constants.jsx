@@ -11,7 +11,7 @@ import Peckshield from "../../public/assests-icon/peckshield-logo-svg.png";
 import abdk from "../../public/assests-icon/abdk.png";
 
 const isProduction = process.env.DFX_PRODUCTION === 'true';
-
+console.log("isProduction",isProduction)
 export const FOOTER_LINK_1 = [
   {
     id: 1,
@@ -88,16 +88,22 @@ export const DASHBOARD_TOP_NAV_LINK = [
     title: "Faq",
     route: "/#Faq",
     icon: "",
-    testnet: false, 
+    testnet: false,
   },
-  {
-    id: 4,
-    title: "Faucet",
-    route: "/Faucet",
-    icon: "",
-    testnet: !isProduction, 
-  },
+  // Faucet should only be visible when not in production
+  ...(!isProduction
+    ? [
+        {
+          id: 4,
+          title: "Faucet",
+          route: "/Faucet",
+          icon: "",
+          testnet: true,
+        },
+      ]
+    : []),
 ];
+
 export const error = [
   {
     id: 0,
@@ -468,6 +474,6 @@ export const FAUCET_ASSETS_TABLE_COL = [
   },
 ];
 
-
 export const BASE_UNIT = 100000000;
-export const HealthFactor_Unit = 10000000000;
+export const SCALING_FACTOR = 100000000;
+export const PERCENTAGE_FACTOR = 100;

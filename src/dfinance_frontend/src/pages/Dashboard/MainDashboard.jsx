@@ -7,8 +7,9 @@ import Loading from "../../components/Common/loading";
 import { usePageLoading } from "../../components/customHooks/useLoading";
 import useAssetData from "../../components/customHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
+import { DashboardDataProvider } from "../../components/Dashboard/DashboardDataProvider";
 
-const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
+const MainDashboard = ({ children, isDGov, includeDashboardNav = true, dataOnly = false }) => {
   const { isAuthenticated } = useAuth();
   const { loading } = useAssetData();
   const isLoading = usePageLoading();
@@ -33,6 +34,10 @@ const MainDashboard = ({ children, isDGov, includeDashboardNav = true }) => {
 
   if (isLoadingPage) {
     return <Loading isLoading={isLoadingPage} />;
+  }
+
+  if (dataOnly) {
+    return <DashboardDataProvider>{children}</DashboardDataProvider>;
   }
 
   return (

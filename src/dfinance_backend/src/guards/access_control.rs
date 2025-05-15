@@ -118,7 +118,6 @@ pub fn add_tester(username: String, principal: Principal) -> Result<(), Error> {
  */
 #[cfg(feature = "testnet")]
 pub fn get_testers() -> Result<Vec<Principal>, Error> {
-    // Check if the user is anonymous
     guard_prevent_anonymous()?;
 
     read_state(|state| {
@@ -189,10 +188,18 @@ pub fn add_admin(name: String, new_admin_id: Principal) -> Result<String, Error>
     })
 }
 
+/**
+ * @title Add Admin (Testnet Only)
+ * @dev Adds a new admin to the system; available only when the `testnet` feature is enabled.
+ * @param name The name of the new admin.
+ * @param new_admin_id The principal ID of the new admin to be added.
+ * @returns A success message if the admin is added, or an error if the admin already exists or the caller is unauthorized.
+ *
+ * @functionality Adds a new administrator after verifying that the caller is the controller and the principal is not anonymous.
+ */
 #[update]
 #[cfg(feature = "testnet")]
 pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, Error> {
-    ic_cdk::println!("add_admin_test");
     guard_principal_not_anonymous(&new_admin_id)?;
     guard_controller_only()?;
 
@@ -221,7 +228,7 @@ pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, E
  */
 #[update]
 pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
-    guard_admin_only()?; // Only an admin can remove another admin
+    guard_admin_only()?;
     guard_principal_not_anonymous(&admin_to_remove)?;
 
     mutate_state(|state| {

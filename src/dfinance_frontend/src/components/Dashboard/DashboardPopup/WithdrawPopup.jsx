@@ -13,7 +13,10 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { BASE_UNIT } from '../../../utils/constants';
+import { SCALING_FACTOR } from '../../../utils/constants';
+import { PERCENTAGE_FACTOR } from '../../../utils/constants';
+import { Info } from "lucide-react";
+import useNotificationSystem from "../../customHooks/useNotification";
 /**
  * WithdrawPopup Component
  *
@@ -22,7 +25,6 @@ import { BASE_UNIT } from '../../../utils/constants';
  *
  * @returns {JSX.Element} - Returns the WithdrawPopup component.
  */
-
 const WithdrawPopup = ({
   asset,
   image,
@@ -48,18 +50,17 @@ const WithdrawPopup = ({
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { backendActor, principal } = useAuth();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
-
+  const ledgerActors = useSelector((state) => state.ledger);
+const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
-
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [amount, setAmount] = useState("");
@@ -70,16 +71,12 @@ const WithdrawPopup = ({
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
 
+  const transferFee = transferFeRetrive?.transferFee;
   /* ===================================================================================
-   *                                  REDUX-SELECTER
+   *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
-
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
-
-  /* ===================================================================================
-   *                                  MEMOIZATION
-   * =================================================================================== */
 
   const principalObj = useMemo(
     () => Principal.fromText(principal),
@@ -89,7 +86,7 @@ const WithdrawPopup = ({
   /* ===================================================================================
    *                                  HELPERS
    * =================================================================================== */
-  
+
   // This function truncates a number to seven decimal places and returns it as a string.
   const truncateToSevenDecimals = (value) => {
     const multiplier = Math.pow(10, 7);
@@ -135,13 +132,30 @@ const WithdrawPopup = ({
 
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
-      inputAmount = truncateToeightDeimals(assetSupply-transferFee).toString();
+      inputAmount = truncateToeightDeimals(assetSupply - transferFee).toString();
     }
 
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
 
+   const fetchStatusFromBackend = async () => {
+    try {
+      const cycleStatus = await backendActor.cycle_alert();
+      console.log("cycleStatus", cycleStatus)
+      const tokenStatus = await backendActor.token_balance_alert(asset);
+      console.log("tokenStatus", tokenStatus)
+      const status = {
+        cycle: cycleStatus,
+        token: tokenStatus.OK
+      };
+
+      return status;
+    } catch (error) {
+      console.error("Failed to fetch status:", error);
+      throw error;
+    }
+  };
   /**
    * This function updates the USD equivalent of the withdrawal amount based on the conversion rate. It also checks if the
    * amount is valid and less than or equal to the asset supply, providing error messages when necessary.
@@ -152,7 +166,7 @@ const WithdrawPopup = ({
   const updateAmountAndUsdValue = (inputAmount) => {
     const Amount = parseFloat(inputAmount.toString().replace(/,/g, ""));
     const truncateTo8Decimals = (num) => {
-      return Math.trunc(num * BASE_UNIT) / BASE_UNIT;
+      return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
     };
     const numericAmount = truncateTo8Decimals(Amount);
     const truncatedAssetSupply = truncateTo8Decimals(assetSupply);
@@ -171,6 +185,7 @@ const WithdrawPopup = ({
       console.error("Amount must be a positive number");
     }
   };
+
   const safeAmount = Number((amount.toString() || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
   const scaledAmount = amountAsNat64;
@@ -213,6 +228,12 @@ const WithdrawPopup = ({
     }
 
     setIsLoading(true);
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
     try {
       const safeAmount =
@@ -222,9 +243,7 @@ const WithdrawPopup = ({
       const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
 
       const totalAmount = transferFeeBigInt
-
         ? scaledAmount + transferFeeBigInt
-
         : scaledAmount;
 
       const withdrawParams = {
@@ -237,13 +256,15 @@ const WithdrawPopup = ({
         withdrawParams
       );
       dispatch(toggleDashboardRefresh());
-
+ const statusData = await fetchStatusFromBackend();            
+      // Check status and send notifications if needed      
+      await checkAndNotify(statusData);
       if ("Ok" in withdrawResult) {
         trackEvent(
           "Withdraw," +
           asset +
           "," +
-          scaledAmount / BASE_UNIT +
+          scaledAmount / SCALING_FACTOR +
           "," +
           currentCollateralStatus +
           "," +
@@ -252,7 +273,7 @@ const WithdrawPopup = ({
           "Withdraw," +
           asset +
           "," +
-          scaledAmount / BASE_UNIT +
+          scaledAmount / SCALING_FACTOR +
           "," +
           currentCollateralStatus +
           ", " +
@@ -281,7 +302,7 @@ const WithdrawPopup = ({
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
-        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
+        if (errorObject && "BlockedForOneHour" in errorObject) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -377,7 +398,27 @@ const WithdrawPopup = ({
     setIsModalOpen(false);
   };
 
-  // This function calculates the health factor and ltv based on the total collateral, total debt, liquidation threshold, and reserve liquidation threshold.
+  /**
+   * Calculates key borrowing metrics:
+   * 
+   * amountTaken:
+   *   - Value of asset used as collateral (if enabled).
+   *   - amountTaken = currentCollateralStatus ? usdValue : 0
+   * 
+   * totalCollateralValue:
+   *   - Remaining collateral = totalCollateral - amountTaken
+   * 
+   * tempLiq (effective liquidation threshold):
+   *   - avliq = liquidationThreshold × totalCollateral
+   *   - truncatedVal = amountTaken × reserveliquidationThreshold
+   *   - tempLiq = (avliq - truncatedVal) / totalCollateralValue
+   * 
+   * healthFactor:
+   *   - Risk buffer = (totalCollateralValue × (tempLiq / 100)) / totalDebt
+   * 
+   * ltv (Loan to Value):
+   *   - ltv = (totalDebt / totalCollateralValue) × 100
+   */
   const calculatedValues = ({
     totalCollateral,
     totalDebt,
@@ -389,7 +430,7 @@ const WithdrawPopup = ({
     const amountTaken = currentCollateralStatus
       ? (usdValue || 0).toFixed(8)
       : "0.00000000";
-    const truncateTo8Decimals = (num) => Math.trunc(num * BASE_UNIT) / BASE_UNIT;
+    const truncateTo8Decimals = (num) => Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
 
     let totalCollateralValue = 0;
     if (
@@ -405,7 +446,7 @@ const WithdrawPopup = ({
 
     let avliq = liquidationThreshold * totalCollateral;
     let truncatedVal =
-      Math.trunc(amountTaken * reserveliquidationThreshold * BASE_UNIT) / BASE_UNIT;
+      Math.trunc(amountTaken * reserveliquidationThreshold * SCALING_FACTOR) / SCALING_FACTOR;
     let tempLiq = 0;
     if (
       amountTaken > totalCollateral &&
@@ -416,7 +457,7 @@ const WithdrawPopup = ({
       tempLiq = avliq - truncatedVal;
     }
     if (totalCollateralValue > 0) {
-      tempLiq = Math.floor((tempLiq / totalCollateralValue) * BASE_UNIT) / BASE_UNIT;
+      tempLiq = Math.floor((tempLiq / totalCollateralValue) * SCALING_FACTOR) / SCALING_FACTOR;
     }
 
     let totalDebtValue = parseFloat(totalDebt);
@@ -426,14 +467,14 @@ const WithdrawPopup = ({
       totalDebtValue === 0
         ? Infinity
         : Math.round(
-          ((totalCollateralValue * (tempLiq / 100)) / totalDebtValue) * BASE_UNIT
-        ) / BASE_UNIT;
+          ((totalCollateralValue * (tempLiq / PERCENTAGE_FACTOR)) / totalDebtValue) * SCALING_FACTOR
+        ) / SCALING_FACTOR;
 
     let ltv =
       totalCollateralValue === 0
         ? 0
         : parseFloat(totalDebtValue) / totalCollateralValue;
-    ltv = Math.trunc(ltv * BASE_UNIT * 100) / BASE_UNIT; //in percent
+    ltv = Math.trunc(ltv * (SCALING_FACTOR * PERCENTAGE_FACTOR)) / SCALING_FACTOR; //in percent
 
 
     return {
@@ -462,10 +503,12 @@ const WithdrawPopup = ({
           : truncateToSevenDecimals(assetSupply)
       : 0;
     const maxAmount = asset_supply - fee;
-    const formattedAmount = maxAmount.toString().split('.')[0] + '.' + (maxAmount.toString().split('.')[1] || '').padEnd(8, '0').substring(0, 8);
+    const formattedAmount =
+      maxAmount.toString().split(".")[0] +
+      "." +
+      (maxAmount.toString().split(".")[1] || "").padEnd(8, "0").substring(0, 8);
     setAmount(formattedAmount);
     updateAmountAndUsdValue(assetSupply);
-
   };
 
   // This function handles the click event for the close button. It resets the payment state and closes the modal.
@@ -667,7 +710,9 @@ const WithdrawPopup = ({
                       }
                     }}
                   >
-                    {truncateToeightDeimals(Math.max(0, assetSupply - transferFee))}{" "}
+                    {truncateToeightDeimals(
+                      Math.max(0, assetSupply - transferFee)
+                    )}{" "}
                     Max
                   </p>
                 </div>
@@ -683,8 +728,11 @@ const WithdrawPopup = ({
                 </div>
                 <div className="w-4/12 flex flex-col items-end">
                   <p className="text-xs mt-2">
-                    {(
-                      Math.max(0, assetSupply - transferFee - Number(amount.toString().replace(/,/g, "")))
+                    {Math.max(
+                      0,
+                      assetSupply -
+                      transferFee -
+                      Number(amount.toString().replace(/,/g, ""))
                     ).toLocaleString(undefined, {
                       minimumFractionDigits: 8,
                       maximumFractionDigits: 8,
@@ -750,9 +798,11 @@ const WithdrawPopup = ({
                     </span>
                   </p>
                 </div>
-                <div className="w-full flex justify-between items-center my-1 mt-2">
-                  <div className="flex items-center gap-1">
-                    <p>Transaction Fee</p>
+                <div className="w-full flex justify-between items-center my-1">
+                  <div className="flex items-center gap-1 relative">
+                    <div className="flex items-center">
+                      <p>Transaction Fee</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <p>{transferFee}</p>
@@ -853,14 +903,14 @@ const WithdrawPopup = ({
                 </strong>{" "}
                 and you have withdrawn{" "}
                 <strong>
-                  {scaledAmount / BASE_UNIT
-                    ? scaledAmount / BASE_UNIT >= 1e-8 &&
-                      scaledAmount / BASE_UNIT < 1e-7
-                      ? Number(scaledAmount / BASE_UNIT).toFixed(8)
-                      : scaledAmount / BASE_UNIT >= 1e-7 &&
-                        scaledAmount / BASE_UNIT < 1e-6
-                        ? Number(scaledAmount / BASE_UNIT).toFixed(7)
-                        : scaledAmount / BASE_UNIT
+                  {scaledAmount / SCALING_FACTOR
+                    ? scaledAmount / SCALING_FACTOR >= 1e-8 &&
+                      scaledAmount / SCALING_FACTOR < 1e-7
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
+                      : scaledAmount / SCALING_FACTOR >= 1e-7 &&
+                        scaledAmount / SCALING_FACTOR < 1e-6
+                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                        : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

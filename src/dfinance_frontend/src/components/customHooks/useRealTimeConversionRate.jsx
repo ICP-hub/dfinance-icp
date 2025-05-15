@@ -28,7 +28,6 @@ const useRealTimeConversionRate = (asset) => {
           asset
         );
 
-        // Certificate check
         if (result && result[1]) {
           const isVerified = await verifyCertificate(result[1]);
           if (!isVerified) {

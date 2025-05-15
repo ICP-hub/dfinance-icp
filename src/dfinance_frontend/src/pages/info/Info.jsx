@@ -16,8 +16,8 @@ import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import useUserData from "../../components/customHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
-import { BASE_UNIT } from '../../utils/constants';
-import { HealthFactor_Unit } from '../../utils/constants';
+import { SCALING_FACTOR } from '../../utils/constants';
+import { PERCENTAGE_FACTOR } from '../../utils/constants';
 ChartJS.register(ArcElement, Tooltip);
 
 /**
@@ -58,7 +58,6 @@ const DashboardCards = () => {
 
   const [like, setLike] = useState(false);
   const [threshold] = useState(5000000000000);
-  const [tokenThreshold] = useState(10000);
 
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -262,9 +261,8 @@ const DashboardCards = () => {
 
     try {
       const result = await backendActor.cycle_checker();
-
       const cycles = result?.Ok[0] ?? "Error retrieving cycles";
-      const cert = result?.Ok[1]; // Assuming certificate is the second element in the result, if it exists.
+      const cert = result?.Ok[1]; 
 
       if (cert) {
         try {
@@ -303,152 +301,9 @@ const DashboardCards = () => {
     fetchCycles();
   }, []);
 
-  /**
-   * Sends email notifications when cycle or token thresholds are breached.
-   * @param {string} subject - Email subject.
-   * @param {string} htmlMessage - Email body.
-   */
-  const sendEmailNotification = async (subject, htmlMessage) => {
-    try {
-      const templateParams = {
-        to_name: "Admin",
-        subject,
-        message: htmlMessage,
-      };
 
-      await emailjs.send(
-        "service_7pu7uvh",
-        "template_1k2eq7a",
-        templateParams,
-        "uWDc83b20aMxTTyrz"
-      );
-    } catch (err) {
-      console.error("Failed to send email:", err);
-    }
-  };
 
-  let emailInterval;
-
-  let lastExhaustedEmailTimestamp;
-  let lastWarningEmailTimestamp;
-
-  /**
-   * Handles cycle-based notifications and sends warning or exhaustion emails.
-   * @param {number} currentCycles - The current number of cycles.
-   */
-  const handleNotification = (currentCycles) => {
-    const oneDay = 24 * 60 * 60 * 1000;
-
-    const sendWarningEmail = async () => {
-      const htmlMessage = `
-    Your cycles are close to the threshold value. Please renew your cycles to avoid interruption.
-   Current Cycles: ${formatNumber(currentCycles)}
-   Threshold : ${formatNumber(threshold + 2000000000000)}
-    `;
-      try {
-        await sendEmailNotification("Cycle Warning", htmlMessage);
-        lastWarningEmailTimestamp = Date.now();
-      } catch (error) {
-        console.error("Failed to send warning email:", error);
-      }
-    };
-
-    const sendExhaustedEmail = async () => {
-      const htmlMessage = `
-      Your cycles are exhausted! Please renew your cycles immediately to continue services.
-      Current Cycles: ${formatNumber(currentCycles)}
-      Threshold: ${formatNumber(threshold)}
-    `;
-      try {
-        await sendEmailNotification("Cycle Exhausted", htmlMessage);
-        lastExhaustedEmailTimestamp = Date.now();
-      } catch (error) {
-        console.error("Failed to send exhausted email:", error);
-      }
-    };
-
-    if (emailInterval) {
-      clearInterval(emailInterval);
-    }
-
-    emailInterval = setInterval(async () => {
-      if (currentCycles <= threshold) {
-        await sendExhaustedEmail();
-      } else if (
-        currentCycles > threshold &&
-        currentCycles < threshold + 2000000000000
-      ) {
-        await sendWarningEmail();
-      }
-    }, oneDay);
-  };
-
-  const onCycleUpdate = async () => {
-    try {
-      const newCycles = await getCycles();
-      handleTokenNotification(newCycles);
-    } catch (error) {
-      console.error("Error fetching cycles:", error);
-    }
-  };
-
-  let emailinterval = null;
-
-  let lastTokenWarningEmailTimestamp;
-  let lastTokenExhaustedEmailTimestamp;
-  /**
-   * Handles token balance-based notifications and sends warning or exhaustion emails.
-   * @param {string} assetName - Name of the asset.
-   * @param {number} assetBalance - Current asset balance.
-   */
-  const handleTokenNotification = (assetName, assetBalance) => {
-    const oneDay = 24 * 60 * 60 * 1000;
-    const currentTime = Date.now();
-
-    const sendTokenWarningEmail = async () => {
-      const htmlMessage = `
-      Your balance of ${assetName} is approaching the threshold. Please mint  ${assetName} above threshold value .
-      Current Balance: ${formatNumber(assetBalance)}
-      Threshold: ${formatNumber(tokenThreshold)}
-    `;
-      try {
-        await sendEmailNotification(`${assetName} Warning`, htmlMessage);
-        lastTokenWarningEmailTimestamp = currentTime;
-      } catch (error) {
-        console.error("Failed to send token warning email:", error);
-      }
-    };
-
-    const sendTokenExhaustedEmail = async () => {
-      const htmlMessage = `
-      Your balance of ${assetName} is exhausted!  Please mint  ${assetName} above threshold value.
-      Current Balance: ${formatNumber(assetBalance)}
-      Threshold: ${formatNumber(tokenThreshold)}
-    `;
-      try {
-        await sendEmailNotification(`${assetName} Exhausted`, htmlMessage);
-        lastTokenExhaustedEmailTimestamp = currentTime;
-      } catch (error) {
-        console.error("Failed to send token exhausted email:", error);
-      }
-    };
-
-    if (emailinterval) {
-      clearInterval(emailinterval);
-    }
-
-    emailInterval = setInterval(async () => {
-      if (assetBalance <= tokenThreshold) {
-        await sendTokenExhaustedEmail();
-      } else if (
-        assetBalance > tokenThreshold &&
-        assetBalance < tokenThreshold + 1000
-      ) {
-        await sendTokenWarningEmail();
-      }
-    }, oneDay);
-  };
-
+ 
   // Function to format numbers with commas
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
@@ -528,26 +383,6 @@ const DashboardCards = () => {
     },
   };
 
-  // Function to handle token updates and notifications
-  const onTokenUpdate = (newBalance) => {
-    handleTokenNotification(newBalance);
-  };
-
-  // Function to handle token balances and send notifications
-  const handleTokenBalances = async () => {
-    for (const asset of poolAssets) {
-      const assetBalance = assetBalances[asset.name];
-      onTokenUpdate(assetBalance);
-      if (assetBalance !== undefined) {
-        handleTokenNotification(asset.name, assetBalance);
-        onTokenUpdate(assetBalance);
-      }
-    }
-  };
-
-  useEffect(() => {
-    handleTokenBalances();
-  }, [assetBalances, tokenThreshold]);
 
   useEffect(() => {
     if (totalUsers === null || interestAccure === null) {
@@ -566,8 +401,6 @@ const DashboardCards = () => {
         ];
 
         setCardData(formattedData);
-        await handleNotification(Number(cycles));
-        await onCycleUpdate(Number(cycles));
       } catch (err) {
         console.error("Error in fetchData:", err);
       }
@@ -584,7 +417,7 @@ const DashboardCards = () => {
     Object.entries(userAccountData).forEach(([principal, data]) => {
       if (data?.healthFactor) {
         updatedHealthFactors[principal] =
-          Number(data.healthFactor) / HealthFactor_Unit;
+          Number(data.healthFactor) / (SCALING_FACTOR * PERCENTAGE_FACTOR);
       } else {
         updatedHealthFactors[principal] = null;
       }
@@ -884,11 +717,10 @@ const DashboardCards = () => {
                 </h3>
 
                 <p
-                  className={`text-4xl font-bold px-3 py-2 mt-1 ${
-                    usersLoading
+                  className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
                       ? "text-[#233D63] dark:text-darkText"
                       : getCycleColor(card.value)
-                  }`}
+                    }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
                 </p>
@@ -973,8 +805,8 @@ const DashboardCards = () => {
                                     </span>{" "}
                                     {formatValue(
                                       (Number(data[1]?.Ok[0]?.asset_supply) /
-                                        BASE_UNIT) *
-                                        (assetRate / BASE_UNIT)
+                                        SCALING_FACTOR) *
+                                      (assetRate / SCALING_FACTOR)
                                     )}
                                   </p>
                                 </div>
@@ -989,8 +821,8 @@ const DashboardCards = () => {
                                     </span>{" "}
                                     {formatValue(
                                       (Number(data[1]?.Ok[0]?.asset_borrow) /
-                                        BASE_UNIT) *
-                                        (assetRate / BASE_UNIT)
+                                        SCALING_FACTOR) *
+                                      (assetRate / SCALING_FACTOR)
                                     )}
                                   </p>
                                 </div>

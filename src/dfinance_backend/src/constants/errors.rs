@@ -72,9 +72,9 @@ pub enum Error {
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
     AmountSubtractionError,
-    TOOMANYREQUESTS,
-    BLOCKEDFORONEHOUR,
-    USERCANNOTBELIQUIDATED,
+    TooManyRequests,
+    BlockedForOneHour,
+    UserCannotBeLiquidated,
     FeeExceedsAmount ,
     LiquidationProtocolfeeIsHigher,
     RateLimitExceeded,
@@ -105,7 +105,8 @@ pub enum Error {
     NoCollateralFound,
     LowPlatformBalance,
     ErrorSupplyToken,
-    TotalCollateraLessThan
+    TotalCollateraLessThan,
+    UserCollateralLessThanReward
     
 }
 
@@ -183,9 +184,9 @@ impl Error {
             Error::LockOperationInProgess => "Another operation is already in progress for user",
             Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
             Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
-            Error::USERCANNOTBELIQUIDATED => "user health factor is greater than the one so liquidation is not possible",
-            Error::TOOMANYREQUESTS => "You are temporarily blocked",
-            Error::BLOCKEDFORONEHOUR => "You are blocked for one hour",
+            Error::UserCannotBeLiquidated => "user health factor is greater than the one so liquidation is not possible",
+            Error::TooManyRequests => "You are temporarily blocked",
+            Error::BlockedForOneHour => "You are blocked for one hour",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
             Error::LiquidationProtocolfeeIsHigher => "Liquidation protocol fee is higher",
             Error::RateLimitExceeded => "Too many requests. Please wait and try again.",
@@ -214,7 +215,8 @@ impl Error {
             Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
             Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",  
             Error::ErrorSupplyToken => "Error supplying token",
-            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd"
+            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd",
+            Error::UserCollateralLessThanReward => "User collateral is less than reward amount",
         }
     }
 }

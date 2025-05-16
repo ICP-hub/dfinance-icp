@@ -63,7 +63,7 @@ const Footer = () => {
     try {
       setLoading(true);
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+        fee: 10,
         memo: [],
         from_subaccount: [],
         created_at_time: [],

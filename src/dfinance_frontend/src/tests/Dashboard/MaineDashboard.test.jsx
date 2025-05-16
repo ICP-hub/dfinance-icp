@@ -13,7 +13,7 @@ jest.mock("../../utils/useAuthClient", () => ({
 }));
 
 // Mocking useAssetData hook to simulate asset data (with loading state and asset values)
-jest.mock("../../components/customHooks/useAssets", () => ({
+jest.mock("../../components/CustomHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     loading: false,

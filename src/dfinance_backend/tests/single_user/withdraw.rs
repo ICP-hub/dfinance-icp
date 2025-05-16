@@ -1,9 +1,10 @@
 use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use crate::utils::common_functions::get_user_principal2;
+use crate::utils::common_functions::{get_user_principal2, init_tracing};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
+use tracing::{info,error};
 
 
 
@@ -35,23 +36,23 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
             expected_error_message: None,
         },
     ];
-
-    ic_cdk::println!(
+    init_tracing();
+    info!(
         "\n======================== Starting IC Withdraw Tests ========================\n"
     );
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset);
+        info!("\n------------------------------------------------------------");
+        info!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
+        info!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("Is Collateral: {}", case.is_collateral);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        info!("Amount: {}", amount_float / 100000000.0);
+        info!("Is Collateral: {}", case.is_collateral);
+        info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            info!("Expected Error Message: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let user_principal = get_user_principal2();
         // Simulate 5 concurrent calls
@@ -89,13 +90,13 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                     match withdraw_response {
                         Ok(_balance) => {
                             if !case.expect_success {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",
                                     i + 1
                                 );
                                 continue;
                             }
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Withdraw successful.\n",
                                 i + 1,
                             );
@@ -103,7 +104,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                         Err(error) => {
                             if !case.expect_success {
                                 if case.expected_error_message.as_deref() != Some(error.message()) {
-                                    println!(
+                                    error!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
                                     case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -111,31 +112,31 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 );
                                     continue;
                                 }
-                                ic_cdk::println!(
+                                info!(
                                 "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {:?}",
                                 i + 1,
                                 error
                             );
                             } else {
-                                ic_cdk::println!(
+                                info!(
                                     "-----------------------------------------------------------------------",
                                 );
-                                ic_cdk::println!(
+                                error!(
                                     "❌ Call {} Failed: Expected success but got error: {}",
                                     j + 1,
                                     error.message(),
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got error : {:?}: {:?}", i + 1, error, user_principal.to_text());
+                                // info!("❌ IC Test Case {} Failed: Expected success but got error : {:?}: {:?}", i + 1, error, user_principal.to_text());
                                 continue;
                             }
                         }
                     }
                 }
                 WasmResult::Reject(reject_message) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
@@ -146,7 +147,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         }
     }
 
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Withdraw Tests Completed ========================\n"
     );
 }

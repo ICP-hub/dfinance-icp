@@ -1656,6 +1656,8 @@ dependencies = [
  "serde_json",
  "time",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "uint",
 ]
 
@@ -5631,6 +5633,8 @@ dependencies = [
  "once_cell",
  "serde",
  "time",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -8480,6 +8484,7 @@ dependencies = [
  "sharded-slab",
  "smallvec",
  "thread_local",
+ "time",
  "tracing",
  "tracing-core",
  "tracing-log",

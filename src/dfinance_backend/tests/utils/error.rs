@@ -107,8 +107,10 @@ pub enum Error {
     NoCollateralFound,
     LowPlatformBalance,
     ErrorSupplyToken,
-    TotalCollateraLessThan
-    
+    TotalCollateraLessThan,
+    UserCollateralLessThanReward  ,
+     AllowanceTooLow,
+    AllowanceQueryFailed,  
 }
 
 impl Error {
@@ -216,7 +218,10 @@ impl Error {
             Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
             Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",  
             Error::ErrorSupplyToken => "Error supplying token",
-            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd"
+            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd",
+            Error::UserCollateralLessThanReward => "User collateral is less than reward amount",
+            Error::AllowanceTooLow => "Allowance is too low",
+            Error::AllowanceQueryFailed => "Failed to query allowance",
         }
     }
 }

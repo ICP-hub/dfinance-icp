@@ -14,7 +14,7 @@ jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => ({
+jest.mock("../../components/CustomHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn(),
 }));

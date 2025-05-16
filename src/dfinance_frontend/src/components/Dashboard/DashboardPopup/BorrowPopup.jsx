@@ -6,19 +6,19 @@ import { useMemo } from "react";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
-import useUserData from "../../customHooks/useUserData";
+import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
+import useUserData from "../../CustomHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { Principal } from "@dfinity/principal";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
-import useFetchConversionRate from "../../customHooks/useFetchConversionRate";
-import useAssetData from "../../customHooks/useAssets";
-import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../../customHooks/useTransferFee";
+import useFetchConversionRate from "../../CustomHooks/useFetchConversionRate";
+import useAssetData from "../../CustomHooks/useAssets";
+import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-import useNotificationSystem from "../../customHooks/useNotification";
+import useNotificationSystem from "../../CustomHooks/useNotification";
 
 /**
  * Borrow component allows users to borrow assets and it also interacts with the backend to execute borrow transactions.

@@ -1,6 +1,7 @@
 use crate::utils::error as errors;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Register User
@@ -36,11 +37,11 @@ pub fn test_register_user(pic: &PocketIc, backend_canister: Principal, user_prin
             match register_user_response {
                 Ok(_message) => {
                     // Success: Log that the registration was successful
-                    ic_cdk::println!("✅ Register user function succeeded");
+                    info!("✅ Register user function succeeded");
                 }
                 Err(e) => {
                     // Failure: Log the error and panic, as it was expected
-                    ic_cdk::println!(
+                    error!(
                         "❌ Register user function failed as expected with error: {:?}",
                         e
                     );

@@ -10,6 +10,16 @@ use core::cell::RefCell;
 use std::time::Duration;
 use std::collections::HashMap;
 use ic_stable_structures::storable::{Bound, Storable};
+use tracing_subscriber::fmt;
+use tracing::{info,error,debug};
+
+pub fn init_tracing() {
+    let _ = fmt()
+        .with_max_level(tracing::Level::INFO)
+        .with_test_writer()
+        .event_format(fmt::format().compact().without_time().with_target(false).with_level(false))
+        .try_init();
+}
 
 // Define the virtual memory type
 type VMem = ic_stable_structures::memory_manager::VirtualMemory<DefaultMemoryImpl>;
@@ -106,7 +116,7 @@ fn init() {
      let caller = ic_cdk::caller();
  
      if !ic_cdk::api::is_controller(&caller) {
-        ic_cdk::println!("Unauthorized access to logs");
+        error!("Unauthorized access to logs");
          return Err("Unauthorized access to logs.".to_string());
      }
      
@@ -130,14 +140,14 @@ fn init() {
              storage.insert(final_id, serialized_logs);
          }
  
-         ic_cdk::println!("✅ Batch logs received and stored.");
+         info!("✅ Batch logs received and stored.");
          // Return the current log count after insertion
          storage.len()
         });
         
         // Check if we need to clean up logs based on count
         if log_count > MAX_LOG_COUNT {
-            ic_cdk::println!("Log count ({}) exceeds limit ({}). Cleaning up logs.", log_count, MAX_LOG_COUNT);
+            info!("Log count ({}) exceeds limit ({}). Cleaning up logs.", log_count, MAX_LOG_COUNT);
             ic_cdk::spawn(async {
                 clear_old_logs_above_limit();
             });
@@ -180,7 +190,7 @@ pub fn clear_old_logs(retention_cutoff: u64) {
                 if let Some(log_entry) = logs.first() {
                     if let Some(timestamp_str) = log_entry.split(']').next() {
                         if let Ok(timestamp) = timestamp_str.trim_start_matches('[').parse::<u64>() {
-                            ic_cdk::println!("comparision in time = {} , {}", timestamp, retention_cutoff);
+                            debug!("comparision in time = {} , {}", timestamp, retention_cutoff);
                             if timestamp < retention_cutoff {
                                 return Some(key);
                             }
@@ -295,8 +305,6 @@ pub fn clear_old_logs_above_limit() {
 
         to_delete.len()
     });
-
-    ic_cdk::println!("Deleted {} logs older logs", deleted_count);
 }
 
 #[update]

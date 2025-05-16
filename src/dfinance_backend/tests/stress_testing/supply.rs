@@ -4,6 +4,7 @@ use crate::utils::structs::*;
 use candid::Nat;
 use candid::{decode_one, encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Supply Stress Test
@@ -77,23 +78,23 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     let total_users = random_users.len();
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Supply Stress Testing ========================\n"
     );
-    ic_cdk::println!(
+    info!(
         "🔥 Stress Testing with {} user principals! 🔥\n",
         total_users
     );
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🚀 Test Case {}: Supply Request Initiated", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🚀 Test Case {}: Supply Request Initiated", i + 1);
 
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!(
+        info!(
             "🔹 Asset: {} \n🔹 Amount (Tokens): {:.8} \n🔹 Collateral: {} \n🔹 Expected Success: {}",
             case.asset,
             amount_float / 100000000.0,
@@ -102,9 +103,9 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         );
 
         if let Some(msg) = &case.expected_error_message {
-            ic_cdk::println!("⚠️ Expected Error: {}", msg);
+            info!("⚠️ Expected Error: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let mut success_count = 0;
         let mut failure_count = 0;
@@ -115,7 +116,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
-                        ic_cdk::println!(
+                        error!(
                             "❌ User {}: Asset principal not found",
                             user_principal.to_text()
                         );
@@ -136,7 +137,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 backend_canister,
                 case.amount.clone(),
             ) {
-                ic_cdk::println!(
+                error!(
                     "❌ User {}: ICRC2 approval rejected",
                     user_principal.to_text()
                 );
@@ -167,14 +168,14 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                 Ok(WasmResult::Reply(reply)) => {
                     match decode_one::<Result<Nat, errors::Error>>(&reply) {
                         Ok(Ok(_)) => {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ User {}: Supply Successful.",
                                 user_principal.to_text(),
                             );
                             success_count += 1;
                         }
                         Ok(Err(error)) => {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ User {}: Supply Failed. Error: {}",
                                 user_principal.to_text(),
                                 error.message()
@@ -182,7 +183,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                             failure_count += 1;
                         }
                         Err(_) => {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ User {}: Unexpected Response Format",
                                 user_principal.to_text()
                             );
@@ -191,7 +192,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     }
                 }
                 Ok(WasmResult::Reject(msg)) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ User {}: Supply Call Rejected. Message: {}",
                         user_principal.to_text(),
                         msg
@@ -199,7 +200,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     failure_count += 1;
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ User {}: Supply Call Error: {:?}",
                         user_principal.to_text(),
                         e
@@ -209,14 +210,14 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             }
         }
 
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
-        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("\n------------------------------------------------------------");
+        info!("📊 Test Case {} Summary: ", i + 1);
+        info!("✅ Successful Transactions: {}", success_count,);
+        error!("❌ Failed Transactions: {}", failure_count,);
+        info!("------------------------------------------------------------\n");
     }
 
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Supply Stress Test Completed ========================\n"
     );
 }

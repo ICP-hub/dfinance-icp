@@ -9,6 +9,8 @@ use candid::{CandidType, Deserialize};
 use serde::Serialize;
 use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData};
 use std::collections::BTreeMap;
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
+use crate::{debug, error, info};
 
 
 // --- Data Structures ---
@@ -71,7 +73,7 @@ pub async fn send_backup_data_to_canister() -> Result<(), String> {
     let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
         Ok(id) => id,
         Err(_) => {
-            ic_cdk::println!("❌ Failed to get logs canister ID");
+            error!("❌ Failed to get logs canister ID");
             return Err("Failed to get logs canister ID".to_string());
         },
     };
@@ -90,11 +92,11 @@ pub async fn send_backup_data_to_canister() -> Result<(), String> {
     ).await {
         Ok((Ok(()),)) => Ok(()),
         Ok((Err(err_msg),)) => {
-            ic_cdk::println!("❌ receive_logs_batch returned error: {}", err_msg);
+            error!("❌ receive_logs_batch returned error: {}", err_msg);
             Err(format!("Error from logs canister: {}", err_msg))
         }
         Err((code, msg)) => {
-            ic_cdk::println!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
+            error!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
             Err(format!("Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg))
         }
     }
@@ -107,7 +109,7 @@ pub async fn receive_and_load_data_backup(backup_id: u64) -> Result<(), String> 
     let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
         Ok(id) => id,
         Err(_) => {
-            ic_cdk::println!("❌ Failed to get logs canister ID");
+            error!("❌ Failed to get logs canister ID");
             return Err("Failed to get logs canister ID".to_string());
         },
     };
@@ -119,11 +121,11 @@ pub async fn receive_and_load_data_backup(backup_id: u64) -> Result<(), String> 
     ).await {
         Ok((Ok(data),)) => data,
         Ok((Err(err_msg),)) => {
-            ic_cdk::println!("❌ get_data_backup returned error: {}", err_msg);
+            error!("❌ get_data_backup returned error: {}", err_msg);
             return Err(format!("Error from logs canister: {}", err_msg));
         }
         Err((code, msg)) => {
-            ic_cdk::println!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
+            error!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
             return Err(format!("Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg));
         }
     };

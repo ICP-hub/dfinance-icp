@@ -7,7 +7,8 @@ import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
 import { Plus, Minus, RefreshCw } from "lucide-react";
 import DFinance from "../../../public/home/favicon.png";
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const Footer = () => {
   /* ===================================================================================
    *                                  HOOKS
@@ -62,8 +63,10 @@ const Footer = () => {
     const ledgerActor = ledgerActors.ckUSDC;
     try {
       setLoading(true);
+      const fee = await ledgerActor.icrc1_fee();
+      console.log("fee",fee)
       const approval = await ledgerActor.icrc2_approve({
-        fee: [10],
+         fee: fee ? [fee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -75,7 +78,7 @@ const Footer = () => {
           subaccount: [],
         },
       });
-
+console.log("approval",approval)
       if (approval?.Ok && approval.Ok > 0n) {
         setIsApproved(true);
       } else {
@@ -102,25 +105,25 @@ const Footer = () => {
         34000000000,
         29000000000
       );
-
+console.log("result",result)
       if ("Ok" in result) {
         console.log("Reserve created successfully:", result.Ok);
       } else if ("Err" in result) {
         console.error("Failed to create reserve:", result.Err);
         if (result.Err.InsufficientFunds) {
-          alert("Insufficient funds to create reserve");
+          toast.errro("Insufficient funds to create reserve");
         } else if (result.Err.InsufficientAllowance) {
           setIsApproved(false);
-          alert("Insufficient allowance. Please approve again.");
+          toast.errro("Insufficient allowance. Please approve again.");
         } else {
-          alert("Error creating reserve. See console for details.");
+          toast.errro("Error creating reserve. See console for details.");
         }
       } else {
         console.error("Unknown response format from create_user_reserve");
       }
     } catch (error) {
       console.error(`Error creating reserve: ${error.message}`);
-      alert("Failed to create reserve. Please try again.");
+      toast.error("Failed to create reserve. Please try again.");
     } finally {
       setLoading(false);
     }

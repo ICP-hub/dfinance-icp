@@ -855,15 +855,37 @@ export default function Navbar({ isHomeNav }) {
 
     // Define async function inside useEffect
     const fetchFee = async () => {
-      try {
-        const fee = await ledgerActor.icrc1_fee();
-        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-        const feeBigInt = BigInt(Math.round(feeAsNumber));
-        setLedgerFee(feeBigInt);
-      } catch (error) {
-        console.error(`Error getting fee for ${asset}:`, error);
-      }
-    };
+  try {
+    const fee = await ledgerActor?.icrc1_fee();
+    
+    // Check if fee is undefined or null
+    if (fee === undefined || fee === null) {
+      console.warn(`Fee for ${asset} is undefined or null`);
+      setLedgerFee(BigInt(0)); // Set a default fee
+      return;
+    }
+    
+    // If fee is already a bigint, use it directly
+    if (typeof fee === "bigint") {
+      setLedgerFee(fee);
+      return;
+    }
+    
+    // Make sure fee is a valid number before converting to BigInt
+    const feeAsNumber = Number(fee);
+    if (isNaN(feeAsNumber)) {
+      console.warn(`Fee for ${asset} is NaN`);
+      setLedgerFee(BigInt(0)); // Set a default fee
+      return;
+    }
+    
+    const feeBigInt = BigInt(Math.round(feeAsNumber));
+    setLedgerFee(feeBigInt);
+  } catch (error) {
+    console.error(`Error getting fee for ${asset}:`, error);
+    setLedgerFee(BigInt(0)); // Set a default fee on error
+  }
+};
 
     // Call the async function
     fetchFee();

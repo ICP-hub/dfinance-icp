@@ -9,8 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
 import useUserData from "../../CustomHooks/useUserData";
-import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
-import useUserData from "../../CustomHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";

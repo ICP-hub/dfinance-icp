@@ -1,6 +1,8 @@
 use candid::Nat;
+use tracing::{info,error,debug};
 use std::ops::Mul;
 use crate::calculation_testing::normalized_supply::user_normalized_supply;
+use crate::utils::common_functions::init_tracing;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
@@ -52,12 +54,12 @@ pub async fn calculate_interest_rates(
     reserve_factor: Nat,
     asset: String,
 ) -> Result<(Nat, Nat), errors::Error> {
-    ic_cdk::println!("\n----------- Calculating Interest Rates --------------\n");
-    ic_cdk::println!("Asset: {:?}", asset);
-    ic_cdk::println!("Total Debt: {:?}", total_debt);
-    ic_cdk::println!("Liquidity Added: {:?}", liq_added);
-    ic_cdk::println!("Liquidity Taken: {:?}", liq_taken);
-    ic_cdk::println!("Reserve Factor: {:?}", reserve_factor);
+    info!("\n----------- Calculating Interest Rates --------------\n");
+    info!("Asset: {:?}", asset);
+    info!("Total Debt: {:?}", total_debt);
+    info!("Liquidity Added: {:?}", liq_added);
+    info!("Liquidity Taken: {:?}", liq_taken);
+    info!("Reserve Factor: {:?}", reserve_factor);
 
     let mut current_liquidity_rate = Nat::from(ZERO_VALUE);
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
@@ -66,19 +68,19 @@ pub async fn calculate_interest_rates(
         .clone()
         .asset_supply
         .scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
-    ic_cdk::println!("Total Supply: {:?}", total_supply);
-    ic_cdk::println!("Liquidity in reserve: {:?}", reserve.asset_supply);
-    // ic_cdk::println!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());
+    debug!("Total Supply: {:?}", total_supply);
+    debug!("Liquidity in reserve: {:?}", reserve.asset_supply);
+    // info!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());
     let available_liq = total_supply.clone() + liq_added.clone() - liq_taken.clone();
 
-    ic_cdk::println!("Available Liquidity: {:?}", available_liq);
+    debug!("Available Liquidity: {:?}", available_liq);
 
     if total_debt != ZERO_VALUE {
         let utilization_ratio = total_debt
             .clone()
             .scaled_div(total_debt.clone() + available_liq.clone());
-        ic_cdk::println!("Utilization Ratio: {:?}", utilization_ratio);
-        ic_cdk::println!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
+        debug!("Utilization Ratio: {:?}", utilization_ratio);
+        debug!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
 
         if utilization_ratio > params.optimal_usage_ratio.clone() {
             let excess_ratio = utilization_ratio.clone() - params.optimal_usage_ratio.clone();
@@ -86,8 +88,8 @@ pub async fn calculate_interest_rates(
                 .clone()
                 .scaled_div(params.max_excess_usage_ratio.clone());
 
-            ic_cdk::println!("Excess Ratio: {:?}", excess_ratio);
-            ic_cdk::println!("Excess Usage Scaled: {:?}", excess_usage_scaled);
+            debug!("Excess Ratio: {:?}", excess_ratio);
+            debug!("Excess Usage Scaled: {:?}", excess_usage_scaled);
 
             curr_borrow_rate += params.variable_rate_slope1.clone()
                 + params
@@ -95,7 +97,7 @@ pub async fn calculate_interest_rates(
                     .clone()
                     .scaled_mul(excess_usage_scaled);
 
-            ic_cdk::println!(
+            debug!(
                 "Borrow Rate (After Excess Usage Applied): {:?}",
                 curr_borrow_rate
             );
@@ -106,7 +108,7 @@ pub async fn calculate_interest_rates(
                 .scaled_mul(utilization_ratio.clone())
                 .scaled_div(params.optimal_usage_ratio.clone());
 
-            ic_cdk::println!("Borrow Rate (Within Optimal Usage): {:?}", curr_borrow_rate);
+            debug!("Borrow Rate (Within Optimal Usage): {:?}", curr_borrow_rate);
         }
 
         current_liquidity_rate = curr_borrow_rate
@@ -114,11 +116,11 @@ pub async fn calculate_interest_rates(
             .scaled_mul(utilization_ratio.clone())
             .scaled_mul(Nat::from(100_000_000u128) - (reserve_factor / Nat::from(100u128)));
 
-        ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
-        ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);
+        info!("Final Borrow Rate: {:?}", curr_borrow_rate);
+        info!("Final Liquidity Rate: {:?}", current_liquidity_rate);
     }
 
-    ic_cdk::println!("\n------------ Interest Rate Calculation Completed -------------\n");
+    info!("\n------------ Interest Rate Calculation Completed -------------\n");
 
     Ok((current_liquidity_rate, curr_borrow_rate))
 }
@@ -492,26 +494,26 @@ pub async fn test_calculate_interest_rates() {
             expected_borrow_rate:     Nat::from(64_999_997u128),                // ~65.00% Borrow APR scaled
         },
     ];
-
+    init_tracing();
 
     for (i, case) in test_cases.iter().enumerate() {
-        println!("\n------------------------------------------------------------");
-        println!("🔵 Test Case {}: Calculating Interest Rates", i + 1);
-        println!("Liquidity Added: {:?}", case.liq_added);
-        println!("Liquidity Taken: {:?}", case.liq_taken);
-        println!("Total Debt: {:?}", case.total_debt);
-        println!("Asset: {:?}", case.asset);
+        info!("\n------------------------------------------------------------");
+        info!("🔵 Test Case {}: Calculating Interest Rates", i + 1);
+        info!("Liquidity Added: {:?}", case.liq_added);
+        info!("Liquidity Taken: {:?}", case.liq_taken);
+        info!("Total Debt: {:?}", case.total_debt);
+        info!("Asset: {:?}", case.asset);
         let amount_u128: u64 = case.expected_liquidity_rate.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        println!("Expected Liquidity Rate: {:?}", amount_float / 100000000.0);
+        info!("Expected Liquidity Rate: {:?}", amount_float / 100000000.0);
 
         let amount_u128_borrow: u64 = case.expected_borrow_rate.clone().0.try_into().unwrap();
         let amount_float_borrow = amount_u128_borrow as f64;
-        println!(
+        info!(
             "Expected Borrow Rate: {:?}",
             amount_float_borrow / 100000000.0
         );
-        println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let result = calculate_interest_rates(
             case.liq_added.clone(),
@@ -531,11 +533,11 @@ pub async fn test_calculate_interest_rates() {
 
                 let amount_u128_borrow: u64 = borrow_rate.clone().0.try_into().unwrap();
                 let amount_float_borrow = amount_u128_borrow as f64;
-                println!(
+                info!(
                     "🔹 Calculated Liquidity Rate: {}",
                     amount_float / 100000000.0
                 );
-                println!(
+                info!(
                     "🔹 Calculated Borrow Rate: {}",
                     amount_float_borrow / 100000000.0
                 );
@@ -558,14 +560,14 @@ pub async fn test_calculate_interest_rates() {
                     borrow_rate
                 );
 
-                println!("✅ Test Case {} Passed", i + 1);
+                info!("✅ Test Case {} Passed", i + 1);
             }
             Err(e) => {
-                println!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
+                error!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
                 panic!("Test Case {} encountered an error", i + 1);
             }
         }
     }
 
-    println!("\n======================== All test cases completed. ========================\n");
+    info!("\n======================== All test cases completed. ========================\n");
 }

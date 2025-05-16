@@ -4,6 +4,7 @@ use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Repay Stress Test
@@ -80,34 +81,34 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     let total_users = random_users.len();
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Repay Stress Testing ========================\n"
     );
-    ic_cdk::println!("🔥 Running tests with {} users 🔥\n", total_users);
+    info!("🔥 Running tests with {} users 🔥\n", total_users);
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🚀 Test Case {}: Repay Request Initiated", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🚀 Test Case {}: Repay Request Initiated", i + 1);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!(
+        info!(
             "🔹 Asset: {} \n🔹 Amount (Tokens): {:.8} \n🔹 Expected Success: {}",
             case.asset,
             amount_float / 100000000.0,
             case.expect_success
         );
-        ic_cdk::println!(
+        info!(
             "\n=================== Checking Reserves before Repayment ===================\n"
         );
         // Fetch and display reserve data
         fetch_reserve_data(pic, backend_canister, &case.asset);
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
         if let Some(msg) = &case.expected_error_message {
-            ic_cdk::println!("⚠️ Expected Error: {}", msg);
+            info!("⚠️ Expected Error: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let mut success_count = 0;
         let mut failure_count = 0;
@@ -118,7 +119,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                 match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
-                        ic_cdk::println!("❌ Asset principal not found. Skipping user.");
+                        error!("❌ Asset principal not found. Skipping user.");
                         failure_count += 1;
                         continue;
                     }
@@ -136,7 +137,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                 backend_canister,
                 case.amount.clone(),
             ) {
-                ic_cdk::println!("❌ Approval failed for user: {}", user_principal);
+                error!("❌ Approval failed for user: {}", user_principal);
                 failure_count += 1;
                 continue;
             }
@@ -164,36 +165,36 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                         candid::decode_one(&reply).expect("Failed to decode response");
                     match repay_response {
                         Ok(_balance) => {
-                            ic_cdk::println!("✅ Repay successful!");
-                            ic_cdk::println!("\n=================== Checking Reserves After successful Repayment ===================\n");
+                            info!("✅ Repay successful!");
+                            info!("\n=================== Checking Reserves After successful Repayment ===================\n");
                             // Fetch and display reserve data
                             fetch_reserve_data(pic, backend_canister, &case.asset);
                             success_count += 1;
                         }
                         Err(error) => {
-                            ic_cdk::println!("❌ Repay failed: {}", error.message());
+                            error!("❌ Repay failed: {}", error.message());
                             failure_count += 1;
                         }
                     }
                 }
                 Ok(WasmResult::Reject(reject_message)) => {
-                    ic_cdk::println!("❌ Function call rejected: {}", reject_message);
+                    error!("❌ Function call rejected: {}", reject_message);
                     failure_count += 1;
                 }
                 Err(e) => {
-                    ic_cdk::println!("❌ Error during function call: {:?}", e);
+                    error!("❌ Error during function call: {:?}", e);
                     failure_count += 1;
                 }
             }
         }
 
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!("✅ Successful Transactions: {}", success_count);
-        ic_cdk::println!("❌ Failed Transactions: {}", failure_count);
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("\n------------------------------------------------------------");
+        info!("📊 Test Case {} Summary: ", i + 1);
+        info!("✅ Successful Transactions: {}", success_count);
+        error!("❌ Failed Transactions: {}", failure_count);
+        info!("------------------------------------------------------------\n");
     }
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Repay Tests Completed ========================\n"
     );
 }

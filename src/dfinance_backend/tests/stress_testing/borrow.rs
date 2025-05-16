@@ -1,9 +1,10 @@
-use crate::utils::common_functions::{fetch_reserve_data, fetch_user_data};
+use crate::utils::common_functions::{fetch_reserve_data, fetch_user_data, init_tracing};
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Borrow Stress Test
@@ -73,32 +74,32 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     let total_users = random_users.len();
 
     // Log the start of the stress test
-    ic_cdk::println!(
+    info!(
         "\n======================== 🚀 Starting IC Borrow Stress Testing ========================"
     );
-    ic_cdk::println!(
+    info!(
         "🔥 Running stress test with {} user principals! 🔥\n",
         total_users
     );
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🚀 Test Case {}: Borrow Request Initiated", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🚀 Test Case {}: Borrow Request Initiated", i + 1);
         let amount_float = case.amount.clone().0.try_into().unwrap_or(0u64) as f64 / 100000000.0;
-        ic_cdk::println!(
+        info!(
             "🔹 Asset: {} \n🔹 Amount (Tokens): {:.8}  \n🔹 Expected Success: {}",
             case.asset,
             amount_float,
             case.expect_success
         );
         if let Some(msg) = &case.expected_error_message {
-            ic_cdk::println!("⚠️ Expected Error: {}", msg);
+            info!("⚠️ Expected Error: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let mut success_count = 0;
         let mut failure_count = 0;
@@ -131,7 +132,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
 
                     match borrow_response {
                         Ok(_) if case.expect_success => {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ User {}: Borrow successful.",
                                 user_principal.to_text(),
                             );
@@ -139,14 +140,14 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                         }
                         Err(error) if !case.expect_success => {
                             if case.expected_error_message.as_deref() == Some(error.message()) {
-                                ic_cdk::println!(
+                                info!(
                                     "✅ Test Case {} Passed: Borrow rejected as expected. Message: {:?}",
                                     i + 1, error
                                 );
-                                ic_cdk::println!("\n==================== Checking Reserves After successful Borrow ====================\n");
+                                info!("\n==================== Checking Reserves After successful Borrow ====================\n");
                                 // Reserve data fetching
                                 fetch_reserve_data(pic, backend_canister, &case.asset);
-                                ic_cdk::println!("\n==================== Checking User data After successful Borrow ====================\n");
+                                info!("\n==================== Checking User data After successful Borrow ====================\n");
                                 // User reserve data fetching
                                 fetch_user_data(
                                     pic,
@@ -154,12 +155,12 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     user_principal,
                                     &case.asset,
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "\n---------------------------------------------------------\n"
                                 );
                                 success_count += 1;
                             } else {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
                                     case.expected_error_message.as_deref().unwrap_or("(none)"),
@@ -169,7 +170,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                             }
                         }
                         Err(error) => {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ Test Case {} Failed: Expected success but got rejection. Message: {:?}",
                                 i + 1,
                                 error
@@ -177,7 +178,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                             failure_count += 1;
                         }
                         _ => {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ Test Case {} Failed: Expected failure but received success.",
                                 i + 1
                             );
@@ -186,7 +187,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     }
                 }
                 Ok(WasmResult::Reject(reject_message)) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ Test Case {} Failed: Function call rejected. Message: {}",
                         i + 1,
                         reject_message
@@ -194,7 +195,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     failure_count += 1;
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ Test Case {} Failed: Error during function call: {:?}",
                         i + 1,
                         e
@@ -205,15 +206,15 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         }
 
         // Log test case summary
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
-        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("\n------------------------------------------------------------");
+        info!("📊 Test Case {} Summary: ", i + 1);
+        info!("✅ Successful Transactions: {}", success_count,);
+        error!("❌ Failed Transactions: {}", failure_count,);
+        info!("------------------------------------------------------------\n");
     }
 
     // Log the completion of the stress test
-    ic_cdk::println!(
+    info!(
         "\n======================== ✅ IC Borrow Tests Completed ========================"
     );
 }

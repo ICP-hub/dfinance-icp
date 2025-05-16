@@ -413,7 +413,6 @@ impl ValidationLogic {
      * @dev Performs checks on:
      * - User’s or liquidator’s balance to ensure sufficient funds for repayment.
      * - User’s outstanding debt to verify if repayment is needed.
-     * - Reserveic_cdk::println!("new health factor = {}", new_health_factor);   //debug status to confirm it is active and not paused or frozen.
      * - Repayment amount to prevent overpayment.
      *
      * @param reserve The reserve data containing asset information.

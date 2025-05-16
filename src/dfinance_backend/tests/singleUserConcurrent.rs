@@ -20,6 +20,7 @@ use crate::single_user::repay::test_repay;
 use crate::single_user::withdraw::test_withdraw;
 use crate::single_user::liquidation::test_liquidation;
 use crate::single_user::liquidated_user::test_liquidated_user;
+use tracing::{info,error};
 
 const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance_backend.wasm";
 
@@ -44,7 +45,7 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, INITIAL_CYCLES);
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
-    ic_cdk::println!("Backend canister: {}", backend_canister);
+    info!("Backend canister: {}", backend_canister);
     pic.install_canister(
         backend_canister,
         wasm,
@@ -221,10 +222,10 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
                 match initialize_response {
                     Ok(()) => {
-                        ic_cdk::println!("✅ Initialize function succeeded for {:?}", token_name);
+                        info!("✅ Initialize function succeeded for {:?}", token_name);
                     }
                     Err(e) => {
-                        ic_cdk::println!(
+                        error!(
                             "❌ Initialize function failed as expected with error: {:?}",
                             e
                         );
@@ -273,10 +274,10 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
             match update_reserve_response {
                 Ok(_message) => {
-                    ic_cdk::println!("✅ update reserve price function succeeded");
+                    info!("✅ update reserve price function succeeded");
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "update reserve price function failed as expected with error: {:?}",
                         e
                     );

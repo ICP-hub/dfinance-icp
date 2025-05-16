@@ -157,9 +157,7 @@ const MobileTopNav = ({
    const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
         token: tokenStatus.OK

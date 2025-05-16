@@ -76,8 +76,14 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen } = useSelector((state) => state.utility);
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-  const { isAuthenticated, login, logout, principal, accountIdString, backendActor } =
-    useAuth();
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    accountIdString,
+    backendActor,
+  } = useAuth();
   const [asset, setAsset] = useState("ICP");
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
@@ -116,27 +122,24 @@ export default function Navbar({ isHomeNav }) {
   const [showDepositPopup, setShowDepositPopup] = useState(false);
   const [receiverAddress, setReceiverAddress] = useState("");
   const popupPosition = { top: 0, left: 0 };
-    const [ledgerFee, setLedgerFee] = useState(null);
+  const [ledgerFee, setLedgerFee] = useState(null);
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint" ? Number(ledgerFee) : Number(ledgerFee) || 0;
 
-     const transferFeRetrive = useTransferFee(asset);
-       const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
-      const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee)  : (Number(ledgerFee)  || 0);
-    
-      const transactionFee = transferFee + ledgerFeeNumber;
-      const approvalFee = transactionFee + ledgerFeeNumber;
-    
-      console.log("dgdhddhhdhd", transactionFee)
-    
-     const formatFee = (fee) => {
-        const fixedFee = parseFloat(fee).toFixed(8);
-        const parts = fixedFee.split('.');
-        const integerPart = parts[0];
-        const decimalPart = parts[1] || '';
-        return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
-      };
-      const formattedTransactionFee = formatFee(transactionFee);
-      const formattedApprovalFee = formatFee(approvalFee);
-      
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
+  const formattedApprovalFee = formatFee(approvalFee);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -180,15 +183,13 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
-        token: tokenStatus.OK
+        token: tokenStatus.OK,
       };
 
       return status;
@@ -220,133 +221,129 @@ export default function Navbar({ isHomeNav }) {
     ckBTC: ckBTCBalance,
     ckUSDC: ckUSDCBalance,
   };
-    const balance = assetBalances[asset] || 0;
-  console.log("formattedTransactionFee", formattedTransactionFee)
- const supplyBalance = Math.max((assetBalances[asset] || 0) - formattedTransactionFee, 0);
-  console.log("supplyBalance", supplyBalance)
+  const balance = assetBalances[asset] || 0;
+  const supplyBalance = Math.max(
+    (assetBalances[asset] || 0) - formattedTransactionFee,
+    0
+  );
 
-    const hasEnoughBalance = 
-  balance >= formattedApprovalFee &&
-  (+amount + (+formattedApprovalFee || 0)) <= +supplyBalance;
+  const hasEnoughBalance =
+    balance >= formattedApprovalFee &&
+    +amount + (+formattedApprovalFee || 0) <= +supplyBalance;
 
   // Function to handle the click event on the "Approve" button
-const handleApprove = async () => {
-  // Check if receiverAddress is empty
-  if (!receiverAddress.trim()) {
-    toast.dismiss(); // Dismiss any existing toasts
-    toast.error("Please enter a valid receiver address", {
-      className: "custom-toast",
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-    return;
-  }
-  
-  // Check if the receiver address is the same as the current user's principal
-  if (receiverAddress.trim() === principal.toString()) {
-    toast.dismiss(); // Dismiss any existing toasts
-    toast.error("You cannot approve transfers to your own address", {
-      className: "custom-toast",
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-     setAmount("");
-        setReceiverAddress("");
-    return;
-  }
-
-  if (isBlocked) {
-    toast.dismiss(); // Dismiss any existing toasts
-    toast.error("You are temporarily blocked from using this function", {
-      className: "custom-toast",
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-     setAmount("");
-        setReceiverAddress("");
-    return;
-  }
-
-  let ledgerActor;
-  if (asset === "ckBTC") {
-    ledgerActor = ledgerActors.ckBTC;
-  } else if (asset === "ckETH") {
-    ledgerActor = ledgerActors.ckETH;
-  } else if (asset === "ckUSDC") {
-    ledgerActor = ledgerActors.ckUSDC;
-  } else if (asset === "ICP") {
-    ledgerActor = ledgerActors.ICP;
-  } else if (asset === "ckUSDT") {
-    ledgerActor = ledgerActors.ckUSDT;
-  }
-
-    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
-    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-
-
-    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
-    console.log(ledgerFee, "ledgerFee")
-  try {
-    const response = await ledgerActor.icrc2_approve({
-        fee: ledgerFee ? [ledgerFee] : [],
-      memo: [],
-      from_subaccount: [],
-      created_at_time: [],
-      amount: totalAmount,
-      expected_allowance: [],
-      expires_at: [],
-      spender: {
-        owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
-        subaccount: [],
-      },
-    });
-    console.log("Aprove in transfer", response)
-    
-    // Handle response (Ok or Err)
-    if ("Ok" in response) {
-      setIsApproved(true);
-      toast.dismiss(); // Dismiss any existing toasts
-      toast.success(`Approval successful!`, {
+  const handleApprove = async () => {
+    if (!receiverAddress.trim()) {
+      toast.dismiss();
+      toast.error("Please enter a valid receiver address", {
         className: "custom-toast",
         position: "top-center",
-        autoClose: 3000,
+        autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
       });
-      dispatch(toggleDashboardRefresh());
-    } else if ("Err" in response) {
-      console.error(response.Err);
-      setIsApproved(false);
-       setAmount("");
-        setReceiverAddress("");
+      return;
     }
-  } catch (error) {
-    console.error(error);
-    setIsApproved(false);
-     setAmount("");
-        setReceiverAddress("");
-  }
-};
 
-  // Function to handle the transfer action
+    if (receiverAddress.trim() === principal.toString()) {
+      toast.dismiss();
+      toast.error("You cannot approve transfers to your own address", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setAmount("");
+      setReceiverAddress("");
+      return;
+    }
+
+    if (isBlocked) {
+      toast.dismiss();
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setAmount("");
+      setReceiverAddress("");
+      return;
+    }
+
+    let ledgerActor;
+    if (asset === "ckBTC") {
+      ledgerActor = ledgerActors.ckBTC;
+    } else if (asset === "ckETH") {
+      ledgerActor = ledgerActors.ckETH;
+    } else if (asset === "ckUSDC") {
+      ledgerActor = ledgerActors.ckUSDC;
+    } else if (asset === "ICP") {
+      ledgerActor = ledgerActors.ICP;
+    } else if (asset === "ckUSDT") {
+      ledgerActor = ledgerActors.ckUSDT;
+    }
+
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
+    try {
+      const response = await ledgerActor.icrc2_approve({
+        fee: ledgerFee ? [ledgerFee] : [],
+        memo: [],
+        from_subaccount: [],
+        created_at_time: [],
+        amount: totalAmount,
+        expected_allowance: [],
+        expires_at: [],
+        spender: {
+          owner: Principal.fromText(process.env.CANISTER_ID_DFINANCE_BACKEND),
+          subaccount: [],
+        },
+      });
+
+      if ("Ok" in response) {
+        setIsApproved(true);
+        toast.dismiss();
+        toast.success(`Approval successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        dispatch(toggleDashboardRefresh());
+      } else if ("Err" in response) {
+        console.error(response.Err);
+        setIsApproved(false);
+        setAmount("");
+        setReceiverAddress("");
+      }
+    } catch (error) {
+      console.error(error);
+      setIsApproved(false);
+      setAmount("");
+      setReceiverAddress("");
+    }
+  };
+
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -376,20 +373,17 @@ const handleApprove = async () => {
         ledgerActor = ledgerActors.ckUSDT;
       }
 
- 
-     const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
-     let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
-     const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
-   
-     const scaledAmount = amountAsNat64;
-   
-     // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
-     const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
-   console.log("approveLedgerFee", ledgerFeenumber)
-     const totalAmount = transferFeeBigInt
-       ? scaledAmount + transferFeeBigInt + ledgerFeenumber
-       : scaledAmount;
-console.log("totalAmount", totalAmount)
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+
+      const scaledAmount = amountAsNat64;
+
+      const ledgerFeenumber =
+        typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
+      const totalAmount = transferFeeBigInt
+        ? scaledAmount + transferFeeBigInt + ledgerFeenumber
+        : scaledAmount;
       const transferFromArgs = {
         from: {
           owner: Principal.fromText(principal),
@@ -400,17 +394,15 @@ console.log("totalAmount", totalAmount)
           subaccount: [],
         },
         amount: totalAmount,
-      fee: ledgerFee ? [ledgerFee] : [],
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         created_at_time: [],
         spender_subaccount: [],
       };
 
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
-      console.log("transfer_from", response)
       dispatch(toggleDashboardRefresh());
       const statusData = await fetchStatusFromBackend();
-      // Check status and send notifications if needed      
       await checkAndNotify(statusData);
       if ("Ok" in response) {
         setIsTransferDropDownOpen(false);
@@ -431,20 +423,20 @@ console.log("totalAmount", totalAmount)
           draggable: true,
           progress: undefined,
         });
-       setAmount("");
+        setAmount("");
         setReceiverAddress("");
-         setIsApproved(false)
+        setIsApproved(false);
       } else if ("Err" in response) {
         handleTransferError(response.Err);
         setAmount("");
         setReceiverAddress("");
-         setIsApproved(false)
+        setIsApproved(false);
       }
     } catch (error) {
       handleTransferException(error);
-       setAmount("");
-        setReceiverAddress("");
-           setIsApproved(false)
+      setAmount("");
+      setReceiverAddress("");
+      setIsApproved(false);
     }
   };
 
@@ -617,13 +609,13 @@ console.log("totalAmount", totalAmount)
   };
 
   // Function to handle the click event on the "Max" button
-const handleMaxClick = () => {
-  const balanceStr = supplyBalance.toString();
-  const [wholePart, decimalPart = ""] = balanceStr.split('.');
-  const truncatedDecimals = decimalPart.padEnd(8, '0').substring(0, 8);
-  const truncatedAmount = `${wholePart}.${truncatedDecimals}`;
-  setAmount(truncatedAmount);
-};
+  const handleMaxClick = () => {
+    const balanceStr = supplyBalance.toString();
+    const [wholePart, decimalPart = ""] = balanceStr.split(".");
+    const truncatedDecimals = decimalPart.padEnd(8, "0").substring(0, 8);
+    const truncatedAmount = `${wholePart}.${truncatedDecimals}`;
+    setAmount(truncatedAmount);
+  };
 
   // Function to handle the click event on the "Tour" button
   const handleTour = () => {
@@ -755,7 +747,6 @@ const handleMaxClick = () => {
     };
   }, []);
 
-
   // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
@@ -848,37 +839,35 @@ const handleMaxClick = () => {
     };
   }, []);
 
-    useEffect(() => {
-      if (!asset || !ledgerActors) return;
-  
-      let ledgerActor;
-      if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
-      else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
-      else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
-      else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
-      else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
-      else {
-        console.error(`Unknown asset type: ${asset}`);
-        return;
+  useEffect(() => {
+    if (!asset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
       }
-  
-      // Define async function inside useEffect
-      const fetchFee = async () => {
-        try {
-          const fee = await ledgerActor.icrc1_fee();
-          const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-          const feeBigInt = BigInt(Math.round(feeAsNumber));
-          setLedgerFee(feeBigInt);
-          console.log("fee", feeBigInt);
-        } catch (error) {
-          console.error(`Error getting fee for ${asset}:`, error);
-        }
-      };
-  
-      // Call the async function
-      fetchFee();
-  
-    }, [asset]);
+    };
+
+    // Call the async function
+    fetchFee();
+  }, [asset]);
 
   // when dropdown open scroll is locked
   useEffect(() => {
@@ -1049,66 +1038,66 @@ const handleMaxClick = () => {
                 <div className="gap-6 hidden  lg:flex lg:ps-10 dark:text-darkText justify-beteen items-center">
                   {!isHomeNav
                     ? DASHBOARD_TOP_NAV_LINK.map((link, index) => {
-                      if (link.alwaysPresent) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      } else if (isTestnetMode && link.testnet) {
-                        return (
-                          <React.Fragment key={index}>
+                        if (link.alwaysPresent) {
+                          return (
                             <NavLink
+                              key={index}
+                              to={link.route}
+                              className="text-[#2A1F9D]  ps-20 px-6 py-2 text-lg nav-link dark:text-darkTextSecondary anchor-transition"
+                            >
+                              {link.title}
+                            </NavLink>
+                          );
+                        } else if (isTestnetMode && link.testnet) {
+                          return (
+                            <React.Fragment key={index}>
+                              <NavLink
+                                to={link.route}
+                                className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                              >
+                                {link.title}
+                              </NavLink>
+                              {link.title === "Faucet" && (
+                                <>
+                                  <span
+                                    className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
+                                    onClick={handlePopupToggle}
+                                  >
+                                    •••
+                                  </span>
+                                  {isPopupVisible && (
+                                    <Popup
+                                      position={popupPosition}
+                                      onClose={() => setIsPopupVisible(false)}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </React.Fragment>
+                          );
+                        } else if (!isTestnetMode && !link.testnet) {
+                          return (
+                            <NavLink
+                              key={index}
                               to={link.route}
                               className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
                             >
                               {link.title}
                             </NavLink>
-                            {link.title === "Faucet" && (
-                              <>
-                                <span
-                                  className="text-[#2A1F9D] relative px-5 py-2 text-lg nav-link dark:text-darkTextSecondary cursor-pointer button1"
-                                  onClick={handlePopupToggle}
-                                >
-                                  •••
-                                </span>
-                                {isPopupVisible && (
-                                  <Popup
-                                    position={popupPosition}
-                                    onClose={() => setIsPopupVisible(false)}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </React.Fragment>
-                        );
-                      } else if (!isTestnetMode && !link.testnet) {
-                        return (
-                          <NavLink
-                            key={index}
-                            to={link.route}
-                            className="text-[#2A1F9D] px-5 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                          >
-                            {link.title}
-                          </NavLink>
-                        );
-                      }
-                      return null;
-                    })
+                          );
+                        }
+                        return null;
+                      })
                     : HOME_TOP_NAV_LINK.map((link, index) => (
-                      <NavLink
-                        key={index}
-                        target={link.target}
-                        to={link.route}
-                        className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
-                      >
-                        {link.title}
-                      </NavLink>
-                    ))}
+                        <NavLink
+                          key={index}
+                          target={link.target}
+                          to={link.route}
+                          className="text-[#2A1F9D] px-3 py-2 text-lg nav-link dark:text-darkTextSecondary"
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
                 </div>
               </>
             )}
@@ -1141,7 +1130,7 @@ const handleMaxClick = () => {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                     </div>
                   </div>
                 )}
@@ -1221,7 +1210,7 @@ const handleMaxClick = () => {
                                             <img
                                               src={
                                                 AssetImages[
-                                                assets.indexOf(asset)
+                                                  assets.indexOf(asset)
                                                 ]
                                               }
                                               alt={asset}
@@ -1232,8 +1221,9 @@ const handleMaxClick = () => {
                                             {asset}
                                           </span>
                                           <svg
-                                            className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""
-                                              }`}
+                                            className={`w-4 h-4 transition-transform ${
+                                              isDropdownOpen ? "rotate-180" : ""
+                                            }`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -1281,13 +1271,13 @@ const handleMaxClick = () => {
                                                     >
                                                       {assetIndex !== -1 &&
                                                         AssetImages[
-                                                        assetIndex
+                                                          assetIndex
                                                         ] && (
                                                           <img
                                                             key={assetIndex}
                                                             src={
                                                               AssetImages[
-                                                              assetIndex
+                                                                assetIndex
                                                               ]
                                                             }
                                                             alt={a || "asset"}
@@ -1316,10 +1306,11 @@ const handleMaxClick = () => {
                                           )}
                                         </p>
                                         <p
-                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                            ? "text-gray-400 cursor-not-allowed"
-                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                                            }`}
+                                          className={`text-[12px] px-2 py-0 rounded-md button1 ${
+                                            supplyBalance === 0 || isApproved
+                                              ? "text-gray-400 cursor-not-allowed"
+                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                          }`}
                                           onClick={() => {
                                             if (
                                               supplyBalance > 0 &&
@@ -1387,15 +1378,17 @@ const handleMaxClick = () => {
                                 <div className="flex flex-col gap-4 mt-4">
                                   <button
                                     onClick={() => !isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                                      isApproved ||
                                       isLoading ||
                                       isButtonDisabled ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
-                                      amount > supplyBalance || !hasEnoughBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                      }`}
+                                      amount > supplyBalance ||
+                                      !hasEnoughBalance
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                    }`}
                                     disabled={
                                       isApproved ||
                                       isLoading ||
@@ -1410,15 +1403,16 @@ const handleMaxClick = () => {
 
                                   <button
                                     onClick={() => isApproved && handleClick()}
-                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                                    className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                                      !isApproved ||
                                       isButtonDisabled ||
                                       isLoading ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
                                       amount > supplyBalance
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                      }`}
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                    }`}
                                     disabled={
                                       !isApproved ||
                                       isLoading ||
@@ -1553,7 +1547,7 @@ const handleMaxClick = () => {
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                  { }
+                  {}
                   <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                     {!isMobile2 && (
                       <div
@@ -1626,7 +1620,7 @@ const handleMaxClick = () => {
                             </div>
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                              { }
+                              {}
                               <div className="hidden lg1:flex justify-center">
                                 <div
                                   className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -1672,7 +1666,7 @@ const handleMaxClick = () => {
                                   </div>
                                 </div>
                               </div>
-                              { }
+                              {}
                               <div className=" w-full flex justify-center">
                                 <div
                                   className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -1728,7 +1722,7 @@ const handleMaxClick = () => {
                               Settings
                             </h2>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around">
                                 <label
@@ -1749,7 +1743,7 @@ const handleMaxClick = () => {
                               </div>
                             </div>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <label
@@ -1770,7 +1764,7 @@ const handleMaxClick = () => {
                               </div>
                             </div>
 
-                            { }
+                            {}
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around relative group">
                                 <label
@@ -1784,7 +1778,7 @@ const handleMaxClick = () => {
                                   />
                                 </label>
 
-                                { }
+                                {}
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                   Enabling this will allow the user to hear
                                   sound when supply, borrow, repay, or withdraw
@@ -1824,7 +1818,7 @@ const handleMaxClick = () => {
                         onClick={() => setIsMobileNav(!isMobileNav)}
                         className="cursor-pointer"
                       >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                       </div>
                     </div>
                   )}
@@ -1858,7 +1852,7 @@ const handleMaxClick = () => {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} {}
                         </div>
                       </div>
                     )}
@@ -1868,7 +1862,7 @@ const handleMaxClick = () => {
                           Settings
                         </h2>
 
-                        { }
+                        {}
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label

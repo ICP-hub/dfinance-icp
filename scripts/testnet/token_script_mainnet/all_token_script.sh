@@ -2,9 +2,6 @@
 set -e
 
 
-# Call each script sequentially
-dfx ledger fabricate-cycles --canister dfinance_backend --network ic
-dfx ledger fabricate-cycles --canister dfinance_backend --network ic
 
 ./ckbtc_token.sh
 if [ $? -ne 0 ]; then

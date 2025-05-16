@@ -65,6 +65,6 @@ if [[ ! "$ASSET_IMAGE_URL" =~ ^https://storage.googleapis.com ]]; then
   echo "Error: Invalid URL. Only URLs from 'storage.googleapis.com' are allowed."
   exit 1
 fi
-
+export TOKEN_PRINCIPAL="xevnm-gaaaa-aaaar-qafnq-cai"
 dfx canister call "$CANISTER_NAME" initialize \
   "(\"$TOKEN_NAME\", $RESERVE_DATA, principal \"$TOKEN_PRINCIPAL\", \"$ASSET_IMAGE_URL\")" --network ic

@@ -10,8 +10,7 @@ import sigmaprime from "../../public/assests-icon/sigma-Prime-svg-fill.png";
 import Peckshield from "../../public/assests-icon/peckshield-logo-svg.png";
 import abdk from "../../public/assests-icon/abdk.png";
 
-const isProduction = process.env.DFX_PRODUCTION === 'true';
-console.log("isProduction",isProduction)
+const isProduction = process.env.DFX_PRODUCTION === "true";
 export const FOOTER_LINK_1 = [
   {
     id: 1,

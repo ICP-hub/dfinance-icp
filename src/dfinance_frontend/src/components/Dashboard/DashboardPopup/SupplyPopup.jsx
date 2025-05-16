@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
 import useTransferFee from "../../customHooks/useTransferFee";
-import { SCALING_FACTOR } from '../../../utils/constants';
+import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
 import useNotificationSystem from "../../customHooks/useNotification";
 /**
@@ -84,26 +84,25 @@ const SupplyPopup = ({
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
 
-   const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
-  const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) / 1e8 : (Number(ledgerFee) / 1e8 || 0);
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee) / 1e8
+      : Number(ledgerFee) / 1e8 || 0;
 
-  // Calculate total fees
   const transactionFee = transferFee + ledgerFeeNumber;
   const approvalFee = transactionFee + ledgerFeeNumber;
 
-  console.log("transactionFee", transactionFee)
-
-  // Format transactionFee and approvalFee up to 8 decimal places
- const formatFee = (fee) => {
+  const formatFee = (fee) => {
     const fixedFee = parseFloat(fee).toFixed(8);
-    const parts = fixedFee.split('.');
+    const parts = fixedFee.split(".");
     const integerPart = parts[0];
-    const decimalPart = parts[1] || '';
-    return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
   };
   const formattedTransactionFee = formatFee(transactionFee);
   const formattedApprovalFee = formatFee(approvalFee);
-  
+
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -132,10 +131,9 @@ const SupplyPopup = ({
 
   const numericBalance = parseFloat(balance);
   const supplyBalance = Math.max(numericBalance - formattedTransactionFee, 0);
-  console.log("numeric",numericBalance,formattedTransactionFee)
-  const hasEnoughBalance = 
-  balance >= formattedApprovalFee &&
-  (+amount + (+formattedApprovalFee || 0)) <= +supplyBalance;
+  const hasEnoughBalance =
+    balance >= formattedApprovalFee &&
+    +amount + (+formattedApprovalFee || 0) <= +supplyBalance;
 
   const value = currentHealthFactor;
 
@@ -214,12 +212,10 @@ const SupplyPopup = ({
   const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
-        token: tokenStatus.OK
+        token: tokenStatus.OK,
       };
 
       return status;
@@ -251,15 +247,14 @@ const SupplyPopup = ({
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-
 
     const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
 
     try {
-
-
       const approval = await ledgerActor.icrc2_approve({
         fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
@@ -273,7 +268,6 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-      console.log("aproval", approval)
       if (approval?.Ok) {
         setIsApproved(true);
         toast.success(`Approval successful!`, {
@@ -313,8 +307,6 @@ const SupplyPopup = ({
     }
   };
 
-
-
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
   const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
@@ -322,7 +314,8 @@ const SupplyPopup = ({
   const scaledAmount = amountAsNat64;
 
   // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
-  const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
+  const ledgerFeenumber =
+    typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
 
   const totalAmount = transferFeeBigInt
     ? scaledAmount + transferFeeBigInt + ledgerFeenumber
@@ -350,20 +343,21 @@ const SupplyPopup = ({
         is_collateral: currentCollateralStatus,
         amount: totalAmount,
       };
-console.log("total amount",supplyParams)
       const response = await backendActor.execute_supply(supplyParams);
       dispatch(toggleDashboardRefresh());
 
       const statusData = await fetchStatusFromBackend();
-      // Check status and send notifications if needed      
+      // Check status and send notifications if needed
       await checkAndNotify(statusData);
 
       if ("Ok" in response) {
         trackEvent(
-          `Supply,${asset},${scaledAmount / SCALING_FACTOR
+          `Supply,${asset},${
+            scaledAmount / SCALING_FACTOR
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets",
-          `Supply,${asset},${scaledAmount / SCALING_FACTOR
+          `Supply,${asset},${
+            scaledAmount / SCALING_FACTOR
           },${currentCollateralStatus},${principalObj.toString()}`,
           "Assets"
         );
@@ -563,17 +557,17 @@ console.log("total amount",supplyParams)
   };
 
   /**
-  * Calculate the Health Factor based on collateral, debt, and liquidation thresholds.
-  * 
-  * 1. Add `usdValue` to `totalCollateral` if `currentCollateralStatus` is true.
-  * 2. Ensure both `totalCollateralValue` and `totalDeptValue` are non-negative.
-  * 3. If `totalDeptValue` is 0, return `Infinity`.
-  * 4. Calculate adjusted liquidation value (`avliq = liquidationThreshold * totalCollateral`).
-  * 5. Adjust liquidation value using reserve liquidation threshold and amount added: 
-  *    `tempLiq = (avliq + amountAdded * reserveliquidationThreshold) / totalCollateralValue`.
-  * 6. Compute Health Factor: `healthFactor = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue`.
-  * 7. Round the result to 8 decimal places and return.
-  */
+   * Calculate the Health Factor based on collateral, debt, and liquidation thresholds.
+   *
+   * 1. Add `usdValue` to `totalCollateral` if `currentCollateralStatus` is true.
+   * 2. Ensure both `totalCollateralValue` and `totalDeptValue` are non-negative.
+   * 3. If `totalDeptValue` is 0, return `Infinity`.
+   * 4. Calculate adjusted liquidation value (`avliq = liquidationThreshold * totalCollateral`).
+   * 5. Adjust liquidation value using reserve liquidation threshold and amount added:
+   *    `tempLiq = (avliq + amountAdded * reserveliquidationThreshold) / totalCollateralValue`.
+   * 6. Compute Health Factor: `healthFactor = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue`.
+   * 7. Round the result to 8 decimal places and return.
+   */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
@@ -678,7 +672,6 @@ console.log("total amount",supplyParams)
     };
   }, []);
 
-
   useEffect(() => {
     if (!asset || !ledgerActors) return;
 
@@ -700,7 +693,6 @@ console.log("total amount",supplyParams)
         const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
         const feeBigInt = BigInt(Math.round(feeAsNumber));
         setLedgerFee(feeBigInt);
-        console.log("fee", feeBigInt);
       } catch (error) {
         console.error(`Error getting fee for ${asset}:`, error);
       }
@@ -708,10 +700,8 @@ console.log("total amount",supplyParams)
 
     // Call the async function
     fetchFee();
-
   }, [asset]);
 
-  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -730,7 +720,6 @@ console.log("total amount",supplyParams)
       };
     }
   }, [isModalOpen, isLoading, setIsModalOpen]);
-
 
   useEffect(() => {
     const healthFactor = calculateHealthFactor(
@@ -821,9 +810,9 @@ console.log("total amount",supplyParams)
                   <p className="text-xs text-gray-500 px-2 mt-2 mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} USD`
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -837,10 +826,11 @@ console.log("total amount",supplyParams)
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                      }`}
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
+                      supplyBalance === 0 || isApproved
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
                         handleMaxClick();
@@ -868,10 +858,11 @@ console.log("total amount",supplyParams)
                 <div className="w-full flex justify-between items-center my-1">
                   <p>Collateralization</p>
                   <p
-                    className={`font-semibold ${currentCollateralStatus
-                      ? "text-green-500"
-                      : "text-red-500"
-                      }`}
+                    className={`font-semibold ${
+                      currentCollateralStatus
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
                   </p>
@@ -882,31 +873,33 @@ console.log("total amount",supplyParams)
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
+                        className={`${
+                          truncatedValue > 3
+                            ? "text-green-500"
+                            : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${value > 3
-                          ? "text-green-500"
-                          : value <= 1
+                        className={`${
+                          value > 3
+                            ? "text-green-500"
+                            : value <= 1
                             ? "text-red-500"
                             : value <= 1.5
-                              ? "text-orange-600"
-                              : value <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : value <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -981,13 +974,17 @@ console.log("total amount",supplyParams)
           <div className="w-full flex justify-between items-center mt-3">
             <div className="flex items-center">
               <p
-                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
-                  }`}
+                className={`text-xs whitespace-nowrap ${
+                  isApproved ? "text-green-500" : "text-red-500"
+                }`}
               >
                 {isApproved
-                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(8)} ${asset} `
-                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(8)} ${asset} `}
-
+                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(
+                      8
+                    )} ${asset} `
+                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(
+                      8
+                    )} ${asset} `}
               </p>
             </div>
           </div>
@@ -997,31 +994,35 @@ console.log("total amount",supplyParams)
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0 ||
-                  (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                isApproved ||
+                isLoading ||
+                !hasEnoughBalance ||
+                amount <= 0 ||
+                +amount + (+formattedApprovalFee || 0) > +supplyBalance
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-                }`}
+              }`}
               disabled={
                 isApproved ||
                 isLoading ||
                 amount <= 0 ||
                 !hasEnoughBalance ||
-                (+amount + (+formattedApprovalFee || 0)) > +supplyBalance
+                +amount + (+formattedApprovalFee || 0) > +supplyBalance
               }
             >
               Approve {asset} to continue
             </button>
 
-
             {/* Supply Button */}
             <button
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved || isLoading || amount <= 0 || !hasEnoughBalance
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
               }
@@ -1030,7 +1031,7 @@ console.log("total amount",supplyParams)
             </button>
           </div>
 
-          { }
+          {}
           {isLoading && (
             <div
               className="fixed inset-0 flex items-center justify-center z-50"
@@ -1071,8 +1072,8 @@ console.log("total amount",supplyParams)
                     ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                     : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                       scaledAmount / SCALING_FACTOR < 1e-6
-                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                      : scaledAmount / SCALING_FACTOR
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                   : "0"}{" "}
                 {asset}
               </strong>
@@ -1086,8 +1087,8 @@ console.log("total amount",supplyParams)
                     ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                     : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                       scaledAmount / SCALING_FACTOR < 1e-6
-                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                      : scaledAmount / SCALING_FACTOR
+                    ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                    : scaledAmount / SCALING_FACTOR
                   : "0"}{" "}
                 d{asset}
               </strong>

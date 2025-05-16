@@ -69,7 +69,7 @@ const Borrow = ({
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();
   const ledgerActors = useSelector((state) => state.ledger);
-  
+
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -93,6 +93,7 @@ const Borrow = ({
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
   const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+
   const ledgerFeeNumber =
     typeof ledgerFee === "bigint"
       ? Number(ledgerFee) / 1e8
@@ -144,9 +145,7 @@ const Borrow = ({
   const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus);
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus);
       const status = {
         cycle: cycleStatus,
         token: tokenStatus.OK,
@@ -675,7 +674,6 @@ const Borrow = ({
         const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
         const feeBigInt = BigInt(Math.round(feeAsNumber));
         setLedgerFee(feeBigInt);
-        console.log("fee", feeBigInt);
       } catch (error) {
         console.error(`Error getting fee for ${asset}:`, error);
       }
@@ -683,7 +681,6 @@ const Borrow = ({
 
     fetchFee();
   }, [asset]);
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {

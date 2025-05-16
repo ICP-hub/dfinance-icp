@@ -13,10 +13,10 @@ use crate::protocol::utils::{
         math_utils::ScalingMath
     };
 use crate::trace;
-use crate::constants::constant_variables::constants::TOKEN_TRANSFER_FEE;
+use crate::constants::constant_variables::constants::{TOKEN_TRANSFER_FEE, CYCLE_EXHAUSTED_LIMIT,CYCLE_THRESHOLD_LIMIT,TOKEN_BALANCE_EXHAUSTED_LIMIT, TOKEN_BALANCE_THRESHOLD_LIMIT};
 use crate::constants::validators::validate_asset_name;
 use crate::declarations::datatypes:: UserData;
-use crate::declarations::structs::AssetData;
+use crate::declarations::structs::{AssetData, CycleAlert, TokenAlert};
 use ic_cdk::query;
 use crate::protocol::libraries::user::{calculate_user_asset_data, get_all_users};
 use crate::stable_storage::state_handler::read_state;
@@ -310,6 +310,19 @@ pub async fn cycle_checker() -> Result<(Nat, Certificate), Error> {
     Ok((Nat::from(api::canister_balance128()), cert))
 }
 
-
-
-
+#[query]
+pub async fn cycle_alert()-> CycleAlert {
+    
+    let cycle = api::canister_balance128();
+    let (is_exhausted, is_warning) = match cycle {
+        c if c <= CYCLE_EXHAUSTED_LIMIT => (true, false),
+        c if c < CYCLE_THRESHOLD_LIMIT => (false, true),
+        _ => (false, false),
+    };
+    
+    CycleAlert {
+        is_exhausted: is_exhausted,
+        is_warning: is_warning,
+        current_cycle: Nat::from(cycle)
+    }
+}

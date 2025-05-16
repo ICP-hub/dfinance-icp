@@ -75,7 +75,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!(
             "\n======================== Initial reserve data before concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch and print reserve data before borrowing
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch and print reserve data before borrowing
         ic_cdk::println!("\n---------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs
@@ -127,7 +127,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         error.message()
                                     );
                                     continue;
@@ -157,7 +157,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         ic_cdk::println!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
-        fetch_reserve_data(&pic, backend_canister, &case.asset.clone()); // Fetch and print reserve data after borrowing
+        fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch and print reserve data after borrowing
         ic_cdk::println!("\n---------------------------------------------------------\n");
     }
     ic_cdk::println!(

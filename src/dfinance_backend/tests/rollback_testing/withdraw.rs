@@ -115,7 +115,7 @@ use crate::utils::structs::*;
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
-            is_collateral: case.is_collateral.clone(),
+            is_collateral: case.is_collateral,
         };
 
         /*
@@ -164,7 +164,7 @@ use crate::utils::structs::*;
                                 println!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
-                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                    case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                     error.message()
                                 );
                                 continue;

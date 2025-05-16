@@ -146,7 +146,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
      * - Each user is assigned an asset to supply and borrow with predefined amounts.
      * - The function also verifies the expected behavior and error handling in case of failures.
      */
-    test_create_user_reserve_with_low_health(&pic, backend_canister);
+    test_create_user_reserve_with_low_health(pic, backend_canister);
 
     for (i, case) in test_cases.iter().enumerate() {
         ic_cdk::println!("\n------------------------------------------------------------");
@@ -175,7 +175,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             ic_cdk::println!("\nPerforming Test: {} for user:   {:?}\n", (i+1), user_principal );
             /* Get asset principal; handle missing cases  */
             let asset_principal =
-                match test_get_asset_principal(case.debt_asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
@@ -201,9 +201,10 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
-                Nat::from(case.amount.clone()),
+                case.amount.clone()
+
             );
             if !approved {
                 if !case.expect_success {
@@ -211,7 +212,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                         println!(
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
-                            case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                            case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                         );
                         continue;
                     }
@@ -232,7 +233,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 debt_asset: case.debt_asset.clone(),
                 collateral_asset: case.collateral_asset.clone(),
                 amount: case.amount.clone(),
-                on_behalf_of: case.on_behalf_of.clone(),
+                on_behalf_of: case.on_behalf_of,
                 reward_amount: case.reward_amount.clone(),
             };
 
@@ -279,7 +280,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                                     println!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
-                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given").to_string(),
+                                        case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                                         e.message()
                                     );
                                     continue;

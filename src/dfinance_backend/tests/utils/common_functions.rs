@@ -41,6 +41,7 @@ pub fn generate_principals(count: usize) -> Vec<Principal> {
  * @functionality Retrieves a user principal based on an index value.
  */
 #[allow(dead_code)]
+#[allow(clippy::cmp_owned)]
 pub fn get_users_principal(index: Nat) -> Result<Principal, String> {
     if index == Nat::from(1u32) {
         Ok(Principal::from_text(TESTER_1).unwrap())
@@ -178,25 +179,25 @@ pub fn test_icrc2_aprove(
                 Ok(ApproveResult::Ok(block_index)) => {
                     ic_cdk::println!("☑️  Approve succeeded, block index: {}\n", block_index);
                     ic_cdk::println!("---------------------------------------------------\n");
-                    return true;
+                    true
                 }
                 Ok(ApproveResult::Err(error)) => {
                     ic_cdk::println!("Output Error: Approve failed with error: {:?}", error);
-                    return false;
+                    false
                 }
                 Err(e) => {
                     ic_cdk::println!("Output Error: Failed to decode ApproveResult: {:?}", e);
-                    return false;
+                    false
                 }
             }
         }
         Ok(WasmResult::Reject(reject_message)) => {
             ic_cdk::println!("Output Error: Approve call rejected: {}", reject_message);
-            return false;
+            false
         }
         Err(e) => {
             ic_cdk::println!("Output Error: Error during approve call: {:?}", e);
-            return false;
+            false
         }
     }
 }
@@ -267,7 +268,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
 
     for user in &users_with_low_health {
         let asset_principal =
-            match test_get_asset_principal(user.asset_supply.clone(), &pic, backend_canister) {
+            match test_get_asset_principal(user.asset_supply.clone(), pic, backend_canister) {
                 Some(principal) => principal,
                 None => {
                     continue;
@@ -277,9 +278,10 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         let approved = test_icrc2_aprove(
             user.user_principal,
             asset_principal,
-            &pic,
+            pic,
             backend_canister,
-            Nat::from(user.supply_tokens.clone()),
+            user.supply_tokens.clone()
+
         );
         if !approved {
             continue;

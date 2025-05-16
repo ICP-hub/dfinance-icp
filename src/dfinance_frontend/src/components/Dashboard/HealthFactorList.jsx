@@ -521,9 +521,11 @@ const HealthFactorList = () => {
         (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
       );
       const assetSupply =
-        Math.trunc(
-          (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
-        ) / SCALING_FACTOR;
+        currentLiquidity > 0
+          ? Math.trunc(
+            (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
+          ) / SCALING_FACTOR
+          : 0;
       const assetBorrow =
         currentDebtIndex > 0
           ? (debtBalance * borrowValue) / (currentDebtIndex * SCALING_FACTOR)
@@ -1068,9 +1070,9 @@ const HealthFactorList = () => {
                       (Number(assetBalance) / Number(currentLiquidity)) * SCALING_FACTOR
                     );
                     const assetSupply =
-                      Math.trunc(
-                        (calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR
-                      ) / SCALING_FACTOR;
+                      currentLiquidity > 0
+                        ? Math.trunc((calculated_supply * Number(getAssetSupplyValue(asset))) / SCALING_FACTOR) / SCALING_FACTOR
+                        : 0;
 
                     const assetBorrow =
                       currentDebtIndex > 0

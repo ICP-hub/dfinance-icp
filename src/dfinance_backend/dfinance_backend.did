@@ -7,8 +7,14 @@ type AssetInfo = record {
 };
 type Certificate = record { certificate : blob; witness : blob };
 type Challenge = record { base64_img : text };
+type CycleAlert = record {
+  is_exhausted : bool;
+  is_warning : bool;
+  current_cycle : nat;
+};
 type Error = variant {
   NormalizedSupply;
+  TooManyRequests;
   ConversionErrorToU128;
   NoCollateralFound;
   NoDebtToRepay;
@@ -22,9 +28,9 @@ type Error = variant {
   SupplyCapExceeded;
   ErrorDecoding;
   InvalidAmount;
-  BLOCKEDFORONEHOUR;
   ErrorInterestRate;
   AuditorNotFound;
+  UserCannotBeLiquidated;
   AmountTooMuch;
   CaptchaMismatch;
   ErrorMintDebtTokens;
@@ -54,7 +60,6 @@ type Error = variant {
   NoReserveDataFound;
   LiquidationProtocolfeeIsHigher;
   LowWalletBalance;
-  USERCANNOTBELIQUIDATED;
   InvalidBurnAmount;
   CaptchaLimitReached;
   AnonymousPrincipal;
@@ -89,6 +94,7 @@ type Error = variant {
   ExceedsRemainingLimit;
   BorrowCapExceeded;
   InsufficientLiquidity;
+  BlockedForOneHour;
   NotASupport;
   AmountSubtractionError;
   ErrorSupplyToken;
@@ -104,7 +110,6 @@ type Error = variant {
   RepayMoreThanDebt;
   InvalidMintAmount;
   ErrorRawResponse;
-  TOOMANYREQUESTS;
   UserNotFound;
   CalculateUserAccountDataError;
   ControllerNotFound;
@@ -173,6 +178,7 @@ type Result_12 = variant {
   Err : Error;
 };
 type Result_13 = variant { Ok : record { bool; Certificate }; Err : Error };
+type Result_14 = variant { Ok : TokenAlert; Err : Error };
 type Result_2 = variant { Ok : Challenge; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : record { nat; Certificate }; Err : Error };
@@ -186,6 +192,12 @@ type Result_8 = variant { Ok : record { principal; Certificate }; Err : Error };
 type Result_9 = variant {
   Ok : record { ReserveData; Certificate };
   Err : Error;
+};
+type TokenAlert = record {
+  asset_name : text;
+  balance : nat;
+  is_exhausted : bool;
+  is_warning : bool;
 };
 type UserAccountData = record {
   ltv : nat;
@@ -219,6 +231,7 @@ service : (principal) -> {
   check_is_tester : () -> (bool) query;
   create_captcha : () -> (Result_2);
   create_user_reserve_with_low_health : (text, text, nat, nat) -> (Result_3);
+  cycle_alert : () -> (CycleAlert) query;
   cycle_checker : () -> (Result_4) query;
   execute_borrow : (ExecuteBorrowParams) -> (Result_5);
   execute_liquidation : (ExecuteLiquidationParams) -> (Result_5);
@@ -257,6 +270,7 @@ service : (principal) -> {
   set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
+  token_balance_alert : (text) -> (Result_14);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt_certified : (ReserveData) -> (Result_4) query;
   user_normalized_supply_certified : (ReserveData) -> (Result_4) query;

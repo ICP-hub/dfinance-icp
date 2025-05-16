@@ -34,7 +34,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             // ✅ Valid Test Case (only one active for now, uncomment others as needed)
             TestCase {
                 asset: "ICP".to_string(),
-                amount: Nat::from(5_00_000_000u128), // 5 ICP (includes transaction fee)
+                amount: Nat::from(500_000_000u128), // 5 ICP (includes transaction fee)
                 is_collateral: true,
                 expect_success: true,
                 expected_error_message: None,
@@ -61,7 +61,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     
             // Get the asset principal (fail fast if None)
             let asset_principal =
-                match test_get_asset_principal(case.asset.clone(), &pic, backend_canister) {
+                match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
@@ -77,7 +77,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
-                &pic,
+                pic,
                 backend_canister,
                 case.amount.clone(), // 5 ICP (transfer fee included)
             );

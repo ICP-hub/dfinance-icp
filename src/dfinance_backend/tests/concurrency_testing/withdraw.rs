@@ -1,9 +1,11 @@
 use crate::utils::common_functions::fetch_reserve_data;
+use crate::utils::common_functions::init_tracing;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Test Withdraw Functionality for Asset Transactions
@@ -59,32 +61,32 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     // Start the withdraw test cases
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Withdraw Tests ========================\n"
     );
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset); // Display asset for withdraw request
+        info!("\n------------------------------------------------------------");
+        info!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
+        info!("Asset: {}", case.asset); // Display asset for withdraw request
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Display amount in human-readable format
-        ic_cdk::println!("Is Collateral: {}", case.is_collateral); // Log whether the asset is collateral
-        ic_cdk::println!("Expected Success: {}", case.expect_success); // Log expected success/failure of test case
+        info!("Amount: {}", amount_float / 100000000.0); // Display amount in human-readable format
+        info!("Is Collateral: {}", case.is_collateral); // Log whether the asset is collateral
+        info!("Expected Success: {}", case.expect_success); // Log expected success/failure of test case
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg); // Log expected error message in failure case
+            info!("Expected Error Message: {}", msg); // Log expected error message in failure case
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         // Fetch initial reserve data before making withdraw request
-        ic_cdk::println!(
+        info!(
             "\n======================== Initial reserve data before concurrent calls  ========================\n"
         );
         fetch_reserve_data(pic, backend_canister, &case.asset.clone());
 
-        ic_cdk::println!(
+        info!(
             "\n======================================================================================\n"
         );
 
@@ -126,13 +128,13 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                     match withdraw_response {
                         Ok(_balance) => {
                             if !case.expect_success {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",
                                     i + 1
                                 );
                                 continue; // Continue to next test case if failure expected but success occurred
                             }
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Withdraw successful.",
                                 i + 1,
                             );
@@ -140,7 +142,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                         Err(error) => {
                             if !case.expect_success {
                                 if case.expected_error_message.as_deref() != Some(error.message()) {
-                                    println!(
+                                    error!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -149,13 +151,13 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                                     );
                                     continue; // Skip this test case if error message does not match
                                 }
-                                ic_cdk::println!(
+                                info!(
                                     "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {:?}",
                                     i + 1,
                                     error
                                 );
                             } else {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",
                                     i + 1,
                                     error
@@ -166,7 +168,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                     }
                 }
                 WasmResult::Reject(reject_message) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
@@ -177,15 +179,15 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         }
 
         // Fetch final reserve data after withdraw operation is processed
-        ic_cdk::println!(
+        info!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
         fetch_reserve_data(pic, backend_canister, &case.asset.clone());
-        ic_cdk::println!("\n---------------------------------------------------------\n");
+        info!("\n---------------------------------------------------------\n");
     }
 
     // End of withdraw tests
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Withdraw Tests Completed ========================\n"
     );
 }

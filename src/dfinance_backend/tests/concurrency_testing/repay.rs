@@ -1,11 +1,12 @@
 use crate::utils::common_functions::{
-    fetch_reserve_data, test_get_asset_principal, test_icrc2_aprove,
+    fetch_reserve_data, init_tracing, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Test Repay Functionality for Asset Transactions
@@ -61,36 +62,36 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     // Starting the repayment test cases
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Repay Tests ========================\n"
     );
 
     // Iterate over all test cases for repayment
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset); // Display the asset to be repaid
-        ic_cdk::println!("case amount = {}", case.amount); // Display the repayment amount
+        info!("\n------------------------------------------------------------");
+        info!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
+        info!("Asset: {}", case.asset); // Display the asset to be repaid
+        info!("case amount = {}", case.amount); // Display the repayment amount
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0); // Convert the amount into human-readable format
+        info!("Amount: {}", amount_float / 100000000.0); // Convert the amount into human-readable format
         if let Some(ref principal) = case.on_behalf_of {
-            ic_cdk::println!("On Behalf Of: {}", principal); // Log the principal on behalf of whom repayment is executed (if provided)
+            info!("On Behalf Of: {}", principal); // Log the principal on behalf of whom repayment is executed (if provided)
         }
-        ic_cdk::println!("Expected Success: {}", case.expect_success); // Log expected success/failure outcome of the test
+        info!("Expected Success: {}", case.expect_success); // Log expected success/failure outcome of the test
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg); // Log the expected error message for failure cases
+            info!("Expected Error Message: {}", msg); // Log the expected error message for failure cases
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         // Fetch and log the reserve data before repayment
-        ic_cdk::println!(
+        info!(
             "\n======================== Initial reserve data before concurrent calls  ========================\n"
         );
         fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch reserve data for the asset before repayment
-        ic_cdk::println!("\n---------------------------------------------------------\n");
+        info!("\n---------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for each repay request
         for user_principal in random_users.clone() {
@@ -99,12 +100,12 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                     Some(principal) => principal, // Get the asset principal for repayment
                     None => {
                         if !case.expect_success {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Repay rejected as expected",
                                 i + 1,
                             );
                         } else {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected success but got rejection",
                                 i + 1
                             );
@@ -123,19 +124,19 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
             if !approved {
                 if !case.expect_success {
                     if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
-                        println!(
+                        error!(
                             "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             i + 1,
                             case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                         );
                         continue; // Skip the current iteration if the approval fails
                     }
-                    ic_cdk::println!(
+                    info!(
                         "✅ IC Test Case {} Passed: Repay rejected as expected",
                         i + 1,
                     );
                 } else {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Expected success but got rejection",
                         i + 1
                     );
@@ -178,18 +179,18 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                     match repay_response {
                         Ok(_balance) => {
                             if !case.expect_success {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",
                                     i + 1
                                 );
                                 continue;
                             }
-                            ic_cdk::println!("✅ IC Test Case {} Passed: Repay successful.", i + 1,);
+                            info!("✅ IC Test Case {} Passed: Repay successful.", i + 1,);
                         }
                         Err(error) => {
                             if !case.expect_success {
                                 if case.expected_error_message.as_deref() != Some(error.message()) {
-                                    println!(
+                                    error!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -197,13 +198,13 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                                     );
                                     continue;
                                 }
-                                ic_cdk::println!(
+                                info!(
                                     "✅ IC Test Case {} Passed: Repay rejected as expected with message: {:?}",
                                     i + 1,
                                     error
                                 );
                             } else {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}",
                                     i + 1,
                                     error
@@ -214,7 +215,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
                     }
                 }
                 WasmResult::Reject(reject_message) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
@@ -225,14 +226,14 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
         }
 
         // Fetch and log the final reserve data after repayment is processed
-        ic_cdk::println!(
+        info!(
             "\n======================== Total reserve data after concurrent calls  ========================\n"
         );
         fetch_reserve_data(pic, backend_canister, &case.asset.clone()); // Fetch updated reserve data after repayment
-        ic_cdk::println!("\n---------------------------------------------------------\n");
+        info!("\n---------------------------------------------------------\n");
     }
 
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Repay Tests Completed ========================\n"
     );
 }

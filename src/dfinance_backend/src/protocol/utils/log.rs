@@ -358,10 +358,7 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
  * @param msg `&str` - The message content to be logged.
  */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
-     ic_cdk::println!(
-        "[{:?}] [{}:{}] : {}",
-        level, file, line, msg
-    );
+  
     let user_principal = ic_cdk::caller().to_text();
 
     if level <= LogLevel::TRACE || level <= get_log_level() {

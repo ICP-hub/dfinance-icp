@@ -36,7 +36,7 @@ export TRIGGER_THRESHOLD=2_000
 export NUM_OF_BLOCK_TO_ARCHIVE=1_000
 export CYCLE_FOR_ARCHIVE_CREATION=10_000_000_000_000
 export FEATURE_FLAGS=true
-
+export TRANSFER_FEE_TOKEN=0
 
 # -----------------------------
 # Deploy token_ledger

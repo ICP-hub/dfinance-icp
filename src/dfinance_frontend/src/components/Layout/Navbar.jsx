@@ -20,7 +20,7 @@ import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/Testnetmode";
 import coinSound from "../../../public/sound/caching_duck_habbo.mp3";
-
+import { SCALING_FACTOR } from "../../utils/constants";
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -42,6 +42,7 @@ import { Principal } from "@dfinity/principal";
 import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import useNotificationSystem from "../CustomHooks/useNotification";
+import useTransferFee from "../CustomHooks/useTransferFee";
 /**
  * Navbar Component
  *
@@ -115,6 +116,27 @@ export default function Navbar({ isHomeNav }) {
   const [showDepositPopup, setShowDepositPopup] = useState(false);
   const [receiverAddress, setReceiverAddress] = useState("");
   const popupPosition = { top: 0, left: 0 };
+    const [ledgerFee, setLedgerFee] = useState(null);
+
+     const transferFeRetrive = useTransferFee(asset);
+       const transferFee = (Number(transferFeRetrive?.transferFee) || 0);
+      const ledgerFeeNumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee)  : (Number(ledgerFee)  || 0);
+    
+      const transactionFee = transferFee + ledgerFeeNumber;
+      const approvalFee = transactionFee + ledgerFeeNumber;
+    
+      console.log("dgdhddhhdhd", transactionFee)
+    
+     const formatFee = (fee) => {
+        const fixedFee = parseFloat(fee).toFixed(8);
+        const parts = fixedFee.split('.');
+        const integerPart = parts[0];
+        const decimalPart = parts[1] || '';
+        return `${integerPart}.${decimalPart.padEnd(8, '0').slice(0, 8)}`;
+      };
+      const formattedTransactionFee = formatFee(transactionFee);
+      const formattedApprovalFee = formatFee(approvalFee);
+      
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -198,7 +220,14 @@ export default function Navbar({ isHomeNav }) {
     ckBTC: ckBTCBalance,
     ckUSDC: ckUSDCBalance,
   };
-  const supplyBalance = assetBalances[asset] || 0;
+    const balance = assetBalances[asset] || 0;
+  console.log("formattedTransactionFee", formattedTransactionFee)
+ const supplyBalance = Math.max((assetBalances[asset] || 0) - formattedTransactionFee, 0);
+  console.log("supplyBalance", supplyBalance)
+
+    const hasEnoughBalance = 
+  balance >= formattedApprovalFee &&
+  (+amount + (+formattedApprovalFee || 0)) <= +supplyBalance;
 
   // Function to handle the click event on the "Approve" button
 const handleApprove = async () => {
@@ -266,16 +295,19 @@ const handleApprove = async () => {
     ledgerActor = ledgerActors.ckUSDT;
   }
 
-  let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-  const scaledAmount = amountAsNat64;
+    const amountAsNat64 = BigInt(Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8));
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
 
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
+    console.log(ledgerFee, "ledgerFee")
   try {
     const response = await ledgerActor.icrc2_approve({
-      fee: [],
+        fee: ledgerFee ? [ledgerFee] : [],
       memo: [],
       from_subaccount: [],
       created_at_time: [],
-      amount: scaledAmount,
+      amount: totalAmount,
       expected_allowance: [],
       expires_at: [],
       spender: {
@@ -344,11 +376,20 @@ const handleApprove = async () => {
         ledgerActor = ledgerActors.ckUSDT;
       }
 
-      let amountAsNat64 = Math.round(
-        amount.replace(/,/g, "") * Math.pow(10, 8)
-      );
-      const scaledAmount = amountAsNat64;
-
+ 
+     const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+     let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+     const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+   
+     const scaledAmount = amountAsNat64;
+   
+     // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
+     const ledgerFeenumber = typeof ledgerFee === 'bigint' ? Number(ledgerFee) : ledgerFee || 0;
+   console.log("approveLedgerFee", ledgerFeenumber)
+     const totalAmount = transferFeeBigInt
+       ? scaledAmount + transferFeeBigInt + ledgerFeenumber
+       : scaledAmount;
+console.log("totalAmount", totalAmount)
       const transferFromArgs = {
         from: {
           owner: Principal.fromText(principal),
@@ -358,14 +399,15 @@ const handleApprove = async () => {
           owner: Principal.fromText(receiverAddress),
           subaccount: [],
         },
-        amount: scaledAmount,
-        fee: [0],
+        amount: totalAmount,
+      fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         created_at_time: [],
         spender_subaccount: [],
       };
 
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
+      console.log("transfer_from", response)
       dispatch(toggleDashboardRefresh());
       const statusData = await fetchStatusFromBackend();
       // Check status and send notifications if needed      
@@ -389,15 +431,20 @@ const handleApprove = async () => {
           draggable: true,
           progress: undefined,
         });
+       setAmount("");
+        setReceiverAddress("");
+         setIsApproved(false)
       } else if ("Err" in response) {
         handleTransferError(response.Err);
-         setAmount("");
+        setAmount("");
         setReceiverAddress("");
+         setIsApproved(false)
       }
     } catch (error) {
       handleTransferException(error);
        setAmount("");
         setReceiverAddress("");
+           setIsApproved(false)
     }
   };
 
@@ -570,9 +617,13 @@ const handleApprove = async () => {
   };
 
   // Function to handle the click event on the "Max" button
-  const handleMaxClick = () => {
-    setAmount(supplyBalance.toString());
-  };
+const handleMaxClick = () => {
+  const balanceStr = supplyBalance.toString();
+  const [wholePart, decimalPart = ""] = balanceStr.split('.');
+  const truncatedDecimals = decimalPart.padEnd(8, '0').substring(0, 8);
+  const truncatedAmount = `${wholePart}.${truncatedDecimals}`;
+  setAmount(truncatedAmount);
+};
 
   // Function to handle the click event on the "Tour" button
   const handleTour = () => {
@@ -796,6 +847,38 @@ const handleApprove = async () => {
       window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
   }, []);
+
+    useEffect(() => {
+      if (!asset || !ledgerActors) return;
+  
+      let ledgerActor;
+      if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+      else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+      else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+      else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+      else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+      else {
+        console.error(`Unknown asset type: ${asset}`);
+        return;
+      }
+  
+      // Define async function inside useEffect
+      const fetchFee = async () => {
+        try {
+          const fee = await ledgerActor.icrc1_fee();
+          const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+          const feeBigInt = BigInt(Math.round(feeAsNumber));
+          setLedgerFee(feeBigInt);
+          console.log("fee", feeBigInt);
+        } catch (error) {
+          console.error(`Error getting fee for ${asset}:`, error);
+        }
+      };
+  
+      // Call the async function
+      fetchFee();
+  
+    }, [asset]);
 
   // when dropdown open scroll is locked
   useEffect(() => {
@@ -1282,7 +1365,7 @@ const handleApprove = async () => {
                               </div>
 
                               <div className="w-full mt-3">
-                                {amount > 0 && amount > supplyBalance && (
+                                {!hasEnoughBalance && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
                                       Insufficient wallet balance to transfer{" "}
@@ -1309,7 +1392,7 @@ const handleApprove = async () => {
                                       isButtonDisabled ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
-                                      amount > supplyBalance
+                                      amount > supplyBalance || !hasEnoughBalance
                                       ? "opacity-50 cursor-not-allowed"
                                       : ""
                                       }`}
@@ -1318,7 +1401,8 @@ const handleApprove = async () => {
                                       isLoading ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
-                                      amount > supplyBalance
+                                      amount > supplyBalance ||
+                                      !hasEnoughBalance
                                     }
                                   >
                                     Approve {asset} to continue

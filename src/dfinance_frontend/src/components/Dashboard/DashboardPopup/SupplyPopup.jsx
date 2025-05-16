@@ -677,8 +677,9 @@ console.log("total amount",supplyParams)
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+
   useEffect(() => {
-    // Skip if there's no asset selected or no ledgerActors
     if (!asset || !ledgerActors) return;
 
     let ledgerActor;
@@ -709,6 +710,8 @@ console.log("total amount",supplyParams)
     fetchFee();
 
   }, [asset]);
+
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (

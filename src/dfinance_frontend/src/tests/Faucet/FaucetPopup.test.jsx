@@ -15,17 +15,17 @@ jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useUserData", () => ({
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
+jest.mock("../../components/CustomHooks/useFunctionBlockStatus", () => ({
   __esModule: true,
   default: jest.fn(),
 }));

@@ -20,13 +20,13 @@ jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => jest.fn());
+jest.mock("../../components/CustomHooks/useAssets", () => jest.fn());
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () =>
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () =>
   jest.fn()
 );
 
-jest.mock("../../components/customHooks/useUserData", () => jest.fn());
+jest.mock("../../components/CustomHooks/useUserData", () => jest.fn());
 
 jest.mock("lucide-react", () => ({
   ChevronRight: () => <div data-testid="chevron-right">ChevronRight</div>,

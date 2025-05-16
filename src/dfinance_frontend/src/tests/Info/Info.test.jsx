@@ -34,12 +34,12 @@ jest.mock("react-toastify", () => ({
   },
 }));
 
-jest.mock("../../components/customHooks/useFormatNumber", () => ({
+jest.mock("../../components/CustomHooks/useFormatNumber", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue((num) => num),
 }));
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () => ({
   __esModule: true,
   default: () => ({
     ckBTCUsdRate: 50000,
@@ -50,7 +50,7 @@ jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
   }),
 }));
 
-jest.mock("../../components/customHooks/useFetchBalanceBackend", () => ({
+jest.mock("../../components/CustomHooks/useFetchBalanceBackend", () => ({
   __esModule: true,
   default: () => ({
     fetchBalance: jest.fn(),
@@ -62,7 +62,7 @@ jest.mock("../../components/customHooks/useFetchBalanceBackend", () => ({
   }),
 }));
 
-jest.mock("../../components/customHooks/useUserData", () => ({
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: () => ({
     isFreezePopupVisible: false,
@@ -70,7 +70,7 @@ jest.mock("../../components/customHooks/useUserData", () => ({
   }),
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => ({
+jest.mock("../../components/CustomHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     loading: false,

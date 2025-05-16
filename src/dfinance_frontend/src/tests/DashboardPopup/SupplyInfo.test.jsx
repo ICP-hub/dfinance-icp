@@ -12,7 +12,7 @@ jest.mock("react-router-dom", () => ({
 }));
 
 // Mocking the useFetchConversionRate hook to return mock conversion rates
-jest.mock("../../components/customHooks/useFetchConversionRate", () =>
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () =>
   jest.fn()
 );
 

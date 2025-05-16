@@ -23,7 +23,7 @@ jest.mock("../../utils/useAuthClient", () => ({
   })),
 }));
 
-jest.mock("../../components/customHooks/useUserData", () => ({
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     isFreezePopupVisible: false,

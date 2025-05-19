@@ -472,7 +472,6 @@ export const FAUCET_ASSETS_TABLE_COL = [
     header: "Wallet Balance",
   },
 ];
-
 export const threshold = 5000000000000;
 export const tokenThreshold = 10000;
 export const SCALING_FACTOR = 100000000;

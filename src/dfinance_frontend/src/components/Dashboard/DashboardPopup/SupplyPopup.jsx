@@ -130,10 +130,10 @@ const SupplyPopup = ({
   };
 
   const numericBalance = parseFloat(balance);
-  const supplyBalance = Math.max(numericBalance - formattedTransactionFee, 0);
+  const supplyBalance = Math.max(numericBalance - formattedApprovalFee, 0);
   const hasEnoughBalance =
     balance >= formattedApprovalFee &&
-    +amount + (+formattedApprovalFee || 0) <= +supplyBalance;
+    +amount + (+formattedApprovalFee || 0) <= +numericBalance;
 
   const value = currentHealthFactor;
 
@@ -999,7 +999,7 @@ const SupplyPopup = ({
                 isLoading ||
                 !hasEnoughBalance ||
                 amount <= 0 ||
-                +amount + (+formattedApprovalFee || 0) > +supplyBalance
+                +amount + (+formattedApprovalFee || 0) > +numericBalance
                   ? "opacity-50 cursor-not-allowed"
                   : ""
               }`}
@@ -1008,7 +1008,7 @@ const SupplyPopup = ({
                 isLoading ||
                 amount <= 0 ||
                 !hasEnoughBalance ||
-                +amount + (+formattedApprovalFee || 0) > +supplyBalance
+                +amount + (+formattedApprovalFee || 0) > +numericBalance
               }
             >
               Approve {asset} to continue

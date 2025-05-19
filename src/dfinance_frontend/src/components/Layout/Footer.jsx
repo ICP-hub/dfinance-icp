@@ -111,12 +111,12 @@ console.log("result",result)
       } else if ("Err" in result) {
         console.error("Failed to create reserve:", result.Err);
         if (result.Err.InsufficientFunds) {
-          toast.errro("Insufficient funds to create reserve");
+          toast.error("Insufficient funds to create reserve");
         } else if (result.Err.InsufficientAllowance) {
           setIsApproved(false);
-          toast.errro("Insufficient allowance. Please approve again.");
+          toast.error("Insufficient allowance. Please approve again.");
         } else {
-          toast.errro("Error creating reserve. See console for details.");
+          toast.error("Error creating reserve. See console for details.");
         }
       } else {
         console.error("Unknown response format from create_user_reserve");

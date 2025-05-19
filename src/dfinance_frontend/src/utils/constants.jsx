@@ -473,6 +473,7 @@ export const FAUCET_ASSETS_TABLE_COL = [
   },
 ];
 
-export const BASE_UNIT = 100000000;
+export const threshold = 5000000000000;
+export const tokenThreshold = 10000;
 export const SCALING_FACTOR = 100000000;
 export const PERCENTAGE_FACTOR = 100;

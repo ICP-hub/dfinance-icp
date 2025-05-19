@@ -369,7 +369,7 @@ const Repay = ({
       // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
       const ledgerFeenumber =
         typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
-      const totalAmount = (+amount + (+formattedTransactionFee || 0)) * 1e8;
+      const totalAmount = Math.round((+amount + (+formattedTransactionFee || 0)) * 1e8);
 
       const repayParams = {
         asset: asset,

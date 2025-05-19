@@ -126,7 +126,6 @@ const UserInformationPopup = ({
     return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
   };
   const formattedTransactionFee = formatFee(transactionFee);
-  console.log("formated", formattedTransactionFee)
 
   /* ===================================================================================
    *                                  FUNCTIONS

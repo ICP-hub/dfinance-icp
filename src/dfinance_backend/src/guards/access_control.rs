@@ -1,5 +1,5 @@
 use crate::{
-    constants::errors::Error, 
+    constants::{constant_variables::constants::ADMIN, errors::Error}, 
     stable_storage::state_handler::{mutate_state, read_state}
 };
 use candid::Principal;
@@ -174,19 +174,24 @@ pub fn check_is_tester() -> bool {
  * @functionality Admin Management - Add Admin
  */
 #[update]
-pub fn add_admin(name: String, new_admin_id: Principal) -> Result<String, Error> {
-    guard_principal_not_anonymous(&new_admin_id)?;
-    guard_admin_only()?;
+pub fn add_user_with_role(user_id: Principal, role: String) -> Result<String, Error> {
+    guard_principal_not_anonymous(&user_id)?; 
+    guard_admin_only()?;                         
+
+    if role.is_empty() {
+        return Err(Error::InvalidRole);
+    }
 
     mutate_state(|state| {
-        if state.admin_data.contains_key(&new_admin_id) {
-            return Err(Error::AdminAlreadyExists);
+        if state.access_control.contains_key(&user_id) {
+            return Err(Error::UserAlreadyExists);
         }
 
-        state.admin_data.insert(new_admin_id, name);
-        Ok("Admin added successfully".to_string())
+        state.access_control.insert(user_id, role);
+        Ok("User with role added successfully.".to_string())
     })
 }
+
 
 /**
  * @title Add Admin (Testnet Only)
@@ -199,16 +204,16 @@ pub fn add_admin(name: String, new_admin_id: Principal) -> Result<String, Error>
  */
 #[update]
 #[cfg(feature = "testnet")]
-pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, Error> {
+pub fn add_admin_test(role: String, new_admin_id: Principal) -> Result<String, Error> {
     guard_principal_not_anonymous(&new_admin_id)?;
     guard_controller_only()?;
 
     mutate_state(|state| {
-        if state.admin_data.contains_key(&new_admin_id) {
+        if state.access_control.contains_key(&new_admin_id) {
             return Err(Error::AdminAlreadyExists);
         }
 
-        state.admin_data.insert(new_admin_id, name);
+        state.access_control.insert(new_admin_id, role);
         Ok("Admin added successfully".to_string())
     })
 }
@@ -227,18 +232,19 @@ pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, E
  * @functionality Admin Management - Remove Admin
  */
 #[update]
-pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
+pub fn remove_user_role(user_id: Principal) -> Result<String, Error> {
     guard_admin_only()?;
-    guard_principal_not_anonymous(&admin_to_remove)?;
+    guard_principal_not_anonymous(&user_id)?;
 
     mutate_state(|state| {
-        if state.admin_data.remove(&admin_to_remove).is_some() {
-            Ok("Remove admin successfully".to_string())
+        if state.access_control.remove(&user_id).is_some() {
+            Ok("User role removed successfully".to_string())
         } else {
-            Err(Error::AdminNotFound)
+            Err(Error::UserRoleNotFound)
         }
     })
 }
+
 
 /*
  * @title Admin Access Guard
@@ -259,10 +265,10 @@ pub fn guard_admin_only() -> Result<(), Error> {
     let principal = caller();
 
     read_state(|state| {
-        if state.admin_data.contains_key(&principal) {
-            Ok(())
-        } else {
-            Err(Error::UnauthorizedAccess)
+        match state.access_control.get(&principal) {
+            Some(role) if role == ADMIN.to_string() => Ok(()),
+            _ => Err(Error::UnauthorizedAccess),
         }
     })
 }
+

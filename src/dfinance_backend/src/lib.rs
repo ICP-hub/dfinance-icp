@@ -32,7 +32,7 @@ use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
 use crate::protocol::logic::faucet::get_all_faucet;
-use constants::constant_variables::constants::{MAIN_ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY};
+use constants::constant_variables::constants::{ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
 use crate::declarations::datatypes::Certificate;
@@ -52,7 +52,7 @@ pub fn init(args: Principal) {
     // of other canisters (e.g., asset reserves) dynamically created
     // by the admin during initialization.
     mutate_state(|state| {
-        state.admin_data.insert(args, MAIN_ADMIN.to_string());
+        state.access_control.insert(args, ADMIN.to_string());
         state.meta_data.insert(
             MAIN_CONTROLLER.to_string(),
             Candid(InitArgs {

@@ -14,6 +14,7 @@ type CycleAlert = record {
 };
 type Error = variant {
   NormalizedSupply;
+  UserAlreadyExists;
   TooManyRequests;
   ConversionErrorToU128;
   NoCollateralFound;
@@ -70,6 +71,7 @@ type Error = variant {
   NegativeAmount;
   EmailError;
   ErrorPriceCache;
+  InvalidRole;
   NotADeveloper;
   InvalidAssetImageUrl;
   InvalidUser;
@@ -78,6 +80,7 @@ type Error = variant {
   InvalidValue;
   TokenAlreadyExist;
   RateLimitExceeded;
+  UserRoleNotFound;
   MaxAmount;
   FeeExceedsAmount;
   ErrorParsingPrincipal;
@@ -228,9 +231,9 @@ type UserReserveData = record {
   is_borrowed : bool;
 };
 service : (principal) -> {
-  add_admin : (text, principal) -> (Result);
   add_admin_test : (text, principal) -> (Result);
   add_tester : (text, principal) -> (Result_1);
+  add_user_with_role : (principal, text) -> (Result);
   admin_restart_reset_task : () -> (Result_1);
   check_is_tester : () -> (bool) query;
   create_captcha : () -> (Result_2);
@@ -272,7 +275,7 @@ service : (principal) -> {
   is_user_blocked : () -> (Result_14) query;
   mock_price_data : () -> (Result_1);
   receive_and_load_data_backup : (nat64) -> (Result_15);
-  remove_admin : (principal) -> (Result);
+  remove_user_role : (principal) -> (Result);
   reset_reserve_value : (text, text, nat) -> (Result_1);
   send_backup_data_to_canister : () -> (Result_15);
   set_canister_id : (text, principal) -> (Result_1);

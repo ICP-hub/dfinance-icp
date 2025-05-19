@@ -31,7 +31,7 @@ pub mod constants {
 
     // ------------------- Asset and Admin Constants -------------------
     pub const MAX_ASSET_LENGTH: usize = 7;
-    pub const MAIN_ADMIN: &str = "main_admin";
+    pub const ADMIN: &str = "admin";
     pub const MAIN_CONTROLLER: &str = "main_controller";
 
     // ------------------- XRC Service Fee -------------------

@@ -9,8 +9,8 @@ use crate::stable_storage::types::{
     ReserveList, TesterList, UserProfile,
 };
 
-use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, FAUCETDATA, LOG_STORAGE};
-use super::types::{AdminData, AssetRecords, FaucetData, LogStorage};
+use super::memory::{ACCESSCONTOL, ASSET_RECORDS_MEMORY_ID, FAUCETDATA, LOG_STORAGE};
+use super::types::{AccessControl, AssetRecords, FaucetData, LogStorage};
 
 pub struct State {
     pub asset_index: AssetIndex,
@@ -20,7 +20,7 @@ pub struct State {
     pub canister_list: CanisterList,
     pub meta_data: MetaData,
     pub tester_list: TesterList,
-    pub admin_data: AdminData,
+    pub access_control: AccessControl,
     pub asset_records:AssetRecords,
     pub faucet_data: FaucetData,
     pub log_storage:LogStorage
@@ -42,7 +42,7 @@ impl State {
             canister_list: CanisterList::init(memory_manager.get(CANISTER_MEMORY_ID)),
             meta_data: MetaData::init(memory_manager.get(META_DATA)),
             tester_list: TesterList::init(memory_manager.get(TESTER_LIST)),
-            admin_data: AdminData::init(memory_manager.get(ADMIN_DATA)),
+            access_control: AccessControl::init(memory_manager.get(ACCESSCONTOL)),
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),
             faucet_data: FaucetData::init(memory_manager.get(FAUCETDATA)),
             log_storage: LogStorage::init(memory_manager.get(LOG_STORAGE)),

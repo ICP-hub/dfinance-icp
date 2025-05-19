@@ -1,13 +1,12 @@
-
 use crate::api::query::get_canister_id_by_name;
 use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME};
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
+use candid::Principal;
 use ic_cdk::api;
-use candid::{ Principal};
-use ic_cdk::{call,query};
+use ic_cdk::{call, query};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -137,7 +136,7 @@ impl Drop for LogFlusher {
 
         let all_logs = get_logs_in_batches();
         let log_count = read_state(|state| state.log_storage.len());
-        
+
         if log_count >= LOGS_LIMIT {
             // This fires and ignores the result; runs asynchronously but not awaited.
             ic_cdk::spawn(async move {
@@ -162,13 +161,12 @@ impl Drop for LogFlusher {
  * @dev Retrieves logs from the state and slices them into batches.
  * @returns A `HashMap` containing the logs in batches, where each entry is a tuple of user ID and their respective log data.
  *
- * @functionality Collects all logs from `log_storage`, slices them into batches of size `BATCH_SIZE`, 
- * and returns the logs for the current batch. The function processes a batch starting from `start_index` 
+ * @functionality Collects all logs from `log_storage`, slices them into batches of size `BATCH_SIZE`,
+ * and returns the logs for the current batch. The function processes a batch starting from `start_index`
  * and returns logs in the range between `start_index` and `end_index`.
  */
 pub fn get_logs_in_batches() -> HashMap<u32, Vec<String>> {
     let all_logs: HashMap<u32, Vec<String>> = mutate_state(|state| {
-
         let logs: Vec<(u32, Vec<String>)> = state
             .log_storage
             .iter()
@@ -196,8 +194,8 @@ pub fn get_logs_in_batches() -> HashMap<u32, Vec<String>> {
  * @param line The line number from which the log entry was generated.
  * @param message The log message.
  * @returns `Ok(())` if the log is successfully stored, or an error if the operation fails.
- * 
- * @functionality Formats the log data, calculates a new log ID based on the highest existing key, 
+ *
+ * @functionality Formats the log data, calculates a new log ID based on the highest existing key,
  * and stores the log entry in the state. Each log entry is stored with a unique ID in `log_storage`.
  */
 pub fn store_log(
@@ -257,16 +255,24 @@ pub async fn send_log_to_logs_canister(
     match call::<(HashMap<u32, Vec<String>>,), (Result<(), String>,)>(
         logs_canister_id,
         "receive_logs_batch",
-        (logs,)
-    ).await {
+        (logs,),
+    )
+    .await
+    {
         Ok((Ok(()),)) => Ok(()),
         Ok((Err(err_msg),)) => {
             error!("❌ receive_logs_batch returned error: {}", err_msg);
             Err(LogError::Rejected(err_msg))
         }
         Err((code, msg)) => {
-            error!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
-            Err(LogError::Rejected(format!("Call failed with code {:?}: {}", code, msg)))
+            error!(
+                "❌ Inter-canister call failed. Code: {:?}, Message: {:?}",
+                code, msg
+            );
+            Err(LogError::Rejected(format!(
+                "Call failed with code {:?}: {}",
+                code, msg
+            )))
         }
     }
 }
@@ -312,7 +318,7 @@ pub fn clear_temp_log() {
  * @dev Returns all log entries stored in the canister in ascending order by their keys.
  *
  * @access Requires admin privileges via `guard_admin_only`.
- * 
+ *
  * @functionality
  * - Accesses the internal state to retrieve the log storage.
  * - Iterates over the log storage and extracts the first entry from each `Candid<Vec<String>>` value.
@@ -322,7 +328,7 @@ pub fn clear_temp_log() {
  * @return `Result<Vec<String>, Error>` containing all logs or an error if access is unauthorized.
  */
 #[query]
-pub fn get_all_logs() -> Result<Vec<String>,Error> {
+pub fn get_all_logs() -> Result<Vec<String>, Error> {
     guard_admin_only()?;
     read_state(|state| {
         let log_storage = &state.log_storage;
@@ -358,11 +364,9 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
  * @param msg `&str` - The message content to be logged.
  */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
-  
     let user_principal = ic_cdk::caller().to_text();
-
+    ic_cdk::println!("[{:?}] [{}:{}] : {}", level, file, line, msg);
     if level <= LogLevel::TRACE || level <= get_log_level() {
         let _ = store_log(user_principal, level, file, line, msg.to_string());
     }
-
 }

@@ -18,12 +18,12 @@ import useUserData from "../../components/CustomHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
+import { threshold } from "../../utils/constants";
+import { tokenThreshold } from "../../utils/constants";
 ChartJS.register(ArcElement, Tooltip);
 
 /**
  * This component displays various statistics related to users, cycles, reserves, and interest accrued.
- * It also monitors cycle and token thresholds and sends email notifications if thresholds are breached.
- *
  * @returns {JSX.Element} - Returns the DashboardCards component.
  */
 const DashboardCards = () => {
@@ -57,7 +57,7 @@ const DashboardCards = () => {
    * =================================================================================== */
 
   const [like, setLike] = useState(false);
-  const [threshold] = useState(5000000000000);
+  // const [threshold] = useState(5000000000000);
 
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);

@@ -738,6 +738,8 @@ pub async fn create_user_reserve_with_low_health(
     supply_tokens: Nat,
     borrow_tokens: Nat,
 ) -> Result<UserData, Error> {
+    use crate::api::inter_canister::get_transfer_fee;
+
     trace!("Creating user reserve with low health factor...");
     if !check_is_tester() {
         error!("Invalid User");
@@ -922,7 +924,7 @@ pub async fn create_user_reserve_with_low_health(
         supply_asset_ledger_canister_id, //ledger
         user_principal,
         platform_principal,
-        supply_tokens,
+        supply_tokens-get_transfer_fee(supply_asset_ledger_canister_id).await?,
     )
     .await
     {

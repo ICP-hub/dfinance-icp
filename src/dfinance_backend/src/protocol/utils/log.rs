@@ -365,6 +365,7 @@ pub fn get_all_logs() -> Result<Vec<String>, Error> {
  */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
     let user_principal = ic_cdk::caller().to_text();
+    #[cfg(feature = "testnet")]
     ic_cdk::println!("[{:?}] [{}:{}] : {}", level, file, line, msg);
     if level <= LogLevel::TRACE || level <= get_log_level() {
         let _ = store_log(user_principal, level, file, line, msg.to_string());

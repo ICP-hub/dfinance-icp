@@ -442,7 +442,26 @@ impl ValidationLogic {
         }
 
         debug!("User balance: {:?}", user_balance);
+        let platform_principal = ic_cdk::api::id();
+        let allowance = get_icrc2_allowance(ledger_canister, user, platform_principal)
+            .await
+            .map_err(|e| {
+                error!("Allowance query failed: {:?}", e);
+                Error::AllowanceQueryFailed
+            })?;
 
+        debug!(
+            "Allowance from user {} to platform {} is {}",
+            user, platform_principal, allowance.allowance
+        );
+
+        if amount > allowance.allowance {
+            error!(
+                "Insufficient allowance: required {}, allowed {}",
+                amount, allowance.allowance
+            );
+            return Err(Error::AllowanceTooLow);
+        }
         //checking if the user has enough wallet balance
         if amount > user_balance {
             error!("Repay amount exceeds user balance."); //error

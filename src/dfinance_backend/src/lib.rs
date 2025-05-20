@@ -109,7 +109,7 @@ pub fn schedule_temp_log_cleanup() {
  */
 #[cfg(feature = "testnet")]
 async fn run_midnight_reset() {
-    let (vector_faucet_data, _cer) = get_all_faucet().await;
+    let vector_faucet_data = get_all_faucet().await;
 
     for (user_principal, _) in vector_faucet_data {
         match reset_faucet_usage(user_principal).await {

@@ -239,9 +239,16 @@ const Repay = ({
   const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
-  const hasEnoughBalance =
-    supplyBalance >= formattedApprovalFee &&
-    +amount + (+formattedApprovalFee || 0) <= +supplyBalance;
+ const truncateTo8Decimals = (num) => {
+     return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+   };
+   const approvalfee = +formattedApprovalFee || 0;
+   const totalRequired = truncateTo8Decimals(+amount + approvalFee);
+ 
+   const hasEnoughBalance =
+     balance >= approvalfee &&
+     totalRequired <= +numericBalance;
+    console.log("HAs",hasEnoughBalance,totalRequired,numericBalance)
   /**
    * This function handles the approval process before executing a repayment. It checks the asset type and uses the appropriate
    * ledger actor to approve the repayment amount for the selected asset.
@@ -572,7 +579,7 @@ const Repay = ({
       return truncated.toFixed(8);
     };
 
-    const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
+    const fee = formattedApprovalFee ? Number(formattedApprovalFee) : 0;
 
     let selectedBalance;
     if (supplyBalance >= assetBorrow + fee) {
@@ -986,7 +993,7 @@ const Repay = ({
                     isApproved ||
                     isLoading ||
                     amount <= 0 ||
-                    +amount + (+formattedApprovalFee || 0) > +supplyBalance
+                    !hasEnoughBalance
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                   }`}
@@ -994,7 +1001,7 @@ const Repay = ({
                     isApproved ||
                     isLoading ||
                     amount <= 0 ||
-                    +amount + (+formattedApprovalFee || 0) > +supplyBalance
+                    !hasEnoughBalance
                   }
                 >
                   Approve {asset} to continue
@@ -1008,7 +1015,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + formattedApprovalFee > supplyBalance
+                    !hasEnoughBalance
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                   }`}
@@ -1017,7 +1024,7 @@ const Repay = ({
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + formattedApprovalFee > supplyBalance
+                    !hasEnoughBalance
                   }
                 >
                   Repay {asset}

@@ -1,3 +1,7 @@
+import { TRILION } from "../../utils/constants";
+import { BILION } from "../../utils/constants";
+import { MILION } from "../../utils/constants";
+import { Thousand } from "../../utils/constants";
 const useFormatNumber = () => {
   const formatNumber = (num) => {
     const parsedNum = parseFloat(num);
@@ -5,17 +9,17 @@ const useFormatNumber = () => {
     if (isNaN(parsedNum) || parsedNum === null || parsedNum === undefined) {
       return "0";
     }
-    if (parsedNum >= 1000000000000) {
-      return (parsedNum / 1000000000000).toFixed(1).replace(/\.0$/, "") + "T";
+    if (parsedNum >= TRILION) {
+      return (parsedNum / TRILION).toFixed(1).replace(/\.0$/, "") + "T";
     }
-    if (parsedNum >= 1000000000) {
-      return (parsedNum / 1000000000).toFixed(1).replace(/\.0$/, "") + "B";
+    if (parsedNum >= BILION) {
+      return (parsedNum / BILION).toFixed(1).replace(/\.0$/, "") + "B";
     }
-    if (parsedNum >= 1000000) {
-      return (parsedNum / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (parsedNum >= MILION) {
+      return (parsedNum / MILION).toFixed(1).replace(/\.0$/, "") + "M";
     }
-    if (parsedNum >= 1000) {
-      return (parsedNum / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    if (parsedNum >= Thousand) {
+      return (parsedNum / Thousand).toFixed(1).replace(/\.0$/, "") + "K";
     }
     return parsedNum.toFixed(2).toString();
   };

@@ -46,7 +46,7 @@ const MobileTopNav = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { assets, AssetImages } = useAssetData();
-  const { isAuthenticated, principal, accountIdString ,backendActor} = useAuth();
+  const { isAuthenticated, principal, accountIdString, backendActor } = useAuth();
   const ledgerActors = useSelector((state) => state.ledger);
   const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
@@ -144,7 +144,6 @@ const MobileTopNav = ({
     const decimalPart = parts[1] || "";
     return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
   };
-  const formattedTransactionFee = formatFee(transactionFee);
   const formattedApprovalFee = formatFee(approvalFee);
 
   const {
@@ -221,13 +220,12 @@ const MobileTopNav = ({
   };
   const approvalfee = +formattedApprovalFee || 0;
   const totalRequired = truncateTo8Decimals(+amount + approvalFee);
-  console.log("totalRequired", amount, totalRequired, approvalfee, numericBalance)
   const hasEnoughBalance =
     balance >= approvalfee &&
     totalRequired <= +numericBalance;
 
   // handle approve function
-   const handleApprove = async () => {
+  const handleApprove = async () => {
     if (!receiverAddress.trim()) {
       toast.dismiss();
       toast.error("Please enter a valid receiver address", {
@@ -694,7 +692,6 @@ const MobileTopNav = ({
 
   useEffect(() => {
     const balanceStr = truncateToEightDecimals(supplyBalance);
-    console.log("truncated", balanceStr, supplyBalance);
     setAmount(balanceStr);
   }, [supplyBalance]);
   useEffect(() => {

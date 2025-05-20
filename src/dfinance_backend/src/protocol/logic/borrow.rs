@@ -10,7 +10,7 @@ use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::libraries::user::get_asset_debt;
 use crate::protocol::logic::validation::ValidationLogic;
-use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::price::{
  calculate_transfer_fee, update_token_price
 };
@@ -69,9 +69,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     let user_principal = ic_cdk::caller();
     debug!("User principal: {:?}", user_principal.to_text());
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(), // or whatever user_key you need
-    };
 
     // input validations
     validate_asset_name(&params.asset)?;
@@ -220,9 +217,6 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
             (ic_cdk::caller(), None)
         };
 
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(),
-    };
 
     let ledger_canister_id = get_asset_principal(params.asset.clone())?;
     let ledger_fee = get_transfer_fee(ledger_canister_id).await?;

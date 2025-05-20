@@ -109,7 +109,7 @@ pub enum Error {
     TotalCollateraLessThan,
     UserCollateralLessThanReward,
     InvalidRole,
-    UserAlreadyExists,
+    RoleAlreadyExistsForUser,
     UserRoleNotFound 
 }
 
@@ -230,7 +230,7 @@ impl Error {
             Error::ErrorSupplyToken => "Error supplying token",
             Error::TotalCollateraLessThan => "Total collateral is less that amount in usd",
             Error::UserCollateralLessThanReward => "User collateral is less than reward amount",
-            Error::UserAlreadyExists => "This user already has a role assigned.",
+            Error::RoleAlreadyExistsForUser => "This user already has a role assigned.",
             Error::InvalidRole => {
                 "The provided role is invalid. Please use a valid role such as 'admin' or 'minter'."
             }

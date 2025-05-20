@@ -52,7 +52,8 @@ pub fn init(args: Principal) {
     // of other canisters (e.g., asset reserves) dynamically created
     // by the admin during initialization.
     mutate_state(|state| {
-        state.access_control.insert(args, ADMIN.to_string());
+        // state.access_control.insert(args, Candid(ADMIN.to_string()));
+        state.access_control.insert(args, Candid(vec![ADMIN.to_string()]));
         state.meta_data.insert(
             MAIN_CONTROLLER.to_string(),
             Candid(InitArgs {

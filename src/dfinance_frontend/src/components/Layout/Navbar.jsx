@@ -138,7 +138,6 @@ export default function Navbar({ isHomeNav }) {
     const decimalPart = parts[1] || "";
     return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
   };
-  const formattedTransactionFee = formatFee(transactionFee);
   const formattedApprovalFee = formatFee(approvalFee);
 
   /* ===================================================================================
@@ -232,7 +231,6 @@ export default function Navbar({ isHomeNav }) {
   };
   const approvalfee = +formattedApprovalFee || 0;
   const totalRequired = truncateTo8Decimals(+amount + approvalFee);
-  console.log("totalRequired",amount,totalRequired,approvalfee,numericBalance)
   const hasEnoughBalance =
     balance >= approvalfee &&
     totalRequired <= +numericBalance;
@@ -617,10 +615,9 @@ export default function Navbar({ isHomeNav }) {
   // Function to handle the click event on the "Max" button
   const handleMaxClick = () => {
     const balanceStr = truncateToEightDecimals(
-                                            supplyBalance
-                                          )
-    
-    console.log("truncated",balanceStr,supplyBalance)
+      supplyBalance
+    )
+
     setAmount(balanceStr);
   };
 
@@ -846,7 +843,7 @@ export default function Navbar({ isHomeNav }) {
     };
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     if (!asset || !ledgerActors) return;
 
     let ledgerActor;
@@ -877,10 +874,10 @@ useEffect(() => {
   }, [asset]);
 
   useEffect(() => {
-  const balanceStr = truncateToEightDecimals(supplyBalance);
-  console.log("truncated", balanceStr, supplyBalance);
-  setAmount(balanceStr);
-}, [supplyBalance]);
+    const balanceStr = truncateToEightDecimals(supplyBalance);
+    setAmount(balanceStr);
+  }, [supplyBalance]);
+
   // when dropdown open scroll is locked
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
@@ -1142,7 +1139,7 @@ useEffect(() => {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}
                     </div>
                   </div>
                 )}
@@ -1318,8 +1315,8 @@ useEffect(() => {
                                         </p>
                                         <p
                                           className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved
-                                              ? "text-gray-400 cursor-not-allowed"
-                                              : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                                             }`}
                                           onClick={() => {
                                             if (
@@ -1389,14 +1386,14 @@ useEffect(() => {
                                   <button
                                     onClick={() => !isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                                        isLoading ||
-                                        isButtonDisabled ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance ||
-                                        !hasEnoughBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isLoading ||
+                                      isButtonDisabled ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance ||
+                                      !hasEnoughBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       isApproved ||
@@ -1413,13 +1410,13 @@ useEffect(() => {
                                   <button
                                     onClick={() => isApproved && handleClick()}
                                     className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                                        isButtonDisabled ||
-                                        isLoading ||
-                                        amount <= 0 ||
-                                        supplyBalance <= 0 ||
-                                        amount > supplyBalance
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                      isButtonDisabled ||
+                                      isLoading ||
+                                      amount <= 0 ||
+                                      supplyBalance <= 0 ||
+                                      amount > supplyBalance
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                       }`}
                                     disabled={
                                       !isApproved ||
@@ -1555,7 +1552,7 @@ useEffect(() => {
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                  { }
+
                   <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                     {!isMobile2 && (
                       <div
@@ -1573,7 +1570,6 @@ useEffect(() => {
                         </span>
                       </div>
                     )}
-
                     {switchWalletDrop && (
                       <>
                         <div
@@ -1628,7 +1624,7 @@ useEffect(() => {
                             </div>
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                              { }
+
                               <div className="hidden lg1:flex justify-center">
                                 <div
                                   className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -1674,7 +1670,7 @@ useEffect(() => {
                                   </div>
                                 </div>
                               </div>
-                              { }
+
                               <div className=" w-full flex justify-center">
                                 <div
                                   className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -1729,8 +1725,6 @@ useEffect(() => {
                             <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
                               Settings
                             </h2>
-
-                            { }
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around">
                                 <label
@@ -1751,7 +1745,7 @@ useEffect(() => {
                               </div>
                             </div>
 
-                            { }
+
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <label
@@ -1772,7 +1766,7 @@ useEffect(() => {
                               </div>
                             </div>
 
-                            { }
+
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around relative group">
                                 <label
@@ -1786,7 +1780,7 @@ useEffect(() => {
                                   />
                                 </label>
 
-                                { }
+
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                   Enabling this will allow the user to hear
                                   sound when supply, borrow, repay, or withdraw
@@ -1826,7 +1820,7 @@ useEffect(() => {
                         onClick={() => setIsMobileNav(!isMobileNav)}
                         className="cursor-pointer"
                       >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                        {isMobileNav ? <CloseIcon /> : <MenuIcon />}
                       </div>
                     </div>
                   )}
@@ -1860,7 +1854,7 @@ useEffect(() => {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}
                         </div>
                       </div>
                     )}
@@ -1869,8 +1863,6 @@ useEffect(() => {
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
                           Settings
                         </h2>
-
-                        { }
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label

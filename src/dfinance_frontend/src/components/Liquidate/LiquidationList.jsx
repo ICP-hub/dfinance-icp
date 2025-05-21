@@ -115,11 +115,13 @@ const DebtStatus = () => {
    */
   const fetchLiquidationUsers = async (totalPages, pageSize) => {
     try {
-      const result = await backendActor.get_liquidation_users_concurrent(
+      const result = await backendActor.get_all_user_list(
         totalPages,
-        pageSize
+        pageSize,
+        true
       );
-      const parsedResult = result.map(
+      console.log("Liquidation users fetched:", result);
+      const parsedResult = result.Ok.map(
         ([principal, userAccountData, userData]) => ({
           principal: Principal.fromUint8Array(principal),
           collateral: userAccountData.collateral,

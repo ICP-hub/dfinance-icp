@@ -261,9 +261,6 @@ service : (principal) -> {
   get_asset_principal_certified : (text) -> (Result_9) query;
   get_cached_exchange_rate_certified : (text) -> (Result_4) query;
   get_canister_id_by_name : (text) -> (Result_10) query;
-  get_liquidation_users_concurrent : (nat64, nat64) -> (
-      vec record { principal; UserAccountData; UserData },
-    );
   get_reserve_data_certified : (text) -> (Result_11) query;
   get_total_users : () -> (nat64, Certificate) query;
   get_transfer_fee : (text) -> (Result_4) query;

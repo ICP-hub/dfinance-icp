@@ -11,8 +11,10 @@ use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
-use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
+use crate::guards::access_control::{
+    guard_optional_principal_not_anonymous, guard_principal_not_anonymous,
+};
 use crate::protocol::libraries::reserve::get_asset_principal;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::{
@@ -65,45 +67,34 @@ use ic_cdk::update;
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-    // trace!("calling calculate user account data");
-
-    if on_behalf == Some(Principal::anonymous()) {
-        error!("Anonymous principal detected.");
-        return Err(Error::AnonymousPrincipal);
-    }
-
+ 
+    guard_optional_principal_not_anonymous(on_behalf)?;
     guard_prevent_anonymous()?;
-
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
-        None => {
-            let user_principal = ic_cdk::caller();
-            user_principal
-        }
+        None => ic_cdk::caller(),
     };
 
 
     let max = get_max_value();
-
     let user_data = user_data(user_principal)?;
 
-    if user_data.reserves.is_none() {
-        info!("No reserves found for the user.");
-        return Ok((
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            max,
-            zero_nat_value(),
-            false,
-        ));
-    }
-
-    let user_data_reserves = user_data.reserves.as_ref().ok_or_else(|| {
-        error!("User data reserves not found.");
-        Error::NoUserReserveDataFound
-    })?;
+    // Optimized handling of user_data.reserves
+    let user_data_reserves = match &user_data.reserves {
+        Some(reserves) => reserves,
+        None => {
+            info!("No reserves found for the user.");
+            return Ok((
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                max,
+                zero_nat_value(),
+                false,
+            ));
+        }
+    };
 
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
@@ -118,10 +109,8 @@ pub async fn calculate_user_account_data(
         }
 
         let reserve_data = get_reserve_data(reserve_name.clone())?;
+        let asset_price = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
-        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
-        let asset_price = rate;
         if user_reserve_data.is_collateral {
             debug!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -129,11 +118,9 @@ pub async fn calculate_user_account_data(
                 user_principal,
                 &user_reserve_data,
                 asset_price.clone(),
+                None,
             )
             .await?;
-            debug!("user balance in account data = {}", user_balance);
-
-            // info!("get user balance in base currency called");
 
             total_collateral += user_balance.clone();
 
@@ -158,11 +145,10 @@ pub async fn calculate_user_account_data(
                 user_principal,
                 &user_reserve_data,
                 asset_price.clone(),
+                None,
             )
             .await?;
-            // info!("get user debt in base currency called");
-
-            total_debt += user_debt.clone();
+            total_debt += user_debt;
         }
     }
 
@@ -191,18 +177,6 @@ pub async fn calculate_user_account_data(
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-
-    debug!(
-            "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
-            total_collateral,
-            total_debt,
-            avg_ltv,
-            avg_liquidation_threshold,
-            health_factor,
-            has_zero_ltv_collateral,
-            available_borrow
-        );
-
     Ok((
         total_collateral,
         total_debt,
@@ -245,36 +219,32 @@ pub async fn calculate_user_asset_data(
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
-        None => {
-            let user_principal = ic_cdk::caller();
-            user_principal
-        }
+        None => ic_cdk::caller(),
     };
 
-    let dtoken_balance = dtoken_balance.unwrap_or_default();
-    let debt_token_balance = debt_token_balance.unwrap_or_default();
+    let dtoken_balance = dtoken_balance.unwrap_or_else(|| Vec::new());
+    let debt_token_balance = debt_token_balance.unwrap_or_else(|| Vec::new());
 
     let max = get_max_value();
 
     let user_data = user_data(user_principal)?;
 
-    if user_data.reserves.is_none() {
-        debug!("No reserves found for the user.");
-        return Ok((
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            max,
-            zero_nat_value(),
-            false,
-        ));
-    }
-
-    let user_data_reserves = user_data.reserves.as_ref().ok_or_else(|| {
-        error!("User data reserves not found.");
-        Error::NoUserReserveDataFound
-    })?;
+    let user_data_reserves = match &user_data.reserves {
+        Some(reserves) => reserves,
+        None => {
+            info!("No reserves found for the user.");
+            return Ok((
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                max,
+                zero_nat_value(),
+                false,
+            ));
+        }
+    };
+    
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
     let mut avg_ltv = zero_nat_value();
@@ -288,10 +258,8 @@ pub async fn calculate_user_asset_data(
         }
 
         let reserve_data = get_reserve_data(reserve_name.clone())?;
+        let asset_price = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
-        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
-        let asset_price = rate;
         if user_reserve_data.is_collateral {
             let balance: Nat = dtoken_balance
                 .iter()
@@ -299,11 +267,11 @@ pub async fn calculate_user_asset_data(
                 .map(|asset| asset.balance.clone())
                 .unwrap_or(zero_nat_value());
 
-            let user_balance = get_user_asset_balance_in_base_currency(
+            let user_balance = get_user_balance_in_base_currency(
                 user_principal,
                 &user_reserve_data,
-                balance.clone(),
                 asset_price.clone(),
+                Some(balance.clone()),
             )
             .await?;
 
@@ -330,9 +298,6 @@ pub async fn calculate_user_asset_data(
         }
 
         if user_reserve_data.is_borrowed {
-            let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
-            let asset_price = rate;
 
             let balance: Nat = debt_token_balance
                 .iter()
@@ -340,10 +305,11 @@ pub async fn calculate_user_asset_data(
                 .map(|asset| asset.balance.clone())
                 .unwrap_or(zero_nat_value());
 
-            let user_debt = get_user_asset_debt_in_base_currency(
+            let user_debt = get_user_debt_in_base_currency(
+                user_principal,
                 &user_reserve_data,
-                balance.clone(),
-                asset_price.clone(),
+                asset_price,
+                Some(balance.clone()),
             )
             .await?;
 
@@ -375,17 +341,6 @@ pub async fn calculate_user_asset_data(
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-
-    debug!(
-            "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
-            total_collateral,
-            total_debt,
-            avg_ltv,
-            avg_liquidation_threshold,
-            health_factor,
-            has_zero_ltv_collateral,
-            available_borrow
-        );
 
     Ok((
         total_collateral,
@@ -426,21 +381,28 @@ pub async fn get_user_balance_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
     asset_price: Nat,
+    user_balance: Option<Nat>,
 ) -> Result<Nat, Error> {
-    // trace!("Calculating user balance in base currency...");
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let d_token_canister_principal: Principal = asset_reserve.d_token_canister.clone().unwrap();
+    let user_scaled_balance = match user_balance {
+        Some(balance) => balance,
+        None => {
+            debug!("going inside the base currency");
+            let d_token_canister_principal = asset_reserve.d_token_canister.ok_or_else(|| {
+                error!("No d_token canister ID found.");
+                Error::NoCanisterIdFound
+            })?;
 
-    let user_scaled_balance = get_balance(d_token_canister_principal, user_principal).await?;
+            get_balance(d_token_canister_principal, user_principal).await?
+        }
+    };
 
     let normalized_supply = user_normalized_supply(asset_reserve)?;
     let user_scaled = if reserve.liquidity_index != zero_nat_value() {
-        user_scaled_balance
-            .clone()
-            .scaled_div(reserve.liquidity_index.clone())
+        user_scaled_balance.scaled_div(reserve.liquidity_index.clone())
     } else {
-        user_scaled_balance.clone()
+        user_scaled_balance
     };
 
     let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
@@ -449,47 +411,6 @@ pub async fn get_user_balance_in_base_currency(
         "Final user balance in base currency = {}", result
     );
     Ok(result)
-}
-
-/**
- * @title Get User Asset Balance in Base Currency
- * @dev Calculates the user's asset balance normalized to a base currency value.
- * @param _user_principal The principal of the user whose balance is being calculated.
- * @param reserve The reserve data associated with the asset.
- * @param user_balance The user's raw asset balance.
- * @param asset_price The current price of the asset in the base currency.
- * @returns The user's asset balance converted into the base currency, or an error if reserve data is not available.
- *
- * @functionality Normalizes and scales the user's asset balance using the liquidity index and reserve's normalized supply, then converts it into the base currency using the asset price.
- */
-pub async fn get_user_asset_balance_in_base_currency(
-    _user_principal: Principal,
-    reserve: &UserReserveData,
-    user_balance: Nat,
-    asset_price: Nat,
-) -> Result<Nat, Error> {
-    trace!("Calculating user asset balance in base currency...");
-
-    let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
-
-    let user_scaled_balance = user_balance.clone();
-
-    let normalized_supply = user_normalized_supply(asset_reserve)?;
-
-    let user_scaled = if reserve.liquidity_index != zero_nat_value() {
-        user_scaled_balance
-            .clone()
-            .scaled_div(reserve.liquidity_index.clone())
-    } else {
-        user_scaled_balance.clone()
-    };
-
-    let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
-    debug!(
-        "user_scaled_balanced_normalized = {}",
-        user_scaled_balanced_normalized
-    );
-    Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
 }
 
 /*
@@ -518,12 +439,21 @@ pub async fn get_user_debt_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
     asset_price: Nat,
+    balance: Option<Nat>,
 ) -> Result<Nat, Error> {
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let debt_token_canister_principal = asset_reserve.debt_token_canister.clone().unwrap();
-
-    let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await?;
+    let mut user_variable_debt = match balance {
+        Some(val) => val,
+        None => {
+            let debt_token_canister_principal =
+                asset_reserve.debt_token_canister.ok_or_else(|| {
+                    error!("No debt_token canister ID found.");
+                    Error::NoCanisterIdFound
+                })?;
+            get_balance(debt_token_canister_principal, user_principal).await?
+        }
+    };
 
     let user_normailzed_debt = user_normalized_debt(asset_reserve)?;
 
@@ -535,135 +465,6 @@ pub async fn get_user_debt_in_base_currency(
     let result = user_variable_debt.scaled_mul(asset_price);
     debug!("Final user debt in base currency: {}", result);
     Ok(result)
-}
-
-/*
- * @title Get User Asset Debt in Base Currency
- * @functionality Calculates a user's outstanding debt for a specific asset, expressed in the base currency (e.g., USD).
- *
- * @notice Computes the user's variable debt balance, applies normalization using indexes,
- *         and converts the result to base currency using the asset's current price.
- *
- * @dev Uses the user's raw balance (provided as `user_balance`), divides it by the current variable borrow index to get the scaled value,
- *      multiplies it by the normalized debt factor retrieved from the reserve data, and finally multiplies the result by the asset's price.
- *
- * @param user_principal The principal of the user whose debt is being calculated.
- * @functionality Identifies the user within the system (used mainly for logging or future extensions).
- *
- * @param reserve The user reserve data for the specific asset.
- * @functionality Provides access to the reserve ID and current variable borrow index for normalization.
- *
- * @param user_balance The raw debt balance (variable debt) of the user for the asset.
- * @functionality Serves as the base value to normalize and convert into base currency.
- *
- * @param asset_price The price of the asset in the base currency.
- * @functionality Used to compute the equivalent debt in base currency by multiplying with the normalized debt.
- *
- * @return Result<Nat, Error> The user's debt in base currency or an error if reserve data is invalid.
- * @functionality Returns a `Nat` representing the total normalized debt in base currency after applying all adjustments.
- */
-
-pub async fn get_user_asset_debt_in_base_currency(
-    reserve: &UserReserveData,
-    user_balance: Nat,
-    asset_price: Nat,
-) -> Result<Nat, Error> {
-    let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
-
-    let mut user_variable_debt = user_balance.clone();
-
-    let user_normailzed_debt = user_normalized_debt(asset_reserve)?;
-
-    if user_variable_debt != zero_nat_value() {
-        user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
-        user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
-        debug!(
-            "User variable debt after normalization: {}",
-            user_variable_debt
-        );
-    }
-    Ok(user_variable_debt.scaled_mul(asset_price))
-}
-
-/*
- * @title Get Users Eligible for Liquidation
- * @notice Identifies users with a health factor below the liquidation threshold.
- *
- * @dev Uses concurrency for improved efficiency by fetching users in batches.
- *
- * @functionality This function fetches user data in batches and calculates their health factors to determine whether they are eligible for liquidation.
- *                It processes users concurrently using the `stream::iter` method and filters out users with health factors below the defined threshold.
- *
- * @param total_pages The total number of pages to fetch users from.
- * @functionality Defines how many pages of users will be processed in parallel, optimizing efficiency.
- *
- * @param page_size The number of users per page.
- * @functionality Specifies how many users will be processed per page for each batch, allowing concurrency control.
- *
- * @return A vector of tuples containing (Principal, UserAccountData, UserData).
- * @functionality Returns a list of users who are eligible for liquidation, based on their health factor,
- *                along with their account data and associated user data.
- */
-
-#[update]
-pub async fn get_liquidation_users_concurrent(
-    total_pages: usize,
-    page_size: usize,
-) -> Vec<(Principal, UserAccountData, UserData)> {
-    let vector_user_data = get_all_users().await;
-
-    let mut liq_list = Vec::new();
-
-    for page in 0..total_pages {
-        let users_to_process = vector_user_data
-            .iter()
-            .skip(page * page_size)
-            .take(page_size)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        // debug!("Processing page: {}", page + 1);
-
-        // Concurrent processing of users in the current page
-        let page_liq_list = stream::iter(users_to_process)
-            .map(|(user_principal, user_data)| async move {
-                match calculate_user_account_data(Some(user_principal)).await {
-                    Ok(user_account_data_tuple) => {
-                        let user_account_data = UserAccountData {
-                            collateral: user_account_data_tuple.0,
-                            debt: user_account_data_tuple.1,
-                            ltv: user_account_data_tuple.2,
-                            liquidation_threshold: user_account_data_tuple.3,
-                            health_factor: user_account_data_tuple.4,
-                            available_borrow: user_account_data_tuple.5,
-                            has_zero_ltv_collateral: user_account_data_tuple.6,
-                        };
-
-                        // Fetch the user's health factor scaled by 100 and 10^8,
-                        // unscale it by 100
-                        // then compare it with the health factor limit (scaled to 10^8).
-                        // This helps determine if the user's position is still safe or needs liquidation.
-                        if user_account_data.health_factor.clone() / Nat::from(PERCENTAGE_FACTOR)
-                            < Nat::from(HEALTH_FACTOR_BARRIER)
-                        {
-                            Some((user_principal, user_account_data, user_data))
-                        } else {
-                            None
-                        }
-                    }
-                    Err(err) => {
-                        error!("Failed to fetch data for {:?}: {:?}", user_principal, err);
-                        None
-                    }
-                }
-            })
-            .buffered(100) // Process 100 users concurrently to prevent overload
-            .collect::<Vec<_>>()
-            .await;
-
-        liq_list.extend(page_liq_list.into_iter().flatten());
-    }
-    liq_list
 }
 
 /*
@@ -986,9 +787,6 @@ pub async fn create_user_reserve_with_low_health(
                 .asset_index
                 .insert(asset_borrow.clone(), Candid(borrow_reserve_data.clone()));
         }
-    });
-
-    mutate_state(|state| {
         state
             .user_profile
             .insert(user_principal, Candid(user_data.clone()));
@@ -1023,12 +821,13 @@ pub async fn create_user_reserve_with_low_health(
 pub async fn get_all_user_list(
     total_pages: usize,
     page_size: usize,
+    only_liquidatable: bool,
 ) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
-    guard_admin_only()?;
+    if !only_liquidatable {
+        guard_admin_only()?;
+    }
 
     let vector_user_data = get_all_users().await;
-    let total_users = vector_user_data.len();
-    debug!("Total users: {}", total_users);
 
     let mut liq_list = Vec::new();
 
@@ -1042,13 +841,8 @@ pub async fn get_all_user_list(
 
         let page_liq_list = stream::iter(users_to_process)
             .map(|(user_principal, user_data)| async move {
-                debug!("Processing user: {:?}", user_principal);
                 match calculate_user_account_data(Some(user_principal)).await {
                     Ok(user_account_data_tuple) => {
-                        debug!(
-                            "User {:?} data: {:?}",
-                            user_principal, user_account_data_tuple
-                        );
                         let user_account_data = UserAccountData {
                             collateral: user_account_data_tuple.0,
                             debt: user_account_data_tuple.1,
@@ -1058,8 +852,19 @@ pub async fn get_all_user_list(
                             available_borrow: user_account_data_tuple.5,
                             has_zero_ltv_collateral: user_account_data_tuple.6,
                         };
-
-                        Some((user_principal, user_account_data, user_data))
+                        if only_liquidatable {
+                            // Filter by low health factor only when requested
+                            if user_account_data.health_factor.clone()
+                                / Nat::from(PERCENTAGE_FACTOR)
+                                < Nat::from(HEALTH_FACTOR_BARRIER)
+                            {
+                                Some((user_principal, user_account_data, user_data))
+                            } else {
+                                None
+                            }
+                        } else {
+                            Some((user_principal, user_account_data, user_data))
+                        }
                     }
                     Err(err) => {
                         error!("Failed to fetch data for {:?}: {:?}", user_principal, err);
@@ -1073,7 +878,6 @@ pub async fn get_all_user_list(
 
         liq_list.extend(page_liq_list.into_iter().flatten());
     }
-
     Ok(liq_list)
 }
 
@@ -1108,9 +912,8 @@ pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-    if let Some(principal) = on_behalf {
-        guard_principal_not_anonymous(&principal)?;
-    }
+    guard_optional_principal_not_anonymous(on_behalf)?;
+
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),

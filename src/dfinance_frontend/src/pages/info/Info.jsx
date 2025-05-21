@@ -204,7 +204,8 @@ const DashboardCards = () => {
   // Function to fetch all users from the backend
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
-      const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      // const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      const result = await backendActor.get_all_user_list(totalPages, pageSize, false);
 
       if (!result.Ok || !Array.isArray(result.Ok)) {
         throw new Error("Unexpected response format");
@@ -262,7 +263,7 @@ const DashboardCards = () => {
     try {
       const result = await backendActor.cycle_checker();
       const cycles = result?.Ok[0] ?? "Error retrieving cycles";
-      const cert = result?.Ok[1]; 
+      const cert = result?.Ok[1];
 
       if (cert) {
         try {
@@ -303,7 +304,7 @@ const DashboardCards = () => {
 
 
 
- 
+
   // Function to format numbers with commas
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
@@ -718,8 +719,8 @@ const DashboardCards = () => {
 
                 <p
                   className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
                     }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}

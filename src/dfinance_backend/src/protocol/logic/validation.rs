@@ -1,5 +1,5 @@
-use crate::api::inter_canister::{get_balance, get_icrc2_allowance, get_total_supply};
-use crate::constants::constant_variables::constants::SCALING_FACTOR;
+use crate::api::inter_canister::{get_balance, get_icrc2_allowance, get_total_supply, get_transfer_fee};
+use crate::constants::constant_variables::constants::{SCALING_FACTOR, TRANSFER_FEE};
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
@@ -443,7 +443,12 @@ impl ValidationLogic {
 
         debug!("User balance: {:?}", user_balance);
         let platform_principal = ic_cdk::api::id();
-        let allowance = get_icrc2_allowance(ledger_canister, user, platform_principal)
+        let user_id = if liquidator.is_none() {
+            user.clone()
+        } else {
+            liquidator.unwrap().clone()
+        };
+        let allowance = get_icrc2_allowance(ledger_canister, user_id, platform_principal)
             .await
             .map_err(|e| {
                 error!("Allowance query failed: {:?}", e);
@@ -540,15 +545,16 @@ impl ValidationLogic {
             repay_amount
         );
         
-
+        let repay_ledger_canister_id = get_asset_principal(repay_asset.clone())?;
         // Check if repay amount exceeds normalized user debt
-        if repay_amount > normalized_debt_amount {
-            error!("Repay amount exceeds user debt.");
+         let transfer_token_fee = calculate_transfer_fee(&repay_asset, repay_amount.clone())?;
+        if (repay_amount.clone() - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee.clone())) > normalized_debt_amount {
+            error!("Repay amount exceeds user debt. {}", repay_amount.clone() - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee));
             return Err(Error::RepayMoreThanDebt);
         }
 
         // Get the repay ledger canister ID
-        let repay_ledger_canister_id = get_asset_principal(repay_asset.clone())?;
+        
 
         // Fetch liquidator's wallet balance
         let liquidator_wallet_balance =

@@ -135,7 +135,7 @@ type ExecuteRepayParams = record {
 };
 type ExecuteSupplyParams = record {
   asset : text;
-  is_collateral : bool;
+  can_be_collateral : bool;
   amount : nat;
 };
 type FaucetReserve = record { faucet_limit : nat; faucet_usage : nat };
@@ -217,6 +217,7 @@ type UserData = record {
   user_id : opt text;
 };
 type UserReserveData = record {
+  can_be_collateral : bool;
   last_update_timestamp : nat64;
   d_token_balance : nat;
   is_collateral : bool;

@@ -19,7 +19,7 @@ use icrc_ledger_types::icrc2::approve::ApproveError;
 pub struct ExecuteSupplyParams {
     pub asset: String,
     pub amount: Nat,
-    pub is_collateral: bool,
+    pub can_be_collateral: bool,
 
 }
 
@@ -67,7 +67,7 @@ pub struct ExecuteRepayParams {
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    pub is_collateral: bool,
+    pub can_be_collateral: bool,
 }
 
 /* 

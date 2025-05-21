@@ -9,7 +9,7 @@ use candid::{CandidType, Deserialize};
 use serde::Serialize;
 use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData};
 use std::collections::BTreeMap;
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::{debug, error, info};
 
 

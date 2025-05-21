@@ -153,7 +153,7 @@ pub enum ApproveResult {
 pub struct ExecuteSupplyParams {
     pub asset: String,
     pub amount: Nat,
-    pub is_collateral: bool,
+    pub can_be_collateral: bool,
 }
 
 #[derive(CandidType)]
@@ -182,7 +182,7 @@ pub struct ExecuteLiquidationParams {
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    pub is_collateral: bool,
+    pub can_be_collateral: bool,
 }
 
 #[derive(CandidType, Deserialize, Serialize, Debug, Clone)]
@@ -194,6 +194,7 @@ pub struct UserReserveData {
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
+    pub can_be_collateral: bool,
     pub d_token_balance: Nat,
     pub debt_token_blance: Nat,
 }

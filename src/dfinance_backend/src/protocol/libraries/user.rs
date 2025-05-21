@@ -14,7 +14,7 @@ use crate::guards::access_control::check_is_tester;
 use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
 use crate::protocol::libraries::reserve::get_asset_principal;
-use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::{
     calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
 };
@@ -65,7 +65,7 @@ use ic_cdk::update;
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-    trace!("calling calculate user account data");
+    // trace!("calling calculate user account data");
 
     if on_behalf == Some(Principal::anonymous()) {
         error!("Anonymous principal detected.");
@@ -82,9 +82,6 @@ pub async fn calculate_user_account_data(
         }
     };
 
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(),
-    };
 
     let max = get_max_value();
 
@@ -136,7 +133,7 @@ pub async fn calculate_user_account_data(
             .await?;
             debug!("user balance in account data = {}", user_balance);
 
-            info!("get user balance in base currency called");
+            // info!("get user balance in base currency called");
 
             total_collateral += user_balance.clone();
 
@@ -163,7 +160,7 @@ pub async fn calculate_user_account_data(
                 asset_price.clone(),
             )
             .await?;
-            info!("get user debt in base currency called");
+            // info!("get user debt in base currency called");
 
             total_debt += user_debt.clone();
         }
@@ -430,7 +427,7 @@ pub async fn get_user_balance_in_base_currency(
     reserve: &UserReserveData,
     asset_price: Nat,
 ) -> Result<Nat, Error> {
-    trace!("Calculating user balance in base currency...");
+    // trace!("Calculating user balance in base currency...");
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
     let d_token_canister_principal: Principal = asset_reserve.d_token_canister.clone().unwrap();
@@ -447,11 +444,11 @@ pub async fn get_user_balance_in_base_currency(
     };
 
     let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
+    let result  = user_scaled_balanced_normalized.scaled_mul(asset_price);
     debug!(
-        "user_scaled_balanced_normalized = {}",
-        user_scaled_balanced_normalized
+        "Final user balance in base currency = {}", result
     );
-    Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
+    Ok(result)
 }
 
 /**
@@ -625,7 +622,7 @@ pub async fn get_liquidation_users_concurrent(
             .cloned()
             .collect::<Vec<_>>();
 
-        debug!("Processing page: {}", page + 1);
+        // debug!("Processing page: {}", page + 1);
 
         // Concurrent processing of users in the current page
         let page_liq_list = stream::iter(users_to_process)
@@ -809,6 +806,7 @@ pub async fn create_user_reserve_with_low_health(
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_collateral = true;
                 reserve_data.is_borrowed = true;
+                reserve_data.can_be_collateral = true;
             }
             None => {
                 user_data.reserves.get_or_insert(vec![]).push((
@@ -823,6 +821,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: true,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -857,6 +856,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: false,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -891,6 +891,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: false,
                         is_borrowed: true,
+                        can_be_collateral: false,
                     },
                 ));
             }

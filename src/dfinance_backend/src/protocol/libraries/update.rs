@@ -64,6 +64,7 @@ impl UpdateLogic {
             reserve_data.reserve = params.asset.clone();
             reserve_data.last_update_timestamp = current_timestamp();
             reserve_data.can_be_collateral = params.can_be_collateral;
+            reserve_data.is_collateral = params.can_be_collateral;
             if reserve_data.is_collateral || reserve_data.is_borrowed {
                 reserve_data.is_using_as_collateral_or_borrow = true;
             } else {

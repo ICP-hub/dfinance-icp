@@ -7,12 +7,12 @@ import { useSelector } from "react-redux";
 import { useAuth } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
-import useAssetData from "../../components/customHooks/useAssets";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
+import useAssetData from "../../components/CustomHooks/useAssets";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import MiniLoader from "../../components/Common/miniLoader";
 import Lottie from "../../components/Common/lottie";
-import useUserData from "../../components/customHooks/useUserData";
+import useUserData from "../../components/CustomHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 import { SCALING_FACTOR } from '../../utils/constants';
 /**

@@ -6,16 +6,16 @@ import cross from "../../../public/assests-icon/cross.png";
 import { Principal } from "@dfinity/principal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import { useDispatch, useSelector } from "react-redux";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { trackEvent } from "../../utils/googleAnalytics";
 import { toggleRefreshLiquidate } from "../../redux/reducers/liquidateUpdateReducer";
-import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../customHooks/useTransferFee";
+import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
-import useNotificationSystem from "../customHooks/useNotification";
+import useNotificationSystem from "../CustomHooks/useNotification";
 const UserInformationPopup = ({
   onClose,
   mappedItem,
@@ -85,7 +85,7 @@ const UserInformationPopup = ({
   const [isDebtAssetSelected, setIsDebtAssetSelected] = useState(false);
   const [amountToRepayUSD, setAmountToRepayUSD] = useState(null);
   const [collateralAmount, setCollateralAmount] = useState(0);
-
+  const [ledgerFee, setLedgerFee] = useState(null);
   const assetRates = {
     ckETH: ckETHUsdRate,
     ckBTC: ckBTCUsdRate,
@@ -95,7 +95,7 @@ const UserInformationPopup = ({
   };
 
   const [value, setValue] = useState(0);
-const checkAndNotify = useNotificationSystem();
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                  REDUX-SELECTER
    * =================================================================================== */
@@ -111,8 +111,21 @@ const checkAndNotify = useNotificationSystem();
    * =================================================================================== */
 
   const transferFeRetrive = useTransferFee(selectedDebtAsset);
-  const transferFee = transferFeRetrive?.transferFee;
-  const transferfee = Number(transferFee);
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee)
+      : Number(ledgerFee) || 0;
+
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -322,12 +335,10 @@ const checkAndNotify = useNotificationSystem();
   const handleCheckboxClick = (e) => {
     setIsCheckboxChecked(e.target.checked);
   };
- const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
-      const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
+      const tokenStatus = await backendActor.token_balance_alert(selectedAsset);
       const status = {
         cycle: cycleStatus,
         token: tokenStatus.OK
@@ -367,12 +378,14 @@ const checkAndNotify = useNotificationSystem();
     }
 
     const supplyAmount = BigInt(Math.round(amountToRepay * SCALING_FACTOR));
-    const totalAmount = supplyAmount + BigInt(Math.round(transferFee * SCALING_FACTOR));
 
+    const fee = await ledgerActor.icrc1_fee();
+    setLedgerFee(fee)
+    const totalAmount = supplyAmount + BigInt(Math.round(formattedTransactionFee * SCALING_FACTOR));
     try {
       setIsLoading(true);
-      await ledgerActor.icrc2_approve({
-        fee: [],
+      const result = await ledgerActor.icrc2_approve({
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -384,7 +397,7 @@ const checkAndNotify = useNotificationSystem();
           subaccount: [],
         },
       });
-
+      console.log("approve", result)
       setIsApproved(true);
       toast.success(`Approval successful!`, {
         className: "custom-toast",
@@ -603,13 +616,13 @@ const checkAndNotify = useNotificationSystem();
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        amount: supplyAmount + transferfee * SCALING_FACTOR,
+        amount: supplyAmount + formattedTransactionFee * SCALING_FACTOR,
         on_behalf_of: mappedItem?.principal?._arr,
         reward_amount: Math.trunc(rewardAmount * SCALING_FACTOR),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
- const statusData = await fetchStatusFromBackend();            
-      // Check status and send notifications if needed      
+      const statusData = await fetchStatusFromBackend();
+       
       await checkAndNotify(statusData);
       if ("Ok" in result) {
         trackEvent(
@@ -1032,7 +1045,7 @@ const checkAndNotify = useNotificationSystem();
           <div className="flex justify-between items-center mt-1">
             <p className="opacity-80">Transaction Fee:</p>
             <div className="flex items-center gap-1 mt-1 ml-1">
-              <p className="font-medium">{transferFee}</p>
+              <p className="font-medium">{formattedTransactionFee}</p>
               {DebtassetIndex !== -1 && AssetImages[DebtassetIndex] && (
                 <img
                   key={DebtassetIndex}

@@ -1,8 +1,10 @@
+use crate::utils::common_functions::init_tracing;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Withdraw Stress Test
@@ -77,24 +79,24 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     let total_users = random_users.len();
 
-    ic_cdk::println!("\n======================== 🚀 IC Withdraw Stress Testing Started ========================\n");
-    ic_cdk::println!(
+    info!("\n======================== 🚀 IC Withdraw Stress Testing Started ========================\n");
+    info!(
         "🔥 Running stress test with {} user principals! 🔥\n",
         total_users
     );
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🚀 Test Case {}: Withdraw Request Initiated", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🚀 Test Case {}: Withdraw Request Initiated", i + 1);
         let _amount_float = case.amount.clone().0.try_into().unwrap_or(0u64) as f64 / 100000000.0;
 
         if let Some(msg) = &case.expected_error_message {
-            ic_cdk::println!("⚠️ Expected Error: {}", msg);
+            info!("⚠️ Expected Error: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let mut success_count = 0;
         let mut failure_count = 0;
@@ -127,13 +129,13 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                     match withdraw_response {
                         Ok(_) => {
                             if !case.expect_success {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ Test Case {} Failed: Expected failure but got success.",
                                     i + 1
                                 );
                                 failure_count += 1;
                             } else {
-                                ic_cdk::println!(
+                                info!(
                                     "✅ User {}: Withdraw successful.",
                                     user_principal.to_text(),
                                 );
@@ -143,7 +145,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                         Err(error) => {
                             if !case.expect_success {
                                 if case.expected_error_message.as_deref() != Some(error.message()) {
-                                    ic_cdk::println!(
+                                    error!(
                                         "❌ Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("No expected message"),
@@ -151,7 +153,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                                     );
                                     failure_count += 1;
                                 } else {
-                                    ic_cdk::println!(
+                                    info!(
                                         "✅ Test Case {} Passed: Withdraw rejected as expected with message: {:?}",
                                         i + 1,
                                         error
@@ -159,14 +161,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                                     success_count += 1;
                                 }
                             } else {
-                                ic_cdk::println!("❌ Test Case {} Failed: Expected success but got rejection: {:?}", i + 1, error);
+                                error!("❌ Test Case {} Failed: Expected success but got rejection: {:?}", i + 1, error);
                                 failure_count += 1;
                             }
                         }
                     }
                 }
                 Ok(WasmResult::Reject(reject_message)) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ Test Case {} Failed: Call rejected with message: {}",
                         i + 1,
                         reject_message
@@ -174,7 +176,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
                     failure_count += 1;
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ Test Case {} Failed: Error during function call: {:?}",
                         i + 1,
                         e
@@ -184,14 +186,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             }
         }
 
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
-        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("\n------------------------------------------------------------");
+        info!("📊 Test Case {} Summary: ", i + 1);
+        info!("✅ Successful Transactions: {}", success_count,);
+        error!("❌ Failed Transactions: {}", failure_count,);
+        info!("------------------------------------------------------------\n");
     }
 
-    ic_cdk::println!(
+    info!(
         "\n======================== ✅ IC Withdraw Tests Completed ========================\n"
     );
 }

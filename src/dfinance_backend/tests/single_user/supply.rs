@@ -2,15 +2,11 @@ use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     get_user_principal2, test_get_asset_principal, test_icrc2_aprove
+     get_user_principal2, init_tracing, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
-
+use tracing::{info,error};
 
 
 /*
@@ -40,23 +36,23 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 expected_error_message: None,
             },
         ];
-    
+        init_tracing();
         let user_principal = get_user_principal2();
     
-        ic_cdk::println!("\n================= Starting IC Supply Tests =================\n");
+        info!("\n================= Starting IC Supply Tests =================\n");
     
         for (i, case) in test_cases.iter().enumerate() {
-            ic_cdk::println!(
+            info!(
                 "\n------------------ Test Case {} ------------------",
                 i + 1
             );
-            ic_cdk::println!("Asset: {}", case.asset);
-            ic_cdk::println!("Amount: {}", case.amount.clone());
-            ic_cdk::println!("Is Collateral: {}", case.is_collateral);
-            ic_cdk::println!("Expect Success: {}", case.expect_success);
+            info!("Asset: {}", case.asset);
+            info!("Amount: {}", case.amount.clone());
+            info!("Is Collateral: {}", case.is_collateral);
+            info!("Expect Success: {}", case.expect_success);
     
             if let Some(ref msg) = case.expected_error_message {
-                ic_cdk::println!("Expected Error Message: {}", msg);
+                info!("Expected Error Message: {}", msg);
             }
     
             // Get the asset principal (fail fast if None)
@@ -65,9 +61,9 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
-                            ic_cdk::println!("✅ Passed: Supply rejected as expected");
+                            info!("✅ Passed: Supply rejected as expected");
                         } else {
-                            ic_cdk::println!("❌ Failed: Expected success but got rejection");
+                            error!("❌ Failed: Expected success but got rejection");
                         }
                         continue;
                     }
@@ -85,15 +81,15 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 if !case.expect_success {
                     let expected = case.expected_error_message.as_deref().unwrap_or("");
                     if expected != "icrc2 not approved" {
-                        ic_cdk::println!(
+                        error!(
                             "❌ Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                             expected
                         );
                     } else {
-                        ic_cdk::println!("✅ Passed: Supply rejected as expected");
+                        info!("✅ Passed: Supply rejected as expected");
                     }
                 } else {
-                    ic_cdk::println!("❌ Failed: Expected success but got rejection");
+                    error!("❌ Failed: Expected success but got rejection");
                 }
                 continue;
             }
@@ -129,12 +125,12 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                         match response {
                             Ok(_balance) => {
                                 if case.expect_success {
-                                    ic_cdk::println!(
+                                    info!(
                                         "✅ Call {} Success: Supply succeeded.\n",
                                         j + 1,
                                     );
                                 } else {
-                                    ic_cdk::println!(
+                                    error!(
                                         "❌ Call {} Failed: Expected failure but got success.",
                                         j + 1
                                     );
@@ -144,29 +140,29 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                                 if !case.expect_success {
                                     let expected = case.expected_error_message.as_deref().unwrap_or("");
                                     if expected != error.message() {
-                                        ic_cdk::println!(
+                                        error!(
                                             "❌ Call {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                             j + 1,
                                             expected,
                                             error.message()
                                         );
                                     } else {
-                                        ic_cdk::println!(
+                                        info!(
                                             "✅ Call {} Passed: Supply rejected with expected error: {}",
                                             j + 1,
                                             error.message()
                                         );
                                     }
                                 } else {
-                                    ic_cdk::println!(
+                                    info!(
                                         "-----------------------------------------------------------------------",
                                     );
-                                    ic_cdk::println!(
+                                    error!(
                                         "❌ Call {} Failed: Expected success but got error: {}",
                                         j + 1,
                                         error.message(),
                                     );
-                                    ic_cdk::println!(
+                                    info!(
                                         "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                     );
                                     
@@ -175,11 +171,11 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                         }
                     }
                     WasmResult::Reject(reason) => {
-                        ic_cdk::println!("❌ Call {} Rejected: Rejection message: {}", j + 1, reason);
+                        error!("❌ Call {} Rejected: Rejection message: {}", j + 1, reason);
                     } 
                 }
             }
         }
     
-        ic_cdk::println!("\n================= IC Supply Tests Completed =================\n");
+        info!("\n================= IC Supply Tests Completed =================\n");
     }

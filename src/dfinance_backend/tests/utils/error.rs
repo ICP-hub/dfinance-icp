@@ -111,7 +111,10 @@ pub enum Error {
     UserActionRestricted,
     RollbackProcessingError,
     RollbackPending,
-    RollbackFailedAdminActionRequired
+    RollbackFailedAdminActionRequired,
+    UserCollateralLessThanReward  ,
+     AllowanceTooLow,
+    AllowanceQueryFailed,  
     
 }
 
@@ -224,7 +227,11 @@ impl Error {
             Error::UserActionRestricted => "User action has been restricted, Rollback pending.",
             Error::RollbackProcessingError => "Rollback encountered an error.",
             Error::RollbackFailedAdminActionRequired => "Rollback Failed, need admin intervention.",
-            Error::RollbackPending => "Rollback is Pending."
+            Error::RollbackPending => "Rollback is Pending.",
+            Error::UserCollateralLessThanReward => "User collateral is less than reward amount",
+            Error::AllowanceTooLow => "Allowance is too low",
+            Error::AllowanceQueryFailed => "Failed to query allowance",
+        }
         }
     }
 }

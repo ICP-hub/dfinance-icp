@@ -12,7 +12,6 @@ use crate::error;
 use crate::guards::access_control::guard_prevent_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::utils::log::LogFlusher;
 use crate::info;
 use crate::protocol::libraries::update::{get_faucet_reserve_for_asset, get_user_faucet_reserves};
 use crate::protocol::utils::log::{log_internal, LogLevel};
@@ -69,9 +68,6 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     
     let user_principal = ic_cdk::caller();
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(), // or whatever user_key you need
-    };
 
     // input asset validator
     validate_asset_name(&asset)?;
@@ -210,7 +206,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::NoUserReserveDataFound);
     }
 
-    info!("user faucet reserve updated successfully");
+    // info!("user faucet reserve updated successfully");
     mutate_state(|state| {
         state
             .faucet_data
@@ -218,10 +214,10 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     });
     insert_certified_value(user_principal.to_string(), user_faucet_reserves.clone());
 
-    info!(
-        "updated user data after facuet reset = {:?}",
-        user_faucet_reserves
-    );
+    // info!(
+    //     "updated user data after facuet reset = {:?}",
+    //     user_faucet_reserves
+    // );
     Ok(())
 }
 
@@ -360,7 +356,7 @@ pub fn captcha_filter(
  * @functionality This function returns a list of all users and their respective faucet reserves.
  */
 #[cfg(feature = "testnet")]
-pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate) {
+pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
     let res = read_state(|state| {
         state
             .faucet_data
@@ -368,7 +364,6 @@ pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate)
             .map(|(k, v)| (k.clone(), v.0.clone()))
             .collect()
     });
-    let cer = get_certificate_witness("all_faucet".to_string());
-    (res, cer)
+    res
 
 }

@@ -4,9 +4,9 @@ import Market from "../../pages/Market/Market";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
-import useAssetData from "../../components/customHooks/useAssets";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import useUserData from "../../components/customHooks/useUserData";
+import useAssetData from "../../components/CustomHooks/useAssets";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
+import useUserData from "../../components/CustomHooks/useUserData";
 
 jest.mock("react-redux", () => ({
   useSelector: jest.fn(),
@@ -20,13 +20,13 @@ jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => jest.fn());
+jest.mock("../../components/CustomHooks/useAssets", () => jest.fn());
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () =>
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () =>
   jest.fn()
 );
 
-jest.mock("../../components/customHooks/useUserData", () => jest.fn());
+jest.mock("../../components/CustomHooks/useUserData", () => jest.fn());
 
 jest.mock("lucide-react", () => ({
   ChevronRight: () => <div data-testid="chevron-right">ChevronRight</div>,

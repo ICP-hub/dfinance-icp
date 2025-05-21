@@ -3,15 +3,15 @@ import { useSelector } from "react-redux";
 import Button from "../Common/button";
 import { FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
 import FaucetPopup from "./FaucetPopup";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import { useEffect } from "react";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import MiniLoader from "../Common/miniLoader";
 import WalletModal from "../Dashboard/WalletModal";
 import Lottie from "../Common/lottie";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
-import useUserData from "../customHooks/useUserData";
+import useUserData from "../CustomHooks/useUserData";
 import { SCALING_FACTOR } from '../../utils/constants';
 const ITEMS_PER_PAGE = 8;
 

@@ -20,7 +20,7 @@ import CloseIcon from "../Home/CloseIcon";
 import MenuIcon from "../Home/MenuIcon";
 import TestnetModePopup from "../Dashboard/DashboardPopup/Testnetmode";
 import coinSound from "../../../public/sound/caching_duck_habbo.mp3";
-
+import { SCALING_FACTOR } from "../../utils/constants";
 import {
   DASHBOARD_TOP_NAV_LINK,
   HOME_TOP_NAV_LINK,
@@ -36,12 +36,13 @@ import { IoIosRocket } from "react-icons/io";
 import DFinance from "../../../public/home/favicon.png";
 import { toggleSound } from "../../redux/reducers/soundReducer";
 
-import useAssetData from "../customHooks/useAssets";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
+import useAssetData from "../CustomHooks/useAssets";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { Principal } from "@dfinity/principal";
-import useFunctionBlockStatus from "../customHooks/useFunctionBlockStatus";
+import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
-import useNotificationSystem from "../customHooks/useNotification";
+import useNotificationSystem from "../CustomHooks/useNotification";
+import useTransferFee from "../CustomHooks/useTransferFee";
 /**
  * Navbar Component
  *
@@ -75,8 +76,14 @@ export default function Navbar({ isHomeNav }) {
   const { isWalletModalOpen } = useSelector((state) => state.utility);
   const isTestnetMode = useSelector((state) => state.testnetMode.isTestnetMode);
   const previousIsTestnetMode = useRef(isTestnetMode);
-  const { isAuthenticated, login, logout, principal, accountIdString } =
-    useAuth();
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    principal,
+    accountIdString,
+    backendActor,
+  } = useAuth();
   const [asset, setAsset] = useState("ICP");
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
@@ -115,6 +122,23 @@ export default function Navbar({ isHomeNav }) {
   const [showDepositPopup, setShowDepositPopup] = useState(false);
   const [receiverAddress, setReceiverAddress] = useState("");
   const popupPosition = { top: 0, left: 0 };
+  const [ledgerFee, setLedgerFee] = useState(null);
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint" ? Number(ledgerFee) : Number(ledgerFee) || 0;
+
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+  const formattedApprovalFee = formatFee(approvalFee);
 
   /* ===================================================================================
    *                                  FUNCTIONS
@@ -158,15 +182,13 @@ export default function Navbar({ isHomeNav }) {
     }
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
-        token: tokenStatus.OK
+        token: tokenStatus.OK,
       };
 
       return status;
@@ -198,11 +220,57 @@ export default function Navbar({ isHomeNav }) {
     ckBTC: ckBTCBalance,
     ckUSDC: ckUSDCBalance,
   };
-  const supplyBalance = assetBalances[asset] || 0;
+  const balance = assetBalances[asset] || 0;
+  const numericBalance = parseFloat(balance);
+  const supplyBalance = Math.max(
+    (assetBalances[asset] || 0) - formattedApprovalFee,
+    0
+  );
+  const truncateTo8Decimals = (num) => {
+    return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+  };
+  const approvalfee = +formattedApprovalFee || 0;
+  const totalRequired = truncateTo8Decimals(+amount + approvalFee);
+  const hasEnoughBalance =
+    balance >= approvalfee &&
+    totalRequired <= +numericBalance;
 
   // Function to handle the click event on the "Approve" button
   const handleApprove = async () => {
+    if (!receiverAddress.trim()) {
+      toast.dismiss();
+      toast.error("Please enter a valid receiver address", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      return;
+    }
+
+    if (receiverAddress.trim() === principal.toString()) {
+      toast.dismiss();
+      toast.error("You cannot approve transfers to your own address", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setAmount("");
+      setReceiverAddress("");
+      return;
+    }
+
     if (isBlocked) {
+      toast.dismiss();
       toast.error("You are temporarily blocked from using this function", {
         className: "custom-toast",
         position: "top-center",
@@ -213,6 +281,8 @@ export default function Navbar({ isHomeNav }) {
         draggable: true,
         progress: undefined,
       });
+      setAmount("");
+      setReceiverAddress("");
       return;
     }
 
@@ -228,16 +298,20 @@ export default function Navbar({ isHomeNav }) {
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    const scaledAmount = amountAsNat64;
 
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
     try {
-      await ledgerActor.icrc2_approve({
-        fee: [],
+      const response = await ledgerActor.icrc2_approve({
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
-        amount: scaledAmount,
+        amount: totalAmount,
         expected_allowance: [],
         expires_at: [],
         spender: {
@@ -245,32 +319,35 @@ export default function Navbar({ isHomeNav }) {
           subaccount: [],
         },
       });
-      setIsApproved(true);
-      toast.success(`Approval successful!`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+
+      if ("Ok" in response) {
+        setIsApproved(true);
+        toast.dismiss();
+        toast.success(`Approval successful!`, {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        dispatch(toggleDashboardRefresh());
+      } else if ("Err" in response) {
+        console.error(response.Err);
+        setIsApproved(false);
+        setAmount("");
+        setReceiverAddress("");
+      }
     } catch (error) {
-      toast.error(`Error: ${error.message || "Approval failed!"}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      console.error(error);
+      setIsApproved(false);
+      setAmount("");
+      setReceiverAddress("");
     }
   };
 
-  // Function to handle the transfer action
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -300,11 +377,17 @@ export default function Navbar({ isHomeNav }) {
         ledgerActor = ledgerActors.ckUSDT;
       }
 
-      let amountAsNat64 = Math.round(
-        amount.replace(/,/g, "") * Math.pow(10, 8)
-      );
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+
       const scaledAmount = amountAsNat64;
 
+      const ledgerFeenumber =
+        typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
+      const totalAmount = transferFeeBigInt
+        ? scaledAmount + transferFeeBigInt + ledgerFeenumber
+        : scaledAmount;
       const transferFromArgs = {
         from: {
           owner: Principal.fromText(principal),
@@ -314,8 +397,8 @@ export default function Navbar({ isHomeNav }) {
           owner: Principal.fromText(receiverAddress),
           subaccount: [],
         },
-        amount: scaledAmount,
-        fee: [0],
+        amount: totalAmount,
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         created_at_time: [],
         spender_subaccount: [],
@@ -324,7 +407,6 @@ export default function Navbar({ isHomeNav }) {
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
       const statusData = await fetchStatusFromBackend();
-      // Check status and send notifications if needed      
       await checkAndNotify(statusData);
       if ("Ok" in response) {
         setIsTransferDropDownOpen(false);
@@ -345,11 +427,20 @@ export default function Navbar({ isHomeNav }) {
           draggable: true,
           progress: undefined,
         });
+        setAmount("");
+        setReceiverAddress("");
+        setIsApproved(false);
       } else if ("Err" in response) {
         handleTransferError(response.Err);
+        setAmount("");
+        setReceiverAddress("");
+        setIsApproved(false);
       }
     } catch (error) {
       handleTransferException(error);
+      setAmount("");
+      setReceiverAddress("");
+      setIsApproved(false);
     }
   };
 
@@ -523,7 +614,11 @@ export default function Navbar({ isHomeNav }) {
 
   // Function to handle the click event on the "Max" button
   const handleMaxClick = () => {
-    setAmount(supplyBalance.toString());
+    const balanceStr = truncateToEightDecimals(
+      supplyBalance
+    )
+
+    setAmount(balanceStr);
   };
 
   // Function to handle the click event on the "Tour" button
@@ -656,7 +751,6 @@ export default function Navbar({ isHomeNav }) {
     };
   }, []);
 
-
   // Function to handle the click event on the "More" button
   const handlePopupToggle = () => {
     setIsPopupVisible((prevVisible) => !prevVisible);
@@ -748,6 +842,41 @@ export default function Navbar({ isHomeNav }) {
       window.removeEventListener("scroll", handleCloseDropdownOnScroll);
     };
   }, []);
+
+  useEffect(() => {
+    if (!asset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+  }, [asset]);
+
+  useEffect(() => {
+    const balanceStr = truncateToEightDecimals(supplyBalance);
+    setAmount(balanceStr);
+  }, [supplyBalance]);
 
   // when dropdown open scroll is locked
   useEffect(() => {
@@ -1010,7 +1139,7 @@ export default function Navbar({ isHomeNav }) {
                       onClick={() => setIsMobileNav(!isMobileNav)}
                       className="cursor-pointer"
                     >
-                      {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                      {isMobileNav ? <CloseIcon /> : <MenuIcon />}
                     </div>
                   </div>
                 )}
@@ -1234,7 +1363,7 @@ export default function Navbar({ isHomeNav }) {
                               </div>
 
                               <div className="w-full mt-3">
-                                {amount > 0 && amount > supplyBalance && (
+                                {!hasEnoughBalance && (
                                   <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                                     <div className="text-white text-[12px]">
                                       Insufficient wallet balance to transfer{" "}
@@ -1261,7 +1390,8 @@ export default function Navbar({ isHomeNav }) {
                                       isButtonDisabled ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
-                                      amount > supplyBalance
+                                      amount > supplyBalance ||
+                                      !hasEnoughBalance
                                       ? "opacity-50 cursor-not-allowed"
                                       : ""
                                       }`}
@@ -1270,7 +1400,8 @@ export default function Navbar({ isHomeNav }) {
                                       isLoading ||
                                       amount <= 0 ||
                                       supplyBalance <= 0 ||
-                                      amount > supplyBalance
+                                      amount > supplyBalance ||
+                                      !hasEnoughBalance
                                     }
                                   >
                                     Approve {asset} to continue
@@ -1421,7 +1552,7 @@ export default function Navbar({ isHomeNav }) {
                   </div>
                 </div>
                 <div className="hidden lg:flex gap-2 sxs3:flex  md:flex  select-none">
-                  { }
+
                   <div className="flex items-center gap-1 my-2 bg-gradient-to-tr from-[#EB8863]/60 to-[#81198E]/60 dark:from-[#EB8863]/80 dark:to-[#81198E]/80 text-white shadow-[#00000040] text-sm cursor-pointer relative rounded-[10px] shadow-sm border-b-[1px] border-white/40 dark:border-white/20">
                     {!isMobile2 && (
                       <div
@@ -1439,7 +1570,6 @@ export default function Navbar({ isHomeNav }) {
                         </span>
                       </div>
                     )}
-
                     {switchWalletDrop && (
                       <>
                         <div
@@ -1494,7 +1624,7 @@ export default function Navbar({ isHomeNav }) {
                             </div>
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
-                              { }
+
                               <div className="hidden lg1:flex justify-center">
                                 <div
                                   className="flex-1 flex flex-col items-center gap-[7px] justify-center place-items-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground sm:flex-row md:flex-col lg:flex-col"
@@ -1540,7 +1670,7 @@ export default function Navbar({ isHomeNav }) {
                                   </div>
                                 </div>
                               </div>
-                              { }
+
                               <div className=" w-full flex justify-center">
                                 <div
                                   className=" flex-1 flex flex-col lg1:items-center justify-center border border-gray-200 p-3 rounded-xl text-sm relative dark:border-currentFAQBackground"
@@ -1595,8 +1725,6 @@ export default function Navbar({ isHomeNav }) {
                             <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
                               Settings
                             </h2>
-
-                            { }
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around">
                                 <label
@@ -1617,7 +1745,7 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
 
-                            { }
+
                             <div className="flex items-center justify-between">
                               <div className="flex flex-col">
                                 <label
@@ -1638,7 +1766,7 @@ export default function Navbar({ isHomeNav }) {
                               </div>
                             </div>
 
-                            { }
+
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex flex-row items-center justify-around relative group">
                                 <label
@@ -1652,7 +1780,7 @@ export default function Navbar({ isHomeNav }) {
                                   />
                                 </label>
 
-                                { }
+
                                 <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 hidden group-hover:block items-center justify-center bg-gray-200 text-gray-800 text-xs rounded-md p-2 shadow-lg border border-gray-300 w-[15vw] ">
                                   Enabling this will allow the user to hear
                                   sound when supply, borrow, repay, or withdraw
@@ -1692,7 +1820,7 @@ export default function Navbar({ isHomeNav }) {
                         onClick={() => setIsMobileNav(!isMobileNav)}
                         className="cursor-pointer"
                       >
-                        {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                        {isMobileNav ? <CloseIcon /> : <MenuIcon />}
                       </div>
                     </div>
                   )}
@@ -1726,7 +1854,7 @@ export default function Navbar({ isHomeNav }) {
                           onClick={() => setIsMobileNav(!isMobileNav)}
                           className="cursor-pointer"
                         >
-                          {isMobileNav ? <CloseIcon /> : <MenuIcon />} { }
+                          {isMobileNav ? <CloseIcon /> : <MenuIcon />}
                         </div>
                       </div>
                     )}
@@ -1735,8 +1863,6 @@ export default function Navbar({ isHomeNav }) {
                         <h2 className="text-[12px] text-[#2A1F9D] font-light mb-5 dark:text-darkText ml-2">
                           Settings
                         </h2>
-
-                        { }
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex flex-row items-center justify-around">
                             <label

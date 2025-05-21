@@ -11,14 +11,14 @@ jest.mock("../../utils/useAuthClient", () => ({
   }),
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => ({
+jest.mock("../../components/CustomHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     assets: ["ckBTC", "ckETH", "ckUSDC", "ICP", "ckUSDT"],
   }),
 }));
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     ckBTCUsdRate: 50000,

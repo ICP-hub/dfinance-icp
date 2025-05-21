@@ -57,6 +57,7 @@ type Error = variant {
   CaptchaNotFound;
   UserActionRestricted;
   InvalidPrincipal;
+  AllowanceQueryFailed;
   DeveloperNotFound;
   ErrorNotController;
   NoReserveDataFound;
@@ -74,6 +75,7 @@ type Error = variant {
   NotADeveloper;
   InvalidAssetImageUrl;
   InvalidUser;
+  AllowanceTooLow;
   EmptyAsset;
   InvalidValue;
   TokenAlreadyExist;
@@ -173,16 +175,21 @@ type ReserveData = record {
 type Result = variant { Ok : text; Err : Error };
 type Result_1 = variant { Ok; Err : Error };
 type Result_10 = variant {
+  Ok : record { ReserveData; Certificate };
+  Err : Error;
+};
+type Result_11 = variant {
   Ok : record { record { nat; nat; nat; nat; nat; nat; bool }; Certificate };
   Err : Error;
 };
-type Result_11 = variant { Ok : record { UserData; Certificate }; Err : Error };
-type Result_12 = variant {
+type Result_12 = variant { Ok : record { UserData; Certificate }; Err : Error };
+type Result_13 = variant {
   Ok : record { FaucetReserves; Certificate };
   Err : Error;
 };
-type Result_13 = variant { Ok : record { bool; Certificate }; Err : Error };
-type Result_14 = variant { Ok : TokenAlert; Err : Error };
+type Result_14 = variant { Ok : record { bool; Certificate }; Err : Error };
+type Result_15 = variant { Ok; Err : text };
+type Result_16 = variant { Ok : TokenAlert; Err : Error };
 type Result_2 = variant { Ok : Challenge; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : record { nat; Certificate }; Err : Error };
@@ -193,10 +200,7 @@ type Result_7 = variant {
   Err : Error;
 };
 type Result_8 = variant { Ok : record { principal; Certificate }; Err : Error };
-type Result_9 = variant {
-  Ok : record { ReserveData; Certificate };
-  Err : Error;
-};
+type Result_9 = variant { Ok : principal; Err : Error };
 type TokenAlert = record {
   asset_name : text;
   balance : nat;
@@ -252,29 +256,33 @@ service : (principal) -> {
     ) query;
   get_asset_principal_certified : (text) -> (Result_8) query;
   get_cached_exchange_rate_certified : (text) -> (Result_4) query;
+  get_canister_id_by_name : (text) -> (Result_9) query;
   get_liquidation_users_concurrent : (nat64, nat64) -> (
       vec record { principal; UserAccountData; UserData },
     );
-  get_reserve_data_certified : (text) -> (Result_9) query;
+  get_reserve_data_certified : (text) -> (Result_10) query;
   get_total_users : () -> (nat64, Certificate) query;
   get_transfer_fee : (text) -> (Result_4) query;
   get_user_account_data : (
       opt principal,
       opt vec AssetData,
       opt vec AssetData,
-    ) -> (Result_10) query;
-  get_user_data : (principal) -> (Result_11) query;
-  get_user_faucet_data : (principal) -> (Result_12) query;
+    ) -> (Result_11) query;
+  get_user_data : (principal) -> (Result_12) query;
+  get_user_faucet_data : (principal) -> (Result_13) query;
   guard_admin_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_user_blocked : () -> (Result_13) query;
+  is_transfer_allowed : (principal, text, nat) -> (bool);
+  is_user_blocked : () -> (Result_14) query;
   mock_price_data : () -> (Result_1);
+  receive_and_load_data_backup : (nat64) -> (Result_15);
   remove_admin : (principal) -> (Result);
   reset_reserve_value : (text, text, nat) -> (Result_1);
+  send_backup_data_to_canister : () -> (Result_15);
   set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
-  token_balance_alert : (text) -> (Result_14);
+  token_balance_alert : (text) -> (Result_16);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt_certified : (ReserveData) -> (Result_4) query;
   user_normalized_supply_certified : (ReserveData) -> (Result_4) query;

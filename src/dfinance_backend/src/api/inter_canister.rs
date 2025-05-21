@@ -6,7 +6,34 @@ use candid::{decode_one, encode_args};
 use candid::{Nat, Principal};
 use ic_cdk::call;
 use icrc_ledger_types::icrc1::account::Account;
-use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs};
+use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::TransferFromArgs, icrc2::allowance::AllowanceArgs, icrc2::allowance::Allowance};
+
+
+
+/*
+ * @title Retrieve Transfer Fee
+ * @notice Queries the transfer fee from a specified ledger canister using the ICRC-1 standard.
+ * @dev Calls the `icrc1_fee` method of the ledger canister to get the standard token transfer fee.
+ * @functionality Token metadata functionality that allows querying the fee required for token transfers
+ *
+ * # Parameters
+ * - `canister_id` - The Principal of the ledger canister from which to retrieve the transfer fee.
+ *
+ * # Returns
+ * Returns the transfer fee as `Nat`.
+ */
+pub async fn get_transfer_fee(canister_id: Principal) -> Result<Nat, Error> {
+    match ic_cdk::api::call::call::<(), (Nat,)>(canister_id, "icrc1_fee", ()).await {
+        Ok((fee,)) => Ok(fee),
+        Err((code, msg)) => {
+            error!(
+                "get_transfer_fee: call to canister {:?} failed with code {:?}, message: {}",
+                canister_id, code, msg
+            );
+            Err(Error::ErrorRawResponse)
+        }
+    }
+}
 
 /*
  * @title Asset Transfer From Function
@@ -35,7 +62,7 @@ pub async fn asset_transfer_from(
             owner: to,
             subaccount: None,
         },
-        fee: None,
+        fee: Some(get_transfer_fee(ledger_canister_id).await.unwrap_or(Nat::from(0u128))),
         spender_subaccount: None,
         from: Account {
             owner: from,
@@ -211,4 +238,29 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
             Err(Error::ErrorRawResponse)
         }
     }
+}
+
+
+pub async fn get_icrc2_allowance(
+    ledger_canister_id: Principal,
+    owner: Principal,
+    spender: Principal,
+) -> Result<Allowance, String> {
+    let args = AllowanceArgs {
+        account: Account {
+            owner,
+            subaccount: None, // use subaccount if needed
+        },
+        spender: Account {
+            owner: spender,
+            subaccount: None, // use subaccount if needed
+        },
+    };
+
+    let result: Result<(Allowance,), _> =
+        call(ledger_canister_id, "icrc2_allowance", (args,)).await;
+
+    result
+        .map(|res| res.0)
+        .map_err(|e| format!("Failed to fetch allowance: {:?}", e))
 }

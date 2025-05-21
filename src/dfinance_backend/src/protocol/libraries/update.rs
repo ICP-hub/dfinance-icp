@@ -12,7 +12,6 @@ use crate::declarations::structs::{
 };
 use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::api_limiter::request_limiter;
-use crate::protocol::utils::log::LogFlusher;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
 use crate::protocol::utils::log::{log_internal, LogLevel};
@@ -425,9 +424,6 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     let user_principal = ic_cdk::caller();
     debug!("User principal in toggle collateral: {:?}", user_principal);
 
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(), // or whatever user_key you need
-    };
 
     let mut user_data = user_data(user_principal)?;
 

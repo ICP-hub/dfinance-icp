@@ -9,9 +9,9 @@ import ColateralPopup from "../../components/Dashboard/DashboardPopup/Collateral
 import { Provider } from "react-redux";
 import { toast } from "react-toastify";
 import * as useAuthModule from "../../utils/useAuthClient";
-import * as useFunctionBlockStatusModule from "../../components/customHooks/useFunctionBlockStatus";
-import * as useUserDataModule from "../../components/customHooks/useUserData";
-import * as useRealTimeConversionRateModule from "../../components/customHooks/useRealTimeConversionRate";
+import * as useFunctionBlockStatusModule from "../../components/CustomHooks/useFunctionBlockStatus";
+import * as useUserDataModule from "../../components/CustomHooks/useUserData";
+import * as useRealTimeConversionRateModule from "../../components/CustomHooks/useRealTimeConversionRate";
 
 // Mocking Redux store for the test
 const mockStore = {

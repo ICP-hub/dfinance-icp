@@ -4,7 +4,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useSelector } from "react-redux";
 import WalletModal from "./WalletModal";
 import Lottie from "../Common/lottie";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import MiniLoader from "../Common/miniLoader";
 import Error from "../../pages/Error";
 import { Infinity, Download } from "lucide-react";

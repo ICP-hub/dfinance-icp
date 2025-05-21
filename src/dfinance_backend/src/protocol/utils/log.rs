@@ -1,15 +1,22 @@
-
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME};
+use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME, CHECK_FREQUENCY};
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
-use crate::stable_storage::storable::Candid;
+use candid::Principal;
 use ic_cdk::api;
-use candid::{ Principal};
-use ic_cdk::{call,query};
+use ic_cdk::{call, query};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
+
+// Thread-local storage for logs
+thread_local! {
+    static LOG_STORAGE: RefCell<HashMap<u32, Vec<String>>> = RefCell::new(HashMap::new());
+    static FLUSH_IN_PROGRESS: RefCell<bool> = RefCell::new(false);
+    static LOG_COUNT: RefCell<u64> = RefCell::new(0);
+    static NEXT_LOG_ID: RefCell<u32> = RefCell::new(1);
+    static CHECK_COUNTER: RefCell<u64> = RefCell::new(0);
+}
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum LogLevel {
@@ -18,10 +25,6 @@ pub enum LogLevel {
     INFO = 2,
     DEBUG = 3,
     TRACE = 4,
-}
-
-pub struct LogFlusher {
-    pub user_key: String,
 }
 
 impl fmt::Display for LogLevel {
@@ -117,44 +120,204 @@ macro_rules! trace {
 }
 
 /**
- * @title LogFlusher Drop Handler
- * @dev Automatically triggers log flushing to a remote canister when the `LogFlusher` is dropped, if log count exceeds `LOGS_LIMIT`.
- *
- * @functionality
- * - Attempts to resolve the target canister ID using a predefined name.
- * - Checks the total number of stored logs.
- * - If the log count exceeds the defined `LOGS_LIMIT`, triggers an asynchronous flush operation.
- * - Uses `ic_cdk::spawn` to call `send_log_to_logs_canister` without awaiting.
- * - Upon successful transmission, removes flushed logs from local memory.
- * - On failure, logs the error and retains logs in memory for future attempts.
+ * @title Increment Log Count
+ * @dev Thread-safe way to increment the log counter
  */
-impl Drop for LogFlusher {
-    fn drop(&mut self) {
-        let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
-            Ok(id) => id,
-            Err(_) => return,
-        };
+fn increment_log_count() {
+    LOG_COUNT.with(|count| {
+        *count.borrow_mut() += 1;
+    });
+}
 
-        let all_logs = get_logs_in_batches();
-        let log_count = read_state(|state| state.log_storage.len());
+/**
+ * @title Decrement Log Count
+ * @dev Thread-safe way to decrement the log counter by specified amount
+ */
+fn decrement_log_count(amount: u64) {
+    LOG_COUNT.with(|count| {
+        let mut current = count.borrow_mut();
+        *current = current.saturating_sub(amount);
+    });
+}
+
+/**
+ * @title Get Log Count
+ * @dev Returns the current log count without traversing the HashMap
+ */
+fn get_log_count() -> u64 {
+    LOG_COUNT.with(|count| *count.borrow())
+}
+
+/**
+ * @title Get Next Log ID
+ * @dev Thread-safe way to get the next log ID and increment the counter
+ */
+fn get_next_log_id() -> u32 {
+    NEXT_LOG_ID.with(|id| {
+        let current = *id.borrow();
+        *id.borrow_mut() = current + 1;
+        current
+    })
+}
+
+/**
+ * @title Maybe Check And Flush Logs
+ * @dev Periodically checks if logs need flushing (not on every log addition)
+ * Uses a counter to only check every CHECK_FREQUENCY logs
+ */
+fn maybe_check_and_flush_logs() {
+    // Only check periodically to reduce overhead
+    let should_check = CHECK_COUNTER.with(|counter| {
+        let mut current = counter.borrow_mut();
+        *current += 1;
         
-        if log_count >= LOGS_LIMIT {
-            // This fires and ignores the result; runs asynchronously but not awaited.
-            ic_cdk::spawn(async move {
-                let result = send_log_to_logs_canister(all_logs.clone(), logs_canister_id).await;
-                if result.is_ok() {
-                    info!("✅ Batch logs sent successfully.");
-                    mutate_state(|state| {
-                        for user_id in all_logs.keys() {
-                            state.log_storage.remove(user_id);
-                        }
-                    });
-                } else {
-                    error!("❌ Failed to send batch logs. Logs remain in memory.");
-                }
-            });
+        if *current >= CHECK_FREQUENCY {
+            *current = 0;
+            true
+        } else {
+            // Also check if we're way over the limit to avoid delaying too much
+            get_log_count() >= (2 * LOGS_LIMIT)
         }
+    });
+    
+    if should_check {
+        check_and_flush_logs();
     }
+}
+
+/**
+ * @title Check And Flush Logs
+ * @dev Checks if log count exceeds the limit and triggers a flush if needed.
+ * This is only called periodically to reduce overhead.
+ */
+pub fn check_and_flush_logs() {
+    // Fast check using our counter instead of traversing the HashMap
+    if get_log_count() < LOGS_LIMIT {
+        return; // Not enough logs to flush
+    }
+    
+    // Check if a flush is already in progress
+    let should_flush = FLUSH_IN_PROGRESS.with(|flag| {
+        if *flag.borrow() {
+            return false; // Another flush is already in progress
+        }
+        
+        // Set the flag to true
+        *flag.borrow_mut() = true;
+        true
+    });
+    
+    if !should_flush {
+        return;
+    }
+    
+    // Get the logs canister ID
+    let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+        Ok(id) => id,
+        Err(_) => {
+            // Reset the flag if we couldn't get the canister ID
+            FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
+            return;
+        }
+    };
+    
+    // Spawn the flush operation to run asynchronously
+    ic_cdk::spawn(async move {
+        // Keep track of logs processed in this flush operation
+        let mut total_logs_flushed = 0;
+        
+        // Process logs in batches until we've cleared enough or hit an error
+        while get_log_count() >= LOGS_LIMIT {
+            // Get batch of logs efficiently (up to BATCH_SIZE)
+            let batch_logs = get_next_batch_of_logs(BATCH_SIZE as usize);
+            
+            if batch_logs.is_empty() {
+                break; // No more logs to process
+            }
+            
+            // Count logs in this batch
+            let batch_size = batch_logs.values().map(|v| v.len()).sum::<usize>();
+            
+            match send_log_to_logs_canister(batch_logs.clone(), logs_canister_id).await {
+                Ok(_) => {
+                    total_logs_flushed += batch_size;
+                    
+                    // Remove the sent logs from storage and update counter
+                    remove_logs_from_storage(&batch_logs);
+                    decrement_log_count(batch_size as u64);
+                    
+                    // Only log occasionally to reduce log volume in high-throughput scenarios
+                    if total_logs_flushed % (5 * BATCH_SIZE) == 0 {
+                        info!("✅ Flushed {} logs so far. Remaining: {}", 
+                              total_logs_flushed, get_log_count());
+                    }
+                },
+                Err(e) => {
+                    error!("❌ Failed to send batch logs: {:?}. Aborting flush operation.", e);
+                    break;
+                }
+            }
+        }
+        
+        // Reset the flag now that we're done
+        FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
+        
+        // Log completion info
+        if total_logs_flushed > 0 {
+            info!("📝 Flush operation complete. Total logs flushed: {}", total_logs_flushed);
+        }
+    });
+}
+
+/**
+ * @title Get Next Batch Of Logs
+ * @dev Retrieves the next batch of logs up to the specified batch size.
+ * Optimized to avoid sorting the entire key set each time.
+ * @param batch_size The maximum number of logs to retrieve.
+ * @return A HashMap containing the logs in the batch.
+ */
+fn get_next_batch_of_logs(batch_size: usize) -> HashMap<u32, Vec<String>> {
+    LOG_STORAGE.with(|log_storage| {
+        let storage = log_storage.borrow();
+        
+        // Optimization: Instead of sorting all keys, just find the lowest N keys
+        // This is much more efficient with large numbers of logs
+        let mut batch = HashMap::new();
+        let mut batch_count = 0;
+        
+        // Find the smallest keys first (oldest logs)
+        if !storage.is_empty() {
+            let mut keys: Vec<u32> = storage.keys().cloned().collect();
+            keys.sort(); // Sort the keys to process oldest logs first
+            
+            // Take only up to batch_size keys
+            for &key in keys.iter().take(batch_size) {
+                if let Some(logs) = storage.get(&key) {
+                    batch.insert(key, logs.clone());
+                    batch_count += 1;
+                    if batch_count >= batch_size {
+                        break;
+                    }
+                }
+            }
+        }
+        
+        batch
+    })
+}
+
+/**
+ * @title Remove Logs From Storage
+ * @dev Removes the specified logs from the thread-local storage.
+ * @param logs_to_remove HashMap containing the logs to remove.
+ */
+fn remove_logs_from_storage(logs_to_remove: &HashMap<u32, Vec<String>>) {
+    LOG_STORAGE.with(|log_storage| {
+        let mut storage = log_storage.borrow_mut();
+        for key in logs_to_remove.keys() {
+            storage.remove(key);
+        }
+    });
 }
 
 /**
@@ -162,17 +325,16 @@ impl Drop for LogFlusher {
  * @dev Retrieves logs from the state and slices them into batches.
  * @returns A `HashMap` containing the logs in batches, where each entry is a tuple of user ID and their respective log data.
  *
- * @functionality Collects all logs from `log_storage`, slices them into batches of size `BATCH_SIZE`, 
- * and returns the logs for the current batch. The function processes a batch starting from `start_index` 
+ * @functionality Collects all logs from `log_storage`, slices them into batches of size `BATCH_SIZE`,
+ * and returns the logs for the current batch. The function processes a batch starting from `start_index`
  * and returns logs in the range between `start_index` and `end_index`.
  */
 pub fn get_logs_in_batches() -> HashMap<u32, Vec<String>> {
-    let all_logs: HashMap<u32, Vec<String>> = mutate_state(|state| {
-
-        let logs: Vec<(u32, Vec<String>)> = state
-            .log_storage
+    LOG_STORAGE.with(|log_storage| {
+        let storage = log_storage.borrow();
+        let logs: Vec<(u32, Vec<String>)> = storage
             .iter()
-            .map(|(user_id, log)| (user_id, log.0.clone())) // log is Candid<Vec<String>>
+            .map(|(user_id, log)| (*user_id, log.clone()))
             .collect();
 
         // Slice the logs in batches of BATCH_SIZE
@@ -182,9 +344,7 @@ pub fn get_logs_in_batches() -> HashMap<u32, Vec<String>> {
         let batch: Vec<(u32, Vec<String>)> = logs[start_index..end_index].to_vec();
 
         batch.into_iter().collect()
-    });
-
-    all_logs
+    })
 }
 
 /**
@@ -196,8 +356,8 @@ pub fn get_logs_in_batches() -> HashMap<u32, Vec<String>> {
  * @param line The line number from which the log entry was generated.
  * @param message The log message.
  * @returns `Ok(())` if the log is successfully stored, or an error if the operation fails.
- * 
- * @functionality Formats the log data, calculates a new log ID based on the highest existing key, 
+ *
+ * @functionality Formats the log data, calculates a new log ID based on the highest existing key,
  * and stores the log entry in the state. Each log entry is stored with a unique ID in `log_storage`.
  */
 pub fn store_log(
@@ -215,24 +375,26 @@ pub fn store_log(
         timestamp, level, file_name, line, user_principal, message
     );
 
-    mutate_state(|state| {
-        let log_storage = &mut state.log_storage;
-
-        let mut highest_key = 0;
-        for (key, _) in log_storage.iter() {
-            if key > highest_key {
-                highest_key = key;
-            }
-        }
-
-        // Calculate the next log ID
-        let next_id = highest_key + 1;
-
+    // Use atomically generated ID 
+    let log_id = get_next_log_id();
+    
+    LOG_STORAGE.with(|log_storage| {
+        let mut storage = log_storage.borrow_mut();
+        
         // Insert the new log entry into the storage
-        log_storage.insert(next_id, Candid(vec![formatted_log]));
+        let log_entry = storage.entry(log_id).or_insert_with(Vec::new);
+        log_entry.push(formatted_log);
     });
+    
+    // Increment our log counter
+    increment_log_count();
+    
+    // Only check for flush periodically to reduce overhead
+    maybe_check_and_flush_logs();
+    
     Ok(())
 }
+
 
 #[derive(Debug)]
 pub enum LogError {
@@ -293,10 +455,11 @@ pub fn clear_temp_log() {
             let result = send_log_to_logs_canister(all_logs.clone(), logs_canister_id).await;
 
             if result.is_ok() {
-                info!("✅ Batch logs sent successfully.");
-                mutate_state(|state| {
+                info!("✅ Batch logs sent successfully (clear temp log).");
+                LOG_STORAGE.with(|log_storage| {
+                    let mut storage = log_storage.borrow_mut();
                     for user_id in all_logs.keys() {
-                        state.log_storage.remove(user_id);
+                        storage.remove(user_id);
                     }
                 });
             } else {
@@ -312,7 +475,7 @@ pub fn clear_temp_log() {
  * @dev Returns all log entries stored in the canister in ascending order by their keys.
  *
  * @access Requires admin privileges via `guard_admin_only`.
- * 
+ *
  * @functionality
  * - Accesses the internal state to retrieve the log storage.
  * - Iterates over the log storage and extracts the first entry from each `Candid<Vec<String>>` value.
@@ -324,22 +487,23 @@ pub fn clear_temp_log() {
 #[query]
 pub fn get_all_logs() -> Result<Vec<String>,Error> {
     guard_admin_only()?;
-    read_state(|state| {
-        let log_storage = &state.log_storage;
-
+    LOG_STORAGE.with(|log_storage| {
+        let storage = log_storage.borrow();
+        
         let mut logs: Vec<(u32, String)> = Vec::new();
-
-        for (key, value) in log_storage.iter() {
-            if let Some(log) = value.0.get(0) {
-                logs.push((key, log.clone()));
+        
+        for (key, value) in storage.iter() {
+            if let Some(log) = value.get(0) {
+                logs.push((*key, log.clone()));
             }
         }
-
+        
         logs.sort_by_key(|(key, _)| *key);
-
+        
         Ok(logs.into_iter().map(|(_, log)| log).collect())
     })
 }
+
 
 /**
  * @title Internal Logging Utility
@@ -358,7 +522,7 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
  * @param msg `&str` - The message content to be logged.
  */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
-     ic_cdk::println!(
+    ic_cdk::println!(
         "[{:?}] [{}:{}] : {}",
         level, file, line, msg
     );
@@ -367,5 +531,4 @@ pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
     if level <= LogLevel::TRACE || level <= get_log_level() {
         let _ = store_log(user_principal, level, file, line, msg.to_string());
     }
-
 }

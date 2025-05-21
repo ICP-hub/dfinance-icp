@@ -7,7 +7,7 @@ import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../Common/pagination";
 import UserInformationPopup from "./UserInformation";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import MiniLoader from "../Common/miniLoader";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
@@ -471,11 +471,11 @@ const DebtStatus = () => {
 
 
 
-  useEffect(() => {
-    if (currentItems.length > 0) {
-      fetchAssetData();
-    }
-  }, [liquidationUsers, assets, users, liquidateTrigger]);
+ useEffect(() => {
+  if (currentItems.length > 0 && assets.length > 0) {
+    fetchAssetData();
+  }
+}, [currentItems, assets, liquidationUsers]);
 
   //Funtion to fetch asset supply and borrow data
   useEffect(() => {

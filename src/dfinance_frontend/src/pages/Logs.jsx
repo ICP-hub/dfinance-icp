@@ -24,11 +24,10 @@ const Logs = () => {
 
     try {
       const result = await backendActor.get_all_logs();
-      console.log("get_all_logs", result)
       if (result?.Ok && Array.isArray(result.Ok)) {
         const indexedLogs = result.Ok.map((log, index) => ({
           originalIndex: index,
-          content: log
+          content: log,
         }));
         setLogs(indexedLogs);
         setFilteredLogs(indexedLogs);

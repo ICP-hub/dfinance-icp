@@ -21,7 +21,7 @@ jest.mock("react-toastify", () => ({
 }));
 
 // Mocking custom hook for real-time conversion rates
-jest.mock("../../components/customHooks/useRealTimeConversionRate", () => ({
+jest.mock("../../components/CustomHooks/useRealTimeConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     conversionRate: 50000 * Math.pow(10, 8), // Mock conversion rate for ckBTC
@@ -40,7 +40,7 @@ jest.mock("../../utils/useAuthClient", () => ({
 }));
 
 // Mocking user data hook (health factor and user data)
-jest.mock("../../components/customHooks/useUserData", () => ({
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     userData: {},
@@ -50,7 +50,7 @@ jest.mock("../../components/customHooks/useUserData", () => ({
 }));
 
 // Mocking function block status to simulate an unblocked state
-jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
+jest.mock("../../components/CustomHooks/useFunctionBlockStatus", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     isBlocked: false, // Simulating that no function is blocked
@@ -58,7 +58,7 @@ jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
 }));
 
 // Mocking transfer fee hook to simulate transfer fee data
-jest.mock("../../components/customHooks/useTransferFee", () => ({
+jest.mock("../../components/CustomHooks/useTransferFee", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     transferFee: 0.0001, // Mock transfer fee

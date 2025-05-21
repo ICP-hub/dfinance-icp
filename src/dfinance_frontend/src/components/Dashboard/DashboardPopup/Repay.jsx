@@ -8,15 +8,15 @@ import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
-import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
-import useUserData from "../../customHooks/useUserData";
+import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
+import useUserData from "../../CustomHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
-import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../../customHooks/useTransferFee";
+import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-import useNotificationSystem from "../../customHooks/useNotification";
+import useNotificationSystem from "../../CustomHooks/useNotification";
 /**
  * Repay Component
  *
@@ -50,16 +50,36 @@ const Repay = ({
   /* ===================================================================================
    *                                  HOOKS &  REDUX-SELECTER & STATES
    * =================================================================================== */
-  const { isBlocked } = useFunctionBlockStatus("execute_repay");
+  const { isBlocked } = useFunctionBlockStatus();
   const approveButtonRef = useRef(null);
   const repayButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { backendActor, principal } = useAuth();
-const checkAndNotify = useNotificationSystem();
+  const checkAndNotify = useNotificationSystem();
+  const [ledgerFee, setLedgerFee] = useState(null);
+
   const transferFeRetrive = useTransferFee(asset);
-  const transferFee = transferFeRetrive?.transferFee;
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee) / 1e8
+      : Number(ledgerFee) / 1e8 || 0;
+
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+
+  const formattedTransactionFee = formatFee(transactionFee);
+  const formattedApprovalFee = formatFee(approvalFee);
 
   const [amount, setAmount] = useState("");
   const modalRef = useRef(null);
@@ -135,14 +155,13 @@ const checkAndNotify = useNotificationSystem();
     if (isNaN(numericAmount)) numericAmount = 0;
 
     if (numericAmount > assetBorrow) {
-
       const truncateToEightDecimals = (value) => {
         const multiplier = Math.pow(10, 8);
         const truncated = Math.round(value * multiplier) / multiplier;
         return truncated.toFixed(8);
       };
 
-      const fee = transferFee ? Number(transferFee) : 0;
+      const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
       let selectedBalance;
       if (supplyBalance >= assetBorrow + fee) {
         selectedBalance = Number(assetBorrow);
@@ -156,8 +175,8 @@ const checkAndNotify = useNotificationSystem();
         ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
           ? Number(selectedBalance).toFixed(8)
           : selectedBalance >= 1e-7 && selectedBalance < 1e-6
-            ? Number(selectedBalance).toFixed(7)
-            : truncateToEightDecimals(selectedBalance)
+          ? Number(selectedBalance).toFixed(7)
+          : truncateToEightDecimals(selectedBalance)
         : "0";
 
       setAmount(displayBalance.toString());
@@ -175,15 +194,13 @@ const checkAndNotify = useNotificationSystem();
     updateAmountAndUsdValue(formattedAmount);
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
-        token: tokenStatus.OK
+        token: tokenStatus.OK,
       };
 
       return status;
@@ -222,7 +239,16 @@ const checkAndNotify = useNotificationSystem();
   const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
-
+ const truncateTo8Decimals = (num) => {
+     return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+   };
+   const approvalfee = +formattedApprovalFee || 0;
+   const totalRequired = truncateTo8Decimals(+amount + approvalFee);
+ 
+   const hasEnoughBalance =
+     balance >= approvalfee &&
+     totalRequired <= +numericBalance;
+    console.log("HAs",hasEnoughBalance,totalRequired,numericBalance)
   /**
    * This function handles the approval process before executing a repayment. It checks the asset type and uses the appropriate
    * ledger actor to approve the repayment amount for the selected asset.
@@ -254,11 +280,12 @@ const checkAndNotify = useNotificationSystem();
       Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
     );
     const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
-    const totalAmount = amountAsNat64 + transferFeeBigInt;
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
 
     try {
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -340,41 +367,42 @@ const checkAndNotify = useNotificationSystem();
     }
 
     try {
-      let amountAsNat64 = Math.round(
-        amount.replace(/,/g, "") * Math.pow(10, 8)
-      );
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
 
       const scaledAmount = amountAsNat64;
-      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
-      const totalAmount = transferFeeBigInt
-        ? scaledAmount + transferFeeBigInt
-        : scaledAmount;
+
+      // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
+      const ledgerFeenumber =
+        typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
+      const totalAmount = Math.round((+amount + (+formattedTransactionFee || 0)) * 1e8);
+
       const repayParams = {
         asset: asset,
         amount: totalAmount,
         on_behalf_of: [],
       };
-
       const repayResult = await backendActor.execute_repay(repayParams);
       dispatch(toggleDashboardRefresh());
-       const statusData = await fetchStatusFromBackend();            
-      // Check status and send notifications if needed      
+      const statusData = await fetchStatusFromBackend();
+
       await checkAndNotify(statusData);
       if ("Ok" in repayResult) {
         trackEvent(
           "Repay," +
-          asset +
-          "," +
-          totalAmount / SCALING_FACTOR +
-          "," +
-          principalObj.toString(),
+            asset +
+            "," +
+            totalAmount / SCALING_FACTOR +
+            "," +
+            principalObj.toString(),
           "Assets",
           "Repay," +
-          asset +
-          "," +
-          totalAmount / SCALING_FACTOR +
-          ", " +
-          principalObj.toString()
+            asset +
+            "," +
+            totalAmount / SCALING_FACTOR +
+            ", " +
+            principalObj.toString()
         );
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -394,7 +422,7 @@ const checkAndNotify = useNotificationSystem();
         setIsVisible(false);
       } else if ("Err" in repayResult) {
         const errorMsg = repayResult.Err;
-        if (errorMsg && "BlockedForOneHour" in errorMsg) {
+        if (errorMsg && "BLOCKEDFORONEHOUR" in errorMsg) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -551,7 +579,7 @@ const checkAndNotify = useNotificationSystem();
       return truncated.toFixed(8);
     };
 
-    const fee = transferFee ? Number(transferFee) : 0;
+    const fee = formattedApprovalFee ? Number(formattedApprovalFee) : 0;
 
     let selectedBalance;
     if (supplyBalance >= assetBorrow + fee) {
@@ -565,8 +593,8 @@ const checkAndNotify = useNotificationSystem();
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
-          ? Number(selectedBalance).toFixed(7)
-          : truncateToEightDecimals(selectedBalance)
+        ? Number(selectedBalance).toFixed(7)
+        : truncateToEightDecimals(selectedBalance)
       : "0";
     "displayBalance", displayBalance;
     setMaxAmount(displayBalance.toString());
@@ -717,7 +745,36 @@ const checkAndNotify = useNotificationSystem();
     amount,
     usdValue,
   ]);
+  useEffect(() => {
+    // Skip if there's no asset selected or no ledgerActors
+    if (!asset || !ledgerActors) return;
 
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+  }, [asset]);
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -746,9 +803,9 @@ const checkAndNotify = useNotificationSystem();
                   <p className="text-[12px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })} USD`
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -772,10 +829,11 @@ const checkAndNotify = useNotificationSystem();
                         {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
-                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
-                          }`}
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${
+                          assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                        }`}
                         onClick={handleMaxClick}
                       >
                         Max
@@ -812,31 +870,33 @@ const checkAndNotify = useNotificationSystem();
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
+                        className={`${
+                          truncatedValue > 3
+                            ? "text-green-500"
+                            : truncatedValue <= 1
                             ? "text-red-500"
                             : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : truncatedValue <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${currentHealthFactor > 3
-                          ? "text-green-500"
-                          : currentHealthFactor <= 1
+                        className={`${
+                          currentHealthFactor > 3
+                            ? "text-green-500"
+                            : currentHealthFactor <= 1
                             ? "text-red-500"
                             : currentHealthFactor <= 1.5
-                              ? "text-orange-600"
-                              : currentHealthFactor <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
-                          }`}
+                            ? "text-orange-600"
+                            : currentHealthFactor <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
+                        }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -846,11 +906,21 @@ const checkAndNotify = useNotificationSystem();
                     <div className="flex items-center gap-1 relative">
                       <div className="flex items-center">
                         <p>Transaction Fee</p>
-
+                        <Info
+                          size={14}
+                          className="text-blue-800 dark:text-white ml-1 cursor-help"
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
+                        />
+                        {showTooltip && (
+                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Platform fee + Ledger Transfer fee
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transferFee}</p>
+                      <p>{formattedTransactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -863,7 +933,7 @@ const checkAndNotify = useNotificationSystem();
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transferFee || 0)
+                          ? (+amount || 0) + (+formattedTransactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -880,7 +950,6 @@ const checkAndNotify = useNotificationSystem();
                 </div>
               </div>
             </div>
-
             <div className="w-full mt-3">
               {amount > 0 && amount > supplyBalance ? (
                 <div className="bg-[#BA5858] p-2 rounded-lg my-2">
@@ -888,7 +957,7 @@ const checkAndNotify = useNotificationSystem();
                     Amount exceeds your wallet balance.
                   </div>
                 </div>
-              ) : supplyBalance <= 0 ? (
+              ) : !hasEnoughBalance ? (
                 <div className="bg-[#BA5858] p-2 rounded-lg my-2">
                   <div className="text-white text-[12px]">
                     You do not have enough {asset} in your account to pay for
@@ -920,20 +989,19 @@ const checkAndNotify = useNotificationSystem();
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                    isApproved ||
                     isLoading ||
                     amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                    }`}
+                    !hasEnoughBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                   disabled={
                     isApproved ||
                     isLoading ||
                     amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
+                    !hasEnoughBalance
                   }
                 >
                   Approve {asset} to continue
@@ -942,20 +1010,21 @@ const checkAndNotify = useNotificationSystem();
                 <button
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
+                    !isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                    }`}
+                    !hasEnoughBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
                   disabled={
                     !isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    Number(amount) + transferFee > supplyBalance
+                    !hasEnoughBalance
                   }
                 >
                   Repay {asset}
@@ -1003,8 +1072,8 @@ const checkAndNotify = useNotificationSystem();
                     ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
-                        ? Number(assetBorrow).toFixed(7)
-                        : truncateToEightDecimals(assetBorrow)
+                      ? Number(assetBorrow).toFixed(7)
+                      : truncateToEightDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}
@@ -1015,8 +1084,8 @@ const checkAndNotify = useNotificationSystem();
                       ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                       : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                         scaledAmount / SCALING_FACTOR < 1e-6
-                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                        : scaledAmount / SCALING_FACTOR
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                      : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

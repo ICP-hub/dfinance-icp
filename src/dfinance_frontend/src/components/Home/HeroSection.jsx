@@ -1,5 +1,5 @@
 import React from "react";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 
 const HeroSection = () => {
   const { totalSupplySize } = useAssetData();

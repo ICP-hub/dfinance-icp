@@ -3,27 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
-import useFormatNumber from "../../components/customHooks/useFormatNumber";
+import useFormatNumber from "../../components/CustomHooks/useFormatNumber";
 import emailjs from "emailjs-com";
-import useAssetData from "../../components/customHooks/useAssets";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
+import useAssetData from "../../components/CustomHooks/useAssets";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
+import useFetchBalanceBackend from "../../components/CustomHooks/useFetchBalanceBackend";
 import MiniLoader from "../../components/Common/miniLoader";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import Analytics from "../../../public/helper/analytics-icon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import useUserData from "../../components/customHooks/useUserData";
+import useUserData from "../../components/CustomHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
+import { threshold } from "../../utils/constants";
+import { tokenThreshold } from "../../utils/constants";
 ChartJS.register(ArcElement, Tooltip);
 
 /**
  * This component displays various statistics related to users, cycles, reserves, and interest accrued.
- * It also monitors cycle and token thresholds and sends email notifications if thresholds are breached.
- *
  * @returns {JSX.Element} - Returns the DashboardCards component.
  */
 const DashboardCards = () => {
@@ -57,7 +57,7 @@ const DashboardCards = () => {
    * =================================================================================== */
 
   const [like, setLike] = useState(false);
-  const [threshold] = useState(5000000000000);
+  // const [threshold] = useState(5000000000000);
 
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);

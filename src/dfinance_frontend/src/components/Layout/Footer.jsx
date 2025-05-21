@@ -7,7 +7,8 @@ import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
 import { Plus, Minus, RefreshCw } from "lucide-react";
 import DFinance from "../../../public/home/favicon.png";
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const Footer = () => {
   /* ===================================================================================
    *                                  HOOKS
@@ -62,8 +63,10 @@ const Footer = () => {
     const ledgerActor = ledgerActors.ckUSDC;
     try {
       setLoading(true);
+      const fee = await ledgerActor.icrc1_fee();
+      console.log("fee",fee)
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+         fee: fee ? [fee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -75,7 +78,7 @@ const Footer = () => {
           subaccount: [],
         },
       });
-
+console.log("approval",approval)
       if (approval?.Ok && approval.Ok > 0n) {
         setIsApproved(true);
       } else {
@@ -88,22 +91,39 @@ const Footer = () => {
     }
   };
 
-  // Function to create a user reserve
   const handleCreateUserReserve = async () => {
     if (!isApproved) {
+      console.warn("Cannot create reserve without approval first");
       return;
     }
 
     try {
       setLoading(true);
-      await backendActor.create_user_reserve_with_low_health(
+      const result = await backendActor.create_user_reserve_with_low_health(
         "ckUSDC",
         "ckUSDC",
         34000000000,
         29000000000
       );
+console.log("result",result)
+      if ("Ok" in result) {
+        console.log("Reserve created successfully:", result.Ok);
+      } else if ("Err" in result) {
+        console.error("Failed to create reserve:", result.Err);
+        if (result.Err.InsufficientFunds) {
+          toast.error("Insufficient funds to create reserve");
+        } else if (result.Err.InsufficientAllowance) {
+          setIsApproved(false);
+          toast.error("Insufficient allowance. Please approve again.");
+        } else {
+          toast.error("Error creating reserve. See console for details.");
+        }
+      } else {
+        console.error("Unknown response format from create_user_reserve");
+      }
     } catch (error) {
       console.error(`Error creating reserve: ${error.message}`);
+      toast.error("Failed to create reserve. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -145,7 +165,7 @@ const Footer = () => {
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">
-        { }
+        {}
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"bottom-left"}
@@ -205,10 +225,9 @@ const Footer = () => {
                   {isApproved
                     ? "Approved"
                     : loading
-                      ? "Approving..."
-                      : "Approve"}
+                    ? "Approving..."
+                    : "Approve"}
                 </button>
-
 
                 <button
                   onClick={handleCreateUserReserve}
@@ -217,7 +236,6 @@ const Footer = () => {
                 >
                   {loading ? "Processing..." : "Create Reserve"}
                 </button>
-
               </div>
             )}
           </div>
@@ -240,7 +258,7 @@ const Footer = () => {
           <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
             <h1 className="font-semibold">Follow us on</h1>
             <div className="flex gap-2 mt-6">
-              { }
+              {}
               <a
                 target="_blank"
                 href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all"
@@ -253,7 +271,7 @@ const Footer = () => {
                   />
                 </span>
               </a>
-              { }
+              {}
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img

@@ -1,5 +1,7 @@
 use candid:: Nat;
+use tracing::{info,error,debug};
 use std::ops::Mul;
+use crate::utils::common_functions::init_tracing;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
@@ -52,11 +54,12 @@ pub fn accrue_to_treasury(
         return Ok(());
     }
 
+    init_tracing();   
     vars.prev_total_variable_debt = ScalingMath::scaled_mul(
         reserve_cache.curr_debt.clone(),
         reserve_cache.curr_debt_index.clone(),
     );
-    ic_cdk::println!(
+    debug!(
         "prev_total_variable_debt in accure: {:?}",
         vars.prev_total_variable_debt
     );
@@ -65,7 +68,7 @@ pub fn accrue_to_treasury(
         reserve_cache.curr_debt.clone(),
         reserve_cache.next_debt_index.clone(),
     );
-    ic_cdk::println!(
+    debug!(
         "curr_total_variable_debt in accure: {:?}",
         vars.curr_total_variable_debt
     );
@@ -75,7 +78,7 @@ pub fn accrue_to_treasury(
     }
 
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
-    ic_cdk::println!(
+    debug!(
         "total_debt_accrued in accure: {:?}",
         vars.total_debt_accrued
     );
@@ -83,13 +86,13 @@ pub fn accrue_to_treasury(
         vars.total_debt_accrued.clone(),
         reserve_cache.reserve_factor.clone(),
     ); //percent
-    ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
+    debug!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
     if vars.amount_to_mint != ZERO_VALUE {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
             reserve_cache.next_liquidity_index.clone(),
         )) / 100_u128;
-        ic_cdk::println!(
+        debug!(
             "accure_to_platform in accure: {:?}",
             reserve_data.accure_to_platform
         );
@@ -358,9 +361,10 @@ pub async fn test_accrue_to_treasury() {
         },
     ];
 
+    init_tracing();
     for (i, case) in test_cases.iter().enumerate() {
-        println!("\n------------------------------------------------------------");
-        println!("🟡 Test Case {}: Accruing to Treasury", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🟡 Test Case {}: Accruing to Treasury", i + 1);
         let amount_u128: u64 = case
             .reserve_data
             .accure_to_platform
@@ -377,18 +381,18 @@ pub async fn test_accrue_to_treasury() {
             .try_into()
             .unwrap();
         let amount_float_borrow = amount_u128_borrow as f64;
-        println!(
+        debug!(
             "Initial Accrue to Platform: {:.8}",
             amount_float / 100000000.0
         );
 
-        println!("Reserve Factor: {:?}", case.reserve_cache.reserve_factor);
-        println!(
+        debug!("Reserve Factor: {:?}", case.reserve_cache.reserve_factor);
+        debug!(
             "Expected Accrue to Platform: {:.8}",
             amount_float_borrow / 100000000.0
         );
 
-        println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let mut reserve_data = case.reserve_data.clone();
         let result = accrue_to_treasury(&mut reserve_data, &case.reserve_cache);
@@ -402,7 +406,7 @@ pub async fn test_accrue_to_treasury() {
                     .try_into()
                     .unwrap();
                 let amount_float_borrow = amount_u128_borrow as f64;
-                ic_cdk::println!(
+                info!(
                     "✅ Test Case Passed with accure_to_platform {:.8}",
                     amount_float_borrow / 100000000.0
                 );
@@ -414,14 +418,14 @@ pub async fn test_accrue_to_treasury() {
                     case.expected_accure_to_platform,
                     reserve_data.accure_to_platform
                 );
-                println!("✅ Test Case {} Passed", i + 1);
+                info!("✅ Test Case {} Passed", i + 1);
             }
             Err(e) => {
-                println!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
+                error!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
                 panic!("Test Case {} encountered an error", i + 1);
             }
         }
     }
-    println!("\n======================== All test cases completed. ========================\n");
+    info!("\n======================== All test cases completed. ========================\n");
 }
 

@@ -11,9 +11,8 @@ use crate::{ constants::{constant_variables::constants::{DEFAULT_MAX_RETRIES, MA
         storable::Candid,
     },
 };
-use crate::{ info, protocol::utils::log::{log_internal, LogFlusher, LogLevel}};
-use candid::{CandidType, Principal};
-use serde::Deserialize;
+use crate::{ info, protocol::utils::log::{log_internal, LogLevel}};
+use candid::Principal;
 use std::{cell::RefCell, collections::BTreeMap};
 
 // --- Global State for Retry Mechanism ---
@@ -100,9 +99,9 @@ async fn rollback_retry() {
         }
     });
 
-    // if jobs_to_process_ids.is_empty() {
-    //     return;
-    // }
+    if jobs_to_process_ids.is_empty() {
+        return;
+    }
 
     debug!(
         "[HEARTBEAT] Found {} due rollback jobs: {:?}",

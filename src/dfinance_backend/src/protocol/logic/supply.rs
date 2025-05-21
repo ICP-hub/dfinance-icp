@@ -14,7 +14,6 @@ use crate::protocol::logic::helper::{
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::price::{calculate_transfer_fee, update_token_price};
-use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info};
 use candid::{Nat, Principal};
@@ -258,9 +257,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
 
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(),
-    };
+
 
     check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
 

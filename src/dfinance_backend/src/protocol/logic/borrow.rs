@@ -72,9 +72,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
     let user_principal = ic_cdk::caller();
     debug!("User principal: {:?}", user_principal.to_text());
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(), // or whatever user_key you need
-    };
 
     check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
 
@@ -315,10 +312,6 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
         } else {
             (ic_cdk::caller(), None)
         };
-
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(),
-    };
 
     check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
 

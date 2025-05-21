@@ -64,7 +64,6 @@ const Footer = () => {
     try {
       setLoading(true);
       const fee = await ledgerActor.icrc1_fee();
-      console.log("fee",fee)
       const approval = await ledgerActor.icrc2_approve({
          fee: fee ? [fee] : [],
         memo: [],
@@ -78,7 +77,6 @@ const Footer = () => {
           subaccount: [],
         },
       });
-console.log("approval",approval)
       if (approval?.Ok && approval.Ok > 0n) {
         setIsApproved(true);
       } else {
@@ -105,9 +103,7 @@ console.log("approval",approval)
         34000000000,
         29000000000
       );
-console.log("result",result)
       if ("Ok" in result) {
-        console.log("Reserve created successfully:", result.Ok);
       } else if ("Err" in result) {
         console.error("Failed to create reserve:", result.Err);
         if (result.Err.InsufficientFunds) {

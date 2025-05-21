@@ -248,7 +248,7 @@ const DashboardComponent = () => {
       : "0";
     borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0] : "0";
   }
-
+console.log("availableborrow",availableBorrow)
   // Calculate total asset supply and borrow values
   const hasVisibleAssets = filteredItems.some((item) => {
     const assetData = item[1].Ok;

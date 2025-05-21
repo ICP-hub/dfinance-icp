@@ -345,7 +345,7 @@ const SupplyPopup = ({
     try {
       const supplyParams = {
         asset: asset,
-        is_collateral: currentCollateralStatus,
+        can_be_collateral: currentCollateralStatus,
         amount: totalAmount,
       };
       const response = await backendActor.execute_supply(supplyParams);

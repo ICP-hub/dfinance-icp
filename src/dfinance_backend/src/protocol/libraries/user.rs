@@ -806,6 +806,7 @@ pub async fn create_user_reserve_with_low_health(
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_collateral = true;
                 reserve_data.is_borrowed = true;
+                reserve_data.can_be_collateral = true;
             }
             None => {
                 user_data.reserves.get_or_insert(vec![]).push((
@@ -820,6 +821,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: true,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -854,6 +856,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: false,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -888,6 +891,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: false,
                         is_borrowed: true,
+                        can_be_collateral: false,
                     },
                 ));
             }

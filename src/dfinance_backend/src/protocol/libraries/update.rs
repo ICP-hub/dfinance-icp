@@ -62,9 +62,13 @@ impl UpdateLogic {
 
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
-            reserve_data.is_collateral = true;
             reserve_data.last_update_timestamp = current_timestamp();
-            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.can_be_collateral = params.can_be_collateral;
+            if reserve_data.is_collateral || reserve_data.is_borrowed {
+                reserve_data.is_using_as_collateral_or_borrow = true;
+            } else {
+                reserve_data.is_using_as_collateral_or_borrow = false;
+            }
 
             reserve_data
         } else {
@@ -72,6 +76,7 @@ impl UpdateLogic {
                 reserve: params.asset.clone(),
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
+                can_be_collateral: true,
                 last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
@@ -276,8 +281,8 @@ impl UpdateLogic {
         )
         .await?;
         user_reserve_data.last_update_timestamp = reserve.last_update_timestamp;
-        user_reserve_data.is_collateral = params.is_collateral;
-        // user_reserve_data.is_collateral = params.is_collateral;    
+        user_reserve_data.is_collateral = params.can_be_collateral;
+        
 
         debug!("Update user reserve data: {:?}", user_reserve_data);
         let d_token_canister_id = reserve.d_token_canister.clone().ok_or_else(|| {
@@ -289,6 +294,7 @@ impl UpdateLogic {
 
         if dtoken_balance == zero_nat_value() {
             user_reserve_data.is_collateral= false;
+            user_reserve_data.can_be_collateral = true;
         }
         // Set is_using_as_collateral_or_borrow based on is_collateral and is_borrowed
         user_reserve_data.is_using_as_collateral_or_borrow =
@@ -483,17 +489,14 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     match user_reserve(&mut user_data, &asset) {
         Some((_, user_reserve_data)) => {
             user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
-
-            if user_reserve_data.is_using_as_collateral_or_borrow {
-                if user_reserve_data.is_borrowed {
-                    user_reserve_data.is_using_as_collateral_or_borrow = true;
-                } else {
-                    user_reserve_data.is_using_as_collateral_or_borrow = false;
-                }
+            if user_reserve_data.d_token_balance != zero_nat_value() {
+                user_reserve_data.can_be_collateral = !user_reserve_data.can_be_collateral;
+            } 
+            user_reserve_data.is_using_as_collateral_or_borrow = if user_reserve_data.is_using_as_collateral_or_borrow {
+                user_reserve_data.is_borrowed
             } else {
-                user_reserve_data.is_using_as_collateral_or_borrow =
-                    user_reserve_data.is_collateral;
-            }
+                user_reserve_data.is_collateral
+            };
             debug!("updated User reserve data: {:?}", user_reserve_data);
         }
         None => {

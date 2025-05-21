@@ -203,7 +203,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     let supply_param = ExecuteSupplyParams {
         asset: params.collateral_asset.to_string(),
         amount: reward_amount.clone() - protocol_fee_amount.clone(),
-        is_collateral: true,
+        can_be_collateral: true,
     };
 
     if let Err(err) = UpdateLogic::update_user_data_supply(

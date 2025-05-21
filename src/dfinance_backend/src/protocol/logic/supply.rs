@@ -138,7 +138,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                                                                             
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
-                is_collateral: params.is_collateral,
+                can_be_collateral: params.can_be_collateral,
                 amount: params.amount.clone(),
             };
             //for burning and reverting the supplied amount
@@ -265,7 +265,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             let supply_param = ExecuteSupplyParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
-                is_collateral: params.is_collateral,
+                can_be_collateral: params.can_be_collateral,
             };
 
             UpdateLogic::update_user_data_supply(

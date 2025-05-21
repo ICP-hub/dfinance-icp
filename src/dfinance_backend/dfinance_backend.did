@@ -21,6 +21,7 @@ type Error = variant {
   InvalidCaptcha;
   TotalCollateraLessThan;
   NoFaucetReservesFound;
+  RollbackProcessingError;
   SupportNotFound;
   FailedToReleaseLock;
   NoCanisterIdFound;
@@ -54,6 +55,7 @@ type Error = variant {
   BorrowingNotEnabled;
   NotAnAuditor;
   CaptchaNotFound;
+  UserActionRestricted;
   InvalidPrincipal;
   DeveloperNotFound;
   ErrorNotController;
@@ -101,6 +103,7 @@ type Error = variant {
   RewardIsHigher;
   ErrorEncoding;
   HealthFactorLess;
+  RollbackFailedAdminActionRequired;
   UnauthorizedAccess;
   ConnectedWalletInvalid;
   ErrorCreatingCanister;
@@ -110,6 +113,7 @@ type Error = variant {
   RepayMoreThanDebt;
   InvalidMintAmount;
   ErrorRawResponse;
+  RollbackPending;
   UserNotFound;
   CalculateUserAccountDataError;
   ControllerNotFound;

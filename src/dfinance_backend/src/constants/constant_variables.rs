@@ -95,4 +95,9 @@ pub mod constants {
 
     pub const TOKEN_BALANCE_EXHAUSTED_LIMIT: u128 = 10_000u128;
     pub const TOKEN_BALANCE_THRESHOLD_LIMIT: u128 = 11_000u128;
+
+    // ------------------- Rollback Retrial Constants -------------------
+    pub const DEFAULT_MAX_RETRIES: u32 = 3;
+    pub const RETRY_DELAY_SECONDS: u64 = 5; // 5 secs
+    pub const MAX_JOBS_PER_HEARTBEAT: usize = 5;
 }

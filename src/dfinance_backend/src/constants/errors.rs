@@ -106,7 +106,11 @@ pub enum Error {
     LowPlatformBalance,
     ErrorSupplyToken,
     TotalCollateraLessThan,
-    UserCollateralLessThanReward
+    UserCollateralLessThanReward,
+    UserActionRestricted,
+    RollbackProcessingError,
+    RollbackPending,
+    RollbackFailedAdminActionRequired
     
 }
 
@@ -217,6 +221,10 @@ impl Error {
             Error::ErrorSupplyToken => "Error supplying token",
             Error::TotalCollateraLessThan => "Total collateral is less that amount in usd",
             Error::UserCollateralLessThanReward => "User collateral is less than reward amount",
+            Error::UserActionRestricted => "User action has been restricted, Rollback pending.",
+            Error::RollbackProcessingError => "Rollback encountered an error.",
+            Error::RollbackFailedAdminActionRequired => "Rollback Failed, need admin intervention.",
+            Error::RollbackPending => "Rollback is Pending."
         }
     }
 }

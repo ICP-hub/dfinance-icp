@@ -3,21 +3,22 @@ use crate::constants::constant_variables::constants::INITIAL_DEBT_INDEX;
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams, OriginalFailedOperationType, RollbackJobStatus, RollbackParamsVariant, RollbackRetryJob};
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve_data};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::libraries::user::get_asset_debt;
+use crate::protocol::logic::helper::{
+    apply_user_asset_restriction, check_user_asset_restriction, schedule_rollback
+};
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
-use crate::protocol::utils::price::{
- calculate_transfer_fee, update_token_price
-};
+use crate::protocol::utils::price::{calculate_transfer_fee, update_token_price};
 use crate::stable_storage::state_handler::*;
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info};
-use candid::Nat;
+use candid::{Nat, Principal};
 use ic_cdk::update;
 
 /*
@@ -73,7 +74,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         user_key: user_principal.to_text(), // or whatever user_key you need
     };
 
+    check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
+
     // input validations
+
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
 
@@ -88,7 +92,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
     if reserve_data.asset_borrow == zero_nat_value() {
         reserve_data.debt_index = Nat::from(INITIAL_DEBT_INDEX);
-
     }
 
     let mut reserve_cache = reserve::cache(&reserve_data);
@@ -102,7 +105,6 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
         .await?;
 
     let _ = update_token_price(params.asset.clone()).await;
-
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let borrow_amount = params.amount.clone() - transfer_token_fee.clone();
@@ -153,24 +155,116 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
             });
             Ok(new_balance)
         }
+        // Err(_) => {
+        //     error!("error in asset transfer from backend to user");
+        //     //Rollback user state
+        // let repay_param = ExecuteRepayParams {
+        //     asset: params.asset.clone(),
+        //     amount: params.amount.clone(),
+        //     on_behalf_of: None,
+        // };
+
+        //     UpdateLogic::update_user_data_repay(
+        //         user_principal,
+        //         &reserve_cache,
+        //         repay_param,
+        //         &mut reserve_data,
+        //     )
+        //     .await?;
+        //     info!("Rollback user and reserve state executed successfully");
+        //     return Err(Error::ErrorMintDebtTokens);
+        // }
         Err(_) => {
-            error!("error in asset transfer from backend to user");
-            //Rollback user state
+            error!(
+        "Error in asset transfer from user to backend canister for supply (Asset: {}, User: {}). Initiating rollback.",
+        params.asset, user_principal
+    );
             let repay_param = ExecuteRepayParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
                 on_behalf_of: None,
             };
 
-            UpdateLogic::update_user_data_repay(
+            match UpdateLogic::update_user_data_repay(
                 user_principal,
-                &reserve_cache,
-                repay_param,
-                &mut reserve_data,
+                &reserve_cache.clone(),
+                repay_param.clone(),
+                &mut reserve_data.clone(),
             )
-            .await?;
-            info!("Rollback user and reserve state executed successfully");
-            return Err(Error::ErrorMintDebtTokens);
+            .await
+            {
+                Ok(_) => {
+                    info!("Rollback successfully executed");
+                    error!("Error in asset transfer from user to backend canister");
+                    return Err(Error::ErrorMintDebtTokens);
+                }
+                Err(first_rollback_failed_error) => {
+                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    error!(
+                "Direct rollback (WithdrawLogic for failed Repay) FAILED for User: {}, Asset: {}: {:?}. Scheduling retry job.",
+                user_principal, params.asset, first_rollback_failed_error
+            );
+                    let repay_param = ExecuteRepayParams {
+                        asset: params.asset.clone(),
+                        amount: params.amount.clone(),
+                        on_behalf_of: None,
+                    };
+
+                    let repay_rollback =
+                        RollbackParamsVariant::RepayAsRollback(repay_param.clone());
+
+                    let mut job_params = RollbackRetryJob {
+                        job_id: 0,
+                        user_principal,
+                        asset_name: params.asset.clone(),
+                        original_operation: OriginalFailedOperationType::Repay,
+                        rollback_params: repay_rollback.clone(),
+                        reserve_cache: reserve_cache.clone(),
+                        retry_attempt: 0,
+                        max_retries: 0,
+                        last_error_message: None,
+                        status: RollbackJobStatus::RetryScheduled,
+                        created_at: 0,
+                        last_attempt_at: 0,
+                        next_attempt_timestamp: 0,
+                    };
+
+                    match schedule_rollback(
+                        None,
+                        &mut job_params,
+                        first_rollback_failed_error.clone(),
+                        user_principal,
+                        params.asset.clone(),
+                        OriginalFailedOperationType::Repay,
+                        repay_rollback,
+                        reserve_cache.clone(),
+                    )
+                    .await
+                    {
+                        Ok(job_id) => {
+                            info!(
+                        "Rollback retry job {} scheduled for failed supply (User: {}, Asset: {}). User restricted.",
+                        job_id, user_principal, params.asset
+                        );
+                            return Err(Error::RollbackPending); // Indicate primary op failed, rollback is pending
+                        }
+                        Err(schedule_err) => {
+                            error!(
+                        "CRITICAL: Failed to schedule rollback retry job for User: {}, Asset: {}: {:?}. Initial error: {:?}",
+                        user_principal, params.asset, schedule_err, first_rollback_failed_error
+                        );
+
+                            apply_user_asset_restriction(
+                                user_principal,
+                                params.asset.clone(),
+                                0,
+                                &OriginalFailedOperationType::Repay,
+                            );
+                            return Err(Error::RollbackFailedAdminActionRequired);
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -223,6 +317,8 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     let _log_flusher = LogFlusher {
         user_key: user_principal.to_text(),
     };
+
+    check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
 
     let ledger_canister_id = get_asset_principal(params.asset.clone())?;
 
@@ -324,23 +420,113 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
             });
             Ok(new_balance)
         }
+        // Err(_) => {
+        //     error!("Error in asset transfer from user to backend");
+        //     //Rollback user state
+        // let borrow_param = ExecuteBorrowParams {
+        //     asset: params.asset.clone(),
+        //     amount: params.amount.clone(),
+        // };
+
+        //     UpdateLogic::update_user_data_borrow(
+        //         user_principal,
+        //         &reserve_cache,
+        //         borrow_param,
+        //         &mut reserve_data,
+        //     )
+        //     .await?;
+        //     info!("Rollback user and reserve state executed successfully");
+        //     return Err(Error::ErrorBurnDebtTokens);
+        // }
         Err(_) => {
-            error!("Error in asset transfer from user to backend");
-            //Rollback user state
+            error!(
+        "Error in asset transfer from user to backend canister for supply (Asset: {}, User: {}). Initiating rollback.",
+        params.asset, user_principal
+    );
             let borrow_param = ExecuteBorrowParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
             };
 
-            UpdateLogic::update_user_data_borrow(
+            match UpdateLogic::update_user_data_borrow(
                 user_principal,
-                &reserve_cache,
-                borrow_param,
-                &mut reserve_data,
+                &reserve_cache.clone(),
+                borrow_param.clone(),
+                &mut reserve_data.clone(),
             )
-            .await?;
-            info!("Rollback user and reserve state executed successfully");
-            return Err(Error::ErrorBurnDebtTokens);
+            .await
+            {
+                Ok(_) => {
+                    info!("Rollback successfully executed");
+                    error!("Error in asset transfer from user to backend canister");
+                    return Err(Error::ErrorBurnDebtTokens);
+                }
+                Err(first_rollback_failed_error) => {
+                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    error!(
+                "Direct rollback (WithdrawLogic for failed Borrow) FAILED for User: {}, Asset: {}: {:?}. Scheduling retry job.",
+                user_principal, params.asset, first_rollback_failed_error
+            );
+                    let borrow_param = ExecuteBorrowParams {
+                        asset: params.asset.clone(),
+                        amount: params.amount.clone(),
+                    };
+
+                    let borrow_rollback =
+                        RollbackParamsVariant::BorrowAsRollback(borrow_param.clone());
+
+                    let mut job_params = RollbackRetryJob {
+                        job_id: 0,
+                        user_principal,
+                        asset_name: params.asset.clone(),
+                        original_operation: OriginalFailedOperationType::Borrow,
+                        rollback_params: borrow_rollback.clone(),
+                        reserve_cache: reserve_cache.clone(),
+                        retry_attempt: 0,
+                        max_retries: 0,
+                        last_error_message: None,
+                        status: RollbackJobStatus::RetryScheduled,
+                        created_at: 0,
+                        last_attempt_at: 0,
+                        next_attempt_timestamp: 0,
+                    };
+
+                    match schedule_rollback(
+                        None,
+                        &mut job_params,
+                        first_rollback_failed_error.clone(),
+                        user_principal,
+                        params.asset.clone(),
+                        OriginalFailedOperationType::Repay,
+                        borrow_rollback,
+                        reserve_cache.clone(),
+                    )
+                    .await
+                    {
+                        Ok(job_id) => {
+                            info!(
+                        "Rollback retry job {} scheduled for failed supply (User: {}, Asset: {}). User restricted.",
+                        job_id, user_principal, params.asset
+                        );
+                            return Err(Error::RollbackPending); // Indicate primary op failed, rollback is pending
+                        }
+                        Err(schedule_err) => {
+                            error!(
+                        "CRITICAL: Failed to schedule rollback retry job for User: {}, Asset: {}: {:?}. Initial error: {:?}",
+                        user_principal, params.asset, schedule_err, first_rollback_failed_error
+                        );
+
+                            apply_user_asset_restriction(
+                                user_principal,
+                                params.asset.clone(),
+                                0,
+                                &OriginalFailedOperationType::Borrow,
+                            );
+                            return Err(Error::RollbackFailedAdminActionRequired);
+                        }
+                    }
+                }
+            }
         }
     }
 }

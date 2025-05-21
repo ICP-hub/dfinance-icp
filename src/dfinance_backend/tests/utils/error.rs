@@ -107,7 +107,11 @@ pub enum Error {
     NoCollateralFound,
     LowPlatformBalance,
     ErrorSupplyToken,
-    TotalCollateraLessThan
+    TotalCollateraLessThan,
+    UserActionRestricted,
+    RollbackProcessingError,
+    RollbackPending,
+    RollbackFailedAdminActionRequired
     
 }
 
@@ -216,7 +220,11 @@ impl Error {
             Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
             Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",  
             Error::ErrorSupplyToken => "Error supplying token",
-            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd"
+            Error::TotalCollateraLessThan => "Total collateral is less that amount in usd",
+            Error::UserActionRestricted => "User action has been restricted, Rollback pending.",
+            Error::RollbackProcessingError => "Rollback encountered an error.",
+            Error::RollbackFailedAdminActionRequired => "Rollback Failed, need admin intervention.",
+            Error::RollbackPending => "Rollback is Pending."
         }
     }
 }

@@ -5,6 +5,8 @@ use icrc_ledger_types::icrc1::account::Account;
 use icrc_ledger_types::icrc2::transfer_from::TransferFromError;
 use icrc_ledger_types::icrc2::approve::ApproveError;
 
+use super::datatypes::ReserveCache;
+
 
 /* 
  * @title Execute Supply Parameters
@@ -253,4 +255,49 @@ pub struct TokenAlert {
     pub is_warning: bool,
     pub balance: Nat
 
+}
+
+
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum OriginalFailedOperationType {
+    Supply,
+    Withdraw,
+    Borrow,
+    Repay,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum RollbackParamsVariant {
+    WithdrawAsRollback(ExecuteWithdrawParams),
+    SupplyAsRollback(ExecuteSupplyParams),
+    RepayAsRollback(ExecuteRepayParams),
+    BorrowAsRollback(ExecuteBorrowParams),
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum RollbackJobStatus {
+    RetryScheduled,
+    Completed,
+    PendingRetry,
+    RollbackFailed,
+}
+
+// --- Core Retry Job Structure ---
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct RollbackRetryJob {
+    pub job_id: u64,
+    pub user_principal: Principal,
+    pub asset_name: String,
+    pub original_operation: OriginalFailedOperationType,
+    pub rollback_params: RollbackParamsVariant,
+    pub reserve_cache: ReserveCache, // Snapshot for index calculations
+    pub retry_attempt: u32,
+    pub max_retries: u32, // Can be configured per job or globally
+    pub last_error_message: Option<String>,
+    pub status: RollbackJobStatus,
+    pub created_at: u64,      // Timestamp (nanoseconds)
+    pub last_attempt_at: u64, // Timestamp (nanoseconds)
+    pub next_attempt_timestamp: u64,
 }

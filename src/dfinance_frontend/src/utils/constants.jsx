@@ -476,3 +476,7 @@ export const threshold = 5000000000000;
 export const tokenThreshold = 10000;
 export const SCALING_FACTOR = 100000000;
 export const PERCENTAGE_FACTOR = 100;
+export const TRILION = 1000000000000;
+export const BILION = 1000000000;
+export const MILION = 1000000;
+export const Thousand=1000;

@@ -30,7 +30,8 @@ import useAssetData from "../CustomHooks/useAssets";
 import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 import useNotificationSystem from "../CustomHooks/useNotification";
-
+import useTransferFee from "../CustomHooks/useTransferFee";
+import { SCALING_FACTOR } from "../../utils/constants";
 const MobileTopNav = ({
   isMobileNav,
   setIsMobileNav,
@@ -45,7 +46,7 @@ const MobileTopNav = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { assets, AssetImages } = useAssetData();
-  const { isAuthenticated, principal, accountIdString } = useAuth();
+  const { isAuthenticated, principal, accountIdString, backendActor } = useAuth();
   const ledgerActors = useSelector((state) => state.ledger);
   const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
@@ -127,6 +128,23 @@ const MobileTopNav = ({
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [ledgerFee, setLedgerFee] = useState(null);
+  const transferFeRetrive = useTransferFee(asset);
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint" ? Number(ledgerFee) : Number(ledgerFee) || 0;
+
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+  const formattedApprovalFee = formatFee(approvalFee);
 
   const {
     fetchConversionRate,
@@ -154,7 +172,7 @@ const MobileTopNav = ({
     }
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
       const tokenStatus = await backendActor.token_balance_alert(asset);
@@ -191,12 +209,26 @@ const MobileTopNav = ({
     ckUSDC: ckUSDCBalance,
   };
 
-  const supplyBalance = assetBalances[asset] || 0;
+  const balance = assetBalances[asset] || 0;
+  const numericBalance = parseFloat(balance);
+  const supplyBalance = Math.max(
+    (assetBalances[asset] || 0) - formattedApprovalFee,
+    0
+  );
+  const truncateTo8Decimals = (num) => {
+    return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+  };
+  const approvalfee = +formattedApprovalFee || 0;
+  const totalRequired = truncateTo8Decimals(+amount + approvalFee);
+  const hasEnoughBalance =
+    balance >= approvalfee &&
+    totalRequired <= +numericBalance;
 
   // handle approve function
   const handleApprove = async () => {
-    if (isBlocked) {
-      toast.error("You are temporarily blocked from using this function", {
+    if (!receiverAddress.trim()) {
+      toast.dismiss();
+      toast.error("Please enter a valid receiver address", {
         className: "custom-toast",
         position: "top-center",
         autoClose: 5000,
@@ -208,6 +240,41 @@ const MobileTopNav = ({
       });
       return;
     }
+
+    if (receiverAddress.trim() === principal.toString()) {
+      toast.dismiss();
+      toast.error("You cannot approve transfers to your own address", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setAmount("");
+      setReceiverAddress("");
+      return;
+    }
+
+    if (isBlocked) {
+      toast.dismiss();
+      toast.error("You are temporarily blocked from using this function", {
+        className: "custom-toast",
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setAmount("");
+      setReceiverAddress("");
+      return;
+    }
+
     let ledgerActor;
     if (asset === "ckBTC") {
       ledgerActor = ledgerActors.ckBTC;
@@ -220,16 +287,20 @@ const MobileTopNav = ({
     } else if (asset === "ckUSDT") {
       ledgerActor = ledgerActors.ckUSDT;
     }
-    let amountAsNat64 = Math.round(amount.replace(/,/g, "") * Math.pow(10, 8));
-    const scaledAmount = amountAsNat64;
 
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
     try {
-      const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+      const response = await ledgerActor.icrc2_approve({
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
-        amount: scaledAmount,
+        amount: totalAmount,
         expected_allowance: [],
         expires_at: [],
         spender: {
@@ -237,8 +308,10 @@ const MobileTopNav = ({
           subaccount: [],
         },
       });
-      if (approval?.Ok) {
+
+      if ("Ok" in response) {
         setIsApproved(true);
+        toast.dismiss();
         toast.success(`Approval successful!`, {
           className: "custom-toast",
           position: "top-center",
@@ -249,33 +322,21 @@ const MobileTopNav = ({
           draggable: true,
           progress: undefined,
         });
-      } else if (approval?.Err) {
-        toast.error(`Error: ${approval.Err || "Approval failed!"}`, {
-          className: "custom-toast",
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
+        dispatch(toggleDashboardRefresh());
+      } else if ("Err" in response) {
+        console.error(response.Err);
+        setIsApproved(false);
+        setAmount("");
+        setReceiverAddress("");
       }
     } catch (error) {
-      toast.error(`Error: ${error.message || "Approval failed!"}`, {
-        className: "custom-toast",
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      console.error(error);
+      setIsApproved(false);
+      setAmount("");
+      setReceiverAddress("");
     }
   };
 
-  //transfer function
   const handleTransfer = async () => {
     if (isBlocked) {
       toast.error("You are temporarily blocked from using this function", {
@@ -305,11 +366,17 @@ const MobileTopNav = ({
         ledgerActor = ledgerActors.ckUSDT;
       }
 
-      let amountAsNat64 = Math.round(
-        amount.replace(/,/g, "") * Math.pow(10, 8)
-      );
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+
       const scaledAmount = amountAsNat64;
 
+      const ledgerFeenumber =
+        typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
+      const totalAmount = transferFeeBigInt
+        ? scaledAmount + transferFeeBigInt + ledgerFeenumber
+        : scaledAmount;
       const transferFromArgs = {
         from: {
           owner: Principal.fromText(principal),
@@ -319,8 +386,8 @@ const MobileTopNav = ({
           owner: Principal.fromText(receiverAddress),
           subaccount: [],
         },
-        amount: scaledAmount,
-        fee: [0],
+        amount: totalAmount,
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         created_at_time: [],
         spender_subaccount: [],
@@ -329,13 +396,11 @@ const MobileTopNav = ({
       const response = await ledgerActor.icrc2_transfer_from(transferFromArgs);
       dispatch(toggleDashboardRefresh());
       const statusData = await fetchStatusFromBackend();
-      // Check status and send notifications if needed      
       await checkAndNotify(statusData);
       if ("Ok" in response) {
         setIsTransferDropDownOpen(false);
         setAmount("");
         setReceiverAddress("");
-
         if (isSoundOn) {
           const sound = new Audio(coinSound);
           sound.play();
@@ -351,11 +416,20 @@ const MobileTopNav = ({
           draggable: true,
           progress: undefined,
         });
+        setAmount("");
+        setReceiverAddress("");
+        setIsApproved(false);
       } else if ("Err" in response) {
         handleTransferError(response.Err);
+        setAmount("");
+        setReceiverAddress("");
+        setIsApproved(false);
       }
     } catch (error) {
       handleTransferException(error);
+      setAmount("");
+      setReceiverAddress("");
+      setIsApproved(false);
     }
   };
 
@@ -364,7 +438,7 @@ const MobileTopNav = ({
     const errorMsg = errorKey?.toString() || "An unexpected error occurred";
     console.error("Error:", errorKey);
 
-    if (typeof errorKey === "object" && "BlockedForOneHour" in errorKey) {
+    if (typeof errorKey === "object" && "BLOCKEDFORONEHOUR" in errorKey) {
       toast.error("You are temporarily blocked from using this function", {
         className: "custom-toast",
         position: "top-center",
@@ -375,7 +449,7 @@ const MobileTopNav = ({
         draggable: true,
         progress: undefined,
       });
-      handleClosePaymentPopup();
+      setIsTransferDropDownOpen(false);
       setIsLoading(false);
     } else if (errorMsg.toLowerCase().includes("panic")) {
       setShowPanicPopup(true);
@@ -435,11 +509,10 @@ const MobileTopNav = ({
     }
   };
 
-  // Handle transfer exception
+  // Function to handle transfer exceptions
   const handleTransferException = (error) => {
     const message = error.message || "transfer action failed!";
     console.error(`Error: ${message}`);
-
     const msgLower = message.toLowerCase();
 
     if (msgLower.includes("panic")) {
@@ -563,7 +636,7 @@ const MobileTopNav = ({
     handleClose();
     navigate("/dashboard");
   };
-  const truncateToSevenDecimals = (value) => {
+  const truncateToEightDecimals = (value) => {
     const multiplier = Math.pow(10, 8);
     const truncated = Math.floor(value * multiplier) / multiplier;
     return truncated.toFixed(8);
@@ -587,7 +660,40 @@ const MobileTopNav = ({
   /* ===================================================================================
    *                                  EFFECTS
    * =================================================================================== */
+  useEffect(() => {
+    if (!asset || !ledgerActors) return;
 
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+  }, [asset]);
+
+  useEffect(() => {
+    const balanceStr = truncateToEightDecimals(supplyBalance);
+    setAmount(balanceStr);
+  }, [supplyBalance]);
   useEffect(() => {
     const shouldLockScroll = showDepositPopup || isTransferDropdownOpen;
 
@@ -1129,7 +1235,7 @@ const MobileTopNav = ({
                         </p>
                         <div className="flex gap-1 items-center">
                           <p className="text-[12px] text-gray-500 -mb-[3px]">
-                            {truncateToSevenDecimals(supplyBalance)}
+                            {truncateToEightDecimals(supplyBalance)}
                           </p>
                           <p
                             className={`text-[12px] px-2 py-0 rounded-md button1 ${supplyBalance === 0 || isApproved

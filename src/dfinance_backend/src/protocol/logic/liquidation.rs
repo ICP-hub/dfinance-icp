@@ -23,7 +23,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
+use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::stable_storage::state_handler::insert_certified_value;
 use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
 
@@ -92,10 +92,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         params.collateral_asset
     );
     
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(),
-    };
-
     let repay_reserve_data = get_reserve_data(params.debt_asset.clone())?;
 
     let mut collateral_reserve_data = get_reserve_data(params.collateral_asset.clone())?;

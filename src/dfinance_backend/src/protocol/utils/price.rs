@@ -57,6 +57,7 @@ impl PriceCache {
  * @functionality Refreshes all cached asset prices by fetching latest rates from the exchange rate oracle
  * @dev Fetches the latest exchange rates for all reserves and updates the cache.
  *      This function iterates through all the registered reserves and fetches new prices.
+ * @return Result<(), Error> -Ok(())on successful update of all reserve prices
  */
 #[update]
 pub async fn update_reserves_price() -> Result<(), Error> {
@@ -83,6 +84,7 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  * @functionality Updates the cached price for a single specific token
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
+ * @return Result<(), Error> -Ok(())on successful update
  */
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
    
@@ -98,7 +100,7 @@ pub async fn update_token_price(asset: String) -> Result<(), Error> {
 }
 
 /*
- * @title Fetch Exchange Rates
+ * @title Get Exchange Rates
  * @functionality Retrieves real-time exchange rates from external price oracle services for converting between assets
  * @dev Fetches the latest exchange rate of a given base asset against a quote asset.
  *      Supports both cryptocurrency and fiat asset classes.
@@ -201,7 +203,7 @@ pub async fn get_exchange_rates(
 }
 
 /*
- * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
+ * @title Mock Price Data for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
  * @functionality Provides a testing mechanism to populate the price cache with predefined values for simulated environments
  * @dev This function checks if the caller is a valid tester for Pocket IC and iterates over the assets in the state,
  *      updating their price caches with manually defined prices. If no price is found for an asset,
@@ -294,7 +296,15 @@ fn normalize_symbol(symbol: &str) -> String {
 }
 
 
-
+/*
+ * @title Get Cached Exchange Rate
+ * @functionality Retrieves a previously cached exchange rate for a given asset against USDT.
+ * @dev Accesses the in-memory price cache.
+ *      Normalizes common "ck" prefixed symbols to their base (e.g., "ckBTC" to "btc") for the primary cache lookup,
+ *      then uses the original symbol for the specific price entry.
+ * @param base_asset_symbol The symbol of the asset (e.g., "ckBTC", "ICP").
+ * @return Result<Nat, Error> - The cached exchange rate (scaled by SCALING_FACTOR) if found, otherwise an error.
+ */
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
     trace!("calling get_cached_exchange_rate");
     // asset validator

@@ -35,10 +35,11 @@ impl UpdateLogic {
      * @notice Updates user data and mints dTokens when assets are supplied.
      *
      * @dev Steps:
-     * 1. Fetch user data.
-     * 2. Update reserve data and collateral status.
-     * 3. Mint dTokens using `mint_scaled()`.
-     * 4. Save updated user profile.
+     * 1. Register user if not already registered
+     * 2. Fetch user data.
+     * 3. Update reserve data and collateral status.
+     * 4. Mint dTokens using `mint_scaled()`.
+     * 5. Save updated user profile.
      *
      * @param user_principal The user's principal.
      * @param reserve_cache Reference to `ReserveCache`.

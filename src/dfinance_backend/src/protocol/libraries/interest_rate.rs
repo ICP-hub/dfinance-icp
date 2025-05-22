@@ -142,6 +142,7 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
  * @param liq_added The amount of liquidity added.
  * @param liq_taken The amount of liquidity taken.
  * @param total_debt The total debt amount.
+ * @param total_supply The total supply of the asset in the system.
  * @param params Interest rate parameters for the asset.
  * @param reserve_factor The reserve factor for the asset, used in liquidity rate calculations.
  * @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP").
@@ -168,6 +169,8 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
  * @return A tuple containing:
  *         - (Nat) current_liquidity_rate: The computed liquidity rate.
  *         - (Nat) curr_borrow_rate: The computed borrow rate.
+ * 
+ * @note All rates and ratios use scaled arithmetic as per platform conventions.
  */
 pub async fn calculate_interest_rates(
     liq_added: Nat,

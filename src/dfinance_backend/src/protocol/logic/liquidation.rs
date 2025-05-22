@@ -68,6 +68,7 @@ use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_
 pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat, Error> {
     request_limiter()?;
     let liquidator_principal = api::caller();
+    // Lock liquidator to prevent concurrent liquidation operations
     let _liquidator_guard = CallerGuard::lock_principal(liquidator_principal.clone())?;
     // guard for user
     guard_principal_not_anonymous(&params.on_behalf_of)?;
@@ -92,10 +93,12 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         params.collateral_asset
     );
     
+    // Fetch reserve data for debt asset and collateral asset
     let repay_reserve_data = get_reserve_data(params.debt_asset.clone())?;
 
     let mut collateral_reserve_data = get_reserve_data(params.collateral_asset.clone())?;
 
+    // Fetch user account data and user's reserve data for the collateral asset
     let mut user_account_data = user_data(user_principal)?;
     debug!("user account data: {:?}", user_account_data);
 
@@ -104,6 +107,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .and_then(|(_, reserve_data)| Some(reserve_data.clone()))
     .ok_or(Error::NoUserReserveDataFound)?;
 
+    // Calculate transfer fee on debt asset
     let transfer_token_fee = calculate_transfer_fee(&params.debt_asset, params.amount.clone())?;
 
     let (earned_rewards, liquidity_bonus) = to_get_reward_amount(
@@ -119,6 +123,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     let liquidation_bonus_amount = liquidity_bonus;
     debug!("reward amount: {:?}, earned_rewards: {:?}", params.reward_amount, earned_rewards);
 
+    // Validate that reward amount does not exceed earned rewards 
     if params.reward_amount > earned_rewards
         && (params.reward_amount.clone() % earned_rewards) != Nat::from(ONE_VALUE)
     {
@@ -127,7 +132,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     }
     register_user()?;
     let mut liquidator_data = user_data(liquidator_principal)?;
-
+    
+    // Ensure collateral reserve has an associated dToken canister principal
     let collateral_dtoken_principal = collateral_reserve_data.d_token_canister.clone().ok_or_else(|| {
         error!("No d token canister ID found.");
         Error::NoCanisterIdFound
@@ -153,6 +159,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .await?;
     info!("Interest rates updated successfully");
 
+    // Validate liquidation conditions and amounts against platform rules
     ValidationLogic::validate_liquidation(
         params.debt_asset.clone(),
         params.amount.clone() - transfer_token_fee.clone(),
@@ -166,8 +173,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .await?;
     info!("liquidation validation successful"); //info
 
+    // Lock user to prevent concurrent modifications during liquidation
     let _user_guard = CallerGuard::lock_principal(user_principal.clone())?;
 
+    // Burn scaled collateral tokens from user’s reserve corresponding to liquidation rewards
     burn_scaled(
         &mut collateral_reserve_data,
         &mut user_reserve_data,
@@ -229,6 +238,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         return Err(err);
     }
 
+    // Persist updated collateral reserve state after liquidation
     mutate_state(|state| {
         state.asset_index.insert(
             params.collateral_asset.clone(),
@@ -236,6 +246,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         )
     });
 
+    // Update user’s reserve data with new collateral reserve after liquidation
     match user_account_data.reserves.as_mut() {
         Some(reserves) => {
             if let Some((_, reserve_data)) = reserves
@@ -255,6 +266,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         }
     }
 
+    // Persist updated user profile state and certified data
     mutate_state(|state| {
         state
             .user_profile
@@ -276,6 +288,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             Ok(params.amount)
         }
         Err(e) => {
+            // On repay failure, rollback collateral burn/mint operations for liquidator and user to maintain consistency
             let mut liquidator_collateral_reserve =
                 user_reserve(&mut liquidator_data, &params.collateral_asset);
 
@@ -382,8 +395,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
  * @param user_principal The user's principal ID for identifying the user.
  * @param user_reserve_data The user's reserve data, including liquidity index.
  *
- * @return Result<Nat, Error> Returns the maximum collateral amount available to the user after applying the liquidation bonus,
- *         or an error if any part of the process fails.
+ * @return Result<(Nat, Nat), Error> Returns a tuple of:
+ *         - max_collateral: the maximum collateral amount available after applying bonuses and limits,
+ *         - liquidation_bonus_amount: the bonus portion of the collateral.
+ *         Returns an error if any step fails (e.g., missing canister ID, zero exchange rates).
  */
 pub async fn to_get_reward_amount(
     amount: Nat,

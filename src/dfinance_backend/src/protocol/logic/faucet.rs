@@ -52,11 +52,11 @@ pub struct Challenge {
  * @dev The function performs several validation checks, updates user data, and transfers tokens from the platform to the user.
  * @functionality Test token distribution functionality that provides users with tokens for testing purposes with rate limiting
  *
- * # Parameters
+ * @params
  * - `asset` - The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
  * - `amount` - The amount of tokens to request. Must be greater than zero.
  *
- * # Returns
+ * @returns
  * - `Ok(Nat)` - The new balance after the transfer.
  */
 #[cfg(feature = "testnet")]
@@ -182,10 +182,10 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
  * @dev It validates the caller, retrieves the user data, resets the faucet usage, and updates the state.
  * @functionality Administrative functionality that allows resetting a user's faucet usage to enable additional token requests
  *
- * # Parameters
+ * @params
  * - `user_principal` - The principal of the user whose faucet usage is to be reset.
  *
- * # Returns
+ * @returns
  * - `Ok(())` - If the faucet usage is successfully reset.
  */
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {

@@ -164,14 +164,21 @@ pub trait ScalingMath {
  * @notice Ensures consistent precision in arithmetic operations such as multiplication and division.
  */
 impl ScalingMath for Nat {
+    //Multiplies two Nat values, assuming both are already scaled by SCALING_FACTOR, 
+    // and returns a result also scaled by SCALING_FACTOR. (Formula:(A * SF) * (B * SF) / SF = ABSF)
     fn scaled_mul(self, other: Nat) -> Nat {
         self.mul(other) / get_scaling_value()
     }
 
+    // Divides twoNatvalues, assuming both are already scaled bySCALING_FACTOR, 
+    // and returns a result also scaled bySCALING_FACTOR. (Formula:(A * SF) / (B * SF) * SF = (A/B)*SF)
     fn scaled_div(self, other: Nat) -> Nat {
         self.mul(get_scaling_value()) / other
     }
 
+    // Multiplies a Nat value by the scaling factor and returns the result.
+    // This is useful for converting a raw value to its scaled representation.
+    // (Formula: A * SF)
     fn to_scaled(self) -> Nat {
         self.mul(get_scaling_value())
     }

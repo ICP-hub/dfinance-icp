@@ -226,7 +226,10 @@ pub async fn calculate_user_account_data(
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
  * @functionality Allows an admin or proxy to calculate metrics for another user.
- *
+ *  
+ * @param dtoken_balance (Optional) A vector of pre-fetched asset data representing the user's dToken (collateral) balances. Defaults to empty if None.
+ * @param debt_token_balance (Optional) A vector of pre-fetched asset data representing the user's debt token balances. Defaults to empty if None.
+ * 
  * @return A tuple containing:
  *   - Total collateral
  *   - Total debt
@@ -546,9 +549,6 @@ pub async fn get_user_debt_in_base_currency(
  *
  * @dev Uses the user's raw balance (provided as `user_balance`), divides it by the current variable borrow index to get the scaled value,
  *      multiplies it by the normalized debt factor retrieved from the reserve data, and finally multiplies the result by the asset's price.
- *
- * @param user_principal The principal of the user whose debt is being calculated.
- * @functionality Identifies the user within the system (used mainly for logging or future extensions).
  *
  * @param reserve The user reserve data for the specific asset.
  * @functionality Provides access to the reserve ID and current variable borrow index for normalization.

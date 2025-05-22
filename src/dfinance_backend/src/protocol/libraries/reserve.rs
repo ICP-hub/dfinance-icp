@@ -87,7 +87,7 @@ pub fn cache(reserve_data: &ReserveData) -> ReserveCache {
  * @param reserve_data The mutable reference to the `ReserveData` struct.
  * @param reserve_cache The mutable reference to the `ReserveCache` struct.
  *
- * @return Result<(), Error> Returns a success message if updated successfully or an error if failed.
+ * @return Result<(), Error> Returns success or error.
  */
 pub fn update_state(
     reserve_data: &mut ReserveData,
@@ -125,7 +125,7 @@ pub fn update_state(
  * @param reserve_data Reference to `ReserveData` for reserve state.
  * @param reserve_cache Reference to `ReserveCache` for liquidity/debt details.
  *
- * @return Result<(), Error> Returns `Ok` if the update indexes are successfully updated, or an error if the update indexes fails.
+ * 
  */
 pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut ReserveCache) {
     trace!("calling update indexes function");
@@ -876,6 +876,7 @@ pub async fn reset_reserve_value(
  * @param asset The asset name.
  * @returns The reserve data if found.
  *  @functionality Retrieve Reserve Data for a Specified Asset
+ * @returns The reserve data associated with the specified asset.
  */
 
  pub fn get_reserve_data(asset: String) -> Result<ReserveData, Error> {

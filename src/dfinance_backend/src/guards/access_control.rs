@@ -64,7 +64,6 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
  * @notice Checks if the caller is a controller of the canister.
  * @dev This function verifies whether the caller has administrative privileges.
  *
- * # Returns
  * @return `true` if the caller is a controller, otherwise `false`.
  *
  * @functionality Controller Permissions Check

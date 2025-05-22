@@ -23,11 +23,9 @@ impl ValidationLogic {
      *
      * @dev Performs checks on:
      * - User's balance in the ledger canister.
-     * - Reserve status (active, paused, or frozen).
      * - Supply cap constraints.
      *
      * @functionality This function first checks the user's balance to ensure they have enough funds in the ledger canister.
-     *                It then checks the state of the reserve (whether it is active, paused, or frozen).
      *                Finally, it verifies if the total supply of the asset, including the user's intended supply, exceeds the supply cap.
      *                If any of these checks fail, it returns an error.
      *
@@ -117,7 +115,12 @@ impl ValidationLogic {
      * - Platform's available balance.
      * - Loan-to-value (LTV) constraints to prevent liquidation risk.
      *
-     * @functionality This function first validates that the user has enough supplied balance to make the withdrawal. It then checks if the requested withdrawal amount exceeds the user's available supply. Next, it verifies the platform's available balance to ensure the withdrawal amount does not exceed what the platform can handle. The function also validates the reserve's state (active, paused, frozen) and updates the token price. Finally, the LTV ratio and health factor are calculated to ensure the withdrawal does not trigger a liquidation condition, based on the user's total collateral and debt. If any of these checks fail, it returns an appropriate error.
+     * @functionality This function first validates that the user has enough supplied balance to make the withdrawal.
+     * It then checks if the requested withdrawal amount exceeds the user's available supply.
+     * Next, it verifies the platform's available balance to ensure the withdrawal amount does not exceed what the platform can handle. 
+     * The function updates the token price. Finally, the LTV ratio and health factor are calculated to ensure the withdrawal 
+     * does not trigger a liquidation condition, based on the user's total collateral and debt. 
+     * If any of these checks fail, it returns an appropriate error.
      *
      * @param reserve The reserve data for the asset being withdrawn.
      * @param amount The withdrawal amount requested by the user.
@@ -274,18 +277,16 @@ impl ValidationLogic {
      * @notice Ensures a user can borrow a specified amount from the reserve.
      *
      * @dev Performs checks on:
-     * - Reserve status (active and borrowing enabled).
      * - Loan-to-value (LTV) limits to prevent excessive borrowing.
      * - User’s health factor ensure safe borrowing.
      *
      * @param reserve The reserve from which the user is borrowing.
      * @param amount The borrowing amount requested.
-     * @param user_principal The principal of the user borrowing funds.
      * @param ledger_canister The principal of the ledger canister for balance verification.
      *
      * @return Returns `Ok(())` if validation is successful.
-     * @functionality Verifies that borrowing conditions are met for the user, such as ensuring borrowing is enabled,
-     * checking the platform's balance, validating the reserve's status, calculating LTV, ensuring the health factor
+     * @functionality Verifies that borrowing conditions are met for the user, 
+     * such as checking the platform's balance, calculating LTV, ensuring the health factor
      * is above a certain threshold, and confirming that the borrow amount does not exceed the borrow cap.
      */
     pub async fn validate_borrow(
@@ -423,8 +424,7 @@ impl ValidationLogic {
      *
      * @return Returns `Ok(())` if validation is successful.
      * @functionality Validates repayment conditions by ensuring that the user or liquidator has sufficient balance,
-     * checks if the reserve is active and not paused or frozen, verifies the repayment amount is correct,
-     * and ensures the user's outstanding debt allows for repayment.
+     * verifies the repayment amount is correct, and ensures the user's outstanding debt allows for repayment.
      */
     pub async fn validate_repay(
         _reserve: &ReserveData,

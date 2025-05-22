@@ -39,6 +39,7 @@ impl fmt::Display for LogLevel {
     }
 }
 
+// Initializes the logging system with a default log level based on the environment.
 pub fn init_logging(is_production: bool) {
     if is_production {
         set_log_level(LogLevel::INFO);
@@ -49,12 +50,14 @@ pub fn init_logging(is_production: bool) {
 
 static mut CURRENT_LOG_LEVEL: LogLevel = LogLevel::INFO;
 
+// Sets the global log level for the canister.
 pub fn set_log_level(level: LogLevel) {
     unsafe {
         CURRENT_LOG_LEVEL = level;
     }
 }
 
+// Retrieves the current global log level.
 pub fn get_log_level() -> LogLevel {
     unsafe { CURRENT_LOG_LEVEL }
 }

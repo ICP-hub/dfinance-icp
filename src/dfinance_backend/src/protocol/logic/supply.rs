@@ -37,7 +37,10 @@ use ic_cdk::update;
  *      3. Updates the reserve data and user profile state.
  *      4. Validates the supply request against platform rules (e.g., limits, reserves).
  *      5. Transfers the asset from the user to the platform.
- *      6. Rolls back any changes and releases resources if an error occurs.
+ *      6. Updates the interest rates (APYs) of the reserve based on liquidity changes.
+ *      7. Persists the updated reserve data state.
+ *      8. Rolls back any changes and releases resources if an error occurs.
+ *      9. Schedules a retry job if the rollback fails.
  *
  * @param params Parameters for the supply operation:
  *               - `asset`: The name of the asset being supplied.
@@ -53,18 +56,21 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
 
     let _guard: CallerGuard = CallerGuard::lock_principal(user_principal.clone())?;
-    //valid param
-    check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
 
+    // Check if user is restricted for this asset
+    check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
+    
+    //valid param
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
 
     let ledger_canister_id = get_asset_principal(params.asset.clone())?; //fetch param.asset canister id
     let platform_principal = ic_cdk::api::id(); //fetch backend canister id
 
-    let amount_nat = params.amount.clone(); //check
-                                            //fetch reserve data state for the asset
+    //
+    let amount_nat = params.amount.clone(); //check 
 
+    //fetch reserve data state for the asset
     let mut reserve_data = get_reserve_data(params.asset.clone())?;
 
     //initialize a asset reserve cache for temp changes
@@ -99,7 +105,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         &mut reserve_data,
     )
     .await?;
-    info!("udpate user data supply called successfully"); //info
+    info!("udpate user data supply called successfully"); 
     let liq_added = params.amount.clone();
     let liq_taken = zero_nat_value();
     //Updating the APYs
@@ -119,6 +125,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     {
         Ok(block_index) => {
             info!("Asset transfer from user to backend canister executed successfully");
+            // Persist updated reserve data state on successful transfer
             mutate_state(|state| {
                 state
                     .asset_index
@@ -137,6 +144,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                 amount: params.amount.clone(),
             };
 
+            // Attempt to rollback the supply operation
+            // by updating the user data with the withdraw logic
             match UpdateLogic::update_user_data_withdraw(
                 user_principal,
                 &reserve_cache.clone(),
@@ -156,6 +165,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                             "Direct rollback (WithdrawLogic for failed Supply) FAILED for User: {}, Asset: {}: {:?}. Scheduling retry job.",
                             user_principal, params.asset, first_rollback_failed_error
                         );
+
+                    // Create a rollback job with the supply parameters
                     let withdraw_param = ExecuteWithdrawParams {
                         asset: params.asset.clone(),
                         is_collateral: params.is_collateral,
@@ -180,7 +191,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                         last_attempt_at: 0,
                         next_attempt_timestamp: 0,
                     };
-
+                    // Schedule the rollback job
+                    // and handle any errors that occur during scheduling
                     match schedule_rollback(
                         None,
                         &mut job_params,
@@ -206,7 +218,8 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                             "CRITICAL: Failed to schedule rollback retry job for User: {}, Asset: {}: {:?}. Initial error: {:?}",
                             user_principal, params.asset, schedule_err, first_rollback_failed_error
                             );
-
+                        // Apply user asset restriction
+                        // to prevent further operations until the rollback is resolved
                         apply_user_asset_restriction(
                             user_principal,
                             params.asset.clone(),
@@ -239,8 +252,11 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
  *      2. Acquires a lock to ensure only one operation per user at a time.
  *      3. Updates the reserve data and user profile state.
  *      4. Validates the withdrawal request against platform rules (e.g., limits, available assets).
- *      5. Transfers the requested asset from the platform to the user or liquidator.
- *      6. Rolls back any changes and releases resources if an error occurs.
+ *      5. Calculates and deducts transfer fee from the requested withdrawal amount.
+ *      6. Transfers the requested asset from the platform backend canister to the user.
+ *      7. Updates the interest rates (APYs) of the reserve based on liquidity changes.
+ *      8. Rolls back any changes and releases resources if an error occurs.
+ *      9. Schedules a retry job if the rollback fails.
  *
  * @param params Parameters for the withdraw operation:
  *               - `asset`: The name of the asset being withdrawn.
@@ -258,11 +274,12 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
 
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
 
-
+    // Check if user is restricted for this asset
     check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
-
+    //validate params
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
+
     let ledger_canister_id = get_asset_principal(params.asset.clone())?;
 
     let transfer_to_principal: Principal = user_principal.clone();
@@ -270,10 +287,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     // Fetches the reserve logic cache having the current values
     let mut reserve_cache = reserve::cache(&reserve_data);
     info!("Reserve cache fetched successfully: {:?}", reserve_cache);
-
+    // Update the reserve cache state 
     reserve::update_state(&mut reserve_data, &mut reserve_cache)?;
     info!("Reserve state updated successfully");
-
+    // Validate the withdraw Parameters
     ValidationLogic::validate_withdraw(
         &reserve_data,
         params.amount.clone(),
@@ -318,6 +335,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     {
         Ok(new_balance) => {
             info!("Asset transfer from backend to user executed successfully");
+            // Persist updated reserve data state on successful transfer
             mutate_state(|state| {
                 state
                     .asset_index
@@ -345,15 +363,16 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             // return Err(Error::ErrorBurnTokens);
             Err(_) => {
                 error!(
-                        "Error in asset transfer from user to backend canister for supply (Asset: {}, User: {}). Initiating rollback.",
+                        "Error in asset transfer from backend canister to user for withdrawal (Asset: {}, User: {}). Initiating rollback.",
                         params.asset, user_principal
                     );
+                // Attempt to rollback the changes of the withdraw operation
                 let supply_param = ExecuteSupplyParams {
                     asset: params.asset.clone(),
                     amount: params.amount.clone(),
                     is_collateral: params.is_collateral,
                 };
-
+                // Attempt to rollback the changes of the withdraw operation by updating the user data with the supply logic
                 match UpdateLogic::update_user_data_supply(
                     user_principal,
                     &reserve_cache.clone(),
@@ -370,9 +389,10 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                     Err(first_rollback_failed_error) => {
                         // --- Direct Rollback Failed: Schedule for Retry ---
                     error!(
-                                "Direct rollback (SupplyLogic for failed Withdrawal) FAILED for User: {}, Asset: {}: {:?}. Scheduling retry job.",
-                                user_principal, params.asset, first_rollback_failed_error
-                                );
+                            "Direct rollback (SupplyLogic for failed Withdrawal) FAILED for User: {}, Asset: {}: {:?}. Scheduling retry job.",
+                            user_principal, params.asset, first_rollback_failed_error
+                        );
+                    // Create a rollback job with the supply parameters
                     let supply_param = ExecuteSupplyParams {
                     asset: params.asset.clone(),
                     amount: params.amount.clone(),
@@ -397,7 +417,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                             last_attempt_at: 0,
                             next_attempt_timestamp: 0,
                         };
-
+                    // Schedule the rollback job
                         match schedule_rollback(
                             None,
                             &mut job_params,
@@ -411,6 +431,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                         .await
                         {
                             Ok(job_id) => {
+                            // Log the successful scheduling of the rollback retry job
                                 info!(
                             "Rollback retry job {} scheduled for failed Withdrawal (User: {}, Asset: {}). User restricted.",
                             job_id, user_principal, params.asset
@@ -422,7 +443,8 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                             "CRITICAL: Failed to schedule rollback retry job for User: {}, Asset: {}: {:?}. Initial error: {:?}",
                             user_principal, params.asset, schedule_err, first_rollback_failed_error
                             );
-
+                                // Apply user asset restriction
+                                // to prevent further operations until the rollback is resolved
                                 apply_user_asset_restriction(
                                     user_principal,
                                     params.asset.clone(),

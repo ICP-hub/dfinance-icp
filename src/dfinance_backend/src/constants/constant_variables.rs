@@ -31,6 +31,8 @@ pub mod constants {
 
     // ------------------- Asset and Admin Constants -------------------
     pub const MAX_ASSET_LENGTH: usize = 7;
+    pub const ALL_ASSETS: &str = "all_assets";
+    pub const ASSET_PRINCIPAL: &str = "asset_principal";
     pub const MAIN_ADMIN: &str = "main_admin";
     pub const MAIN_CONTROLLER: &str = "main_controller";
 
@@ -79,6 +81,7 @@ pub mod constants {
     // ------------------- General Constants -------------------
     pub const INITIAL_DEBT_INDEX: u128 = 100_000_000;
     pub const MIN_BORROW: u128 = 100;
+    pub const ALL_USERS: &str = "all_users";
 
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;

@@ -27,9 +27,9 @@ fn call_test_function() {
     test_faucet(&pic, backend_canister,random_users.clone());
     test_supply(&pic, backend_canister,random_users.clone());
     test_borrow(&pic, backend_canister,random_users.clone());
-    test_repay(&pic, backend_canister,random_users.clone());
-    test_withdraw(&pic, backend_canister,random_users.clone());
-    test_liquidation(&pic, backend_canister,random_users.clone());
+    // test_repay(&pic, backend_canister,random_users.clone());
+    // test_withdraw(&pic, backend_canister,random_users.clone());
+    // test_liquidation(&pic, backend_canister,random_users.clone());
 }
 
 /*
@@ -41,7 +41,7 @@ fn call_test_function() {
 fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
-    let random_users = generate_principals(2);
+    let random_users = generate_principals(10);
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();

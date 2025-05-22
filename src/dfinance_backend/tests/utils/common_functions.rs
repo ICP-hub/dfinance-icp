@@ -256,15 +256,15 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(3u32)).unwrap(),
         asset_supply: "ckBTC".to_string(),
         asset_borrow: "ckBTC".to_string(),
-        supply_tokens: Nat::from(450_000u128), // 0.0045 btc
-        borrow_tokens: Nat::from(420_000u128), // 0.0042 btc
+        supply_tokens: Nat::from(440_000u128), // 0.0044 btc
+        borrow_tokens: Nat::from(410_000u128), // 0.0041 btc
     });
     // Pushing 4th user data
     users_with_low_health.push(LowHealthUsersData {
         user_principal: get_users_principal(Nat::from(4u32)).unwrap(),
         asset_supply: "ckUSDC".to_string(),
         asset_borrow: "ckUSDC".to_string(),
-        supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
+        supply_tokens: Nat::from(44_000_000_000u128), // 440 usdc
         borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
     });
     // // Pushing 5th user data
@@ -272,7 +272,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
         asset_supply: "ckUSDT".to_string(),
         asset_borrow: "ckUSDT".to_string(),
-        supply_tokens: Nat::from(30_000_000_000u128), // 300 USDT
+        supply_tokens: Nat::from(29_000_000_000u128), // 290 USDT
         borrow_tokens: Nat::from(25_000_000_000u128), // 250 USDT
     });
 
@@ -347,7 +347,6 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         }
     }
 }
-
 /*
  * Adds a tester to the backend canister.
  * @param pic - PocketIc instance for executing the call.

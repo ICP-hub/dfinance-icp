@@ -347,7 +347,6 @@ async fn execute_transfer(
         let amount = match Tokens::try_from(amount.clone()) {
             Ok(n) => n,
             Err(_) => {
-                // No one can have so many tokens
                 let balance_tokens = ledger.balances().account_balance(&from_account);
                 let balance = Nat::from(balance_tokens);
                 assert!(balance < amount);

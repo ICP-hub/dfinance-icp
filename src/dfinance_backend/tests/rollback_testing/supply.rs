@@ -106,7 +106,6 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         } else {
             info!("🔵 IC Test Case {}: Executing Supply Request", i + 1);
         }
-        // info!("🔵 Test Case {}: Executing Supply Request", i + 1);
         info!(" Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;

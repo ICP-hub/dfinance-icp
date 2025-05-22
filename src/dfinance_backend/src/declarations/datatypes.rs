@@ -93,9 +93,6 @@ pub struct ReserveCache {
  * @param borrow_cap The maximum borrowable amount.
  * @param supply_cap The maximum supply limit.
  * @param liquidation_protocol_fee The fee charged on liquidation.
- * @param active Indicates if the reserve is currently active.
- * @param frozen Indicates if the reserve is frozen.
- * @param paused Indicates if transactions are paused.
  * @param reserve_factor The portion of interest that accrues to the protocol.
  */
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]

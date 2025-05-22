@@ -64,7 +64,6 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
  * @notice Checks if the caller is a controller of the canister.
  * @dev This function verifies whether the caller has administrative privileges.
  *
- * # Returns
  * @return `true` if the caller is a controller, otherwise `false`.
  *
  * @functionality Controller Permissions Check
@@ -165,7 +164,7 @@ pub fn check_is_tester() -> bool {
  *      It prevents anonymous calls, checks if the caller and new admin are not anonymous, and verifies the caller is an admin.
  *
  * @param name The name of the new admin to be added.
- * @param new_admin The `Principal` of the user to be added as an admin.
+ * @param new_admin_id The `Principal` of the user to be added as an admin.
  *
  * @returns
  *      - `Ok(())`: If the admin is added successfully.
@@ -246,10 +245,10 @@ pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
  * @dev Verifies that the caller is not anonymous and exists in the admin data store.
  * @functionality Access control mechanism to restrict certain operations to admin users only.
  *
- * # Parameters
+ * @params
  * - None
  *
- * # Returns
+ * @returns
  * - `Ok(())` - If the caller is a valid admin.
  * - `Err(Error)` - If the caller is anonymous or not listed as an admin.
  */

@@ -244,13 +244,13 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         }
     }
 
-    test_add_tester(&pic, backend_canister, user_principal, user_principal);
-    /*
+     /*
      * @title Add Testers
      * @notice Registers testers to validate liquidation scenarios.
      * @dev Adds the primary user and test users (1 to 5).
      */
-    // test_add_tester(&pic, backend_canister, user_principal, user_principal);
+    test_add_tester(&pic, backend_canister, user_principal, user_principal);
+
     for num in 1..=5 {
         let index: u32 = num as u32;
         test_add_tester(

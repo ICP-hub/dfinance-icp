@@ -241,20 +241,6 @@ pub async fn test_accrue_to_treasury() {
             },
             expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 
         },
-        // // Test Case 7: Error Check: Negative Accrual (Indices Reversed)
-        // TestCase { // Tests the AmountSubtractionError check.
-        //     reserve_data: default_reserve.clone(),
-        //     reserve_cache: ReserveCache {
-        //          curr_debt: Nat::from(5_000_000_000u128),              // 50 base units
-        //          curr_debt_index: Nat::from(110_000_000u128),          // Index = 1.1 (Start high)
-        //          next_debt_index: Nat::from(100_000_000u128),          // Index = 1.0 (End low)
-        //          reserve_factor: Nat::from(10_000_000u128),            // 10% RF
-        //          next_liquidity_index: Nat::from(120_000_000u128),     // Index = 1.2
-        //          ..default_cache.clone()
-        //      },
-        //     // Should return Err(AmountSubtractionError), platform value unchanged
-        //     expected_accure_to_platform: Nat::from(50_000_000_000u128),
-        // },
         // Test Case 8: Very High Debt Index Change*
         TestCase {
             reserve_data: default_reserve.clone(),

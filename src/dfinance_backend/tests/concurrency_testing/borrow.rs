@@ -56,7 +56,6 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
     ];
     init_tracing();
-    // let user_principal = get_user_principal();
 
     info!(
         "\n======================== Starting IC Borrow Tests ========================\n"

@@ -120,7 +120,6 @@ use crate::utils::structs::*;
         }else{
             info!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
         }
-        // info!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
         info!("Debt Asset: {}", case.debt_asset);
         info!("Collateral Asset: {}", case.collateral_asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();

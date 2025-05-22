@@ -44,7 +44,6 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, errors::
             "previoys liquidity index: {} for reserve",
             reserve_data.liquidity_index
         );
-        //  user_reserve_data.liquidity_index =
         Ok(cumulated_liquidity_interest.scaled_mul(reserve_data.liquidity_index))
     }
 }

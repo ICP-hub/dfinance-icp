@@ -648,17 +648,15 @@ pub fn accrue_to_treasury(
 }
 
 /*
- * @title Reserve Initialization
+ * @title Reserve Initialization (Only for Testnet)
  * @notice Provides functionalities for initializing reserves, modifying reserve configurations,
  *         and verifying controller permissions.
  * @dev This module handles the creation of token canisters, updating reserve parameters,
  *      and ensures only controllers can execute certain operations.
  *
- * # Parameters
  * @param token_name The name of the token to be initialized.
  * @param reserve_data The reserve data structure containing metadata and token-related details.
  *
- * # Returns
  * @return `Ok(())` on success.
  *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
@@ -806,12 +804,10 @@ pub async fn initialize(
  * @notice Resets a specific variable in the reserve configuration.
  * @dev This function allows only the controller to modify key reserve parameters.
  *
- * # Parameters
  * @param asset_name The name of the asset whose reserve data is to be modified.
  * @param variable_name The specific variable to reset (e.g., "liquidity_index", "ltv").
  * @param reset_value The new value to set for the specified variable.
  *
- * # Returns
  * @return `Ok(())` on success.
  *
  * @functionality Modifies a specific parameter of an existing reserve configuration.

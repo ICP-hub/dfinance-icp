@@ -70,7 +70,6 @@ pub async fn calculate_interest_rates(
         .scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
     debug!("Total Supply: {:?}", total_supply);
     debug!("Liquidity in reserve: {:?}", reserve.asset_supply);
-    // info!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());
     let available_liq = total_supply.clone() + liq_added.clone() - liq_taken.clone();
 
     debug!("Available Liquidity: {:?}", available_liq);

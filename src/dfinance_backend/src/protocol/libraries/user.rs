@@ -32,7 +32,7 @@ use futures::stream::{self, StreamExt};
 use ic_cdk::update;
 
 /*
- * @title User Account Data Calculation
+ * @title Calculate User Account Data
  * @functionality User account metric calculation logic.
  *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -65,7 +65,6 @@ use ic_cdk::update;
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-    // trace!("calling calculate user account data");
 
     if on_behalf == Some(Principal::anonymous()) {
         error!("Anonymous principal detected.");
@@ -133,7 +132,6 @@ pub async fn calculate_user_account_data(
             .await?;
             debug!("user balance in account data = {}", user_balance);
 
-            // info!("get user balance in base currency called");
 
             total_collateral += user_balance.clone();
 
@@ -160,7 +158,6 @@ pub async fn calculate_user_account_data(
                 asset_price.clone(),
             )
             .await?;
-            // info!("get user debt in base currency called");
 
             total_debt += user_debt.clone();
         }
@@ -215,7 +212,7 @@ pub async fn calculate_user_account_data(
 }
 
 /*
- * @title User Account Data Calculation
+ * @title Calculate User Asset Data
  * @functionality Calculates the user's financial metrics for lending and borrowing.
  *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -225,6 +222,11 @@ pub async fn calculate_user_account_data(
  * @functionality Performs dynamic calculations using live user data and asset configurations.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * @param dtoken_balance (Optional) A vector of `AssetData` representing user's DToken balances
+ *                       (collateral tokens) to be considered in calculations.
+ *
+ * @param debt_token_balance (Optional) A vector of `AssetData` representing user's debt token balances
+ *                           to be included in debt calculations.
  * @functionality Allows an admin or proxy to calculate metrics for another user.
  *
  * @return A tuple containing:
@@ -427,7 +429,6 @@ pub async fn get_user_balance_in_base_currency(
     reserve: &UserReserveData,
     asset_price: Nat,
 ) -> Result<Nat, Error> {
-    // trace!("Calculating user balance in base currency...");
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
     let d_token_canister_principal: Principal = asset_reserve.d_token_canister.clone().unwrap();
@@ -547,9 +548,6 @@ pub async fn get_user_debt_in_base_currency(
  * @dev Uses the user's raw balance (provided as `user_balance`), divides it by the current variable borrow index to get the scaled value,
  *      multiplies it by the normalized debt factor retrieved from the reserve data, and finally multiplies the result by the asset's price.
  *
- * @param user_principal The principal of the user whose debt is being calculated.
- * @functionality Identifies the user within the system (used mainly for logging or future extensions).
- *
  * @param reserve The user reserve data for the specific asset.
  * @functionality Provides access to the reserve ID and current variable borrow index for normalization.
  *
@@ -621,8 +619,6 @@ pub async fn get_liquidation_users_concurrent(
             .take(page_size)
             .cloned()
             .collect::<Vec<_>>();
-
-        // debug!("Processing page: {}", page + 1);
 
         // Concurrent processing of users in the current page
         let page_liq_list = stream::iter(users_to_process)
@@ -704,7 +700,7 @@ pub fn register_user() -> Result<String, Error> {
 }
 
 /*
- * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC)
+ * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC) (Only for Testnet)
  * @notice Identifies users with a health factor below the liquidation threshold,
  *         enabling liquidation testing for Pocket IC.
  *
@@ -788,7 +784,6 @@ pub async fn create_user_reserve_with_low_health(
 
     let mut user_data = user_data(user_principal)?;
 
-    // If asset_supply == asset_borrow
     if asset_supply == asset_borrow {
         let reserve_key = asset_supply.clone();
         let user_reserve_entry = user_data
@@ -903,7 +898,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        dtoken_principal, //dtoken
+        dtoken_principal, 
         platform_principal,
         supply_tokens.clone(),
     )
@@ -922,7 +917,7 @@ pub async fn create_user_reserve_with_low_health(
     }
 
     match asset_transfer_from(
-        supply_asset_ledger_canister_id, //ledger
+        supply_asset_ledger_canister_id, 
         user_principal,
         platform_principal,
         supply_tokens-get_transfer_fee(supply_asset_ledger_canister_id).await?,
@@ -946,7 +941,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        debt_token_principal, //debttoken
+        debt_token_principal, 
         platform_principal,
         borrow_tokens.clone(),
     )

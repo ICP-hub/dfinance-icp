@@ -4,7 +4,7 @@ use crate::declarations::datatypes::{
 };
 
 #[cfg(feature = "testnet")]
-use protocol::logic::faucet::Challenge;
+use declarations::structs::Challenge;
 use candid::Nat;
 use candid::Principal;
 use declarations::datatypes::InitArgs;
@@ -67,7 +67,7 @@ pub fn init(args: Principal) {
 
     schedule_temp_log_cleanup();
 }
-/* @title Schedule Midnight Task
+/* @title Schedule Midnight Task (Only for Testnet)
  * @dev This function schedules a task to reset faucet usage at midnight.
  * @functionality Schedules a daily reset task at midnight for faucet usage.
  */
@@ -101,7 +101,7 @@ pub fn schedule_temp_log_cleanup() {
     });
 }
 
-/* @title Run Midnight Reset
+/* @title Run Midnight Reset (Only for Testnet)
  * @dev Resets faucet usage for all registered users at midnight (UTC).
  * This function retrieves all user data and calls `reset_faucet_usage` for each user.
  * Any errors encountered during the reset are silently ignored, but can be logged for debugging purposes.

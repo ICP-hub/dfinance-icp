@@ -90,7 +90,6 @@ use crate::utils::structs::*;
         }else{
             info!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
         }
-        // info!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
         info!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;

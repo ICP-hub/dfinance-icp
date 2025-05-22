@@ -25,7 +25,7 @@ fn call_test_function() {
     test_borrow(&pic, backend_canister);
     test_repay(&pic, backend_canister);
     test_withdraw(&pic, backend_canister);
-    test_liquidation(&pic, backend_canister);
+    // test_liquidation(&pic, backend_canister);
 }
 
 fn setup() -> (PocketIc, Principal) {

@@ -398,7 +398,6 @@ pub fn store_log(
 
 #[derive(Debug)]
 pub enum LogError {
-    InvalidCanister,
     Rejected(String),
 }
 

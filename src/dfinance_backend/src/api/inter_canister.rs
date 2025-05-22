@@ -11,15 +11,15 @@ use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::Tran
 
 
 /*
- * @title Retrieve Transfer Fee
+ * @title Get Transfer Fee
  * @notice Queries the transfer fee from a specified ledger canister using the ICRC-1 standard.
  * @dev Calls the `icrc1_fee` method of the ledger canister to get the standard token transfer fee.
  * @functionality Token metadata functionality that allows querying the fee required for token transfers
  *
- * # Parameters
+ * @params
  * - `canister_id` - The Principal of the ledger canister from which to retrieve the transfer fee.
  *
- * # Returns
+ * @returns
  * Returns the transfer fee as `Nat`.
  */
 pub async fn get_transfer_fee(canister_id: Principal) -> Result<Nat, Error> {
@@ -42,13 +42,13 @@ pub async fn get_transfer_fee(canister_id: Principal) -> Result<Nat, Error> {
  *      It enables asset transfers between users, with optional memo and timestamp settings.
  * @functionality Token transfer functionality using ICRC-2 standard where a pre-approved spender can transfer tokens from one account to another
  *
- * # Parameters
+ * @params
  * - `ledger_canister_id` - The Principal of the ledger canister handling the asset.
  * - `from` - The Principal of the sender account.
  * - `to` - The Principal of the recipient account.
  * - `amount` - The amount of the asset to transfer.
  *
- * # Returns
+ * @returns
  * Returns the transferred amount as `Nat` if successful, otherwise returns an error message.
  */
 pub async fn asset_transfer_from(
@@ -100,13 +100,13 @@ pub async fn asset_transfer_from(
  * @dev Calls the ledger canister to execute `icrc1_transfer`, allowing direct asset transfers.
  * @functionality Direct token transfer functionality using ICRC-1 standard for sending tokens from one account to another
  *
- * # Parameters
+ * @params
  * - `to` - The Principal of the recipient.
  * - `ledger` - The Principal of the ledger canister handling the asset.
  * - `from` - The Principal of the sender account.
  * - `amount` - The amount of the asset to transfer.
  *
- * # Returns
+ * @returns
  * Returns the transferred amount as `Nat` if successful, otherwise returns an error message.
  */
 pub async fn asset_transfer(
@@ -148,17 +148,17 @@ pub async fn asset_transfer(
 }
 
 /*
- * @title Get Account Balance
+ * @title Get Balance
  * @notice Fetches the balance of a given principal from a specified ledger canister.
  * @dev Calls `icrc1_balance_of` on the ledger canister to retrieve the balance of the provided principal.
  *      Uses `call_raw` for efficient interaction with the canister.
  * @functionality Account balance query functionality that allows checking token balances for any account
  *
- * # Parameters
+ * @params
  * - `canister` - The Principal of the ledger canister.
  * - `principal` - The Principal of the account whose balance is being queried.
  *
- * # Returns
+ * @returns
  * Returns the account balance as `Nat` if successful, otherwise returns an `Error`.
  */
 pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Nat, Error> {
@@ -213,16 +213,16 @@ pub async fn get_balance(canister: Principal, principal: Principal) -> Result<Na
 }
 
 /*
- * @title Retrieve Total Token Supply
+ * @title Get Total Supply
  * @notice Queries the total supply of tokens from a specified ledger canister.
  * @dev Calls the `icrc1_total_supply` method of the given `canister_id` to fetch the total supply.
  *      Ensures that the provided `canister_id` is valid and not an anonymous principal.
  * @functionality Token metadata functionality that allows querying the total supply of tokens in circulation
  *
- * # Parameters
+ * @params
  * - `canister_id` - The principal of the ledger canister from which to retrieve the total supply.
  *
- * # Returns
+ * @returns
  * Returns the total supply of tokens as `Nat`.
  */
 
@@ -249,11 +249,11 @@ pub async fn get_icrc2_allowance(
     let args = AllowanceArgs {
         account: Account {
             owner,
-            subaccount: None, // use subaccount if needed
+            subaccount: None, 
         },
         spender: Account {
             owner: spender,
-            subaccount: None, // use subaccount if needed
+            subaccount: None, 
         },
     };
 

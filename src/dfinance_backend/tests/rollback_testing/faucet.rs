@@ -57,7 +57,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14_000_000u128), // 0.14 ckETH (transfer fee included)
+            amount: Nat::from(15_000_000u128), // 0.15 ckETH (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },

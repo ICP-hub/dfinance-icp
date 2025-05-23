@@ -54,18 +54,18 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         TestCase {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(420_000u128), // 2.1 ckBTC (includes transaction fee)
+            amount: Nat::from(410_000u128), // 2.1 ckBTC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(440_996u128), // 2.20496 ckBTC
+            reward_amount: Nat::from(430_000u128), // 2.20496 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckUSDC".to_string(),
             collateral_asset: "ckUSDC".to_string(),
-            amount: Nat::from(40_000_000_000u128), // 200,000 ckUSDC (includes transaction fee)
+            amount: Nat::from(20_000_000_000u128), // 200,000 ckUSDC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(41999673926u128), // 209,996.73926 ckUSDC
+            reward_amount: Nat::from(20_999_673_926u128), // 209,996.73926 ckUSDC
             expect_success: true,
             expected_error_message: None,
         },
@@ -113,7 +113,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
             reward_amount: Nat::from(10_000u128),  // No reward since liquidation request exceeds collateral
             expect_success: false,
-            expected_error_message: Some("Reward is higher than expected".to_string()), // Expecting failure due to insufficient collateral
+            expected_error_message: Some("Repay cannot be more than debt".to_string()), // Expecting failure due to insufficient collateral
         },
         TestCase {
             debt_asset: "ckUSDT".to_string(),

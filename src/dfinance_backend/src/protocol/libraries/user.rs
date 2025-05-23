@@ -14,7 +14,7 @@ use crate::guards::access_control::check_is_tester;
 use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
 use crate::protocol::libraries::reserve::get_asset_principal;
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::protocol::utils::math_utils::{
     calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
 };
@@ -80,6 +80,9 @@ pub async fn calculate_user_account_data(
             let user_principal = ic_cdk::caller();
             user_principal
         }
+    };
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
     };
 
 
@@ -750,6 +753,9 @@ pub async fn create_user_reserve_with_low_health(
     validate_zero_value(&borrow_tokens)?;
 
     let user_principal = ic_cdk::caller();
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     register_user()?;
     info!("User registered successfully");
@@ -806,6 +812,7 @@ pub async fn create_user_reserve_with_low_health(
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_collateral = true;
                 reserve_data.is_borrowed = true;
+                reserve_data.can_be_collateral = true;
             }
             None => {
                 user_data.reserves.get_or_insert(vec![]).push((
@@ -820,6 +827,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: true,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -854,6 +862,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: false,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -888,6 +897,7 @@ pub async fn create_user_reserve_with_low_health(
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: false,
                         is_borrowed: true,
+                        can_be_collateral: false,
                     },
                 ));
             }

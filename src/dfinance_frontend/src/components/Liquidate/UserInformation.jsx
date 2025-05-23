@@ -396,7 +396,6 @@ const UserInformationPopup = ({
           subaccount: [],
         },
       });
-      console.log("approve", result)
       setIsApproved(true);
       toast.success(`Approval successful!`, {
         className: "custom-toast",

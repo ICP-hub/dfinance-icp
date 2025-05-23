@@ -18,7 +18,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
     struct TestCase {
         asset: String,
         amount: Nat,
-        is_collateral: bool,
+        can_be_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
     }
@@ -28,35 +28,35 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(3_800_000_000u128), // 38 ICP (includes transaction fee)
-            is_collateral: false,                 // Asset is not marked as collateral
+            can_be_collateral: false,                 // Asset is not marked as collateral
             expect_success: true,                 // Expect success
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
             amount: Nat::from(40_000u128), // 0.0004 ckBTC (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
             amount: Nat::from(5_000u128), // 0.00005 ckETH (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(1_000_000u128), // 10 ckUSDT (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(2_000_000u128), // 2 ckUSDC (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
@@ -73,7 +73,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         info!("Amount: {}", amount_float / 100000000.0); // Display amount in human-readable format
-        info!("Is Collateral: {}", case.is_collateral); // Log whether the asset is collateral
+        info!("Is Collateral: {}", case.can_be_collateral); // Log whether the asset is collateral
         info!("Expected Success: {}", case.expect_success); // Log expected success/failure of test case
         if let Some(ref msg) = case.expected_error_message {
             info!("Expected Error Message: {}", msg); // Log expected error message in failure case
@@ -96,7 +96,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
             let withdraw_params = ExecuteWithdrawParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
-                is_collateral: case.is_collateral,
+                can_be_collateral: case.can_be_collateral,
             };
 
             // Submit the withdraw request to backend canister

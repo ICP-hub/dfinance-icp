@@ -248,7 +248,6 @@ const Repay = ({
    const hasEnoughBalance =
      balance >= approvalfee &&
      totalRequired <= +numericBalance;
-    console.log("HAs",hasEnoughBalance,totalRequired,numericBalance)
   /**
    * This function handles the approval process before executing a repayment. It checks the asset type and uses the appropriate
    * ledger actor to approve the repayment amount for the selected asset.

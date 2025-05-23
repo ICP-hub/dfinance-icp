@@ -29,7 +29,7 @@ use crate::utils::structs::*;
     struct TestCase {
         asset: String,
         amount: Nat,
-        is_collateral: bool,
+        can_be_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
     }
@@ -39,42 +39,42 @@ use crate::utils::structs::*;
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(400_000u128), // 0.004 ckUSDT (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(200_000_000_000u128), // 2000 ckUSDT (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(1_000_000u128), // 0.01 ICP (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(20_000_000_000u128), // 200 ICP (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(500_000u128), // 0.005 ckUSDT (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(500_000_000_000u128), // 5000 ckUSDT (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
@@ -95,7 +95,7 @@ use crate::utils::structs::*;
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         info!("Amount: {}", amount_float / 100000000.0);
-        info!("Is Collateral: {}", case.is_collateral);
+        info!("Is Collateral: {}", case.can_be_collateral);
         info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
             info!("Expected Error Message: {}", msg);
@@ -116,7 +116,7 @@ use crate::utils::structs::*;
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
-            is_collateral: case.is_collateral,
+            can_be_collateral: case.can_be_collateral,
         };
 
         /*

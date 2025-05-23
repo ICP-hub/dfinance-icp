@@ -570,7 +570,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   <h1>Transaction overview</h1>
                 </div>
                 <div className="w-full flex items-center justify-between bg-gray-100 p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                  <div className="w-[60%]">
+                  <div className="w-[80%]">
                     <input
                       type="text"
                       value={amount}

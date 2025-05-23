@@ -13,7 +13,7 @@ use crate::protocol::utils::{
         math_utils::ScalingMath
     };
 use crate::trace;
-use crate::constants::constant_variables::constants::{TOKEN_TRANSFER_FEE, CYCLE_EXHAUSTED_LIMIT,CYCLE_THRESHOLD_LIMIT};
+use crate::constants::constant_variables::constants::{ALL_ASSETS, ALL_USERS, ASSET_PRINCIPAL, CYCLE_EXHAUSTED_LIMIT, CYCLE_THRESHOLD_LIMIT, TOKEN_TRANSFER_FEE};
 use crate::constants::validators::validate_asset_name;
 use crate::declarations::datatypes:: UserData;
 use crate::declarations::structs::{AssetData, CycleAlert};
@@ -117,7 +117,7 @@ pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
             .collect();
 
         // Generate the certificate from the certified map
-        let cert = get_certificate_witness("all_assets".to_string());
+        let cert = get_certificate_witness(ALL_ASSETS.to_string());
 
         (assets, cert)
     })
@@ -137,7 +137,7 @@ pub fn get_asset_principal_certified(asset_name: String) -> Result<(Principal, C
 
     let asset_principal = get_asset_principal(asset_name.clone())?;
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("asset_principal".to_string());
+    let cert = get_certificate_witness(ASSET_PRINCIPAL.to_string());
     Ok((asset_principal, cert))
 }
 
@@ -151,7 +151,7 @@ pub fn get_asset_principal_certified(asset_name: String) -> Result<(Principal, C
 #[query]
 pub async fn get_all_users_certified() -> (Vec<(Principal, UserData)>, Certificate) {
     let res = get_all_users().await;
-    let cert = get_certificate_witness("all_users".to_string());
+    let cert = get_certificate_witness(ALL_USERS.to_string());
 
     (res, cert)
 }

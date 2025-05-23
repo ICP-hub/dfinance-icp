@@ -1,5 +1,5 @@
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME, CHECK_FREQUENCY};
+use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME};
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
 use candid::Principal;
@@ -15,7 +15,10 @@ thread_local! {
     static FLUSH_IN_PROGRESS: RefCell<bool> = RefCell::new(false);
     static LOG_COUNT: RefCell<u64> = RefCell::new(0);
     static NEXT_LOG_ID: RefCell<u32> = RefCell::new(1);
-    static CHECK_COUNTER: RefCell<u64> = RefCell::new(0);
+}
+
+pub struct LogFlusher {
+    pub user_key: String,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
@@ -161,112 +164,90 @@ fn get_next_log_id() -> u32 {
 }
 
 /**
- * @title Maybe Check And Flush Logs
- * @dev Periodically checks if logs need flushing (not on every log addition)
- * Uses a counter to only check every CHECK_FREQUENCY logs
- */
-fn maybe_check_and_flush_logs() {
-    // Only check periodically to reduce overhead
-    let should_check = CHECK_COUNTER.with(|counter| {
-        let mut current = counter.borrow_mut();
-        *current += 1;
-        
-        if *current >= CHECK_FREQUENCY {
-            *current = 0;
-            true
-        } else {
-            // Also check if we're way over the limit to avoid delaying too much
-            get_log_count() >= (2 * LOGS_LIMIT)
-        }
-    });
-    
-    if should_check {
-        check_and_flush_logs();
-    }
-}
-
-/**
  * @title Check And Flush Logs
  * @dev Checks if log count exceeds the limit and triggers a flush if needed.
  * This is only called periodically to reduce overhead.
  */
-pub fn check_and_flush_logs() {
-    // Fast check using our counter instead of traversing the HashMap
-    if get_log_count() < LOGS_LIMIT {
-        return; // Not enough logs to flush
-    }
-    
-    // Check if a flush is already in progress
-    let should_flush = FLUSH_IN_PROGRESS.with(|flag| {
-        if *flag.borrow() {
-            return false; // Another flush is already in progress
+impl Drop for LogFlusher {
+    fn drop(&mut self) {
+        // Fast check using our counter instead of traversing the HashMap
+        if get_log_count() < LOGS_LIMIT {
+            return; // Not enough logs to flush
         }
         
-        // Set the flag to true
-        *flag.borrow_mut() = true;
-        true
-    });
-    
-    if !should_flush {
-        return;
-    }
-    
-    // Get the logs canister ID
-    let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
-        Ok(id) => id,
-        Err(_) => {
-            // Reset the flag if we couldn't get the canister ID
-            FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
+        // Check if a flush is already in progress
+        let should_flush = FLUSH_IN_PROGRESS.with(|flag| {
+            if *flag.borrow() {
+                return false; // Another flush is already in progress
+            }
+            
+            // Set the flag to true
+            *flag.borrow_mut() = true;
+            true
+        });
+        
+        if !should_flush {
             return;
         }
-    };
-    
-    // Spawn the flush operation to run asynchronously
-    ic_cdk::spawn(async move {
-        // Keep track of logs processed in this flush operation
-        let mut total_logs_flushed = 0;
         
-        // Process logs in batches until we've cleared enough or hit an error
-        while get_log_count() >= LOGS_LIMIT {
-            // Get batch of logs efficiently (up to BATCH_SIZE)
-            let batch_logs = get_next_batch_of_logs(BATCH_SIZE as usize);
-            
-            if batch_logs.is_empty() {
-                break; // No more logs to process
+        // Get the logs canister ID
+        let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+            Ok(id) => id,
+            Err(_) => {
+                // Reset the flag if we couldn't get the canister ID
+                error!("❌ Failed to get logs canister ID. Aborting flush operation.");
+                FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
+                return;
             }
+        };
+        
+        // Spawn the flush operation to run asynchronously
+        ic_cdk::spawn(async move {
+            // Keep track of logs processed in this flush operation
+            let mut total_logs_flushed = 0;
             
-            // Count logs in this batch
-            let batch_size = batch_logs.values().map(|v| v.len()).sum::<usize>();
-            
-            match send_log_to_logs_canister(batch_logs.clone(), logs_canister_id).await {
-                Ok(_) => {
-                    total_logs_flushed += batch_size;
-                    
-                    // Remove the sent logs from storage and update counter
-                    remove_logs_from_storage(&batch_logs);
-                    decrement_log_count(batch_size as u64);
-                    
-                    // Only log occasionally to reduce log volume in high-throughput scenarios
-                    if total_logs_flushed % (5 * BATCH_SIZE) == 0 {
-                        info!("✅ Flushed {} logs so far. Remaining: {}", 
-                              total_logs_flushed, get_log_count());
+            // Process logs in batches until we've cleared enough or hit an error
+            while get_log_count() >= LOGS_LIMIT {
+                // Get batch of logs efficiently (up to BATCH_SIZE)
+                let batch_logs = get_next_batch_of_logs(BATCH_SIZE as usize);
+                
+                if batch_logs.is_empty() {
+                    break; // No more logs to process
+                }
+                
+                // Count logs in this batch
+                let batch_size = batch_logs.values().map(|v| v.len()).sum::<usize>();
+                
+                match send_log_to_logs_canister(batch_logs.clone(), logs_canister_id).await {
+                    Ok(_) => {
+                        total_logs_flushed += batch_size;
+                        
+                        // Remove the sent logs from storage and update counter
+                        remove_logs_from_storage(&batch_logs);
+                        decrement_log_count(batch_size as u64);
+                        
+                        // Only log occasionally to reduce log volume in high-throughput scenarios
+                        if total_logs_flushed % (5 * BATCH_SIZE) == 0 {
+                            info!("✅ Flushed {} logs so far. Remaining: {}", 
+                                  total_logs_flushed, get_log_count());
+                        }
+                    },
+                    Err(e) => {
+                        error!("❌ Failed to send batch logs: {:?}. Aborting flush operation.", e);
+                        break;
                     }
-                },
-                Err(e) => {
-                    error!("❌ Failed to send batch logs: {:?}. Aborting flush operation.", e);
-                    break;
                 }
             }
-        }
-        
-        // Reset the flag now that we're done
-        FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
-        
-        // Log completion info
-        if total_logs_flushed > 0 {
-            info!("📝 Flush operation complete. Total logs flushed: {}", total_logs_flushed);
-        }
-    });
+            
+            // Reset the flag now that we're done
+            FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
+            
+            // Log completion info
+            if total_logs_flushed > 0 {
+                info!("📝 Flush operation complete. Total logs flushed: {}", total_logs_flushed);
+            }
+        });
+    }
 }
 
 /**
@@ -389,8 +370,6 @@ pub fn store_log(
     // Increment our log counter
     increment_log_count();
     
-    // Only check for flush periodically to reduce overhead
-    maybe_check_and_flush_logs();
     
     Ok(())
 }
@@ -486,10 +465,25 @@ pub fn clear_temp_log() {
 #[query]
 pub fn get_all_logs() -> Result<Vec<String>,Error> {
     guard_admin_only()?;
+    let mut logs: Vec<(u32, String)> = Vec::new();
+    let timestamp = api::time() / 1_000_000_000;
+    if get_log_count() > (5 * LOGS_LIMIT) {
+        let message = FLUSH_IN_PROGRESS.with(|flag| {
+            if *flag.borrow() {
+                "[INFO] [-:-] [admin] Log limit exceeded. Flushing is in progress"
+            } else {
+                "[ERROR] [-:-] [admin] Log limit exceeded. Please try again later or clear logs manually"
+            }
+        });
+
+        let formatted_log = format!("[{}] {}", timestamp, message);
+        logs.push((0, formatted_log));
+
+        return Ok(logs.into_iter().map(|(_, log)| log).collect());
+    }
+
     LOG_STORAGE.with(|log_storage| {
         let storage = log_storage.borrow();
-        
-        let mut logs: Vec<(u32, String)> = Vec::new();
         
         for (key, value) in storage.iter() {
             if let Some(log) = value.get(0) {
@@ -521,6 +515,7 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
  * @param msg `&str` - The message content to be logged.
  */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
+    #[cfg(feature = "testnet")]
     ic_cdk::println!(
         "[{:?}] [{}:{}] : {}",
         level, file, line, msg

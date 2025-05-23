@@ -949,6 +949,22 @@ const Repay = ({
                 </div>
               </div>
             </div>
+            <div className="w-full flex justify-between items-center mt-3">
+            <div className="flex items-center">
+              <p
+                className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
+                  }`}
+              >
+                {isApproved
+                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(
+                    8
+                  )} ${asset} `
+                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(
+                    8
+                  )} ${asset} `}
+              </p>
+            </div>
+          </div>
             <div className="w-full mt-3">
               {amount > 0 && amount > supplyBalance ? (
                 <div className="bg-[#BA5858] p-2 rounded-lg my-2">

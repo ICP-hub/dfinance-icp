@@ -20,7 +20,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
     struct TestCase {
         asset: String,
         amount: Nat,
-        is_collateral: bool,
+        can_be_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
     }
@@ -30,35 +30,35 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(4_000_000_000u128), // 40 ICP (includes transaction fee)
-            is_collateral: true,                  // Mark asset as collateral
+            can_be_collateral: true,                  // Mark asset as collateral
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
             amount: Nat::from(45_000u128), // 0.00045 ckBTC (includes transaction fee)
-            is_collateral: false,          // Mark asset as non-collateral
+            can_be_collateral: false,          // Mark asset as non-collateral
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(800_000_000u128), // 8 ckUSDC (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
             amount: Nat::from(6_000u128), // 0.06 ckETH (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(40_000_000u128), // 0.4 ckUSDT (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
@@ -77,7 +77,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
         info!("Amount: {}", amount_float / 100000000.0); // Convert the amount into human-readable format
-        info!("Is Collateral: {}", case.is_collateral); // Log whether the asset is being supplied as collateral
+        info!("Is Collateral: {}", case.can_be_collateral); // Log whether the asset is being supplied as collateral
         info!("Expected Success: {}", case.expect_success); // Log expected success/failure outcome of the test
         if let Some(ref msg) = case.expected_error_message {
             info!("Expected Error Message: {}", msg); // Log the expected error message for failure cases
@@ -149,7 +149,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             let supply_params = ExecuteSupplyParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),
-                is_collateral: case.is_collateral,
+                can_be_collateral: case.can_be_collateral,
             };
 
             // Submit the supply request to the backend canister

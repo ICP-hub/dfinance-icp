@@ -10,4 +10,3 @@ pub const TESTER_LIST: MemoryId = MemoryId::new(6);
 pub const ACCESSCONTOL: MemoryId = MemoryId::new(7);
 pub const ASSET_RECORDS_MEMORY_ID: MemoryId = MemoryId::new(8);
 pub const FAUCETDATA: MemoryId = MemoryId::new(9);
-pub const LOG_STORAGE: MemoryId = MemoryId::new(10);

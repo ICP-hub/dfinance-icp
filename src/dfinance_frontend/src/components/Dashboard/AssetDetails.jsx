@@ -590,7 +590,7 @@ const AssetDetails = () => {
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
       (Number(DebtIndex) * SCALING_FACTOR);
 
-    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+    const currentCollateralStatus = reserveData?.[1]?.can_be_collateral ?? true;
 
     const totalCollateral =
       parseFloat(Number(userAccountData?.Ok[0]?.[0]) / SCALING_FACTOR) || 0;

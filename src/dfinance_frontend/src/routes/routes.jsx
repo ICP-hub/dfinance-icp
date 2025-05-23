@@ -6,6 +6,7 @@ import Home from "../pages/Home/Home";
 import Faucet from "../pages/Faucet/Faucet";
 import { Outlet } from "react-router-dom";
 import MiniLoader from "../components/Common/miniLoader";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 const Error = lazy(() => import("../pages/Error"));
 const AssetDetails = lazy(() => import("../components/Dashboard/AssetDetails"));
@@ -73,9 +74,9 @@ const routes = [
     path: "/logs",
     element: (
       <MainDashboard includeDashboardNav={false}>
-      <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
-        <Logs />
-      </Suspense>
+        <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
+          <Logs />
+        </Suspense>
       </MainDashboard>
     ),
   },
@@ -125,17 +126,22 @@ const routes = [
         </Suspense>
       </MainDashboard>
     ),
-    children: [
-      {
-        path: "debt-users-list",
-        element: (
+  },
+  {
+    path: "/Liquidate/debt-users-list",
+    element: (
+      <ProtectedRoute>
+        <MainDashboard includeDashboardNav={false}>
           <Suspense fallback={<div className="h-[60vh]"><MiniLoader /></div>}>
             <LiquidationList />
           </Suspense>
-        ),
-      },
-    ],
-  },
+        </MainDashboard>
+      </ProtectedRoute>
+    ),
+  }
+
+
+
 ];
 
 export default routes.filter(Boolean);

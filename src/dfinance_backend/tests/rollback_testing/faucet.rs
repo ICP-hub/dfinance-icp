@@ -111,7 +111,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             asset: "ICP ".to_string(), // white space after ICP
             amount: Nat::from(1u128), // 0.00000001 ICP (transfer fee included)
             expect_success: false, 
-            expected_error_message: Some("no canister id found".to_string()), 
+            expected_error_message: Some("No principal found for asset".to_string()), 
         },
         // Test Case : lower case asset name
         TestCase { 
@@ -125,7 +125,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             asset: "".to_string(), // empty asset name
             amount: Nat::from(1u128), // 0.00000001 unknown (transfer fee included)
             expect_success: false, 
-            expected_error_message: Some("No principal found for asset".to_string()), 
+            expected_error_message: Some("Asset cannot be an empty string".to_string()), 
         },
         // Test Case : amount is zero
         TestCase { 

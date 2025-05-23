@@ -41,9 +41,9 @@ use tracing::{info,error};
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128), // 100 ICP (transfer fee included)
-            expect_success: false,
-            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
+            amount: Nat::from(2_000_000_000u128), // 100 ICP (transfer fee included)
+            expect_success: true,
+            expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),

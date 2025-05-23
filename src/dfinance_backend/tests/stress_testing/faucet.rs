@@ -61,7 +61,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(16_000_000u128), // 0.14 ckETH
+            amount: Nat::from(15_000_000u128), // 0.15 ckETH
             expect_success: true,
             expected_error_message: None,
         },

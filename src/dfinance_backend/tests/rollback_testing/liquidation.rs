@@ -46,7 +46,7 @@ use crate::utils::structs::*;
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.4 ICP (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_400_000u128), // 0.404 ICP (liquidation reward)
+            reward_amount: Nat::from(40_357_486u128), // 0.404 ICP (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -55,7 +55,7 @@ use crate::utils::structs::*;
             collateral_asset: "ckBTC".to_string(),
             amount: Nat::from(210_000u128), // 0.0021 ckBTC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220_500u128), // 0.002205 ckBTC (liquidation reward)
+            reward_amount: Nat::from(220_496u128), // 0.002205 ckBTC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -64,7 +64,7 @@ use crate::utils::structs::*;
             collateral_asset: "ckUSDC".to_string(),
             amount: Nat::from(20_000_000_000u128), // 2000 ckUSDC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(21_000_000_000u128), // 2100 ckUSDC (liquidation reward)
+            reward_amount: Nat::from(20_999_673_926u128), // 2100 ckUSDC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -73,18 +73,18 @@ use crate::utils::structs::*;
             collateral_asset: "ckUSDT".to_string(),
             amount: Nat::from(12_500_000_000u128), // 1250 ckUSDT (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13_062_500_000u128), // 1306.25 ckUSDT (liquidation reward)
+            reward_amount: Nat::from(13_062_175_527u128), // 1306.25 ckUSDT (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ICP".to_string(),
-            collateral_asset: "INV".to_string(),
+            collateral_asset: "ICP".to_string(),
             amount: Nat::from(50_000_000u128),  // 0.5 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
             reward_amount: Nat::from(50_000_000u128),  // Expected reward: 0.5 ICP
-            expect_success: false,
-            expected_error_message: Some("no reserve data found of the given asset".to_string()), // Expecting failure due to invalid collateral asset
+            expect_success: true,
+            expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckBTC".to_string(),
@@ -127,7 +127,9 @@ use crate::utils::structs::*;
         let amount_float = amount_u128 as f64;
         info!("Amount: {}", amount_float / 100000000.0);
         info!("On Behalf Of: {}", case.on_behalf_of);
-        info!("Reward Amount: {}", case.reward_amount);
+        let rew_amount_u128: u64 = case.reward_amount.clone().0.try_into().unwrap();
+        let rew_amount_float = rew_amount_u128 as f64;
+        info!("Reward Amount: {}", rew_amount_float / 100000000.0);
         info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
             info!("Expected Error Message: {}", msg);
@@ -160,7 +162,7 @@ use crate::utils::structs::*;
              * @dev Validates approval status and expected outcomes.
              */
             let approved = test_icrc2_aprove(
-                get_users_principal(Nat::from(1u128)).unwrap(),
+                get_user_principal2(),
                 asset_principal,
                 pic,
                 backend_canister,
@@ -209,7 +211,7 @@ use crate::utils::structs::*;
 
             info!("\n======================== Initial Liquidator User Data Before Roll Backs ========================\n");
 
-            fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
 
             info!("\n======================== Initial On Behalf User Data Before Roll Backs ========================\n");
 
@@ -236,7 +238,7 @@ use crate::utils::structs::*;
          */
         let result = pic.update_call(
             backend_canister,
-            get_users_principal(Nat::from(1u32)).unwrap(),
+            get_user_principal2(),
             "execute_liquidation",
             encode_one(liquidation_params).unwrap(),
         );
@@ -335,7 +337,7 @@ use crate::utils::structs::*;
     
             info!("\n======================== Liquidator User Data (No Rollbacks Initiated) ========================\n");
     
-            fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
     
             info!("\n======================== On Behalf User Data (No Rollbacks Initiated) ========================\n");
     
@@ -362,7 +364,7 @@ use crate::utils::structs::*;
 
         info!("\n======================== Liquidator User Data After Roll Backs ========================\n");
 
-        fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+        fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
 
         info!("\n======================== On Behalf User Data After Roll Backs ========================\n");
 

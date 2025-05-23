@@ -269,7 +269,7 @@ const WithdrawPopup = ({
       const withdrawParams = {
         asset: asset,
         amount: totalAmount,
-        is_collateral: currentCollateralStatus,
+        can_be_collateral: currentCollateralStatus,
       };
 
       const withdrawResult = await backendActor.execute_withdraw(

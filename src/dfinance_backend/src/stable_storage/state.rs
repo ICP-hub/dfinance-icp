@@ -9,8 +9,8 @@ use crate::stable_storage::types::{
     ReserveList, TesterList, UserProfile,
 };
 
-use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, FAUCETDATA, LOG_STORAGE};
-use super::types::{AdminData, AssetRecords, FaucetData, LogStorage};
+use super::memory::{ADMIN_DATA, ASSET_RECORDS_MEMORY_ID, FAUCETDATA};
+use super::types::{AdminData, AssetRecords, FaucetData};
 
 pub struct State {
     pub asset_index: AssetIndex,
@@ -23,7 +23,6 @@ pub struct State {
     pub admin_data: AdminData,
     pub asset_records:AssetRecords,
     pub faucet_data: FaucetData,
-    pub log_storage:LogStorage
 }
 /*
  * @title State
@@ -45,7 +44,6 @@ impl State {
             admin_data: AdminData::init(memory_manager.get(ADMIN_DATA)),
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),
             faucet_data: FaucetData::init(memory_manager.get(FAUCETDATA)),
-            log_storage: LogStorage::init(memory_manager.get(LOG_STORAGE)),
         }
     }
 }

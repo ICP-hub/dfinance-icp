@@ -248,7 +248,6 @@ const DashboardComponent = () => {
       : "0";
     borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0] : "0";
   }
-
   // Calculate total asset supply and borrow values
   const hasVisibleAssets = filteredItems.some((item) => {
     const assetData = item[1].Ok;
@@ -666,7 +665,10 @@ const DashboardComponent = () => {
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
       (Number(DebtIndex) * SCALING_FACTOR);
 
-    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+    const currentCollateralStatus = actionType === "collateral"
+  ? reserveData?.[1]?.is_collateral ?? true
+  : reserveData?.[1]?.can_be_collateral ?? true;
+
 
     const totalCollateral =
       parseFloat(Number(userAccountData?.Ok[0]?.[0]) / SCALING_FACTOR) || 0;
@@ -723,7 +725,7 @@ const DashboardComponent = () => {
       borrowableAssetValue
     );
   };
-
+  // Filter and map over the user's reserve data to compute detailed borrowing and supply metrics for each asset
   const filteredReserves = userData?.Ok?.[0].reserves[0]
     ?.filter((reserveGroup) => {
       const asset = reserveGroup[0];
@@ -941,7 +943,7 @@ const DashboardComponent = () => {
       });
   };
 
-
+// Returns a list of reserves where the user has supplied assets
   const getFilteredSupplyReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
 
@@ -969,7 +971,7 @@ const DashboardComponent = () => {
   };
 
 
-
+// Returns a list of reserves where the user has Borrowed assets
   const getFilteredBorrowReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
 

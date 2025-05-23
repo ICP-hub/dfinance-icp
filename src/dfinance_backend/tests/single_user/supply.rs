@@ -21,7 +21,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         struct TestCase {
             asset: String,
             amount: Nat,
-            is_collateral: bool,
+            can_be_collateral: bool,
             expect_success: bool,
             expected_error_message: Option<String>,
         }
@@ -31,7 +31,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             TestCase {
                 asset: "ICP".to_string(),
                 amount: Nat::from(500_000_000u128), // 5 ICP (includes transaction fee)
-                is_collateral: true,
+                can_be_collateral: true,
                 expect_success: true,
                 expected_error_message: None,
             },
@@ -48,7 +48,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             );
             info!("Asset: {}", case.asset);
             info!("Amount: {}", case.amount.clone());
-            info!("Is Collateral: {}", case.is_collateral);
+            info!("Is Collateral: {}", case.can_be_collateral);
             info!("Expect Success: {}", case.expect_success);
     
             if let Some(ref msg) = case.expected_error_message {
@@ -101,7 +101,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
                 let supply_params = ExecuteSupplyParams {
                     asset: case.asset.clone(),
                     amount: case.amount.clone(), // 5 ICP (transfer fee included)
-                    is_collateral: case.is_collateral,
+                    can_be_collateral: case.can_be_collateral,
                 };
                 let msg_id = pic.submit_call(
                     backend_canister,

@@ -9,7 +9,7 @@ use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve_data};
 use crate::protocol::libraries::update::UpdateLogic;
 use crate::protocol::logic::validation::ValidationLogic;
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::protocol::utils::price::{calculate_transfer_fee, update_token_price};
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info};
@@ -50,6 +50,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
   
     let _guard: CallerGuard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
     //valid param
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
@@ -138,7 +141,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                                                                             
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
-                is_collateral: params.is_collateral,
+                can_be_collateral: params.can_be_collateral,
                 amount: params.amount.clone(),
             };
             //for burning and reverting the supplied amount
@@ -193,6 +196,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
   
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
     validate_asset_name(&params.asset)?;
     validate_zero_value(&params.amount)?;
     let ledger_canister_id = get_asset_principal(params.asset.clone())?;
@@ -265,7 +271,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
             let supply_param = ExecuteSupplyParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
-                is_collateral: params.is_collateral,
+                can_be_collateral: params.can_be_collateral,
             };
 
             UpdateLogic::update_user_data_supply(

@@ -218,6 +218,7 @@ pub struct UserReserveData {
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
+    pub can_be_collateral: bool,
     pub d_token_balance: Nat,
     pub debt_token_blance: Nat,
 }
@@ -228,9 +229,10 @@ impl Default for UserReserveData {
             last_update_timestamp: Default::default(),
             liquidity_index: Default::default(),
             variable_borrow_index: Default::default(),
-            is_using_as_collateral_or_borrow: Default::default(),
+            is_using_as_collateral_or_borrow: true,
             is_collateral: true,
             is_borrowed: Default::default(),
+            can_be_collateral: true,
             d_token_balance: Default::default(),
             debt_token_blance: Default::default(),
         }

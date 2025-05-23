@@ -911,7 +911,7 @@ const DashboardComponent = () => {
         const isBorrowAvailable = availableBorrowNumber > 0.01;
 
         if (!showAllAssets) {
-          const formattedTotalSupply = total_supply * 0.85;
+          const formattedTotalSupply =(total_supply * 0.85).toFixed(8);
           const formattedTotalBorrow = total_borrow;
 
           return (
@@ -933,8 +933,8 @@ const DashboardComponent = () => {
         const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / SCALING_FACTOR;
         const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / SCALING_FACTOR;
 
-        const isEligibleA = parseFloat((total_supply_A).toFixed(8)) * 0.85 > total_borrow_A;
-        const isEligibleB = parseFloat((total_supply_B).toFixed(8)) * 0.85 > total_borrow_B;
+        const isEligibleA = (total_supply_A * 0.85).toFixed(8) * 0.85 > total_borrow_A;
+        const isEligibleB = (total_supply_B * 0.85).toFixed(8) > total_borrow_B;
 
 
         if (isEligibleA && !isEligibleB) return -1;

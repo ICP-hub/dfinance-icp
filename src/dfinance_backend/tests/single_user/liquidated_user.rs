@@ -1,19 +1,19 @@
-use candid::Nat;
-use candid::{ encode_one, Principal};
-use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     get_users_principal, init_tracing, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+    get_user_principal2, get_users_principal, init_tracing,
+    test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove,
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-use tracing::{info,error};
+use candid::Nat;
+use candid::{encode_one, Principal};
+use pocket_ic::{PocketIc, WasmResult};
+use tracing::{error, info};
 
-
-
-
-
-
-pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
+pub fn test_liquidated_user(
+    pic: &PocketIc,
+    backend_canister: Principal,
+    random_users: Vec<Principal>,
+) {
     #[derive(Debug, Clone)]
     struct TestCase {
         debt_asset: String,
@@ -37,9 +37,7 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
         },
     ];
     init_tracing();
-    info!(
-        "\n======================== Starting IC Liquidation Tests ========================\n"
-    );
+    info!("\n======================== Starting IC Liquidation Tests ========================\n");
 
     /*
      * @title Test Creating User Reserve with Low Health
@@ -70,6 +68,8 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
         }
         info!("------------------------------------------------------------\n");
 
+        let user_principal = get_user_principal2();
+
         /* Get asset principal; handle missing cases  */
         let asset_principal =
             match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
@@ -95,42 +95,39 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
          * @notice Approves ICRC2 transfer before supply operation.
          * @dev Validates approval status and expected outcomes.
          */
-        for user_principal in random_users.clone() {
-            let approved = test_icrc2_aprove(
-                user_principal,
-                asset_principal,
-                pic,
-                backend_canister,
-                case.amount.clone()
-
-            );
-            if !approved {
-                if !case.expect_success {
-                    if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
-                        error!(
+        let approved = test_icrc2_aprove(
+            user_principal,
+            asset_principal,
+            pic,
+            backend_canister,
+            case.amount.clone(),
+        );
+        if !approved {
+            if !case.expect_success {
+                if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
+                    error!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
                         case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
                     );
-                        continue;
-                    }
-                    info!(
-                        "✅ IC Test Case {} Passed: Liquidation rejected as expected",
-                        i + 1,
-                    );
-                } else {
-                    error!(
-                        "❌ IC Test Case {} Failed: Expected success but got rejection",
-                        i + 1
-                    );
+                    continue;
                 }
-                continue;
+                info!(
+                    "✅ IC Test Case {} Passed: Liquidation rejected as expected",
+                    i + 1,
+                );
+            } else {
+                error!(
+                    "❌ IC Test Case {} Failed: Expected success but got rejection",
+                    i + 1
+                );
             }
+            continue;
         }
 
         // Simulate 5 concurrent calls
         let mut msg_ids = vec![];
-        for user_principal in random_users.clone() {
+        for _ in 0..5 {
             /* Liquidation params */
             let liquidation_params = ExecuteLiquidationParams {
                 debt_asset: case.debt_asset.clone(),
@@ -222,7 +219,5 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
             }
         }
     }
-    info!(
-        "\n======================== IC Liquidation Tests Completed ========================\n"
-    );
+    info!("\n======================== IC Liquidation Tests Completed ========================\n");
 }

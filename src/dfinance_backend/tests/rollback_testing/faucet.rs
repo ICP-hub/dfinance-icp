@@ -57,7 +57,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14_000_000u128), // 0.14 ckETH (transfer fee included)
+            amount: Nat::from(15_000_000u128), // 0.15 ckETH (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
@@ -111,14 +111,14 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
             asset: "ICP ".to_string(), // white space after ICP
             amount: Nat::from(1u128), // 0.00000001 ICP (transfer fee included)
             expect_success: false, 
-            expected_error_message: Some("no canister id found".to_string()), 
+            expected_error_message: Some("No principal found for asset".to_string()), 
         },
         // Test Case : lower case asset name
         TestCase { 
             asset: "icp".to_string(),  // lower case asset name
             amount: Nat::from(1u128), // 0.00000001 ICP (transfer fee included)
             expect_success: false, 
-            expected_error_message: Some("no canister id found".to_string()), 
+            expected_error_message: Some("No principal found for asset".to_string()), 
         },
         // Test Case : empty asset name
         TestCase { 

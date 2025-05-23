@@ -32,7 +32,7 @@ fn call_test_function() {
 fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
-    let random_users = generate_principals(2);
+    let random_users = generate_principals(10);
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();

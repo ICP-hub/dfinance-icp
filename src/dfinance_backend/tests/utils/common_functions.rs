@@ -537,7 +537,7 @@ pub fn fetch_user_data(
                 }
                 Ok(Err(error)) => {
                     error!(
-                        "❌ Error fetching user data for {}: {}",
+                        "Error fetching user data for {}: {}",
                         user_principal,
                         error.message()
                     );

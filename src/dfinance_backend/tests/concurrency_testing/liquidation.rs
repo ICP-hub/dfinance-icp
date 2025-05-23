@@ -94,9 +94,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         fetch_reserve_data(pic, backend_canister, &case.collateral_asset); // Fetch and log the initial collateral reserves before liquidation
         info!("\n---------------------------------------------------------\n");
 
-        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
-        for user_principal in random_users.clone() {
-            let asset_principal =
+        let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
                     Some(principal) => principal, // Get the asset principal for liquidation
                     None => {
@@ -115,6 +113,8 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                     }
                 };
 
+        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
+        for user_principal in random_users.clone() {
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
@@ -144,7 +144,9 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 }
                 continue;
             }
+        }
 
+            for user_principal in random_users.clone() {
             let liquidation_params = ExecuteLiquidationParams {
                 debt_asset: case.debt_asset.clone(),
                 collateral_asset: case.collateral_asset.clone(),
@@ -159,12 +161,11 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                     user_principal,
                     "execute_liquidation",
                     encode_one(liquidation_params).unwrap(), // Submit liquidation request with parameters
-                )
-                .unwrap();
+                ).unwrap();
             msg_ids.push(msg); // Store message ID for tracking the request
         }
         // let mut results = Vec::new();
-        for (_j, msg_id) in msg_ids.into_iter().enumerate() {
+        for (j, msg_id) in msg_ids.into_iter().enumerate() {
             let result = pic.await_call(msg_id).unwrap();
             // results.push(res); // Store results of all liquidation requests
             // }

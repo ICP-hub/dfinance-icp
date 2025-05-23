@@ -27,7 +27,7 @@ pub mod constants {
     pub const NANOS_PER_SECOND: u128 = 1_000_000_000u128;
 
     // ------------------- Request Limit Constants -------------------
-    pub const REQUEST_LIMIT: usize = 100; // Maximum allowed requests within the defined time window
+    pub const REQUEST_LIMIT: usize = 5; // Maximum allowed requests within the defined time window
 
     // ------------------- Asset and Admin Constants -------------------
     pub const MAX_ASSET_LENGTH: usize = 7;

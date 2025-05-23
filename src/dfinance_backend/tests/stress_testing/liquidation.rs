@@ -54,9 +54,9 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         TestCase {
             debt_asset: "ckBTC".to_string(),
             collateral_asset: "ckBTC".to_string(),
-            amount: Nat::from(420_000u128), // 2.1 ckBTC (includes transaction fee)
+            amount: Nat::from(410_000u128), // 2.1 ckBTC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(440_996u128), // 2.20496 ckBTC
+            reward_amount: Nat::from(430_496u128), // 2.20496 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
@@ -166,7 +166,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
         info!("\n-----------------------------------------------------------------------------\n");
         for user_principal in random_users.clone() {
-            info!("\nPerforming Test: {} for user:   {:?}\n", (i+1), user_principal );
+            info!("\nPerforming Test: {} for user:   {:?}\n", (i+1), user_principal.to_text() );
             /* Get asset principal; handle missing cases  */
             let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {

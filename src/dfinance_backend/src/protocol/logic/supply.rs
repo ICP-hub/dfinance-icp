@@ -223,7 +223,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     .await?;
     info!("Withdraw validated successfully");
 
-    if let Err(_) = update_token_price(params.asset.clone()).await {}
 
     let transfer_token_fee= calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();

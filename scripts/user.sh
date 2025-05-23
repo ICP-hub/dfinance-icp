@@ -47,7 +47,7 @@ for ((i=1; i<=NUM_USERS; i++)); do
     record {
       asset = "ckUSDC";
       amount = 900000000 : nat;
-      is_collateral = true;
+      can_be_collateral = true;
     }
   )')
   echo "Supply result: $supply_result"

@@ -23,7 +23,7 @@ use crate::{
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::stable_storage::state_handler::insert_certified_value;
 use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
 
@@ -79,6 +79,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     validate_zero_value(&params.reward_amount)?;
 
     let platform_principal = ic_cdk::api::id();
+    let _log_flusher = LogFlusher {
+        user_key: params.on_behalf_of.to_text(), // or whatever user_key you need
+    };
 
     let user_principal = params.on_behalf_of;
     debug!("User Principal (Debt User): {}", user_principal.to_text());

@@ -14,7 +14,7 @@ use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
 use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
 use crate::protocol::utils::price::get_exchange_rates;
 use crate::stable_storage::state_handler::insert_certified_value;
@@ -429,6 +429,9 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     validate_negatige_value(&added_amount)?;
 
     let user_principal = ic_cdk::caller();
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
     debug!("User principal in toggle collateral: {:?}", user_principal);
 
 

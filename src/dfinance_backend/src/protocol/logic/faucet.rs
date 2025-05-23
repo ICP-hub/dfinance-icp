@@ -14,7 +14,7 @@ use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
 use crate::info;
 use crate::protocol::libraries::update::{get_faucet_reserve_for_asset, get_user_faucet_reserves};
-use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
 use crate::protocol::utils::math_utils::ScalingMath;
 use crate::stable_storage::state_handler::mutate_state;
 use crate::stable_storage::state_handler::read_state;
@@ -24,8 +24,7 @@ use ic_cdk_macros::update;
 use ic_captcha::CaptchaBuilder;
 use crate::stable_storage::state_handler::insert_certified_value;
 use crate::protocol::utils::price::get_cached_exchange_rate;
-use crate::stable_storage::state_handler::get_certificate_witness;
-use crate::declarations::datatypes::Certificate;
+
 
 thread_local! {
     // static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
@@ -68,6 +67,9 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
     
     let user_principal = ic_cdk::caller();
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     // input asset validator
     validate_asset_name(&asset)?;
@@ -193,6 +195,9 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         error!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     let mut user_faucet_reserves = get_user_faucet_reserves(user_principal)?;
 

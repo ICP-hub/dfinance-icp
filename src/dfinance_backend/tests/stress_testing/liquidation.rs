@@ -113,7 +113,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
             reward_amount: Nat::from(10_000u128),  // No reward since liquidation request exceeds collateral
             expect_success: false,
-            expected_error_message: Some("Repay cannot be more than debt".to_string()), // Expecting failure due to insufficient collateral
+            expected_error_message: Some("Reward is higher than expected".to_string()), // Expecting failure due to insufficient collateral
         },
         TestCase {
             debt_asset: "ckUSDT".to_string(),

@@ -1,12 +1,13 @@
 use crate::utils::common_functions::{
-    fetch_reserve_data, get_user_principal2, get_users_principal, init_tracing, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+    fetch_reserve_data, get_user_principal2, get_users_principal, init_tracing,
+    test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove,
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use tracing::{info,error};
+use tracing::{error, info};
 
 /*
  * @title Test Liquidation Functionality for Asset Transactions
@@ -67,10 +68,8 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         },
     ];
     init_tracing();
-    let user_principal = get_user_principal2();
-    info!(
-        "\n======================== Starting IC Liquidation Tests ========================\n"
-    );
+    // let user_principal = get_user_principal2();
+    info!("\n======================== Starting IC Liquidation Tests ========================\n");
     test_create_user_reserve_with_low_health(pic, backend_canister); // Create user reserves for liquidation tests
 
     for (i, case) in test_cases.iter().enumerate() {
@@ -96,7 +95,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         info!("\n---------------------------------------------------------\n");
 
         let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
-        for _ in random_users.clone() {
+        for user_principal in random_users.clone() {
             let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
                     Some(principal) => principal, // Get the asset principal for liquidation
@@ -164,13 +163,13 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 .unwrap();
             msg_ids.push(msg); // Store message ID for tracking the request
         }
-        let mut results = Vec::new();
-        for msg_id in msg_ids {
-            let res = pic.await_call(msg_id).unwrap();
-            results.push(res); // Store results of all liquidation requests
-        }
+        // let mut results = Vec::new();
+        for (_j, msg_id) in msg_ids.into_iter().enumerate() {
+            let result = pic.await_call(msg_id).unwrap();
+            // results.push(res); // Store results of all liquidation requests
+            // }
 
-        for result in results {
+            // for result in results {
             match result {
                 WasmResult::Reply(response) => {
                     let liquidation_response: Result<Nat, errors::Error> =

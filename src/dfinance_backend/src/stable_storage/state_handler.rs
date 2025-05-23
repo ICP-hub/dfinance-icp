@@ -57,6 +57,14 @@ pub fn mutate_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
     STATE.with(|cell| f(&mut cell.borrow_mut()))
 }
 
+/*
+ * @title Insert Certified Value
+ * @notice Inserts a key-value pair into the certified data tree with cryptographic hashing.
+ * @dev Serializes the value using Candid and updates the certified data root hash accordingly.
+ * @param key The key under which to store the certified value.
+ * @param value The value to be serialized and inserted into the certified data tree.
+ * @functionality Maintains the integrity and verifiability of certified data for queries.
+ */
 pub fn insert_certified_value<T: Serialize + CandidType>(key: String, value: T) {
     let bytes: Vec<u8> = Encode!(&value).unwrap();
 
@@ -67,6 +75,14 @@ pub fn insert_certified_value<T: Serialize + CandidType>(key: String, value: T) 
     });
 }
 
+/*
+ * @title Get Certificate Witness
+ * @notice Retrieves the certificate and witness proof for a given key in the certified data tree.
+ * @dev Constructs a CBOR serialized witness for the key to prove data authenticity.
+ * @param key The key for which to generate the certificate witness.
+ * @return Certificate containing the data certificate and witness proof bytes.
+ * @functionality Provides cryptographic proof to clients verifying data integrity for queries.
+ */
 pub fn get_certificate_witness(key: String)-> Certificate {
     let certificate = data_certificate().expect("No data certificate available");
 

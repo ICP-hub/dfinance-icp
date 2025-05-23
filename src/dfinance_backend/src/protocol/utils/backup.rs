@@ -10,11 +10,13 @@ use serde::Serialize;
 use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData};
 use std::collections::BTreeMap;
 use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::{debug, error, info};
+use crate::error;
 
 
-// --- Data Structures ---
-
+/**  Snapshot struct represents the entire state snapshot of the system.
+*    It contains mappings of asset indices, faucet data, user profiles, and tester lists.
+*    Used for serialization/deserialization to export or import the complete system state.
+*/
 #[derive(Serialize, Deserialize)]
 struct Snapshot {
     asset_index: BTreeMap<String, ReserveData>,
@@ -23,14 +25,24 @@ struct Snapshot {
     tester_list: BTreeMap<String, Principal>,
 }
 
+/**
+ * BackupData struct encapsulates backup payload for inter-canister communication.
+ * It holds the timestamp when the backup was created and the actual data as a JSON string.
+ */
 #[derive(CandidType, Deserialize, Clone)]
 pub struct BackupData {
     pub load_time: u64,
     pub data: String,
 }
 
-// --- Export Snapshot ---
-
+/**
+ * @title Export Snapshot
+ * @notice Serializes the current full state snapshot of the system into a JSON string.
+ * @functionality This function gathers the current system state from asset indices, faucet data,
+ *               user profiles, and tester lists, packages them into a `Snapshot` struct,
+ *               and serializes it to a JSON string for backup or transfer.
+ * @return A JSON string representing the serialized snapshot of the entire system state.
+ */
 fn export_snapshot() -> String {
     read_state(|state| {
         let snapshot = Snapshot {
@@ -44,8 +56,15 @@ fn export_snapshot() -> String {
     })
 }
 
-// --- Import Snapshot ---
-
+/**
+ * @title Import Snapshot
+ * @notice Deserializes a given JSON string to restore the system state snapshot.
+ * @functionality This function parses the provided JSON string into a `Snapshot` struct,
+ *               then updates the system's internal state with the snapshot's content,
+ *               restoring asset indices, faucet data, user profiles, and tester lists.
+ * @param snapshot_json A JSON string representing the serialized snapshot of the system state.
+ * @return None (side effects on internal state).
+ */
 pub fn import_snapshot(snapshot_json: &str) {
     let snapshot: Snapshot = serde_json::from_str(snapshot_json)
         .expect("Failed to parse snapshot JSON");
@@ -66,8 +85,14 @@ pub fn import_snapshot(snapshot_json: &str) {
     });
 }
 
-// --- Send Backup to Logs Canister ---
-
+/**
+ * @title Send Backup Data to Logs Canister
+ * @notice Exports the current system snapshot and sends it to a designated logs canister for backup storage.
+ * @functionality This async update function fetches the logs canister ID, exports the current snapshot,
+ *               packages it into a `BackupData` struct with a timestamp, and performs an inter-canister
+ *               call to the logs canister's `receive_data_backup` method to save the backup.
+ * @return `Result<(), String>` indicating success or failure with an error message.
+ */
 #[update]
 pub async fn send_backup_data_to_canister() -> Result<(), String> {
     let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
@@ -102,8 +127,15 @@ pub async fn send_backup_data_to_canister() -> Result<(), String> {
     }
 }
 
-// --- Load Backup from Logs Canister ---
-
+/**
+ * @title Receive and Load Data Backup from Logs Canister
+ * @notice Retrieves a specific backup by ID from the logs canister and loads it into the current system state.
+ * @functionality This async update function obtains the logs canister ID, requests the backup data
+ *               identified by `backup_id` from the logs canister via inter-canister call, deserializes
+ *               the backup data, and imports the snapshot into the system state.
+ * @param backup_id The unique identifier of the backup to retrieve.
+ * @return `Result<(), String>` indicating success or failure with an error message.
+ */
 #[update]
 pub async fn receive_and_load_data_backup(backup_id: u64) -> Result<(), String> {
     let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {

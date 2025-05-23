@@ -14,16 +14,19 @@ thread_local! {
     static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
 }
 
+const LIMIT: usize = REQUEST_LIMIT; 
+const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
+
 /*
  * @title Check User Rate Limit Status
  * @notice Determines whether the caller has exceeded the allowed number of function calls within a specific time window.
  * @dev Counts the number of valid timestamps in the rate-limiting queue and compares it with the predefined limit.
  * @functionality User rate-limiting mechanism to restrict excessive usage of functions.
  *
- * # Parameters
- * - `function_name` - The name of the function to check. *(Currently unused, can be integrated for per-function limits.)*
+ * @params
+ * - None
  *
- * # Returns
+ * @returns
  * - `Ok(bool)` - True if the user is currently rate-limited (blocked), false otherwise.
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
@@ -84,8 +87,7 @@ pub fn inspect_message() {
     }
 }
 
-const LIMIT: usize = REQUEST_LIMIT; 
-const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
+
 
 /**
  * @title Request Rate Limiter

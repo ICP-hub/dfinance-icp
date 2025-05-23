@@ -7,6 +7,12 @@ use pocket_ic::{PocketIc, WasmResult};
 use tracing_subscriber::fmt;
 use tracing::{info,error};
 
+/*
+ * @title Initialize Tracing
+ * @notice Configures and initializes the tracing subscriber for logging.
+ * @dev Sets maximum log level to INFO and customizes the log format without timestamps, targets, or levels.
+ * @functionality Enables structured logging output for diagnostics and monitoring during execution.
+ */
 pub fn init_tracing() {
     let _ = fmt()
         .with_max_level(tracing::Level::INFO)
@@ -25,7 +31,12 @@ pub fn init_tracing() {
 pub fn get_user_principal() -> Principal {
     Principal::from_text(TESTER_2).unwrap()
 }
-
+/*
+ * @title Get User Principal
+ * @notice Returns a predefined principal ID.
+ * @dev Converts a fixed text representation into a Principal type.
+ * @functionality Returns a predefined principal for the user.
+ */
 #[allow(dead_code)]
 pub fn get_user_principal2() -> Principal {
     Principal::from_text(TESTER_3).unwrap()

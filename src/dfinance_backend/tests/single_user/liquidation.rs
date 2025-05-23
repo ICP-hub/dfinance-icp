@@ -209,7 +209,6 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // info!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                                 continue;
                             }
                         }

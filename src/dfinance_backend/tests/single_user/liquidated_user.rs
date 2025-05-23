@@ -206,7 +206,6 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
                                 info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // info!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                                 continue;
                             }
                         }
@@ -219,14 +218,7 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
                         reject_message
                     );
                     continue;
-                } // Err(e) => {
-                  //     info!(
-                  //         "❌ IC Test Case {} Failed: Error during liquidation function call: {:?}",
-                  //         i + 1,
-                  //         e
-                  //     );
-                  //     continue;
-                  // }
+                } 
             }
         }
     }

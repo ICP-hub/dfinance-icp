@@ -191,7 +191,7 @@ pub async fn create_token_canister(
 }
 
 /*
- * @title Create Test Token Canister
+ * @title Create Test Token Canister (Only for Testnet)
  * @dev Deploys a new test token canister with a given name and symbol.
  *      It initializes the token and installs the test ledger WASM code.
  *
@@ -342,7 +342,7 @@ pub fn get_controller() -> Result<InitArgs, Error> {
     read_state(|state| {
         state
             .meta_data
-            .get(&MAIN_CONTROLLER.to_string()) // use the appropriate string key
+            .get(&MAIN_CONTROLLER.to_string()) 
             .map(|candid_val| candid_val.0.clone()) // extract InitArgs from Candid wrapper
             .ok_or(Error::ControllerNotFound)
     })

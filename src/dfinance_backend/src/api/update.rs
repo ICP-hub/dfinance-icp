@@ -71,6 +71,15 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
     result
 }
 
+/*
+ * @title Token Balance Alert
+ * @dev Checks the token balance of the backend canister for a specific asset and returns alert status.
+ * @param asset_name The name of the asset to check balance for.
+ * @returns Result<TokenAlert, Error> Returns a `TokenAlert` struct indicating whether the token balance is exhausted,
+ *          in warning state, and the current balance, or an error if the operation fails.
+ * @functionality Queries the balance of the backend canister for the specified asset and evaluates if the
+ *                balance has reached predefined exhausted or warning thresholds, returning corresponding alert flags.
+ */
 
 #[update]
 pub async fn token_balance_alert(asset_name: String) -> Result<TokenAlert, Error>{

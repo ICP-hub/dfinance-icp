@@ -129,7 +129,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // info!("❌ IC Test Case {} Failed: Expected success but got error : {:?}: {:?}", i + 1, error, user_principal.to_text());
                                 continue;
                             }
                         }

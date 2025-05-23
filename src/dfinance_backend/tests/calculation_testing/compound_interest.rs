@@ -41,9 +41,8 @@ pub fn calculate_compounded_interest(
     init_tracing();
     info!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
     if last_update_timestamp > current_timestamp{
-        error!("Exponential function underflow"); //error
+        error!("Exponential function underflow"); 
         return Nat::from(0u128); 
-       //error result
     }
     let exp = current_timestamp - last_update_timestamp;
     debug!("exp (time difference): {}", exp);

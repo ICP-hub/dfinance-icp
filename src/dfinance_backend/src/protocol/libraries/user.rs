@@ -34,7 +34,7 @@ use futures::stream::{self, StreamExt};
 use ic_cdk::update;
 
 /*
- * @title User Account Data Calculation
+ * @title Calculate User Account Data
  * @functionality User account metric calculation logic.
  *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -192,7 +192,7 @@ pub async fn calculate_user_account_data(
 }
 
 /*
- * @title User Account Data Calculation
+ * @title Calculate User Asset Data
  * @functionality Calculates the user's financial metrics for lending and borrowing.
  *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -202,6 +202,11 @@ pub async fn calculate_user_account_data(
  * @functionality Performs dynamic calculations using live user data and asset configurations.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * @param dtoken_balance (Optional) A vector of `AssetData` representing user's DToken balances
+ *                       (collateral tokens) to be considered in calculations.
+ *
+ * @param debt_token_balance (Optional) A vector of `AssetData` representing user's debt token balances
+ *                           to be included in debt calculations.
  * @functionality Allows an admin or proxy to calculate metrics for another user.
  *
  * @return A tuple containing:
@@ -508,7 +513,7 @@ pub fn register_user() -> Result<String, Error> {
 }
 
 /*
- * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC)
+ * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC) (Only for Testnet)
  * @notice Identifies users with a health factor below the liquidation threshold,
  *         enabling liquidation testing for Pocket IC.
  *
@@ -595,7 +600,6 @@ pub async fn create_user_reserve_with_low_health(
 
     let mut user_data = user_data(user_principal)?;
 
-    // If asset_supply == asset_borrow
     if asset_supply == asset_borrow {
         let reserve_key = asset_supply.clone();
         let user_reserve_entry = user_data
@@ -710,7 +714,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        dtoken_principal, //dtoken
+        dtoken_principal, 
         platform_principal,
         supply_tokens.clone(),
     )
@@ -729,7 +733,7 @@ pub async fn create_user_reserve_with_low_health(
     }
 
     match asset_transfer_from(
-        supply_asset_ledger_canister_id, //ledger
+        supply_asset_ledger_canister_id, 
         user_principal,
         platform_principal,
         supply_tokens-get_transfer_fee(supply_asset_ledger_canister_id).await?,
@@ -753,7 +757,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        debt_token_principal, //debttoken
+        debt_token_principal, 
         platform_principal,
         borrow_tokens.clone(),
     )

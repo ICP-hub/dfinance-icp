@@ -75,12 +75,12 @@ fn get_user_data(user: Principal) -> Result<(UserData, Certificate), Error> {
 }
 
 /*
- * @title Get User Faucet Data (testnet only)
+ * @title Get User Faucet Data (Only for Testnet)
  * @dev Retrieves the faucet data for a given user.
  * @param user The principal of the user.
  * @returns The faucet reserves if found.
  *
- * @functionality Retrieve User Faucet Data for a Specified Principal
+ * @functionality Retrieve User Faucet Data for a Specified Principal (Only for Testnet)
  */
 #[cfg(feature = "testnet")]
 #[query]
@@ -125,7 +125,7 @@ pub fn get_all_assets_certified() -> (Vec<AssetInfo>, Certificate) {
 
 
 /*
- * @title Get Asset Principal
+ * @title Get Asset Principal Certified
  * @dev Retrieves the principal ID associated with an asset.
  * @param asset_name The name of the asset.
  * @returns The principal ID if found.
@@ -142,7 +142,7 @@ pub fn get_asset_principal_certified(asset_name: String) -> Result<(Principal, C
 }
 
 /**
- * @title Get All Certified Users
+ * @title Get All Certified Users Certified
  * @dev Asynchronously retrieves all user data along with a certificate for verification.
  * @returns A tuple containing a vector of principal-user data pairs and the certificate.
  *
@@ -158,7 +158,7 @@ pub async fn get_all_users_certified() -> (Vec<(Principal, UserData)>, Certifica
 
 
 /*
- * @title Get Cached Exchange Rate
+ * @title Get Cached Exchange Rate Certified
  * @dev Retrieves the cached exchange rate for a given asset.
  * @param base_asset_symbol The symbol of the base asset.
  * @returns The cached exchange rate as `PriceCache`.
@@ -177,7 +177,7 @@ pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(
 
 
 /*
- * @title User Normalized Supply
+ * @title User Normalized Supply Certified
  * @dev Calculates the normalized supply of a user for a given reserve.
  * @param reserve_data The reserve data containing liquidity index and rate.
  * @returns The normalized supply as `Nat`.
@@ -194,7 +194,7 @@ pub fn user_normalized_supply_certified(reserve_data: ReserveData) -> Result<(Na
 
 
 /*
- * @title User Normalized Debt
+ * @title User Normalized Debt Certified
  * @dev Computes the normalized debt of a user for a given reserve.
  * @param reserve_data The reserve data containing debt index and borrow rate.
  * @returns The normalized debt as `Nat`.
@@ -304,7 +304,7 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
  * # Returns
  * - `Nat` - The current cycle balance of the canister.
  */
-#[query] //update
+#[query]
 pub async fn cycle_checker() -> Result<(Nat, Certificate), Error> {
     guard_admin_only()?;
     let cert = get_certificate_witness("cycle_checker".to_string());
@@ -322,8 +322,8 @@ pub async fn cycle_alert()-> CycleAlert {
     };
     
     CycleAlert {
-        is_exhausted: is_exhausted,
-        is_warning: is_warning,
+        is_exhausted,
+        is_warning,
         current_cycle: Nat::from(cycle)
     }
 }

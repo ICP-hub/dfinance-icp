@@ -13,7 +13,7 @@ use crate::protocol::utils::{
         math_utils::ScalingMath
     };
 use crate::trace;
-use crate::constants::constant_variables::constants::{ALL_ASSETS, ALL_USERS, ASSET_PRINCIPAL, CYCLE_EXHAUSTED_LIMIT, CYCLE_THRESHOLD_LIMIT, TOKEN_TRANSFER_FEE};
+use crate::constants::constant_variables::constants::{ALL_ASSETS, ALL_USERS, ASSET_PRINCIPAL, CYCLE_CHECKER, CYCLE_EXHAUSTED_LIMIT, CYCLE_THRESHOLD_LIMIT, PRICE_CACHE, TOKEN_TRANSFER_FEE, TOTAL_USERS, TRANSFER_FEE_VAR, USER_ACCOUNT_DATA, USER_NORMALIZED_DEBT, USER_NORMALIZED_SUPPLY};
 use crate::constants::validators::validate_asset_name;
 use crate::declarations::datatypes:: UserData;
 use crate::declarations::structs::{AssetData, CycleAlert};
@@ -170,7 +170,7 @@ pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(
     let res = get_cached_exchange_rate(base_asset_symbol)?;
 
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("price_cache".to_string());
+    let cert = get_certificate_witness(PRICE_CACHE.to_string());
     
     Ok((res, cert)) 
 }
@@ -187,7 +187,7 @@ pub fn get_cached_exchange_rate_certified(base_asset_symbol: String) -> Result<(
 pub fn user_normalized_supply_certified(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
 
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("user_normalized_supply".to_string());
+    let cert = get_certificate_witness(USER_NORMALIZED_SUPPLY.to_string());
     let res = user_normalized_supply(reserve_data.clone())?;
     Ok((res, cert))
 }
@@ -204,7 +204,7 @@ pub fn user_normalized_supply_certified(reserve_data: ReserveData) -> Result<(Na
 pub fn user_normalized_debt_certified(reserve_data: ReserveData) -> Result<(Nat, Certificate), Error> {
 
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("user_normalized_debt".to_string());
+    let cert = get_certificate_witness(USER_NORMALIZED_DEBT.to_string());
     let res = user_normalized_debt(reserve_data.clone())?;
     Ok((res, cert))
 }
@@ -220,7 +220,7 @@ pub fn get_total_users() -> (usize, Certificate) {
     let res =read_state(|state| state.user_profile.len().try_into().unwrap());
     
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("total_users".to_string());
+    let cert = get_certificate_witness(TOTAL_USERS.to_string());
     (res, cert)
 }
 
@@ -248,7 +248,7 @@ async fn get_user_account_data(
     let result = calculate_user_asset_data(on_behalf, dtoken_balance, debt_token_balance).await?;
 
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("user_account_data".to_string());
+    let cert = get_certificate_witness(USER_ACCOUNT_DATA.to_string());
     info!("calculated user asset data called successfully inide get user account data");
     Ok((result, cert))
 }
@@ -267,7 +267,7 @@ pub async fn get_transfer_fee(asset_name: String) -> Result<(Nat, Certificate), 
     guard_prevent_anonymous()?;
 
     //Generates a Certificate with a CBOR-encoded witness for the given key.
-    let cert = get_certificate_witness("transfer_fee".to_string());
+    let cert = get_certificate_witness(TRANSFER_FEE_VAR.to_string());
 
     let asset_price =  get_cached_exchange_rate(asset_name.clone())?;
 
@@ -307,7 +307,7 @@ pub fn get_canister_id_by_name(canister_name: String) -> Result<Principal, Error
 #[query]
 pub async fn cycle_checker() -> Result<(Nat, Certificate), Error> {
     guard_admin_only()?;
-    let cert = get_certificate_witness("cycle_checker".to_string());
+    let cert = get_certificate_witness(CYCLE_CHECKER.to_string());
     Ok((Nat::from(api::canister_balance128()), cert))
 }
 

@@ -509,7 +509,7 @@ export default function Navbar({ isHomeNav }) {
     } else {
       const userFriendlyMessage =
         errorMessages[errorKey] || errorMessages.Default;
-      toast.error(`Supply failed: ${userFriendlyMessage}`, {
+      toast.error(`Transfer failed: ${userFriendlyMessage}`, {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,

@@ -117,7 +117,7 @@ const UserInformationPopup = ({
       ? Number(ledgerFee)
       : Number(ledgerFee) || 0;
 
-  const transactionFee = transferFee + ledgerFeeNumber/1e8;
+  const transactionFee = transferFee + ledgerFeeNumber / 1e8;
   const formatFee = (fee) => {
     const fixedFee = parseFloat(fee).toFixed(8);
     const parts = fixedFee.split(".");
@@ -378,7 +378,7 @@ const UserInformationPopup = ({
 
     const supplyAmount = BigInt(Math.round(amountToRepay * SCALING_FACTOR));
 
-   
+
     // If some values are regular numbers
     const totalAmount = BigInt(supplyAmount) + BigInt(Math.round(transferFee * SCALING_FACTOR)) + BigInt(ledgerFee);
     try {
@@ -614,7 +614,6 @@ const UserInformationPopup = ({
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        // If some values are regular numbers
         amount: BigInt(supplyAmount) + BigInt(Math.round(transferFee * SCALING_FACTOR)) + BigInt(ledgerFee),
         on_behalf_of: mappedItem?.principal?._arr,
         reward_amount: Math.trunc(rewardAmount * SCALING_FACTOR),
@@ -1127,7 +1126,7 @@ const UserInformationPopup = ({
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, liquidateTrigger]);
- useEffect(() => {
+  useEffect(() => {
     if (!selectedAsset || !ledgerActors) return;
 
     let ledgerActor;

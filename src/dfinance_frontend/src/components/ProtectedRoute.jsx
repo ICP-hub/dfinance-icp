@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children }) => {
     }
 
     if (isAuthenticated === undefined) {
-        return <div>Checking authentication...</div>;
+        return ;
     }
 
     return children || <Outlet />;

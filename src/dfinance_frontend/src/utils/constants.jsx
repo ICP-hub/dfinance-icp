@@ -89,17 +89,17 @@ export const DASHBOARD_TOP_NAV_LINK = [
     icon: "",
     testnet: false,
   },
-  // Faucet should only be visible when not in production
+
   ...(!isProduction
     ? [
-        {
-          id: 4,
-          title: "Faucet",
-          route: "/Faucet",
-          icon: "",
-          testnet: true,
-        },
-      ]
+      {
+        id: 4,
+        title: "Faucet",
+        route: "/Faucet",
+        icon: "",
+        testnet: true,
+      },
+    ]
     : []),
 ];
 
@@ -479,4 +479,5 @@ export const PERCENTAGE_FACTOR = 100;
 export const TRILION = 1000000000000;
 export const BILION = 1000000000;
 export const MILION = 1000000;
-export const Thousand=1000;
+export const Thousand = 1000;
+export const InitialFuaceLimit = 50000000000;

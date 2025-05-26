@@ -7,8 +7,10 @@ import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
 import { Plus, Minus, RefreshCw } from "lucide-react";
 import DFinance from "../../../public/home/favicon.png";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
+import { toggleDashboardRefresh } from "../../redux/reducers/dashboardDataUpdateReducer";
 const Footer = () => {
   /* ===================================================================================
    *                                  HOOKS
@@ -17,6 +19,7 @@ const Footer = () => {
   const navigate = useNavigate();
   const [zoomLevel, setZoomLevel] = useState(100);
   const ledgerActors = useSelector((state) => state.ledger);
+  const dispatch = useDispatch();
   /* ===================================================================================
    *                                 STATE-MANAGEMENT
    * =================================================================================== */
@@ -65,7 +68,7 @@ const Footer = () => {
       setLoading(true);
       const fee = await ledgerActor.icrc1_fee();
       const approval = await ledgerActor.icrc2_approve({
-         fee: fee ? [fee] : [],
+        fee: fee ? [fee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -104,6 +107,7 @@ const Footer = () => {
         29000000000
       );
       if ("Ok" in result) {
+        dispatch(toggleDashboardRefresh());
       } else if ("Err" in result) {
         console.error("Failed to create reserve:", result.Err);
         if (result.Err.InsufficientFunds) {
@@ -161,7 +165,7 @@ const Footer = () => {
   return (
     <div className="w-full bg-[#233D63] font-poppins mt-20">
       <footer className="w-full xl3:w-[80%] xl4:w-[60%] xl3:mx-auto px-3 xl:px-24 py-[3rem] pb-[6rem] relative">
-        {}
+
         <div className="absolute top-[-30%] md:top-[-110%] left-0 xl:w-auto xl:h-auto -z-10">
           <Ellipse
             position={"bottom-left"}
@@ -221,8 +225,8 @@ const Footer = () => {
                   {isApproved
                     ? "Approved"
                     : loading
-                    ? "Approving..."
-                    : "Approve"}
+                      ? "Approving..."
+                      : "Approve"}
                 </button>
 
                 <button
@@ -254,7 +258,7 @@ const Footer = () => {
           <div className="w-full md:w-3/12 text-white mb-5 md:mb-0 md:px-8 xl:px-24 text-sm mt-2">
             <h1 className="font-semibold">Follow us on</h1>
             <div className="flex gap-2 mt-6">
-              {}
+
               <a
                 target="_blank"
                 href="https://www.linkedin.com/company/dfinanceprotocol/posts/?feedView=all"
@@ -267,7 +271,7 @@ const Footer = () => {
                   />
                 </span>
               </a>
-              {}
+
               <a target="_blank" href="https://x.com/dfinance_app">
                 <span className="bg-[#77b0c8] p-2 w-8 h-8 flex items-center justify-center rounded-md">
                   <img

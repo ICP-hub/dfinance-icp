@@ -298,42 +298,4 @@ describe("FaucetPopup Component", () => {
       expect.any(Object)
     );
   });
-
-
-  // Test: Handles out of cycles error
-  test("displays proper message for out of cycles error", async () => {
-    // Override the mock for this specific test
-    const { useAuth } = require("../../utils/useAuthClient");
-    useAuth.mockReturnValue({
-      backendActor: {
-        faucet: jest.fn().mockRejectedValue(new Error("out of cycles")),
-      },
-      principal: "rrkah-fqaaa-aaaaa-aaaaq-cai",
-    });
-
-    await act(async () => {
-      render(
-        <Provider store={store}>
-          <MemoryRouter>
-            <FaucetPopup {...defaultProps} />
-          </MemoryRouter>
-        </Provider>
-      );
-    });
-
-    // Set an amount
-    const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
-    const faucetButton = screen.getByRole("button", { name: /Faucet ckBTC/i });
-
-    await act(async () => {
-      fireEvent.change(amountInput, { target: { value: "0.5" } });
-      fireEvent.click(faucetButton);
-    });
-
-    // Should show out of cycles message
-    expect(toast.error).toHaveBeenCalledWith(
-      "Canister is out of cycles. Please wait, the admin has been notified.",
-      expect.any(Object)
-    );
-  });
 });

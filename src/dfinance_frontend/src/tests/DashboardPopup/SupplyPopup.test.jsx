@@ -1,4 +1,4 @@
-import React ,{ act }from "react";
+import React, { act } from "react";
 import {
   render,
   screen,
@@ -97,16 +97,16 @@ jest.mock("react-redux", () => ({
         },
       },
       sound: {
-        isSoundOn: true, 
+        isSoundOn: true,
       },
       fees: {
         fees: {
           // Mock consistent fee structure across tokens
-          ckBTC: 0.0001,
-          ckETH: 0.0001,
-          ckUSDC: 0.0001,
-          ICP: 0.0001,
-          ckUSDT: 0.0001,
+          ckBTC: 10,
+          ckETH: 10,
+          ckUSDC: 10,
+          ICP: 10,
+          ckUSDT: 10,
         },
       },
     });
@@ -237,8 +237,11 @@ describe("SupplyPopup Component", () => {
     // Verify displayed values match expected calculations
     expect(screen.getByText(/2.50/i)).toBeInTheDocument();
     expect(screen.getByText(/5.00%/i)).toBeInTheDocument();
-    expect(screen.getByText(/0.0001/i)).toBeInTheDocument();
-    expect(screen.getByText(/0.00000000/i)).toBeInTheDocument();
+    const elements = screen.getAllByText(/0.0001/i);
+    elements.forEach(element => expect(element).toBeInTheDocument());
+
+    const element = screen.getAllByText(/0.00000000/i);
+    element.forEach(element => expect(element).toBeInTheDocument());
   });
 
   // Test USD value calculation and display

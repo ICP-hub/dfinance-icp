@@ -443,8 +443,7 @@ const Market = () => {
                             {/* Asset values */}
                             <p className="min-w-[70px] text-center">
                               {(() => {
-                                const assetSupply =
-                                  Number(item[1].Ok[0].asset_supply) / SCALING_FACTOR;
+                                const assetSupply = Number(item[1]?.Ok?.[0]?.asset_supply || 0) / SCALING_FACTOR;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -482,8 +481,7 @@ const Market = () => {
                             {/* Asset USD Conversions */}
                             <p className="font-light text-[12px] text-center">
                               {(() => {
-                                const assetSupply =
-                                  Number(item[1].Ok[0].asset_supply) / SCALING_FACTOR;
+                                const assetSupply = Number(item[1]?.Ok?.[0]?.asset_supply || 0) / SCALING_FACTOR;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -518,7 +516,7 @@ const Market = () => {
                               })()}
                             </p>
 
-                            { }
+
                           </div>
                           <div
                             className="lg:hidden justify-center ml-6"
@@ -536,13 +534,13 @@ const Market = () => {
 
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
-                          {(Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
+                          {(Number(item?.[1]?.Ok?.[0]?.current_liquidity_rate) *
                             100) /
                             SCALING_FACTOR <
                             0.01
                             ? "<0.01%"
                             : `${(
-                              (Number(item?.[1]?.Ok?.[0].current_liquidity_rate) *
+                              (Number(item?.[1]?.Ok?.[0]?.current_liquidity_rate) *
                                 100) /
                               SCALING_FACTOR
                             ).toFixed(2)}%`}
@@ -554,8 +552,7 @@ const Market = () => {
                             {/* Asset values */}
                             <p className="min-w-[150px] text-center">
                               {(() => {
-                                const assetBorrow =
-                                  Number(item[1].Ok[0].asset_borrow) / SCALING_FACTOR;
+                                const assetBorrow = Number(item[1]?.Ok?.[0]?.asset_borrow || 0) / SCALING_FACTOR;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -593,8 +590,7 @@ const Market = () => {
                             {/* USD Conversion Rates */}
                             <p className="font-light text-[12px] text-center">
                               {(() => {
-                                const assetBorrow =
-                                  Number(item[1].Ok[0].asset_borrow) / SCALING_FACTOR;
+                                const assetBorrow = Number(item[1]?.Ok?.[0]?.asset_borrow || 0) / SCALING_FACTOR;
                                 let usdRate = 0;
 
                                 switch (item[0]) {
@@ -635,12 +631,12 @@ const Market = () => {
                       <td className="p-3 align-center hidden lg:table-cell">
                         <div className="flex justify-center">
                           {" "}
-                          {(Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
+                          {(Number(item?.[1]?.Ok?.[0]?.borrow_rate) * 100) /
                             SCALING_FACTOR <
                             0.01
                             ? "<0.01%"
                             : `${(
-                              (Number(item?.[1]?.Ok?.[0].borrow_rate) * 100) /
+                              (Number(item?.[1]?.Ok?.[0]?.borrow_rate) * 100) /
                               SCALING_FACTOR
                             ).toFixed(2)}%`}
                         </div>
@@ -662,7 +658,7 @@ const Market = () => {
                 </tbody>
               </table>
             </div>
-            { }
+
 
             {showPopup && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
@@ -701,7 +697,7 @@ const Market = () => {
                         <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
-                              Number(selectedAssetData[1].Ok[0].asset_supply) /
+                              Number(selectedAssetData[1]?.Ok[0]?.asset_supply) /
                               SCALING_FACTOR
                             )}
                           </p>
@@ -709,7 +705,7 @@ const Market = () => {
                           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             $
                             {formatValue(
-                              (Number(selectedAssetData[1].Ok[0].asset_supply) /
+                              (Number(selectedAssetData[1]?.Ok[0]?.asset_supply) /
                                 SCALING_FACTOR) *
                               getUsdRate(selectedAssetData[0])
                             )}
@@ -723,7 +719,7 @@ const Market = () => {
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                           {" "}
                           {(Number(
-                            selectedAssetData[1].Ok[0].current_liquidity_rate
+                            selectedAssetData[1]?.Ok[0]?.current_liquidity_rate
                           ) *
                             100) /
                             SCALING_FACTOR <
@@ -731,7 +727,7 @@ const Market = () => {
                             ? "<0.01%"
                             : `${(
                               (Number(
-                                selectedAssetData[1].Ok[0].current_liquidity_rate
+                                selectedAssetData[1]?.Ok[0]?.current_liquidity_rate
                               ) *
                                 100) /
                               SCALING_FACTOR
@@ -746,7 +742,7 @@ const Market = () => {
                         <div className="flex flex-col items-end">
                           <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
                             {formatValue(
-                              Number(selectedAssetData[1].Ok[0].asset_borrow) /
+                              Number(selectedAssetData[1]?.Ok[0]?.asset_borrow) /
                               SCALING_FACTOR
                             )}
                           </p>
@@ -754,7 +750,7 @@ const Market = () => {
                           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             $
                             {formatValue(
-                              (Number(selectedAssetData[1].Ok[0].asset_borrow) /
+                              (Number(selectedAssetData[1]?.Ok[0]?.asset_borrow) /
                                 SCALING_FACTOR) *
                               getUsdRate(selectedAssetData[0])
                             )}
@@ -766,12 +762,12 @@ const Market = () => {
                           Borrow APY:
                         </p>
                         <p className="text-sm font-medium text-[#2A1F9D] dark:text-darkText">
-                          {(Number(selectedAssetData[1].Ok[0].borrow_rate) * 100) /
+                          {(Number(selectedAssetData[1]?.Ok[0]?.borrow_rate) * 100) /
                             SCALING_FACTOR <
                             0.01
                             ? "<0.01%"
                             : `${(
-                              (Number(selectedAssetData[1].Ok[0].borrow_rate) *
+                              (Number(selectedAssetData[1]?.Ok[0]?.borrow_rate) *
                                 100) /
                               SCALING_FACTOR
                             ).toFixed(2)}%`}

@@ -110,7 +110,7 @@ describe("DebtStatus Component", () => {
   test("handles empty liquidation users state", () => {
     const { rerender } = render(<DebtStatus />);
     
-    // Use fake timers to handle the component's setTimeout
+    //  fake timers to handle the component's setTimeout
     jest.useFakeTimers();
     setTimeout(() => {}, 1300);
     jest.runAllTimers();

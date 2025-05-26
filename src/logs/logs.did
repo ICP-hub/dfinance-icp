@@ -1,9 +1,0 @@
-type LogRecord = record { id : nat32; logs : vec text };
-type Result_9 = variant { Ok : vec LogRecord; Err : text };
-type Result_14 = variant { Ok; Err : text };
-
-service : {
-  
-  get_logs : () -> (Result_9) query;
-  receive_logs_batch : (vec record { nat32; vec text }) -> (Result_14);
-};

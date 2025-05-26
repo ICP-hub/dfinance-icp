@@ -133,7 +133,7 @@ pub struct AssetInfo {
  *
  * @param controller_id The principal ID of the controller.
  */
-#[derive(CandidType, Deserialize, Clone, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct InitArgs {
     pub controller_id: Principal, // for the test-token and dtoken cannisters which are going to be created dynamically
 }

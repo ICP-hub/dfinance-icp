@@ -27,9 +27,9 @@ fn call_test_function() {
     test_faucet(&pic, backend_canister,random_users.clone());
     test_supply(&pic, backend_canister,random_users.clone());
     test_borrow(&pic, backend_canister,random_users.clone());
-    // test_repay(&pic, backend_canister,random_users.clone());
-    // test_withdraw(&pic, backend_canister,random_users.clone());
-    // test_liquidation(&pic, backend_canister,random_users.clone());
+    test_repay(&pic, backend_canister,random_users.clone());
+    test_withdraw(&pic, backend_canister,random_users.clone());
+    test_liquidation(&pic, backend_canister,random_users.clone());
 }
 
 /*

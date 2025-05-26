@@ -1,7 +1,7 @@
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
 use crate::{constants::errors::Error, guards::api_limiter::request_limiter};
 use crate::declarations::structs::{ExecuteRepayParams, TokenAlert};
-use crate::guards::access_control::{guard_admin_only, guard_principal_not_anonymous};
+use crate::guards::access_control::{guard_admin_only, guard_optional_principal_not_anonymous, guard_principal_not_anonymous};
 
 use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::logic::borrow::repay;
@@ -50,9 +50,7 @@ pub async fn set_canister_id(canister_name: String, canister_id: Principal) -> R
 pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
     request_limiter()?;
 
-    if params.on_behalf_of == Some(Principal::anonymous()) {
-        return Err(Error::AnonymousPrincipal);
-    }
+    guard_optional_principal_not_anonymous(params.on_behalf_of)?;
 
     //lock the caller principal
     let _guard = CallerGuard::lock_principal(ic_cdk::caller())?;

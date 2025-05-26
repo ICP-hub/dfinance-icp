@@ -3,9 +3,7 @@ use crate::declarations::datatypes::{AssetInfo,FaucetReserves, ReserveData};
 use crate::constants::errors::Error;
 use crate::error;
 use crate::guards::access_control::{
-    guard_admin_only,
-    guard_prevent_anonymous,
-    guard_principal_not_anonymous
+    guard_admin_only, guard_optional_principal_not_anonymous, guard_prevent_anonymous, guard_principal_not_anonymous
 };
 use crate::info;
 use crate::protocol::utils::{
@@ -238,10 +236,7 @@ async fn get_user_account_data(
     debt_token_balance: Option<Vec<AssetData>>,
 ) -> Result<((Nat, Nat, Nat, Nat, Nat, Nat, bool),Certificate), Error> {
 
-    if on_behalf == Some(Principal::anonymous()) {
-        error!("Anonymous principal detected.");
-        return Err(Error::AnonymousPrincipal);
-    }
+    guard_optional_principal_not_anonymous(on_behalf)?;
 
     guard_prevent_anonymous()?;
 

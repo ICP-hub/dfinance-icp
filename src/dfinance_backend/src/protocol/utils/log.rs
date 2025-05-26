@@ -21,6 +21,14 @@ pub struct LogFlusher {
     pub user_key: String,
 }
 
+/**
+ * @title Log Level Enum
+ * @dev Represents different levels of logging severity.
+ * @enum LogLevel
+ * @values ERROR, WARN, INFO, DEBUG, TRACE
+ *
+ * @functionality Used to categorize log messages based on their severity.
+ */
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum LogLevel {
     ERROR = 0,
@@ -30,6 +38,12 @@ pub enum LogLevel {
     TRACE = 4,
 }
 
+/**
+ * @title Display Implementation for LogLevel
+ * @dev Implements the Display trait for LogLevel to provide a string representation.
+ *
+ * @functionality Converts the LogLevel enum values to their string equivalents.
+ */
 impl fmt::Display for LogLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -42,6 +56,13 @@ impl fmt::Display for LogLevel {
     }
 }
 
+/**
+ * @title Initialize Logging
+ * @dev Initializes the logging system based on the environment (production or development).
+ * @param is_production A boolean indicating if the environment is production.
+ *
+ * @functionality Sets the log level to INFO for production and DEBUG for development.
+ */
 pub fn init_logging(is_production: bool) {
     if is_production {
         set_log_level(LogLevel::INFO);
@@ -50,14 +71,29 @@ pub fn init_logging(is_production: bool) {
     }
 }
 
+
 static mut CURRENT_LOG_LEVEL: LogLevel = LogLevel::INFO;
 
+/**
+ * @title Set Log Level
+ * @dev Sets the current log level for the logging system.
+ * @param level The desired log level to set.
+ *
+ * @functionality Allows changing the log level dynamically at runtime.
+ */
 pub fn set_log_level(level: LogLevel) {
     unsafe {
         CURRENT_LOG_LEVEL = level;
     }
 }
 
+/**
+ * @title Get Log Level
+ * @dev Retrieves the current log level.
+ * @returns The current log level as a `LogLevel` enum.
+ *
+ * @functionality Provides access to the current logging level for conditional logging.
+ */
 pub fn get_log_level() -> LogLevel {
     unsafe { CURRENT_LOG_LEVEL }
 }

@@ -976,6 +976,13 @@ pub async fn get_asset_debt(
     )
 }
 
+/*
+ * @title User Normalized Supply
+ * @dev Calculates the normalized supply for a user based on the reserve data.
+ * @param reserve_data The reserve data containing current liquidity rate and last update timestamp.
+ * @returns The normalized supply as `Nat`.
+ * @functionality This function computes the user's normalized supply by applying linear interest calculations based on the reserve's current liquidity rate and last update timestamp.
+ */
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     trace!("calling user_normalized_supply");
     guard_prevent_anonymous()?;
@@ -1002,6 +1009,13 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+/*
+ * @title User Normalized Debt
+ * @dev Calculates the normalized debt for a user based on the reserve data.
+ * @param reserve_data The reserve data containing current borrow rate and last update timestamp.
+ * @returns The normalized debt as `Nat`.
+ * @functionality This function computes the user's normalized debt by applying compounded interest calculations based on the reserve's current borrow rate and last update timestamp.
+ */
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     trace!("calling user_normalized_debt");
     guard_prevent_anonymous()?;

@@ -61,6 +61,17 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
     Ok(())
 }
 
+/*
+ * @title Guard Optional Principal Not Anonymous
+ * @dev Ensures that the provided principal is not anonymous.
+ *      This function is used to restrict access to authorized users only.
+ *
+ * @param on_behalf The optional principal to check.
+ *
+ * @returns `Ok(())` if the principal is not anonymous, otherwise an error.
+ *
+ * @functionality Optional Principal Check
+ */
 pub fn guard_optional_principal_not_anonymous(on_behalf: Option<Principal>) -> Result<(), Error> {
     if on_behalf == Some(Principal::anonymous()) {
         return Err(Error::AnonymousPrincipal);
@@ -273,7 +284,7 @@ pub fn remove_user_role(user_id: Principal, role: String) -> Result<String, Erro
     mutate_state(|state| {
         let mut roles = match state.access_control.get(&user_id) {
             Some(Candid(existing)) => existing.clone(),
-            None => return Err(Error::UserRoleNotFound),
+            None => return Err(Error::UserNotFound),
         };
 
         if !roles.contains(&role) {

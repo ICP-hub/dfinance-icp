@@ -933,7 +933,7 @@ const DashboardComponent = () => {
         const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / SCALING_FACTOR;
         const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / SCALING_FACTOR;
 
-        const isEligibleA = (total_supply_A * 0.85).toFixed(8) * 0.85 > total_borrow_A;
+        const isEligibleA = (total_supply_A * 0.85).toFixed(8) > total_borrow_A;
         const isEligibleB = (total_supply_B * 0.85).toFixed(8) > total_borrow_B;
 
 

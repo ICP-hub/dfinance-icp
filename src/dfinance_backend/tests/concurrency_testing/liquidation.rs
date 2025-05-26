@@ -1,5 +1,5 @@
 use crate::utils::common_functions::{
-    fetch_reserve_data, get_user_principal2, get_users_principal, init_tracing,
+    fetch_reserve_data, get_users_principal, init_tracing,
     test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove,
 };
 use crate::utils::error as errors;
@@ -162,15 +162,11 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                     "execute_liquidation",
                     encode_one(liquidation_params).unwrap(), // Submit liquidation request with parameters
                 ).unwrap();
-            msg_ids.push(msg); // Store message ID for tracking the request
+            msg_ids.push(msg); 
         }
-        // let mut results = Vec::new();
-        for (j, msg_id) in msg_ids.into_iter().enumerate() {
+        for (_j, msg_id) in msg_ids.into_iter().enumerate() {
             let result = pic.await_call(msg_id).unwrap();
-            // results.push(res); // Store results of all liquidation requests
-            // }
 
-            // for result in results {
             match result {
                 WasmResult::Reply(response) => {
                     let liquidation_response: Result<Nat, errors::Error> =

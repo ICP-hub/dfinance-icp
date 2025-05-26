@@ -1,7 +1,6 @@
 
 use crate::declarations::datatypes::{AssetInfo,FaucetReserves, ReserveData};
 use crate::constants::errors::Error;
-use crate::error;
 use crate::guards::access_control::{
     guard_admin_only, guard_optional_principal_not_anonymous, guard_prevent_anonymous, guard_principal_not_anonymous
 };

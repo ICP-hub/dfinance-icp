@@ -22,7 +22,7 @@ use tracing::{info,error};
  * 5. Validates the state of reserves and user data before and after the supply operation.
  * 6. Handles scenarios where supply requests may fail due to insufficient approval or unexpected errors.
  */
-
+#[allow(dead_code)]
 pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {

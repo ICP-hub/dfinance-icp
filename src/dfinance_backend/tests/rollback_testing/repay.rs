@@ -23,7 +23,7 @@ use crate::utils::structs::*;
  * 6. Simulates repayment on behalf of another principal when applicable.
  * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
  */
-
+#[allow(dead_code)]
  pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {

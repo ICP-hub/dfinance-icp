@@ -14,7 +14,7 @@ use tracing::{info,error};
  * @dev Ensures that the supply function correctly processes asset supply requests, including handling collateral, amount validation, and edge cases such as asset approval errors or insufficient funds.
  * @functionality Confirms that the supply function performs as expected, rejecting invalid requests and successfully processing valid transactions.
  */
-
+#[allow(dead_code)]
 pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {

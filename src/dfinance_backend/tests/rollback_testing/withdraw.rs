@@ -23,7 +23,7 @@ use crate::utils::structs::*;
  * 4. Verifies that error messages are returned correctly if the withdrawal is unsuccessful or if the expected outcome does not match.
  * 5. Validates whether the balance is updated correctly after the withdrawal.
  */
-
+#[allow(dead_code)]
  pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {

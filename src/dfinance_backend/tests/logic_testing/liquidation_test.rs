@@ -176,7 +176,6 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
 
     ];
     init_tracing();
-    // let user_principal = get_user_principal();
     info!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );

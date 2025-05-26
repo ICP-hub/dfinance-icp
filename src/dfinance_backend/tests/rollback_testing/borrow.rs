@@ -21,7 +21,7 @@ use tracing::{info,error};
  * 4. Validates the borrow response and checks whether the balance is updated correctly.
  * 5. Handles cases where the borrow request may fail due to errors or unexpected conditions, including mismatched error messages.
  */
-
+#[allow(dead_code)]
  pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {

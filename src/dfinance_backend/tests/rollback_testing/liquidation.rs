@@ -97,7 +97,6 @@ use crate::utils::structs::*;
         },
     ];
     init_tracing();
-    let user_principal = get_user_principal();
     info!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );

@@ -3,8 +3,6 @@ use tracing::{info,error,debug};
 use std::ops::Mul;
 use crate::utils::{common_functions::init_tracing, constant_variables::*};
 
-
-//
 pub trait ScalingMath {
     fn scaled_mul(self, other: Self) -> Self;
 }

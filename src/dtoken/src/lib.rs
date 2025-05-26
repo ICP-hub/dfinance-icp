@@ -51,7 +51,7 @@ use icrc_ledger_types::{
 };
 use num_traits::{bounds::Bounded, ToPrimitive};
 use serde_bytes::ByteBuf;
-use std::{cell::RefCell, error::Error};
+use std::cell::RefCell;
 
 const MAX_MESSAGE_SIZE: u64 = 1024 * 1024;
 

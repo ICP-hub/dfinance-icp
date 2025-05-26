@@ -38,7 +38,6 @@ const DebtStatus = () => {
   const [assetBalances, setAssetBalances] = useState([]);
   const [liquidationUsers, setLiquidationUsers] = useState([]);
   const [liquidationLoading, setLiquidationLoading] = useState(true);
-  const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -57,7 +56,6 @@ const DebtStatus = () => {
   } = useAssetData();
 
   const {
-    getAllUsers,
     user,
     backendActor,
     createLedgerActor,
@@ -421,19 +419,7 @@ const DebtStatus = () => {
     })();
   }, []);
 
-  //Function to fetch  each user
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const usersData = await getAllUsers();
-        setUsers(usersData);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-    fetchUsers();
-  }, [getAllUsers, liquidateTrigger]);
-
+  
   //Function to fetch  data for each user
   useEffect(() => {
     console.log("Starting liquidation data loading process");

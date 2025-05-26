@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { showCaptchaToUser } from "../Captcha/showCaptchaToUser";
-import { SCALING_FACTOR } from '../../utils/constants';
+import { InitialFuaceLimit, SCALING_FACTOR } from '../../utils/constants';
 
 /**
  * FaucetPopup Component
@@ -55,11 +55,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [isCaptchaOpen, setIsCaptchaOpen] = useState(false);
 
   const initialLimits = {
-    ckBTC: 50000000000,
-    ckETH: 50000000000,
-    ckUSDC: 50000000000,
-    ICP: 50000000000,
-    ckUSDT: 50000000000,
+    ckBTC: InitialFuaceLimit,
+    ckETH: InitialFuaceLimit,
+    ckUSDC: InitialFuaceLimit,
+    ICP: InitialFuaceLimit,
+    ckUSDT: InitialFuaceLimit,
   };
 
   const initialUsages = {

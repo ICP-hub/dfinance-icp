@@ -544,11 +544,11 @@ const HealthFactorList = () => {
     const overviewData = [
       {
         Principal: selectedUser.principal,
-        "Total Collateral": selectedUser.totalCollateral.toFixed(2),
-        "Available Borrow": selectedUser.availableBorrow.toFixed(2),
+        "Total Collateral": formatValue(selectedUser.totalCollateral),
+        "Available Borrow": formatValue(selectedUser.availableBorrow),
         "Liquidation Threshold": selectedUser.liquidationThreshold.toFixed(2),
         "Health Factor": selectedUser.healthFactor,
-        "Total Debt": selectedUser.totalDebt.toFixed(2),
+        "Total Debt": formatValue(selectedUser.totalDebt),
       },
     ];
 
@@ -948,10 +948,10 @@ const HealthFactorList = () => {
                             : principal}
                         </td>
                         <td className="px-3 py-6 hidden sm:table-cell text-center">
-                          ${totalCollateral.toFixed(2)}
+                          {<span>${Number(totalCollateral.toFixed(2)).toLocaleString('en-US')}</span>}
                         </td>
                         <td className="px-3 py-6 hidden sm:table-cell text-center">
-                          ${totalDebt.toFixed(2)}
+                          {<span>${Number(totalDebt.toFixed(2)).toLocaleString('en-US')}</span>}
                         </td>
                         <td className="px-3 py-6 text-center">
                           <span
@@ -1121,14 +1121,14 @@ const HealthFactorList = () => {
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Total Collateral:
                 </span>
-                <span>${selectedUser.totalCollateral.toFixed(2)}</span>
+                <span>${Number(selectedUser.totalCollateral.toFixed(2)).toLocaleString('en-US')}</span>
               </p>
 
               <p className="text-sm flex justify-between sm:hidden">
                 <span className="text-[#4659CF] dark:text-darkTextSecondary dark:opacity-80">
                   Total Debt:
                 </span>
-                <span>${selectedUser.totalDebt.toFixed(2)}</span>
+                <span>${Number(selectedUser.totalDebt.toFixed(2)).toLocaleString('en-US')}</span>
               </p>
             </div>
 

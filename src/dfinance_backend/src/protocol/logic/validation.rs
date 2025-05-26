@@ -1,4 +1,6 @@
-use crate::api::inter_canister::{get_balance, get_icrc2_allowance, get_total_supply, get_transfer_fee};
+use crate::api::inter_canister::{
+    get_balance, get_icrc2_allowance, get_total_supply, get_transfer_fee,
+};
 use crate::constants::constant_variables::constants::SCALING_FACTOR;
 use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
 use crate::constants::errors::Error;
@@ -9,7 +11,9 @@ use crate::protocol::libraries::user::{
 };
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::{get_cached_exchange_rate, calculate_transfer_fee, update_token_price};
+use crate::protocol::utils::price::{
+    calculate_transfer_fee, get_cached_exchange_rate, update_token_price,
+};
 use crate::{debug, error, trace};
 use candid::{Nat, Principal};
 pub struct ValidationLogic;
@@ -52,7 +56,6 @@ impl ValidationLogic {
         let user_balance = get_balance(ledger_canister, user).await?;
 
         //checking if the user has enough wallet balance
-    
 
         if amount > user_balance {
             error!("Supply amount exceeds user balance.");
@@ -88,7 +91,8 @@ impl ValidationLogic {
 
         let total_supply = get_total_supply(d_token_canister_id).await?;
 
-        let total_supply_amount_accure = total_supply.clone() + reserve.accure_to_platform.clone() + amount;
+        let total_supply_amount_accure =
+            total_supply.clone() + reserve.accure_to_platform.clone() + amount;
         debug!(
             "User balance: {:?}, supply_cap: {:?}, reserve accure to platform = {}, total supply = {}, total supply with amount and accrue = {}",
             user_balance,
@@ -150,7 +154,6 @@ impl ValidationLogic {
             supplied_interest_rate,
             user_current_supply.clone().scaled_mul(supplied_interest_rate.clone())
         );
-        
 
         //checking if the user has enough supply
         if amount
@@ -158,7 +161,7 @@ impl ValidationLogic {
                 .clone()
                 .scaled_mul(supplied_interest_rate)
         {
-            error!("Withdraw amount exceeds current supply."); 
+            error!("Withdraw amount exceeds current supply.");
             return Err(Error::WithdrawMoreThanSupply);
         }
 
@@ -167,11 +170,11 @@ impl ValidationLogic {
         //fetching platfrom balance
         let platform_balance = get_balance(ledger_canister, platform_principal).await?;
 
-        debug!("platform balance: {:?}", platform_balance); 
+        debug!("platform balance: {:?}", platform_balance);
 
         //checking if plaform has enough balance
         if amount > platform_balance {
-            error!("Withdraw amount exceeds platform balance."); 
+            error!("Withdraw amount exceeds platform balance.");
             return Err(Error::LowPlatformBalance);
         }
 
@@ -183,7 +186,7 @@ impl ValidationLogic {
         debug!(
             "user collateral status for this token = {:?}",
             user_reserve.is_collateral
-        ); 
+        );
         if !user_reserve.is_collateral {
             return Ok(());
         }
@@ -201,14 +204,18 @@ impl ValidationLogic {
                     _a_borrow,
                     _zero_ltv_collateral,
                 )) => {
-                    debug!("total collateral = {}, total debt = {}, liquidation_threshold_var = {}", t_collateral, t_debt, liquidation_threshold); //debug
+                    debug!(
+                        "total collateral = {}, total debt = {}, liquidation_threshold_var = {}",
+                        t_collateral, t_debt, liquidation_threshold
+                    ); //debug
                     (t_collateral, t_debt, ltv, liquidation_threshold, h_factor)
                 }
                 Err(e) => return Err(e),
             };
 
         if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
-            let transfer_token_fee= calculate_transfer_fee(&reserve.asset_name.clone(),amount.clone())?;
+            let transfer_token_fee =
+                calculate_transfer_fee(&reserve.asset_name.clone(), amount.clone())?;
 
             amount = amount.clone() - transfer_token_fee.clone();
 
@@ -228,29 +235,30 @@ impl ValidationLogic {
             }
             debug!(
                 "withdraw asset price = {:?}, usd withdraw amount = {}, adjusted amount = {}",
-                rate,
-                usd_withdrawl,
-                adjusted_collateral
+                rate, usd_withdrawl, adjusted_collateral
             );
-            
-            //calculating the liquidation threshold
-            let avliq= liquidation_threshold_var.clone().scaled_mul(total_collateral.clone());
 
-            let mut templiq = avliq - usd_withdrawl.scaled_mul(reserve.configuration.liquidation_threshold.clone());
-            templiq =  templiq.scaled_div(adjusted_collateral.clone());
-            
+            //calculating the liquidation threshold
+            let avliq = liquidation_threshold_var
+                .clone()
+                .scaled_mul(total_collateral.clone());
+
+            let mut templiq = avliq
+                - usd_withdrawl.scaled_mul(reserve.configuration.liquidation_threshold.clone());
+            templiq = templiq.scaled_div(adjusted_collateral.clone());
+
             let mut new_ltv = Nat::from(ZERO_VALUE);
 
             //calculating the newe LTV with adjusted collateral
             if adjusted_collateral != Nat::from(0u128) {
                 new_ltv = total_debt.clone().scaled_div(adjusted_collateral.clone());
                 new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
-                debug!("New ltv {} and templiq : {}", new_ltv, templiq); 
+                debug!("New ltv {} and templiq : {}", new_ltv, templiq);
             }
 
             //checking if the LTV is greater than the liquidation threshold
             if new_ltv >= templiq {
-                error!("LTV is greater than liquidation threshold"); 
+                error!("LTV is greater than liquidation threshold");
                 return Err(Error::LTVGreaterThanThreshold);
             }
 
@@ -259,11 +267,11 @@ impl ValidationLogic {
                     adjusted_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
 
                 new_health_factor = new_health_factor.scaled_div(total_debt);
-                debug!("new health factor = {}", new_health_factor); 
+                debug!("new health factor = {}", new_health_factor);
 
                 //checking if the health factor
                 if new_health_factor < Nat::from(SCALING_FACTOR) {
-                    error!("Health factor is less than 1"); 
+                    error!("Health factor is less than 1");
                     return Err(Error::HealthFactorLess);
                 }
             }
@@ -303,20 +311,16 @@ impl ValidationLogic {
 
         let platform_principal = ic_cdk::api::id();
 
-
-
         //fetching the platform balance
         let platform_balance = get_balance(ledger_canister, platform_principal).await?;
         debug!(
             "amount in borrow = {}, platform balance: {:?}",
-            amount,
-            platform_balance
+            amount, platform_balance
         );
-        
 
         //checking if the platform has enough balance
         if amount > platform_balance {
-            error!("Borrow amount exceeds platform balance."); 
+            error!("Borrow amount exceeds platform balance.");
             return Err(Error::LowPlatformBalance);
         }
 
@@ -348,11 +352,15 @@ impl ValidationLogic {
         let adjusted_debt = total_debt.clone() + usd_borrow.clone();
 
         //calculating the liquidation threshold
-        let avliq= liquidation_threshold_var.clone().scaled_mul(total_collateral.clone());
+        let avliq = liquidation_threshold_var
+            .clone()
+            .scaled_mul(total_collateral.clone());
 
-        let mut templiq = avliq + usd_borrow.clone().scaled_mul(reserve.configuration.liquidation_threshold.clone());
-        templiq =  templiq.scaled_div(adjusted_debt.clone());
-        
+        let mut templiq = avliq
+            + usd_borrow
+                .clone()
+                .scaled_mul(reserve.configuration.liquidation_threshold.clone());
+        templiq = templiq.scaled_div(adjusted_debt.clone());
 
         //calculating the new LTV with adjusted debt
         let mut new_ltv: Nat;
@@ -360,21 +368,18 @@ impl ValidationLogic {
         new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
         debug!(
             "asset price = {}, usd borrow amount = {}, adjusted debt = {}, New ltv: {}",
-            rate,
-            usd_borrow,
-            adjusted_debt,
-            new_ltv
+            rate, usd_borrow, adjusted_debt, new_ltv
         );
-        
 
         //checking if the LTV is greater than the liquidation threshold
         if new_ltv >= templiq {
-            error!("LTV is greater than liquidation threshold"); 
+            error!("LTV is greater than liquidation threshold");
             return Err(Error::LTVGreaterThanThreshold);
         }
 
         //checking the health factor
-        let mut new_health_factor = total_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
+        let mut new_health_factor =
+            total_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
         new_health_factor = new_health_factor
             .scaled_div(adjusted_debt)
             .scaled_div(Nat::from(PERCENTAGE_FACTOR));
@@ -394,11 +399,8 @@ impl ValidationLogic {
                 .scaled_mul(reserve.debt_index.clone()));
         debug!(
             "new health factor = {}, borrow_cap: {:?}, final_total_borrow: {:?}",
-            new_health_factor,
-            borrow_cap,
-            final_total_borrow
+            new_health_factor, borrow_cap, final_total_borrow
         );
-        
 
         // Validating borrow cap limit
         if final_total_borrow >= borrow_cap {
@@ -470,7 +472,7 @@ impl ValidationLogic {
         }
         //checking if the user has enough wallet balance
         if amount > user_balance {
-            error!("Repay amount exceeds user balance."); 
+            error!("Repay amount exceeds user balance.");
             return Err(Error::LowWalletBalance);
         };
 
@@ -512,19 +514,27 @@ impl ValidationLogic {
         user_reserve_data: UserReserveData,
     ) -> Result<(), Error> {
         // Get the repay asset's debt token canister
-        let repay_asset_principal = repay_reserve_data.debt_token_canister.clone().ok_or_else(|| {
-            error!("No debt token canister ID found.");
-            Error::NoCanisterIdFound
-        })?;
-        let reward_asset_principal = reward_reserve_data.d_token_canister.clone().ok_or_else(|| {
-            error!("No d_token canister ID found.");
-            Error::NoCanisterIdFound
-        })?;
-        if !user_reserve_data.is_collateral{
+        let repay_asset_principal =
+            repay_reserve_data
+                .debt_token_canister
+                .clone()
+                .ok_or_else(|| {
+                    error!("No debt token canister ID found.");
+                    Error::NoCanisterIdFound
+                })?;
+        let reward_asset_principal =
+            reward_reserve_data
+                .d_token_canister
+                .clone()
+                .ok_or_else(|| {
+                    error!("No d_token canister ID found.");
+                    Error::NoCanisterIdFound
+                })?;
+        if !user_reserve_data.is_collateral {
             error!("User reserve asset is not collateral.");
             return Err(Error::NoCollateralFound);
         }
-        
+
         let user_dtoken_balance = get_balance(reward_asset_principal, user.clone()).await?;
         if user_dtoken_balance < reward_amount {
             error!("User collateral amount is less than the reward amount.");
@@ -539,19 +549,23 @@ impl ValidationLogic {
         let normalized_debt_amount = debt_amount.clone().scaled_mul(norm_debt);
         debug!(
             "Normalized debt: {:?}, User debt: {:?}, Repay amount: {:?}",
-            normalized_debt_amount,
-            debt_amount,
-            repay_amount
+            normalized_debt_amount, debt_amount, repay_amount
         );
-        
+
         let repay_ledger_canister_id = get_asset_principal(repay_asset.clone())?;
         // Check if repay amount exceeds normalized user debt
-         let transfer_token_fee = calculate_transfer_fee(&repay_asset, repay_amount.clone())?;
-        if (repay_amount.clone() - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee.clone())) > normalized_debt_amount {
-            error!("Repay amount exceeds user debt. {}", repay_amount.clone() - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee));
+        let transfer_token_fee = calculate_transfer_fee(&repay_asset, repay_amount.clone())?;
+        if (repay_amount.clone()
+            - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee.clone()))
+            > normalized_debt_amount
+        {
+            error!(
+                "Repay amount exceeds user debt. {}",
+                repay_amount.clone()
+                    - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee)
+            );
             return Err(Error::RepayMoreThanDebt);
         }
-        
 
         // Fetch liquidator's wallet balance
         let liquidator_wallet_balance =

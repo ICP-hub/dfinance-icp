@@ -3,29 +3,28 @@ use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACT
 use crate::constants::data_types::zero_nat_value;
 use crate::constants::errors::Error;
 use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::protocol::libraries::user::{register_user, user_normalized_supply};
-use crate::{debug, error, info, trace};
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
 use crate::guards::access_control::guard_principal_not_anonymous;
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled, get_reserve_data};
+use crate::protocol::libraries::reserve::{self, burn_scaled, get_reserve_data, mint_scaled};
 use crate::protocol::libraries::update::{user_data, user_reserve};
+use crate::protocol::libraries::user::{register_user, user_normalized_supply};
 use crate::protocol::logic::borrow::repay;
 use crate::protocol::logic::validation::ValidationLogic;
+use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
 use crate::protocol::utils::math_utils::ScalingMath;
+use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
+use crate::stable_storage::state_handler::insert_certified_value;
 use crate::stable_storage::storable::Candid;
+use crate::{debug, error, info, trace};
 use crate::{
-    declarations::structs::ExecuteSupplyParams,
-    protocol::libraries::update::UpdateLogic,
+    declarations::structs::ExecuteSupplyParams, protocol::libraries::update::UpdateLogic,
     stable_storage::state_handler::mutate_state,
 };
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
 
 /*
 -------------------------------------
@@ -281,8 +280,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             Ok(params.amount)
         }
         Err(e) => {
+            let mut liquidator_user_data = user_data(liquidator_principal)?;
+
             let mut liquidator_collateral_reserve =
-                user_reserve(&mut liquidator_data, &params.collateral_asset);
+                user_reserve(&mut liquidator_user_data, &params.collateral_asset);
 
             let mut liquidator_reserve_data = match liquidator_collateral_reserve.as_mut() {
                 Some((_, reserve_data)) => reserve_data,
@@ -343,8 +344,24 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 true,
             )
             .await?;
+ 
+            if let Some(ref mut reserves) = user_account_data.reserves {
+                if let Some((_, reserve)) = reserves
+                    .iter_mut()
+                    .find(|(name, _)| name == &params.collateral_asset)
+                {
+                    *reserve = user_reserve_data.clone();
+                }
+            }
 
             mutate_state(|state| {
+                state.user_profile.insert(
+                    liquidator_principal,
+                    Candid(liquidator_user_data.clone()),
+                );
+                state
+                    .user_profile
+                    .insert(user_principal, Candid(user_account_data.clone()));
                 state.asset_index.insert(
                     params.collateral_asset.clone(),
                     Candid(collateral_reserve_data.clone()),

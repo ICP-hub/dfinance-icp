@@ -4,7 +4,6 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/CustomHooks/useFormatNumber";
-import emailjs from "emailjs-com";
 import useAssetData from "../../components/CustomHooks/useAssets";
 import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/CustomHooks/useFetchBalanceBackend";
@@ -57,7 +56,6 @@ const DashboardCards = () => {
    * =================================================================================== */
 
   const [like, setLike] = useState(false);
-  // const [threshold] = useState(5000000000000);
 
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -844,7 +842,7 @@ const DashboardCards = () => {
                           Token Available:
                         </p>
                         <p className="text-sm font-bold  text-right">
-                          {Number(assetBalance).toFixed(2)}
+                          <span>${Number(assetBalance.toFixed(2)).toLocaleString('en-US')}</span>
                         </p>
                       </div>
 

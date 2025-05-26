@@ -108,7 +108,7 @@ const routes = [
       </MainDashboard>
     ),
   },
-  // --- Faucet route only when not production ---
+  
   !isProduction && {
     path: "/Faucet",
     element: (

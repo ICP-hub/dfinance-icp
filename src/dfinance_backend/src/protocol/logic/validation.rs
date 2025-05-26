@@ -187,8 +187,6 @@ impl ValidationLogic {
         if !user_reserve.is_collateral {
             return Ok(());
         }
-        //updating token price and store latest price in price cache
-        let _ = update_token_price(reserve.asset_name.clone()).await;
 
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {

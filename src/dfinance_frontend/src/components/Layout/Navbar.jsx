@@ -126,7 +126,9 @@ export default function Navbar({ isHomeNav }) {
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = Number(transferFeRetrive?.transferFee) || 0;
   const ledgerFeeNumber =
-    typeof ledgerFee === "bigint" ? Number(ledgerFee) : Number(ledgerFee) || 0;
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee) / 1e8
+      : Number(ledgerFee) / 1e8 || 0;
 
   const transactionFee = transferFee + ledgerFeeNumber;
   const approvalFee = transactionFee + ledgerFeeNumber;

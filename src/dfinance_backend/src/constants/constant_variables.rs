@@ -81,9 +81,18 @@ pub mod constants {
     pub const INITIAL_DEBT_INDEX: u128 = 100_000_000;
     pub const MIN_BORROW: u128 = 100;
     pub const ALL_USERS: &str = "all_users";
+    pub const PRICE_CACHE: &str = "price_cache";
+    pub const USER_NORMALIZED_SUPPLY: &str = "user_normalized_supply";
+    pub const USER_NORMALIZED_DEBT: &str = "user_normalized_debt";
+    pub const TOTAL_USERS: &str = "total_users";
+    pub const USER_ACCOUNT_DATA: &str = "user_account_data";
+    pub const CYCLE_CHECKER: &str = "cycle_checker";
+    pub const USER_BLOCKED: &str = "user_blocked";
+
 
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
+    pub const TRANSFER_FEE_VAR :&str = "transfer_fee";
 
 
     // -------------------Max Value Constants -------------------

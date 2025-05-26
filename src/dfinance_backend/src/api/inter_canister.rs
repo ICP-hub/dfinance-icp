@@ -240,6 +240,21 @@ pub async fn get_total_supply(canister_id: Principal) -> Result<Nat, Error> {
     }
 }
 
+/*
+ * @title Get ICRC-2 Allowance
+ * @notice Retrieves the allowance set by an owner for a spender using the ICRC-2 standard.
+ * @dev Calls the `icrc2_allowance` method on the ledger canister to fetch the approved allowance.
+ *      This is useful for verifying how many tokens a spender is allowed to transfer on behalf of the owner.
+ * @functionality Allowance query functionality using ICRC-2 standard
+ *
+ * @params
+ * - `ledger_canister_id` - The Principal of the ledger canister handling the asset.
+ * - `owner` - The Principal of the account providing the allowance.
+ * - `spender` - The Principal of the account receiving the allowance.
+ *
+ * @returns
+ * Returns the `Allowance` if successful, otherwise returns a descriptive error message.
+ */
 
 pub async fn get_icrc2_allowance(
     ledger_canister_id: Principal,

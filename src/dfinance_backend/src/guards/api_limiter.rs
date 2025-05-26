@@ -1,4 +1,4 @@
-use crate::constants::constant_variables::constants::{REQUEST_LIMIT, WINDOW_SIZE_VAR};
+use crate::constants::constant_variables::constants::{REQUEST_LIMIT, USER_BLOCKED, WINDOW_SIZE_VAR};
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::Certificate;
 use crate::protocol::utils::math_utils::current_timestamp;
@@ -35,7 +35,7 @@ pub fn is_user_blocked() -> Result<(bool, Certificate), Error> {
     guard_prevent_anonymous()?;
     let caller = ic_cdk::api::caller();
     let now = current_timestamp();
-    let cert = get_certificate_witness("user_blocked".to_string());
+    let cert = get_certificate_witness(USER_BLOCKED.to_string());
     let is_blocked = RATE_LIMITER.with(|map| {
         let map = map.borrow();
         let maybe_queue = map.get(&caller);

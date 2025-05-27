@@ -32,14 +32,21 @@ for ((i=1; i<=NUM_USERS; i++)); do
   echo "Faucet result: $faucet_result"
 
   # Approve the backend canister to spend tokens
-  approve_result=$(dfx canister call "$TOKEN_LEDGER_ID" icrc2_approve "(
+    approve_result=$(dfx canister call "$TOKEN_LEDGER_ID" icrc2_approve '(
     record {
-      amount = 900000000 : nat;
+      amount = 900000010 : nat;  
+      fee = opt 10;
       spender = record {
-        owner = principal \"$BACKEND_CANISTER_ID\";
+        owner = principal "'$BACKEND_CANISTER_ID'";
+        subaccount = null;
       };
+      from_subaccount = null;
+      created_at_time = null;
+      expected_allowance = null;
+      expires_at = null;
+      memo = null;
     }
-  )")
+  )')
   echo "Approve result: $approve_result"
 
   # Call the execute_supply function

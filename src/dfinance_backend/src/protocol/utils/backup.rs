@@ -21,16 +21,16 @@ use crate::guards::access_control::guard_controller_only;
 #[derive(Serialize, Deserialize)]
 struct Snapshot {
     asset_index: BTreeMap<String, ReserveData>,
-    faucet_data: BTreeMap<Principal, FaucetReserves>,
     user_profile: BTreeMap<Principal, UserData>,
     reserve_list: BTreeMap<String, Principal>,
-    price_cache_list: BTreeMap<String, PriceCache>,
     canister_list: BTreeMap<String, Principal>,
-    tester_list: BTreeMap<String, Principal>,
     meta_data: BTreeMap<String, InitArgs>,
-    admin_data: BTreeMap<Principal, String>,
+    tester_list: BTreeMap<String, Principal>,
+    access_control: BTreeMap<Principal, Vec<String>>,
     asset_records: BTreeMap<String, AssetInfo>,
+    faucet_data: BTreeMap<Principal, FaucetReserves>,
 }
+
 
 /**
  * BackupData struct encapsulates backup payload for inter-canister communication.
@@ -54,20 +54,21 @@ fn export_snapshot() -> String {
     read_state(|state| {
         let snapshot = Snapshot {
             asset_index: state.asset_index.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
-            faucet_data: state.faucet_data.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
             user_profile: state.user_profile.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
             reserve_list: state.reserve_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            price_cache_list: state.price_cache_list.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
             canister_list: state.canister_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            tester_list: state.tester_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
             meta_data: state.meta_data.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
-            admin_data: state.admin_data.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            tester_list: state.tester_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            access_control: state.access_control.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
             asset_records: state.asset_records.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
+            faucet_data: state.faucet_data.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
         };
 
         serde_json::to_string(&snapshot).expect("Serialization failed")
     })
 }
+
+
 
 
 /**
@@ -84,44 +85,38 @@ pub fn import_snapshot(snapshot_json: &str) {
         .expect("Failed to parse snapshot JSON");
 
     mutate_state(|state| {
-    if !state.asset_index.is_empty() {
-        state.asset_index.clear_new();
-    }
-    if !state.faucet_data.is_empty() {
-        state.faucet_data.clear_new();
-    }
-    if !state.user_profile.is_empty() {
-        state.user_profile.clear_new();
-    }
-    if !state.reserve_list.is_empty() {
-        state.reserve_list.clear_new();
-    }
-    if !state.price_cache_list.is_empty() {
-        state.price_cache_list.clear_new();
-    }
-    if !state.canister_list.is_empty() {
-        state.canister_list.clear_new();
-    }
-    if !state.tester_list.is_empty() {
-        state.tester_list.clear_new();
-    }
-    if !state.meta_data.is_empty() {
-        state.meta_data.clear_new();
-    }
-    if !state.admin_data.is_empty() {
-        state.admin_data.clear_new();
-    }
-    if !state.asset_records.is_empty() {
-        state.asset_records.clear_new();
-    }
-});
+        if !state.asset_index.is_empty() {
+            state.asset_index.clear_new();
+        }
+        if !state.user_profile.is_empty() {
+            state.user_profile.clear_new();
+        }
+        if !state.reserve_list.is_empty() {
+            state.reserve_list.clear_new();
+        }
+        if !state.canister_list.is_empty() {
+            state.canister_list.clear_new();
+        }
+        if !state.meta_data.is_empty() {
+            state.meta_data.clear_new();
+        }
+        if !state.tester_list.is_empty() {
+            state.tester_list.clear_new();
+        }
+        if !state.access_control.is_empty() {
+            state.access_control.clear_new();
+        }
+        if !state.asset_records.is_empty() {
+            state.asset_records.clear_new();
+        }
+        if !state.faucet_data.is_empty() {
+            state.faucet_data.clear_new();
+        }
+    });
 
     mutate_state(|state| {
         for (k, v) in snapshot.asset_index {
             state.asset_index.insert(k, Candid(v));
-        }
-        for (k, v) in snapshot.faucet_data {
-            state.faucet_data.insert(k, Candid(v));
         }
         for (k, v) in snapshot.user_profile {
             state.user_profile.insert(k, Candid(v));
@@ -129,26 +124,28 @@ pub fn import_snapshot(snapshot_json: &str) {
         for (k, v) in snapshot.reserve_list {
             state.reserve_list.insert(k, v);
         }
-        for (k, v) in snapshot.price_cache_list {
-            state.price_cache_list.insert(k, Candid(v));
-        }
         for (k, v) in snapshot.canister_list {
             state.canister_list.insert(k, v);
-        }
-        for (k, v) in snapshot.tester_list {
-            state.tester_list.insert(k, v);
         }
         for (k, v) in snapshot.meta_data {
             state.meta_data.insert(k, Candid(v));
         }
-        for (k, v) in snapshot.admin_data {
-            state.admin_data.insert(k, v);
+        for (k, v) in snapshot.tester_list {
+            state.tester_list.insert(k, v);
+        }
+        for (k, v) in snapshot.access_control {
+            state.access_control.insert(k, Candid(v));
         }
         for (k, v) in snapshot.asset_records {
             state.asset_records.insert(k, Candid(v));
         }
+        for (k, v) in snapshot.faucet_data {
+            state.faucet_data.insert(k, Candid(v));
+        }
     });
 }
+
+
 
 
 /**

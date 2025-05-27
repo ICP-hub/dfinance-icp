@@ -678,14 +678,19 @@ const MobileTopNav = ({
 
     // Define async function inside useEffect
     const fetchFee = async () => {
-      try {
-        const fee = await ledgerActor?.icrc1_fee();
-        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-        const feeBigInt = BigInt(Math.round(feeAsNumber));
-        setLedgerFee(feeBigInt);
-      } catch (error) {
-        console.error(`Error getting fee for ${asset}:`, error);
+
+      const fee = await ledgerActor?.icrc1_fee();
+      const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+
+      if (isNaN(feeAsNumber)) {
+        console.error("Invalid fee value:", fee);
+        return;
       }
+
+      const feeBigInt = BigInt(Math.round(feeAsNumber));
+
+      setLedgerFee(feeBigInt);
+
     };
 
     // Call the async function

@@ -1,5 +1,5 @@
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LOG_CANISTER_NAME};
+use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, DATA_STORAGE_CANISTER_NAME};
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
 use candid::Principal;
@@ -226,12 +226,12 @@ impl Drop for LogFlusher {
             return;
         }
         
-        // Get the logs canister ID
-        let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+        // Get the data_storage canister ID
+        let data_storage_canister_id = match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
             Ok(id) => id,
             Err(_) => {
                 // Reset the flag if we couldn't get the canister ID
-                error!("❌ Failed to get logs canister ID. Aborting flush operation.");
+                error!("❌ Failed to get data_storage canister ID. Aborting flush operation.");
                 FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
                 return;
             }
@@ -254,7 +254,7 @@ impl Drop for LogFlusher {
                 // Count logs in this batch
                 let batch_size = batch_logs.values().map(|v| v.len()).sum::<usize>();
                 
-                match send_log_to_logs_canister(batch_logs.clone(), logs_canister_id).await {
+                match send_log_to_logs_canister(batch_logs.clone(), data_storage_canister_id).await {
                     Ok(_) => {
                         total_logs_flushed += batch_size;
                         
@@ -417,21 +417,21 @@ pub enum LogError {
 }
 
 /**
- * @title Send Logs to Logs Canister
- * @dev Sends a batch of logs to the specified logs canister for processing.
+ * @title Send Logs to data_storage canister
+ * @dev Sends a batch of logs to the specified data_storage canister for processing.
  * @param logs The logs to be sent, in the form of a `HashMap<u32, Vec<String>>`.
- * @param logs_canister_id The principal ID of the logs canister where logs should be sent.
- * @returns `Ok(())` if the logs are successfully received by the logs canister, or an error if the process fails.
+ * @param data_storage_canister_id The principal ID of the data_storage canister where logs should be sent.
+ * @returns `Ok(())` if the logs are successfully received by the data_storage canister, or an error if the process fails.
  * @throws LogError::Rejected if the logs are rejected by the canister or the inter-canister call fails.
  *
- * @functionality Makes an inter-canister call to the `receive_logs_batch` function of the logs canister. If the call succeeds, it returns `Ok(())`; otherwise, it logs the error and returns a `LogError::Rejected` error.
+ * @functionality Makes an inter-canister call to the `receive_logs_batch` function of the data_storage canister. If the call succeeds, it returns `Ok(())`; otherwise, it logs the error and returns a `LogError::Rejected` error.
  */
 pub async fn send_log_to_logs_canister(
     logs: HashMap<u32, Vec<String>>,
-    logs_canister_id: Principal,
+    data_storage_canister_id: Principal,
 ) -> Result<(), LogError> {
     match call::<(HashMap<u32, Vec<String>>,), (Result<(), String>,)>(
-        logs_canister_id,
+        data_storage_canister_id,
         "receive_logs_batch",
         (logs,)
     ).await {
@@ -449,11 +449,11 @@ pub async fn send_log_to_logs_canister(
 
 /**
  * @title Clear Temporary Logs
- * @dev Clears the temporary logs by sending them to the designated logs canister.
- * @functionality Retrieves logs in batches, sends them to the logs canister, and removes successfully sent logs from the state. The process is repeated until all logs are cleared or an error occurs.
+ * @dev Clears the temporary logs by sending them to the designated data_storage canister.
+ * @functionality Retrieves logs in batches, sends them to the data_storage canister, and removes successfully sent logs from the state. The process is repeated until all logs are cleared or an error occurs.
  */
 pub fn clear_temp_log() {
-    let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+    let data_storage_canister_id = match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
         Ok(id) => id,
         Err(_) => return,
     };
@@ -466,7 +466,7 @@ pub fn clear_temp_log() {
                 break;
             }
 
-            let result = send_log_to_logs_canister(all_logs.clone(), logs_canister_id).await;
+            let result = send_log_to_logs_canister(all_logs.clone(), data_storage_canister_id).await;
 
             if result.is_ok() {
                 info!("✅ Batch logs sent successfully (clear temp log).");

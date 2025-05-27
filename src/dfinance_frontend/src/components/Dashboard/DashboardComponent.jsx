@@ -2921,7 +2921,7 @@ const DashboardComponent = () => {
                         className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 `}
                       >
                         <div>
-                          {(showAllAssets || hasVisibleAssets) && (
+                          {(showAllAssets || hasVisibleAssets || !showAllAssets) && (
                             <div className="grid grid-cols-4 items-center text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10 mt-4 gap-6">
                               {MY_ASSET_TO_SUPPLY_TABLE_COL.map(
                                 (item, index) => (

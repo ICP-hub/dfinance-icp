@@ -113,11 +113,11 @@ export TOKEN_NAME="debttoken"
 
 
 # -----------------------------
-# Deploy logs canister
+# Deploy data_storage canister
 # -----------------------------
-dfx canister create logs --network ic || exit 1
-dfx build logs --network ic || exit 1
-dfx deploy logs --network ic || exit 1
+dfx canister create data_storage --network ic || exit 1
+dfx build data_storage --network ic || exit 1
+dfx deploy data_storage --network ic || exit 1
 
 
 # -------------------------------
@@ -129,18 +129,18 @@ dfx deploy dfinance_backend --network ic --argument "(
 )" || exit 1
 
 # -----------------------------
-# Add backend canister the controller of the logs canister
+# Add backend canister the controller of the data_storage canister
 # -----------------------------
 BACKEND_CANISTER_ID=$(dfx canister id dfinance_backend --network ic)
-dfx canister update-settings logs --add-controller "$BACKEND_CANISTER_ID" --network ic
+dfx canister update-settings data_storage --add-controller "$BACKEND_CANISTER_ID" --network ic
 
 # -------------------------------
-# Set xrc and log canister ID
+# Set xrc and data_storage canister ID
 # -------------------------------
 XRC_CANISTER_ID=uf6dk-hyaaa-aaaaq-qaaaq-cai
-LOGS_CANISTER_ID=$(dfx canister id logs --network ic)
+DATA_STORAGE_CANISTER_ID=$(dfx canister id data_storage --network ic)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"  --network ic || exit 1
-dfx canister call dfinance_backend set_canister_id "(\"logs\", principal \"$LOGS_CANISTER_ID\")" --network ic || exit 1
+dfx canister call dfinance_backend set_canister_id "(\"data_storage\", principal \"$DATA_STORAGE_CANISTER_ID\")" --network ic || exit 1
 
 # Final deployment step
 dfx deploy --network ic || exit 1

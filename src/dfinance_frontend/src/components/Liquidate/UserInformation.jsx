@@ -525,7 +525,7 @@ const UserInformationPopup = ({
         return response;
       }
     } catch (error) {
-      console.error("Error in handleMaxCollateral:", error.message);
+      console.warn("Error in handleMaxCollateral:", error.message);
     }
   };
 
@@ -784,7 +784,7 @@ const UserInformationPopup = ({
         message.includes("reject text: canister");
       const isMaxAmountExceeded = message.includes("MaxAmount");
       const isLessRewardAmount = message.includes("LessRewardAmount");
-
+      const RepayMoreThanDebt = message.includes("RepayMoreThanDebt");
       if (isPanicError) {
         setShowPanicPopup(true);
         setShowWarningPopup(false);
@@ -812,6 +812,17 @@ const UserInformationPopup = ({
         });
       } else if (isLessRewardAmount) {
         toast.error("Reward amount is too low for liquidation.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (RepayMoreThanDebt) {
+        toast.error("Amount to repay is more then debt .", {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,

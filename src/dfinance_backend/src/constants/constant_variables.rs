@@ -42,7 +42,6 @@ pub mod constants {
 
     // ------------------- Logs Constants -------------------
     pub const BATCH_SIZE: usize = 1000;
-    pub const LOG_CANISTER_NAME: &str = "logs";
     pub const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
     pub const LOGS_LIMIT: u64 = 1000u64;
 
@@ -112,4 +111,8 @@ pub mod constants {
     pub const CAPTCHA_LIFETIME: u64 = 1 * 60 * 1_000_000_000; // 1 minute in nanoseconds
     pub const CAPTCHA_THRESHOLD: usize = 5;
     pub const CAPTCHA_HARDNESS: u8 = 32;
+
+    //-------------------- Miscellaneous Constants -------------------
+    pub const DATA_STORAGE_CANISTER_NAME: &str = "data_storage";
+
 }

@@ -601,7 +601,7 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
         });
     }
 
-        let backend_canister_id = match icrc1_minting_account() {
+    let backend_canister_id = match icrc1_minting_account() {
         Some(account) => account.owner,
         None => {
             return Err(TransferFromError::GenericError {
@@ -623,7 +623,12 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
         let result: Result<(bool,), _> = call(
             backend_canister_id,
             "is_transfer_allowed",
-            (arg.from.owner,arg.to.owner, asset_name.clone(), arg.amount.clone()),
+            (
+                arg.from.owner,
+                arg.to.owner,
+                asset_name.clone(),
+                arg.amount.clone(),
+            ),
         )
         .await;
 
@@ -645,24 +650,62 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
         }
     }
 
-    execute_transfer(
+    let transfer_result = execute_transfer(
         arg.from,
         arg.to,
         Some(spender_account),
-        arg.fee,
-        arg.amount,
-        arg.memo,
+        arg.fee.clone(),
+        arg.amount.clone(),
+        arg.memo.clone(),
         arg.created_at_time,
     )
-    .await
-    .map_err(convert_transfer_error)
-    .map_err(|err| {
-        let err: TransferFromError = match err.try_into() {
-            Ok(err) => err,
-            Err(err) => ic_cdk::trap(&err),
-        };
-        err
-    })
+    .await;
+    let transfer_outcome = transfer_result
+        .map_err(convert_transfer_error)
+        .map_err(|err| {
+            let err: TransferFromError = match err.try_into() {
+                Ok(err) => err,
+                Err(err) => ic_cdk::trap(&err),
+            };
+            err
+        });
+
+    // If transfer failed, update backend and rollback
+    if let Err(ref _transfer_error) = transfer_outcome {
+        if !ic_cdk::api::is_controller(&caller) {
+            let _ = call::<_, (bool,)>(
+                backend_canister_id,
+                "users_transfer_changes",
+                (arg.from.owner, arg.to.owner, asset_name, arg.amount.clone()),
+            )
+            .await;
+
+            // Attempt to rollback (reverse transfer)
+            let rollback_result = execute_transfer(
+                arg.to.clone(),   // from
+                arg.from.clone(), // to
+                None,
+                arg.fee.clone(),
+                arg.amount.clone(),
+                arg.memo.clone(),
+                arg.created_at_time,
+            )
+            .await;
+
+            if rollback_result.is_err() {
+                return Err(TransferFromError::GenericError {
+                    message: "CRITICAL: Transfer failed and rollback also failed.".to_string(),
+                    error_code: Nat::from(999u32),
+                });
+            }
+
+            return Err(TransferFromError::GenericError {
+                message: "Backend update failed. Transfer reverted.".to_string(),
+                error_code: Nat::from(11u32),
+            });
+        }
+    }
+    transfer_outcome
 }
 
 #[query]
@@ -747,15 +790,6 @@ fn get_data_certificate() -> DataCertificate {
 #[update]
 #[candid_method(update)]
 async fn icrc2_approve(arg: ApproveArgs) -> Result<Nat, ApproveError> {
-    let caller = ic_cdk::api::caller();
-    let platform_principal = ic_cdk::api::id();
-
-    // if caller != platform_principal && !ic_cdk::api::is_controller(&caller) {
-    //     return Err(ApproveError::GenericError {
-    //         message: "Unauthorized access.".to_string(),
-    //         error_code: Nat::from(2u32),
-    //     });
-    // }
 
     let block_idx = Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());

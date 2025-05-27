@@ -106,7 +106,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: true,
             expected_error_message: None,
         },
-        // // Health factor is falling below 1
+        // Reward higher than calculated
         TestCase {
             debt_asset: "ckETH".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -116,7 +116,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Reward is higher than expected".to_string()),
         },
-        // //  Invalid asset
+        //  Invalid asset
         TestCase {
             debt_asset: "XYZ".to_string(),
             collateral_asset: "XYZ".to_string(),
@@ -126,7 +126,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),
         },
-        // // Anonymous principals are not allowed
+        //Anonymous principals are not allowed
         TestCase {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -136,7 +136,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Anonymous principals are not allowed".to_string()),
         },
-        // // Zero amount
+        //Zero amount
         TestCase {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ICP".to_string(),

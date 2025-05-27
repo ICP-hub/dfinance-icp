@@ -97,7 +97,6 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             // Simulate 5 concurrent calls
             let mut msg_ids = vec![];
             for _ in 0..5 {
-                // Supply parameters
                 let supply_params = ExecuteSupplyParams {
                     asset: case.asset.clone(),
                     amount: case.amount.clone(), // 5 ICP (transfer fee included)

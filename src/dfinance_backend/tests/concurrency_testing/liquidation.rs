@@ -68,7 +68,6 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         },
     ];
     init_tracing();
-    // let user_principal = get_user_principal2();
     info!("\n======================== Starting IC Liquidation Tests ========================\n");
     test_create_user_reserve_with_low_health(pic, backend_canister); // Create user reserves for liquidation tests
 

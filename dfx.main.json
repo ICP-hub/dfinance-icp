@@ -77,9 +77,9 @@
       "package": "debttoken",
       "type": "rust"
     },
-    "logs": {
-      "candid": "src/logs/logs.did",
-      "package": "logs",
+    "data_storage": {
+      "candid": "src/data_storage/data_storage.did",
+      "package": "data_storage",
       "type": "rust"
     },
     "dfinance_frontend": {

@@ -41,7 +41,7 @@ use tracing::{info,error};
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(2_000_000_000u128), // 100 ICP (transfer fee included)
+            amount: Nat::from(2_000_000_000u128), // 20 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },

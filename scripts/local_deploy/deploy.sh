@@ -113,11 +113,11 @@ echo "Token Name: $TOKEN_NAME"
  }})"
 
 # -----------------------------
-# Deploy logs canister
+# Deploy data_storage canister
 # -----------------------------
-dfx canister create logs
-dfx build logs
-dfx deploy logs
+dfx canister create data_storage
+dfx build data_storage
+dfx deploy data_storage
 
 
 # -----------------------------
@@ -138,19 +138,19 @@ dfx deploy dfinance_backend --argument "(
 )"
 
 # -----------------------------
-# Add backend canister the controller of the logs canister
+# Add backend canister the controller of the data_storage canister
 # -----------------------------
 BACKEND_CANISTER_ID=$(dfx canister id dfinance_backend)
-dfx canister update-settings logs --add-controller "$BACKEND_CANISTER_ID"
+dfx canister update-settings data_storage --add-controller "$BACKEND_CANISTER_ID"
 
 
 # -------------------------------
 # Set xrc and log canister ID
 # -------------------------------
 XRC_CANISTER_ID=$(dfx canister id xrc)
-LOGS_CANISTER_ID=$(dfx canister id logs)
+DATA_STORAGE_CANISTER_ID=$(dfx canister id data_storage)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
-dfx canister call dfinance_backend set_canister_id "(\"logs\", principal \"$LOGS_CANISTER_ID\")"
+dfx canister call dfinance_backend set_canister_id "(\"data_storage\", principal \"$DATA_STORAGE_CANISTER_ID\")"
 dfx canister call dfinance_backend admin_restart_reset_task
 
 # Final deploy

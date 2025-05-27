@@ -4,7 +4,7 @@ members = [
     "src/dtoken", 
     "src/debttoken", 
     "src/token_ledger",
-    "src/logs",
+    "src/data_storage",
 ]
 resolver = "2"
 

@@ -45,25 +45,25 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(4_000u128), // 0.004 ckBTC
+            amount: Nat::from(4_000u128), // 0.00004 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(4_000u128), // 0.004 ckBTC
+            amount: Nat::from(4_000u128), // 0.00004 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(400_000u128), // 4 ckUSDC
+            amount: Nat::from(400_000u128), // 0.004 ckUSDC
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000u128), // 30 USDT
+            amount: Nat::from(30_000_000u128), // 0.3 USDT
             expect_success: true,
             expected_error_message: None,
         },

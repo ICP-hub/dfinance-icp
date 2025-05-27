@@ -52,14 +52,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(400u128), // 0.004 ckBTC
+            amount: Nat::from(400u128), // 0.000004 ckBTC
             can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(10_000_000u128), // 100 ckUSDC
+            amount: Nat::from(10_000_000u128), // 0.1 ckUSDC
             can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,

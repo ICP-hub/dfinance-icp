@@ -1,26 +1,29 @@
 use crate::api::inter_canister::get_balance;
-use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{
-    validate_asset_name, validate_negatige_value,
+use crate::constants::{
+    constant_variables::constants::PERCENTAGE_FACTOR,
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_negatige_value}
 };
-use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData};
-use crate::declarations::datatypes::{UserData, UserReserveData};
-use crate::declarations::structs::{
-    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+use crate::declarations::{
+    datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData, UserData, UserReserveData},
+    structs::{ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams}
 };
-use crate::guards::access_control::guard_principal_not_anonymous;
-use crate::guards::api_limiter::request_limiter;
-use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
-use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::protocol::utils::price::get_exchange_rates;
-use crate::stable_storage::state_handler::insert_certified_value;
+use crate::guards::{
+    access_control::guard_principal_not_anonymous,
+    api_limiter::request_limiter
+};
+use crate::protocol::{
+    libraries::reserve::{burn_scaled, mint_scaled},
+    libraries::user::{calculate_user_account_data, register_user},
+    utils::log::{log_internal, LogLevel, LogFlusher},
+    utils::math_utils::{current_timestamp, ScalingMath},
+    utils::price::get_exchange_rates
+};
 use crate::stable_storage::{
     state_handler::{mutate_state, read_state},
     storable::Candid,
+    state_handler::insert_certified_value,
 };
 use crate::{debug, error, info};
 use candid::{Nat, Principal};

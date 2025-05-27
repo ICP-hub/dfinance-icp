@@ -1,28 +1,32 @@
 use crate::api::inter_canister::get_balance;
-use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR};
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::constants::{
+    constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR},
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value},
+};
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
-use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
-use crate::guards::access_control::guard_principal_not_anonymous;
-use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, burn_scaled, get_reserve_data, mint_scaled};
-use crate::protocol::libraries::update::{user_data, user_reserve};
-use crate::protocol::libraries::user::{register_user, user_normalized_supply};
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams};
+use crate::guards::{
+    access_control::guard_principal_not_anonymous,
+    api_limiter::request_limiter,
+    locks_handler::CallerGuard,
+};
+use crate::protocol::libraries::{
+    reserve::{self, burn_scaled, get_reserve_data, mint_scaled},
+    update::{user_data, user_reserve, UpdateLogic},
+    user::{register_user, user_normalized_supply},
+};
 use crate::protocol::logic::borrow::repay;
 use crate::protocol::logic::validation::ValidationLogic;
-use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
-use crate::stable_storage::state_handler::insert_certified_value;
+use crate::protocol::utils::{
+    log::{log_internal, LogFlusher, LogLevel},
+    math_utils::ScalingMath,
+    price::{calculate_transfer_fee, get_cached_exchange_rate},
+};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info, trace};
-use crate::{
-    declarations::structs::ExecuteSupplyParams, protocol::libraries::update::UpdateLogic,
-    stable_storage::state_handler::mutate_state,
-};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
 

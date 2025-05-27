@@ -1,0 +1,11 @@
+type BackupData = record { data : text; upload_time : nat64 };
+type LogRecord = record { id : nat32; logs : vec text };
+type Result = variant { Ok : BackupData; Err : text };
+type Result_1 = variant { Ok : vec LogRecord; Err : text };
+type Result_2 = variant { Ok; Err : text };
+service : () -> {
+  get_data_backup : (nat64) -> (Result) query;
+  get_logs : () -> (Result_1) query;
+  receive_data_backup : (BackupData) -> (Result_2);
+  receive_logs_batch : (vec record { nat32; vec text }) -> (Result_2);
+}

@@ -10,10 +10,10 @@ use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
 use crate::rollback_testing::faucet::test_faucet;
-// use crate::rollback_testing::supply::test_supply;
-// use crate::rollback_testing::borrow::test_borrow;
-// use crate::rollback_testing::repay::test_repay;
-// use crate::rollback_testing::withdraw::test_withdraw;
+use crate::rollback_testing::supply::test_supply;
+use crate::rollback_testing::borrow::test_borrow;
+use crate::rollback_testing::repay::test_repay;
+use crate::rollback_testing::withdraw::test_withdraw;
 use crate::rollback_testing::liquidation::test_liquidation;
 use tracing::{info,error};
 
@@ -41,7 +41,7 @@ fn setup() -> (PocketIc, Principal) {
     pic.install_canister(
         backend_canister,
         wasm,
-        candid::encode_one(Principal::anonymous()).unwrap(),
+        candid::encode_one(user_principal).unwrap(),
         Some(Principal::anonymous()),
     );
     let _ = pocket_ic::PocketIc::set_controllers(
@@ -62,8 +62,6 @@ fn setup() -> (PocketIc, Principal) {
         Ok(wasm_result) => match wasm_result {
             WasmResult::Reply(bytes) => {
                 info!("Call succeeded. Reply bytes: {:?}", bytes);
-                // Optionally, decode bytes if you know the return type
-                // e.g., let decoded: YourType = decode(&bytes).unwrap();
             }
             WasmResult::Reject(reason) => {
                 info!("Call rejected: {}", reason);
@@ -73,12 +71,6 @@ fn setup() -> (PocketIc, Principal) {
             info!("Call failed with user error: {:?}", user_error);
         }
     }
-    let _ = pocket_ic::PocketIc::set_controllers(
-        &pic,
-        backend_canister,
-        Some(Principal::anonymous()),
-        vec![user_principal],
-    );
 
     // 🔹 Define test input (token name + reserve data)
     let icp_token_name = "ICP".to_string();

@@ -1,5 +1,7 @@
-use crate::constants::constant_variables::constants::{REQUEST_LIMIT, USER_BLOCKED, WINDOW_SIZE_VAR};
-use crate::constants::errors::Error;
+use crate::constants::{
+    constant_variables::constants::{REQUEST_LIMIT, USER_BLOCKED, WINDOW_SIZE_VAR},
+    errors::Error,
+};
 use crate::declarations::datatypes::Certificate;
 use crate::protocol::utils::math_utils::current_timestamp;
 use crate::stable_storage::state_handler::get_certificate_witness;

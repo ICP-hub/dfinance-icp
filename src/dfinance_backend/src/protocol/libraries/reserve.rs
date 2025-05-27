@@ -1,28 +1,26 @@
-use crate::api::inter_canister::asset_transfer;
-use crate::api::inter_canister::get_balance;
-use crate::api::inter_canister::get_total_supply;
-use crate::constants::constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR};
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::validate_asset_image_url;
-use crate::constants::validators::validate_asset_name;
-use crate::declarations::datatypes::AssetInfo;
-use crate::declarations::datatypes::ReserveCache;
-use crate::declarations::datatypes::ReserveData;
-use crate::declarations::datatypes::UserReserveData;
+use crate::api::inter_canister::{asset_transfer,get_balance, get_total_supply};
+use crate::constants::{
+    constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR},
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_image_url, validate_zero_value, validate_asset_name},
+};
+use crate::declarations::datatypes::{AssetInfo,ReserveCache, ReserveData, UserReserveData};
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use crate::guards::access_control::guard_admin_only;
 use crate::protocol::libraries::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
 };
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils;
-use crate::protocol::utils::math_utils::current_timestamp;
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::stable_storage::state_handler::{mutate_state, read_state};
-use crate::stable_storage::storable::Candid;
+use crate::protocol::utils::{
+    log::{log_internal, LogLevel},
+    math_utils::{ScalingMath, calculate_compounded_interest, calculate_linear_interest, current_timestamp}
+
+};
+use crate::stable_storage::{
+    state_handler::{mutate_state, read_state, insert_certified_value},
+    storable::Candid
+};
 use crate::{debug, error, info, trace};
 use candid::{Nat, Principal};
 use ic_cdk::update;
@@ -132,7 +130,8 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
 
     // Update liquidity index if there's an active liquidity rate
     if reserve_cache.curr_liquidity_rate != zero_nat_value() {
-        let cumulated_liquidity_interest = math_utils::calculate_linear_interest(
+        
+        let cumulated_liquidity_interest = calculate_linear_interest(
             reserve_cache.curr_liquidity_rate.clone(),
             reserve_cache.reserve_last_update_timestamp,
         );
@@ -154,7 +153,7 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
 
     // Update debt index if there's outstanding debt
     if reserve_cache.curr_debt != zero_nat_value() {
-        let cumulated_borrow_interest = math_utils::calculate_compounded_interest(
+        let cumulated_borrow_interest = calculate_compounded_interest(
             reserve_cache.curr_debt_rate.clone(),
             reserve_cache.reserve_last_update_timestamp,
             current_timestamp(),
@@ -340,24 +339,28 @@ pub async fn burn_scaled(
         }
         balance_increase = balance_indexed - balance_user_indexed;
 
-        if user_state.debt_token_blance == adjusted_amount {
+       
+        if user_state.debt_token_balance == adjusted_amount {
             debug!("Setting debt token balance to zero");
-            user_state.debt_token_blance = zero_nat_value();
-        } else if user_state.debt_token_blance < adjusted_amount.clone() {
+            user_state.debt_token_balance = zero_nat_value();
+        } else if user_state.debt_token_balance < adjusted_amount.clone() {
             error!("Debt token balance is less than adjusted amount");
-            return Err(Error::AmountSubtractionError);
+            return Err(Error::DebtTokenBalanceLessThan);
         } else {
-            user_state.debt_token_blance -= adjusted_amount.clone();
+           
+            user_state.debt_token_balance -= adjusted_amount.clone();
 
-            if user_state.debt_token_blance < Nat::from(1000u128) {
-                user_state.debt_token_blance = zero_nat_value();
+            if user_state.debt_token_balance < Nat::from(1000u128) {
+                user_state.debt_token_balance = zero_nat_value();
             }
         }
 
         user_state.variable_borrow_index = index;
         debug!(
             "balance_increase: {}, final_debt_token_balance: {}, new_variable_borrow_index: {}",
-            balance_increase, user_state.debt_token_blance, user_state.variable_borrow_index
+            balance_increase,
+            user_state.debt_token_balance,
+            user_state.variable_borrow_index
         );
     }
 
@@ -402,7 +405,7 @@ pub async fn burn_scaled(
             if burn_dtoken {
                 user_state.d_token_balance = zero_nat_value();
             } else {
-                user_state.debt_token_blance = zero_nat_value();
+                user_state.debt_token_balance = zero_nat_value();
             }
         }
         debug!(" amount_to_burn = {}", amount_to_burn);
@@ -528,17 +531,14 @@ pub async fn mint_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
         if user_state.variable_borrow_index == zero_nat_value() {
-            user_state.debt_token_blance = amount.clone();
+            user_state.debt_token_balance = amount.clone();
         } else {
-            user_state.debt_token_blance += adjusted_amount.clone();
+            user_state.debt_token_balance += adjusted_amount.clone();
         }
 
         user_state.variable_borrow_index = index;
-
-        debug!(
-            "balance increase debttoken {}, new debt balance {}, new debt index {} ",
-            balance_increase, user_state.debt_token_blance, user_state.variable_borrow_index
-        );
+       
+        debug!("balance increase debttoken {}, new debt balance {}, new debt index {} ", balance_increase, user_state.debt_token_balance, user_state.variable_borrow_index);
     }
 
     let newmint = amount + balance_increase;
@@ -840,10 +840,7 @@ pub async fn reset_reserve_value(
     trace!("Executing reset_reserve_value");
     guard_admin_only()?;
     validate_asset_name(&asset_name.clone())?;
-    if reset_value < zero_nat_value() {
-        error!("Invalid reset value provided: {}", reset_value);
-        return Err(Error::InvalidValue);
-    }
+    validate_zero_value(&reset_value)?;
 
     let mut reserve_data = mutate_state(|state| {
         let asset_index = &mut state.asset_index;

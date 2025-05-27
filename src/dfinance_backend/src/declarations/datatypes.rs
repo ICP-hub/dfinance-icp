@@ -133,7 +133,7 @@ pub struct AssetInfo {
  *
  * @param controller_id The principal ID of the controller.
  */
-#[derive(CandidType, Deserialize, Clone, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct InitArgs {
     pub controller_id: Principal, // for the test-token and dtoken cannisters which are going to be created dynamically
 }
@@ -217,7 +217,7 @@ pub struct UserReserveData {
     pub is_borrowed: bool,
     pub can_be_collateral: bool,
     pub d_token_balance: Nat,
-    pub debt_token_blance: Nat,
+    pub debt_token_balance: Nat,
 }
 impl Default for UserReserveData {
     fn default() -> Self {
@@ -231,7 +231,7 @@ impl Default for UserReserveData {
             is_borrowed: Default::default(),
             can_be_collateral: true,
             d_token_balance: Default::default(),
-            debt_token_blance: Default::default(),
+            debt_token_balance: Default::default(),
         }
     }
 }

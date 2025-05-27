@@ -1,9 +1,15 @@
-use crate::constants::validators::validate_asset_name;
 use crate::{debug, error, info, trace};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
 use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
-use crate::constants::errors::Error;
-use crate::constants::constant_variables::constants::{SCALING_FACTOR, TOKEN_TRANSFER_FEE, XRC_CANISTER_NAME};
+use crate::constants::{
+    errors::Error,
+    validators::validate_asset_name,
+    constant_variables::constants::{
+        SCALING_FACTOR, TOKEN_TRANSFER_FEE, XRC_CANISTER_NAME, ONE_VALUE, TEST_CKBTC_PRICE, 
+        TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
+    },
+};
+
 use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
@@ -15,9 +21,6 @@ use ic_cdk::update;
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{
-    ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
-};
 use crate::protocol::utils::log::{log_internal,LogLevel};
 
 /*
@@ -165,7 +168,7 @@ pub async fn get_exchange_rates(
             return Err(Error::ExchangeRateError);
         }
         Err(e) => {
-            error!("Call failed: {:?}", e);
+            error!("get_exchange_rate Call failed: {:?}", e);
             return Err(Error::ExchangeRateError);
         }
     };

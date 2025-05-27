@@ -72,7 +72,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(6_000u128), // 0.00005 ckETH (includes transaction fee)
+            amount: Nat::from(6_000u128), // 0.00006 ckETH (includes transaction fee)
             can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,

@@ -1,34 +1,36 @@
-use super::update::{user_data, user_reserve};
-use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
-use crate::constants::constant_variables::constants::MIN_BORROW;
-use crate::constants::constant_variables::constants::{
-    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
+use super::{
+    update::{user_data, user_reserve},
+    reserve::{get_asset_principal, get_reserve_data}
 };
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
-use crate::declarations::structs::{AssetData, UserAccountData};
+use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
+use crate::constants::constant_variables::constants::{
+    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR, MIN_BORROW
+};
+use crate::constants::{
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value}
+};
+use crate::declarations::{
+    datatypes::{ReserveData, UserData, UserReserveData},
+    structs::{AssetData, UserAccountData}
+};
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
 use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous, is_caller_authorized_for_asset};
 use crate::guards::access_control::{
-    guard_optional_principal_not_anonymous, guard_principal_not_anonymous,
+    guard_optional_principal_not_anonymous, guard_principal_not_anonymous, guard_admin_only, guard_prevent_anonymous
 };
-use crate::protocol::libraries::reserve::get_asset_principal;
-use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
-use crate::protocol::utils::math_utils::{
-    calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
+use crate::protocol::utils::{
+    log::{log_internal, LogLevel, LogFlusher},
+    math_utils::{ScalingMath, calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,},
+    price::{get_cached_exchange_rate, update_token_price}
 };
-use crate::protocol::utils::price::{get_cached_exchange_rate, update_token_price};
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::stable_storage::storable::Candid;
+use crate::stable_storage::{
+    state_handler::{insert_certified_value,read_state, mutate_state},
+    storable::Candid
+};
 use crate::{debug, error, info, trace};
-use crate::{
-    protocol::libraries::reserve::get_reserve_data,
-    protocol::utils::math_utils::ScalingMath,
-    stable_storage::state_handler::{mutate_state, read_state},
-};
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::update;
@@ -610,7 +612,7 @@ pub async fn create_user_reserve_with_low_health(
                 reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
                 reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
                 reserve_data.d_token_balance += supply_tokens.clone();
-                reserve_data.debt_token_blance += borrow_tokens.clone();
+                reserve_data.debt_token_balance += borrow_tokens.clone();
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_collateral = true;
                 reserve_data.is_borrowed = true;
@@ -625,7 +627,7 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: supply_tokens.clone(),
-                        debt_token_blance: borrow_tokens.clone(),
+                        debt_token_balance: borrow_tokens.clone(),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: true,
@@ -660,7 +662,7 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: supply_tokens.clone(),
-                        debt_token_blance: Nat::from(0u32),
+                        debt_token_balance: Nat::from(0u32),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: false,
@@ -682,7 +684,7 @@ pub async fn create_user_reserve_with_low_health(
             Some((_, reserve_data)) => {
                 reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
                 reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
-                reserve_data.debt_token_blance += borrow_tokens.clone();
+                reserve_data.debt_token_balance += borrow_tokens.clone();
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_borrowed = true;
             }
@@ -695,7 +697,7 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: Nat::from(0u32),
-                        debt_token_blance: borrow_tokens.clone(),
+                        debt_token_balance: borrow_tokens.clone(),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: false,
                         is_borrowed: true,
@@ -748,7 +750,7 @@ pub async fn create_user_reserve_with_low_health(
                 "Error: Asset transfer from user to backend canister: {:?}",
                 e
             );
-            return Err(Error::ErrorMintTokens);
+            return Err(Error::TokenNotTransfered);
         }
     }
 
@@ -761,10 +763,10 @@ pub async fn create_user_reserve_with_low_health(
     .await
     {
         Ok(_) => {
-            info!("Dtoken transfer from backend to user executed successfully");
+            info!("Debttoken transfer from backend to user executed successfully");
         }
         Err(err) => {
-            error!("Error: Dtoken transfer from backend to user: {:?}", err);
+            error!("Error: Debttoken transfer from backend to user: {:?}", err);
             return Err(Error::ErrorMintTokens);
         }
     }
@@ -785,7 +787,7 @@ pub async fn create_user_reserve_with_low_health(
         }
         Err(e) => {
             error!("Error: Asset transfer from backend to user: {:?}", e);
-            return Err(Error::ErrorRollBack);
+            return Err(Error::TokenNotTransfered);
         }
     }
 

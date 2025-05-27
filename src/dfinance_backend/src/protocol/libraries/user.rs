@@ -1068,7 +1068,6 @@ pub async fn is_transfer_allowed(
     let base_asset = asset_name.trim_start_matches('d').to_string();
     let is_authorized = is_caller_authorized_for_asset(&base_asset.clone());
     if !is_authorized {
-        debug!("Unauthorized caller for asset: {}", base_asset);
         return false;
     }
 
@@ -1117,7 +1116,6 @@ pub async fn is_transfer_allowed(
         if !users_transfer_changes(to, from, asset_name, amount).await {
             return false;
         };
-        info!("Transfer allowed as there is no outstanding debt.");
         return true;
     }
 
@@ -1154,6 +1152,17 @@ pub async fn is_transfer_allowed(
     allowed
 }
 
+/*
+ * @title Users Transfer Changes
+ * @dev Reverts the transfer changes made by the users.
+ * @param from The Principal of the user initiating the transfer.
+ * @param to The Principal of the recipient user.
+ * @param asset_name The name of the asset being transferred (typically prefixed with 'd').
+ * @param amount The amount of the asset to be transferred.
+ * @returns A boolean indicating whether the transfer changes were successfully reverted.
+ * @functionality This function reverts the transfer changes by updating the reserves of both sender and recipient,
+ *                ensuring that the sender's dToken balance is increased and the recipient's dToken balance is decreased.
+ */
 #[update]
 pub async fn users_transfer_changes(
     from: Principal,
@@ -1161,34 +1170,26 @@ pub async fn users_transfer_changes(
     asset_name: String,
     amount: Nat,
 ) -> bool {
-    debug!("calling users transfer changes");
     let base_asset = asset_name.trim_start_matches('d').to_string();
 
     let is_authorized = is_caller_authorized_for_asset(&base_asset);
     if !is_authorized {
-        debug!("Unauthorized caller for asset: {}", base_asset);
         return false;
     }
 
     // Fetch sender account
     let mut sender_account: UserData = match user_data(from) {
         Ok(account) => {
-            debug!("Sender account found: {:?}", from);
             account
         }
         Err(_) => {
             // Register the user and then fetch the user data
-            if let Err(e) = register_user(Some(from)) {
-                debug!("Failed to register sender: {:?}", e);
+            if let Err(_) = register_user(Some(from)) {
                 return false;
             }
             match user_data(from) {
                 Ok(account) => account,
                 Err(_) => {
-                    debug!(
-                        "Failed to fetch sender account after registration: {:?}",
-                        from.to_text()
-                    );
                     return false;
                 }
             }
@@ -1198,22 +1199,16 @@ pub async fn users_transfer_changes(
     // Fetch recipient account
     let mut recipient_account = match user_data(to) {
         Ok(account) => {
-            debug!("Recipient account found: {:?}", to.to_text());
             account
         }
         Err(_) => {
             // Register the user and then fetch the user data
-            if let Err(e) = register_user(Some(to)) {
-                debug!("Failed to register sender: {:?}", e);
+            if let Err(_) = register_user(Some(to)) {
                 return false;
             }
             match user_data(to) {
                 Ok(account) => account,
                 Err(_) => {
-                    debug!(
-                        "Failed to fetch sender account after registration: {:?}",
-                        to.to_text()
-                    );
                     return false;
                 }
             }
@@ -1233,10 +1228,6 @@ pub async fn users_transfer_changes(
             sender_reserve_details.d_token_balance
         );
     } else {
-        debug!(
-            "Sender reserve not found for asset: {}. Creating new reserve.",
-            base_asset
-        );
         let new_reserve = UserReserveData {
             reserve: base_asset.clone(),
             d_token_balance: amount.clone(),
@@ -1263,14 +1254,9 @@ pub async fn users_transfer_changes(
                 recipient_reserve_details.d_token_balance
             );
         } else {
-            debug!(
-                "Recipient has insufficient dToken balance to revert. Current: {}, Required: {}",
-                recipient_reserve_details.d_token_balance, amount
-            );
             return false;
         }
     } else {
-        debug!("Recipient reserve not found for asset: {}", base_asset);
         return false;
     }
 
@@ -1279,7 +1265,5 @@ pub async fn users_transfer_changes(
         state.user_profile.insert(from, Candid(sender_account));
         state.user_profile.insert(to, Candid(recipient_account));
     });
-
-    debug!("State successfully reverted for both users.");
     true
 }

@@ -150,7 +150,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Anonymous principals are not allowed".to_string()),
         },
-        // repay on no borrow
+        // Wallet balance is low
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(1_000_000_000u128),

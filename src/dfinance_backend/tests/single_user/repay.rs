@@ -118,7 +118,6 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Simulate 5 concurrent calls
         let mut msg_ids = vec![];
         for _ in 0..5 {
-            /* Repay params */
             let repay_params = ExecuteRepayParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(), // Amount ICP (transfer fee included)

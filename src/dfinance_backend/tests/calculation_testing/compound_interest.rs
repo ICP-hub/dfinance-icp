@@ -186,19 +186,16 @@ pub fn test_calculate_compounded_interest() {
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR * 10), // 10 years
             expected_output: Nat::from(100_000_010u128),
         },
-        //10% interest for 1 year and 540000 seconds 
         TestCase {
             rate_input: Nat::from(10_000_000u128), // 10% interest
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR + 540000), // 1 year and 54000 ago
             expected_output: Nat::from(110_171_232u128),
         },
-        //10% interest for 540000 seconds less than a year 
         TestCase {
             rate_input: Nat::from(10_000_000u128), // 10% interest
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR - 540000), // 54000 seconds less than a year
             expected_output: Nat::from(109_828_767u128),
         },
-        //.01% interest for 2 years
         TestCase {
             rate_input: Nat::from(10_000u128), // 0.01% interest
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR * 2), // 2 years

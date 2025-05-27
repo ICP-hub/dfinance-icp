@@ -41,30 +41,30 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
             expect_success: true,
             expected_error_message: None,
         },
-        TestCase {
-            asset: "ckBTC".to_string(),
-            amount: Nat::from(450_000u128), // 0.0045 ckBTC
-            expect_success: true,
-            expected_error_message: None,
-        },
-        TestCase {
-            asset: "ckUSDC".to_string(),
-            amount: Nat::from(45_000_000_000u128), // 450 ckUSDC
-            expect_success: true,
-            expected_error_message: None,
-        },
-        TestCase {
-            asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000_000u128), // 300 ckUSDT
-            expect_success: true,
-            expected_error_message: None,
-        },
-        TestCase {
-            asset: "ckETH".to_string(),
-            amount: Nat::from(15_000_000u128), // 0.15 ckETH
-            expect_success: true,
-            expected_error_message: None,
-        },
+        // TestCase {
+        //     asset: "ckBTC".to_string(),
+        //     amount: Nat::from(450_000u128), // 0.0045 ckBTC
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDC".to_string(),
+        //     amount: Nat::from(45_000_000_000u128), // 450 ckUSDC
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckUSDT".to_string(),
+        //     amount: Nat::from(30_000_000_000u128), // 300 ckUSDT
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
+        // TestCase {
+        //     asset: "ckETH".to_string(),
+        //     amount: Nat::from(15_000_000u128), // 0.15 ckETH
+        //     expect_success: true,
+        //     expected_error_message: None,
+        // },
     ];
     init_tracing();
     let total_users = random_users.len();

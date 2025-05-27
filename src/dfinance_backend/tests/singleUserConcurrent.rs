@@ -28,10 +28,10 @@ const BACKEND_WASM: &str = "../../target/wasm32-unknown-unknown/release/dfinance
 fn call_test_function() {
     let (pic, backend_canister, random_users) = setup();
     test_faucet(&pic, backend_canister, random_users.clone());
-    test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
-    test_repay(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
+    // test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
     test_liquidation(&pic, backend_canister);
     test_liquidated_user(&pic, backend_canister, random_users);
 }

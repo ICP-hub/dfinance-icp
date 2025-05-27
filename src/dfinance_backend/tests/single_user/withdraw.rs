@@ -58,7 +58,6 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // Simulate 5 concurrent calls
         let mut msg_ids = vec![];
         for _ in 0..5 {
-            /* Withdraw params */
             let withdraw_params = ExecuteWithdrawParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(),

@@ -88,7 +88,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
             asset: "ckUSDT".to_string(), // Asset previously supplied as non-collateral
             amount: Nat::from(10_000_000_000u128), // Supply another 100 ckUSDT (includes transaction fee)
             can_be_collateral: false,                  // Explicitly keep it non-collateral
-            expect_success: true, // Should succeed, just adding to existing non-collateral position
+            expect_success: true, // succeed, just adding to existing non-collateral position
             expected_error_message: None,
         },
         TestCase {

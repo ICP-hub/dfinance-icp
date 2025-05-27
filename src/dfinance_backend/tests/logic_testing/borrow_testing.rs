@@ -116,6 +116,7 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Platform balance is low".to_string()),
         },
+        // Borrow amount is too high
         TestCase {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(500_000_000_000u128),

@@ -2,15 +2,12 @@ use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 use crate::stable_storage::memory::{
     ASSET_INDEX_MEMORY_ID,  CANISTER_MEMORY_ID,
     META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, TESTER_LIST,
-     USER_PROFILE_MEMORY_ID,
+     USER_PROFILE_MEMORY_ID, ACCESSCONTOL, ASSET_RECORDS_MEMORY_ID, FAUCETDATA
 };
 use crate::stable_storage::types::{
     AssetIndex,CanisterList, MetaData, PriceCacheList,
-    ReserveList, TesterList, UserProfile,
+    ReserveList, TesterList, UserProfile, AccessControl, AssetRecords, FaucetData
 };
-
-use super::memory::{ACCESSCONTOL, ASSET_RECORDS_MEMORY_ID, FAUCETDATA};
-use super::types::{AccessControl, AssetRecords, FaucetData};
 
 pub struct State {
     pub asset_index: AssetIndex,

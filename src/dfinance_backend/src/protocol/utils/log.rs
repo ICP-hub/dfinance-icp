@@ -3,8 +3,7 @@ use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, LO
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
 use candid::Principal;
-use ic_cdk::api;
-use ic_cdk::{call, query};
+use ic_cdk::{call, query, api};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;

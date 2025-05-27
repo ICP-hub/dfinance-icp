@@ -1,30 +1,32 @@
 
-use crate::declarations::datatypes::{AssetInfo,FaucetReserves, ReserveData};
-use crate::constants::errors::Error;
+use crate::declarations::{
+    datatypes::{ AssetInfo,FaucetReserves, ReserveData, UserData, Certificate},
+    structs::{AssetData, CycleAlert}
+};
+
+use crate::constants::{
+    errors::Error,
+    constant_variables::constants::{ALL_ASSETS, ALL_USERS, ASSET_PRINCIPAL, CYCLE_CHECKER, CYCLE_EXHAUSTED_LIMIT, CYCLE_THRESHOLD_LIMIT, PRICE_CACHE, TOKEN_TRANSFER_FEE, TOTAL_USERS, TRANSFER_FEE_VAR, USER_ACCOUNT_DATA, USER_NORMALIZED_DEBT, USER_NORMALIZED_SUPPLY},
+    validators::validate_asset_name
+};
 use crate::guards::access_control::{
     guard_admin_only, guard_optional_principal_not_anonymous, guard_prevent_anonymous, guard_principal_not_anonymous
 };
 use crate::info;
 use crate::protocol::utils::{
-        price::get_cached_exchange_rate,
-        math_utils::ScalingMath
-    };
+    price::get_cached_exchange_rate,
+    math_utils::ScalingMath,
+    log::{log_internal, LogLevel}
+};
 use crate::trace;
-use crate::constants::constant_variables::constants::{ALL_ASSETS, ALL_USERS, ASSET_PRINCIPAL, CYCLE_CHECKER, CYCLE_EXHAUSTED_LIMIT, CYCLE_THRESHOLD_LIMIT, PRICE_CACHE, TOKEN_TRANSFER_FEE, TOTAL_USERS, TRANSFER_FEE_VAR, USER_ACCOUNT_DATA, USER_NORMALIZED_DEBT, USER_NORMALIZED_SUPPLY};
-use crate::constants::validators::validate_asset_name;
-use crate::declarations::datatypes:: UserData;
-use crate::declarations::structs::{AssetData, CycleAlert};
-use ic_cdk::query;
-use crate::protocol::libraries::user::{calculate_user_asset_data, get_all_users};
-use crate::stable_storage::state_handler::read_state;
-use candid::Nat;
-use candid::Principal;
-use ic_cdk::api;
-use crate::protocol::utils::log::{log_internal, LogLevel};  
-use crate::stable_storage::state_handler::get_certificate_witness;
-use crate::declarations::datatypes::Certificate;
-use crate::protocol::libraries::reserve::{get_reserve_data,get_asset_principal};
-use crate::protocol::libraries::user::{user_normalized_debt, user_normalized_supply};
+use ic_cdk::{query,api};
+use crate::protocol::libraries::{
+    user::{calculate_user_asset_data, get_all_users},
+    reserve::{get_reserve_data,get_asset_principal},
+    user::{user_normalized_debt, user_normalized_supply}
+};
+use crate::stable_storage::state_handler::{read_state, get_certificate_witness};
+use candid::{Nat, Principal};
 
 
 /**

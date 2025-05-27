@@ -1,5 +1,5 @@
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::LOG_CANISTER_NAME;
+use crate::constants::constant_variables::constants::DATA_STORAGE_CANISTER_NAME;
 use crate::stable_storage::state_handler::{mutate_state, read_state};
 use crate::stable_storage::storable::Candid;
 use ic_cdk::api;
@@ -7,10 +7,11 @@ use candid::Principal;
 use ic_cdk::{call, update};
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
-use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData};
+use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData, PriceCache, AssetInfo, InitArgs};
 use std::collections::BTreeMap;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::error;
+use crate::guards::access_control::guard_controller_only;
 
 
 /**  Snapshot struct represents the entire state snapshot of the system.
@@ -22,7 +23,13 @@ struct Snapshot {
     asset_index: BTreeMap<String, ReserveData>,
     faucet_data: BTreeMap<Principal, FaucetReserves>,
     user_profile: BTreeMap<Principal, UserData>,
+    reserve_list: BTreeMap<String, Principal>,
+    price_cache_list: BTreeMap<String, PriceCache>,
+    canister_list: BTreeMap<String, Principal>,
     tester_list: BTreeMap<String, Principal>,
+    meta_data: BTreeMap<String, InitArgs>,
+    admin_data: BTreeMap<Principal, String>,
+    asset_records: BTreeMap<String, AssetInfo>,
 }
 
 /**
@@ -31,7 +38,7 @@ struct Snapshot {
  */
 #[derive(CandidType, Deserialize, Clone)]
 pub struct BackupData {
-    pub load_time: u64,
+    pub upload_time: u64,
     pub data: String,
 }
 
@@ -49,12 +56,19 @@ fn export_snapshot() -> String {
             asset_index: state.asset_index.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
             faucet_data: state.faucet_data.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
             user_profile: state.user_profile.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
+            reserve_list: state.reserve_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            price_cache_list: state.price_cache_list.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
+            canister_list: state.canister_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
             tester_list: state.tester_list.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            meta_data: state.meta_data.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
+            admin_data: state.admin_data.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            asset_records: state.asset_records.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect(),
         };
 
         serde_json::to_string(&snapshot).expect("Serialization failed")
     })
 }
+
 
 /**
  * @title Import Snapshot
@@ -70,6 +84,39 @@ pub fn import_snapshot(snapshot_json: &str) {
         .expect("Failed to parse snapshot JSON");
 
     mutate_state(|state| {
+    if !state.asset_index.is_empty() {
+        state.asset_index.clear_new();
+    }
+    if !state.faucet_data.is_empty() {
+        state.faucet_data.clear_new();
+    }
+    if !state.user_profile.is_empty() {
+        state.user_profile.clear_new();
+    }
+    if !state.reserve_list.is_empty() {
+        state.reserve_list.clear_new();
+    }
+    if !state.price_cache_list.is_empty() {
+        state.price_cache_list.clear_new();
+    }
+    if !state.canister_list.is_empty() {
+        state.canister_list.clear_new();
+    }
+    if !state.tester_list.is_empty() {
+        state.tester_list.clear_new();
+    }
+    if !state.meta_data.is_empty() {
+        state.meta_data.clear_new();
+    }
+    if !state.admin_data.is_empty() {
+        state.admin_data.clear_new();
+    }
+    if !state.asset_records.is_empty() {
+        state.asset_records.clear_new();
+    }
+});
+
+    mutate_state(|state| {
         for (k, v) in snapshot.asset_index {
             state.asset_index.insert(k, Candid(v));
         }
@@ -79,34 +126,60 @@ pub fn import_snapshot(snapshot_json: &str) {
         for (k, v) in snapshot.user_profile {
             state.user_profile.insert(k, Candid(v));
         }
+        for (k, v) in snapshot.reserve_list {
+            state.reserve_list.insert(k, v);
+        }
+        for (k, v) in snapshot.price_cache_list {
+            state.price_cache_list.insert(k, Candid(v));
+        }
+        for (k, v) in snapshot.canister_list {
+            state.canister_list.insert(k, v);
+        }
         for (k, v) in snapshot.tester_list {
             state.tester_list.insert(k, v);
+        }
+        for (k, v) in snapshot.meta_data {
+            state.meta_data.insert(k, Candid(v));
+        }
+        for (k, v) in snapshot.admin_data {
+            state.admin_data.insert(k, v);
+        }
+        for (k, v) in snapshot.asset_records {
+            state.asset_records.insert(k, Candid(v));
         }
     });
 }
 
+
 /**
- * @title Send Backup Data to Logs Canister
- * @notice Exports the current system snapshot and sends it to a designated logs canister for backup storage.
- * @functionality This async update function fetches the logs canister ID, exports the current snapshot,
+ * @title Send Backup Data to data_storage canister
+ * @notice Exports the current system snapshot and sends it to a designated data_storage canister for backup storage.
+ * @functionality This async update function fetches the data_storage canister ID, exports the current snapshot,
  *               packages it into a `BackupData` struct with a timestamp, and performs an inter-canister
- *               call to the logs canister's `receive_data_backup` method to save the backup.
+ *               call to the data_storage canister's `receive_data_backup` method to save the backup.
  * @return `Result<(), String>` indicating success or failure with an error message.
  */
 #[update]
 pub async fn send_backup_data_to_canister() -> Result<(), String> {
-    let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+    match guard_controller_only(){
+        Ok(_) => {},
+        Err(e) => {
+            error!("❌ Access denied: {}", e.message());
+            return Err(e.message().to_string());
+        }
+    };
+    let logs_canister_id = match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
         Ok(id) => id,
         Err(_) => {
-            error!("❌ Failed to get logs canister ID");
-            return Err("Failed to get logs canister ID".to_string());
+            error!("❌ Failed to get data_storage canister ID");
+            return Err("Failed to get data_storage canister ID".to_string());
         },
     };
 
     let backup_data = export_snapshot();
 
     let backup_param = BackupData {
-        load_time: api::time(),
+        upload_time: api::time(),
         data: serde_json::to_string(&backup_data).expect("Failed to encode snapshot string"),
     };
 
@@ -118,7 +191,7 @@ pub async fn send_backup_data_to_canister() -> Result<(), String> {
         Ok((Ok(()),)) => Ok(()),
         Ok((Err(err_msg),)) => {
             error!("❌ receive_logs_batch returned error: {}", err_msg);
-            Err(format!("Error from logs canister: {}", err_msg))
+            Err(format!("Error from data_storage canister: {}", err_msg))
         }
         Err((code, msg)) => {
             error!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
@@ -128,21 +201,29 @@ pub async fn send_backup_data_to_canister() -> Result<(), String> {
 }
 
 /**
- * @title Receive and Load Data Backup from Logs Canister
- * @notice Retrieves a specific backup by ID from the logs canister and loads it into the current system state.
- * @functionality This async update function obtains the logs canister ID, requests the backup data
- *               identified by `backup_id` from the logs canister via inter-canister call, deserializes
+ * @title Receive and Load Data Backup from data_storage canister
+ * @notice Retrieves a specific backup by ID from the data_storage canister and loads it into the current system state.
+ * @functionality This async update function obtains the data_storage canister ID, requests the backup data
+ *               identified by `backup_id` from the data_storage canister via inter-canister call, deserializes
  *               the backup data, and imports the snapshot into the system state.
  * @param backup_id The unique identifier of the backup to retrieve.
  * @return `Result<(), String>` indicating success or failure with an error message.
  */
 #[update]
 pub async fn receive_and_load_data_backup(backup_id: u64) -> Result<(), String> {
-    let logs_canister_id = match get_canister_id_by_name(LOG_CANISTER_NAME.to_string()) {
+
+    match guard_controller_only(){
+        Ok(_) => {},
+        Err(e) => {
+            error!("❌ Access denied: {}", e.message());
+            return Err(e.message().to_string());
+        }
+    };
+    let logs_canister_id = match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
         Ok(id) => id,
         Err(_) => {
-            error!("❌ Failed to get logs canister ID");
-            return Err("Failed to get logs canister ID".to_string());
+            error!("❌ Failed to get data_storage canister ID");
+            return Err("Failed to get data_storage canister ID".to_string());
         },
     };
 
@@ -154,7 +235,7 @@ pub async fn receive_and_load_data_backup(backup_id: u64) -> Result<(), String> 
         Ok((Ok(data),)) => data,
         Ok((Err(err_msg),)) => {
             error!("❌ get_data_backup returned error: {}", err_msg);
-            return Err(format!("Error from logs canister: {}", err_msg));
+            return Err(format!("Error from data_storage canister: {}", err_msg));
         }
         Err((code, msg)) => {
             error!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);

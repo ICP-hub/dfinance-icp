@@ -45,6 +45,7 @@ thread_local! {
 const LOG_RETENTION_DAYS: u64 = 7; // Number of days to retain logs
 const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
 const MAX_LOG_COUNT: u64 = 15000; // Maximum number of logs before cleanup
+const BACKUP_DATA_ID: u64 = 1245u64; // ID for backup data
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct LogRecord {
@@ -62,7 +63,7 @@ pub enum LogLevel {
 }
 #[derive(CandidType, Deserialize, Clone)]
 pub struct BackupData {
-    pub load_time: u64,
+    pub upload_time: u64,
     pub data: String,
 }
 
@@ -319,7 +320,7 @@ pub fn receive_data_backup(data: BackupData) -> Result<(), String> {
     DATA_BACKUP_STORAGE.with(|storage| {
         let mut storage = storage.borrow_mut();
         // let serialized_data = candid::encode_one(&data).expect("Failed to serialize BackupData");
-        storage.insert(1000u64 , data);
+        storage.insert(BACKUP_DATA_ID , data);
     });
 
     Ok(())

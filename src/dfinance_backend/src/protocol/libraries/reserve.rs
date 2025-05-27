@@ -337,18 +337,18 @@ pub async fn burn_scaled(
         balance_increase = balance_indexed - balance_user_indexed;
 
        
-        if user_state.debt_token_blance == adjusted_amount {
+        if user_state.debt_token_balance == adjusted_amount {
             debug!("Setting debt token balance to zero");
-            user_state.debt_token_blance = zero_nat_value();
-        } else if user_state.debt_token_blance < adjusted_amount.clone() {
+            user_state.debt_token_balance = zero_nat_value();
+        } else if user_state.debt_token_balance < adjusted_amount.clone() {
             error!("Debt token balance is less than adjusted amount");
             return Err(Error::DebtTokenBalanceLessThan);
         } else {
            
-            user_state.debt_token_blance -= adjusted_amount.clone();
+            user_state.debt_token_balance -= adjusted_amount.clone();
 
-            if user_state.debt_token_blance < Nat::from(1000u128) {
-                user_state.debt_token_blance = zero_nat_value();
+            if user_state.debt_token_balance < Nat::from(1000u128) {
+                user_state.debt_token_balance = zero_nat_value();
             }
         }
 
@@ -357,7 +357,7 @@ pub async fn burn_scaled(
         debug!(
             "balance_increase: {}, final_debt_token_balance: {}, new_variable_borrow_index: {}",
             balance_increase,
-            user_state.debt_token_blance,
+            user_state.debt_token_balance,
             user_state.variable_borrow_index
         );
     }
@@ -403,7 +403,7 @@ pub async fn burn_scaled(
             if burn_dtoken {
                 user_state.d_token_balance = zero_nat_value();
             } else {
-                user_state.debt_token_blance = zero_nat_value();
+                user_state.debt_token_balance = zero_nat_value();
             }
         }
         debug!(
@@ -529,14 +529,14 @@ pub async fn mint_scaled(
 
         balance_increase = balance_indexed - balance_user_indexed;
         if user_state.variable_borrow_index == zero_nat_value() {
-            user_state.debt_token_blance = amount.clone();
+            user_state.debt_token_balance = amount.clone();
         } else {
-            user_state.debt_token_blance += adjusted_amount.clone();
+            user_state.debt_token_balance += adjusted_amount.clone();
         }
 
         user_state.variable_borrow_index = index;
        
-        debug!("balance increase debttoken {}, new debt balance {}, new debt index {} ", balance_increase, user_state.debt_token_blance, user_state.variable_borrow_index);
+        debug!("balance increase debttoken {}, new debt balance {}, new debt index {} ", balance_increase, user_state.debt_token_balance, user_state.variable_borrow_index);
     }
 
     let newmint = amount + balance_increase;

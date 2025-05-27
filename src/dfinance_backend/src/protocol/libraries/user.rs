@@ -614,7 +614,7 @@ pub async fn create_user_reserve_with_low_health(
                 reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
                 reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
                 reserve_data.d_token_balance += supply_tokens.clone();
-                reserve_data.debt_token_blance += borrow_tokens.clone();
+                reserve_data.debt_token_balance += borrow_tokens.clone();
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_collateral = true;
                 reserve_data.is_borrowed = true;
@@ -629,7 +629,7 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: supply_tokens.clone(),
-                        debt_token_blance: borrow_tokens.clone(),
+                        debt_token_balance: borrow_tokens.clone(),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: true,
@@ -664,7 +664,7 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: supply_tokens.clone(),
-                        debt_token_blance: Nat::from(0u32),
+                        debt_token_balance: Nat::from(0u32),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: false,
@@ -686,7 +686,7 @@ pub async fn create_user_reserve_with_low_health(
             Some((_, reserve_data)) => {
                 reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
                 reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
-                reserve_data.debt_token_blance += borrow_tokens.clone();
+                reserve_data.debt_token_balance += borrow_tokens.clone();
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_borrowed = true;
             }
@@ -699,7 +699,7 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: Nat::from(0u32),
-                        debt_token_blance: borrow_tokens.clone(),
+                        debt_token_balance: borrow_tokens.clone(),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: false,
                         is_borrowed: true,

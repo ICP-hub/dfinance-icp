@@ -11,12 +11,12 @@ use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
 use crate::declarations::structs::{AssetData, UserAccountData};
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
-use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
+use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous, is_caller_authorized_for_asset};
 use crate::guards::access_control::{
     guard_optional_principal_not_anonymous, guard_principal_not_anonymous,
 };
 use crate::protocol::libraries::reserve::get_asset_principal;
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
+use crate::protocol::utils::log::{log_internal, LogFlusher, LogLevel};
 use crate::protocol::utils::math_utils::{
     calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
 };
@@ -67,7 +67,6 @@ use ic_cdk::update;
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
- 
     guard_optional_principal_not_anonymous(on_behalf)?;
     guard_prevent_anonymous()?;
     let user_principal = match on_behalf {
@@ -77,7 +76,6 @@ pub async fn calculate_user_account_data(
     let _log_flusher = LogFlusher {
         user_key: user_principal.to_text(), // or whatever user_key you need
     };
-
 
     let max = get_max_value();
     let user_data = user_data(user_principal)?;
@@ -414,10 +412,8 @@ pub async fn get_user_balance_in_base_currency(
     };
 
     let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
-    let result  = user_scaled_balanced_normalized.scaled_mul(asset_price);
-    debug!(
-        "Final user balance in base currency = {}", result
-    );
+    let result = user_scaled_balanced_normalized.scaled_mul(asset_price);
+    debug!("Final user balance in base currency = {}", result);
     Ok(result)
 }
 
@@ -484,17 +480,17 @@ pub async fn get_user_debt_in_base_currency(
  *
  * @returns A string message indicating success or failure.
  */
-pub fn register_user() -> Result<String, Error> {
-    guard_prevent_anonymous()?;
+pub fn register_user(user_id: Option<Principal>) -> Result<String, Error> {
+    guard_prevent_anonymous()?; // ensure caller is not anonymous
 
-    let user_principal: Principal = ic_cdk::api::caller();
+    let user_principal: Principal = user_id.unwrap_or_else(ic_cdk::api::caller);
 
     let user_data = mutate_state(|state| {
         match state.user_profile.get(&user_principal) {
-            Some(_) => Ok("User available".to_string()),
+            Some(_) => Ok("User already registered".to_string()),
             None => {
                 let mut new_user_data = UserData::default();
-                let user_count = state.user_profile.len(); //user_id is starting from 1
+                let user_count = state.user_profile.len(); // user_id starts from 1
                 let new_user_id = (user_count + 1).to_string();
                 new_user_data.user_id = Some(new_user_id);
 
@@ -504,7 +500,8 @@ pub fn register_user() -> Result<String, Error> {
 
                 // Insert the user data into the certified storage
                 insert_certified_value(user_principal.to_string(), new_user_data);
-                Ok("User added".to_string())
+
+                Ok("User registered successfully".to_string())
             }
         }
     });
@@ -563,7 +560,7 @@ pub async fn create_user_reserve_with_low_health(
         user_key: user_principal.to_text(), // or whatever user_key you need
     };
 
-    register_user()?;
+    register_user(None)?;
     info!("User registered successfully");
 
     let platform_principal = ic_cdk::api::id();
@@ -714,7 +711,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        dtoken_principal, 
+        dtoken_principal,
         platform_principal,
         supply_tokens.clone(),
     )
@@ -733,10 +730,10 @@ pub async fn create_user_reserve_with_low_health(
     }
 
     match asset_transfer_from(
-        supply_asset_ledger_canister_id, 
+        supply_asset_ledger_canister_id,
         user_principal,
         platform_principal,
-        supply_tokens-get_transfer_fee(supply_asset_ledger_canister_id).await?,
+        supply_tokens - get_transfer_fee(supply_asset_ledger_canister_id).await?,
     )
     .await
     {
@@ -757,7 +754,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        debt_token_principal, 
+        debt_token_principal,
         platform_principal,
         borrow_tokens.clone(),
     )
@@ -1047,7 +1044,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-
 /*
  * @title Check Transfer Eligibility
  * @dev Determines whether a user is allowed to transfer a specified amount of a particular asset.
@@ -1055,21 +1051,31 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @param asset_name The name of the asset (typically prefixed with 'd').
  * @param amount The amount of the asset to be transferred.
  * @returns A boolean value indicating whether the transfer is allowed.
- * @functionality This function checks if the transfer is allowed by verifying if the user's 
- *                post-transfer health factor remains above the required threshold. 
- *                It updates the token price, retrieves collateral and debt data, computes 
+ * @functionality This function checks if the transfer is allowed by verifying if the user's
+ *                post-transfer health factor remains above the required threshold.
+ *                It updates the token price, retrieves collateral and debt data, computes
  *                adjusted collateral, and recalculates the health factor before deciding.
  */
 #[update]
-pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Nat) -> bool {
+pub async fn is_transfer_allowed(
+    from: Principal,
+    to: Principal,
+    asset_name: String,
+    amount: Nat,
+) -> bool {
 
     // Remove 'd' prefix to get the base asset name
     let base_asset = asset_name.trim_start_matches('d').to_string();
+    let is_authorized = is_caller_authorized_for_asset(&base_asset.clone());
+    if !is_authorized {
+        debug!("Unauthorized caller for asset: {}", base_asset);
+        return false;
+    }
 
     let _ = update_token_price(base_asset.clone()).await;
 
     let (total_collateral, total_debt, _avg_ltv, liquidation_threshold, _health_factor) =
-        match calculate_user_account_data(Some(user)).await {
+        match calculate_user_account_data(Some(from)).await {
             Ok((
                 t_collateral,
                 t_debt,
@@ -1084,7 +1090,6 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
                 return false;
             }
         };
-
 
     let rate = match get_cached_exchange_rate(base_asset.clone()) {
         Ok(rate) => rate,
@@ -1109,10 +1114,14 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
 
     // Allow transfer if there's no outstanding debt
     if total_debt == Nat::from(0u128) {
+        if !users_transfer_changes(to, from, asset_name, amount).await {
+            return false;
+        };
+        info!("Transfer allowed as there is no outstanding debt.");
         return true;
     }
 
-    let reserve = match get_reserve_data(base_asset) {
+    let reserve = match get_reserve_data(base_asset.clone()) {
         Ok(data) => data,
         Err(_) => return false,
     };
@@ -1138,5 +1147,139 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
     // Determine whether transfer is allowed based on health factor
     let allowed = new_health_factor >= Nat::from(SCALING_FACTOR);
 
+    if !users_transfer_changes(to, from, asset_name, amount).await {
+        return false;
+    };
+
     allowed
+}
+
+#[update]
+pub async fn users_transfer_changes(
+    from: Principal,
+    to: Principal,
+    asset_name: String,
+    amount: Nat,
+) -> bool {
+    debug!("calling users transfer changes");
+    let base_asset = asset_name.trim_start_matches('d').to_string();
+
+    let is_authorized = is_caller_authorized_for_asset(&base_asset);
+    if !is_authorized {
+        debug!("Unauthorized caller for asset: {}", base_asset);
+        return false;
+    }
+
+    // Fetch sender account
+    let mut sender_account: UserData = match user_data(from) {
+        Ok(account) => {
+            debug!("Sender account found: {:?}", from);
+            account
+        }
+        Err(_) => {
+            // Register the user and then fetch the user data
+            if let Err(e) = register_user(Some(from)) {
+                debug!("Failed to register sender: {:?}", e);
+                return false;
+            }
+            match user_data(from) {
+                Ok(account) => account,
+                Err(_) => {
+                    debug!(
+                        "Failed to fetch sender account after registration: {:?}",
+                        from.to_text()
+                    );
+                    return false;
+                }
+            }
+        }
+    };
+
+    // Fetch recipient account
+    let mut recipient_account = match user_data(to) {
+        Ok(account) => {
+            debug!("Recipient account found: {:?}", to.to_text());
+            account
+        }
+        Err(_) => {
+            // Register the user and then fetch the user data
+            if let Err(e) = register_user(Some(to)) {
+                debug!("Failed to register sender: {:?}", e);
+                return false;
+            }
+            match user_data(to) {
+                Ok(account) => account,
+                Err(_) => {
+                    debug!(
+                        "Failed to fetch sender account after registration: {:?}",
+                        to.to_text()
+                    );
+                    return false;
+                }
+            }
+        }
+    };
+
+    // Access reserves
+    let sender_reserve = user_reserve(&mut sender_account, &base_asset);
+    let recipient_reserve = user_reserve(&mut recipient_account, &base_asset);
+
+    if let Some((_k, sender_reserve_details)) = sender_reserve {
+        sender_reserve_details.d_token_balance += amount.clone();
+        sender_reserve_details.is_collateral = sender_reserve_details.can_be_collateral;
+        sender_reserve_details.is_using_as_collateral_or_borrow = sender_reserve_details.is_collateral || sender_reserve_details.is_borrowed;
+        debug!(
+            "Sender dToken balance reverted. New balance: {}",
+            sender_reserve_details.d_token_balance
+        );
+    } else {
+        debug!(
+            "Sender reserve not found for asset: {}. Creating new reserve.",
+            base_asset
+        );
+        let new_reserve = UserReserveData {
+            reserve: base_asset.clone(),
+            d_token_balance: amount.clone(),
+            is_using_as_collateral_or_borrow: true,
+            is_collateral: true,
+            can_be_collateral: true,
+            last_update_timestamp: current_timestamp(),
+            liquidity_index: Nat::from(SCALING_FACTOR),
+            ..Default::default()
+        };
+
+        if let Some(ref mut reserves) = sender_account.reserves {
+            reserves.push((base_asset.clone(), new_reserve));
+        } else {
+            sender_account.reserves = Some(vec![(base_asset.clone(), new_reserve)]);
+        }
+    }
+
+    if let Some((_k, recipient_reserve_details)) = recipient_reserve {
+        if recipient_reserve_details.d_token_balance >= amount {
+            recipient_reserve_details.d_token_balance -= amount;
+            debug!(
+                "Recipient dToken balance reverted. New balance: {}",
+                recipient_reserve_details.d_token_balance
+            );
+        } else {
+            debug!(
+                "Recipient has insufficient dToken balance to revert. Current: {}, Required: {}",
+                recipient_reserve_details.d_token_balance, amount
+            );
+            return false;
+        }
+    } else {
+        debug!("Recipient reserve not found for asset: {}", base_asset);
+        return false;
+    }
+
+    // Save reverted states
+    mutate_state(|state| {
+        state.user_profile.insert(from, Candid(sender_account));
+        state.user_profile.insert(to, Candid(recipient_account));
+    });
+
+    debug!("State successfully reverted for both users.");
+    true
 }

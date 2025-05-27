@@ -274,7 +274,7 @@ service : (principal) -> {
   get_user_faucet_data : (principal) -> (Result_14) query;
   guard_admin_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_transfer_allowed : (principal, text, nat) -> (bool);
+  is_transfer_allowed : (principal, principal, text, nat) -> (bool);
   is_user_blocked : () -> (Result_15) query;
   mock_price_data : () -> (Result_1);
   receive_and_load_data_backup : (nat64) -> (Result_16);
@@ -288,5 +288,6 @@ service : (principal) -> {
   update_reserves_price : () -> (Result_1);
   user_normalized_debt_certified : (ReserveData) -> (Result_4) query;
   user_normalized_supply_certified : (ReserveData) -> (Result_4) query;
+  users_transfer_changes : (principal, principal, text, nat) -> (bool);
   verify_captcha : (text) -> (Result_1);
 }

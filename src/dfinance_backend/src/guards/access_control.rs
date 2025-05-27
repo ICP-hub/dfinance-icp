@@ -357,3 +357,29 @@ pub fn get_all_users_with_roles() -> Result<Vec<(Principal, Vec<String>)>, Error
     })
 }
 
+/*
+ * @title Check if Caller is Authorized for Asset
+ * @dev This function checks if the caller is authorized to access a specific asset.
+ *      It retrieves the list of authorized callers for the asset from the state and compares
+ *      it with the caller's principal ID.
+ *
+ * @param asset The asset for which authorization is being checked.
+ *
+ * @returns
+ *      - `true`: If the caller is authorized for the asset.
+ *      - `false`: If the caller is not authorized for the asset or if the asset does not exist.
+ *
+ * @functionality Asset Authorization Check
+ */
+pub fn is_caller_authorized_for_asset(asset: &String) -> bool {
+
+    let caller = ic_cdk::api::caller();
+    read_state(|state| {
+        state
+            .canister_list
+            .get(asset)
+            .map(|authorized_caller| authorized_caller == caller)
+            .unwrap_or(false)
+    })
+}
+

@@ -53,7 +53,7 @@ impl UpdateLogic {
         params: ExecuteSupplyParams,
         reserve: &mut ReserveData,
     ) -> Result<(), Error> {
-        register_user()?;
+        register_user(None)?;
         let mut user_data = user_data(user_principal)?;
 
         let user_reserve = user_reserve(&mut user_data, &params.asset);

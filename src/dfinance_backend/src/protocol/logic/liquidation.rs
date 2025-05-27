@@ -129,7 +129,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         error!("Reward amount is greater than earned rewards");
         return Err(Error::RewardIsHigher);
     }
-    register_user()?;
+    register_user(None)?;
     let mut liquidator_data = user_data(liquidator_principal)?;
 
     let collateral_dtoken_principal = collateral_reserve_data.d_token_canister.clone().ok_or_else(|| {

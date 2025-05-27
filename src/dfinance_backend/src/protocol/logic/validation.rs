@@ -1,24 +1,25 @@
 use crate::api::inter_canister::{
     get_balance, get_icrc2_allowance, get_total_supply, get_transfer_fee,
 };
-use crate::constants::constant_variables::constants::SCALING_FACTOR;
-use crate::constants::constant_variables::constants::{PERCENTAGE_FACTOR, ZERO_VALUE};
-use crate::constants::errors::Error;
-use crate::declarations::datatypes::{ReserveData, UserReserveData};
-use crate::protocol::libraries::update::user_reserve;
-use crate::protocol::libraries::user::{
-    calculate_user_account_data, user_normalized_debt, user_normalized_supply,
+use crate::constants::{
+    constant_variables::constants::{SCALING_FACTOR, PERCENTAGE_FACTOR, ZERO_VALUE},
+    errors::Error,
 };
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::protocol::utils::price::{
-    calculate_transfer_fee, get_cached_exchange_rate, update_token_price,
+
+use crate::declarations::datatypes::{ReserveData, UserReserveData};
+use crate::protocol::libraries::{
+    reserve::get_asset_principal,
+    update::{user_data, user_reserve},
+    user::{calculate_user_account_data, user_normalized_debt, user_normalized_supply},
+};
+use crate::protocol::utils::{
+    log::{log_internal, LogLevel},
+    math_utils::ScalingMath,
+    price::{calculate_transfer_fee, get_cached_exchange_rate, update_token_price},
 };
 use crate::{debug, error, trace};
 use candid::{Nat, Principal};
 pub struct ValidationLogic;
-use crate::protocol::libraries::reserve::get_asset_principal;
-use crate::protocol::libraries::update::user_data;
 
 impl ValidationLogic {
     /*

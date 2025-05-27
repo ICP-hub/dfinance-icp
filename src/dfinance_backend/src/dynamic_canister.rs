@@ -8,7 +8,7 @@ use crate::constants::constant_variables::constants::{
     TEST_CYCLES_FOR_ARCHIVE_CREATION, TEST_DECIMALS, TEST_DEFAULT_CYCLES, TEST_MAX_MEMO_LENGTH,
     TEST_MAX_MESSAGE_SIZE_BYTES, TEST_MAX_NUMBER_OF_ACCOUNTS, TEST_MAX_TRANSACTIONS_PER_RESPONSE,
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
-    TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
+    TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD, MAIN_CONTROLLER
 };
 use crate::declarations::structs::{
     ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg,
@@ -23,7 +23,6 @@ use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
 use crate::stable_storage::state_handler::read_state;
-use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
 use crate::declarations::datatypes::InitArgs;
 
 /*

@@ -70,6 +70,7 @@ pub enum Error {
     FailedToReleaseLock,
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
+    DebtTokenBalanceLessThan,
     AmountSubtractionError,
     TooManyRequests,
     BlockedForOneHour,
@@ -110,7 +111,8 @@ pub enum Error {
     UserCollateralLessThanReward,
     InvalidRole,
     RoleAlreadyExistsForUser,
-    UserRoleNotFound 
+    UserRoleNotFound,
+    TokenNotTransfered,
 }
 
 impl Error {
@@ -187,6 +189,9 @@ impl Error {
             Error::LockOperationInProgess => "Another operation is already in progress for user",
             Error::ErrorDTokenBalanceLessThan => {
                 "d token balance is less than the adjusted balance"
+            },
+            Error::DebtTokenBalanceLessThan => {
+                "debt token balance is less than the adjusted balance"
             }
             Error::AmountSubtractionError => {
                 "The current locked amount is less than the amount you are trying to subtract"
@@ -235,6 +240,7 @@ impl Error {
                 "The provided role is invalid. Please use a valid role such as 'admin' or 'minter'."
             }
             Error::UserRoleNotFound => "No role assigned to the specified user.",
+            Error::TokenNotTransfered => "Token transfer failed. Please try again later.",
 
         }
     }

@@ -1,21 +1,29 @@
 use crate::api::inter_canister::{asset_transfer_from, get_transfer_fee};
-use crate::constants::constant_variables::constants::INITIAL_DEBT_INDEX;
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
-use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve_data};
-use crate::protocol::libraries::update::UpdateLogic;
-use crate::protocol::libraries::user::get_asset_debt;
-use crate::protocol::logic::validation::ValidationLogic;
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
-use crate::protocol::utils::price::{
- calculate_transfer_fee, update_token_price
+use crate::constants::{
+    constant_variables::constants::INITIAL_DEBT_INDEX,
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value}
 };
-use crate::stable_storage::state_handler::*;
-use crate::stable_storage::storable::Candid;
+use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::guards::{
+    api_limiter::request_limiter,
+    locks_handler::CallerGuard
+};
+use crate::protocol::libraries::{
+    reserve::{self, get_asset_principal, get_reserve_data},
+    update::UpdateLogic,
+    user::get_asset_debt
+};
+use crate::protocol::logic::validation::ValidationLogic;
+use crate::protocol::{
+    utils::log::{log_internal, LogLevel, LogFlusher},
+    utils::price::{calculate_transfer_fee, update_token_price}
+};
+use crate::stable_storage::{
+    state_handler::*,
+    storable::Candid
+};
 use crate::{debug, error, info};
 use candid::Nat;
 use ic_cdk::update;

@@ -1,14 +1,11 @@
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::{
-    AssetInfo, FaucetReserves, ReserveData, UserData,
+    AssetInfo, FaucetReserves, ReserveData, UserData, InitArgs
 };
 
 #[cfg(feature = "testnet")]
 use declarations::structs::Challenge;
-use candid::Nat;
-use candid::Principal;
-use declarations::datatypes::InitArgs;
-use declarations::structs::{AssetData, CycleAlert, TokenAlert};
+use candid::{Nat,Principal};
 use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
@@ -25,7 +22,7 @@ mod protocol;
 mod stable_storage;
 use crate::declarations::structs::{
     ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
-    ExecuteWithdrawParams, UserAccountData,
+    ExecuteWithdrawParams, UserAccountData, AssetData, CycleAlert, TokenAlert
 };
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::stable_storage::state_handler::mutate_state;

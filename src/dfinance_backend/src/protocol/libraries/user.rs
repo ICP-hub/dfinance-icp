@@ -19,7 +19,7 @@ use crate::declarations::{
 use crate::guards::access_control::check_is_tester;
 use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous, is_caller_authorized_for_asset};
 use crate::guards::access_control::{
-    guard_optional_principal_not_anonymous, guard_principal_not_anonymous, guard_admin_only, guard_prevent_anonymous
+    guard_optional_principal_not_anonymous, guard_principal_not_anonymous
 };
 use crate::protocol::utils::{
     log::{log_internal, LogLevel, LogFlusher},

@@ -66,6 +66,7 @@ const SupplyPopup = ({
 
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -206,6 +207,8 @@ const SupplyPopup = ({
       if (numericAmount + transferFee <= supplyBalance) {
         const adjustedConversionRate = Number(conversionRate) / SCALING_FACTOR;
         const convertedValue = numericAmount * adjustedConversionRate;
+        const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+        setUsdAmount(parseFloat(Value));
         setUsdValue(convertedValue.toFixed(8));
       } else {
       }
@@ -577,7 +580,7 @@ const SupplyPopup = ({
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    const amountAdded = currentCollateralStatus ? usdValue || 0 : 0;
+    const amountAdded = currentCollateralStatus ? usdAmount || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {

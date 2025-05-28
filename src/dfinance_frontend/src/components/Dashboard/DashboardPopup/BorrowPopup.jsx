@@ -80,6 +80,7 @@ const Borrow = ({
   const [amount, setAmount] = useState("");
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -431,7 +432,8 @@ const Borrow = ({
     totalDebt,
     liquidationThreshold
   ) => {
-    const amountTaken = usdValue || 0;
+
+    const amountTaken = usdAmount || 0;
     let totalCollateralValue = parseFloat(totalCollateral) || 0;
     if (totalCollateralValue < 0) totalCollateralValue = 0;
     let totalDeptValue = parseFloat(totalDebt) + parseFloat(amountTaken);
@@ -523,6 +525,8 @@ const Borrow = ({
     if (numericAmount <= borrowableValue) {
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue = numericAmount * adjustedConversionRate;
+      const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+        setUsdAmount(parseFloat(Value));
       setUsdValue(convertedValue.toFixed(7));
     } else {
       console.warn("Amount exceeds borrowable value.");
@@ -723,7 +727,7 @@ const Borrow = ({
    *      - acknowledgment required but not given.
    */
   useEffect(() => {
-    const amountTaken = usdValue || 0;
+    const amountTaken = usdAmount || 0;
     const amountAdded = 0;
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
@@ -734,7 +738,7 @@ const Borrow = ({
       totalDebt,
       liquidationThreshold
     );
-
+    console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);

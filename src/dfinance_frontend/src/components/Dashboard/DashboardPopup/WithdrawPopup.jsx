@@ -66,6 +66,7 @@ const WithdrawPopup = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [amount, setAmount] = useState("");
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -192,6 +193,8 @@ const WithdrawPopup = ({
       if (numericAmount <= truncatedAssetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
+        const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+        setUsdAmount(parseFloat(Value));
         setUsdValue(parseFloat(convertedValue));
       } else {
         console.error("Amount exceeds the supply balance");
@@ -444,10 +447,10 @@ const WithdrawPopup = ({
     liquidationThreshold,
     reserveliquidationThreshold,
     currentCollateralStatus,
-    usdValue,
+    usdAmount,
   }) => {
     const amountTaken = currentCollateralStatus
-      ? (usdValue || 0).toFixed(8)
+      ? (usdAmount || 0).toFixed(8)
       : "0.00000000";
     const truncateTo8Decimals = (num) =>
       Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
@@ -501,7 +504,7 @@ const WithdrawPopup = ({
         : parseFloat(totalDebtValue) / totalCollateralValue;
     ltv =
       Math.trunc(ltv * (SCALING_FACTOR * PERCENTAGE_FACTOR)) / SCALING_FACTOR; //in percent
-
+    console.log("healthFactor withdraw", healthFactor);
     return {
       amountTaken,
       totalCollateralValue,
@@ -623,7 +626,7 @@ const WithdrawPopup = ({
       liquidationThreshold,
       reserveliquidationThreshold,
       currentCollateralStatus,
-      usdValue,
+      usdAmount,
     });
 
     const truncateToDecimals = (num, decimals) => {
@@ -705,6 +708,8 @@ const WithdrawPopup = ({
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
         Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
+      const Value = ( Number(amount.toString().replace(/,/g, ""))+ Number(formattedTransactionFee)) * adjustedConversionRate;
+      setUsdAmount(parseFloat(Value));
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);

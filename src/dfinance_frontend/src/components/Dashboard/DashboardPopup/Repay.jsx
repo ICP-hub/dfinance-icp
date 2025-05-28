@@ -88,6 +88,7 @@ const Repay = ({
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
@@ -231,6 +232,8 @@ const Repay = ({
     }
     const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
     const convertedValue = numericAmount * adjustedConversionRate;
+    const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+        setUsdAmount(parseFloat(Value));
     setUsdValue(convertedValue.toFixed(7));
     setAmount(inputAmount);
   };
@@ -555,7 +558,7 @@ const Repay = ({
     liquidationThreshold
   ) => {
     const amountTaken = 0;
-    const amountAdded = usdValue || 0;
+    const amountAdded = usdAmount || 0;
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountTaken);
     let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);

@@ -215,10 +215,6 @@ impl ValidationLogic {
             };
 
         if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
-            let transfer_token_fee =
-                calculate_transfer_fee(&reserve.asset_name.clone(), amount.clone())?;
-
-            amount = amount.clone() - transfer_token_fee.clone();
 
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;

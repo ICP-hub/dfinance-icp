@@ -532,7 +532,7 @@ pub fn fetch_user_data(
                             info!(
                                 "dToken Balance: {:?}, Debt Token Balance: {:?}",
                                 reserve_data.d_token_balance,
-                                reserve_data.debt_token_blance
+                                reserve_data.debt_token_balance
                             );
                             info!(
                                 "Liquidity Index: {:?}, Variable Borrow Index: {:?}",

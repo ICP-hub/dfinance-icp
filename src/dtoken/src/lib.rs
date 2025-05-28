@@ -546,30 +546,6 @@ async fn icrc1_transfer(
                 (from_principal, arg.to.owner, asset_name, arg.amount.clone()),
             )
             .await;
-
-            // Attempt to reverse the token transfer
-            let rollback_result = execute_transfer(
-                arg.to.clone(),       // From: recipient
-                from_account.clone(), // To: original sender
-                None,
-                arg.fee.clone(),
-                arg.amount.clone(),
-                arg.memo.clone(),
-                arg.created_at_time,
-            )
-            .await;
-
-            if rollback_result.is_err() {
-                return Err(TransferError::GenericError {
-                    message: "CRITICAL: Transfer succeeded, but rollback failed.".to_string(),
-                    error_code: Nat::from(999u32),
-                });
-            }
-
-            return Err(TransferError::GenericError {
-                message: "Backend update failed. Transfer reverted.".to_string(),
-                error_code: Nat::from(11u32),
-            });
         }
     }
     transfer_outcome
@@ -679,30 +655,6 @@ async fn icrc2_transfer_from(arg: TransferFromArgs) -> Result<Nat, TransferFromE
                 (arg.from.owner, arg.to.owner, asset_name, arg.amount.clone()),
             )
             .await;
-
-            // Attempt to rollback (reverse transfer)
-            let rollback_result = execute_transfer(
-                arg.to.clone(),   // from
-                arg.from.clone(), // to
-                None,
-                arg.fee.clone(),
-                arg.amount.clone(),
-                arg.memo.clone(),
-                arg.created_at_time,
-            )
-            .await;
-
-            if rollback_result.is_err() {
-                return Err(TransferFromError::GenericError {
-                    message: "CRITICAL: Transfer failed and rollback also failed.".to_string(),
-                    error_code: Nat::from(999u32),
-                });
-            }
-
-            return Err(TransferFromError::GenericError {
-                message: "Backend update failed. Transfer reverted.".to_string(),
-                error_code: Nat::from(11u32),
-            });
         }
     }
     transfer_outcome

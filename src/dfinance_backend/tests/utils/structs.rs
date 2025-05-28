@@ -196,7 +196,7 @@ pub struct UserReserveData {
     pub is_borrowed: bool,
     pub can_be_collateral: bool,
     pub d_token_balance: Nat,
-    pub debt_token_blance: Nat,
+    pub debt_token_balance: Nat,
 }
 
 #[derive(CandidType, Clone, Debug, Deserialize, Serialize)]

@@ -233,7 +233,7 @@ type UserReserveData = record {
   liquidity_index : nat;
   variable_borrow_index : nat;
   reserve : text;
-  debt_token_blance : nat;
+  debt_token_balance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };

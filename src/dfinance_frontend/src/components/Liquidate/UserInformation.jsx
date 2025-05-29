@@ -1184,7 +1184,7 @@ const UserInformationPopup = ({
         const item1 = filteredItems?.find((item) => item[0] === assetName);
 
         const liquidationThreshold =
-          Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
+          Number(item1?.[1]?.Ok[0]?.configuration?.liquidation_threshold) /
           SCALING_FACTOR || 0;
 
         return { assetName, liquidationThreshold };

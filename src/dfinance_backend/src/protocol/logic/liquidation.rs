@@ -1,4 +1,4 @@
-use crate::api::inter_canister::get_balance;
+use crate::api::inter_canister::{get_balance, get_transfer_fee};
 use crate::constants::{
     constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR},
     data_types::zero_nat_value,
@@ -13,7 +13,7 @@ use crate::guards::{
     locks_handler::CallerGuard,
 };
 use crate::protocol::libraries::{
-    reserve::{self, burn_scaled, get_reserve_data, mint_scaled},
+    reserve::{self, burn_scaled, get_reserve_data, mint_scaled, get_asset_principal},
     update::{user_data, user_reserve, UpdateLogic},
     user::{register_user, user_normalized_supply},
 };
@@ -113,9 +113,11 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .ok_or(Error::NoUserReserveDataFound)?;
 
     let transfer_token_fee = calculate_transfer_fee(&params.debt_asset, params.amount.clone())?;
+    let repay_ledger_canister_id = get_asset_principal(params.debt_asset.clone())?;
+    let ledger_fee = get_transfer_fee(repay_ledger_canister_id).await?;
 
     let (earned_rewards, liquidity_bonus) = to_get_reward_amount(
-        params.amount.clone() - transfer_token_fee.clone(),
+        params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone()),
         params.collateral_asset.clone(),
         params.debt_asset.clone(),
         collateral_reserve_data.clone(),
@@ -163,7 +165,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     ValidationLogic::validate_liquidation(
         params.debt_asset.clone(),
-        params.amount.clone() - transfer_token_fee.clone(),
+        params.amount.clone() ,
         reward_amount.clone(),
         liquidator_principal,
         user_principal,

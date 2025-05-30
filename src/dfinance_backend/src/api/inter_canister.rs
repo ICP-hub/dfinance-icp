@@ -10,7 +10,7 @@ use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::Tran
 
 
 /*
- * @title Get Transfer Fee
+ * @title Get Ledger Transfer Fee
  * @notice Queries the transfer fee from a specified ledger canister using the ICRC-1 standard.
  * @dev Calls the `icrc1_fee` method of the ledger canister to get the standard token transfer fee.
  * @functionality Token metadata functionality that allows querying the fee required for token transfers

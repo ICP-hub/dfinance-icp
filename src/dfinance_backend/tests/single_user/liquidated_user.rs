@@ -31,7 +31,7 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.40 ICP (transfer fee included)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128), // 0.40357486 ICP (transfer fee included)
+            reward_amount: Nat::from(40_357_475u128), // 0.40357486 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },

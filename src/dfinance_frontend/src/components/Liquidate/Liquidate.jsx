@@ -7,7 +7,7 @@ import Element from "../../../public/element/elements.svg";
 import DebtStatus from "./LiquidationList";
 import WalletModal from "../Dashboard/WalletModal";
 import FreezeCanisterPopup from "../Dashboard/DashboardPopup/CanisterDrainPopup";
-import useUserData from "../customHooks/useUserData";
+import useUserData from "../CustomHooks/useUserData";
 import { useLocation } from "react-router-dom";
 
 /**

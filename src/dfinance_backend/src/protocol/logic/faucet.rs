@@ -1,63 +1,52 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-
-use crate::api::inter_canister::asset_transfer_from;
-use crate::api::inter_canister::get_balance;
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
+use crate::api::inter_canister::{asset_transfer_from, get_balance};
+use crate::constants::{
+    data_types::zero_nat_value,
+    constant_variables::constants::{CAPTCHA_HARDNESS, CAPTCHA_LIFETIME, CAPTCHA_THRESHOLD},
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value}
+};
 use crate::debug;
 use crate::declarations::datatypes::{FaucetReserve, FaucetReserves};
+use crate::declarations::structs::{CaptchaEntry,Challenge};
 use crate::error;
-use crate::guards::access_control::guard_prevent_anonymous;
-use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::utils::log::LogFlusher;
+use crate::guards::{
+    access_control::guard_prevent_anonymous,
+    api_limiter::request_limiter,
+    locks_handler::CallerGuard
+};
 use crate::info;
 use crate::protocol::libraries::update::{get_faucet_reserve_for_asset, get_user_faucet_reserves};
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::stable_storage::state_handler::mutate_state;
-use crate::stable_storage::state_handler::read_state;
+use crate::protocol::utils::{
+    log::{log_internal, LogLevel, LogFlusher},
+    math_utils::ScalingMath,
+    price::get_cached_exchange_rate
+};
+use crate::stable_storage::state_handler::{mutate_state,read_state, insert_certified_value};
 use crate::stable_storage::storable::Candid;
 use candid::{Nat, Principal};
 use ic_cdk_macros::update;
 use ic_captcha::CaptchaBuilder;
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::protocol::utils::price::get_cached_exchange_rate;
-use crate::stable_storage::state_handler::get_certificate_witness;
-use crate::declarations::datatypes::Certificate;
 
 thread_local! {
-    // static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
     static CAPTCHA_STATE: RefCell<HashMap<Principal, CaptchaEntry>> = RefCell::new(HashMap::new());
 
 }
-const CAPTCHA_LIFETIME: u64 = 1 * 60 * 1_000_000_000; // 1 minutes in nanoseconds
-const CAPTCHA_THRESHOLD: usize = 5;
-const CAPTCHA_HARDNESS: u8 = 32;
 
-#[derive(Debug, Clone)]
-pub struct CaptchaEntry {
-    pub data: String,
-    pub created_at: u64,
-}
 
-#[derive(candid::CandidType, serde::Serialize)]
-pub struct Challenge {
-    pub base64_img: String,
-}
+
 /*
- * @title Token Faucet
+ * @title Token Faucet (Only for Testnet)
  * @notice This function allows users to request tokens from the faucet for a specified asset and amount.
  * @dev The function performs several validation checks, updates user data, and transfers tokens from the platform to the user.
  * @functionality Test token distribution functionality that provides users with tokens for testing purposes with rate limiting
  *
- * # Parameters
+ * @params
  * - `asset` - The asset symbol (e.g., "ETH", "BTC"). Must be non-empty and <= 7 characters.
  * - `amount` - The amount of tokens to request. Must be greater than zero.
  *
- * # Returns
+ * @returns
  * - `Ok(Nat)` - The new balance after the transfer.
  */
 #[cfg(feature = "testnet")]
@@ -186,10 +175,10 @@ pub async fn faucet(asset: String, amount: Nat) -> Result<Nat, Error> {
  * @dev It validates the caller, retrieves the user data, resets the faucet usage, and updates the state.
  * @functionality Administrative functionality that allows resetting a user's faucet usage to enable additional token requests
  *
- * # Parameters
+ * @params
  * - `user_principal` - The principal of the user whose faucet usage is to be reset.
  *
- * # Returns
+ * @returns
  * - `Ok(())` - If the faucet usage is successfully reset.
  */
 pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> {
@@ -197,6 +186,9 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         error!("Anonymous principals are not allowed");
         return Err(Error::AnonymousPrincipal);
     }
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     let mut user_faucet_reserves = get_user_faucet_reserves(user_principal)?;
 
@@ -210,7 +202,6 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
         return Err(Error::NoUserReserveDataFound);
     }
 
-    info!("user faucet reserve updated successfully");
     mutate_state(|state| {
         state
             .faucet_data
@@ -218,10 +209,6 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
     });
     insert_certified_value(user_principal.to_string(), user_faucet_reserves.clone());
 
-    info!(
-        "updated user data after facuet reset = {:?}",
-        user_faucet_reserves
-    );
     Ok(())
 }
 
@@ -354,13 +341,13 @@ pub fn captcha_filter(
 }
 
 /*
- * @title Get All Faucet
+ * @title Get All Faucet (Only for Testnet)
  * @dev Retrieves a list of all users with their faucet reserves.
  * @returns A vector of tuples containing user principals and their faucet reserves.
  * @functionality This function returns a list of all users and their respective faucet reserves.
  */
 #[cfg(feature = "testnet")]
-pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate) {
+pub async fn get_all_faucet() -> Vec<(Principal, FaucetReserves)> {
     let res = read_state(|state| {
         state
             .faucet_data
@@ -368,7 +355,6 @@ pub async fn get_all_faucet() -> (Vec<(Principal, FaucetReserves)>, Certificate)
             .map(|(k, v)| (k.clone(), v.0.clone()))
             .collect()
     });
-    let cer = get_certificate_witness("all_faucet".to_string());
-    (res, cer)
+    res
 
 }

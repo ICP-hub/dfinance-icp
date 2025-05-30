@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import FaucetDetails from "../../components/Faucet/FaucetList";
 import { useSelector } from "react-redux";
-import useAssetData from "../../components/customHooks/useAssets";
+import useAssetData from "../../components/CustomHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import useUserData from "../../components/customHooks/useUserData";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
+import useUserData from "../../components/CustomHooks/useUserData";
 import { SCALING_FACTOR } from '../../utils/constants';
 // Mock all the required dependencies
 jest.mock("react-redux", () => ({
@@ -60,17 +60,17 @@ jest.mock("../../components/Faucet/FaucetPopup", () => ({
   ),
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => jest.fn());
+jest.mock("../../components/CustomHooks/useAssets", () => jest.fn());
 
 jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () =>
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () =>
   jest.fn()
 );
 
-jest.mock("../../components/customHooks/useUserData", () => jest.fn());
+jest.mock("../../components/CustomHooks/useUserData", () => jest.fn());
 
 // Mock images
 jest.mock("../../../public/assests-icon/ckBTC.png", () => "ckBTC.png");

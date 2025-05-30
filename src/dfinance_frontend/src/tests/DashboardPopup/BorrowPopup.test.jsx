@@ -11,7 +11,7 @@ import { MemoryRouter } from "react-router-dom";
 import Borrow from "../../components/Dashboard/DashboardPopup/BorrowPopup";
 
 // Mocking custom hooks and components used in Borrow component for testing
-jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     ckBTCUsdRate: 50000,
@@ -32,11 +32,32 @@ jest.mock("../../utils/useAuthClient", () => ({
   }),
 }));
 
-jest.mock("../../components/customHooks/useUserData", () => ({
+// Updated mock for useUserData with proper structure
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
-    userData: {},
-    userAccountData: {},
+    userData: {
+      // Add any userData properties your component expects
+      totalSupplied: 1000,
+      totalBorrowed: 500,
+    },
+    userAccountData: {
+      Ok: [
+        [
+          "1000000000",  // index 0 - totalSupply (scaled)
+          "500000000",   // index 1 - totalBorrow (scaled)
+          "2000000000",  // index 2 - availableSupply (scaled)
+          "1500000000",  // index 3 - availableBorrow (scaled)
+          "2000000",     // index 4 - healthFactor (scaled, 2.0)
+          "1500000000",  // index 5 - borrowValue (scaled) - This is what your useEffect uses
+          "85000000",    // index 6 - liquidationThreshold (scaled, 85%)
+          // Add more values if your component expects them
+        ]
+      ]
+    },
+    dashboardRefreshTrigger: 0,
+    loading: false,
+    error: null,
   }),
 }));
 
@@ -49,7 +70,7 @@ jest.mock("@dfinity/principal", () => ({
   },
 }));
 
-jest.mock("../../components/customHooks/useAssets", () => ({
+jest.mock("../../components/CustomHooks/useAssets", () => ({
   __esModule: true,
   default: jest.fn().mockReturnValue({
     filteredItems: [
@@ -57,6 +78,9 @@ jest.mock("../../components/customHooks/useAssets", () => ({
     ], // Mocked asset data
   }),
 }));
+
+// Import the mocked hook so we can override it in specific tests
+import useUserData from "../../components/CustomHooks/useUserData";
 
 describe("Borrow Component", () => {
   // Mock properties passed into Borrow component
@@ -83,6 +107,11 @@ describe("Borrow Component", () => {
     setIsModalOpen: jest.fn(),
     onLoadingChange: jest.fn(),
   };
+
+  beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+  });
 
   // Test case 1: Verify that the Borrow component renders correctly
   test("renders Borrow component", async () => {
@@ -126,7 +155,6 @@ describe("Borrow Component", () => {
     const borrowButton = screen.getByRole("button", { name: /Borrow ckBTC/i });
     expect(borrowButton).toBeDisabled(); // Button should be disabled if amount is 0
   });
-
 
   // Test case 3: Verify that transaction overview details are shown correctly
   test("displays correct transaction overview information", async () => {
@@ -219,7 +247,7 @@ describe("Borrow Component", () => {
 
     const usdValueAfterInput = screen.queryByText("$0.00 USD");
     if (usdValueAfterInput === null) {
-      expect(true).toBe(true); // Check for USD sign
+      expect(true).toBe(true); 
     } else {
       expect(screen.getByText(/\$/)).toBeInTheDocument();
     }
@@ -255,5 +283,83 @@ describe("Borrow Component", () => {
       // Verify that liquidation info is displayed correctly
       expect(screen.getByText(/liquidation at/i)).toBeInTheDocument();
     });
+  });
+
+  // Test case 8: Test with empty userAccountData
+  test("handles empty userAccountData gracefully", async () => {
+    // Override the mock for this specific test
+    useUserData.mockReturnValueOnce({
+      userData: {},
+      userAccountData: null,
+    });
+
+    await act(async () => {
+      render(
+        <Provider store={store}>
+          <MemoryRouter>
+            <Borrow {...defaultProps} />
+          </MemoryRouter>
+        </Provider>
+      );
+    });
+
+    // Component should still render without crashing
+    expect(
+      screen.getByPlaceholderText(/Enter Amount ckBTC/i)
+    ).toBeInTheDocument();
+  });
+
+  // Test case 9: Test with userAccountData having insufficient array length
+  test("handles userAccountData with short array", async () => {
+    // Override the mock for this specific test
+    useUserData.mockReturnValueOnce({
+      userData: {},
+      userAccountData: {
+        Ok: [
+          ["value1", "value2", "value3"] // Only 3 items, less than 6
+        ]
+      },
+    });
+
+    await act(async () => {
+      render(
+        <Provider store={store}>
+          <MemoryRouter>
+            <Borrow {...defaultProps} />
+          </MemoryRouter>
+        </Provider>
+      );
+    });
+
+    // Component should still render without crashing
+    expect(
+      screen.getByPlaceholderText(/Enter Amount ckBTC/i)
+    ).toBeInTheDocument();
+  });
+
+  // Test case 10: Test with malformed userAccountData structure
+  test("handles malformed userAccountData structure", async () => {
+    // Override the mock for this specific test
+    useUserData.mockReturnValueOnce({
+      userData: {},
+      userAccountData: {
+        Ok: [] // Empty Ok array
+      },
+    });
+
+    await act(async () => {
+      render(
+        <Provider store={store}>
+          <MemoryRouter>
+            <Borrow {...defaultProps} />
+          </MemoryRouter>
+        </Provider>
+      );
+    });
+
+    // Component should still render without crashing
+    expect(
+      screen.getByPlaceholderText(/Enter Amount ckBTC/i)
+    ).toBeInTheDocument();
   });
 });

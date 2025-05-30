@@ -3,6 +3,7 @@ use crate::utils::error as errors;
 use candid::Nat;
 use candid::{decode_one, encode_args, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title Faucet Stress Test
@@ -60,37 +61,37 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14_000_000u128), // 0.14 ckETH
+            amount: Nat::from(15_000_000u128), // 0.15 ckETH
             expect_success: true,
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     let total_users = random_users.len();
     // Log the start of the stress test
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Faucet Stress Testing ========================\n"
     );
-    ic_cdk::println!(
+    info!(
         "🔥 Stress Testing with {} user principals! 🔥\n",
         total_users
     );
 
     // Iterate over each test case to perform faucet requests
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🚀 Test Case {}: Faucet Request Initiated", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🚀 Test Case {}: Faucet Request Initiated", i + 1);
 
         // Convert the amount to float for easier display
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!(
+        info!(
             "🔹 Asset: {} \n🔹 Amount (Tokens): {:.8} \n🔹 Expected Success: {}",
             case.asset,
             amount_float / 100000000.0,
             case.expect_success
         );
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         // Track success and failure counts for the current test case
         let mut success_count = 0;
@@ -125,14 +126,14 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                         decode_one(&reply).expect("Failed to decode faucet response");
                     match faucet_response {
                         Ok(_) => {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ User {}: Faucet successful.",
                                 user_principal.to_text(),
                             );
                             success_count += 1;
                         }
                         Err(error) => {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ User {}: Faucet Failed. Error: {}",
                                 user_principal.to_text(),
                                 error.message()
@@ -142,7 +143,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     }
                 }
                 Ok(WasmResult::Reject(reject_message)) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ User {}: Faucet Rejected. Message: {}",
                         user_principal.to_text(),
                         reject_message
@@ -150,7 +151,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     failure_count += 1;
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ User {}: Faucet Call Error: {:?}",
                         user_principal.to_text(),
                         e
@@ -192,13 +193,13 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     match faucet_response {
                         Ok(_) => {
                             if !case.expect_success {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success.",
                                     i + 1
                                 );
                                 continue;
                             }
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Faucet successful.",
                                 i + 1,
                             );
@@ -206,7 +207,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                         Err(error) => {
                             if !case.expect_success {
                                 if case.expected_error_message.as_deref() != Some(error.message()) {
-                                    println!(
+                                    error!(
                                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                         i + 1,
                                         case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -214,20 +215,20 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                                     );
                                     continue;
                                 }
-                                ic_cdk::println!(
+                                info!(
                                     "✅ IC Test Case {} Passed: Faucet rejected as expected with message: {:?}",
                                     i + 1,
                                     error
                                 );
                             } else {
-                                ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                                error!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                                 continue;
                             }
                         }
                     }
                 }
                 Ok(WasmResult::Reject(reject_message)) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
@@ -235,7 +236,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
                     continue;
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Error during faucet function call: {:?}",
                         i + 1,
                         e
@@ -246,15 +247,15 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         }
 
         // Log summary for the test case
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("📊 Test Case {} Summary: ", i + 1);
-        ic_cdk::println!("✅ Successful Transactions: {}", success_count,);
-        ic_cdk::println!("❌ Failed Transactions: {}", failure_count,);
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("\n------------------------------------------------------------");
+        info!("📊 Test Case {} Summary: ", i + 1);
+        info!("✅ Successful Transactions: {}", success_count,);
+        error!("❌ Failed Transactions: {}", failure_count,);
+        info!("------------------------------------------------------------\n");
     }
 
     // Log the completion of the faucet stress test
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Faucet Stress Test Completed ========================\n"
     );
 }

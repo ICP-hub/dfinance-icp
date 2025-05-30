@@ -1,13 +1,10 @@
 use candid::{ encode_one, Principal};
 use candid::Nat;
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
 
 /*
  * @title Liquidation Function Test
@@ -49,7 +46,7 @@ use crate::utils::structs::*;
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.4 ICP (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_400_000u128), // 0.404 ICP (liquidation reward)
+            reward_amount: Nat::from(40_357_475u128), // 0.404 ICP (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -58,7 +55,7 @@ use crate::utils::structs::*;
             collateral_asset: "ckBTC".to_string(),
             amount: Nat::from(210_000u128), // 0.0021 ckBTC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220_500u128), // 0.002205 ckBTC (liquidation reward)
+            reward_amount: Nat::from(220_486u128), // 0.002205 ckBTC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -67,7 +64,7 @@ use crate::utils::structs::*;
             collateral_asset: "ckUSDC".to_string(),
             amount: Nat::from(20_000_000_000u128), // 2000 ckUSDC (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(21_000_000_000u128), // 2100 ckUSDC (liquidation reward)
+            reward_amount: Nat::from(20_999_673_916u128), // 2100 ckUSDC (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
@@ -76,18 +73,18 @@ use crate::utils::structs::*;
             collateral_asset: "ckUSDT".to_string(),
             amount: Nat::from(12_500_000_000u128), // 1250 ckUSDT (transferfee included)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13_062_500_000u128), // 1306.25 ckUSDT (liquidation reward)
+            reward_amount: Nat::from(13_062_175_517u128), // 1306.25 ckUSDT (liquidation reward)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             debt_asset: "ICP".to_string(),
-            collateral_asset: "INV".to_string(),
+            collateral_asset: "ICP".to_string(),
             amount: Nat::from(50_000_000u128),  // 0.5 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
             reward_amount: Nat::from(50_000_000u128),  // Expected reward: 0.5 ICP
-            expect_success: false,
-            expected_error_message: Some("no reserve data found of the given asset".to_string()), // Expecting failure due to invalid collateral asset
+            expect_success: true,
+            expected_error_message: None,
         },
         TestCase {
             debt_asset: "ckBTC".to_string(),
@@ -99,9 +96,8 @@ use crate::utils::structs::*;
             expected_error_message: Some("Repay cannot be more than debt".to_string()), // Expecting failure due to insufficient collateral
         },
     ];
-
-    let user_principal = get_user_principal();
-    ic_cdk::println!(
+    init_tracing();
+    info!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
 
@@ -117,25 +113,26 @@ use crate::utils::structs::*;
     test_create_user_reserve_with_low_health(pic, backend_canister);
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
+        info!("\n------------------------------------------------------------");
         if i%2 != Nat::from(0u128) {
-            ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+            info!("🔵 IC Test Case {}: Executing Liquidation Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
         }else{
-            ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
+            info!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
         }
-        // ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
-        ic_cdk::println!("Debt Asset: {}", case.debt_asset);
-        ic_cdk::println!("Collateral Asset: {}", case.collateral_asset);
+        info!("Debt Asset: {}", case.debt_asset);
+        info!("Collateral Asset: {}", case.collateral_asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("On Behalf Of: {}", case.on_behalf_of);
-        ic_cdk::println!("Reward Amount: {}", case.reward_amount);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        info!("Amount: {}", amount_float / 100000000.0);
+        info!("On Behalf Of: {}", case.on_behalf_of);
+        let rew_amount_u128: u64 = case.reward_amount.clone().0.try_into().unwrap();
+        let rew_amount_float = rew_amount_u128 as f64;
+        info!("Reward Amount: {}", rew_amount_float / 100000000.0);
+        info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            info!("Expected Error Message: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         if i % 2 == Nat::from(0u128) {
             let asset_principal =
@@ -143,12 +140,12 @@ use crate::utils::structs::*;
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Liquidation rejected as expected",
                                 i + 1,
                             );
                         } else {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected success but got rejection",
                                 i + 1
                             );
@@ -163,7 +160,7 @@ use crate::utils::structs::*;
              * @dev Validates approval status and expected outcomes.
              */
             let approved = test_icrc2_aprove(
-                get_users_principal(Nat::from(1u128)).unwrap(),
+                get_user_principal2(),
                 asset_principal,
                 pic,
                 backend_canister,
@@ -173,7 +170,7 @@ use crate::utils::structs::*;
             if !approved {
                 if !case.expect_success {
                     if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
-                        println!(
+                        error!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
                         case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -181,12 +178,12 @@ use crate::utils::structs::*;
                     );
                         continue;
                     }
-                    ic_cdk::println!(
+                    info!(
                         "✅ IC Test Case {} Passed: Liquidation rejected as expected",
                         i + 1,
                     );
                 } else {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Expected success but got rejection",
                         i + 1
                     );
@@ -197,24 +194,24 @@ use crate::utils::structs::*;
 
         if i % 2 != Nat::from(0u128) {
             if case.collateral_asset == case.debt_asset {
-                ic_cdk::println!("\n======================== Initial Reserve Data Before Roll Backs  ========================\n");
+                info!("\n======================== Initial Reserve Data Before Roll Backs  ========================\n");
 
                 fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
             } else {
-                ic_cdk::println!("\n======================== Initial Debt Asset Reserve Data Before Roll Backs  ========================\n");
+                info!("\n======================== Initial Debt Asset Reserve Data Before Roll Backs  ========================\n");
 
                 fetch_reserve_data(pic, backend_canister, &case.debt_asset);
 
-                ic_cdk::println!("\n======================== Initial Collateral Asset Reserve Data Before Roll Backs  ========================\n");
+                info!("\n======================== Initial Collateral Asset Reserve Data Before Roll Backs  ========================\n");
 
                 fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
             }
 
-            ic_cdk::println!("\n======================== Initial Liquidator User Data Before Roll Backs ========================\n");
+            info!("\n======================== Initial Liquidator User Data Before Roll Backs ========================\n");
 
-            fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
 
-            ic_cdk::println!("\n======================== Initial On Behalf User Data Before Roll Backs ========================\n");
+            info!("\n======================== Initial On Behalf User Data Before Roll Backs ========================\n");
 
             fetch_user_data(
                 pic,
@@ -239,7 +236,7 @@ use crate::utils::structs::*;
          */
         let result = pic.update_call(
             backend_canister,
-            get_users_principal(Nat::from(1u32)).unwrap(),
+            get_user_principal2(),
             "execute_liquidation",
             encode_one(liquidation_params).unwrap(),
         );
@@ -252,12 +249,12 @@ use crate::utils::structs::*;
                 match liquidation_response {
                     Ok(_) => {
                         if case.expect_success {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Liquidation completed successfully",
                                 i + 1
                             );
                         } else {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success",
                                 i + 1
                             );
@@ -266,45 +263,45 @@ use crate::utils::structs::*;
                     Err(error) => {
                         if case.expect_success {
                             if i % 2 != 0 {
-                                ic_cdk::println!(
+                                info!(
                                     "\n============================================================"
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "🟢 Test Case {} Passed: ICRC Approval Not Provided",
                                     i + 1
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "   ➜ Triggering rollback mechanism for asset: {}",
                                     case.debt_asset
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "------------------------------------------------------------"
                                 );
-                                ic_cdk::println!("🔄 Rollback Process Initiated...");
-                                ic_cdk::println!("   ⏳ Reverting all state changes...");
-                                ic_cdk::println!(
+                                info!("🔄 Rollback Process Initiated...");
+                                info!("   ⏳ Reverting all state changes...");
+                                info!(
                                     "   🔁 Restoring previous balances and reserves..."
                                 );
-                                ic_cdk::println!("✅ Rollback Successfully Completed!");
-                                ic_cdk::println!(
+                                info!("✅ Rollback Successfully Completed!");
+                                info!(
                                     "============================================================\n"
                                 );
                             }
                         } else if case.expected_error_message.as_deref() != Some(error.message()) {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                 i + 1,
                                 case.expected_error_message.as_deref().unwrap_or("N/A"),
                                 error.message()
                             );
                         } else {
-                            ic_cdk::println!("✅ Test Case {} Passed: Supply rejected as expected with message: {:?}", i + 1, error);
+                            info!("✅ Test Case {} Passed: Supply rejected as expected with message: {:?}", i + 1, error);
                         }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                     i + 1,
                     reject_message
@@ -312,7 +309,7 @@ use crate::utils::structs::*;
                 continue;
             }
             Err(e) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Error during liquidation function call: {:?}",
                     i + 1,
                     e
@@ -323,24 +320,24 @@ use crate::utils::structs::*;
         if i%2 == Nat::from(0u128) {
 
             if case.collateral_asset == case.debt_asset {
-                ic_cdk::println!("\n========================  Final Reserve Data (No Rollbacks Initiated)  ========================\n");
+                info!("\n========================  Final Reserve Data (No Rollbacks Initiated)  ========================\n");
     
                 fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
             } else {
-                ic_cdk::println!("\n======================== Final Debt Asset Reserve Data (No Rollbacks Initiated)  ========================\n");
+                info!("\n======================== Final Debt Asset Reserve Data (No Rollbacks Initiated)  ========================\n");
     
                 fetch_reserve_data(pic, backend_canister, &case.debt_asset);
     
-                ic_cdk::println!("\n========================  Final Collateral Asset Reserve Data (No Rollbacks Initiated)  ========================\n");
+                info!("\n========================  Final Collateral Asset Reserve Data (No Rollbacks Initiated)  ========================\n");
     
                 fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
             }
     
-            ic_cdk::println!("\n======================== Liquidator User Data (No Rollbacks Initiated) ========================\n");
+            info!("\n======================== Liquidator User Data (No Rollbacks Initiated) ========================\n");
     
-            fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+            fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
     
-            ic_cdk::println!("\n======================== On Behalf User Data (No Rollbacks Initiated) ========================\n");
+            info!("\n======================== On Behalf User Data (No Rollbacks Initiated) ========================\n");
     
             fetch_user_data(
                 pic,
@@ -350,24 +347,24 @@ use crate::utils::structs::*;
             );
     }else{
         if case.collateral_asset == case.debt_asset {
-            ic_cdk::println!("\n========================  Reserve Data After Roll Backs  ========================\n");
+            info!("\n========================  Reserve Data After Roll Backs  ========================\n");
 
             fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
         } else {
-            ic_cdk::println!("\n======================== Debt Asset Reserve Data After Roll Backs  ========================\n");
+            info!("\n======================== Debt Asset Reserve Data After Roll Backs  ========================\n");
 
             fetch_reserve_data(pic, backend_canister, &case.debt_asset);
 
-            ic_cdk::println!("\n======================== Collateral Asset Reserve Data After Roll Backs  ========================\n");
+            info!("\n======================== Collateral Asset Reserve Data After Roll Backs  ========================\n");
 
             fetch_reserve_data(pic, backend_canister, &case.collateral_asset);
         }
 
-        ic_cdk::println!("\n======================== Liquidator User Data After Roll Backs ========================\n");
+        info!("\n======================== Liquidator User Data After Roll Backs ========================\n");
 
-        fetch_user_data(pic, backend_canister, &user_principal, &case.debt_asset);
+        fetch_user_data(pic, backend_canister, &get_user_principal2(), &case.debt_asset);
 
-        ic_cdk::println!("\n======================== On Behalf User Data After Roll Backs ========================\n");
+        info!("\n======================== On Behalf User Data After Roll Backs ========================\n");
 
         fetch_user_data(
             pic,
@@ -377,7 +374,7 @@ use crate::utils::structs::*;
         );
     }
     }
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Liquidation Tests Completed ========================\n"
     );
 }

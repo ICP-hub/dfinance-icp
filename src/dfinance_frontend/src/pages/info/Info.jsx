@@ -3,27 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
-import useFormatNumber from "../../components/customHooks/useFormatNumber";
-import emailjs from "emailjs-com";
-import useAssetData from "../../components/customHooks/useAssets";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
-import useFetchBalanceBackend from "../../components/customHooks/useFetchBalanceBackend";
+import useFormatNumber from "../../components/CustomHooks/useFormatNumber";
+import useAssetData from "../../components/CustomHooks/useAssets";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
+import useFetchBalanceBackend from "../../components/CustomHooks/useFetchBalanceBackend";
 import MiniLoader from "../../components/Common/miniLoader";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip } from "chart.js";
 import Analytics from "../../../public/helper/analytics-icon.svg";
 import { useSelector } from "react-redux";
 import WalletModal from "../../components/Dashboard/WalletModal";
-import useUserData from "../../components/customHooks/useUserData";
+import useUserData from "../../components/CustomHooks/useUserData";
 import FreezeCanisterPopup from "../../components/Dashboard/DashboardPopup/CanisterDrainPopup";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
+import { threshold } from "../../utils/constants";
+import { tokenThreshold } from "../../utils/constants";
 ChartJS.register(ArcElement, Tooltip);
 
 /**
  * This component displays various statistics related to users, cycles, reserves, and interest accrued.
- * It also monitors cycle and token thresholds and sends email notifications if thresholds are breached.
- *
  * @returns {JSX.Element} - Returns the DashboardCards component.
  */
 const DashboardCards = () => {
@@ -57,7 +56,6 @@ const DashboardCards = () => {
    * =================================================================================== */
 
   const [like, setLike] = useState(false);
-  const [threshold] = useState(5000000000000);
 
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -204,7 +202,8 @@ const DashboardCards = () => {
   // Function to fetch all users from the backend
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
-      const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      // const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      const result = await backendActor.get_all_user_list(totalPages, pageSize, false);
 
       if (!result.Ok || !Array.isArray(result.Ok)) {
         throw new Error("Unexpected response format");
@@ -262,7 +261,7 @@ const DashboardCards = () => {
     try {
       const result = await backendActor.cycle_checker();
       const cycles = result?.Ok[0] ?? "Error retrieving cycles";
-      const cert = result?.Ok[1]; 
+      const cert = result?.Ok[1];
 
       if (cert) {
         try {
@@ -303,7 +302,7 @@ const DashboardCards = () => {
 
 
 
- 
+
   // Function to format numbers with commas
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
@@ -718,8 +717,8 @@ const DashboardCards = () => {
 
                 <p
                   className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
                     }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
@@ -843,7 +842,7 @@ const DashboardCards = () => {
                           Token Available:
                         </p>
                         <p className="text-sm font-bold  text-right">
-                          {Number(assetBalance).toFixed(2)}
+                          <span>${Number(assetBalance.toFixed(2)).toLocaleString('en-US')}</span>
                         </p>
                       </div>
 

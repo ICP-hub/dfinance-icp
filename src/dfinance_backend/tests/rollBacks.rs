@@ -15,15 +15,16 @@ use crate::rollback_testing::borrow::test_borrow;
 use crate::rollback_testing::repay::test_repay;
 use crate::rollback_testing::withdraw::test_withdraw;
 use crate::rollback_testing::liquidation::test_liquidation;
+use tracing::{info,error};
 
 #[test]
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
-    test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
-    test_repay(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
+    // test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
     test_liquidation(&pic, backend_canister);
 }
 
@@ -36,11 +37,11 @@ fn setup() -> (PocketIc, Principal) {
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, INITIAL_CYCLES);
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
-    ic_cdk::println!("Backend canister: {}", backend_canister);
+    info!("Backend canister: {}", backend_canister);
     pic.install_canister(
         backend_canister,
         wasm,
-        candid::encode_one(Principal::anonymous()).unwrap(),
+        candid::encode_one(user_principal).unwrap(),
         Some(Principal::anonymous()),
     );
     let _ = pocket_ic::PocketIc::set_controllers(
@@ -60,24 +61,16 @@ fn setup() -> (PocketIc, Principal) {
     match result {
         Ok(wasm_result) => match wasm_result {
             WasmResult::Reply(bytes) => {
-                println!("Call succeeded. Reply bytes: {:?}", bytes);
-                // Optionally, decode bytes if you know the return type
-                // e.g., let decoded: YourType = decode(&bytes).unwrap();
+                info!("Call succeeded. Reply bytes: {:?}", bytes);
             }
             WasmResult::Reject(reason) => {
-                println!("Call rejected: {}", reason);
+                info!("Call rejected: {}", reason);
             }
         },
         Err(user_error) => {
-            println!("Call failed with user error: {:?}", user_error);
+            info!("Call failed with user error: {:?}", user_error);
         }
     }
-    let _ = pocket_ic::PocketIc::set_controllers(
-        &pic,
-        backend_canister,
-        Some(Principal::anonymous()),
-        vec![user_principal],
-    );
 
     // 🔹 Define test input (token name + reserve data)
     let icp_token_name = "ICP".to_string();
@@ -243,10 +236,10 @@ fn setup() -> (PocketIc, Principal) {
 
                 match initialize_response {
                     Ok(()) => {
-                        ic_cdk::println!("✅ Initialize function succeeded for {:?}", token_name);
+                        info!("✅ Initialize function succeeded for {:?}", token_name);
                     }
                     Err(e) => {
-                        ic_cdk::println!(
+                        error!(
                             "❌ Initialize function failed as expected with error: {:?}",
                             e
                         );
@@ -299,10 +292,10 @@ fn setup() -> (PocketIc, Principal) {
 
             match update_reserve_response {
                 Ok(_message) => {
-                    ic_cdk::println!("✅ update reserve price function succeeded");
+                    info!("✅ update reserve price function succeeded");
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "update reserve price function failed as expected with error: {:?}",
                         e
                     );

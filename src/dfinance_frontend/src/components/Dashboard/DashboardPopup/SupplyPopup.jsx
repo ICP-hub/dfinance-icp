@@ -7,16 +7,16 @@ import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
-import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
-import useUserData from "../../customHooks/useUserData";
+import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
+import useUserData from "../../CustomHooks/useUserData";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
-import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../../customHooks/useTransferFee";
-import { SCALING_FACTOR } from '../../../utils/constants';
+import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../../CustomHooks/useTransferFee";
+import { SCALING_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-import useNotificationSystem from "../../customHooks/useNotification";
+import useNotificationSystem from "../../CustomHooks/useNotification";
 /**
  * SupplyPopup Component
  *
@@ -66,6 +66,7 @@ const SupplyPopup = ({
 
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
@@ -83,7 +84,26 @@ const SupplyPopup = ({
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
   const dispatch = useDispatch();
   const ledgerActors = useSelector((state) => state.ledger);
-  const transferFee = transferFeRetrive?.transferFee;
+
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee) / 1e8
+      : Number(ledgerFee) / 1e8 || 0;
+
+  const transactionFee = transferFee + ledgerFeeNumber;
+  const approvalFee = transactionFee + ledgerFeeNumber;
+
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
+  const formattedApprovalFee = formatFee(approvalFee);
+
   /* ===================================================================================
    *                                  MEMOIZATION
    * =================================================================================== */
@@ -111,8 +131,16 @@ const SupplyPopup = ({
   };
 
   const numericBalance = parseFloat(balance);
-  const supplyBalance = Math.max(numericBalance - transferFee, 0);
-  const hasEnoughBalance = balance >= transferFee;
+  const supplyBalance = Math.max(numericBalance - formattedApprovalFee, 0);
+  const truncateTo8Decimals = (num) => {
+    return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+  };
+  const approvalfee = +formattedApprovalFee || 0;
+  const totalRequired = truncateTo8Decimals(+amount + approvalFee);
+
+  const hasEnoughBalance =
+    balance >= approvalfee &&
+    totalRequired <= +numericBalance;
   const value = currentHealthFactor;
 
   /* ===================================================================================
@@ -179,6 +207,8 @@ const SupplyPopup = ({
       if (numericAmount + transferFee <= supplyBalance) {
         const adjustedConversionRate = Number(conversionRate) / SCALING_FACTOR;
         const convertedValue = numericAmount * adjustedConversionRate;
+        const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+        setUsdAmount(parseFloat(Value));
         setUsdValue(convertedValue.toFixed(8));
       } else {
       }
@@ -187,15 +217,13 @@ const SupplyPopup = ({
     }
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
-        token: tokenStatus.OK
+        token: tokenStatus.OK,
       };
 
       return status;
@@ -227,15 +255,16 @@ const SupplyPopup = ({
     else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
-    const amountAsNat64 = Math.round(amount.replace(/,/g, "") * SCALING_FACTOR);
-    const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
-    const totalAmount = amountAsNat64 + transferFeeBigInt;
+    const amountAsNat64 = BigInt(
+      Math.round(parseFloat(amount.replace(/,/g, "")) * 1e8)
+    );
+    const transferFeeBigInt = BigInt(Math.round(transferFee * 1e8));
+
+    const totalAmount = amountAsNat64 + transferFeeBigInt + ledgerFee;
 
     try {
-
-
       const approval = await ledgerActor.icrc2_approve({
-        fee: [],
+        fee: ledgerFee ? [ledgerFee] : [],
         memo: [],
         from_subaccount: [],
         created_at_time: [],
@@ -247,7 +276,6 @@ const SupplyPopup = ({
           subaccount: [],
         },
       });
-
       if (approval?.Ok) {
         setIsApproved(true);
         toast.success(`Approval successful!`, {
@@ -287,16 +315,18 @@ const SupplyPopup = ({
     }
   };
 
-
-
   const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
   let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
   const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
 
   const scaledAmount = amountAsNat64;
 
+  // Convert ledgerFee to a Number if it's a BigInt, otherwise use it as is
+  const ledgerFeenumber =
+    typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
+
   const totalAmount = transferFeeBigInt
-    ? scaledAmount + transferFeeBigInt
+    ? scaledAmount + transferFeeBigInt + ledgerFeenumber
     : scaledAmount;
 
   // Function to handle the supply process
@@ -318,15 +348,14 @@ const SupplyPopup = ({
     try {
       const supplyParams = {
         asset: asset,
-        is_collateral: currentCollateralStatus,
+        can_be_collateral: currentCollateralStatus,
         amount: totalAmount,
       };
-
       const response = await backendActor.execute_supply(supplyParams);
       dispatch(toggleDashboardRefresh());
-      
-      const statusData = await fetchStatusFromBackend();            
-      // Check status and send notifications if needed      
+
+      const statusData = await fetchStatusFromBackend();
+      // Check status and send notifications if needed
       await checkAndNotify(statusData);
 
       if ("Ok" in response) {
@@ -396,7 +425,7 @@ const SupplyPopup = ({
           const errorMsg =
             errorKey?.toString() || "An unexpected error occurred";
 
-          if (errorKey && "BlockedForOneHour" in errorKey) {
+          if (errorKey && "BLOCKEDFORONEHOUR" in errorKey) {
             console.error(
               "You are temporarily blocked from using this function"
             );
@@ -534,24 +563,24 @@ const SupplyPopup = ({
   };
 
   /**
-  * Calculate the Health Factor based on collateral, debt, and liquidation thresholds.
-  * 
-  * 1. Add `usdValue` to `totalCollateral` if `currentCollateralStatus` is true.
-  * 2. Ensure both `totalCollateralValue` and `totalDeptValue` are non-negative.
-  * 3. If `totalDeptValue` is 0, return `Infinity`.
-  * 4. Calculate adjusted liquidation value (`avliq = liquidationThreshold * totalCollateral`).
-  * 5. Adjust liquidation value using reserve liquidation threshold and amount added: 
-  *    `tempLiq = (avliq + amountAdded * reserveliquidationThreshold) / totalCollateralValue`.
-  * 6. Compute Health Factor: `healthFactor = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue`.
-  * 7. Round the result to 8 decimal places and return.
-  */
+   * Calculate the Health Factor based on collateral, debt, and liquidation thresholds.
+   *
+   * 1. Add `usdValue` to `totalCollateral` if `currentCollateralStatus` is true.
+   * 2. Ensure both `totalCollateralValue` and `totalDeptValue` are non-negative.
+   * 3. If `totalDeptValue` is 0, return `Infinity`.
+   * 4. Calculate adjusted liquidation value (`avliq = liquidationThreshold * totalCollateral`).
+   * 5. Adjust liquidation value using reserve liquidation threshold and amount added:
+   *    `tempLiq = (avliq + amountAdded * reserveliquidationThreshold) / totalCollateralValue`.
+   * 6. Compute Health Factor: `healthFactor = (totalCollateralValue * (tempLiq / 100)) / totalDeptValue`.
+   * 7. Round the result to 8 decimal places and return.
+   */
   const calculateHealthFactor = (
     totalCollateral,
     totalDebt,
     liquidationThreshold,
     reserveliquidationThreshold
   ) => {
-    const amountAdded = currentCollateralStatus ? usdValue || 0 : 0;
+    const amountAdded = currentCollateralStatus ? usdAmount || 0 : 0;
     let totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountAdded);
     if (totalCollateralValue < 0) {
@@ -648,6 +677,36 @@ const SupplyPopup = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    if (!asset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+  }, [asset]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -774,8 +833,8 @@ const SupplyPopup = ({
                   </div>
                   <p
                     className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
                       if (supplyBalance > 0 && !isApproved) {
@@ -805,8 +864,8 @@ const SupplyPopup = ({
                   <p>Collateralization</p>
                   <p
                     className={`font-semibold ${currentCollateralStatus
-                      ? "text-green-500"
-                      : "text-red-500"
+                        ? "text-green-500"
+                        : "text-red-500"
                       }`}
                   >
                     {currentCollateralStatus ? "Enabled" : "Disabled"}
@@ -819,14 +878,14 @@ const SupplyPopup = ({
                     <p>
                       <span
                         className={`${truncatedValue > 3
-                          ? "text-green-500"
-                          : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                              ? "text-orange-600"
-                              : truncatedValue <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : truncatedValue <= 1
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
@@ -834,14 +893,14 @@ const SupplyPopup = ({
                       <span className="text-gray-500 mx-1">→</span>
                       <span
                         className={`${value > 3
-                          ? "text-green-500"
-                          : value <= 1
-                            ? "text-red-500"
-                            : value <= 1.5
-                              ? "text-orange-600"
-                              : value <= 2
-                                ? "text-orange-400"
-                                : "text-orange-300"
+                            ? "text-green-500"
+                            : value <= 1
+                              ? "text-red-500"
+                              : value <= 1.5
+                                ? "text-orange-600"
+                                : value <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
                           }`}
                       >
                         {currentHealthFactor}
@@ -852,10 +911,21 @@ const SupplyPopup = ({
                     <div className="flex items-center gap-1 relative">
                       <div className="flex items-center">
                         <p>Transaction Fee</p>
+                        <Info
+                          size={14}
+                          className="text-blue-800 dark:text-white ml-1 cursor-help"
+                          onMouseEnter={() => setShowTooltip(true)}
+                          onMouseLeave={() => setShowTooltip(false)}
+                        />
+                        {showTooltip && (
+                          <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                            Platform fee + Ledger Transfer fee
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p>{transferFee}</p>
+                      <p>{formattedTransactionFee}</p>
                       <img
                         src={image}
                         alt="connect_wallet_icon"
@@ -868,7 +938,7 @@ const SupplyPopup = ({
                     <div className="flex items-center gap-2">
                       <p>
                         {(amount
-                          ? (+amount || 0) + (+transferFee || 0)
+                          ? (+amount || 0) + (+formattedTransactionFee || 0)
                           : 0
                         ).toFixed(8)}{" "}
                       </p>
@@ -910,9 +980,12 @@ const SupplyPopup = ({
                   }`}
               >
                 {isApproved
-                  ? `Approved with signed message `
-                  : `Approve with sign message `}
-
+                  ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(
+                    8
+                  )} ${asset} `
+                  : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(
+                    8
+                  )} ${asset} `}
               </p>
             </div>
           </div>
@@ -922,12 +995,19 @@ const SupplyPopup = ({
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved || isLoading || !hasEnoughBalance || amount <= 0
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                  isLoading ||
+                  !hasEnoughBalance ||
+                  amount <= 0 ||
+                  !hasEnoughBalance
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                 }`}
               disabled={
-                isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                isApproved ||
+                isLoading ||
+                amount <= 0 ||
+                !hasEnoughBalance
               }
             >
               Approve {asset} to continue
@@ -938,8 +1018,8 @@ const SupplyPopup = ({
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved || isLoading || amount <= 0 || !hasEnoughBalance
-                ? "opacity-50 cursor-not-allowed"
-                : ""
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
                 }`}
               disabled={
                 !isApproved || isLoading || amount <= 0 || !hasEnoughBalance

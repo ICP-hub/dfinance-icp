@@ -1,31 +1,34 @@
-use crate::api::inter_canister::get_balance;
-use crate::constants::constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR};
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::protocol::libraries::user::{register_user, user_normalized_supply};
-use crate::{debug, error, info, trace};
+use crate::api::inter_canister::{get_balance, get_ledger_transfer_fee};
+use crate::constants::{
+    constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR},
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value},
+};
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
-use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams};
-use crate::guards::access_control::guard_principal_not_anonymous;
-use crate::guards::api_limiter::request_limiter;
-use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, burn_scaled, mint_scaled, get_reserve_data};
-use crate::protocol::libraries::update::{user_data, user_reserve};
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams};
+use crate::guards::{
+    access_control::guard_principal_not_anonymous,
+    api_limiter::request_limiter,
+    locks_handler::CallerGuard,
+};
+use crate::protocol::libraries::{
+    reserve::{self, burn_scaled, get_reserve_data, mint_scaled, get_asset_principal},
+    update::{user_data, user_reserve, UpdateLogic},
+    user::{register_user, user_normalized_supply},
+};
 use crate::protocol::logic::borrow::repay;
 use crate::protocol::logic::validation::ValidationLogic;
-use crate::protocol::utils::math_utils::ScalingMath;
-use crate::stable_storage::storable::Candid;
-use crate::{
-    declarations::structs::ExecuteSupplyParams,
-    protocol::libraries::update::UpdateLogic,
-    stable_storage::state_handler::mutate_state,
+use crate::protocol::utils::{
+    log::{log_internal, LogFlusher, LogLevel},
+    math_utils::ScalingMath,
+    price::{calculate_transfer_fee, get_cached_exchange_rate},
 };
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
+use crate::stable_storage::storable::Candid;
+use crate::{debug, error, info, trace};
 use candid::{Nat, Principal};
 use ic_cdk::{api, update};
-use crate::protocol::utils::log::{log_internal, LogLevel, LogFlusher};
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_rate};
 
 /*
 -------------------------------------
@@ -56,10 +59,12 @@ use crate::protocol::utils::price::{calculate_transfer_fee, get_cached_exchange_
  *               by enforcing liquidation when necessary to protect the system from excessive risk due to overdue debts
  *               or under-collateralized positions.
  *
- * @param params The parameters needed for the liquidation operation, including the asset name and the amount to be liquidated:
- *               - `asset`: The name of the collateral asset to be liquidated.
- *               - `amount`: The amount of collateral to be liquidated.
- *               - `userPrincipal`: The principal ID of the user whose collateral is being liquidated.
+ * @param ExecuteLiquidationParams The parameters needed for the liquidation operation, including the asset name and the amount to be liquidated:
+ *               - `debt_asset`: The name of the debt asset.
+ *               - `collateral_asset`: The name of the collateral asset to be liquidated.
+ *               - `amount`: The amount of the debt asset to be repaid during liquidation.
+ *               - `on_behalf_of`: The principal ID of the user whose collateral and debt are being liquidated.
+ *               - `reward_amount`: The amount of collateral rewarded to the liquidator as incentive.
  *
  * @return Result<Nat, Error> Returns the updated collateral balance after liquidation or an error code if any operation fails.
  */
@@ -79,6 +84,9 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     validate_zero_value(&params.reward_amount)?;
 
     let platform_principal = ic_cdk::api::id();
+    let _log_flusher = LogFlusher {
+        user_key: params.on_behalf_of.to_text(), // or whatever user_key you need
+    };
 
     let user_principal = params.on_behalf_of;
     debug!("User Principal (Debt User): {}", user_principal.to_text());
@@ -92,10 +100,6 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         params.collateral_asset
     );
     
-    let _log_flusher = LogFlusher {
-        user_key: user_principal.to_text(),
-    };
-
     let repay_reserve_data = get_reserve_data(params.debt_asset.clone())?;
 
     let mut collateral_reserve_data = get_reserve_data(params.collateral_asset.clone())?;
@@ -109,9 +113,11 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     .ok_or(Error::NoUserReserveDataFound)?;
 
     let transfer_token_fee = calculate_transfer_fee(&params.debt_asset, params.amount.clone())?;
+    let repay_ledger_canister_id = get_asset_principal(params.debt_asset.clone())?;
+    let ledger_fee = get_ledger_transfer_fee(repay_ledger_canister_id).await?;
 
     let (earned_rewards, liquidity_bonus) = to_get_reward_amount(
-        params.amount.clone() - transfer_token_fee.clone(),
+        params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone()),
         params.collateral_asset.clone(),
         params.debt_asset.clone(),
         collateral_reserve_data.clone(),
@@ -129,7 +135,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         error!("Reward amount is greater than earned rewards");
         return Err(Error::RewardIsHigher);
     }
-    register_user()?;
+    register_user(None)?;
     let mut liquidator_data = user_data(liquidator_principal)?;
 
     let collateral_dtoken_principal = collateral_reserve_data.d_token_canister.clone().ok_or_else(|| {
@@ -159,7 +165,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     ValidationLogic::validate_liquidation(
         params.debt_asset.clone(),
-        params.amount.clone() - transfer_token_fee.clone(),
+        params.amount.clone() ,
         reward_amount.clone(),
         liquidator_principal,
         user_principal,
@@ -168,7 +174,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
         user_reserve_data.clone()
     )
     .await?;
-    info!("liquidation validation successful"); //info
+    info!("liquidation validation successful"); 
 
     let _user_guard = CallerGuard::lock_principal(user_principal.clone())?;
 
@@ -207,7 +213,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     let supply_param = ExecuteSupplyParams {
         asset: params.collateral_asset.to_string(),
         amount: reward_amount.clone() - protocol_fee_amount.clone(),
-        is_collateral: true,
+        can_be_collateral: true,
     };
 
     if let Err(err) = UpdateLogic::update_user_data_supply(
@@ -280,8 +286,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             Ok(params.amount)
         }
         Err(e) => {
+            let mut liquidator_user_data = user_data(liquidator_principal)?;
+
             let mut liquidator_collateral_reserve =
-                user_reserve(&mut liquidator_data, &params.collateral_asset);
+                user_reserve(&mut liquidator_user_data, &params.collateral_asset);
 
             let mut liquidator_reserve_data = match liquidator_collateral_reserve.as_mut() {
                 Some((_, reserve_data)) => reserve_data,
@@ -342,8 +350,24 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 true,
             )
             .await?;
+ 
+            if let Some(ref mut reserves) = user_account_data.reserves {
+                if let Some((_, reserve)) = reserves
+                    .iter_mut()
+                    .find(|(name, _)| name == &params.collateral_asset)
+                {
+                    *reserve = user_reserve_data.clone();
+                }
+            }
 
             mutate_state(|state| {
+                state.user_profile.insert(
+                    liquidator_principal,
+                    Candid(liquidator_user_data.clone()),
+                );
+                state
+                    .user_profile
+                    .insert(user_principal, Candid(user_account_data.clone()));
                 state.asset_index.insert(
                     params.collateral_asset.clone(),
                     Candid(collateral_reserve_data.clone()),
@@ -386,8 +410,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
  * @param user_principal The user's principal ID for identifying the user.
  * @param user_reserve_data The user's reserve data, including liquidity index.
  *
- * @return Result<Nat, Error> Returns the maximum collateral amount available to the user after applying the liquidation bonus,
- *         or an error if any part of the process fails.
+ * @return Result<(Nat, Nat), Error> Returns a tuple with:
+ *         - Maximum collateral amount available (Nat)
+ *         - Liquidation bonus amount (Nat)
+ *         or an error if calculation fails.
  */
 pub async fn to_get_reward_amount(
     amount: Nat,

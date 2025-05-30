@@ -1,9 +1,8 @@
 use candid:: Nat;
+use tracing::{info,error,debug};
 use std::ops::Mul;
-use crate::utils::constant_variables::*;
+use crate::utils::{common_functions::init_tracing, constant_variables::*};
 
-
-//
 pub trait ScalingMath {
     fn scaled_mul(self, other: Self) -> Self;
 }
@@ -37,59 +36,51 @@ pub fn calculate_compounded_interest(
     current_timestamp: u64,
 ) -> Nat {
 
-    ic_cdk::println!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
+    init_tracing();
+    info!("current time in cal_compound function {} and seconds per year {} and last timestamp {} and rate input {}", current_timestamp, SECONDS_PER_YEAR, last_update_timestamp, rate_input);
     if last_update_timestamp > current_timestamp{
-        ic_cdk::println!("Exponential function underflow"); //error
+        error!("Exponential function underflow"); 
         return Nat::from(0u128); 
-       //error result
     }
     let exp = current_timestamp - last_update_timestamp;
-    ic_cdk::println!("exp (time difference): {}", exp);
+    debug!("exp (time difference): {}", exp);
     if exp == 0 {
-        ic_cdk::println!("exp is 0, returning SCALING_FACTOR {}", get_scaling_value());
+        debug!("exp is 0, returning SCALING_FACTOR {}", get_scaling_value());
         return get_scaling_value();
     }
     let rate = rate_input;
-    ic_cdk::println!("Rate calculated: {}", rate);
+    debug!("Rate calculated: {}", rate);
 
     let scaled_rate = (rate.clone() * exp as u128) / SECONDS_PER_YEAR as u128;
-    ic_cdk::println!("Scaled rate: {}", scaled_rate);
+    debug!("Scaled rate: {}", scaled_rate);
 
     let exp_minus_one = exp - 1;
-    ic_cdk::println!("exp_minus_one: {}", exp_minus_one);
+    debug!("exp_minus_one: {}", exp_minus_one);
 
     let exp_minus_two = if exp > 2 { exp - 2 } else { 0 };
-    ic_cdk::println!("exp_minus_two: {}", exp_minus_two);
+    debug!("exp_minus_two: {}", exp_minus_two);
 
     let base_power_two = rate.clone().scaled_mul(rate.clone())
         / (SECONDS_PER_YEAR as u128 * SECONDS_PER_YEAR as u128);
-    ic_cdk::println!("Base power two: {}", base_power_two);
+    debug!("Base power two: {}", base_power_two);
 
     let base_power_three =
         base_power_two.clone().scaled_mul(rate.clone()) / SECONDS_PER_YEAR as u128;
-    ic_cdk::println!("Base power three: {}", base_power_three);
+    debug!("Base power three: {}", base_power_three);
 
     let second_term = (exp as u128 * exp_minus_one as u128 * base_power_two) / Nat::from(2u128);
-    ic_cdk::println!("Second term: {}", second_term);
+    debug!("Second term: {}", second_term);
 
     let third_term =
         (exp as u128 * exp_minus_one as u128 * exp_minus_two as u128 * base_power_three)
             / Nat::from(6u128);
-    ic_cdk::println!("Third term: {}", third_term);
+    debug!("Third term: {}", third_term);
 
     let result = get_scaling_value() + scaled_rate + second_term + third_term;
-    ic_cdk::println!("Final result: {}", result);
+    debug!("Final result: {}", result);
 
     result
 }
-
-
-
-
-
-
-
-
 
 /*
  * @title Test Compounded Interest Calculation
@@ -195,19 +186,16 @@ pub fn test_calculate_compounded_interest() {
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR * 10), // 10 years
             expected_output: Nat::from(100_000_010u128),
         },
-        //10% interest for 1 year and 540000 seconds 
         TestCase {
             rate_input: Nat::from(10_000_000u128), // 10% interest
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR + 540000), // 1 year and 54000 ago
             expected_output: Nat::from(110_171_232u128),
         },
-        //10% interest for 540000 seconds less than a year 
         TestCase {
             rate_input: Nat::from(10_000_000u128), // 10% interest
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR - 540000), // 54000 seconds less than a year
             expected_output: Nat::from(109_828_767u128),
         },
-        //.01% interest for 2 years
         TestCase {
             rate_input: Nat::from(10_000u128), // 0.01% interest
             last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR * 2), // 2 years
@@ -219,18 +207,18 @@ pub fn test_calculate_compounded_interest() {
             expected_output: Nat::from(101_000_000u128),
         },
     ];
-
-    println!("\n======================== Running `calculate_compounded_interest` Tests ========================\n");
+    init_tracing();
+    info!("\n======================== Running `calculate_compounded_interest` Tests ========================\n");
 
     for (i, case) in test_cases.iter().enumerate() {
-        println!("\n------------------------------------------------------------");
-        println!("🔵 Test Case {}: Calculating Compounded Interest", i + 1);
-        println!("Rate Input: {}%", case.rate_input);
-        println!("Last Update Timestamp: {}", case.last_update_timestamp);
+        info!("\n------------------------------------------------------------");
+        info!("🔵 Test Case {}: Calculating Compounded Interest", i + 1);
+        info!("Rate Input: {}%", case.rate_input);
+        info!("Last Update Timestamp: {}", case.last_update_timestamp);
         let amount_u128: u64 = case.expected_output.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Expected Output: {}", amount_float / 100000000.0);
-        println!("------------------------------------------------------------\n");
+        info!("Expected Output: {}", amount_float / 100000000.0);
+        info!("------------------------------------------------------------\n");
         let mut curr_time = current_timestamp;
         if i == 20 {
             curr_time =31_536_000u64;
@@ -248,16 +236,16 @@ pub fn test_calculate_compounded_interest() {
         let amount_float_result = amount_u128_result as f64;
 
         if result == case.expected_output {
-            println!(
+            info!(
                 "✅ Test Case {} Passed: Expected Borrow Index = {}, Got = {}",
                 i + 1,
                 amount_float / 100000000.0,
                 amount_float_result / 100000000.0
             );
         } else {
-            println!("❌ Test Case {} Failed:", i + 1);
-            println!("   Expected Borrow Index: {}", amount_float / 100000000.0);
-            println!("   Got:      {}", amount_float_result / 100000000.0);
+            error!("❌ Test Case {} Failed:", i + 1);
+            info!("   Expected Borrow Index: {}", amount_float / 100000000.0);
+            info!("   Got:      {}", amount_float_result / 100000000.0);
         }
 
         assert_eq!(
@@ -270,5 +258,5 @@ pub fn test_calculate_compounded_interest() {
         );
     }
 
-    println!("\n======================== All test cases completed. ========================\n");
+    info!("\n======================== All test cases completed. ========================\n");
 }

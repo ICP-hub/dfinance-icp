@@ -1,5 +1,7 @@
 use candid:: Nat;
+use tracing::{info,error,debug};
 use std::ops::Mul;
+use crate::utils::common_functions::init_tracing;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
@@ -52,11 +54,12 @@ pub fn accrue_to_treasury(
         return Ok(());
     }
 
+    init_tracing();   
     vars.prev_total_variable_debt = ScalingMath::scaled_mul(
         reserve_cache.curr_debt.clone(),
         reserve_cache.curr_debt_index.clone(),
     );
-    ic_cdk::println!(
+    debug!(
         "prev_total_variable_debt in accure: {:?}",
         vars.prev_total_variable_debt
     );
@@ -65,7 +68,7 @@ pub fn accrue_to_treasury(
         reserve_cache.curr_debt.clone(),
         reserve_cache.next_debt_index.clone(),
     );
-    ic_cdk::println!(
+    debug!(
         "curr_total_variable_debt in accure: {:?}",
         vars.curr_total_variable_debt
     );
@@ -75,21 +78,21 @@ pub fn accrue_to_treasury(
     }
 
     vars.total_debt_accrued = vars.curr_total_variable_debt - vars.prev_total_variable_debt;
-    ic_cdk::println!(
+    debug!(
         "total_debt_accrued in accure: {:?}",
         vars.total_debt_accrued
     );
     vars.amount_to_mint = ScalingMath::scaled_mul(
         vars.total_debt_accrued.clone(),
         reserve_cache.reserve_factor.clone(),
-    ); //percent
-    ic_cdk::println!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
+    ); 
+    debug!("amount_to_mint in accure: {:?}", vars.amount_to_mint);
     if vars.amount_to_mint != ZERO_VALUE {
         reserve_data.accure_to_platform += (ScalingMath::scaled_mul(
             vars.amount_to_mint,
             reserve_cache.next_liquidity_index.clone(),
         )) / 100_u128;
-        ic_cdk::println!(
+        debug!(
             "accure_to_platform in accure: {:?}",
             reserve_data.accure_to_platform
         );
@@ -200,7 +203,7 @@ pub async fn test_accrue_to_treasury() {
         },
         // --- Edge Cases ---
         // Test Case 4: Zero Initial Debt
-        TestCase {  // Checks no accrual if no debt.
+        TestCase {  
             reserve_data: default_reserve.clone(),
             reserve_cache: ReserveCache {
                 curr_debt: Nat::from(0u128),                         // 0 base units debt
@@ -213,7 +216,7 @@ pub async fn test_accrue_to_treasury() {
             expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 
         },
         // Test Case 5: Zero Reserve Factor
-        TestCase {  // Checks function returns early if RF=0.
+        TestCase {  
             reserve_data: default_reserve.clone(),
             reserve_cache: ReserveCache {
                  curr_debt: Nat::from(5_000_000_000u128),              // 50 base units
@@ -226,7 +229,7 @@ pub async fn test_accrue_to_treasury() {
             expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 
         },
         // Test Case 6: Zero Index Change (No time passed)
-        TestCase {  // Checks no interest accrued if indices same.
+        TestCase {  
             reserve_data: default_reserve.clone(),
             reserve_cache: ReserveCache {
                 curr_debt: Nat::from(5_000_000_000u128),               // 50 base units
@@ -238,20 +241,6 @@ pub async fn test_accrue_to_treasury() {
             },
             expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 
         },
-        // // Test Case 7: Error Check: Negative Accrual (Indices Reversed)
-        // TestCase { // Tests the AmountSubtractionError check.
-        //     reserve_data: default_reserve.clone(),
-        //     reserve_cache: ReserveCache {
-        //          curr_debt: Nat::from(5_000_000_000u128),              // 50 base units
-        //          curr_debt_index: Nat::from(110_000_000u128),          // Index = 1.1 (Start high)
-        //          next_debt_index: Nat::from(100_000_000u128),          // Index = 1.0 (End low)
-        //          reserve_factor: Nat::from(10_000_000u128),            // 10% RF
-        //          next_liquidity_index: Nat::from(120_000_000u128),     // Index = 1.2
-        //          ..default_cache.clone()
-        //      },
-        //     // Should return Err(AmountSubtractionError), platform value unchanged
-        //     expected_accure_to_platform: Nat::from(50_000_000_000u128),
-        // },
         // Test Case 8: Very High Debt Index Change*
         TestCase {
             reserve_data: default_reserve.clone(),
@@ -278,11 +267,11 @@ pub async fn test_accrue_to_treasury() {
              },
             expected_accure_to_platform: Nat::from(50_050_000_000u128), // 500.50
         },
-        // Test Case 10: Minimal Values to trigger Increment=1* (using revised inputs from calc)
+        // Test Case 10: Minimal Values to trigger Increment=1
         TestCase {
             reserve_data: default_reserve.clone(),
             reserve_cache: ReserveCache {
-                curr_debt: Nat::from(1_000_000u128),                  // 1M base units
+                curr_debt: Nat::from(1_000_000u128),                  // 0.01 base units
                 curr_debt_index: Nat::from(100_000_000u128),           // Index = 1.0
                 next_debt_index: Nat::from(101_000_000u128),           // Index = 1.01
                 reserve_factor: Nat::from(100_000_000u128),           // 100% RF
@@ -317,37 +306,37 @@ pub async fn test_accrue_to_treasury() {
             },
             expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 
         },
-        // Test Case 13: Max Reserve Factor (100%)* - still zero increment with minimal index change
+        // Test Case 13: Max Reserve Factor (100%) and exremely low index change.
         TestCase {
             reserve_data: default_reserve.clone(),
             reserve_cache: ReserveCache {
-                curr_debt: Nat::from(1_000_000u128),                  // 1M base units
+                curr_debt: Nat::from(1_000_000u128),                  // 0.01 base units
                 curr_debt_index: Nat::from(100_000_000u128),           // Index = 1.0
                 next_debt_index: Nat::from(100_000_001u128),           // Index = 1.0 + 1e-8
                 reserve_factor: Nat::from(100_000_000u128),           // 100% RF
                 next_liquidity_index: Nat::from(100_000_000u128),      // Index = 1.0
                  ..default_cache.clone()
              },
-            expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 (increment is 0 due to truncation)
+            expected_accure_to_platform: Nat::from(50_000_000_000u128), // 500 
         },
         // Test Case 14: Very Large Indices*
         TestCase {
             reserve_data: ReserveData { accure_to_platform: Nat::from(50_000_000_000u128), ..default_reserve.clone() }, // Initial accrue=500 base units
             reserve_cache: ReserveCache {
-                curr_debt: Nat::from(10_000u128),                     // 10k base units
+                curr_debt: Nat::from(10_000_000_000u128),               // 100 base units
                 curr_debt_index: Nat::from(10_000_000_000u128),        // Index = 100.0
                 next_debt_index: Nat::from(11_000_000_000u128),        // Index = 110.0
                 reserve_factor: Nat::from(10_000_000u128),            // 10% RF
                 next_liquidity_index: Nat::from(10_000_000_000u128),   // Index = 100.0
                  ..default_cache.clone()
              },
-            expected_accure_to_platform: Nat::from(50_000_010_000u128), // 500.00010000
+            expected_accure_to_platform: Nat::from(60_000_000_000u128), // 600
         },
          // Test Case 15: Extremely High Accrued Value*
         TestCase {
             reserve_data: default_reserve.clone(),
             reserve_cache: ReserveCache {
-                curr_debt: Nat::from(1_000_000_000_000_000u128),      // 10M base units = 1 Trillion
+                curr_debt: Nat::from(1_000_000_000_000_000u128),      // 10M base units 
                 curr_debt_index: Nat::from(100_000_000u128),           // Index = 1.0
                 next_debt_index: Nat::from(1_100_000_000u128),         // Index = 11.0
                 reserve_factor: Nat::from(10_000_000u128),            // 10% RF
@@ -358,9 +347,10 @@ pub async fn test_accrue_to_treasury() {
         },
     ];
 
+    init_tracing();
     for (i, case) in test_cases.iter().enumerate() {
-        println!("\n------------------------------------------------------------");
-        println!("🟡 Test Case {}: Accruing to Treasury", i + 1);
+        info!("\n------------------------------------------------------------");
+        info!("🟡 Test Case {}: Accruing to Treasury", i + 1);
         let amount_u128: u64 = case
             .reserve_data
             .accure_to_platform
@@ -377,18 +367,18 @@ pub async fn test_accrue_to_treasury() {
             .try_into()
             .unwrap();
         let amount_float_borrow = amount_u128_borrow as f64;
-        println!(
+        debug!(
             "Initial Accrue to Platform: {:.8}",
             amount_float / 100000000.0
         );
 
-        println!("Reserve Factor: {:?}", case.reserve_cache.reserve_factor);
-        println!(
+        debug!("Reserve Factor: {:?}", case.reserve_cache.reserve_factor);
+        debug!(
             "Expected Accrue to Platform: {:.8}",
             amount_float_borrow / 100000000.0
         );
 
-        println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let mut reserve_data = case.reserve_data.clone();
         let result = accrue_to_treasury(&mut reserve_data, &case.reserve_cache);
@@ -402,7 +392,7 @@ pub async fn test_accrue_to_treasury() {
                     .try_into()
                     .unwrap();
                 let amount_float_borrow = amount_u128_borrow as f64;
-                ic_cdk::println!(
+                info!(
                     "✅ Test Case Passed with accure_to_platform {:.8}",
                     amount_float_borrow / 100000000.0
                 );
@@ -414,14 +404,14 @@ pub async fn test_accrue_to_treasury() {
                     case.expected_accure_to_platform,
                     reserve_data.accure_to_platform
                 );
-                println!("✅ Test Case {} Passed", i + 1);
+                info!("✅ Test Case {} Passed", i + 1);
             }
             Err(e) => {
-                println!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
+                error!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
                 panic!("Test Case {} encountered an error", i + 1);
             }
         }
     }
-    println!("\n======================== All test cases completed. ========================\n");
+    info!("\n======================== All test cases completed. ========================\n");
 }
 

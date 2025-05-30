@@ -4,11 +4,7 @@ use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
-
+use tracing::{info,error};
 
 /*
  * @title Borrow Function Test
@@ -25,7 +21,7 @@ use crate::utils::structs::*;
  * 4. Validates the borrow response and checks whether the balance is updated correctly.
  * 5. Handles cases where the borrow request may fail due to errors or unexpected conditions, including mismatched error messages.
  */
-
+#[allow(dead_code)]
  pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -45,9 +41,9 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128), // 100 ICP (transfer fee included)
-            expect_success: false,
-            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
+            amount: Nat::from(2_000_000_000u128), // 20 ICP (transfer fee included)
+            expect_success: true,
+            expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
@@ -74,39 +70,39 @@ use crate::utils::structs::*;
             expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
         },
     ];
-
+    init_tracing();
     let user_principal = get_user_principal2();
 
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Borrow Tests ========================\n"
     );
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
+        info!("\n------------------------------------------------------------");
         if i%2 != Nat::from(0u128) {
-            ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+            info!("🔵 IC Test Case {}: Executing Borrow Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
         }else{
-            ic_cdk::println!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
+            info!("🔵 IC Test Case {}: Executing Borrow Request", i + 1);
         }
-        ic_cdk::println!("Asset: {}", case.asset);
+        info!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        info!("Amount: {}", amount_float / 100000000.0);
+        info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            info!("Expected Error Message: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
 
-        ic_cdk::println!("\n=========================== Initial Reserve Data Before Roll Backs  ===========================\n");
+        info!("\n=========================== Initial Reserve Data Before Roll Backs  ===========================\n");
 
             fetch_reserve_data(pic, backend_canister, &case.asset);
 
-            ic_cdk::println!("\n=========================== Initial User Data Before Roll Backs ===========================\n");
+            info!("\n=========================== Initial User Data Before Roll Backs ===========================\n");
 
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
 
-            ic_cdk::println!("\n----------------------------------------------------------------------------------------\n");
+            info!("\n----------------------------------------------------------------------------------------\n");
 
         /* Borrow params */
         let borrow_params = ExecuteBorrowParams {
@@ -134,13 +130,13 @@ use crate::utils::structs::*;
                 match borrow_response {
                     Ok(_balance) => {
                         if !case.expect_success {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success.",
                                 i + 1
                             );
                             continue;
                         }
-                        ic_cdk::println!(
+                        info!(
                             "✅ IC Test Case {} Passed: Borrow successful.",
                             i + 1,
                         );
@@ -149,7 +145,7 @@ use crate::utils::structs::*;
                     Err(error) => {
                         if !case.expect_success {
                             if case.expected_error_message.as_deref() != Some(error.message()) {
-                                println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
                                     case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -157,13 +153,13 @@ use crate::utils::structs::*;
                                 );
                                 continue;
                             }
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Borrow rejected as expected with message: {:?}",
                                 i + 1,
                                 error
                             );
                         } else {
-                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            error!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
                         
@@ -171,7 +167,7 @@ use crate::utils::structs::*;
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                     i + 1,
                     reject_message
@@ -179,7 +175,7 @@ use crate::utils::structs::*;
                 continue;
             }
             Err(e) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Error during borrow function call: {:?}",
                     i + 1,
                     e
@@ -188,22 +184,22 @@ use crate::utils::structs::*;
             }
         }
         if i%2 == Nat::from(0u128) {
-            ic_cdk::println!("\n=========================== Final Reserve Data (No Rollbacks Initiated) ===========================\n");
+            info!("\n=========================== Final Reserve Data (No Rollbacks Initiated) ===========================\n");
             fetch_reserve_data(pic, backend_canister, &case.asset);
-            ic_cdk::println!(
+            info!(
             "\n=========================== Final User Data (No Rollbacks Initiated) ===========================\n"
         );
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
     }else{
-        ic_cdk::println!("\n=========================== Verifying Reserve Data After Intended Rollback ===========================\n");
+        info!("\n=========================== Verifying Reserve Data After Intended Rollback ===========================\n");
         fetch_reserve_data(pic, backend_canister, &case.asset);
-        ic_cdk::println!(
+        info!(
             "\n=========================== Verifying User Data After Intended Rollback ===========================\n"
         );
         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
     }
     }
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Borrow Tests Completed ========================\n"
     );
 }

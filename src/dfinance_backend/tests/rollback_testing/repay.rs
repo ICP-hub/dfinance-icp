@@ -1,13 +1,10 @@
 use candid::{ encode_one, Principal};
 use candid::Nat;
 use pocket_ic::{PocketIc,  WasmResult};
+use tracing::{info,error};
 use crate::utils::common_functions::*;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
-
-
-
-
 
 /*
  * @title Repay Function Test
@@ -26,7 +23,7 @@ use crate::utils::structs::*;
  * 6. Simulates repayment on behalf of another principal when applicable.
  * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
  */
-
+#[allow(dead_code)]
  pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -75,47 +72,45 @@ use crate::utils::structs::*;
             expected_error_message: None,
         },
     ];
-
+    init_tracing();
     let user_principal = get_user_principal2();
 
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Repay Tests ========================\n"
     );
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
+        info!("\n------------------------------------------------------------");
         if i%2 != Nat::from(0u128) {
-            ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
+            info!("🔵 IC Test Case {}: Executing Repay Request (Intentional Failure to Trigger Rollback in a Controlled Manner) ", i + 1);
         }else{
-            ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
+            info!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         }
-        // ic_cdk::println!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset);
+        info!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
+        info!("Amount: {}", amount_float / 100000000.0);
         if let Some(ref principal) = case.on_behalf_of {
-            ic_cdk::println!("On Behalf Of: {}", principal);
+            info!("On Behalf Of: {}", principal);
         }
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            info!("Expected Error Message: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         if i % 2 == Nat::from(0u128) {
-            /* Get asset principal; handle missing cases  */
             let asset_principal =
                 match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,
                     None => {
                         if !case.expect_success {
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Repay rejected as expected",
                                 i + 1,
                             );
                         } else {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected success but got rejection",
                                 i + 1
                             );
@@ -140,7 +135,7 @@ use crate::utils::structs::*;
             if !approved {
                 if !case.expect_success {
                     if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
-                        println!(
+                        error!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
                         case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -148,12 +143,12 @@ use crate::utils::structs::*;
                     );
                         continue;
                     }
-                    ic_cdk::println!(
+                    info!(
                         "✅ IC Test Case {} Passed: Repay rejected as expected",
                         i + 1,
                     );
                 } else {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Expected success but got rejection",
                         i + 1
                     );
@@ -163,15 +158,15 @@ use crate::utils::structs::*;
         }
 
         if i % 2 != Nat::from(0u128) {
-            ic_cdk::println!("\n======================== Initial Reserve Data Before Roll Backs  ========================\n");
+            info!("\n======================== Initial Reserve Data Before Roll Backs  ========================\n");
 
             fetch_reserve_data(pic, backend_canister, &case.asset);
 
-            ic_cdk::println!("\n======================== Initial User Data Before Roll Backs ========================\n");
+            info!("\n======================== Initial User Data Before Roll Backs ========================\n");
 
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
 
-            ic_cdk::println!("\n------------------------------------------------------------------------------------\n");
+            info!("\n------------------------------------------------------------------------------------\n");
         }
 
         /* Repay params */
@@ -201,13 +196,13 @@ use crate::utils::structs::*;
                 match repay_response {
                     Ok(_balance) => {
                         if !case.expect_success {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success.",
                                 i + 1
                             );
                             continue;
                         }
-                        ic_cdk::println!(
+                        info!(
                             "✅ IC Test Case {} Passed: Repay successful.",
                             i + 1,
                         );
@@ -215,45 +210,45 @@ use crate::utils::structs::*;
                     Err(error) => {
                         if case.expect_success {
                             if i % 2 != 0 {
-                                ic_cdk::println!(
+                                info!(
                                     "\n============================================================"
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "🟢 Test Case {} Passed: ICRC Approval Not Provided",
                                     i + 1
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "   ➜ Triggering rollback mechanism for asset: {}",
                                     case.asset
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "------------------------------------------------------------"
                                 );
-                                ic_cdk::println!("🔄 Rollback Process Initiated...");
-                                ic_cdk::println!("   ⏳ Reverting all state changes...");
-                                ic_cdk::println!(
+                                info!("🔄 Rollback Process Initiated...");
+                                info!("   ⏳ Reverting all state changes...");
+                                info!(
                                     "   🔁 Restoring previous balances and reserves..."
                                 );
-                                ic_cdk::println!("✅ Rollback Successfully Completed!");
-                                ic_cdk::println!(
+                                info!("✅ Rollback Successfully Completed!");
+                                info!(
                                     "============================================================\n"
                                 );
                             }
                         } else if case.expected_error_message.as_deref() != Some(error.message()) {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                 i + 1,
                                 case.expected_error_message.as_deref().unwrap_or("N/A"),
                                 error.message()
                             );
                         } else {
-                            ic_cdk::println!("✅ Test Case {} Passed: Supply rejected as expected with message: {:?}", i + 1, error);
+                            info!("✅ Test Case {} Passed: Supply rejected as expected with message: {:?}", i + 1, error);
                         }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                     i + 1,
                     reject_message
@@ -261,7 +256,7 @@ use crate::utils::structs::*;
                 continue;
             }
             Err(e) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Error during repay function call: {:?}",
                     i + 1,
                     e
@@ -270,24 +265,24 @@ use crate::utils::structs::*;
             }
         }
         if i%2 == Nat::from(0u128) {
-            ic_cdk::println!("\n======================== Final Reserve Data (No Rollbacks Initiated) ========================\n");
+            info!("\n======================== Final Reserve Data (No Rollbacks Initiated) ========================\n");
             fetch_reserve_data(pic, backend_canister, &case.asset);
-            ic_cdk::println!(
+            info!(
             "\n======================== Final User Data (No Rollbacks Initiated) ========================\n"
         );
             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-            ic_cdk::println!("\n------------------------------------------------------------------------------------\n");
+            info!("\n------------------------------------------------------------------------------------\n");
     }else{
-        ic_cdk::println!("\n======================== Final Reserve Data After Rollback ========================\n");
+        info!("\n======================== Final Reserve Data After Rollback ========================\n");
         fetch_reserve_data(pic, backend_canister, &case.asset);
-        ic_cdk::println!(
+        info!(
             "\n======================== Final User Data After Rollback ========================\n"
         );
         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
-        ic_cdk::println!("\n------------------------------------------------------------------------------------\n");
+        info!("\n------------------------------------------------------------------------------------\n");
     }
     }
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Repay Tests Completed ========================\n"
     );
 }

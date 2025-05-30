@@ -93,9 +93,6 @@ pub struct ReserveCache {
  * @param borrow_cap The maximum borrowable amount.
  * @param supply_cap The maximum supply limit.
  * @param liquidation_protocol_fee The fee charged on liquidation.
- * @param active Indicates if the reserve is currently active.
- * @param frozen Indicates if the reserve is frozen.
- * @param paused Indicates if transactions are paused.
  * @param reserve_factor The portion of interest that accrues to the protocol.
  */
 #[derive(Default, CandidType, Deserialize, Serialize, Clone, Debug)]
@@ -136,7 +133,7 @@ pub struct AssetInfo {
  *
  * @param controller_id The principal ID of the controller.
  */
-#[derive(CandidType, Deserialize, Clone, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug)]
 pub struct InitArgs {
     pub controller_id: Principal, // for the test-token and dtoken cannisters which are going to be created dynamically
 }
@@ -218,8 +215,9 @@ pub struct UserReserveData {
     pub is_using_as_collateral_or_borrow: bool,
     pub is_collateral: bool,
     pub is_borrowed: bool,
+    pub can_be_collateral: bool,
     pub d_token_balance: Nat,
-    pub debt_token_blance: Nat,
+    pub debt_token_balance: Nat,
 }
 impl Default for UserReserveData {
     fn default() -> Self {
@@ -228,11 +226,12 @@ impl Default for UserReserveData {
             last_update_timestamp: Default::default(),
             liquidity_index: Default::default(),
             variable_borrow_index: Default::default(),
-            is_using_as_collateral_or_borrow: Default::default(),
+            is_using_as_collateral_or_borrow: true,
             is_collateral: true,
             is_borrowed: Default::default(),
+            can_be_collateral: true,
             d_token_balance: Default::default(),
-            debt_token_blance: Default::default(),
+            debt_token_balance: Default::default(),
         }
     }
 }

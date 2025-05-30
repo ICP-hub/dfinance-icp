@@ -1,6 +1,5 @@
-use crate::constants::constant_variables::constants::{NANOS_PER_SECOND, TWO_VALUE, ZERO_VALUE};
 use crate::constants::constant_variables::constants::{
-    MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR,
+    MAX_VALUE, SCALING_FACTOR, SECONDS_PER_YEAR, NANOS_PER_SECOND, TWO_VALUE, ZERO_VALUE
 };
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::{debug, info};

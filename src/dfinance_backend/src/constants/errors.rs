@@ -1,7 +1,6 @@
 use candid::CandidType;
 
-#[derive(Debug ,CandidType)]
-#[derive(Clone)]
+#[derive(Debug, CandidType, Clone)]
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,
@@ -44,7 +43,7 @@ pub enum Error {
     NoPriceCache,
     EmptyAsset,
     LowWalletBalance,
-    AmountExceedsLimit, 
+    AmountExceedsLimit,
     ExceedsRemainingLimit,
     AmountTooMuch,
     InvalidAssetLength,
@@ -71,11 +70,12 @@ pub enum Error {
     FailedToReleaseLock,
     LockOperationInProgess,
     ErrorDTokenBalanceLessThan,
+    DebtTokenBalanceLessThan,
     AmountSubtractionError,
     TooManyRequests,
     BlockedForOneHour,
     UserCannotBeLiquidated,
-    FeeExceedsAmount ,
+    FeeExceedsAmount,
     LiquidationProtocolfeeIsHigher,
     RateLimitExceeded,
     CaptchaLimitReached,
@@ -104,10 +104,15 @@ pub enum Error {
     ErrorUpdateCanisterSetting,
     NoCollateralFound,
     LowPlatformBalance,
+    AllowanceTooLow,
+    AllowanceQueryFailed,
     ErrorSupplyToken,
     TotalCollateraLessThan,
-    UserCollateralLessThanReward
-    
+    UserCollateralLessThanReward,
+    InvalidRole,
+    RoleAlreadyExistsForUser,
+    UserRoleNotFound,
+    TokenNotTransfered,
 }
 
 impl Error {
@@ -182,9 +187,18 @@ impl Error {
             Error::TokenAlreadyExist => "Token already exist - try again with different token",
             Error::FailedToReleaseLock => "Failed to release lock",
             Error::LockOperationInProgess => "Another operation is already in progress for user",
-            Error::ErrorDTokenBalanceLessThan => "d token balance is less than the adjusted balance",
-            Error::AmountSubtractionError => "The current locked amount is less than the amount you are trying to subtract",
-            Error::UserCannotBeLiquidated => "user health factor is greater than the one so liquidation is not possible",
+            Error::ErrorDTokenBalanceLessThan => {
+                "d token balance is less than the adjusted balance"
+            },
+            Error::DebtTokenBalanceLessThan => {
+                "debt token balance is less than the adjusted balance"
+            }
+            Error::AmountSubtractionError => {
+                "The current locked amount is less than the amount you are trying to subtract"
+            }
+            Error::UserCannotBeLiquidated => {
+                "user health factor is greater than the one so liquidation is not possible"
+            }
             Error::TooManyRequests => "You are temporarily blocked",
             Error::BlockedForOneHour => "You are blocked for one hour",
             Error::FeeExceedsAmount => "Fee exceeds the amount",
@@ -213,10 +227,21 @@ impl Error {
             Error::LowPlatformBalance => "Platform balance is low",
             Error::ConnectedWalletInvalid => "connected wallet length is invalid",
             Error::InvalidCaptcha => "The CAPTCHA text you entered is incorrect. Please try again.",
-            Error::CaptchaNotFound => "No CAPTCHA found for your account. Please request a new one.",  
+            Error::CaptchaNotFound => {
+                "No CAPTCHA found for your account. Please request a new one."
+            }
+            Error::AllowanceTooLow => "Allowance is too low",
+            Error::AllowanceQueryFailed => "Failed to query allowance",
             Error::ErrorSupplyToken => "Error supplying token",
             Error::TotalCollateraLessThan => "Total collateral is less that amount in usd",
             Error::UserCollateralLessThanReward => "User collateral is less than reward amount",
+            Error::RoleAlreadyExistsForUser => "This user already has a role assigned.",
+            Error::InvalidRole => {
+                "The provided role is invalid. Please use a valid role such as 'admin' or 'minter'."
+            }
+            Error::UserRoleNotFound => "No role assigned to the specified user.",
+            Error::TokenNotTransfered => "Token transfer failed. Please try again later.",
+
         }
     }
 }

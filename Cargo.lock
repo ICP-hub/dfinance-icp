@@ -1550,6 +1550,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
 
 [[package]]
+name = "data_storage"
+version = "0.1.0"
+dependencies = [
+ "candid",
+ "ic-cdk 0.15.0",
+ "ic-cdk-macros 0.15.0",
+ "ic-cdk-timers",
+ "ic-stable-structures",
+ "once_cell",
+ "serde",
+ "time",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "debttoken"
 version = "0.1.0"
 dependencies = [
@@ -1656,6 +1672,8 @@ dependencies = [
  "serde_json",
  "time",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "uint",
 ]
 
@@ -5620,20 +5638,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "logs"
-version = "0.1.0"
-dependencies = [
- "candid",
- "ic-cdk 0.15.0",
- "ic-cdk-macros 0.15.0",
- "ic-cdk-timers",
- "ic-stable-structures",
- "once_cell",
- "serde",
- "time",
-]
-
-[[package]]
 name = "lru"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8480,6 +8484,7 @@ dependencies = [
  "sharded-slab",
  "smallvec",
  "thread_local",
+ "time",
  "tracing",
  "tracing-core",
  "tracing-log",

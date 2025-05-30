@@ -1,9 +1,15 @@
-use crate::constants::validators::validate_asset_name;
 use crate::{debug, error, info, trace};
 use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
 use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
-use crate::constants::errors::Error;
-use crate::constants::constant_variables::constants::{SCALING_FACTOR, TOKEN_TRANSFER_FEE, XRC_CANISTER_NAME};
+use crate::constants::{
+    errors::Error,
+    validators::validate_asset_name,
+    constant_variables::constants::{
+        SCALING_FACTOR, TOKEN_TRANSFER_FEE, XRC_CANISTER_NAME, ONE_VALUE, TEST_CKBTC_PRICE, 
+        TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
+    },
+};
+
 use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
@@ -15,9 +21,6 @@ use ic_cdk::update;
 use ic_xrc_types::{Asset, AssetClass, GetExchangeRateRequest, GetExchangeRateResult};
 use std::collections::HashMap;
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{
-    ONE_VALUE, TEST_CKBTC_PRICE, TEST_CKETH_PRICE, TEST_CKUSDC_PRICE, TEST_CKUSDT_PRICE, TEST_ICP_PRICE, XRC_CYCLES_FEE
-};
 use crate::protocol::utils::log::{log_internal,LogLevel};
 
 /*
@@ -83,6 +86,9 @@ pub async fn update_reserves_price() -> Result<(), Error> {
  * @functionality Updates the cached price for a single specific token
  * @dev Fetches the latest exchange rate for a single asset and updates the cache.
  * @param asset The name of the asset whose price needs to be updated.
+ * @returns
+ *   - `Ok(())`: if the token prices get updated successfully.
+ *   - `Err(e)`: if in case and error comes up while updating.
  */
 pub async fn update_token_price(asset: String) -> Result<(), Error> {
    
@@ -162,7 +168,7 @@ pub async fn get_exchange_rates(
             return Err(Error::ExchangeRateError);
         }
         Err(e) => {
-            error!("Call failed: {:?}", e);
+            error!("get_exchange_rate Call failed: {:?}", e);
             return Err(Error::ExchangeRateError);
         }
     };
@@ -201,7 +207,7 @@ pub async fn get_exchange_rates(
 }
 
 /*
- * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC)
+ * @title Update Price Cache for Assets with Predefined Manual Prices (For Testing Purpose - Pocket IC) (Only for Testnet)
  * @functionality Provides a testing mechanism to populate the price cache with predefined values for simulated environments
  * @dev This function checks if the caller is a valid tester for Pocket IC and iterates over the assets in the state,
  *      updating their price caches with manually defined prices. If no price is found for an asset,
@@ -282,7 +288,13 @@ pub async fn mock_price_data() -> Result<(), Error> {
     Ok(())
 }
 
-
+/*
+* @title Normalize Symbol
+* @functionality Converts specific asset symbols to their canonical forms for consistency
+* @dev Normalizes asset symbols to a standard format.
+* @param symbol The asset symbol to normalize.
+* @returns String - The normalized asset symbol.
+*/
 fn normalize_symbol(symbol: &str) -> String {
     match symbol {
         "ckBTC" => "btc".to_string(),
@@ -294,7 +306,13 @@ fn normalize_symbol(symbol: &str) -> String {
 }
 
 
-
+/*
+* @title Get Cached Exchange Rate
+* @functionality Retrieves the cached exchange rate for a specific asset from the price cache
+* @dev Fetches the cached exchange rate for a given asset symbol.
+* @param base_asset_symbol The symbol of the asset to retrieve the exchange rate for.
+* @returns Result<Nat, Error> - Returns the cached exchange rate if available, otherwise an error.
+*/
 pub fn get_cached_exchange_rate(base_asset_symbol: String) -> Result<Nat, Error> {
     trace!("calling get_cached_exchange_rate");
     // asset validator

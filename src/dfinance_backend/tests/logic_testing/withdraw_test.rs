@@ -4,6 +4,7 @@ use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
+use tracing::{info,error};
 
 /*
  * @title IC Withdraw Functionality Test
@@ -36,14 +37,14 @@ use pocket_ic::{PocketIc, WasmResult};
  * - Provides detailed feedback to developers for debugging and refining withdraw logic.
  *
  * @note
- * Uses `ic_cdk::println!` for verbose logging during test execution.
+ * Uses `info!` for verbose logging during test execution.
  */
 pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
         asset: String,
         amount: Nat,
-        is_collateral: bool,
+        can_be_collateral: bool,
         expect_success: bool,
         expected_error_message: Option<String>,
     }
@@ -53,42 +54,42 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(200_000_000u128), // 2.00 ICP (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(100_000_000u128), // 1.00 ICP (with collateral) (includes transaction fee)
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
             amount: Nat::from(30_000u128), // 0.0003 ckBTC (includes transaction fee)
-            is_collateral: true,
+            can_be_collateral: true,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
             amount: Nat::from(2_000u128), // 0.00002 ckETH
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
             amount: Nat::from(1_000_000u128), // 10,000 ckUSDT
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
             amount: Nat::from(400_000u128), // 200,000 ckUSDC
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
@@ -97,7 +98,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(100_000_000_000u128),
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
         },
@@ -105,7 +106,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "".to_string(),
             amount: Nat::from(100u128),
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
         },
@@ -113,7 +114,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "XYZ".to_string(),
             amount: Nat::from(100u128),
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
         },
@@ -121,7 +122,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "ckXYZ_long".to_string(),
             amount: Nat::from(100u128),
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Lenght of the asset is invalid".to_string()),
         },
@@ -129,56 +130,57 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         TestCase {
             asset: "ckBTC".to_string(),
             amount: Nat::from(0u128),
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
         TestCase {
             asset: "ckUSDT ".to_string(),  // Asset name with trailing space
             amount: Nat::from(10_000u128), // 10 USDT
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
         },
         TestCase {
             asset: "icp".to_string(),           // Lowercase asset name
             amount: Nat::from(100_000_000u128), // 0.1 ICP
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false, // Assuming asset names are case-sensitive
             expected_error_message: Some("no canister id found".to_string()),
         },
         TestCase {
             asset: "ckETH".to_string(),
             amount: Nat::from(1u128), // Withdraw tiny fraction
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Fee exceeds the amount".to_string()),
         },
         TestCase {
             asset: "ICP".to_string(),
             amount: Nat::from(10_000_000u128), // 0.10 ICP
-            is_collateral: false,
+            can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
     ];
+    init_tracing();
     let user_principal = get_user_principal2();
-    ic_cdk::println!(
+    info!(
         "\n======================== Starting IC Withdraw Tests ========================\n"
     );
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
-        ic_cdk::println!("Asset: {}", case.asset);
+        info!("\n------------------------------------------------------------");
+        info!("🔵 IC Test Case {}: Executing Withdraw Request", i + 1);
+        info!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("Is Collateral: {}", case.is_collateral);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        info!("Amount: {}", amount_float / 100000000.0);
+        info!("Is Collateral: {}", case.can_be_collateral);
+        info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            info!("Expected Error Message: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         //checking asset principal
         let _asset_principal =
@@ -186,12 +188,12 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                 Some(principal) => principal,
                 None => {
                     if !case.expect_success {
-                        ic_cdk::println!(
+                        info!(
                             "✅ IC Test Case {} Passed: Supply rejected as expected",
                             i + 1,
                         );
                     } else {
-                        ic_cdk::println!(
+                        error!(
                             "❌ IC Test Case {} Failed: Expected success but got rejection",
                             i + 1
                         );
@@ -204,7 +206,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         let withdraw_params = ExecuteWithdrawParams {
             asset: case.asset.clone(),
             amount: case.amount.clone(),
-            is_collateral: case.is_collateral,
+            can_be_collateral: case.can_be_collateral,
 
         };
 
@@ -228,24 +230,24 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                 match withdraw_response {
                     Ok(_) => {
                         if !case.expect_success {
-                            ic_cdk::println!(
+                            error!(
                                 "❌ IC Test Case {} Failed: Expected failure but got success.",
                                 i + 1
                             );
                             continue;
                         }
-                        ic_cdk::println!("✅ IC Test Case {} Passed: Withdraw successful.", i + 1,);
-                        ic_cdk::println!("\n=================== Checking Reserves After successful Withdrawal ===================\n");
+                        info!("✅ IC Test Case {} Passed: Withdraw successful.", i + 1,);
+                        info!("\n=================== Checking Reserves After successful Withdrawal ===================\n");
                         // Check reserve data after successful withdraw
                         fetch_reserve_data(pic, backend_canister, &case.asset);
-                        ic_cdk::println!("\n=================== Checking User data After successful Withdrawal ===================\n");
+                        info!("\n=================== Checking User data After successful Withdrawal ===================\n");
                         //check user data after successful withdraw
                         fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                     }
                     Err(error) => {
                         if !case.expect_success {
                             if case.expected_error_message.as_deref() != Some(error.message()) {
-                                println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
                                     case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -253,26 +255,26 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                                 );
                                 continue;
                             }
-                            ic_cdk::println!(
+                            info!(
                                 "✅ IC Test Case {} Passed: Withdraw rejected as expected with message: {:?}",
                                 i + 1,
                                 error
                             );
-                            ic_cdk::println!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
+                            info!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
                             // Check reserve data after successful withdraw
                             fetch_reserve_data(pic, backend_canister, &case.asset);
-                            ic_cdk::println!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
+                            info!("\n===================  Verifying Reserve after intentional withdrawl failure ===================\n");
                             // check user data after successful withdraw
                             fetch_user_data(pic, backend_canister, &user_principal, &case.asset);
                         } else {
-                            ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
+                            error!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, error);
                             continue;
                         }
                     }
                 }
             }
             Ok(WasmResult::Reject(reject_message)) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                     i + 1,
                     reject_message
@@ -280,7 +282,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
                 continue;
             }
             Err(e) => {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Error during withdraw function call: {:?}",
                     i + 1,
                     e
@@ -290,7 +292,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         }
     }
 
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Withdraw Tests Completed ========================\n"
     );
 }

@@ -4,8 +4,8 @@ import Footer from "../../components/Layout/Footer";
 import Ellipse from "../../components/Common/ellipse";
 import DashboardNav from "../../components/Dashboard/DashboardNav";
 import Loading from "../../components/Common/loading";
-import { usePageLoading } from "../../components/customHooks/useLoading";
-import useAssetData from "../../components/customHooks/useAssets";
+import { usePageLoading } from "../../components/CustomHooks/useLoading";
+import useAssetData from "../../components/CustomHooks/useAssets";
 import { useAuth } from "../../utils/useAuthClient";
 import { DashboardDataProvider } from "../../components/Dashboard/DashboardDataProvider";
 

@@ -8,7 +8,7 @@ use crate::constants::constant_variables::constants::{
     TEST_CYCLES_FOR_ARCHIVE_CREATION, TEST_DECIMALS, TEST_DEFAULT_CYCLES, TEST_MAX_MEMO_LENGTH,
     TEST_MAX_MESSAGE_SIZE_BYTES, TEST_MAX_NUMBER_OF_ACCOUNTS, TEST_MAX_TRANSACTIONS_PER_RESPONSE,
     TEST_NODE_MAX_MEMORY_SIZE_BYTES, TEST_NUM_BLOCKS_TO_ARCHIVE, TEST_TRANSFER_FEE,
-    TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD,
+    TEST_TRIGGER_THRESHOLD, TRANSFER_FEE, TRIGGER_THRESHOLD, MAIN_CONTROLLER
 };
 use crate::declarations::structs::{
     ArchiveOptions, DynamicCanisterInitArgs, FeatureFlags, LedgerArg,
@@ -23,7 +23,6 @@ use icrc_ledger_types::icrc::generic_value::Value;
 use icrc_ledger_types::icrc1::account::Account;
 use std::borrow::Cow;
 use crate::stable_storage::state_handler::read_state;
-use crate::constants::constant_variables::constants::MAIN_CONTROLLER;
 use crate::declarations::datatypes::InitArgs;
 
 /*
@@ -191,7 +190,7 @@ pub async fn create_token_canister(
 }
 
 /*
- * @title Create Test Token Canister
+ * @title Create Test Token Canister (Only for Testnet)
  * @dev Deploys a new test token canister with a given name and symbol.
  *      It initializes the token and installs the test ledger WASM code.
  *
@@ -342,7 +341,7 @@ pub fn get_controller() -> Result<InitArgs, Error> {
     read_state(|state| {
         state
             .meta_data
-            .get(&MAIN_CONTROLLER.to_string()) // use the appropriate string key
+            .get(&MAIN_CONTROLLER.to_string()) 
             .map(|candid_val| candid_val.0.clone()) // extract InitArgs from Candid wrapper
             .ok_or(Error::ControllerNotFound)
     })

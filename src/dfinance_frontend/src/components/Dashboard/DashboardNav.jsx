@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
@@ -7,26 +13,26 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
 import { Principal } from "@dfinity/principal";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
-import useFormatNumber from "../customHooks/useFormatNumber";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import useUserData from "../customHooks/useUserData";
+import useFormatNumber from "../CustomHooks/useFormatNumber";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
+import useUserData from "../CustomHooks/useUserData";
 import { Info } from "lucide-react";
 import { useReserveData } from "../../context/ReserveDataContext";
-import { SCALING_FACTOR } from '../../utils/constants';
+import { SCALING_FACTOR } from "../../utils/constants";
 
 /**
  * DashboardNav Component
  *
  * This component serves as the navigation header, displaying key financial metrics.
- * 
+ *
  * Features:
  * - Displays market statistics (total market size, available liquidity, total borrows)
  * - Shows metrics like (net worth, net APY, health factor)
  * - Provides risk assessment information with Risk Details popup
- * 
+ *
  * @returns {JSX.Element} - Returns the DashboardNav component with relevant financial metrics and navigation options.
  */
 const DashboardNav = () => {
@@ -35,6 +41,7 @@ const DashboardNav = () => {
    * =================================================================================== */
   const {
     assets,
+    AssetImages,
     totalSupplySize,
     totalBorrowSize,
     asset_supply,
@@ -43,6 +50,7 @@ const DashboardNav = () => {
     fetchAssetSupply,
     reserveData,
   } = useAssetData();
+
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -90,7 +98,7 @@ const DashboardNav = () => {
    *                                  MEMOIZATION
    * =================================================================================== */
   const principalObj = useMemo(
-    () => principal ? Principal.fromText(principal) : null,
+    () => (principal ? Principal.fromText(principal) : null),
     [principal]
   );
 
@@ -102,93 +110,102 @@ const DashboardNav = () => {
     return `${num.toFixed(2)}%`;
   }, []);
 
-
   // Memoize wallet detail tab to prevent unnecessary re-renders
-  const walletDetailTab = useMemo(() => [
-    {
-      id: 0,
-      title: "Net Worth",
-      count: netWorth === 0 || netWorth === "-" ? (
-        "-"
-      ) : netWorth ? (
-        <>
-          <span style={{ fontWeight: "lighter" }}>$</span>
-          {formatNumber(netWorth)}
-        </>
-      ) : (
-        "-"
-      ),
-    },
-    {
-      id: 1,
-      title: "Net APY",
-      count:
-        netApy !== null && netApy !== undefined
-          ? netApy === "<0.01%"
-            ? "<0.01%"
-            : !isNaN(parseFloat(netApy))
+  const walletDetailTab = useMemo(
+    () => [
+      {
+        id: 0,
+        title: "Net Worth",
+        count:
+          netWorth === 0 || netWorth === "-" ? (
+            "-"
+          ) : netWorth ? (
+            <>
+              <span style={{ fontWeight: "lighter" }}>$</span>
+              {formatNumber(netWorth)}
+            </>
+          ) : (
+            "-"
+          ),
+      },
+      {
+        id: 1,
+        title: "Net APY",
+        count:
+          netApy !== null && netApy !== undefined
+            ? netApy === "<0.01%"
+              ? "<0.01%"
+              : !isNaN(parseFloat(netApy))
               ? `${formatNetApy(netApy)}`
               : "-"
-          : "-",
-    },
-    {
-      id: 2,
-      title: "Health Factor",
-      count: healthFactor ? healthFactor : "-",
-    },
-  ], [netWorth, netApy, healthFactor, formatNumber, formatNetApy]);
+            : "-",
+      },
+      {
+        id: 2,
+        title: "Health Factor",
+        count: healthFactor ? healthFactor : "-",
+      },
+    ],
+    [netWorth, netApy, healthFactor, formatNumber, formatNetApy]
+  );
 
-  const walletDetailTabs = useMemo(() => [
-    {
-      id: 0,
-      title: "Total Market Size",
-      count: totalSupplySize ? (
-        <>
-          <span className="font-light">$</span>
-          {totalSupplySize}
-        </>
-      ) : 0
-    },
-    {
-      id: 1,
-      title: "Total Available",
-      count: (() => {
-        const convertToNumber = (value) => {
-          if (typeof value === "string") {
-            const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
-            if (value.includes("K")) return numberValue * 1e3;
-            if (value.includes("M")) return numberValue * 1e6;
-            return numberValue;
-          }
-          return 0;
-        };
-
-        const supply = convertToNumber(totalSupplySize);
-        const borrow = convertToNumber(totalBorrowSize);
-        const result =
-          !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
-        const formattedResult = formatNumber(
-          result === "0.00" ? "0" : result
-        );
-        return (
+  const walletDetailTabs = useMemo(
+    () => [
+      {
+        id: 0,
+        title: "Total Market Size",
+        count: totalSupplySize ? (
           <>
             <span className="font-light">$</span>
-            {formattedResult}
+            {totalSupplySize}
           </>
-        );
-      })()
-    },
-    {
-      id: 2,
-      title: "Total Borrows",
-      count: totalBorrowSize ? (
-        <>
-          <span className="font-light">$</span>
-          {totalBorrowSize}
-        </>
-      ) : 0
-    },
-  ], [totalSupplySize, totalBorrowSize, formatNumber]);
+        ) : (
+          0
+        ),
+      },
+      {
+        id: 1,
+        title: "Total Available",
+        count: (() => {
+          const convertToNumber = (value) => {
+            if (typeof value === "string") {
+              const numberValue = parseFloat(value.replace(/[^0-9.]/g, ""));
+              if (value.includes("K")) return numberValue * 1e3;
+              if (value.includes("M")) return numberValue * 1e6;
+              return numberValue;
+            }
+            return 0;
+          };
+
+          const supply = convertToNumber(totalSupplySize);
+          const borrow = convertToNumber(totalBorrowSize);
+          const result = !isNaN(supply) && !isNaN(borrow) ? supply - borrow : 0;
+          const formattedResult = formatNumber(
+            result === "0.00" ? "0" : result
+          );
+          return (
+            <>
+              <span className="font-light">$</span>
+              {formattedResult}
+            </>
+          );
+        })(),
+      },
+      {
+        id: 2,
+        title: "Total Borrows",
+        count: totalBorrowSize ? (
+          <>
+            <span className="font-light">$</span>
+            {totalBorrowSize}
+          </>
+        ) : (
+          0
+        ),
+      },
+    ],
+    [totalSupplySize, totalBorrowSize, formatNumber]
+  );
 
   /* ===================================================================================
    *                    Derived State, UI Variables, and Route-Based Flags
@@ -224,7 +241,8 @@ const DashboardNav = () => {
       for (const asset of assets) {
         const reserveDataForAsset = batchedReserveData[asset];
         const dtokenId = reserveDataForAsset?.Ok[0]?.d_token_canister?.[0];
-        const debtTokenId = reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
+        const debtTokenId =
+          reserveDataForAsset?.Ok[0]?.debt_token_canister?.[0];
         const assetBalance = {
           asset,
           dtokenBalance: null,
@@ -239,7 +257,10 @@ const DashboardNav = () => {
               const balance = await dtokenActor.icrc1_balance_of(account);
               assetBalance.dtokenBalance = balance;
             } catch (error) {
-              console.error(`Error fetching dtoken balance for ${asset}:`, error);
+              console.error(
+                `Error fetching dtoken balance for ${asset}:`,
+                error
+              );
             }
           }
         }
@@ -252,7 +273,10 @@ const DashboardNav = () => {
               const balance = await debtTokenActor.icrc1_balance_of(account);
               assetBalance.debtTokenBalance = balance;
             } catch (error) {
-              console.error(`Error fetching debt token balance for ${asset}:`, error);
+              console.error(
+                `Error fetching debt token balance for ${asset}:`,
+                error
+              );
             }
           }
         }
@@ -267,44 +291,51 @@ const DashboardNav = () => {
   }, [assets, principalObj, batchFetchReserveData, createLedgerActor]);
 
   // Function to get asset supply value
-  const getAssetSupplyValue = useCallback((asset) => {
-    if (asset_supply[asset] !== undefined) {
-      const supplyValue = Number(asset_supply[asset][0]);
-      return supplyValue;
-    }
-    console.warn(`No supply value found for ${asset}`);
-    return 0;
-  }, [asset_supply]);
-
+  const getAssetSupplyValue = useCallback(
+    (asset) => {
+      if (asset_supply[asset] !== undefined) {
+        const supplyValue = Number(asset_supply[asset][0]);
+        return supplyValue;
+      }
+      console.warn(`No supply value found for ${asset}`);
+      return 0;
+    },
+    [asset_supply]
+  );
 
   // Function to get asset borrow value
-  const getAssetBorrowValue = useCallback((asset) => {
-    if (asset_supply[asset] !== undefined) {
-      const borrowValue = Number(asset_borrow[asset][0]);
-      return borrowValue;
-    }
-    console.warn(`No supply value found for ${asset}`);
-    return 0;
-  }, [asset_supply]);
-
+  const getAssetBorrowValue = useCallback(
+    (asset) => {
+      if (asset_supply[asset] !== undefined) {
+        const borrowValue = Number(asset_borrow[asset][0]);
+        return borrowValue;
+      }
+      console.warn(`No supply value found for ${asset}`);
+      return 0;
+    },
+    [asset_supply]
+  );
 
   // Function to get conversion rate for assets
-  const getConversionRate = useCallback((asset) => {
-    switch (asset) {
-      case "ckBTC":
-        return ckBTCUsdRate;
-      case "ckETH":
-        return ckETHUsdRate;
-      case "ckUSDC":
-        return ckUSDCUsdRate;
-      case "ICP":
-        return ckICPUsdRate;
-      case "ckUSDT":
-        return ckUSDTUsdRate;
-      default:
-        return null;
-    }
-  }, [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]);
+  const getConversionRate = useCallback(
+    (asset) => {
+      switch (asset) {
+        case "ckBTC":
+          return ckBTCUsdRate;
+        case "ckETH":
+          return ckETHUsdRate;
+        case "ckUSDC":
+          return ckUSDCUsdRate;
+        case "ICP":
+          return ckICPUsdRate;
+        case "ckUSDT":
+          return ckUSDTUsdRate;
+        default:
+          return null;
+      }
+    },
+    [ckBTCUsdRate, ckETHUsdRate, ckUSDCUsdRate, ckICPUsdRate, ckUSDTUsdRate]
+  );
 
   const toggleTooltip = useCallback(() => {
     setIsTooltipVisible((prev) => !prev);
@@ -313,7 +344,12 @@ const DashboardNav = () => {
   // Function to calculate net supply APY - optimized with proper dependencies
   const calculateNetSupplyApy = useCallback(
     (reserves, reserveData) => {
-      if (!reserves || !reserveData || !assetBalances || assetBalances.length === 0) {
+      if (
+        !reserves ||
+        !reserveData ||
+        !assetBalances ||
+        assetBalances.length === 0
+      ) {
         console.warn("Missing reserves, reserveData, or assetBalances");
         return NaN;
       }
@@ -328,13 +364,21 @@ const DashboardNav = () => {
       reserves?.forEach((reserve) => {
         const assetKey = reserve[0];
 
-        if (!reserveData || !reserveData[assetKey] || !reserveData[assetKey].Ok[0]) return;
-
+        if (
+          !reserveData ||
+          !reserveData[assetKey] ||
+          !reserveData[assetKey].Ok[0]
+        )
+          return;
 
         const conversionRate = getConversionRate(assetKey) || 0;
 
-        const supplyApy = (Number(reserveData[assetKey].Ok[0].current_liquidity_rate) || 0) / SCALING_FACTOR;
-        const debtApy = (Number(reserveData[assetKey].Ok[0].borrow_rate) || 0) / SCALING_FACTOR;
+        const supplyApy =
+          (Number(reserveData[assetKey].Ok[0].current_liquidity_rate) || 0) /
+          SCALING_FACTOR;
+        const debtApy =
+          (Number(reserveData[assetKey].Ok[0].borrow_rate) || 0) /
+          SCALING_FACTOR;
 
         const currentLiquidity =
           userData?.Ok?.[0].reserves[0]?.find(
@@ -342,18 +386,30 @@ const DashboardNav = () => {
           )?.[1]?.liquidity_index || 1;
 
         const assetBalance =
-          assetBalances?.find((balance) => balance.asset === assetKey)?.dtokenBalance || 0;
+          assetBalances?.find((balance) => balance.asset === assetKey)
+            ?.dtokenBalance || 0;
 
-        const safeAssetBalance = typeof assetBalance === "bigint" ? Number(assetBalance) : assetBalance;
+        const safeAssetBalance =
+          typeof assetBalance === "bigint"
+            ? Number(assetBalance)
+            : assetBalance;
 
-        const safeCurrentLiquidity = typeof currentLiquidity === "bigint" ? Number(currentLiquidity) : currentLiquidity;
+        const safeCurrentLiquidity =
+          typeof currentLiquidity === "bigint"
+            ? Number(currentLiquidity)
+            : currentLiquidity;
 
         const supplyValue = getAssetSupplyValue(assetKey);
-        const safeSupplyValue = typeof supplyValue === "bigint" ? Number(supplyValue) : supplyValue;
+        const safeSupplyValue =
+          typeof supplyValue === "bigint" ? Number(supplyValue) : supplyValue;
 
-        const calculated_supply = Math.trunc((safeAssetBalance / safeCurrentLiquidity) * SCALING_FACTOR);
+        const calculated_supply = Math.trunc(
+          (safeAssetBalance / safeCurrentLiquidity) * SCALING_FACTOR
+        );
 
-        const assetSupply = Math.trunc((calculated_supply * safeSupplyValue) / SCALING_FACTOR);
+        const assetSupply = Math.trunc(
+          (calculated_supply * safeSupplyValue) / SCALING_FACTOR
+        );
 
         const assetSupplyInUSD = assetSupply * conversionRate;
 
@@ -363,12 +419,14 @@ const DashboardNav = () => {
           )?.[1]?.variable_borrow_index || 1;
 
         const assetBorrowBalance =
-          assetBalances.find((balance) => balance.asset === assetKey)?.debtTokenBalance || 0;
+          assetBalances.find((balance) => balance.asset === assetKey)
+            ?.debtTokenBalance || 0;
 
         const safeBorrowBalance = Number(assetBorrowBalance);
         const assetBorrowValue = Number(getAssetBorrowValue(assetKey) || 0);
 
-        const assetBorrowed = (safeBorrowBalance * assetBorrowValue) / Number(DebtIndex) || 0;
+        const assetBorrowed =
+          (safeBorrowBalance * assetBorrowValue) / Number(DebtIndex) || 0;
 
         const assetBorrowedInUSD = assetBorrowed * conversionRate;
 
@@ -378,10 +436,8 @@ const DashboardNav = () => {
         totalSuppliedInUSD += assetSupplyInUSD;
         weightedApySum += assetSupplyInUSD * supplyApy;
 
-
         numerator += weightedApySum - weightedDebtApySum;
         denominator += totalSuppliedInUSD;
-
       });
 
       if (denominator === 0) {
@@ -393,10 +449,15 @@ const DashboardNav = () => {
 
       return netApy < 0.0001 ? 0.0001 : netApy;
     },
-    [reserveData, assetBalances, userData, getAssetSupplyValue, getAssetBorrowValue, getConversionRate]
+    [
+      reserveData,
+      assetBalances,
+      userData,
+      getAssetSupplyValue,
+      getAssetBorrowValue,
+      getConversionRate,
+    ]
   );
-
-
 
   const truncateToDecimals = useCallback((num, decimals) => {
     const factor = Math.pow(10, decimals);
@@ -418,7 +479,7 @@ const DashboardNav = () => {
   }, []);
 
   const toggleMenu = useCallback(() => {
-    setIsMenuOpen(prev => {
+    setIsMenuOpen((prev) => {
       if (!prev) {
         document.addEventListener("mousedown", handleClickOutside);
       } else {
@@ -427,6 +488,19 @@ const DashboardNav = () => {
       return !prev;
     });
   }, [handleClickOutside]);
+
+  const currentAsset = useMemo(() => {
+    if (isAssetDetailsPage) {
+      const pathParts = location.pathname.split("/");
+      return pathParts[pathParts.length - 1];
+    }
+    return null;
+  }, [isAssetDetailsPage, location.pathname]);
+
+  const assetImageIndex = useMemo(() => {
+    if (!currentAsset || !assets || assets.length === 0) return -1;
+    return assets.indexOf(currentAsset);
+  }, [currentAsset, assets]);
 
   /* ===================================================================================
    *                                  EFFECTS
@@ -506,7 +580,11 @@ const DashboardNav = () => {
 
   // Effect for calculating Net APY
   useEffect(() => {
-    if (userData?.Ok?.[0]?.reserves?.[0] && reserveData && assetBalances.length > 0) {
+    if (
+      userData?.Ok?.[0]?.reserves?.[0] &&
+      reserveData &&
+      assetBalances.length > 0
+    ) {
       const reservesData = userData.Ok[0].reserves[0];
       const calculatedNetApy = calculateNetSupplyApy(reservesData, reserveData);
       if (!calculatedNetApy || isNaN(calculatedNetApy)) {
@@ -531,29 +609,37 @@ const DashboardNav = () => {
 
       reservesData.forEach((reserveGroup) => {
         const asset = reserveGroup[0];
-        const currentLiquidity = userData?.Ok?.[0].reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === asset
-        )?.[1]?.liquidity_index || 1;
+        const currentLiquidity =
+          userData?.Ok?.[0].reserves[0]?.find(
+            (reserveGroup) => reserveGroup[0] === asset
+          )?.[1]?.liquidity_index || 1;
 
-        const assetBalance = assetBalances?.find((balance) => balance.asset === asset)
-          ?.dtokenBalance || 0;
+        const assetBalance =
+          assetBalances?.find((balance) => balance.asset === asset)
+            ?.dtokenBalance || 0;
 
         const supplyValue = getAssetSupplyValue(asset);
-        const supply = (Number(assetBalance) * Number(supplyValue)) / Number(currentLiquidity) || 0;
+        const supply =
+          (Number(assetBalance) * Number(supplyValue)) /
+            Number(currentLiquidity) || 0;
 
         if (supply) {
           totalSupply += supply;
         }
 
-        const DebtIndex = userData?.Ok?.[0].reserves[0]?.find(
-          (reserveGroup) => reserveGroup[0] === asset
-        )?.[1]?.variable_borrow_index || 1;
+        const DebtIndex =
+          userData?.Ok?.[0].reserves[0]?.find(
+            (reserveGroup) => reserveGroup[0] === asset
+          )?.[1]?.variable_borrow_index || 1;
 
-        const assetBorrowBalance = assetBalances.find((balance) => balance.asset === asset)
-          ?.debtTokenBalance || 0;
+        const assetBorrowBalance =
+          assetBalances.find((balance) => balance.asset === asset)
+            ?.debtTokenBalance || 0;
 
         const borrowValue = getAssetBorrowValue(asset);
-        const borrow = (Number(assetBorrowBalance) * Number(borrowValue)) / Number(DebtIndex) || 0;
+        const borrow =
+          (Number(assetBorrowBalance) * Number(borrowValue)) /
+            Number(DebtIndex) || 0;
 
         if (borrow > 0) {
           totalBorrow += borrow;
@@ -570,7 +656,7 @@ const DashboardNav = () => {
     dashboardRefreshTrigger,
     calculateNetSupplyApy,
     getAssetSupplyValue,
-    getAssetBorrowValue
+    getAssetBorrowValue,
   ]);
 
   // Effect for managing body overflow when menu is open
@@ -604,23 +690,40 @@ const DashboardNav = () => {
 
       <div className="flex gap-5 -ml-3">
         {!["/dashboard", "/market", "/governance"].includes(pathname) && (
-          <div
-            className=" text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText mt-5"
-            onClick={() => navigate(-1)}
-          >
-            <div className="flex -mt-2">
-              <ChevronLeft
-                size={40}
-                color={chevronColor}
-                className="cursor-pointer"
-              />
+          <div className="flex items-center justify-between w-full mt-3">
+            <div
+              className="text-[#2A1F9D] font-bold font-poppins text-[19px] md:text-2xl lg:text-2xl dark:text-darkText flex items-center cursor-pointer mr-2"
+              onClick={() => navigate(-1)}
+            >
+              <ChevronLeft size={40} color={chevronColor} />
             </div>
+
+            {isAssetDetailsPage && currentAsset && (
+              <div className="flex items-center flex-grow">
+                {assetImageIndex !== -1 &&
+                  AssetImages &&
+                  AssetImages[assetImageIndex] && (
+                    <img
+                      src={AssetImages[assetImageIndex]}
+                      alt={`${currentAsset} logo`}
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                  )}
+                <span className="text-[#2A1F9D] font-semibold dark:text-darkText text-[19px]">
+                  {currentAsset}
+                </span>
+              </div>
+            )}
+
+            {/* Empty div to balance the layout */}
+            <div className="w-10"></div>
           </div>
         )}
 
         <div
-          className={`md:hidden flex ml-auto ${isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
-            }`}
+          className={`md:hidden flex ml-auto ${
+            isAssetDetailsPage ? "mt-1" : "-mt-[3.95rem]"
+          }`}
         >
           {(isMarketRoute || (isDashboardRoute && isAuthenticated)) && (
             <button onClick={toggleMenu} className="rounded-md button1 z-10">
@@ -634,8 +737,9 @@ const DashboardNav = () => {
         <div id="dashboard-nav-details" className="flex market-nav-details">
           <div className="relative">
             <div
-              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isMenuOpen ? "block" : "hidden"
-                } md:hidden`}
+              className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${
+                isMenuOpen ? "block" : "hidden"
+              } md:hidden`}
             >
               <div className="flex justify-center items-center min-h-screen">
                 <div
@@ -700,22 +804,23 @@ const DashboardNav = () => {
 
                             <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
                             <span
-                              className={`font-bold text-[20px] ${data.title === "Health Factor"
+                              className={`font-bold text-[20px] ${
+                                data.title === "Health Factor"
                                   ? data.count === 0
                                     ? "text-red-500"
                                     : data.count > 3
-                                      ? "text-green-500"
-                                      : data.count <= 1
-                                        ? "text-red-500"
-                                        : data.count <= 1.5
-                                          ? "text-orange-600"
-                                          : data.count <= 2
-                                            ? "text-orange-400"
-                                            : "text-orange-300"
+                                    ? "text-green-500"
+                                    : data.count <= 1
+                                    ? "text-red-500"
+                                    : data.count <= 1.5
+                                    ? "text-orange-600"
+                                    : data.count <= 2
+                                    ? "text-orange-400"
+                                    : "text-orange-300"
                                   : data.title === "Total Borrows"
-                                    ? "text-[#2A1F9D] dark:text-darkBlue"
-                                    : "text-[#2A1F9D] dark:text-darkBlue"
-                                }`}
+                                  ? "text-[#2A1F9D] dark:text-darkBlue"
+                                  : "text-[#2A1F9D] dark:text-darkBlue"
+                              }`}
                             >
                               {data.count !== null ? data.count : "\u00A0"}
                             </span>
@@ -793,20 +898,21 @@ const DashboardNav = () => {
                     <hr className="ease-in-out duration-500 bg-[#8CC0D7] h-[2px] w-[20px] group-hover:w-full" />
 
                     <span
-                      className={`font-bold text-[20px] ${data.title === "Health Factor"
+                      className={`font-bold text-[20px] ${
+                        data.title === "Health Factor"
                           ? data.count === 0 && assetSupply === 0
                             ? "text-[#2A1F9D] dark:text-darkBlue"
                             : data.count > 3
-                              ? "text-green-500"
-                              : data.count <= 1
-                                ? "text-red-500"
-                                : data.count <= 1.5
-                                  ? "text-orange-600"
-                                  : data.count <= 2
-                                    ? "text-orange-400"
-                                    : "text-orange-300"
+                            ? "text-green-500"
+                            : data.count <= 1
+                            ? "text-red-500"
+                            : data.count <= 1.5
+                            ? "text-orange-600"
+                            : data.count <= 2
+                            ? "text-orange-400"
+                            : "text-orange-300"
                           : "text-[#2A1F9D] dark:text-darkBlue"
-                        }`}
+                      }`}
                     >
                       {data.count !== null ? data.count : "\u00A0"}
                     </span>

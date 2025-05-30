@@ -4,11 +4,11 @@ import { useAuth } from "../../../utils/useAuthClient";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
-import useUserData from "../../customHooks/useUserData";
+import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
+import useUserData from "../../CustomHooks/useUserData";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
 import { useDispatch } from "react-redux";
-import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
+import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
 import { SCALING_FACTOR } from '../../../utils/constants';
 /**
  * ColateralPopup Component

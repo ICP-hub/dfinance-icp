@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import SupplyInfo from "../../components/Dashboard/DashboardPopup/SupplyInfo";
 import { useParams } from "react-router-dom";
-import useFetchConversionRate from "../../components/customHooks/useFetchConversionRate";
+import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
 import { SCALING_FACTOR } from '../../utils/constants';
 // Mocking react-router's useParams hook for routing functionality
 jest.mock("react-router-dom", () => ({
@@ -12,7 +12,7 @@ jest.mock("react-router-dom", () => ({
 }));
 
 // Mocking the useFetchConversionRate hook to return mock conversion rates
-jest.mock("../../components/customHooks/useFetchConversionRate", () =>
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () =>
   jest.fn()
 );
 

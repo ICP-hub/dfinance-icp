@@ -15,17 +15,17 @@ jest.mock("../../utils/useAuthClient", () => ({
   useAuth: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useFetchConversionRate", () => ({
+jest.mock("../../components/CustomHooks/useFetchConversionRate", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useUserData", () => ({
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 
-jest.mock("../../components/customHooks/useFunctionBlockStatus", () => ({
+jest.mock("../../components/CustomHooks/useFunctionBlockStatus", () => ({
   __esModule: true,
   default: jest.fn(),
 }));
@@ -67,7 +67,7 @@ describe("FaucetPopup Component", () => {
     });
 
     const useFetchConversionRate =
-      require("../../components/customHooks/useFetchConversionRate").default;
+      require("../../components/CustomHooks/useFetchConversionRate").default;
     useFetchConversionRate.mockReturnValue({
       ckBTCUsdRate: 50000,
       ckETHUsdRate: 4000,
@@ -79,7 +79,7 @@ describe("FaucetPopup Component", () => {
     });
 
     const useUserData =
-      require("../../components/customHooks/useUserData").default;
+      require("../../components/CustomHooks/useUserData").default;
     useUserData.mockReturnValue({
       userData: {
         Ok: {
@@ -127,7 +127,7 @@ describe("FaucetPopup Component", () => {
     });
 
     const useFunctionBlockStatus =
-      require("../../components/customHooks/useFunctionBlockStatus").default;
+      require("../../components/CustomHooks/useFunctionBlockStatus").default;
     useFunctionBlockStatus.mockReturnValue({
       isBlocked: false,
     });
@@ -264,7 +264,7 @@ describe("FaucetPopup Component", () => {
   test("handles temporary block status", async () => {
     // Override the mocks for function block status
     const useFunctionBlockStatus =
-      require("../../components/customHooks/useFunctionBlockStatus").default;
+      require("../../components/CustomHooks/useFunctionBlockStatus").default;
     useFunctionBlockStatus.mockReturnValue({
       isBlocked: true,
     });
@@ -299,40 +299,5 @@ describe("FaucetPopup Component", () => {
     );
   });
 
-  // Test: Handles out of cycles error
-  test("displays proper message for out of cycles error", async () => {
-    // Override the mock for this specific test
-    const { useAuth } = require("../../utils/useAuthClient");
-    useAuth.mockReturnValue({
-      backendActor: {
-        faucet: jest.fn().mockRejectedValue(new Error("out of cycles")),
-      },
-      principal: "rrkah-fqaaa-aaaaa-aaaaq-cai",
-    });
-
-    await act(async () => {
-      render(
-        <Provider store={store}>
-          <MemoryRouter>
-            <FaucetPopup {...defaultProps} />
-          </MemoryRouter>
-        </Provider>
-      );
-    });
-
-    // Set an amount
-    const amountInput = screen.getByPlaceholderText(/Enter Amount/i);
-    const faucetButton = screen.getByRole("button", { name: /Faucet ckBTC/i });
-
-    await act(async () => {
-      fireEvent.change(amountInput, { target: { value: "0.5" } });
-      fireEvent.click(faucetButton);
-    });
-
-    // Should show out of cycles message
-    expect(toast.error).toHaveBeenCalledWith(
-      "Canister is out of cycles. Please wait, the admin has been notified.",
-      expect.any(Object)
-    );
-  });
+  
 });

@@ -4,19 +4,20 @@ import { Check, X } from "lucide-react";
 import { useAuth } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useRealTimeConversionRate from "../../customHooks/useRealTimeConversionRate";
-import useUserData from "../../customHooks/useUserData";
+import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
+import useUserData from "../../CustomHooks/useUserData";
 import coinSound from "../../../../public/sound/caching_duck_habbo.mp3";
 import { Principal } from "@dfinity/principal";
 import { trackEvent } from "../../../utils/googleAnalytics";
 import { useMemo } from "react";
 import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpdateReducer";
-import useFunctionBlockStatus from "../../customHooks/useFunctionBlockStatus";
-import useTransferFee from "../../customHooks/useTransferFee";
-import { SCALING_FACTOR } from '../../../utils/constants';
-import { PERCENTAGE_FACTOR } from '../../../utils/constants';
+import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
+import useTransferFee from "../../CustomHooks/useTransferFee";
+import { SCALING_FACTOR } from "../../../utils/constants";
+import { PERCENTAGE_FACTOR } from "../../../utils/constants";
 import { Info } from "lucide-react";
-import useNotificationSystem from "../../customHooks/useNotification";
+import useNotificationSystem from "../../CustomHooks/useNotification";
+
 /**
  * WithdrawPopup Component
  *
@@ -57,7 +58,7 @@ const WithdrawPopup = ({
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const ledgerActors = useSelector((state) => state.ledger);
-const checkAndNotify = useNotificationSystem();
+  const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
    *                                 STATE MANAGEMENT
    * =================================================================================== */
@@ -65,13 +66,30 @@ const checkAndNotify = useNotificationSystem();
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [amount, setAmount] = useState("");
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [liq_thresh, setTempLiq] = useState(liquidationThreshold);
   const [showPanicPopup, setShowPanicPopup] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [ledgerFee, setLedgerFee] = useState(null);
+  const transferFee = Number(transferFeRetrive?.transferFee) || 0;
+  const ledgerFeeNumber =
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee) / 1e8
+      : Number(ledgerFee) / 1e8 || 0;
+  const transactionFee = transferFee + ledgerFeeNumber;
 
-  const transferFee = transferFeRetrive?.transferFee;
+  const formatFee = (fee) => {
+    const fixedFee = parseFloat(fee).toFixed(8);
+    const parts = fixedFee.split(".");
+    const integerPart = parts[0];
+    const decimalPart = parts[1] || "";
+    return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
+  };
+  const formattedTransactionFee = formatFee(transactionFee);
+
   /* ===================================================================================
    *                                  REDUX-SELECTER & MEMOIZATION
    * =================================================================================== */
@@ -132,22 +150,22 @@ const checkAndNotify = useNotificationSystem();
 
     const numericAmount = parseFloat(inputAmount);
     if (!isNaN(numericAmount) && numericAmount > assetSupply) {
-      inputAmount = truncateToeightDeimals(assetSupply - transferFee).toString();
+      inputAmount = truncateToeightDeimals(
+        assetSupply - formattedTransactionFee
+      ).toString();
     }
 
     setAmount(inputAmount);
     updateAmountAndUsdValue(inputAmount);
   };
 
-   const fetchStatusFromBackend = async () => {
+  const fetchStatusFromBackend = async () => {
     try {
       const cycleStatus = await backendActor.cycle_alert();
-      console.log("cycleStatus", cycleStatus)
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      console.log("tokenStatus", tokenStatus)
       const status = {
         cycle: cycleStatus,
-        token: tokenStatus.OK
+        token: tokenStatus.OK,
       };
 
       return status;
@@ -156,6 +174,7 @@ const checkAndNotify = useNotificationSystem();
       throw error;
     }
   };
+
   /**
    * This function updates the USD equivalent of the withdrawal amount based on the conversion rate. It also checks if the
    * amount is valid and less than or equal to the asset supply, providing error messages when necessary.
@@ -174,6 +193,8 @@ const checkAndNotify = useNotificationSystem();
       if (numericAmount <= truncatedAssetSupply) {
         const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
         const convertedValue = numericAmount * adjustedConversionRate;
+        const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+        setUsdAmount(parseFloat(Value));
         setUsdValue(parseFloat(convertedValue));
       } else {
         console.error("Amount exceeds the supply balance");
@@ -236,48 +257,49 @@ const checkAndNotify = useNotificationSystem();
     else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
 
     try {
-      const safeAmount =
-        Number((amount.toString() || "").replace(/,/g, "")) || 0;
-      let amountAsNat64 = Math.round(safeAmount * Math.pow(10, 8));
+      const safeAmount = Number((amount || "").replace(/,/g, "")) || 0;
+      let amountAsNat64 = Math.round(safeAmount * SCALING_FACTOR);
+      const transferFeeBigInt = Math.round(transferFee * SCALING_FACTOR);
+
       const scaledAmount = amountAsNat64;
-      const transferFeeBigInt = Math.round(transferFee * Math.pow(10, 8));
+
+      const ledgerFeeNumber =
+        typeof ledgerFee === "bigint" ? Number(ledgerFee) : ledgerFee || 0;
 
       const totalAmount = transferFeeBigInt
-        ? scaledAmount + transferFeeBigInt
+        ? scaledAmount + transferFeeBigInt + ledgerFeeNumber
         : scaledAmount;
-
       const withdrawParams = {
         asset: asset,
         amount: totalAmount,
-        is_collateral: currentCollateralStatus,
+        can_be_collateral: currentCollateralStatus,
       };
 
       const withdrawResult = await backendActor.execute_withdraw(
         withdrawParams
       );
       dispatch(toggleDashboardRefresh());
- const statusData = await fetchStatusFromBackend();            
-      // Check status and send notifications if needed      
+      const statusData = await fetchStatusFromBackend();
       await checkAndNotify(statusData);
       if ("Ok" in withdrawResult) {
         trackEvent(
           "Withdraw," +
-          asset +
-          "," +
-          scaledAmount / SCALING_FACTOR +
-          "," +
-          currentCollateralStatus +
-          "," +
-          principalObj.toString(),
+            asset +
+            "," +
+            scaledAmount / SCALING_FACTOR +
+            "," +
+            currentCollateralStatus +
+            "," +
+            principalObj.toString(),
           "Assets",
           "Withdraw," +
-          asset +
-          "," +
-          scaledAmount / SCALING_FACTOR +
-          "," +
-          currentCollateralStatus +
-          ", " +
-          principalObj.toString()
+            asset +
+            "," +
+            scaledAmount / SCALING_FACTOR +
+            "," +
+            currentCollateralStatus +
+            ", " +
+            principalObj.toString()
         );
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -302,7 +324,7 @@ const checkAndNotify = useNotificationSystem();
         const errorMessage =
           errorKey?.toString() || "An unexpected error occurred";
         const isPanicError = errorMessage.toLowerCase().includes("panic");
-        if (errorObject && "BlockedForOneHour" in errorObject) {
+        if (errorObject && "BLOCKEDFORONEHOUR" in errorObject) {
           console.error("You are temporarily blocked from using this function");
 
           toast.error("You are temporarily blocked from using this function", {
@@ -400,22 +422,22 @@ const checkAndNotify = useNotificationSystem();
 
   /**
    * Calculates key borrowing metrics:
-   * 
+   *
    * amountTaken:
    *   - Value of asset used as collateral (if enabled).
    *   - amountTaken = currentCollateralStatus ? usdValue : 0
-   * 
+   *
    * totalCollateralValue:
    *   - Remaining collateral = totalCollateral - amountTaken
-   * 
+   *
    * tempLiq (effective liquidation threshold):
    *   - avliq = liquidationThreshold × totalCollateral
    *   - truncatedVal = amountTaken × reserveliquidationThreshold
    *   - tempLiq = (avliq - truncatedVal) / totalCollateralValue
-   * 
+   *
    * healthFactor:
    *   - Risk buffer = (totalCollateralValue × (tempLiq / 100)) / totalDebt
-   * 
+   *
    * ltv (Loan to Value):
    *   - ltv = (totalDebt / totalCollateralValue) × 100
    */
@@ -425,12 +447,13 @@ const checkAndNotify = useNotificationSystem();
     liquidationThreshold,
     reserveliquidationThreshold,
     currentCollateralStatus,
-    usdValue,
+    usdAmount,
   }) => {
     const amountTaken = currentCollateralStatus
-      ? (usdValue || 0).toFixed(8)
+      ? (usdAmount || 0).toFixed(8)
       : "0.00000000";
-    const truncateTo8Decimals = (num) => Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+    const truncateTo8Decimals = (num) =>
+      Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
 
     let totalCollateralValue = 0;
     if (
@@ -446,7 +469,8 @@ const checkAndNotify = useNotificationSystem();
 
     let avliq = liquidationThreshold * totalCollateral;
     let truncatedVal =
-      Math.trunc(amountTaken * reserveliquidationThreshold * SCALING_FACTOR) / SCALING_FACTOR;
+      Math.trunc(amountTaken * reserveliquidationThreshold * SCALING_FACTOR) /
+      SCALING_FACTOR;
     let tempLiq = 0;
     if (
       amountTaken > totalCollateral &&
@@ -457,7 +481,9 @@ const checkAndNotify = useNotificationSystem();
       tempLiq = avliq - truncatedVal;
     }
     if (totalCollateralValue > 0) {
-      tempLiq = Math.floor((tempLiq / totalCollateralValue) * SCALING_FACTOR) / SCALING_FACTOR;
+      tempLiq =
+        Math.floor((tempLiq / totalCollateralValue) * SCALING_FACTOR) /
+        SCALING_FACTOR;
     }
 
     let totalDebtValue = parseFloat(totalDebt);
@@ -467,16 +493,17 @@ const checkAndNotify = useNotificationSystem();
       totalDebtValue === 0
         ? Infinity
         : Math.round(
-          ((totalCollateralValue * (tempLiq / PERCENTAGE_FACTOR)) / totalDebtValue) * SCALING_FACTOR
-        ) / SCALING_FACTOR;
+            ((totalCollateralValue * (tempLiq / PERCENTAGE_FACTOR)) /
+              totalDebtValue) *
+              SCALING_FACTOR
+          ) / SCALING_FACTOR;
 
     let ltv =
       totalCollateralValue === 0
         ? 0
         : parseFloat(totalDebtValue) / totalCollateralValue;
-    ltv = Math.trunc(ltv * (SCALING_FACTOR * PERCENTAGE_FACTOR)) / SCALING_FACTOR; //in percent
-
-
+    ltv =
+      Math.trunc(ltv * (SCALING_FACTOR * PERCENTAGE_FACTOR)) / SCALING_FACTOR; //in percent
     return {
       amountTaken,
       totalCollateralValue,
@@ -494,13 +521,13 @@ const checkAndNotify = useNotificationSystem();
       const truncated = Math.floor(value * multiplier) / multiplier;
       return truncated;
     };
-    const fee = transferFee ? Number(transferFee) : 0;
+    const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
     let asset_supply = assetSupply
       ? assetSupply >= 1e-8 && assetSupply < 1e-7
         ? parseFloat(Number(assetSupply).toFixed(8))
         : assetSupply >= 1e-7 && assetSupply < 1e-6
-          ? parseFloat(Number(assetSupply).toFixed(7))
-          : truncateToSevenDecimals(assetSupply)
+        ? parseFloat(Number(assetSupply).toFixed(7))
+        : truncateToSevenDecimals(assetSupply)
       : 0;
     const maxAmount = asset_supply - fee;
     const formattedAmount =
@@ -565,13 +592,40 @@ const checkAndNotify = useNotificationSystem();
   }, []);
 
   useEffect(() => {
+    if (!asset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (asset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (asset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (asset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (asset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (asset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown asset type: ${asset}`);
+      return;
+    }
+
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${asset}:`, error);
+      }
+    };
+
+    fetchFee();
+  }, [asset]);
+  useEffect(() => {
     const { tempLiq, healthFactor, ltv } = calculatedValues({
       totalCollateral,
       totalDebt,
       liquidationThreshold,
       reserveliquidationThreshold,
       currentCollateralStatus,
-      usdValue,
+      usdAmount,
     });
 
     const truncateToDecimals = (num, decimals) => {
@@ -653,6 +707,8 @@ const checkAndNotify = useNotificationSystem();
       const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
       const convertedValue =
         Number(amount.toString().replace(/,/g, "")) * adjustedConversionRate;
+      const Value = ( Number(amount.toString().replace(/,/g, ""))+ Number(formattedTransactionFee)) * adjustedConversionRate;
+      setUsdAmount(parseFloat(Value));
       setUsdValue(convertedValue);
     } else {
       setUsdValue(0);
@@ -711,7 +767,7 @@ const checkAndNotify = useNotificationSystem();
                     }}
                   >
                     {truncateToeightDeimals(
-                      Math.max(0, assetSupply - transferFee)
+                      Math.max(0, assetSupply - formattedTransactionFee)
                     )}{" "}
                     Max
                   </p>
@@ -731,8 +787,8 @@ const checkAndNotify = useNotificationSystem();
                     {Math.max(
                       0,
                       assetSupply -
-                      transferFee -
-                      Number(amount.toString().replace(/,/g, ""))
+                        formattedTransactionFee -
+                        Number(amount.toString().replace(/,/g, ""))
                     ).toLocaleString(undefined, {
                       minimumFractionDigits: 8,
                       maximumFractionDigits: 8,
@@ -757,8 +813,9 @@ const checkAndNotify = useNotificationSystem();
               <div className="w-full flex justify-between items-center my-1">
                 <p>Collateralization</p>
                 <p
-                  className={`font-semibold ${currentCollateralStatus ? "text-green-500" : "text-red-500"
-                    }`}
+                  className={`font-semibold ${
+                    currentCollateralStatus ? "text-green-500" : "text-red-500"
+                  }`}
                 >
                   {currentCollateralStatus ? "Enabled" : "Disabled"}
                 </p>
@@ -768,31 +825,33 @@ const checkAndNotify = useNotificationSystem();
                   <p>Health Factor</p>
                   <p>
                     <span
-                      className={`${truncatedValue > 3
-                        ? "text-green-500"
-                        : truncatedValue <= 1
+                      className={`${
+                        truncatedValue > 3
+                          ? "text-green-500"
+                          : truncatedValue <= 1
                           ? "text-red-500"
                           : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}
+                          ? "text-orange-600"
+                          : truncatedValue <= 2
+                          ? "text-orange-400"
+                          : "text-orange-300"
+                      }`}
                     >
                       {truncatedValue > 100 ? "Infinity" : truncatedValue}
                     </span>
                     <span className="text-gray-500 mx-1">→</span>
                     <span
-                      className={`${currentHealthFactor > 3
-                        ? "text-green-500"
-                        : currentHealthFactor <= 1
+                      className={`${
+                        currentHealthFactor > 3
+                          ? "text-green-500"
+                          : currentHealthFactor <= 1
                           ? "text-red-500"
                           : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                              ? "text-orange-400"
-                              : "text-orange-300"
-                        }`}
+                          ? "text-orange-600"
+                          : currentHealthFactor <= 2
+                          ? "text-orange-400"
+                          : "text-orange-300"
+                      }`}
                     >
                       {currentHealthFactor}
                     </span>
@@ -802,10 +861,21 @@ const checkAndNotify = useNotificationSystem();
                   <div className="flex items-center gap-1 relative">
                     <div className="flex items-center">
                       <p>Transaction Fee</p>
+                      <Info
+                        size={14}
+                        className="text-blue-800 dark:text-white ml-1 cursor-help"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                      />
+                      {showTooltip && (
+                        <div className="absolute bottom-full left-[-4px] mb-2 px-4 py-3 dark:bg-[#252347] bg-white border border-gray-300 dark:border-gray-700  dark:text-white text-[12px] rounded-xl shadow-lg w-64 z-10">
+                          Platform fee + Ledger Transfer fee
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <p>{transferFee}</p>
+                    <p>{formattedTransactionFee}</p>
                     <img
                       src={image}
                       alt="connect_wallet_icon"
@@ -818,7 +888,7 @@ const checkAndNotify = useNotificationSystem();
                   <div className="flex items-center gap-2">
                     <p>
                       {(amount
-                        ? (+amount || 0) + (+transferFee || 0)
+                        ? (+amount || 0) + (+formattedTransactionFee || 0)
                         : 0
                       ).toFixed(8)}{" "}
                     </p>
@@ -840,14 +910,14 @@ const checkAndNotify = useNotificationSystem();
             {parseFloat(
               assetSupply - amount.toString().replace(/,/g, "")
             ).toFixed(7) === "0.0000000" && (
-                <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
-                  <p className="text-yellow-800 text-[13px] font-medium">
-                    <span className="font-semibold">Warning: </span>
-                    Due to interest rates, a small amount might still remain even
-                    after the maximum withdraw.
-                  </p>
-                </div>
-              )}
+              <div className="bg-yellow-200 p-3 rounded-lg border border-yellow-400">
+                <p className="text-yellow-800 text-[13px] font-medium">
+                  <span className="font-semibold">Warning: </span>
+                  Due to interest rates, a small amount might still remain even
+                  after the maximum withdraw.
+                </p>
+              </div>
+            )}
           </div>
           <div>
             <button
@@ -857,10 +927,11 @@ const checkAndNotify = useNotificationSystem();
                   ? null
                   : handleWithdraw
               }
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+                isLoading || amount <= 0 || isButtonDisabled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               Withdraw
             </button>
@@ -909,8 +980,8 @@ const checkAndNotify = useNotificationSystem();
                       ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                       : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                         scaledAmount / SCALING_FACTOR < 1e-6
-                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                        : scaledAmount / SCALING_FACTOR
+                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                      : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

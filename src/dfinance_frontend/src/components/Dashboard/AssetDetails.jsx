@@ -14,12 +14,12 @@ import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import useAssetData from "../customHooks/useAssets";
+import useAssetData from "../CustomHooks/useAssets";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
-import useFormatNumber from "../customHooks/useFormatNumber";
-import useFetchConversionRate from "../customHooks/useFetchConversionRate";
-import useUserData from "../customHooks/useUserData";
+import useFormatNumber from "../CustomHooks/useFormatNumber";
+import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
+import useUserData from "../CustomHooks/useUserData";
 import WalletModal from "./WalletModal";
 import { lazy, Suspense } from "react";
 import MiniLoader from "../Common/miniLoader";
@@ -590,7 +590,7 @@ const AssetDetails = () => {
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
       (Number(DebtIndex) * SCALING_FACTOR);
 
-    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+    const currentCollateralStatus = reserveData?.[1]?.can_be_collateral ?? true;
 
     const totalCollateral =
       parseFloat(Number(userAccountData?.Ok[0]?.[0]) / SCALING_FACTOR) || 0;

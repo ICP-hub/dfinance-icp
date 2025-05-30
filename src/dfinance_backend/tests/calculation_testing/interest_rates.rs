@@ -1,6 +1,8 @@
 use candid::Nat;
+use tracing::{info,error,debug};
 use std::ops::Mul;
 use crate::calculation_testing::normalized_supply::user_normalized_supply;
+use crate::utils::common_functions::init_tracing;
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use crate::utils::constant_variables::*;
@@ -52,12 +54,12 @@ pub async fn calculate_interest_rates(
     reserve_factor: Nat,
     asset: String,
 ) -> Result<(Nat, Nat), errors::Error> {
-    ic_cdk::println!("\n----------- Calculating Interest Rates --------------\n");
-    ic_cdk::println!("Asset: {:?}", asset);
-    ic_cdk::println!("Total Debt: {:?}", total_debt);
-    ic_cdk::println!("Liquidity Added: {:?}", liq_added);
-    ic_cdk::println!("Liquidity Taken: {:?}", liq_taken);
-    ic_cdk::println!("Reserve Factor: {:?}", reserve_factor);
+    info!("\n----------- Calculating Interest Rates --------------\n");
+    info!("Asset: {:?}", asset);
+    info!("Total Debt: {:?}", total_debt);
+    info!("Liquidity Added: {:?}", liq_added);
+    info!("Liquidity Taken: {:?}", liq_taken);
+    info!("Reserve Factor: {:?}", reserve_factor);
 
     let mut current_liquidity_rate = Nat::from(ZERO_VALUE);
     let mut curr_borrow_rate = params.base_variable_borrow_rate.clone();
@@ -66,19 +68,18 @@ pub async fn calculate_interest_rates(
         .clone()
         .asset_supply
         .scaled_mul(user_normalized_supply(reserve.clone()).unwrap());
-    ic_cdk::println!("Total Supply: {:?}", total_supply);
-    ic_cdk::println!("Liquidity in reserve: {:?}", reserve.asset_supply);
-    // ic_cdk::println!("interest: {:?}", user_normalized_supply(reserve.clone()).unwrap());
+    debug!("Total Supply: {:?}", total_supply);
+    debug!("Liquidity in reserve: {:?}", reserve.asset_supply);
     let available_liq = total_supply.clone() + liq_added.clone() - liq_taken.clone();
 
-    ic_cdk::println!("Available Liquidity: {:?}", available_liq);
+    debug!("Available Liquidity: {:?}", available_liq);
 
     if total_debt != ZERO_VALUE {
         let utilization_ratio = total_debt
             .clone()
             .scaled_div(total_debt.clone() + available_liq.clone());
-        ic_cdk::println!("Utilization Ratio: {:?}", utilization_ratio);
-        ic_cdk::println!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
+        debug!("Utilization Ratio: {:?}", utilization_ratio);
+        debug!("Optimal Usage Ratio: {:?}", params.optimal_usage_ratio);
 
         if utilization_ratio > params.optimal_usage_ratio.clone() {
             let excess_ratio = utilization_ratio.clone() - params.optimal_usage_ratio.clone();
@@ -86,8 +87,8 @@ pub async fn calculate_interest_rates(
                 .clone()
                 .scaled_div(params.max_excess_usage_ratio.clone());
 
-            ic_cdk::println!("Excess Ratio: {:?}", excess_ratio);
-            ic_cdk::println!("Excess Usage Scaled: {:?}", excess_usage_scaled);
+            debug!("Excess Ratio: {:?}", excess_ratio);
+            debug!("Excess Usage Scaled: {:?}", excess_usage_scaled);
 
             curr_borrow_rate += params.variable_rate_slope1.clone()
                 + params
@@ -95,7 +96,7 @@ pub async fn calculate_interest_rates(
                     .clone()
                     .scaled_mul(excess_usage_scaled);
 
-            ic_cdk::println!(
+            debug!(
                 "Borrow Rate (After Excess Usage Applied): {:?}",
                 curr_borrow_rate
             );
@@ -106,7 +107,7 @@ pub async fn calculate_interest_rates(
                 .scaled_mul(utilization_ratio.clone())
                 .scaled_div(params.optimal_usage_ratio.clone());
 
-            ic_cdk::println!("Borrow Rate (Within Optimal Usage): {:?}", curr_borrow_rate);
+            debug!("Borrow Rate (Within Optimal Usage): {:?}", curr_borrow_rate);
         }
 
         current_liquidity_rate = curr_borrow_rate
@@ -114,11 +115,11 @@ pub async fn calculate_interest_rates(
             .scaled_mul(utilization_ratio.clone())
             .scaled_mul(Nat::from(100_000_000u128) - (reserve_factor / Nat::from(100u128)));
 
-        ic_cdk::println!("Final Borrow Rate: {:?}", curr_borrow_rate);
-        ic_cdk::println!("Final Liquidity Rate: {:?}", current_liquidity_rate);
+        info!("Final Borrow Rate: {:?}", curr_borrow_rate);
+        info!("Final Liquidity Rate: {:?}", current_liquidity_rate);
     }
 
-    ic_cdk::println!("\n------------ Interest Rate Calculation Completed -------------\n");
+    info!("\n------------ Interest Rate Calculation Completed -------------\n");
 
     Ok((current_liquidity_rate, curr_borrow_rate))
 }
@@ -196,7 +197,7 @@ pub async fn test_calculate_interest_rates() {
 
     let test_cases = vec![
         // Test Case 1: Zero Debt, Zero Utilization
-        TestCase { // Checks base case with no borrowing activity.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(0u128),                            // 0 Debt base units
@@ -209,7 +210,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 2: Low Utilization (U = 20%)
-        TestCase { // Checks rate calc below optimal U.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(250_000_000_000u128),            // 2.5k tokens debt base units
@@ -222,7 +223,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 3: Mid Utilization (U = 50%)
-        TestCase { // Checks rate calc below optimal U, higher utilization.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt base units
@@ -235,7 +236,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 4: Optimal Utilization (U = 80%)
-         TestCase { // Checks boundary condition exactly at optimal U.
+         TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(4_000_000_000_000u128),         // 40k tokens debt base units
@@ -261,7 +262,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 6: Zero available liquidity (U=100%)
-        TestCase { // Tests U=1 edge case.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(1_000_000_000_000u128),         // Taken = Initial Supply (10k tokens)
             total_debt:               Nat::from(500_000_000_000u128),          // 5k tokens debt
@@ -273,8 +274,8 @@ pub async fn test_calculate_interest_rates() {
             expected_borrow_rate:     Nat::from(65_000_000u128),              // 65.00% Borrow APR scaled (Max Rate)
         },
 
-        // Test Case 7: Utilization slightly ABOVE Optimal (Nat truncation likely makes it optimal)
-        TestCase { // Tests crossing the kink point upwards.
+        // Test Case 7: Utilization slightly ABOVE Optimal 
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(4_000_000_000_001u128),         // 40k tokens + 1 base unit debt
@@ -287,7 +288,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 8: Utilization slightly BELOW Optimal
-        TestCase { // Tests crossing the kink point downwards.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(3_999_999_999_999u128),         // 40k tokens - 1 base unit debt
@@ -300,7 +301,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 9: Large Liquidity Added (Lowers U)
-        TestCase { // Tests impact of large liq_added.
+        TestCase { 
             liq_added:                Nat::from(9_000_000_000_000u128),         // Add 9k tokens
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt
@@ -313,7 +314,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 10: Large Liquidity Taken (Increases U)
-        TestCase { // Tests impact of large liq_taken.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(500_000_000_000u128),          // Take 5k tokens
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt
@@ -326,7 +327,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 11: Zero Base Rate
-        TestCase { // Tests model with zero base rate.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt (U=50%)
@@ -339,7 +340,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 12: Zero Slope1
-        TestCase { // Tests model with zero initial slope.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt (U=50%)
@@ -352,7 +353,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 13: Zero Slope2
-        TestCase { // Tests model with zero excess slope (U=90%).
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(9_000_000_000_000u128),         // 90k tokens debt (U=90%)
@@ -365,7 +366,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 14: Zero Optimal Usage Ratio (U > 0)
-        TestCase { // Tests edge case where U > 0 = Optimal.
+        TestCase { 
             liq_added:                Nat::from(100_000_000_000u128),     // 1k tokens added
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(2_000_000_000_000u128),   // 20k tokens debt
@@ -378,7 +379,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 15: Optimal = 100% (U=90%)
-        TestCase { // Tests when optimal is max possible.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(9_000_000_000_000u128),         // 90k tokens debt (U=90%)
@@ -391,7 +392,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 16: Zero Reserve Factor (U=50%)
-        TestCase { // Tests impact on liquidity rate only.
+        TestCase {
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt (U=50%)
@@ -410,7 +411,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 17: High Reserve Factor (50%, U=50%)
-        TestCase { // Tests high RF impact on LR.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),         // 10k tokens debt (U=50%)
@@ -429,7 +430,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 18: Tiny Asset Supply (Results in U=100% due to truncation)
-        TestCase { // Checks with small denominator for U.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(10u128),                         // 10 base units debt
@@ -442,7 +443,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
         // Test Case 19: Huge Asset Supply (U=10%)
-        TestCase { // Checks with large denominator for U.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_111_111_000_000_000u128),     // ~1.11M tokens debt
@@ -455,7 +456,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 20: Different Rate Params (Steeper Slope1, U=50%)
-        TestCase { // Tests different rate model parameters.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(1_000_000_000_000u128),        // 10k tokens debt (U=50%)
@@ -468,7 +469,7 @@ pub async fn test_calculate_interest_rates() {
         },
 
          // Test Case 21: Different Rate Params (Higher Optimal U=90%, U=85%)
-        TestCase { // Tests shift in optimal point.
+        TestCase { 
             liq_added:                Nat::from(0u128),
             liq_taken:                Nat::from(0u128),
             total_debt:               Nat::from(5_666_666_666_666u128),        // ~56.7k tokens debt (U~=85%)
@@ -492,26 +493,26 @@ pub async fn test_calculate_interest_rates() {
             expected_borrow_rate:     Nat::from(64_999_997u128),                // ~65.00% Borrow APR scaled
         },
     ];
-
+    init_tracing();
 
     for (i, case) in test_cases.iter().enumerate() {
-        println!("\n------------------------------------------------------------");
-        println!("🔵 Test Case {}: Calculating Interest Rates", i + 1);
-        println!("Liquidity Added: {:?}", case.liq_added);
-        println!("Liquidity Taken: {:?}", case.liq_taken);
-        println!("Total Debt: {:?}", case.total_debt);
-        println!("Asset: {:?}", case.asset);
+        info!("\n------------------------------------------------------------");
+        info!("🔵 Test Case {}: Calculating Interest Rates", i + 1);
+        info!("Liquidity Added: {:?}", case.liq_added);
+        info!("Liquidity Taken: {:?}", case.liq_taken);
+        info!("Total Debt: {:?}", case.total_debt);
+        info!("Asset: {:?}", case.asset);
         let amount_u128: u64 = case.expected_liquidity_rate.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        println!("Expected Liquidity Rate: {:?}", amount_float / 100000000.0);
+        info!("Expected Liquidity Rate: {:?}", amount_float / 100000000.0);
 
         let amount_u128_borrow: u64 = case.expected_borrow_rate.clone().0.try_into().unwrap();
         let amount_float_borrow = amount_u128_borrow as f64;
-        println!(
+        info!(
             "Expected Borrow Rate: {:?}",
             amount_float_borrow / 100000000.0
         );
-        println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         let result = calculate_interest_rates(
             case.liq_added.clone(),
@@ -531,11 +532,11 @@ pub async fn test_calculate_interest_rates() {
 
                 let amount_u128_borrow: u64 = borrow_rate.clone().0.try_into().unwrap();
                 let amount_float_borrow = amount_u128_borrow as f64;
-                println!(
+                info!(
                     "🔹 Calculated Liquidity Rate: {}",
                     amount_float / 100000000.0
                 );
-                println!(
+                info!(
                     "🔹 Calculated Borrow Rate: {}",
                     amount_float_borrow / 100000000.0
                 );
@@ -558,14 +559,14 @@ pub async fn test_calculate_interest_rates() {
                     borrow_rate
                 );
 
-                println!("✅ Test Case {} Passed", i + 1);
+                info!("✅ Test Case {} Passed", i + 1);
             }
             Err(e) => {
-                println!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
+                error!("❌ Test Case {} Failed with Error: {:?}", i + 1, e);
                 panic!("Test Case {} encountered an error", i + 1);
             }
         }
     }
 
-    println!("\n======================== All test cases completed. ========================\n");
+    info!("\n======================== All test cases completed. ========================\n");
 }

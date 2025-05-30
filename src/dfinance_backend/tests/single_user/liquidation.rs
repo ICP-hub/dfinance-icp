@@ -2,10 +2,11 @@ use candid::Nat;
 use candid::{ encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use crate::utils::common_functions::{
-     get_user_principal2, get_users_principal, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+     get_user_principal2, get_users_principal, init_tracing, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
+use tracing::{info,error};
 
 
 
@@ -36,13 +37,13 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.40 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128), // Reward: 0.40357486 ICP
+            reward_amount: Nat::from(40_357_475u128), // Reward: 0.40357486 ICP
             expect_success: true,
             expected_error_message: None,
         },
     ];
-
-    ic_cdk::println!(
+    init_tracing();
+    info!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );
 
@@ -58,22 +59,22 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
     test_create_user_reserve_with_low_health(pic, backend_canister);
 
     for (i, case) in test_cases.iter().enumerate() {
-        ic_cdk::println!("\n------------------------------------------------------------");
-        ic_cdk::println!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
-        ic_cdk::println!("Debt Asset: {}", case.debt_asset);
-        ic_cdk::println!("Collateral Asset: {}", case.collateral_asset);
+        info!("\n------------------------------------------------------------");
+        info!("🔵 IC Test Case {}: Executing Liquidation Request", i + 1);
+        info!("Debt Asset: {}", case.debt_asset);
+        info!("Collateral Asset: {}", case.collateral_asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Amount: {}", amount_float / 100000000.0);
-        ic_cdk::println!("On Behalf Of: {}", case.on_behalf_of);
+        info!("Amount: {}", amount_float / 100000000.0);
+        info!("On Behalf Of: {}", case.on_behalf_of);
         let reward_amount_u128: u64 = case.reward_amount.clone().0.try_into().unwrap();
         let reward_amount_float = reward_amount_u128 as f64;
-        ic_cdk::println!("Reward Amount: {}", reward_amount_float / 100000000.0);
-        ic_cdk::println!("Expected Success: {}", case.expect_success);
+        info!("Reward Amount: {}", reward_amount_float / 100000000.0);
+        info!("Expected Success: {}", case.expect_success);
         if let Some(ref msg) = case.expected_error_message {
-            ic_cdk::println!("Expected Error Message: {}", msg);
+            info!("Expected Error Message: {}", msg);
         }
-        ic_cdk::println!("------------------------------------------------------------\n");
+        info!("------------------------------------------------------------\n");
 
         /* Get asset principal; handle missing cases  */
         let asset_principal =
@@ -81,12 +82,12 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                 Some(principal) => principal,
                 None => {
                     if !case.expect_success {
-                        ic_cdk::println!(
+                        info!(
                             "✅ IC Test Case {} Passed: Liquidation rejected as expected",
                             i + 1,
                         );
                     } else {
-                        ic_cdk::println!(
+                        error!(
                             "❌ IC Test Case {} Failed: Expected success but got rejection",
                             i + 1
                         );
@@ -110,19 +111,19 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
         if !approved {
             if !case.expect_success {
                 if case.expected_error_message.as_deref() != Some("icrc2 not approved") {
-                    println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: icrc2 not approved",
                         i + 1,
                         case.expected_error_message.as_deref().unwrap_or("Error msg not given")
                     );
                     continue;
                 }
-                ic_cdk::println!(
+                info!(
                     "✅ IC Test Case {} Passed: Liquidation rejected as expected",
                     i + 1,
                 );
             } else {
-                ic_cdk::println!(
+                error!(
                     "❌ IC Test Case {} Failed: Expected success but got rejection",
                     i + 1
                 );
@@ -169,12 +170,12 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                     match liquidation_response {
                         Ok(_) => {
                             if case.expect_success {
-                                ic_cdk::println!(
+                                info!(
                                     "✅ IC Test Case {} Passed: Liquidation completed successfully\n",
                                     i + 1
                                 );
                             } else {
-                                ic_cdk::println!(
+                                error!(
                                     "❌ IC Test Case {} Failed: Expected failure but got success",
                                     i + 1
                                 );
@@ -183,7 +184,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                         Err(e) => {
                             if !case.expect_success {
                                 if case.expected_error_message.as_deref() != Some(e.message()) {
-                                    println!(
+                                    error!(
                                     "❌ IC Test Case {} Failed: Error message mismatch.\nExpected: {}\nActual: {}",
                                     i + 1,
                                     case.expected_error_message.as_deref().unwrap_or("Error msg not given"),
@@ -191,31 +192,30 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 );
                                     continue;
                                 }
-                                ic_cdk::println!(
+                                info!(
                                 "✅ IC Test Case {} Passed: Liquidation rejected as expected with message: {:?}",
                                 i + 1,
                                 e
                             );
                             } else {
-                                ic_cdk::println!(
+                                info!(
                                     "-----------------------------------------------------------------------",
                                 );
-                                ic_cdk::println!(
+                                error!(
                                     "❌ Call {} Failed: Expected success but got error: {}",
                                     j + 1,
                                     e.message(),
                                 );
-                                ic_cdk::println!(
+                                info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // ic_cdk::println!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                                 continue;
                             }
                         }
                     }
                 }
                 WasmResult::Reject(reject_message) => {
-                    ic_cdk::println!(
+                    error!(
                         "❌ IC Test Case {} Failed: Function call rejected with message: {}",
                         i + 1,
                         reject_message
@@ -225,7 +225,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             }
         }
     }
-    ic_cdk::println!(
+    info!(
         "\n======================== IC Liquidation Tests Completed ========================\n"
     );
 }

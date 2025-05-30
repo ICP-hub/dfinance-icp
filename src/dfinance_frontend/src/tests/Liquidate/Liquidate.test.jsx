@@ -23,7 +23,7 @@ jest.mock("../../utils/useAuthClient", () => ({
   })),
 }));
 
-jest.mock("../../components/customHooks/useUserData", () => ({
+jest.mock("../../components/CustomHooks/useUserData", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     isFreezePopupVisible: false,
@@ -165,7 +165,7 @@ describe("Liquidate Component", () => {
   test("renders freeze popup when isFreezePopupVisible is true", () => {
     // Mock the freeze popup state
     jest
-      .spyOn(require("../../components/customHooks/useUserData"), "default")
+      .spyOn(require("../../components/CustomHooks/useUserData"), "default")
       .mockReturnValue({
         isFreezePopupVisible: true,
         setIsFreezePopupVisible: jest.fn(),

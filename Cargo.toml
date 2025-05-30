@@ -4,7 +4,7 @@ members = [
     "src/dtoken", 
     "src/debttoken", 
     "src/token_ledger",
-    "src/logs",
+    "src/data_storage",
 ]
 resolver = "2"
 
@@ -40,5 +40,7 @@ dotenv = "0.15.0"
 env_logger = "0.11"
 futures = "0.3"
 canbench-rs = { version = "0.1.4" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["time"] }
 ciborium = { git = "https://github.com/enarx/ciborium", rev = "e719537c99b564c3674a56defe53713c702c6f46" }
 icrc-ledger-types = { git = "https://github.com/dfinity/ic.git" }

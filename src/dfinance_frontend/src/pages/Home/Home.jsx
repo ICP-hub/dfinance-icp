@@ -12,7 +12,7 @@ import TabPanel from "../../components/Home/TabPanel";
 import { LuMoveUp } from "react-icons/lu";
 import Loading from "../../components/Common/loading";
 import { MAIN_NAV_LINK, FAQ_QUESTION } from "../../utils/constants";
-import { usePageLoading } from "../../components/customHooks/useLoading";
+import { usePageLoading } from "../../components/CustomHooks/useLoading";
 
 /**
  * Home component represents the main landing page with sections such as hero, markets, FAQs, and more.

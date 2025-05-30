@@ -1,5 +1,6 @@
 use candid::Nat;
-use crate::utils::constant_variables::*;
+use tracing::{info,debug,error};
+use crate::utils::{common_functions::init_tracing, constant_variables::*};
 
 
 
@@ -17,15 +18,13 @@ fn get_scaling_value() -> Nat {
  * @functionality Returns the result of linear interest based on elapsed time and rate.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
-    // let rate = rate_input/Nat::from(100u128);
     let rate = rate_input;
     let current_timestamp = 1_700_000_000; // Convert nanoseconds to seconds
     if last_update_timestamp > current_timestamp{
-        ic_cdk::println!("Exponential function underflow"); //error
+        error!("Exponential function underflow"); 
         return Nat::from(0u128); 
-       //error result
     }
-    ic_cdk::println!(
+    debug!(
         "current time in cal_linear function {} and seconds per year {} and last timestamp {}",
         current_timestamp,
         SECONDS_PER_YEAR,
@@ -33,11 +32,11 @@ pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) ->
     );
     let time_delta = current_timestamp - last_update_timestamp;
     let result = rate.clone() * time_delta / SECONDS_PER_YEAR;
-    ic_cdk::println!(
+    debug!(
         "time_delta as u128 / SECONDS_PER_YEAR as u128 {}",
         time_delta / SECONDS_PER_YEAR
     );
-    ic_cdk::println!(
+    debug!(
         "time delta {} and result {} and rate {}",
         time_delta,
         result,
@@ -75,19 +74,19 @@ pub fn test_calculate_linear_interest() {
         //simple 8% interest
         TestCase {
             rate_input: Nat::from(8_000_000u128), // 8% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR - 950000), // 
+            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR - 950000), // 950000 seconds less than a year
             expected_output: Nat::from(107_759_005u128),
         },
         //simple 15% interest
         TestCase {
             rate_input: Nat::from(15_000_000u128), // 15% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR -222225), // 
+            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR -222225), // 222225 seconds less than a year
             expected_output: Nat::from(114_894_299u128),
         },
         //simple 6% interest
         TestCase {
             rate_input: Nat::from(6_000_000u128), // 6% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR / 9), // 
+            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR / 9), // 3504000 seconds ago
             expected_output: Nat::from(100_666_666u128),
         },
         // simple 10% interest for 6 months
@@ -187,21 +186,21 @@ pub fn test_calculate_linear_interest() {
             expected_output: Nat::from(0u128),
         },
     ];
-
-    println!("\n======================== Running test cases for `calculate_linear_interest` ========================\n");
+    init_tracing();
+    info!("\n======================== Running test cases for `calculate_linear_interest` ========================\n");
 
     for (i, case) in test_cases.iter().enumerate() {
-        println!("\n------------------------------------------------------------");
-        println!(
+        info!("\n------------------------------------------------------------");
+        info!(
             "🔵 Test Case {}: Executing `calculate_linear_interest`",
             i + 1
         );
-        println!("Rate Input: {}", case.rate_input);
-        println!("Last Update Timestamp: {}", case.last_update_timestamp);
+        info!("Rate Input: {}", case.rate_input);
+        info!("Last Update Timestamp: {}", case.last_update_timestamp);
         let amount_u128: u64 = case.expected_output.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
-        ic_cdk::println!("Expected Output: {}", amount_float / 100000000.0);
-        println!("------------------------------------------------------------\n");
+        info!("Expected Output: {}", amount_float / 100000000.0);
+        info!("------------------------------------------------------------\n");
 
         let result = calculate_linear_interest(case.rate_input.clone(), case.last_update_timestamp);
 
@@ -210,21 +209,20 @@ pub fn test_calculate_linear_interest() {
 
         let amount_u128_result: u64 = result.clone().0.try_into().unwrap();
         let amount_float_result = amount_u128_result as f64;
-        // ic_cdk::println!("Expected Output: {}", amount_float / 100000000.0);
         if result == case.expected_output {
-            println!(
+            info!(
                 "✅ Test Case {} Passed: Expected Liquidity Index = {}, Got = {}",
                 i + 1,
                 amount_float / 100000000.0,
                 amount_float_result / 100000000.0
             );
         } else {
-            println!("❌ Test Case {} Failed", i + 1);
-            println!(
+            error!("❌ Test Case {} Failed", i + 1);
+            info!(
                 "   Expected Liquidity Index: {}",
                 amount_float / 100000000.0
             );
-            println!("   Got:      {}", amount_float_result / 100000000.0);
+            info!("   Got:      {}", amount_float_result / 100000000.0);
         }
 
         assert_eq!(
@@ -237,5 +235,5 @@ pub fn test_calculate_linear_interest() {
         );
     }
 
-    println!("\n======================== All test cases completed ========================\n");
+    info!("\n======================== All test cases completed ========================\n");
 }

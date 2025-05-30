@@ -31,7 +31,9 @@ pub mod constants {
 
     // ------------------- Asset and Admin Constants -------------------
     pub const MAX_ASSET_LENGTH: usize = 7;
-    pub const MAIN_ADMIN: &str = "main_admin";
+    pub const ALL_ASSETS: &str = "all_assets";
+    pub const ASSET_PRINCIPAL: &str = "asset_principal";
+    pub const ADMIN: &str = "admin";
     pub const MAIN_CONTROLLER: &str = "main_controller";
 
     // ------------------- XRC Service Fee -------------------
@@ -40,7 +42,6 @@ pub mod constants {
 
     // ------------------- Logs Constants -------------------
     pub const BATCH_SIZE: usize = 1000;
-    pub const LOG_CANISTER_NAME: &str = "logs";
     pub const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
     pub const LOGS_LIMIT: u64 = 1000u64;
 
@@ -63,7 +64,7 @@ pub mod constants {
     // ------------------- Test Token Canister Constants -------------------
 
     pub const TEST_DEFAULT_CYCLES: u128 = 900_000_000_000;
-    pub const TEST_TRANSFER_FEE: u64 = 0;
+    pub const TEST_TRANSFER_FEE: u64 = 10;
     pub const TEST_DECIMALS: u8 = 8;
     pub const TEST_MAX_MEMO_LENGTH: u16 = 256;
     pub const TEST_MAX_NUMBER_OF_ACCOUNTS: u64 = 1_000;
@@ -78,9 +79,19 @@ pub mod constants {
     // ------------------- General Constants -------------------
     pub const INITIAL_DEBT_INDEX: u128 = 100_000_000;
     pub const MIN_BORROW: u128 = 100;
+    pub const ALL_USERS: &str = "all_users";
+    pub const PRICE_CACHE: &str = "price_cache";
+    pub const USER_NORMALIZED_SUPPLY: &str = "user_normalized_supply";
+    pub const USER_NORMALIZED_DEBT: &str = "user_normalized_debt";
+    pub const TOTAL_USERS: &str = "total_users";
+    pub const USER_ACCOUNT_DATA: &str = "user_account_data";
+    pub const CYCLE_CHECKER: &str = "cycle_checker";
+    pub const USER_BLOCKED: &str = "user_blocked";
+
 
     // -------------------Token Transfer Fees -------------------
     pub const TOKEN_TRANSFER_FEE: u128 = 345_000;
+    pub const TRANSFER_FEE_VAR :&str = "transfer_fee";
 
 
     // -------------------Max Value Constants -------------------
@@ -88,11 +99,20 @@ pub mod constants {
 
     // -------------------Seconds Per Year Constants -------------------
     pub const SECONDS_PER_YEAR: u64 = 365 * 24 * 60 * 60; // 365 days
-                                                          //leap year calculation left
+                                                          
     // ------------------- Threshold limit Constants -------------------
     pub const CYCLE_EXHAUSTED_LIMIT: u128 = 5_000_000_000_000u128;
     pub const CYCLE_THRESHOLD_LIMIT: u128 = 7_000_000_000_000u128;
 
     pub const TOKEN_BALANCE_EXHAUSTED_LIMIT: u128 = 10_000u128;
     pub const TOKEN_BALANCE_THRESHOLD_LIMIT: u128 = 11_000u128;
+
+    // ------------------- Captcha Constants -------------------
+    pub const CAPTCHA_LIFETIME: u64 = 1 * 60 * 1_000_000_000; // 1 minute in nanoseconds
+    pub const CAPTCHA_THRESHOLD: usize = 5;
+    pub const CAPTCHA_HARDNESS: u8 = 32;
+
+    //-------------------- Miscellaneous Constants -------------------
+    pub const DATA_STORAGE_CANISTER_NAME: &str = "data_storage";
+
 }

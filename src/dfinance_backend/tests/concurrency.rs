@@ -18,6 +18,7 @@ use crate::concurrency_testing::borrow::test_borrow;
 use crate::concurrency_testing::repay::test_repay;
 use crate::concurrency_testing::withdraw::test_withdraw;
 use crate::concurrency_testing::faucet::test_faucet;
+use tracing::{info,error};
 
 
 #[test]
@@ -40,13 +41,13 @@ fn call_test_function() {
 fn setup() -> (PocketIc, Principal, Vec<Principal>) {
     let pic = PocketIc::new();
     let user_principal = get_user_principal();
-    let random_users = generate_principals(2);
+    let random_users = generate_principals(10);
 
     //================== backend canister =====================
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, INITIAL_CYCLES);
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
-    ic_cdk::println!("Backend canister: {}", backend_canister);
+    info!("Backend canister: {}", backend_canister);
     pic.install_canister(
         backend_canister,
         wasm,
@@ -223,10 +224,10 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
                 match initialize_response {
                     Ok(()) => {
-                        ic_cdk::println!("✅ Initialize function succeeded for {:?}", token_name);
+                        info!("✅ Initialize function succeeded for {:?}", token_name);
                     }
                     Err(e) => {
-                        ic_cdk::println!(
+                        error!(
                             "❌ Initialize function failed as expected with error: {:?}",
                             e
                         );
@@ -243,13 +244,13 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
         }
     }
 
-    test_add_tester(&pic, backend_canister, user_principal, user_principal);
-    /*
+     /*
      * @title Add Testers
      * @notice Registers testers to validate liquidation scenarios.
      * @dev Adds the primary user and test users (1 to 5).
      */
-    // test_add_tester(&pic, backend_canister, user_principal, user_principal);
+    test_add_tester(&pic, backend_canister, user_principal, user_principal);
+
     for num in 1..=5 {
         let index: u32 = num as u32;
         test_add_tester(
@@ -275,10 +276,10 @@ fn setup() -> (PocketIc, Principal, Vec<Principal>) {
 
             match update_reserve_response {
                 Ok(_message) => {
-                    ic_cdk::println!("✅ update reserve price function succeeded");
+                    info!("✅ update reserve price function succeeded");
                 }
                 Err(e) => {
-                    ic_cdk::println!(
+                    error!(
                         "update reserve price function failed as expected with error: {:?}",
                         e
                     );

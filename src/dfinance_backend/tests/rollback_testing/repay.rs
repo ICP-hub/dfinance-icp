@@ -52,21 +52,21 @@ use crate::utils::structs::*;
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(400u128), // 0.004 ckETH (transferfee included)
+            amount: Nat::from(400u128), // 0.000004 ckETH (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH (transferfee included)
+            amount: Nat::from(200u128), // 0.000002 ckETH (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000u128), // 30 ckUSDT (transferfee included)
+            amount: Nat::from(30_000_000u128), // 0.3 ckUSDT (transferfee included)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

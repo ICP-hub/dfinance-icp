@@ -81,14 +81,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(1_000_000u128), // 10,000 ckUSDT
+            amount: Nat::from(1_000_000u128), // 0.01 ckUSDT
             can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(400_000u128), // 200,000 ckUSDC
+            amount: Nat::from(400_000u128), // 0.004 ckUSDC
             can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
@@ -97,7 +97,7 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // // Large amount exceeding wallet balance
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000_000u128),
+            amount: Nat::from(100_000_000_000u128), // 1000 ICP (includes transaction fee)
             can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Withdraw cannot be more than supply".to_string()),
@@ -129,21 +129,21 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal) {
         // // Zero amount request
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(0u128),
+            amount: Nat::from(0u128), // 0 ckBTC
             can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
         TestCase {
             asset: "ckUSDT ".to_string(),  // Asset name with trailing space
-            amount: Nat::from(10_000u128), // 10 USDT
+            amount: Nat::from(10_000u128), // 0.0001 USDT
             can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
         },
         TestCase {
             asset: "icp".to_string(),           // Lowercase asset name
-            amount: Nat::from(100_000_000u128), // 0.1 ICP
+            amount: Nat::from(100_000_000u128), // 1 ICP
             can_be_collateral: false,
             expect_success: false, // Assuming asset names are case-sensitive
             expected_error_message: Some("no canister id found".to_string()),

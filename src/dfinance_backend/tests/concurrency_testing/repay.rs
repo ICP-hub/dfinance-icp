@@ -43,21 +43,21 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.002 ckETH (includes transaction fee)
+            amount: Nat::from(200u128), // 0.000002 ckETH (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(800_000u128), // 0.8 ckUSDC (includes transaction fee)
+            amount: Nat::from(800_000u128), // 0.008 ckUSDC (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(400_000u128), // 0.4 ckUSDT (includes transaction fee)
+            amount: Nat::from(400_000u128), // 0.004 ckUSDT (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

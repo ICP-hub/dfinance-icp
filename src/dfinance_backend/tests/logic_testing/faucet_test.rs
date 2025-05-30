@@ -51,7 +51,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Valid faucet request for each asset
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(500_000_000u128), // 50 ICP
+            amount: Nat::from(500_000_000u128), // 5 ICP
             expect_success: true,
             expected_error_message: None,
         },
@@ -89,21 +89,21 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Non-existent asset
         TestCase {
             asset: "XYZ".to_string(),
-            amount: Nat::from(50_000u128),
+            amount: Nat::from(50_000u128), 
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),
         },
         // Zero amount request
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(0u128),
+            amount: Nat::from(0u128), 
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
         },
         // Large amount exceeding wallet balance
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(10_000_000_000u128),
+            amount: Nat::from(10_000_000_000u128),  // 100 ckETH
             expect_success: false,
             expected_error_message: Some(
                 "Requested amount exceeds the total faucet limit.".to_string(),
@@ -112,7 +112,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal) {
         // Boundary amount
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(100_000_000u128),
+            amount: Nat::from(100_000_000u128),  // 1 ICP
             expect_success: true,
             expected_error_message: None,
         },

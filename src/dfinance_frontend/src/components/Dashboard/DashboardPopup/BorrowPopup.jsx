@@ -738,7 +738,6 @@ const Borrow = ({
       totalDebt,
       liquidationThreshold
     );
-    console.log("Health Factor:", healthFactor);
     const ltv = calculateLTV(nextTotalDebt, totalCollateralValue);
     const truncateToDecimals = (num, decimals) => {
       const factor = Math.pow(10, decimals);

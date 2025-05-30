@@ -504,7 +504,6 @@ const WithdrawPopup = ({
         : parseFloat(totalDebtValue) / totalCollateralValue;
     ltv =
       Math.trunc(ltv * (SCALING_FACTOR * PERCENTAGE_FACTOR)) / SCALING_FACTOR; //in percent
-    console.log("healthFactor withdraw", healthFactor);
     return {
       amountTaken,
       totalCollateralValue,

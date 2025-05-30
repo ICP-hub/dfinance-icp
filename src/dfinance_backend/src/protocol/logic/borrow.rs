@@ -1,4 +1,4 @@
-use crate::api::inter_canister::{asset_transfer_from, get_transfer_fee};
+use crate::api::inter_canister::{asset_transfer_from, get_ledger_transfer_fee};
 use crate::constants::{
     constant_variables::constants::INITIAL_DEBT_INDEX,
     data_types::zero_nat_value,
@@ -231,7 +231,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
         user_key: user_principal.to_text(), // or whatever user_key you need
     };
     let ledger_canister_id = get_asset_principal(params.asset.clone())?;
-    let ledger_fee = get_transfer_fee(ledger_canister_id).await?;
+    let ledger_fee = get_ledger_transfer_fee(ledger_canister_id).await?;
     let platform_principal = ic_cdk::api::id();
 
     let repay_amount = params.amount.clone();
@@ -270,6 +270,9 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     let _ = update_token_price(params.asset.clone()).await;
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
+    if  params.amount < transfer_token_fee.clone() + ledger_fee.clone() {
+        return Err(Error::FeeExceedsAmount);
+    } 
     params.amount = params.amount - (transfer_token_fee.clone() + ledger_fee.clone());
 
     let user_current_debt: Nat = get_asset_debt(params.asset.clone(), Some(user_principal)).await?;

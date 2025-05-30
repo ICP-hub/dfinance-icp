@@ -1,4 +1,4 @@
-use crate::api::inter_canister::{get_balance, get_transfer_fee};
+use crate::api::inter_canister::{get_balance, get_ledger_transfer_fee};
 use crate::constants::{
     constant_variables::constants::{ONE_VALUE, PERCENTAGE_FACTOR},
     data_types::zero_nat_value,
@@ -114,7 +114,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
 
     let transfer_token_fee = calculate_transfer_fee(&params.debt_asset, params.amount.clone())?;
     let repay_ledger_canister_id = get_asset_principal(params.debt_asset.clone())?;
-    let ledger_fee = get_transfer_fee(repay_ledger_canister_id).await?;
+    let ledger_fee = get_ledger_transfer_fee(repay_ledger_canister_id).await?;
 
     let (earned_rewards, liquidity_bonus) = to_get_reward_amount(
         params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone()),

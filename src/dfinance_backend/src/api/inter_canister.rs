@@ -21,7 +21,7 @@ use icrc_ledger_types::{icrc1::transfer::TransferArg, icrc2::transfer_from::Tran
  * @returns
  * Returns the transfer fee as `Nat`.
  */
-pub async fn get_transfer_fee(canister_id: Principal) -> Result<Nat, Error> {
+pub async fn get_ledger_transfer_fee(canister_id: Principal) -> Result<Nat, Error> {
     match ic_cdk::api::call::call::<(), (Nat,)>(canister_id, "icrc1_fee", ()).await {
         Ok((fee,)) => Ok(fee),
         Err((code, msg)) => {
@@ -61,7 +61,7 @@ pub async fn asset_transfer_from(
             owner: to,
             subaccount: None,
         },
-        fee: Some(get_transfer_fee(ledger_canister_id).await.unwrap_or(Nat::from(0u128))),
+        fee: Some(get_ledger_transfer_fee(ledger_canister_id).await.unwrap_or(Nat::from(0u128))),
         spender_subaccount: None,
         from: Account {
             owner: from,

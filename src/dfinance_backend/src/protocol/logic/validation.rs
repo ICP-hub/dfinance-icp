@@ -1,5 +1,7 @@
+use std::clone;
+
 use crate::api::inter_canister::{
-    get_balance, get_icrc2_allowance, get_total_supply, get_transfer_fee,
+    get_balance, get_icrc2_allowance, get_ledger_transfer_fee, get_total_supply
 };
 use crate::constants::{
     constant_variables::constants::{PERCENTAGE_FACTOR, SCALING_FACTOR, ZERO_VALUE},
@@ -548,14 +550,17 @@ impl ValidationLogic {
         let repay_ledger_canister_id = get_asset_principal(repay_asset.clone())?;
         // Check if repay amount exceeds normalized user debt
         let transfer_token_fee = calculate_transfer_fee(&repay_asset, repay_amount.clone())?;
-        if (repay_amount.clone()
-            - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee.clone()))
+        let ledger_fee = get_ledger_transfer_fee(repay_ledger_canister_id).await?;
+        if repay_amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
+            error!("Repay amount is less than the transfer fee.");
+            return Err(Error::FeeExceedsAmount);
+        }
+        if (repay_amount.clone() - (ledger_fee.clone() + transfer_token_fee.clone()))
             > normalized_debt_amount
         {
             error!(
                 "Repay amount exceeds user debt. {}",
-                repay_amount.clone()
-                    - (get_transfer_fee(repay_ledger_canister_id).await? + transfer_token_fee)
+                repay_amount.clone() - (ledger_fee + transfer_token_fee)
             );
             return Err(Error::RepayMoreThanDebt);
         }

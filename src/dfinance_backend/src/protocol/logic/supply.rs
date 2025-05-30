@@ -1,4 +1,4 @@
-use crate::api::inter_canister::{asset_transfer_from, get_transfer_fee};
+use crate::api::inter_canister::{asset_transfer_from, get_ledger_transfer_fee};
 use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
 use crate::constants::{
     data_types::zero_nat_value,
@@ -95,7 +95,12 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     //fetching the price of the asset in USD
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
-    let ledger_fee = get_transfer_fee(ledger_canister_id).await?;
+    let ledger_fee = get_ledger_transfer_fee(ledger_canister_id).await?;
+
+    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
     //updating params.amount with the actual amount of tokens to be supplied
     params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
     UpdateLogic::update_user_data_supply(

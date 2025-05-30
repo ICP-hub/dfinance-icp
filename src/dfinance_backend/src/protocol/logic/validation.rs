@@ -2,7 +2,7 @@ use crate::api::inter_canister::{
     get_balance, get_icrc2_allowance, get_total_supply, get_transfer_fee,
 };
 use crate::constants::{
-    constant_variables::constants::{SCALING_FACTOR, PERCENTAGE_FACTOR, ZERO_VALUE},
+    constant_variables::constants::{PERCENTAGE_FACTOR, SCALING_FACTOR, ZERO_VALUE},
     errors::Error,
 };
 
@@ -193,7 +193,7 @@ impl ValidationLogic {
         }
         // updating the token price and store in latest prince in price cache
         let _ = update_token_price(reserve.asset_name.clone()).await;
-        
+
         let (total_collateral, total_debt, _avg_ltv, liquidation_threshold_var, _health_factor) =
             match calculate_user_account_data(None).await {
                 Ok((
@@ -215,7 +215,6 @@ impl ValidationLogic {
             };
 
         if total_debt != Nat::from(0u128) || user_reserve.is_collateral {
-
             //fetching the exchange rate from cache
             let rate = get_cached_exchange_rate(reserve.asset_name.clone())?;
 
@@ -235,41 +234,38 @@ impl ValidationLogic {
                 rate, usd_withdrawl, adjusted_collateral
             );
 
-            //calculating the liquidation threshold
-            let avliq = liquidation_threshold_var
-                .clone()
-                .scaled_mul(total_collateral.clone());
-
-            let mut templiq = avliq
-                - usd_withdrawl.scaled_mul(reserve.configuration.liquidation_threshold.clone());
-            templiq = templiq.scaled_div(adjusted_collateral.clone());
-
-            let mut new_ltv = Nat::from(ZERO_VALUE);
-
             //calculating the newe LTV with adjusted collateral
             if adjusted_collateral != Nat::from(0u128) {
+                //calculating the liquidation threshold
+                let avliq = liquidation_threshold_var
+                    .clone()
+                    .scaled_mul(total_collateral.clone());
+
+                let mut templiq = avliq
+                    - usd_withdrawl.scaled_mul(reserve.configuration.liquidation_threshold.clone());
+                templiq = templiq.scaled_div(adjusted_collateral.clone());
+
+                let mut new_ltv = Nat::from(ZERO_VALUE);
                 new_ltv = total_debt.clone().scaled_div(adjusted_collateral.clone());
                 new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
                 debug!("New ltv {} and templiq : {}", new_ltv, templiq);
-            }
+                //checking if the LTV is greater than the liquidation threshold
+                if new_ltv >= templiq {
+                    error!("LTV is greater than liquidation threshold");
+                    return Err(Error::LTVGreaterThanThreshold);
+                }
+                if total_debt != Nat::from(0u128) {
+                    let mut new_health_factor =
+                        adjusted_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
 
-            //checking if the LTV is greater than the liquidation threshold
-            if new_ltv >= templiq {
-                error!("LTV is greater than liquidation threshold");
-                return Err(Error::LTVGreaterThanThreshold);
-            }
+                    new_health_factor = new_health_factor.scaled_div(total_debt);
+                    debug!("new health factor = {}", new_health_factor);
 
-            if total_debt != Nat::from(0u128) {
-                let mut new_health_factor =
-                    adjusted_collateral.scaled_mul(templiq / Nat::from(PERCENTAGE_FACTOR));
-
-                new_health_factor = new_health_factor.scaled_div(total_debt);
-                debug!("new health factor = {}", new_health_factor);
-
-                //checking if the health factor
-                if new_health_factor < Nat::from(SCALING_FACTOR) {
-                    error!("Health factor is less than 1");
-                    return Err(Error::HealthFactorLess);
+                    //checking if the health factor
+                    if new_health_factor < Nat::from(SCALING_FACTOR) {
+                        error!("Health factor is less than 1");
+                        return Err(Error::HealthFactorLess);
+                    }
                 }
             }
         }

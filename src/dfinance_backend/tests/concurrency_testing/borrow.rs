@@ -39,19 +39,19 @@ pub fn test_borrow(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(400_000u128), // 4 ckUSDT (includes transaction fee)
+            amount: Nat::from(400_000u128), // 0.004 ckUSDT (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(200u128), // 0.0002 ckETH (includes transaction fee)
+            amount: Nat::from(200u128), // 0.000002 ckETH (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(800_000u128), // 8 ckUSDC (includes transaction fee)
+            amount: Nat::from(800_000u128), // 0.008 ckUSDC (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },

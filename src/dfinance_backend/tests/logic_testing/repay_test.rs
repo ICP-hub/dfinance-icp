@@ -89,7 +89,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Empty asset name
         TestCase {
             asset: "".to_string(),
-            amount: Nat::from(100u128),
+            amount: Nat::from(100u128), 
             on_behalf_of: None,
             expect_success: false,
             expected_error_message: Some("Asset cannot be an empty string".to_string()),
@@ -121,7 +121,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Large amount exceeding wallet balance
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(50_000_000_000u128),
+            amount: Nat::from(50_000_000_000u128),  // 500 USDC (includes transaction fee)
             on_behalf_of: None,
             expect_success: false,
             expected_error_message: Some("wallet balance is low".to_string()),
@@ -129,7 +129,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // tRAILING WHITESPACES
         TestCase {
             asset: "ckUSDC ".to_string(),
-            amount: Nat::from(50_000_000_000u128),
+            amount: Nat::from(50_000_000_000u128), 
             on_behalf_of: None,
             expect_success: false,
             expected_error_message: Some("no canister id found".to_string()),
@@ -153,7 +153,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Wallet balance is low
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(1_000_000_000u128),
+            amount: Nat::from(1_000_000_000u128),  // 10 ICP (includes transaction fee)
             on_behalf_of: None,
             expect_success: false,
             expected_error_message: Some("wallet balance is low".to_string()),

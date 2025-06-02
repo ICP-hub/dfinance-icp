@@ -49,14 +49,14 @@ pub fn test_withdraw(pic: &PocketIc, backend_canister: Principal, random_users: 
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(1_000_000u128), // 10 ckUSDT (includes transaction fee)
+            amount: Nat::from(1_000_000u128), // 0.010 ckUSDT (includes transaction fee)
             can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(2_000_000u128), // 2 ckUSDC (includes transaction fee)
+            amount: Nat::from(2_000_000u128), // 0.02 ckUSDC (includes transaction fee)
             can_be_collateral: false,
             expect_success: true,
             expected_error_message: None,

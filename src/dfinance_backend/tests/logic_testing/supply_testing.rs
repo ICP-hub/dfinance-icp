@@ -124,7 +124,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_001u128), // Supply 10,001 e8s
+            amount: Nat::from(10_001u128), // Supply 0.00010001 ICP (includes transaction fee)
             can_be_collateral: true,
             expect_success: false,
             expected_error_message: Some("Fee exceeds the amount".to_string()),
@@ -132,7 +132,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         //  low wallet amount
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(100_000_000u128),
+            amount: Nat::from(100_000_000u128),  // 1 ckETH (includes transaction fee)
             can_be_collateral: true,
             expect_success: false,
             expected_error_message: Some(
@@ -142,7 +142,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Zero amount request
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(0u128),
+            amount: Nat::from(0u128),   
             can_be_collateral: true,
             expect_success: false,
             expected_error_message: Some("Amount must be greater than 0".to_string()),
@@ -150,7 +150,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Asset length exceeds 7 characters
         TestCase {
             asset: "ckXYZ_long".to_string(),
-            amount: Nat::from(100u128),
+            amount: Nat::from(100u128), 
             can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some(
@@ -160,7 +160,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // Non-existent asset
         TestCase {
             asset: "ckXYZ".to_string(),
-            amount: Nat::from(100u128),
+            amount: Nat::from(100u128), 
             can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),
@@ -168,7 +168,7 @@ pub fn test_supply(pic: &PocketIc, backend_canister: Principal) {
         // TRAILING WHITESPACES
         TestCase {
             asset: "ckUSDC ".to_string(),
-            amount: Nat::from(50_000_000_000u128),
+            amount: Nat::from(50_000_000_000u128),  // 500 ckUSDC (includes transaction fee)
             can_be_collateral: false,
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),

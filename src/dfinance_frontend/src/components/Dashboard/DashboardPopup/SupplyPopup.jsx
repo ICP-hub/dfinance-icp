@@ -218,13 +218,19 @@ const SupplyPopup = ({
   };
 
   const fetchStatusFromBackend = async () => {
+    let status = { cycle: null, token: null };
     try {
       const cycleStatus = await backendActor.cycle_alert();
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      const status = {
-        cycle: cycleStatus,
-        token: tokenStatus.OK,
-      };
+      
+      if (cycleStatus && cycleStatus.Ok !== undefined && tokenStatus && tokenStatus.Ok !== undefined){
+        status = {
+          cycle: cycleStatus.Ok,
+          token: tokenStatus.Ok,
+        };
+      }else{
+        console.error("Got Error from backend while fetching status : ", cycleStatus, tokenStatus);
+      }
 
       return status;
     } catch (error) {
@@ -232,6 +238,7 @@ const SupplyPopup = ({
       throw error;
     }
   };
+  
   // Function to handle the approval process
   const handleApprove = async () => {
     if (isBlocked) {

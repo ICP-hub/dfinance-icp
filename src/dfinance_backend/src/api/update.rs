@@ -6,7 +6,7 @@ use crate::constants::{
 };
 use crate::guards::{
     api_limiter::request_limiter,
-    access_control::{guard_admin_only, guard_optional_principal_not_anonymous, guard_principal_not_anonymous},
+    access_control::{guard_admin_only, guard_optional_principal_not_anonymous, guard_principal_not_anonymous, guard_prevent_anonymous},
     locks_handler::CallerGuard
 };
 use crate::declarations::structs::{ExecuteRepayParams, TokenAlert};
@@ -80,14 +80,14 @@ pub async fn execute_repay(params: ExecuteRepayParams) -> Result<Nat, Error> {
  * @dev Checks the token balance of the backend canister for a specific asset and returns alert status.
  * @param asset_name The name of the asset to check balance for.
  * @returns Result<TokenAlert, Error> Returns a `TokenAlert` struct indicating whether the token balance is exhausted,
- *          in warning state, and the current balance, or an error if the operation fails.
+ *          in warning state, or an error if the operation fails.
  * @functionality Queries the balance of the backend canister for the specified asset and evaluates if the
  *                balance has reached predefined exhausted or warning thresholds, returning corresponding alert flags.
  */
 
 #[update]
 pub async fn token_balance_alert(asset_name: String) -> Result<TokenAlert, Error>{
-
+    guard_prevent_anonymous()?;
     let asset_principal = get_asset_principal(asset_name.clone())?;
     let balance = get_balance(asset_principal.clone(), ic_cdk::api::id()).await?;
     
@@ -101,6 +101,5 @@ pub async fn token_balance_alert(asset_name: String) -> Result<TokenAlert, Error
         asset_name : asset_name.clone(),
         is_exhausted,
         is_warning,
-        balance
     })
 }

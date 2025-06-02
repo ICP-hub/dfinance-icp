@@ -12,7 +12,7 @@ const useTransferFee = (asset) => {
       try {
         const feeResponse = await backendActor.get_transfer_fee(asset);
         const rawData = feeResponse.Ok?.[0];
-        const cert = feeResponse.OK?.[1];
+        const cert = feeResponse.Ok?.[1];
 
         if (cert) {
           try {

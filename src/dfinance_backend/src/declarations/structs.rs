@@ -248,13 +248,12 @@ pub struct UserAccountData {
 pub struct CycleAlert {
     pub is_warning : bool,
     pub is_exhausted : bool,
-    pub current_cycle: Nat
 }
 
 /*
  * @title Token Alert Structure
  * @notice Alerts on token balance status including warnings and exhaustion.
- * @dev Stores asset name, balance, and flags indicating low or exhausted token balances.
+ * @dev Stores asset name, and flags indicating low or exhausted token balances.
  * @functionality Used to notify users or systems about token balance health.
  */
 #[derive(Debug, Clone, CandidType, Deserialize)]
@@ -262,7 +261,6 @@ pub struct TokenAlert {
     pub asset_name: String,
     pub is_exhausted: bool,
     pub is_warning: bool,
-    pub balance: Nat
 
 }
 

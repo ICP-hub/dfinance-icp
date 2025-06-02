@@ -307,9 +307,18 @@ pub async fn cycle_checker() -> Result<(Nat, Certificate), Error> {
     Ok((Nat::from(api::canister_balance128()), cert))
 }
 
+/*
+    * @title Cycle Alert
+    * @notice Checks the cycle balance and returns an alert if it is below certain thresholds.
+    * @dev Uses `canister_balance128` API to fetch the balance and determine if it is exhausted or warning level.
+    * @functionality Provides an alert mechanism for cycle balance monitoring.
+    * # Returns
+    * - `CycleAlert` - An object containing flags for exhausted and warning states.
+ */
+
 #[query]
-pub async fn cycle_alert()-> CycleAlert {
-    
+pub async fn cycle_alert()-> Result<CycleAlert, Error> {
+    guard_prevent_anonymous()?;
     let cycle = api::canister_balance128();
     let (is_exhausted, is_warning) = match cycle {
         c if c <= CYCLE_EXHAUSTED_LIMIT => (true, false),
@@ -317,9 +326,8 @@ pub async fn cycle_alert()-> CycleAlert {
         _ => (false, false),
     };
     
-    CycleAlert {
+    Ok(CycleAlert {
         is_exhausted,
         is_warning,
-        current_cycle: Nat::from(cycle)
-    }
+    })
 }

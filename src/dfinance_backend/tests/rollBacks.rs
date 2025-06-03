@@ -226,7 +226,7 @@ fn setup() -> (PocketIc, Principal) {
             backend_canister,
             user_principal,
             "initialize",
-            encode_args((token_name, reserve_data, "https://storage.googleapis.com/dfinance/ICPMARKET.png")).unwrap(),
+            encode_args((token_name, reserve_data, None::<String>, "https://storage.googleapis.com/dfinance/ICPMARKET.png")).unwrap(),
         );
 
         match result {

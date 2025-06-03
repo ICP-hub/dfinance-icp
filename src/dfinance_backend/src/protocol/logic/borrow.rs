@@ -5,7 +5,7 @@ use crate::constants::{
     errors::Error,
     validators::{validate_asset_name, validate_zero_value}
 };
-use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams, OriginalFailedOperationType, RollbackJobStatus, RollbackParamsVariant, RollbackRetryJob};
 use crate::guards::{
     api_limiter::request_limiter,
     locks_handler::CallerGuard

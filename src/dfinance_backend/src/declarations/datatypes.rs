@@ -1,4 +1,4 @@
-use crate::constants::constant_variables::constants::FAUCET_LIMIT;
+use crate::{constants::constant_variables::constants::FAUCET_LIMIT, declarations::structs::RollbackRetryJob};
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 use std::collections::HashMap;
@@ -266,4 +266,13 @@ pub struct PriceCache {
 pub struct Certificate {
     pub certificate: Vec<u8>,
     pub witness: Vec<u8>,
+}
+
+
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct PendingRollback {
+    pub principal: Principal,
+    pub function_name: String,
+    pub function_params: RollbackRetryJob,
 }

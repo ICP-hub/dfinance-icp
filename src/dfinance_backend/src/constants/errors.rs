@@ -111,11 +111,11 @@ pub enum Error {
     UserCollateralLessThanReward,
     InvalidRole,
     RoleAlreadyExistsForUser,
-    UserRoleNotFound,,
+    UserRoleNotFound,
     UserActionRestricted,
     RollbackProcessingError,
     RollbackPending,
-    RollbackFailedAdminActionRequired
+    RollbackFailedAdminActionRequired,
     TokenNotTransfered,
 }
 

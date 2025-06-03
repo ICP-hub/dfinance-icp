@@ -5,7 +5,7 @@ use crate::constants::{
     errors::Error,
     validators::{validate_asset_name, validate_zero_value},
 };
-use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
+use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams, OriginalFailedOperationType, RollbackJobStatus, RollbackParamsVariant, RollbackRetryJob};
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::{
@@ -126,7 +126,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     // Transfers the asset from the user to our backend cansiter
     match asset_transfer_from(
         ledger_canister_id,
-        user_principal,
+        user_principal, 
         platform_principal,
         amount_nat.clone() - ledger_fee.clone(), 
     )
@@ -155,7 +155,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             // Attempt to rollback the supply operation
             // by updating the user data with the withdraw logic
             match UpdateLogic::update_user_data_withdraw(
-                user_principal,
+                user_principal, 
                 &reserve_cache.clone(),
                 withdraw_param.clone(),
                 &mut reserve_data.clone(),
@@ -177,7 +177,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                     // Create a rollback job with the supply parameters
                     let withdraw_param = ExecuteWithdrawParams {
                         asset: params.asset.clone(),
-                        is_collateral: params.is_collateral,
+                        can_be_collateral: params.can_be_collateral,
                         amount: params.amount.clone(),
                     };
 
@@ -377,7 +377,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                 let supply_param = ExecuteSupplyParams {
                     asset: params.asset.clone(),
                     amount: params.amount.clone(),
-                    is_collateral: params.is_collateral,
+                    can_be_collateral: params.can_be_collateral,
                 };
                 // Attempt to rollback the changes of the withdraw operation by updating the user data with the supply logic
                 match UpdateLogic::update_user_data_supply(
@@ -403,7 +403,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                     let supply_param = ExecuteSupplyParams {
                     asset: params.asset.clone(),
                     amount: params.amount.clone(),
-                    is_collateral: params.is_collateral,
+                    can_be_collateral: params.can_be_collateral,
                     };
 
                     let rollback_params_variant =

@@ -1,5 +1,5 @@
 use crate::{ constants::{constant_variables::constants::{DEFAULT_MAX_RETRIES, MAX_JOBS_PER_HEARTBEAT, RETRY_DELAY_SECONDS}, errors::Error}, debug,
-    declarations::{ datatypes::{ReserveCache, ReserveData}, 
+    declarations::{ datatypes::{PendingRollback, ReserveCache, ReserveData}, 
     structs::{
         OriginalFailedOperationType, RollbackJobStatus, RollbackParamsVariant, RollbackRetryJob
         },
@@ -153,7 +153,7 @@ async fn rollback_retry() {
 
         let reserve_cache_rollback = job.reserve_cache.clone();
 
-        let execution_result: Result<(), Error> = match job.rollback_params.clone() {
+        let mut execution_result = match job.rollback_params.clone() {
             RollbackParamsVariant::WithdrawAsRollback(withdraw_params) => {
                 UpdateLogic::update_user_data_withdraw(
                     job.user_principal,
@@ -219,7 +219,7 @@ async fn rollback_retry() {
             remove_user_asset_restriction(user_principal, &asset);
         } else {
             let error = execution_result.unwrap_err();
-            ic_cdk::println!(
+            error!(
                 "[HEARTBEAT FAIL] Job ID {} attempt {} failed. Error: {:?}",
                 job.job_id,
                 job.retry_attempt + 1,
@@ -229,8 +229,8 @@ async fn rollback_retry() {
 
             let current_error_for_scheduler = error; // The error from the failed execution
 
-            let principal = Principal::anonymous();
-            let asset_name = String::new();
+            let principal = job.user_principal.clone();
+            let asset_name = job.asset_name.clone();
             let op_type = job.original_operation.clone();
             let params_variant = job.rollback_params.clone();
             let reserve_cache = job.reserve_cache.clone();
@@ -273,6 +273,17 @@ pub async fn schedule_rollback(
                 "[JOB UPDATE] Job ID {} reached max retries. Escalated. Last Error: {:?}",
                 job_id, current_error
             );
+            let rollbackFailed: PendingRollback = PendingRollback {
+                    principal: user_principal,
+                    function_name: format!("{:?}", original_op_type),
+                    function_params: job_struct_for_update.clone(),
+                };
+            mutate_state(|state| {
+                state.pending_rollback.insert(user_principal, Candid(rollbackFailed.clone()));
+            });
+            PENDING_ROLLBACK_JOBS.with(|jobs_ref| {
+                jobs_ref.borrow_mut().remove(&job_id);
+            });
         } else {
             job_struct_for_update.status = RollbackJobStatus::PendingRetry;
             job_struct_for_update.next_attempt_timestamp =
@@ -281,6 +292,7 @@ pub async fn schedule_rollback(
                 "[JOB UPDATE] Job ID {} attempt failed, rescheduled for {}. Error: {:?}",
                 job_id, job_struct_for_update.next_attempt_timestamp, current_error
             );
+            
         }
 
         PENDING_ROLLBACK_JOBS.with(|jobs_ref| {
@@ -318,7 +330,6 @@ pub async fn schedule_rollback(
         });
 
         apply_user_asset_restriction(user_principal, asset_name, job_id, &original_op_type);
-
         debug!("[NEW JOB FOR HEARTBEAT] Job ID {}. User: {}, Asset: {}. Next attempt at: {}. Initial Error: {:?}",
             job_id, new_job.user_principal, new_job.asset_name, new_job.next_attempt_timestamp, new_job.last_error_message);
     }

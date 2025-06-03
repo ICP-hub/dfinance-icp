@@ -8,7 +8,9 @@ use crate::constants::{
 };
 use crate::declarations::datatypes::{AssetInfo, ReserveCache, ReserveData, UserReserveData};
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
-use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
+#[cfg(feature = "testnet")]
+use crate::dynamic_canister::create_testtoken_canister;
+use crate::dynamic_canister::create_token_canister;
 use crate::guards::access_control::guard_admin_only;
 use crate::protocol::libraries::interest_rate::{
     calculate_interest_rates, initialize_interest_rate_params,
@@ -661,11 +663,11 @@ pub fn accrue_to_treasury(
  *
  * @functionality Initializes a reserve by creating its associated canisters and storing metadata.
  */
-#[cfg(feature = "testnet")]
 #[update]
 pub async fn initialize(
     token_name: String,
     mut reserve_data: ReserveData,
+    token_canister_id: Option<Principal>,
     asset_image: String,
 ) -> Result<(), Error> {
     guard_admin_only()?;
@@ -676,17 +678,28 @@ pub async fn initialize(
         return Err(Error::TokenAlreadyExist);
     }
 
-    let token_canister_id =
-        match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
-            Ok(principal) => {
-                info!("Successfully created test token ledger"); //debug?
-                principal
+    let token_canister_id = match token_canister_id {
+        Some(canister_id) => canister_id,
+        None => {
+            #[cfg(feature = "testnet")]
+            {
+                match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
+                    Ok(principal) => {
+                        debug!("Successfully created test token ledger");
+                        principal
+                    }
+                    Err(e) => {
+                        error!("Failed to create test token ledger: {:?}", e);
+                        return Err(e);
+                    }
+                }
             }
-            Err(e) => {
-                error!("Failed to create test token ledger : {:?}", e);
-                return Err(e);
+            #[cfg(feature = "mainnet")]
+            {
+                return Err(Error::NoCanisterIdFound);
             }
-        };
+        }
+    };
 
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
@@ -743,66 +756,6 @@ pub async fn initialize(
         reserve_data_e.insert(token_name.clone(), Candid(reserve_data));
     });
     info!("Reserve for {} initialized successfully", token_name);
-
-    Ok(())
-}
-
-#[cfg(feature = "mainnet")]
-#[update]
-pub async fn initialize(
-    token_name: String,
-    mut reserve_data: ReserveData,
-    token_canister_id: Principal,
-    asset_image: String,
-) -> Result<(), Error> {
-    guard_admin_only()?;
-    validate_asset_name(&token_name)?;
-    validate_asset_image_url(&asset_image)?;
-
-    if read_state(|state| state.reserve_list.contains_key(&token_name)) {
-        return Err(Error::TokenAlreadyExist);
-    }
-
-    let d_token_name = format!("d{}", token_name.clone());
-    let debt_token_name = format!("debt{}", token_name.clone());
-    let asset_info = AssetInfo {
-        asset_name: token_name.clone(),
-        principal_id: token_canister_id,
-        symbol: token_name.clone(),
-        image: asset_image,
-    };
-
-    reserve_data.asset_name = token_name.clone();
-    let d_token_principal = match create_token_canister(d_token_name.clone(), d_token_name).await {
-        Ok(principal) => principal,
-        Err(e) => return Err(e),
-    };
-    reserve_data.debt_token_canister =
-        match create_token_canister(debt_token_name.clone(), debt_token_name).await {
-            Ok(principal) => Some(principal),
-            Err(e) => return Err(e),
-        };
-
-    reserve_data.d_token_canister = Some(d_token_principal);
-
-    set_canister_id(reserve_data.asset_name.clone(), d_token_principal).await?;
-
-    reserve_data.last_update_timestamp = current_timestamp();
-
-    mutate_state(|state| {
-        state
-            .reserve_list
-            .insert(token_name.clone(), token_canister_id);
-
-        state
-            .asset_records
-            .insert(token_name.clone(), Candid(asset_info));
-
-        let reserve_data_e = &mut state.asset_index;
-
-        reserve_data_e.insert(token_name.clone(), Candid(reserve_data));
-        info!("Reserve for {} initialized successfully", token_name);
-    });
 
     Ok(())
 }

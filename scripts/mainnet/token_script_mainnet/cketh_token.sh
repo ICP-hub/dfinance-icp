@@ -67,4 +67,4 @@ if [[ ! "$ASSET_IMAGE_URL" =~ ^https://storage.googleapis.com ]]; then
 fi
 export TOKEN_PRINCIPAL="ss2fx-dyaaa-aaaar-qacoq-cai"
 dfx canister call "$CANISTER_NAME" initialize \
-  "(\"$TOKEN_NAME\", $RESERVE_DATA, principal \"$TOKEN_PRINCIPAL\", \"$ASSET_IMAGE_URL\")" --network ic
+  "(\"$TOKEN_NAME\", $RESERVE_DATA, opt principal \"$TOKEN_PRINCIPAL\", \"$ASSET_IMAGE_URL\")" --network ic

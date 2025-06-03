@@ -274,7 +274,7 @@ service : (principal) -> {
   get_user_faucet_data : (principal) -> (Result_15) query;
   guard_admin_only : () -> (Result_1) query;
   init_logging : (bool) -> ();
-  initialize : (text, ReserveData, text) -> (Result_1);
+  initialize : (text, ReserveData, opt principal, text) -> (Result_1);
   is_transfer_allowed : (principal, principal, text, nat) -> (bool);
   is_user_blocked : () -> (Result_16) query;
   mock_price_data : () -> (Result_1);

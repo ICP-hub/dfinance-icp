@@ -69,4 +69,4 @@ fi
 
 
 dfx canister call "$CANISTER_NAME" initialize \
-  "(\"$TOKEN_NAME\", $RESERVE_DATA, \"$ASSET_IMAGE_URL\")"
+  "(\"$TOKEN_NAME\", $RESERVE_DATA, null, \"$ASSET_IMAGE_URL\")"

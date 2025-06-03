@@ -33,6 +33,7 @@ type Error = variant {
   AuditorNotFound;
   UserCannotBeLiquidated;
   AmountTooMuch;
+  TokenNotTransfered;
   CaptchaMismatch;
   ErrorMintDebtTokens;
   AdminNotFound;
@@ -72,6 +73,8 @@ type Error = variant {
   NegativeAmount;
   EmailError;
   ErrorPriceCache;
+  RoleAlreadyExistsForUser;
+  InvalidRole;
   NotADeveloper;
   InvalidAssetImageUrl;
   InvalidUser;
@@ -80,6 +83,7 @@ type Error = variant {
   InvalidValue;
   TokenAlreadyExist;
   RateLimitExceeded;
+  UserRoleNotFound;
   MaxAmount;
   FeeExceedsAmount;
   ErrorParsingPrincipal;
@@ -122,6 +126,7 @@ type Error = variant {
   AdminAlreadyExists;
   NormalizedDebt;
   UserCollateralLessThanReward;
+  DebtTokenBalanceLessThan;
   CaptchaAlreadyExists;
 };
 type ExecuteBorrowParams = record { asset : text; amount : nat };
@@ -139,7 +144,7 @@ type ExecuteRepayParams = record {
 };
 type ExecuteSupplyParams = record {
   asset : text;
-  is_collateral : bool;
+  can_be_collateral : bool;
   amount : nat;
 };
 type FaucetReserve = record { faucet_limit : nat; faucet_usage : nat };
@@ -174,22 +179,23 @@ type ReserveData = record {
 };
 type Result = variant { Ok : text; Err : Error };
 type Result_1 = variant { Ok; Err : Error };
-type Result_10 = variant {
+type Result_10 = variant { Ok : principal; Err : Error };
+type Result_11 = variant {
   Ok : record { ReserveData; Certificate };
   Err : Error;
 };
-type Result_11 = variant {
+type Result_12 = variant {
   Ok : record { record { nat; nat; nat; nat; nat; nat; bool }; Certificate };
   Err : Error;
 };
-type Result_12 = variant { Ok : record { UserData; Certificate }; Err : Error };
-type Result_13 = variant {
+type Result_13 = variant { Ok : record { UserData; Certificate }; Err : Error };
+type Result_14 = variant {
   Ok : record { FaucetReserves; Certificate };
   Err : Error;
 };
-type Result_14 = variant { Ok : record { bool; Certificate }; Err : Error };
-type Result_15 = variant { Ok; Err : text };
-type Result_16 = variant { Ok : TokenAlert; Err : Error };
+type Result_15 = variant { Ok : record { bool; Certificate }; Err : Error };
+type Result_16 = variant { Ok; Err : text };
+type Result_17 = variant { Ok : TokenAlert; Err : Error };
 type Result_2 = variant { Ok : Challenge; Err : Error };
 type Result_3 = variant { Ok : UserData; Err : Error };
 type Result_4 = variant { Ok : record { nat; Certificate }; Err : Error };
@@ -199,8 +205,11 @@ type Result_7 = variant {
   Ok : vec record { principal; UserAccountData; UserData };
   Err : Error;
 };
-type Result_8 = variant { Ok : record { principal; Certificate }; Err : Error };
-type Result_9 = variant { Ok : principal; Err : Error };
+type Result_8 = variant {
+  Ok : vec record { principal; vec text };
+  Err : Error;
+};
+type Result_9 = variant { Ok : record { principal; Certificate }; Err : Error };
 type TokenAlert = record {
   asset_name : text;
   balance : nat;
@@ -221,20 +230,21 @@ type UserData = record {
   user_id : opt text;
 };
 type UserReserveData = record {
+  can_be_collateral : bool;
   last_update_timestamp : nat64;
   d_token_balance : nat;
   is_collateral : bool;
   liquidity_index : nat;
   variable_borrow_index : nat;
   reserve : text;
-  debt_token_blance : nat;
+  debt_token_balance : nat;
   is_using_as_collateral_or_borrow : bool;
   is_borrowed : bool;
 };
 service : (principal) -> {
-  add_admin : (text, principal) -> (Result);
   add_admin_test : (text, principal) -> (Result);
   add_tester : (text, principal) -> (Result_1);
+  add_user_with_role : (principal, text) -> (Result);
   admin_restart_reset_task : () -> (Result_1);
   check_is_tester : () -> (bool) query;
   create_captcha : () -> (Result_2);
@@ -249,42 +259,42 @@ service : (principal) -> {
   faucet : (text, nat) -> (Result_5);
   get_all_assets_certified : () -> (vec AssetInfo, Certificate) query;
   get_all_logs : () -> (Result_6) query;
-  get_all_user_list : (nat64, nat64) -> (Result_7);
+  get_all_user_list : (nat64, nat64, bool) -> (Result_7);
   get_all_users_certified : () -> (
       vec record { principal; UserData },
       Certificate,
     ) query;
-  get_asset_principal_certified : (text) -> (Result_8) query;
+  get_all_users_with_roles : () -> (Result_8) query;
+  get_asset_principal_certified : (text) -> (Result_9) query;
   get_cached_exchange_rate_certified : (text) -> (Result_4) query;
-  get_canister_id_by_name : (text) -> (Result_9) query;
-  get_liquidation_users_concurrent : (nat64, nat64) -> (
-      vec record { principal; UserAccountData; UserData },
-    );
-  get_reserve_data_certified : (text) -> (Result_10) query;
+  get_canister_id_by_name : (text) -> (Result_10) query;
+  get_reserve_data_certified : (text) -> (Result_11) query;
   get_total_users : () -> (nat64, Certificate) query;
   get_transfer_fee : (text) -> (Result_4) query;
   get_user_account_data : (
       opt principal,
       opt vec AssetData,
       opt vec AssetData,
-    ) -> (Result_11) query;
-  get_user_data : (principal) -> (Result_12) query;
-  get_user_faucet_data : (principal) -> (Result_13) query;
+    ) -> (Result_12) query;
+  get_user_data : (principal) -> (Result_13) query;
+  get_user_faucet_data : (principal) -> (Result_14) query;
   guard_admin_only : () -> (Result_1) query;
   initialize : (text, ReserveData, text) -> (Result_1);
-  is_transfer_allowed : (principal, text, nat) -> (bool);
-  is_user_blocked : () -> (Result_14) query;
+  initialize2 : (text, ReserveData, principal, text) -> (Result_1);
+  is_transfer_allowed : (principal, principal, text, nat) -> (bool);
+  is_user_blocked : () -> (Result_15) query;
   mock_price_data : () -> (Result_1);
-  receive_and_load_data_backup : (nat64) -> (Result_15);
-  remove_admin : (principal) -> (Result);
+  receive_and_load_data_backup : (nat64) -> (Result_16);
+  remove_user_role : (principal, text) -> (Result);
   reset_reserve_value : (text, text, nat) -> (Result_1);
-  send_backup_data_to_canister : () -> (Result_15);
+  send_backup_data_to_canister : () -> (Result_16);
   set_canister_id : (text, principal) -> (Result_1);
   to_check_controller : () -> (bool) query;
   toggle_collateral : (text, nat, nat) -> (Result_1);
-  token_balance_alert : (text) -> (Result_16);
+  token_balance_alert : (text) -> (Result_17);
   update_reserves_price : () -> (Result_1);
   user_normalized_debt_certified : (ReserveData) -> (Result_4) query;
   user_normalized_supply_certified : (ReserveData) -> (Result_4) query;
+  users_transfer_changes : (principal, principal, text, nat) -> (bool);
   verify_captcha : (text) -> (Result_1);
 }

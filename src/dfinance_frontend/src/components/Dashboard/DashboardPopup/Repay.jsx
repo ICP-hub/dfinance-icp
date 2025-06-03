@@ -88,6 +88,7 @@ const Repay = ({
   const [isPaymentDone, setIsPaymentDone] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [usdValue, setUsdValue] = useState(0);
+  const [usdAmount, setUsdAmount] = useState(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const ledgerActors = useSelector((state) => state.ledger);
   const isSoundOn = useSelector((state) => state.sound.isSoundOn);
@@ -141,24 +142,36 @@ const Repay = ({
 
     inputAmount = inputAmount.replace(/[^0-9.]/g, "");
 
+    const dotIndex = inputAmount.indexOf(".");
+    if (dotIndex !== -1) {
+      const beforeDot = inputAmount.slice(0, dotIndex + 1);
+      const afterDot = inputAmount.slice(dotIndex + 1).replace(/\./g, "").slice(0, 8);
+      inputAmount = beforeDot + afterDot;
+    }
+
+    if (/^0[0-9]+/.test(inputAmount)) {
+      inputAmount = inputAmount.replace(/^0+/, "");
+      if (inputAmount === "") inputAmount = "0";
+    }
+
     if (inputAmount === ".") {
-      setAmount("0.");
-      updateAmountAndUsdValue("0.");
+      inputAmount = "0.";
+    }
+
+    const numericAmount = parseFloat(inputAmount);
+    const isValidNumber = !isNaN(numericAmount);
+
+    if (!isValidNumber) {
+      setAmount(inputAmount);
+      updateAmountAndUsdValue("0");
       return;
     }
-
-    if (inputAmount.indexOf(".") !== inputAmount.lastIndexOf(".")) {
-      inputAmount = inputAmount.slice(0, inputAmount.lastIndexOf("."));
-    }
-
-    let numericAmount = parseFloat(inputAmount);
-    if (isNaN(numericAmount)) numericAmount = 0;
 
     if (numericAmount > assetBorrow) {
       const truncateToEightDecimals = (value) => {
         const multiplier = Math.pow(10, 8);
-        const truncated = Math.round(value * multiplier) / multiplier;
-        return truncated.toFixed(8);
+        const truncated = Math.floor(value * multiplier) / multiplier;
+        return truncated.toFixed(8).replace(/\.?0+$/, "");
       };
 
       const fee = formattedTransactionFee ? Number(formattedTransactionFee) : 0;
@@ -172,11 +185,7 @@ const Repay = ({
       if (selectedBalance < 0) selectedBalance = 0;
 
       const displayBalance = selectedBalance
-        ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
-          ? Number(selectedBalance).toFixed(8)
-          : selectedBalance >= 1e-7 && selectedBalance < 1e-6
-          ? Number(selectedBalance).toFixed(7)
-          : truncateToEightDecimals(selectedBalance)
+        ? truncateToEightDecimals(selectedBalance)
         : "0";
 
       setAmount(displayBalance.toString());
@@ -184,15 +193,13 @@ const Repay = ({
       updateAmountAndUsdValue(displayBalance.toString());
       return;
     }
-    let formattedAmount = numericAmount.toFixed(8).replace(/\.?0+$/, "");
-    if (inputAmount.endsWith(".")) {
-      formattedAmount += ".";
-    }
 
-    setAmount(formattedAmount);
-    setMaxClicked(formattedAmount === assetBorrow.toString());
-    updateAmountAndUsdValue(formattedAmount);
+    setAmount(inputAmount);
+    setMaxClicked(inputAmount === assetBorrow.toString());
+    updateAmountAndUsdValue(inputAmount);
   };
+
+
 
   const fetchStatusFromBackend = async () => {
     try {
@@ -221,7 +228,7 @@ const Repay = ({
     let numericAmount = parseFloat(inputAmount);
     if (isNaN(numericAmount) || numericAmount < 0) {
       setAmount("");
-      setUsdValue("0.00"); // ✅ Always show 2 decimal places
+      setUsdValue("0.00");
       console.error("Amount must be a positive number");
       return;
     }
@@ -231,6 +238,8 @@ const Repay = ({
     }
     const adjustedConversionRate = Number(conversionRate) / Math.pow(10, 8);
     const convertedValue = numericAmount * adjustedConversionRate;
+    const Value = (numericAmount + Number(formattedTransactionFee)) * adjustedConversionRate;
+    setUsdAmount(parseFloat(Value));
     setUsdValue(convertedValue.toFixed(7));
     setAmount(inputAmount);
   };
@@ -239,16 +248,15 @@ const Repay = ({
   const supplyBalance = numericBalance;
   const amountAsNat64 = Number(amount);
   const scaledAmount = amountAsNat64 * Number(10 ** 8);
- const truncateTo8Decimals = (num) => {
-     return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
-   };
-   const approvalfee = +formattedApprovalFee || 0;
-   const totalRequired = truncateTo8Decimals(+amount + approvalFee);
- 
-   const hasEnoughBalance =
-     balance >= approvalfee &&
-     totalRequired <= +numericBalance;
-    console.log("HAs",hasEnoughBalance,totalRequired,numericBalance)
+  const truncateTo8Decimals = (num) => {
+    return Math.trunc(num * SCALING_FACTOR) / SCALING_FACTOR;
+  };
+  const approvalfee = +formattedApprovalFee || 0;
+  const totalRequired = truncateTo8Decimals(+amount + approvalFee);
+
+  const hasEnoughBalance =
+    balance >= approvalfee &&
+    totalRequired <= +numericBalance;
   /**
    * This function handles the approval process before executing a repayment. It checks the asset type and uses the appropriate
    * ledger actor to approve the repayment amount for the selected asset.
@@ -391,18 +399,18 @@ const Repay = ({
       if ("Ok" in repayResult) {
         trackEvent(
           "Repay," +
-            asset +
-            "," +
-            totalAmount / SCALING_FACTOR +
-            "," +
-            principalObj.toString(),
+          asset +
+          "," +
+          totalAmount / SCALING_FACTOR +
+          "," +
+          principalObj.toString(),
           "Assets",
           "Repay," +
-            asset +
-            "," +
-            totalAmount / SCALING_FACTOR +
-            ", " +
-            principalObj.toString()
+          asset +
+          "," +
+          totalAmount / SCALING_FACTOR +
+          ", " +
+          principalObj.toString()
         );
         if (isSoundOn) {
           const sound = new Audio(coinSound);
@@ -556,7 +564,7 @@ const Repay = ({
     liquidationThreshold
   ) => {
     const amountTaken = 0;
-    const amountAdded = usdValue || 0;
+    const amountAdded = usdAmount || 0;
     const totalCollateralValue =
       parseFloat(totalCollateral) + parseFloat(amountTaken);
     let totalDeptValue = parseFloat(totalDebt) - parseFloat(amountAdded);
@@ -593,8 +601,8 @@ const Repay = ({
       ? selectedBalance >= 1e-8 && selectedBalance < 1e-7
         ? Number(selectedBalance).toFixed(8)
         : selectedBalance >= 1e-7 && selectedBalance < 1e-6
-        ? Number(selectedBalance).toFixed(7)
-        : truncateToEightDecimals(selectedBalance)
+          ? Number(selectedBalance).toFixed(7)
+          : truncateToEightDecimals(selectedBalance)
       : "0";
     "displayBalance", displayBalance;
     setMaxAmount(displayBalance.toString());
@@ -803,9 +811,9 @@ const Repay = ({
                   <p className="text-[12px] text-gray-500 -mb-1">
                     {usdValue
                       ? `$${usdValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} USD`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} USD`
                       : "$0.00 USD"}
                   </p>
                 </div>
@@ -829,11 +837,10 @@ const Repay = ({
                         {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[12px] px-2 py-0 rounded-md button1 ${
-                          assetBorrow === 0 || isApproved
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
                             ? "text-gray-400 cursor-not-allowed pointer-events-none"
                             : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
-                        }`}
+                          }`}
                         onClick={handleMaxClick}
                       >
                         Max
@@ -870,33 +877,31 @@ const Repay = ({
                     <p>Health Factor</p>
                     <p>
                       <span
-                        className={`${
-                          truncatedValue > 3
+                        className={`${truncatedValue > 3
                             ? "text-green-500"
                             : truncatedValue <= 1
-                            ? "text-red-500"
-                            : truncatedValue <= 1.5
-                            ? "text-orange-600"
-                            : truncatedValue <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : truncatedValue <= 1.5
+                                ? "text-orange-600"
+                                : truncatedValue <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {truncatedValue > 100 ? "Infinity" : truncatedValue}
                       </span>
                       <span className="text-gray-500 mx-1">→</span>
                       <span
-                        className={`${
-                          currentHealthFactor > 3
+                        className={`${currentHealthFactor > 3
                             ? "text-green-500"
                             : currentHealthFactor <= 1
-                            ? "text-red-500"
-                            : currentHealthFactor <= 1.5
-                            ? "text-orange-600"
-                            : currentHealthFactor <= 2
-                            ? "text-orange-400"
-                            : "text-orange-300"
-                        }`}
+                              ? "text-red-500"
+                              : currentHealthFactor <= 1.5
+                                ? "text-orange-600"
+                                : currentHealthFactor <= 2
+                                  ? "text-orange-400"
+                                  : "text-orange-300"
+                          }`}
                       >
                         {currentHealthFactor}
                       </span>
@@ -950,6 +955,22 @@ const Repay = ({
                 </div>
               </div>
             </div>
+            <div className="w-full flex justify-between items-center mt-3">
+              <div className="flex items-center">
+                <p
+                  className={`text-xs whitespace-nowrap ${isApproved ? "text-green-500" : "text-red-500"
+                    }`}
+                >
+                  {isApproved
+                    ? `Approved with ${(Number(ledgerFee) / 1e8).toFixed(
+                      8
+                    )} ${asset} `
+                    : `Approve with ${(Number(ledgerFee) / 1e8).toFixed(
+                      8
+                    )} ${asset} `}
+                </p>
+              </div>
+            </div>
             <div className="w-full mt-3">
               {amount > 0 && amount > supplyBalance ? (
                 <div className="bg-[#BA5858] p-2 rounded-lg my-2">
@@ -989,14 +1010,13 @@ const Repay = ({
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    isApproved ||
-                    isLoading ||
-                    amount <= 0 ||
-                    !hasEnoughBalance
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
+                      isLoading ||
+                      amount <= 0 ||
+                      !hasEnoughBalance
                       ? "opacity-50 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                   disabled={
                     isApproved ||
                     isLoading ||
@@ -1010,15 +1030,14 @@ const Repay = ({
                 <button
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
-                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${
-                    !isApproved ||
-                    isLoading ||
-                    amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    !hasEnoughBalance
+                  className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
+                      isLoading ||
+                      amount <= 0 ||
+                      supplyBalance <= 0 ||
+                      !hasEnoughBalance
                       ? "opacity-50 cursor-not-allowed"
                       : ""
-                  }`}
+                    }`}
                   disabled={
                     !isApproved ||
                     isLoading ||
@@ -1072,8 +1091,8 @@ const Repay = ({
                     ? assetBorrow >= 1e-8 && assetBorrow < 1e-7
                       ? Number(assetBorrow).toFixed(8)
                       : assetBorrow >= 1e-7 && assetBorrow < 1e-6
-                      ? Number(assetBorrow).toFixed(7)
-                      : truncateToEightDecimals(assetBorrow)
+                        ? Number(assetBorrow).toFixed(7)
+                        : truncateToEightDecimals(assetBorrow)
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> and you have repayed{" "}
@@ -1084,8 +1103,8 @@ const Repay = ({
                       ? Number(scaledAmount / SCALING_FACTOR).toFixed(8)
                       : scaledAmount / SCALING_FACTOR >= 1e-7 &&
                         scaledAmount / SCALING_FACTOR < 1e-6
-                      ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
-                      : scaledAmount / SCALING_FACTOR
+                        ? Number(scaledAmount / SCALING_FACTOR).toFixed(7)
+                        : scaledAmount / SCALING_FACTOR
                     : "0"}
                 </strong>{" "}
                 <strong>{asset}</strong> after{" "}

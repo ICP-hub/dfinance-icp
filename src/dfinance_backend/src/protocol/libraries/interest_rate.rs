@@ -142,7 +142,7 @@ pub fn initialize_interest_rate_params(asset: &str) -> InterestRateParams {
  * @param liq_added The amount of liquidity added.
  * @param liq_taken The amount of liquidity taken.
  * @param total_debt The total debt amount.
- * @param total_supply The total supply of the asset in the system.
+ * @param total_supply The total Supply amount.
  * @param params Interest rate parameters for the asset.
  * @param reserve_factor The reserve factor for the asset, used in liquidity rate calculations.
  * @param asset The asset name (e.g., "ckBTC", "ckETH", "ICP").

@@ -90,7 +90,7 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
             asset_principal,
             pic,
             backend_canister,
-            Nat::from(case.amount.clone()), // Amount ICP (transfer fee included)
+            case.amount.clone(), // Amount ICP (transfer fee included)
         );
         if !approved {
             if !case.expect_success {
@@ -118,7 +118,6 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
         // Simulate 5 concurrent calls
         let mut msg_ids = vec![];
         for _ in 0..5 {
-            /* Repay params */
             let repay_params = ExecuteRepayParams {
                 asset: case.asset.clone(),
                 amount: case.amount.clone(), // Amount ICP (transfer fee included)
@@ -175,11 +174,6 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
                                 error
                             );
                             } else {
-                            //     info!(
-                            //     "❌ IC Test Case {} Failed: Expected success but got error: {:?}: {:?}",
-                            //     i + 1,
-                            //     error,user_principal.to_text()
-                            // );
                             info!(
                                 "-----------------------------------------------------------------------",
                             );

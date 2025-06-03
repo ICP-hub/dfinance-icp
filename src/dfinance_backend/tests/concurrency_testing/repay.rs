@@ -14,6 +14,7 @@ use tracing::{info,error};
  * @dev Ensures that the repay function handles different asset types and amounts correctly. It checks both successful repay operations and failure cases such as insufficient balance, invalid asset types, or non-approved asset transfers.
  * @functionality Confirms that the repay function processes requests successfully when expected and rejects invalid repay requests with appropriate error messages, ensuring that the balance is correctly updated after each repayment attempt.
  */
+#[allow(dead_code)]
 pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {

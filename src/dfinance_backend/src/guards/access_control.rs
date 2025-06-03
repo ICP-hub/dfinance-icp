@@ -1,10 +1,12 @@
 use crate::{
-    constants::errors::Error, 
-    stable_storage::state_handler::{mutate_state, read_state}
+    constants::{constant_variables::constants::ADMIN, errors::Error},
+    stable_storage::{
+        state_handler::{mutate_state, read_state},
+        storable::Candid,
+    },
 };
 use candid::Principal;
 use ic_cdk::{caller, query, update};
-
 
 /*
  * @title Guard Controller Only
@@ -60,6 +62,24 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
 }
 
 /*
+ * @title Guard Optional Principal Not Anonymous
+ * @dev Ensures that the provided principal is not anonymous.
+ *      This function is used to restrict access to authorized users only.
+ *
+ * @param on_behalf The optional principal to check.
+ *
+ * @returns `Ok(())` if the principal is not anonymous, otherwise an error.
+ *
+ * @functionality Optional Principal Check
+ */
+pub fn guard_optional_principal_not_anonymous(on_behalf: Option<Principal>) -> Result<(), Error> {
+    if on_behalf == Some(Principal::anonymous()) {
+        return Err(Error::AnonymousPrincipal);
+    }
+    Ok(())
+}
+
+/*
  * @title Check Controller Permissions
  * @notice Checks if the caller is a controller of the canister.
  * @dev This function verifies whether the caller has administrative privileges.
@@ -70,7 +90,6 @@ pub fn guard_prevent_anonymous() -> Result<(), Error> {
  */
 #[query]
 pub fn to_check_controller() -> bool {
-   
     let res = ic_cdk::api::is_controller(&ic_cdk::api::caller());
     res
 }
@@ -159,12 +178,55 @@ pub fn check_is_tester() -> bool {
 }
 
 /*
- * @title Add Admin to the Canister
+ * @title Add User with Role
+ * @dev This function adds a new user with a specified role to the access control list. It checks if the caller
+ *      is an admin and if the user ID is not anonymous. If both conditions are met, it adds the user and their
+ *      role to the state.
+ *
+ * @param user_id The `Principal` ID of the user to be added.
+ * @param role The role to be assigned to the user.
+ *
+ * @returns
+ *      - `Ok(())`: If the user was successfully added.
+ *      - `Err(Error::AnonymousPrincipal)`: If the user ID is anonymous.
+ *      - `Err(Error::InvalidRole)`: If the role is invalid or empty.
+ *      - `Err(Error::RoleAlreadyExistsForUser)`: If the role already exists for the user.
+ *
+ * @functionality Add User with Role
+ */
+#[update]
+pub fn add_user_with_role(user_id: Principal, role: String) -> Result<String, Error> {
+    guard_principal_not_anonymous(&user_id)?;
+    guard_admin_only()?;
+
+    if role.trim().is_empty() {
+        return Err(Error::InvalidRole);
+    }
+
+    mutate_state(|state| {
+        let mut roles = match state.access_control.get(&user_id) {
+            Some(Candid(existing)) => existing.clone(),
+            None => Vec::new(),
+        };
+
+        if roles.contains(&role) {
+            return Err(Error::RoleAlreadyExistsForUser);
+        }
+
+        roles.push(role);
+
+        state.access_control.insert(user_id, Candid(roles));
+        Ok("Role added successfully.".to_string())
+    })
+}
+
+/*
+ * @title Add Admin to the Canister (For Testing Purpose - Pocket IC)
  * @dev This function adds a new admin to the state if they do not already exist. Only existing admins can perform this action.
  *      It prevents anonymous calls, checks if the caller and new admin are not anonymous, and verifies the caller is an admin.
  *
- * @param name The name of the new admin to be added.
- * @param new_admin The `Principal` of the user to be added as an admin.
+ * @param role The role of the new admin to be added.
+ * @param new_admin_id The `Principal` of the user to be added as an admin.
  *
  * @returns
  *      - `Ok(())`: If the admin is added successfully.
@@ -173,84 +235,88 @@ pub fn check_is_tester() -> bool {
  * @functionality Admin Management - Add Admin
  */
 #[update]
-pub fn add_admin(name: String, new_admin_id: Principal) -> Result<String, Error> {
-    guard_principal_not_anonymous(&new_admin_id)?;
-    guard_admin_only()?;
-
-    mutate_state(|state| {
-        if state.admin_data.contains_key(&new_admin_id) {
-            return Err(Error::AdminAlreadyExists);
-        }
-
-        state.admin_data.insert(new_admin_id, name);
-        Ok("Admin added successfully".to_string())
-    })
-}
-
-/**
- * @title Add Admin (Testnet Only)
- * @dev Adds a new admin to the system; available only when the `testnet` feature is enabled.
- * @param name The name of the new admin.
- * @param new_admin_id The principal ID of the new admin to be added.
- * @returns A success message if the admin is added, or an error if the admin already exists or the caller is unauthorized.
- *
- * @functionality Adds a new administrator after verifying that the caller is the controller and the principal is not anonymous.
- */
-#[update]
 #[cfg(feature = "testnet")]
-pub fn add_admin_test(name: String, new_admin_id: Principal) -> Result<String, Error> {
+pub fn add_admin_test(role: String, new_admin_id: Principal) -> Result<String, Error> {
     guard_principal_not_anonymous(&new_admin_id)?;
     guard_controller_only()?;
 
+    if role.trim().is_empty() {
+        return Err(Error::InvalidRole);
+    }
+
     mutate_state(|state| {
-        if state.admin_data.contains_key(&new_admin_id) {
+        let mut roles = match state.access_control.get(&new_admin_id) {
+            Some(Candid(existing_roles)) => existing_roles.clone(),
+            None => Vec::new(),
+        };
+
+        if roles.contains(&role) {
             return Err(Error::AdminAlreadyExists);
         }
 
-        state.admin_data.insert(new_admin_id, name);
+        roles.push(role);
+        state.access_control.insert(new_admin_id, Candid(roles));
         Ok("Admin added successfully".to_string())
     })
 }
 
+
 /*
- * @title Remove Admin from the Canister
- * @dev This function removes an admin based on their `Principal` ID. Only existing admins can remove others.
- *      It ensures the caller is authorized and not anonymous. If the admin exists, they are removed from the state.
+ * @title Remove User Role
+ * @dev This function removes a role from a user. It checks if the caller is an admin and if the user ID is not anonymous.
+ *      If both conditions are met, it removes the specified role from the user's roles list in the state.
  *
- * @param admin_to_remove The `Principal` of the admin to be removed.
+ * @param user_id The `Principal` ID of the user whose role is to be removed.
+ * @param role The role to be removed from the user.
  *
  * @returns
- *      - `Ok(())`: If the admin is removed successfully.
- *      - `Err(Error::AdminNotFound)`: If the admin does not exist.
+ *      - `Ok(())`: If the role was successfully removed.
+ *      - `Err(Error::AnonymousPrincipal)`: If the user ID is anonymous.
+ *      - `Err(Error::UserRoleNotFound)`: If the role was not found for the user.
  *
- * @functionality Admin Management - Remove Admin
+ * @functionality Remove User Role
  */
 #[update]
-pub fn remove_admin(admin_to_remove: Principal) -> Result<String, Error> {
+pub fn remove_user_role(user_id: Principal, role: String) -> Result<String, Error> {
     guard_admin_only()?;
-    guard_principal_not_anonymous(&admin_to_remove)?;
+    guard_principal_not_anonymous(&user_id)?;
 
     mutate_state(|state| {
-        if state.admin_data.remove(&admin_to_remove).is_some() {
-            Ok("Remove admin successfully".to_string())
+        let mut roles = match state.access_control.get(&user_id) {
+            Some(Candid(existing)) => existing.clone(),
+            None => return Err(Error::UserNotFound),
+        };
+
+        if !roles.contains(&role) {
+            return Err(Error::UserRoleNotFound);
+        }
+
+        roles.retain(|r| r != &role);
+
+        if roles.is_empty() {
+            // If no roles left, remove the user entry completely
+             state.access_control.remove(&user_id);
+             Ok("Role removed, user entry deleted.".to_string())
         } else {
-            Err(Error::AdminNotFound)
+            // Otherwise, update the roles list
+             state.access_control.insert(user_id, Candid(roles));
+             Ok("Role removed successfully.".to_string())
         }
     })
 }
 
+
 /*
- * @title Admin Access Guard
- * @notice Ensures that the caller is an authenticated and authorized admin.
- * @dev Verifies that the caller is not anonymous and exists in the admin data store.
- * @functionality Access control mechanism to restrict certain operations to admin users only.
+ * @title Guard Admin Only
+ * @dev This function checks if the caller is an admin. It ensures that the caller is not anonymous and
+ *      verifies their role in the access control list. If the caller is an admin, it returns `Ok(())`,
+ *      otherwise it returns an error.
  *
- * # Parameters
- * - None
+ * @returns
+ *      - `Ok(())`: If the caller is an admin.
+ *      - `Err(Error::UnauthorizedAccess)`: If the caller is not an admin or is anonymous.
  *
- * # Returns
- * - `Ok(())` - If the caller is a valid admin.
- * - `Err(Error)` - If the caller is anonymous or not listed as an admin.
+ * @functionality Admin Access Control
  */
 #[query]
 pub fn guard_admin_only() -> Result<(), Error> {
@@ -258,10 +324,62 @@ pub fn guard_admin_only() -> Result<(), Error> {
     let principal = caller();
 
     read_state(|state| {
-        if state.admin_data.contains_key(&principal) {
-            Ok(())
-        } else {
-            Err(Error::UnauthorizedAccess)
+        match state.access_control.get(&principal) {
+            Some(Candid(roles)) if roles.contains(&ADMIN.to_string()) => Ok(()),
+            _ => Err(Error::UnauthorizedAccess),
         }
     })
 }
+
+/*
+ * @title Get All Users with Roles
+ * @dev This function retrieves all users and their associated roles from the access control list.
+ *      It checks if the caller is an admin before proceeding to fetch the data.
+ *
+ * @returns
+ *      - `Ok(Vec<(Principal, Vec<String>)>)`: A vector of tuples containing user principals and their roles.
+ *      - `Err(Error::UnauthorizedAccess)`: If the caller is not an admin.
+ *
+ * @functionality Get All Users with Roles
+ */
+#[query]
+pub fn get_all_users_with_roles() -> Result<Vec<(Principal, Vec<String>)>, Error> {
+    guard_admin_only()?; 
+
+    read_state(|state| {
+        let mut result = Vec::new();
+
+        for (principal, Candid(roles)) in state.access_control.iter() {
+            result.push((principal, roles.clone()));
+        }
+
+        Ok(result)
+    })
+}
+
+/*
+ * @title Check if Caller is Authorized for Asset
+ * @dev This function checks if the caller is authorized to access a specific asset.
+ *      It retrieves the list of authorized callers for the asset from the state and compares
+ *      it with the caller's principal ID.
+ *
+ * @param asset The asset for which authorization is being checked.
+ *
+ * @returns
+ *      - `true`: If the caller is authorized for the asset.
+ *      - `false`: If the caller is not authorized for the asset or if the asset does not exist.
+ *
+ * @functionality Asset Authorization Check
+ */
+pub fn is_caller_authorized_for_asset(asset: &String) -> bool {
+
+    let caller = ic_cdk::api::caller();
+    read_state(|state| {
+        state
+            .canister_list
+            .get(asset)
+            .map(|authorized_caller| authorized_caller == caller)
+            .unwrap_or(false)
+    })
+}
+

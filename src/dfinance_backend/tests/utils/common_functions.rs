@@ -7,6 +7,12 @@ use pocket_ic::{PocketIc, WasmResult};
 use tracing_subscriber::fmt;
 use tracing::{info,error};
 
+/*
+ * @title Initialize Tracing
+ * @notice Configures and initializes the tracing subscriber for logging.
+ * @dev Sets maximum log level to INFO and customizes the log format without timestamps, targets, or levels.
+ * @functionality Enables structured logging output for diagnostics and monitoring during execution.
+ */
 pub fn init_tracing() {
     let _ = fmt()
         .with_max_level(tracing::Level::INFO)
@@ -25,7 +31,12 @@ pub fn init_tracing() {
 pub fn get_user_principal() -> Principal {
     Principal::from_text(TESTER_2).unwrap()
 }
-
+/*
+ * @title Get User Principal
+ * @notice Returns a predefined principal ID.
+ * @dev Converts a fixed text representation into a Principal type.
+ * @functionality Returns a predefined principal for the user.
+ */
 #[allow(dead_code)]
 pub fn get_user_principal2() -> Principal {
     Principal::from_text(TESTER_3).unwrap()
@@ -256,15 +267,15 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(3u32)).unwrap(),
         asset_supply: "ckBTC".to_string(),
         asset_borrow: "ckBTC".to_string(),
-        supply_tokens: Nat::from(450_000u128), // 0.0045 btc
-        borrow_tokens: Nat::from(420_000u128), // 0.0042 btc
+        supply_tokens: Nat::from(440_000u128), // 0.0044 btc
+        borrow_tokens: Nat::from(410_000u128), // 0.0041 btc
     });
     // Pushing 4th user data
     users_with_low_health.push(LowHealthUsersData {
         user_principal: get_users_principal(Nat::from(4u32)).unwrap(),
         asset_supply: "ckUSDC".to_string(),
         asset_borrow: "ckUSDC".to_string(),
-        supply_tokens: Nat::from(45_000_000_000u128), // 450 usdc
+        supply_tokens: Nat::from(44_000_000_000u128), // 440 usdc
         borrow_tokens: Nat::from(40_000_000_000u128), // 400 usdt
     });
     // // Pushing 5th user data
@@ -272,7 +283,7 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         user_principal: get_users_principal(Nat::from(5u32)).unwrap(),
         asset_supply: "ckUSDT".to_string(),
         asset_borrow: "ckUSDT".to_string(),
-        supply_tokens: Nat::from(30_000_000_000u128), // 300 USDT
+        supply_tokens: Nat::from(29_000_000_000u128), // 290 USDT
         borrow_tokens: Nat::from(25_000_000_000u128), // 250 USDT
     });
 
@@ -347,7 +358,6 @@ pub fn test_create_user_reserve_with_low_health(pic: &PocketIc, backend_canister
         }
     }
 }
-
 /*
  * Adds a tester to the backend canister.
  * @param pic - PocketIc instance for executing the call.
@@ -522,7 +532,7 @@ pub fn fetch_user_data(
                             info!(
                                 "dToken Balance: {:?}, Debt Token Balance: {:?}",
                                 reserve_data.d_token_balance,
-                                reserve_data.debt_token_blance
+                                reserve_data.debt_token_balance
                             );
                             info!(
                                 "Liquidity Index: {:?}, Variable Borrow Index: {:?}",
@@ -538,7 +548,7 @@ pub fn fetch_user_data(
                 }
                 Ok(Err(error)) => {
                     error!(
-                        "❌ Error fetching user data for {}: {}",
+                        "Error fetching user data for {}: {}",
                         user_principal,
                         error.message()
                     );

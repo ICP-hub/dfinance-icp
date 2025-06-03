@@ -271,6 +271,9 @@ type InternetIdentityInit = record {
     // Configuration for Related Origins Requests.
     // If present, list of origins from where registration is allowed.
     related_origins : opt vec text;
+    // Configuration for New Origin Flows.
+    // If present, list of origins using the new authentication flow.
+    new_flow_origins : opt vec text;
     // Configuration for OpenID Google client
     openid_google : opt opt OpenIdConfig;
     // Configuration for Web Analytics
@@ -561,10 +564,30 @@ type IdentityMetadataReplaceError = variant {
 
 type CreateAccountError = variant {
     InternalCanisterError : text;
+    AccountLimitReached;
+    Unauthorized : principal;
 };
 
 type UpdateAccountError = variant {
     InternalCanisterError : text;
+    AccountLimitReached;
+    Unauthorized : principal;
+};
+
+type AccountDelegationError = variant {
+    InternalCanisterError : text;
+    Unauthorized : principal;
+    NoSuchDelegation;
+};
+
+type PrepareAccountDelegation = record {
+    user_key : UserKey;
+    timestamp : Timestamp;
+};
+
+type GetAccountsError = variant {
+    InternalCanisterError : text;
+    Unauthorized : principal;
 };
 
 type PrepareIdAliasRequest = record {
@@ -690,7 +713,7 @@ type IdRegFinishError = variant {
     StorageError : text;
 };
 
-type Account = record {
+type AccountInfo = record {
     // Null is unreserved default account
     account_number : opt AccountNumber;
     origin : text;
@@ -843,20 +866,20 @@ service : (opt InternetIdentityInit) -> {
     get_accounts : (
         anchor_number : UserNumber,
         origin : FrontendHostname,
-    ) -> (vec Account) query;
+    ) -> (variant { Ok : vec AccountInfo; Err: GetAccountsError }) query;
 
     create_account : (
         anchor_number : UserNumber,
         origin : FrontendHostname,
         name : text
-    ) -> (variant { Ok : Account; Err: CreateAccountError });
+    ) -> (variant { Ok : AccountInfo; Err: CreateAccountError });
 
     update_account : (
         anchor_number : UserNumber,
         origin : FrontendHostname,
         account_number : opt AccountNumber, // Null is unreserved default account
         update : AccountUpdate
-    ) ->  (variant { Ok : Account; Err: UpdateAccountError });
+    ) ->  (variant { Ok : AccountInfo; Err: UpdateAccountError });
 
     prepare_account_delegation : (
         anchor_number : UserNumber,
@@ -864,13 +887,13 @@ service : (opt InternetIdentityInit) -> {
         account_number : opt AccountNumber, // Null is unreserved default account
         session_key : SessionKey,
         max_ttl : opt nat64
-    ) -> (UserKey, Timestamp);
+    ) -> (variant { Ok : PrepareAccountDelegation; Err : AccountDelegationError });
     
     get_account_delegation : (
         anchor_number : UserNumber,
         origin : FrontendHostname,
-        account_number : AccountNumber, // Null is unreserved default account
+        account_number : opt AccountNumber, // Null is unreserved default account
         session_key : SessionKey,
         expiration : Timestamp
-    ) -> (GetDelegationResponse) query;
+    ) -> (variant { Ok : SignedDelegation; Err : AccountDelegationError }) query;
 };

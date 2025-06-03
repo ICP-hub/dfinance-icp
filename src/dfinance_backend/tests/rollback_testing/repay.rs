@@ -23,7 +23,7 @@ use crate::utils::structs::*;
  * 6. Simulates repayment on behalf of another principal when applicable.
  * 7. Ensures that the rollback mechanism is triggered and the state is reverted when necessary.
  */
-
+#[allow(dead_code)]
  pub fn test_repay(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -86,7 +86,6 @@ use crate::utils::structs::*;
         }else{
             info!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         }
-        // info!("🔵 IC Test Case {}: Executing Repay Request", i + 1);
         info!("Asset: {}", case.asset);
         let amount_u128: u64 = case.amount.clone().0.try_into().unwrap();
         let amount_float = amount_u128 as f64;
@@ -101,7 +100,6 @@ use crate::utils::structs::*;
         info!("------------------------------------------------------------\n");
 
         if i % 2 == Nat::from(0u128) {
-            /* Get asset principal; handle missing cases  */
             let asset_principal =
                 match test_get_asset_principal(case.asset.clone(), pic, backend_canister) {
                     Some(principal) => principal,

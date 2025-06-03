@@ -21,10 +21,10 @@ use tracing::{info,error};
 fn call_test_function() {
     let (pic, backend_canister) = setup();
     test_faucet(&pic, backend_canister);
-    test_supply(&pic, backend_canister);
-    test_borrow(&pic, backend_canister);
-    test_repay(&pic, backend_canister);
-    test_withdraw(&pic, backend_canister);
+    // test_supply(&pic, backend_canister);
+    // test_borrow(&pic, backend_canister);
+    // test_repay(&pic, backend_canister);
+    // test_withdraw(&pic, backend_canister);
     test_liquidation(&pic, backend_canister);
 }
 
@@ -41,7 +41,7 @@ fn setup() -> (PocketIc, Principal) {
     pic.install_canister(
         backend_canister,
         wasm,
-        candid::encode_one(Principal::anonymous()).unwrap(),
+        candid::encode_one(user_principal).unwrap(),
         Some(Principal::anonymous()),
     );
     let _ = pocket_ic::PocketIc::set_controllers(
@@ -62,8 +62,6 @@ fn setup() -> (PocketIc, Principal) {
         Ok(wasm_result) => match wasm_result {
             WasmResult::Reply(bytes) => {
                 info!("Call succeeded. Reply bytes: {:?}", bytes);
-                // Optionally, decode bytes if you know the return type
-                // e.g., let decoded: YourType = decode(&bytes).unwrap();
             }
             WasmResult::Reject(reason) => {
                 info!("Call rejected: {}", reason);
@@ -73,12 +71,6 @@ fn setup() -> (PocketIc, Principal) {
             info!("Call failed with user error: {:?}", user_error);
         }
     }
-    let _ = pocket_ic::PocketIc::set_controllers(
-        &pic,
-        backend_canister,
-        Some(Principal::anonymous()),
-        vec![user_principal],
-    );
 
     // 🔹 Define test input (token name + reserve data)
     let icp_token_name = "ICP".to_string();

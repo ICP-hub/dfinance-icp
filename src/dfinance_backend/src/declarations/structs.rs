@@ -21,7 +21,7 @@ use super::datatypes::ReserveCache;
 pub struct ExecuteSupplyParams {
     pub asset: String,
     pub amount: Nat,
-    pub is_collateral: bool,
+    pub can_be_collateral: bool,
 
 }
 
@@ -62,14 +62,13 @@ pub struct ExecuteRepayParams {
  * 
  * @param asset The asset being withdrawn.
  * @param amount The amount to withdraw.
- * @param on_behalf_of Optional: The principal of the user on whose behalf the withdrawal is made.
- * @param is_collateral Indicates if the asset being withdrawn was used as collateral.
+ * @param can_be_collateral Indicates if the asset being withdrawn was used as collateral.
  */
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct ExecuteWithdrawParams {
     pub asset: String,
     pub amount: Nat,
-    pub is_collateral: bool,
+    pub can_be_collateral: bool,
 }
 
 /* 
@@ -241,6 +240,12 @@ pub struct UserAccountData {
     pub has_zero_ltv_collateral: bool,
 }
 
+/*
+ * @title Cycle Alert Structure
+ * @notice Alerts on cycle usage status such as warnings or exhaustion.
+ * @dev Tracks whether cycles are near exhaustion or have been fully consumed.
+ * @functionality Used for monitoring computational resource consumption.
+ */
 #[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct CycleAlert {
     pub is_warning : bool,
@@ -248,6 +253,12 @@ pub struct CycleAlert {
     pub current_cycle: Nat
 }
 
+/*
+ * @title Token Alert Structure
+ * @notice Alerts on token balance status including warnings and exhaustion.
+ * @dev Stores asset name, balance, and flags indicating low or exhausted token balances.
+ * @functionality Used to notify users or systems about token balance health.
+ */
 #[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct TokenAlert {
     pub asset_name: String,
@@ -255,6 +266,29 @@ pub struct TokenAlert {
     pub is_warning: bool,
     pub balance: Nat
 
+}
+
+/*
+ * @title Captcha Entry Structure
+ * @notice Represents a CAPTCHA entry with data and creation timestamp.
+ * @dev Stores the CAPTCHA challenge string and the time it was created.
+ * @functionality Used to manage CAPTCHA verification challenges.
+ */
+#[derive(Debug, Clone)]
+pub struct CaptchaEntry {
+    pub data: String,
+    pub created_at: u64,
+}
+
+/*
+ * @title Challenge Structure
+ * @notice Represents a CAPTCHA challenge image.
+ * @dev Stores the CAPTCHA image as a Base64 encoded string.
+ * @functionality Used to present CAPTCHA challenges to users.
+ */
+#[derive(candid::CandidType, serde::Serialize)]
+pub struct Challenge {
+    pub base64_img: String,
 }
 
 

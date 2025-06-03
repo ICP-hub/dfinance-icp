@@ -117,7 +117,7 @@ const UserInformationPopup = ({
       ? Number(ledgerFee)
       : Number(ledgerFee) || 0;
 
-  const transactionFee = transferFee + ledgerFeeNumber;
+  const transactionFee = transferFee + ledgerFeeNumber / 1e8;
   const formatFee = (fee) => {
     const fixedFee = parseFloat(fee).toFixed(8);
     const parts = fixedFee.split(".");
@@ -126,7 +126,6 @@ const UserInformationPopup = ({
     return `${integerPart}.${decimalPart.padEnd(8, "0").slice(0, 8)}`;
   };
   const formattedTransactionFee = formatFee(transactionFee);
-
   /* ===================================================================================
    *                                  FUNCTIONS
    * =================================================================================== */
@@ -379,9 +378,9 @@ const UserInformationPopup = ({
 
     const supplyAmount = BigInt(Math.round(amountToRepay * SCALING_FACTOR));
 
-    const fee = await ledgerActor.icrc1_fee();
-    setLedgerFee(fee)
-    const totalAmount = supplyAmount + BigInt(Math.round(formattedTransactionFee * SCALING_FACTOR));
+
+    // If some values are regular numbers
+    const totalAmount = BigInt(supplyAmount) + BigInt(Math.round(transferFee * SCALING_FACTOR)) + BigInt(ledgerFee);
     try {
       setIsLoading(true);
       const result = await ledgerActor.icrc2_approve({
@@ -397,7 +396,6 @@ const UserInformationPopup = ({
           subaccount: [],
         },
       });
-      console.log("approve", result)
       setIsApproved(true);
       toast.success(`Approval successful!`, {
         className: "custom-toast",
@@ -527,7 +525,7 @@ const UserInformationPopup = ({
         return response;
       }
     } catch (error) {
-      console.error("Error in handleMaxCollateral:", error.message);
+      console.warn("Error in handleMaxCollateral:", error.message);
     }
   };
 
@@ -616,13 +614,13 @@ const UserInformationPopup = ({
       const liquidationParams = {
         debt_asset: selectedDebtAsset,
         collateral_asset: selectedAsset,
-        amount: supplyAmount + formattedTransactionFee * SCALING_FACTOR,
+        amount: BigInt(supplyAmount) + BigInt(Math.round(transferFee * SCALING_FACTOR)) + BigInt(ledgerFee),
         on_behalf_of: mappedItem?.principal?._arr,
         reward_amount: Math.trunc(rewardAmount * SCALING_FACTOR),
       };
       const result = await backendActor.execute_liquidation(liquidationParams);
       const statusData = await fetchStatusFromBackend();
-       
+
       await checkAndNotify(statusData);
       if ("Ok" in result) {
         trackEvent(
@@ -786,7 +784,7 @@ const UserInformationPopup = ({
         message.includes("reject text: canister");
       const isMaxAmountExceeded = message.includes("MaxAmount");
       const isLessRewardAmount = message.includes("LessRewardAmount");
-
+      const RepayMoreThanDebt = message.includes("RepayMoreThanDebt");
       if (isPanicError) {
         setShowPanicPopup(true);
         setShowWarningPopup(false);
@@ -814,6 +812,17 @@ const UserInformationPopup = ({
         });
       } else if (isLessRewardAmount) {
         toast.error("Reward amount is too low for liquidation.", {
+          className: "custom-toast",
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else if (RepayMoreThanDebt) {
+        toast.error("Amount to repay is more then debt .", {
           className: "custom-toast",
           position: "top-center",
           autoClose: 3000,
@@ -1128,6 +1137,35 @@ const UserInformationPopup = ({
     fetchSupplyData();
     fetchBorrowData();
   }, [assets, liquidateTrigger]);
+  useEffect(() => {
+    if (!selectedAsset || !ledgerActors) return;
+
+    let ledgerActor;
+    if (selectedAsset === "ckBTC") ledgerActor = ledgerActors.ckBTC;
+    else if (selectedAsset === "ckETH") ledgerActor = ledgerActors.ckETH;
+    else if (selectedAsset === "ckUSDC") ledgerActor = ledgerActors.ckUSDC;
+    else if (selectedAsset === "ICP") ledgerActor = ledgerActors.ICP;
+    else if (selectedAsset === "ckUSDT") ledgerActor = ledgerActors.ckUSDT;
+    else {
+      console.error(`Unknown selectedAsset type: ${selectedAsset}`);
+      return;
+    }
+
+    // Define async function inside useEffect
+    const fetchFee = async () => {
+      try {
+        const fee = await ledgerActor.icrc1_fee();
+        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+        const feeBigInt = BigInt(Math.round(feeAsNumber));
+        setLedgerFee(feeBigInt);
+      } catch (error) {
+        console.error(`Error getting fee for ${selectedAsset}:`, error);
+      }
+    };
+
+    // Call the async function
+    fetchFee();
+  }, [selectedAsset]);
 
   useEffect(() => {
     const totalCollateral = Number(mappedItem.collateral) / SCALING_FACTOR || 0;
@@ -1146,7 +1184,7 @@ const UserInformationPopup = ({
         const item1 = filteredItems?.find((item) => item[0] === assetName);
 
         const liquidationThreshold =
-          Number(item1?.[1]?.Ok?.configuration?.liquidation_threshold) /
+          Number(item1?.[1]?.Ok[0]?.configuration?.liquidation_threshold) /
           SCALING_FACTOR || 0;
 
         return { assetName, liquidationThreshold };

@@ -1,38 +1,42 @@
-use super::update::{user_data, user_reserve};
-use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
-use crate::constants::constant_variables::constants::MIN_BORROW;
-use crate::constants::constant_variables::constants::{
-    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR,
+use super::{
+    update::{user_data, user_reserve},
+    reserve::{get_asset_principal, get_reserve_data}
 };
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::datatypes::{ReserveData, UserData, UserReserveData};
-use crate::declarations::structs::{AssetData, UserAccountData};
+use crate::api::inter_canister::{asset_transfer, asset_transfer_from, get_balance};
+use crate::constants::constant_variables::constants::{
+    HEALTH_FACTOR_BARRIER, PERCENTAGE_FACTOR, SCALING_FACTOR, MIN_BORROW
+};
+use crate::constants::{
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value}
+};
+use crate::declarations::{
+    datatypes::{ReserveData, UserData, UserReserveData},
+    structs::{AssetData, UserAccountData}
+};
 #[cfg(feature = "testnet")]
 use crate::guards::access_control::check_is_tester;
-use crate::guards::access_control::guard_principal_not_anonymous;
-use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous};
-use crate::protocol::libraries::reserve::get_asset_principal;
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils::{
-    calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,
+use crate::guards::access_control::{guard_admin_only, guard_prevent_anonymous, is_caller_authorized_for_asset};
+use crate::guards::access_control::{
+    guard_optional_principal_not_anonymous, guard_principal_not_anonymous
 };
-use crate::protocol::utils::price::{get_cached_exchange_rate, update_token_price};
-use crate::stable_storage::state_handler::insert_certified_value;
-use crate::stable_storage::storable::Candid;
+use crate::protocol::utils::{
+    log::{log_internal, LogLevel, LogFlusher},
+    math_utils::{ScalingMath, calculate_compounded_interest, calculate_linear_interest, current_timestamp, get_max_value,},
+    price::{get_cached_exchange_rate, update_token_price}
+};
+use crate::stable_storage::{
+    state_handler::{insert_certified_value,read_state, mutate_state},
+    storable::Candid
+};
 use crate::{debug, error, info, trace};
-use crate::{
-    protocol::libraries::reserve::get_reserve_data,
-    protocol::utils::math_utils::ScalingMath,
-    stable_storage::state_handler::{mutate_state, read_state},
-};
 use candid::{Nat, Principal};
 use futures::stream::{self, StreamExt};
 use ic_cdk::update;
 
 /*
- * @title User Account Data Calculation
+ * @title Calculate User Account Data
  * @functionality User account metric calculation logic.
  *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -65,45 +69,35 @@ use ic_cdk::update;
 pub async fn calculate_user_account_data(
     on_behalf: Option<Principal>,
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
-    // trace!("calling calculate user account data");
-
-    if on_behalf == Some(Principal::anonymous()) {
-        error!("Anonymous principal detected.");
-        return Err(Error::AnonymousPrincipal);
-    }
-
+    guard_optional_principal_not_anonymous(on_behalf)?;
     guard_prevent_anonymous()?;
-
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
-        None => {
-            let user_principal = ic_cdk::caller();
-            user_principal
-        }
+        None => ic_cdk::caller(),
+    };
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
     };
 
-
     let max = get_max_value();
-
     let user_data = user_data(user_principal)?;
 
-    if user_data.reserves.is_none() {
-        info!("No reserves found for the user.");
-        return Ok((
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            max,
-            zero_nat_value(),
-            false,
-        ));
-    }
-
-    let user_data_reserves = user_data.reserves.as_ref().ok_or_else(|| {
-        error!("User data reserves not found.");
-        Error::NoUserReserveDataFound
-    })?;
+    // Optimized handling of user_data.reserves
+    let user_data_reserves = match &user_data.reserves {
+        Some(reserves) => reserves,
+        None => {
+            info!("No reserves found for the user.");
+            return Ok((
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                max,
+                zero_nat_value(),
+                false,
+            ));
+        }
+    };
 
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
@@ -118,10 +112,8 @@ pub async fn calculate_user_account_data(
         }
 
         let reserve_data = get_reserve_data(reserve_name.clone())?;
+        let asset_price = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
-        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
-        let asset_price = rate;
         if user_reserve_data.is_collateral {
             debug!("Reserve '{}' is collateral.", user_reserve_data.reserve);
 
@@ -129,11 +121,9 @@ pub async fn calculate_user_account_data(
                 user_principal,
                 &user_reserve_data,
                 asset_price.clone(),
+                None,
             )
             .await?;
-            debug!("user balance in account data = {}", user_balance);
-
-            // info!("get user balance in base currency called");
 
             total_collateral += user_balance.clone();
 
@@ -158,11 +148,10 @@ pub async fn calculate_user_account_data(
                 user_principal,
                 &user_reserve_data,
                 asset_price.clone(),
+                None,
             )
             .await?;
-            // info!("get user debt in base currency called");
-
-            total_debt += user_debt.clone();
+            total_debt += user_debt;
         }
     }
 
@@ -191,18 +180,6 @@ pub async fn calculate_user_account_data(
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-
-    debug!(
-            "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
-            total_collateral,
-            total_debt,
-            avg_ltv,
-            avg_liquidation_threshold,
-            health_factor,
-            has_zero_ltv_collateral,
-            available_borrow
-        );
-
     Ok((
         total_collateral,
         total_debt,
@@ -215,7 +192,7 @@ pub async fn calculate_user_account_data(
 }
 
 /*
- * @title User Account Data Calculation
+ * @title Calculate User Asset Data
  * @functionality Calculates the user's financial metrics for lending and borrowing.
  *
  * @notice Computes account metrics like total collateral, debt, LTV, and health factor.
@@ -225,6 +202,11 @@ pub async fn calculate_user_account_data(
  * @functionality Performs dynamic calculations using live user data and asset configurations.
  *
  * @param on_behalf (Optional) The principal of the user whose account data is being calculated.
+ * @param dtoken_balance (Optional) A vector of `AssetData` representing user's DToken balances
+ *                       (collateral tokens) to be considered in calculations.
+ *
+ * @param debt_token_balance (Optional) A vector of `AssetData` representing user's debt token balances
+ *                           to be included in debt calculations.
  * @functionality Allows an admin or proxy to calculate metrics for another user.
  *  
  * @param dtoken_balance (Optional) A vector of pre-fetched asset data representing the user's dToken (collateral) balances. Defaults to empty if None.
@@ -248,36 +230,32 @@ pub async fn calculate_user_asset_data(
 ) -> Result<(Nat, Nat, Nat, Nat, Nat, Nat, bool), Error> {
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
-        None => {
-            let user_principal = ic_cdk::caller();
-            user_principal
-        }
+        None => ic_cdk::caller(),
     };
 
-    let dtoken_balance = dtoken_balance.unwrap_or_default();
-    let debt_token_balance = debt_token_balance.unwrap_or_default();
+    let dtoken_balance = dtoken_balance.unwrap_or_else(|| Vec::new());
+    let debt_token_balance = debt_token_balance.unwrap_or_else(|| Vec::new());
 
     let max = get_max_value();
 
     let user_data = user_data(user_principal)?;
 
-    if user_data.reserves.is_none() {
-        debug!("No reserves found for the user.");
-        return Ok((
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            zero_nat_value(),
-            max,
-            zero_nat_value(),
-            false,
-        ));
-    }
-
-    let user_data_reserves = user_data.reserves.as_ref().ok_or_else(|| {
-        error!("User data reserves not found.");
-        Error::NoUserReserveDataFound
-    })?;
+    let user_data_reserves = match &user_data.reserves {
+        Some(reserves) => reserves,
+        None => {
+            info!("No reserves found for the user.");
+            return Ok((
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                zero_nat_value(),
+                max,
+                zero_nat_value(),
+                false,
+            ));
+        }
+    };
+    
     let mut total_collateral = zero_nat_value();
     let mut total_debt = zero_nat_value();
     let mut avg_ltv = zero_nat_value();
@@ -291,10 +269,8 @@ pub async fn calculate_user_asset_data(
         }
 
         let reserve_data = get_reserve_data(reserve_name.clone())?;
+        let asset_price = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
 
-        let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
-        let asset_price = rate;
         if user_reserve_data.is_collateral {
             let balance: Nat = dtoken_balance
                 .iter()
@@ -302,11 +278,11 @@ pub async fn calculate_user_asset_data(
                 .map(|asset| asset.balance.clone())
                 .unwrap_or(zero_nat_value());
 
-            let user_balance = get_user_asset_balance_in_base_currency(
+            let user_balance = get_user_balance_in_base_currency(
                 user_principal,
                 &user_reserve_data,
-                balance.clone(),
                 asset_price.clone(),
+                Some(balance.clone()),
             )
             .await?;
 
@@ -333,9 +309,6 @@ pub async fn calculate_user_asset_data(
         }
 
         if user_reserve_data.is_borrowed {
-            let rate = get_cached_exchange_rate(user_reserve_data.reserve.clone())?;
-
-            let asset_price = rate;
 
             let balance: Nat = debt_token_balance
                 .iter()
@@ -343,10 +316,11 @@ pub async fn calculate_user_asset_data(
                 .map(|asset| asset.balance.clone())
                 .unwrap_or(zero_nat_value());
 
-            let user_debt = get_user_asset_debt_in_base_currency(
+            let user_debt = get_user_debt_in_base_currency(
+                user_principal,
                 &user_reserve_data,
-                balance.clone(),
-                asset_price.clone(),
+                asset_price,
+                Some(balance.clone()),
             )
             .await?;
 
@@ -378,17 +352,6 @@ pub async fn calculate_user_asset_data(
     } else {
         (total_collateral.clone() * avg_liquidation_threshold.clone()) / total_debt.clone()
     };
-
-    debug!(
-            "Final calculated values: total_collateral = {}, total_debt = {}, avg_ltv = {}, avg_liquidation_threshold = {}, health_factor = {}, has_zero_ltv_collateral = {}, available_borrow = {}",
-            total_collateral,
-            total_debt,
-            avg_ltv,
-            avg_liquidation_threshold,
-            health_factor,
-            has_zero_ltv_collateral,
-            available_borrow
-        );
 
     Ok((
         total_collateral,
@@ -429,70 +392,34 @@ pub async fn get_user_balance_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
     asset_price: Nat,
+    user_balance: Option<Nat>,
 ) -> Result<Nat, Error> {
-    // trace!("Calculating user balance in base currency...");
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let d_token_canister_principal: Principal = asset_reserve.d_token_canister.clone().unwrap();
+    let user_scaled_balance = match user_balance {
+        Some(balance) => balance,
+        None => {
+            debug!("going inside the base currency");
+            let d_token_canister_principal = asset_reserve.d_token_canister.ok_or_else(|| {
+                error!("No d_token canister ID found.");
+                Error::NoCanisterIdFound
+            })?;
 
-    let user_scaled_balance = get_balance(d_token_canister_principal, user_principal).await?;
+            get_balance(d_token_canister_principal, user_principal).await?
+        }
+    };
 
     let normalized_supply = user_normalized_supply(asset_reserve)?;
     let user_scaled = if reserve.liquidity_index != zero_nat_value() {
-        user_scaled_balance
-            .clone()
-            .scaled_div(reserve.liquidity_index.clone())
+        user_scaled_balance.scaled_div(reserve.liquidity_index.clone())
     } else {
-        user_scaled_balance.clone()
+        user_scaled_balance
     };
 
     let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
-    let result  = user_scaled_balanced_normalized.scaled_mul(asset_price);
-    debug!(
-        "Final user balance in base currency = {}", result
-    );
+    let result = user_scaled_balanced_normalized.scaled_mul(asset_price);
+    debug!("Final user balance in base currency = {}", result);
     Ok(result)
-}
-
-/**
- * @title Get User Asset Balance in Base Currency
- * @dev Calculates the user's asset balance normalized to a base currency value.
- * @param _user_principal The principal of the user whose balance is being calculated.
- * @param reserve The reserve data associated with the asset.
- * @param user_balance The user's raw asset balance.
- * @param asset_price The current price of the asset in the base currency.
- * @returns The user's asset balance converted into the base currency, or an error if reserve data is not available.
- *
- * @functionality Normalizes and scales the user's asset balance using the liquidity index and reserve's normalized supply, then converts it into the base currency using the asset price.
- */
-pub async fn get_user_asset_balance_in_base_currency(
-    _user_principal: Principal,
-    reserve: &UserReserveData,
-    user_balance: Nat,
-    asset_price: Nat,
-) -> Result<Nat, Error> {
-    trace!("Calculating user asset balance in base currency...");
-
-    let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
-
-    let user_scaled_balance = user_balance.clone();
-
-    let normalized_supply = user_normalized_supply(asset_reserve)?;
-
-    let user_scaled = if reserve.liquidity_index != zero_nat_value() {
-        user_scaled_balance
-            .clone()
-            .scaled_div(reserve.liquidity_index.clone())
-    } else {
-        user_scaled_balance.clone()
-    };
-
-    let user_scaled_balanced_normalized = user_scaled.scaled_mul(normalized_supply);
-    debug!(
-        "user_scaled_balanced_normalized = {}",
-        user_scaled_balanced_normalized
-    );
-    Ok(user_scaled_balanced_normalized.scaled_mul(asset_price))
 }
 
 /*
@@ -521,12 +448,21 @@ pub async fn get_user_debt_in_base_currency(
     user_principal: Principal,
     reserve: &UserReserveData,
     asset_price: Nat,
+    balance: Option<Nat>,
 ) -> Result<Nat, Error> {
     let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
 
-    let debt_token_canister_principal = asset_reserve.debt_token_canister.clone().unwrap();
-
-    let mut user_variable_debt = get_balance(debt_token_canister_principal, user_principal).await?;
+    let mut user_variable_debt = match balance {
+        Some(val) => val,
+        None => {
+            let debt_token_canister_principal =
+                asset_reserve.debt_token_canister.ok_or_else(|| {
+                    error!("No debt_token canister ID found.");
+                    Error::NoCanisterIdFound
+                })?;
+            get_balance(debt_token_canister_principal, user_principal).await?
+        }
+    };
 
     let user_normailzed_debt = user_normalized_debt(asset_reserve)?;
 
@@ -541,132 +477,6 @@ pub async fn get_user_debt_in_base_currency(
 }
 
 /*
- * @title Get User Asset Debt in Base Currency
- * @functionality Calculates a user's outstanding debt for a specific asset, expressed in the base currency (e.g., USD).
- *
- * @notice Computes the user's variable debt balance, applies normalization using indexes,
- *         and converts the result to base currency using the asset's current price.
- *
- * @dev Uses the user's raw balance (provided as `user_balance`), divides it by the current variable borrow index to get the scaled value,
- *      multiplies it by the normalized debt factor retrieved from the reserve data, and finally multiplies the result by the asset's price.
- *
- * @param reserve The user reserve data for the specific asset.
- * @functionality Provides access to the reserve ID and current variable borrow index for normalization.
- *
- * @param user_balance The raw debt balance (variable debt) of the user for the asset.
- * @functionality Serves as the base value to normalize and convert into base currency.
- *
- * @param asset_price The price of the asset in the base currency.
- * @functionality Used to compute the equivalent debt in base currency by multiplying with the normalized debt.
- *
- * @return Result<Nat, Error> The user's debt in base currency or an error if reserve data is invalid.
- * @functionality Returns a `Nat` representing the total normalized debt in base currency after applying all adjustments.
- */
-
-pub async fn get_user_asset_debt_in_base_currency(
-    reserve: &UserReserveData,
-    user_balance: Nat,
-    asset_price: Nat,
-) -> Result<Nat, Error> {
-    let asset_reserve = get_reserve_data(reserve.reserve.clone())?;
-
-    let mut user_variable_debt = user_balance.clone();
-
-    let user_normailzed_debt = user_normalized_debt(asset_reserve)?;
-
-    if user_variable_debt != zero_nat_value() {
-        user_variable_debt = user_variable_debt.scaled_div(reserve.variable_borrow_index.clone());
-        user_variable_debt = user_variable_debt.scaled_mul(user_normailzed_debt);
-        debug!(
-            "User variable debt after normalization: {}",
-            user_variable_debt
-        );
-    }
-    Ok(user_variable_debt.scaled_mul(asset_price))
-}
-
-/*
- * @title Get Users Eligible for Liquidation
- * @notice Identifies users with a health factor below the liquidation threshold.
- *
- * @dev Uses concurrency for improved efficiency by fetching users in batches.
- *
- * @functionality This function fetches user data in batches and calculates their health factors to determine whether they are eligible for liquidation.
- *                It processes users concurrently using the `stream::iter` method and filters out users with health factors below the defined threshold.
- *
- * @param total_pages The total number of pages to fetch users from.
- * @functionality Defines how many pages of users will be processed in parallel, optimizing efficiency.
- *
- * @param page_size The number of users per page.
- * @functionality Specifies how many users will be processed per page for each batch, allowing concurrency control.
- *
- * @return A vector of tuples containing (Principal, UserAccountData, UserData).
- * @functionality Returns a list of users who are eligible for liquidation, based on their health factor,
- *                along with their account data and associated user data.
- */
-
-#[update]
-pub async fn get_liquidation_users_concurrent(
-    total_pages: usize,
-    page_size: usize,
-) -> Vec<(Principal, UserAccountData, UserData)> {
-    let vector_user_data = get_all_users().await;
-
-    let mut liq_list = Vec::new();
-
-    for page in 0..total_pages {
-        let users_to_process = vector_user_data
-            .iter()
-            .skip(page * page_size)
-            .take(page_size)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        // debug!("Processing page: {}", page + 1);
-
-        // Concurrent processing of users in the current page
-        let page_liq_list = stream::iter(users_to_process)
-            .map(|(user_principal, user_data)| async move {
-                match calculate_user_account_data(Some(user_principal)).await {
-                    Ok(user_account_data_tuple) => {
-                        let user_account_data = UserAccountData {
-                            collateral: user_account_data_tuple.0,
-                            debt: user_account_data_tuple.1,
-                            ltv: user_account_data_tuple.2,
-                            liquidation_threshold: user_account_data_tuple.3,
-                            health_factor: user_account_data_tuple.4,
-                            available_borrow: user_account_data_tuple.5,
-                            has_zero_ltv_collateral: user_account_data_tuple.6,
-                        };
-
-                        // Fetch the user's health factor scaled by 100 and 10^8,
-                        // unscale it by 100
-                        // then compare it with the health factor limit (scaled to 10^8).
-                        // This helps determine if the user's position is still safe or needs liquidation.
-                        if user_account_data.health_factor.clone() / Nat::from(PERCENTAGE_FACTOR)
-                            < Nat::from(HEALTH_FACTOR_BARRIER)
-                        {
-                            Some((user_principal, user_account_data, user_data))
-                        } else {
-                            None
-                        }
-                    }
-                    Err(err) => {
-                        error!("Failed to fetch data for {:?}: {:?}", user_principal, err);
-                        None
-                    }
-                }
-            })
-            .buffered(100) // Process 100 users concurrently to prevent overload
-            .collect::<Vec<_>>()
-            .await;
-
-        liq_list.extend(page_liq_list.into_iter().flatten());
-    }
-    liq_list
-}
-
-/*
  * @title Register User
  * @dev Registers a new user if they do not already exist.
  * @functionality This function checks if the user is anonymous or if the request exceeds the rate limit.
@@ -675,17 +485,17 @@ pub async fn get_liquidation_users_concurrent(
  *
  * @returns A string message indicating success or failure.
  */
-pub fn register_user() -> Result<String, Error> {
-    guard_prevent_anonymous()?;
+pub fn register_user(user_id: Option<Principal>) -> Result<String, Error> {
+    guard_prevent_anonymous()?; // ensure caller is not anonymous
 
-    let user_principal: Principal = ic_cdk::api::caller();
+    let user_principal: Principal = user_id.unwrap_or_else(ic_cdk::api::caller);
 
     let user_data = mutate_state(|state| {
         match state.user_profile.get(&user_principal) {
-            Some(_) => Ok("User available".to_string()),
+            Some(_) => Ok("User already registered".to_string()),
             None => {
                 let mut new_user_data = UserData::default();
-                let user_count = state.user_profile.len(); //user_id is starting from 1
+                let user_count = state.user_profile.len(); // user_id starts from 1
                 let new_user_id = (user_count + 1).to_string();
                 new_user_data.user_id = Some(new_user_id);
 
@@ -695,7 +505,8 @@ pub fn register_user() -> Result<String, Error> {
 
                 // Insert the user data into the certified storage
                 insert_certified_value(user_principal.to_string(), new_user_data);
-                Ok("User added".to_string())
+
+                Ok("User registered successfully".to_string())
             }
         }
     });
@@ -704,7 +515,7 @@ pub fn register_user() -> Result<String, Error> {
 }
 
 /*
- * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC)
+ * @title Create User Reserve With Low Health (For Testing Purpose - Pocket IC) (Only for Testnet)
  * @notice Identifies users with a health factor below the liquidation threshold,
  *         enabling liquidation testing for Pocket IC.
  *
@@ -735,7 +546,7 @@ pub async fn create_user_reserve_with_low_health(
     supply_tokens: Nat,
     borrow_tokens: Nat,
 ) -> Result<UserData, Error> {
-    use crate::api::inter_canister::get_transfer_fee;
+    use crate::api::inter_canister::get_ledger_transfer_fee;
 
     trace!("Creating user reserve with low health factor...");
     if !check_is_tester() {
@@ -750,8 +561,11 @@ pub async fn create_user_reserve_with_low_health(
     validate_zero_value(&borrow_tokens)?;
 
     let user_principal = ic_cdk::caller();
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
-    register_user()?;
+    register_user(None)?;
     info!("User registered successfully");
 
     let platform_principal = ic_cdk::api::id();
@@ -788,7 +602,6 @@ pub async fn create_user_reserve_with_low_health(
 
     let mut user_data = user_data(user_principal)?;
 
-    // If asset_supply == asset_borrow
     if asset_supply == asset_borrow {
         let reserve_key = asset_supply.clone();
         let user_reserve_entry = user_data
@@ -802,10 +615,11 @@ pub async fn create_user_reserve_with_low_health(
                 reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
                 reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
                 reserve_data.d_token_balance += supply_tokens.clone();
-                reserve_data.debt_token_blance += borrow_tokens.clone();
+                reserve_data.debt_token_balance += borrow_tokens.clone();
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_collateral = true;
                 reserve_data.is_borrowed = true;
+                reserve_data.can_be_collateral = true;
             }
             None => {
                 user_data.reserves.get_or_insert(vec![]).push((
@@ -816,10 +630,11 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: supply_tokens.clone(),
-                        debt_token_blance: borrow_tokens.clone(),
+                        debt_token_balance: borrow_tokens.clone(),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: true,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -850,10 +665,11 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: supply_tokens.clone(),
-                        debt_token_blance: Nat::from(0u32),
+                        debt_token_balance: Nat::from(0u32),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: true,
                         is_borrowed: false,
+                        can_be_collateral: true,
                     },
                 ));
             }
@@ -871,7 +687,7 @@ pub async fn create_user_reserve_with_low_health(
             Some((_, reserve_data)) => {
                 reserve_data.liquidity_index = Nat::from(SCALING_FACTOR);
                 reserve_data.variable_borrow_index = Nat::from(SCALING_FACTOR);
-                reserve_data.debt_token_blance += borrow_tokens.clone();
+                reserve_data.debt_token_balance += borrow_tokens.clone();
                 reserve_data.is_using_as_collateral_or_borrow = true;
                 reserve_data.is_borrowed = true;
             }
@@ -884,10 +700,11 @@ pub async fn create_user_reserve_with_low_health(
                         liquidity_index: Nat::from(SCALING_FACTOR),
                         variable_borrow_index: Nat::from(SCALING_FACTOR),
                         d_token_balance: Nat::from(0u32),
-                        debt_token_blance: borrow_tokens.clone(),
+                        debt_token_balance: borrow_tokens.clone(),
                         is_using_as_collateral_or_borrow: true,
                         is_collateral: false,
                         is_borrowed: true,
+                        can_be_collateral: false,
                     },
                 ));
             }
@@ -899,7 +716,7 @@ pub async fn create_user_reserve_with_low_health(
 
     match asset_transfer(
         user_principal,
-        dtoken_principal, //dtoken
+        dtoken_principal,
         platform_principal,
         supply_tokens.clone(),
     )
@@ -918,10 +735,10 @@ pub async fn create_user_reserve_with_low_health(
     }
 
     match asset_transfer_from(
-        supply_asset_ledger_canister_id, //ledger
+        supply_asset_ledger_canister_id,
         user_principal,
         platform_principal,
-        supply_tokens-get_transfer_fee(supply_asset_ledger_canister_id).await?,
+        supply_tokens - get_ledger_transfer_fee(supply_asset_ledger_canister_id).await?,
     )
     .await
     {
@@ -936,23 +753,23 @@ pub async fn create_user_reserve_with_low_health(
                 "Error: Asset transfer from user to backend canister: {:?}",
                 e
             );
-            return Err(Error::ErrorMintTokens);
+            return Err(Error::TokenNotTransfered);
         }
     }
 
     match asset_transfer(
         user_principal,
-        debt_token_principal, //debttoken
+        debt_token_principal,
         platform_principal,
         borrow_tokens.clone(),
     )
     .await
     {
         Ok(_) => {
-            info!("Dtoken transfer from backend to user executed successfully");
+            info!("Debttoken transfer from backend to user executed successfully");
         }
         Err(err) => {
-            error!("Error: Dtoken transfer from backend to user: {:?}", err);
+            error!("Error: Debttoken transfer from backend to user: {:?}", err);
             return Err(Error::ErrorMintTokens);
         }
     }
@@ -973,7 +790,7 @@ pub async fn create_user_reserve_with_low_health(
         }
         Err(e) => {
             error!("Error: Asset transfer from backend to user: {:?}", e);
-            return Err(Error::ErrorRollBack);
+            return Err(Error::TokenNotTransfered);
         }
     }
 
@@ -986,9 +803,6 @@ pub async fn create_user_reserve_with_low_health(
                 .asset_index
                 .insert(asset_borrow.clone(), Candid(borrow_reserve_data.clone()));
         }
-    });
-
-    mutate_state(|state| {
         state
             .user_profile
             .insert(user_principal, Candid(user_data.clone()));
@@ -1023,12 +837,13 @@ pub async fn create_user_reserve_with_low_health(
 pub async fn get_all_user_list(
     total_pages: usize,
     page_size: usize,
+    only_liquidatable: bool,
 ) -> Result<Vec<(Principal, UserAccountData, UserData)>, Error> {
-    guard_admin_only()?;
+    if !only_liquidatable {
+        guard_admin_only()?;
+    }
 
     let vector_user_data = get_all_users().await;
-    let total_users = vector_user_data.len();
-    debug!("Total users: {}", total_users);
 
     let mut liq_list = Vec::new();
 
@@ -1042,13 +857,8 @@ pub async fn get_all_user_list(
 
         let page_liq_list = stream::iter(users_to_process)
             .map(|(user_principal, user_data)| async move {
-                debug!("Processing user: {:?}", user_principal);
                 match calculate_user_account_data(Some(user_principal)).await {
                     Ok(user_account_data_tuple) => {
-                        debug!(
-                            "User {:?} data: {:?}",
-                            user_principal, user_account_data_tuple
-                        );
                         let user_account_data = UserAccountData {
                             collateral: user_account_data_tuple.0,
                             debt: user_account_data_tuple.1,
@@ -1058,8 +868,19 @@ pub async fn get_all_user_list(
                             available_borrow: user_account_data_tuple.5,
                             has_zero_ltv_collateral: user_account_data_tuple.6,
                         };
-
-                        Some((user_principal, user_account_data, user_data))
+                        if only_liquidatable {
+                            // Filter by low health factor only when requested
+                            if user_account_data.health_factor.clone()
+                                / Nat::from(PERCENTAGE_FACTOR)
+                                < Nat::from(HEALTH_FACTOR_BARRIER)
+                            {
+                                Some((user_principal, user_account_data, user_data))
+                            } else {
+                                None
+                            }
+                        } else {
+                            Some((user_principal, user_account_data, user_data))
+                        }
                     }
                     Err(err) => {
                         error!("Failed to fetch data for {:?}: {:?}", user_principal, err);
@@ -1073,7 +894,6 @@ pub async fn get_all_user_list(
 
         liq_list.extend(page_liq_list.into_iter().flatten());
     }
-
     Ok(liq_list)
 }
 
@@ -1108,9 +928,8 @@ pub async fn get_asset_debt(
     asset_name: String,
     on_behalf: Option<Principal>,
 ) -> Result<Nat, Error> {
-    if let Some(principal) = on_behalf {
-        guard_principal_not_anonymous(&principal)?;
-    }
+    guard_optional_principal_not_anonymous(on_behalf)?;
+
     let user_principal = match on_behalf {
         Some(principal_str) => principal_str,
         None => ic_cdk::caller(),
@@ -1159,6 +978,13 @@ pub async fn get_asset_debt(
     )
 }
 
+/*
+ * @title User Normalized Supply
+ * @dev Calculates the normalized supply for a user based on the reserve data.
+ * @param reserve_data The reserve data containing current liquidity rate and last update timestamp.
+ * @returns The normalized supply as `Nat`.
+ * @functionality This function computes the user's normalized supply by applying linear interest calculations based on the reserve's current liquidity rate and last update timestamp.
+ */
 pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     trace!("calling user_normalized_supply");
     guard_prevent_anonymous()?;
@@ -1185,6 +1011,13 @@ pub fn user_normalized_supply(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
+/*
+ * @title User Normalized Debt
+ * @dev Calculates the normalized debt for a user based on the reserve data.
+ * @param reserve_data The reserve data containing current borrow rate and last update timestamp.
+ * @returns The normalized debt as `Nat`.
+ * @functionality This function computes the user's normalized debt by applying compounded interest calculations based on the reserve's current borrow rate and last update timestamp.
+ */
 pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     trace!("calling user_normalized_debt");
     guard_prevent_anonymous()?;
@@ -1216,7 +1049,6 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
     }
 }
 
-
 /*
  * @title Check Transfer Eligibility
  * @dev Determines whether a user is allowed to transfer a specified amount of a particular asset.
@@ -1224,21 +1056,30 @@ pub fn user_normalized_debt(reserve_data: ReserveData) -> Result<Nat, Error> {
  * @param asset_name The name of the asset (typically prefixed with 'd').
  * @param amount The amount of the asset to be transferred.
  * @returns A boolean value indicating whether the transfer is allowed.
- * @functionality This function checks if the transfer is allowed by verifying if the user's 
- *                post-transfer health factor remains above the required threshold. 
- *                It updates the token price, retrieves collateral and debt data, computes 
+ * @functionality This function checks if the transfer is allowed by verifying if the user's
+ *                post-transfer health factor remains above the required threshold.
+ *                It updates the token price, retrieves collateral and debt data, computes
  *                adjusted collateral, and recalculates the health factor before deciding.
  */
 #[update]
-pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Nat) -> bool {
+pub async fn is_transfer_allowed(
+    from: Principal,
+    to: Principal,
+    asset_name: String,
+    amount: Nat,
+) -> bool {
 
     // Remove 'd' prefix to get the base asset name
     let base_asset = asset_name.trim_start_matches('d').to_string();
+    let is_authorized = is_caller_authorized_for_asset(&base_asset.clone());
+    if !is_authorized {
+        return false;
+    }
 
     let _ = update_token_price(base_asset.clone()).await;
 
     let (total_collateral, total_debt, _avg_ltv, liquidation_threshold, _health_factor) =
-        match calculate_user_account_data(Some(user)).await {
+        match calculate_user_account_data(Some(from)).await {
             Ok((
                 t_collateral,
                 t_debt,
@@ -1253,7 +1094,6 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
                 return false;
             }
         };
-
 
     let rate = match get_cached_exchange_rate(base_asset.clone()) {
         Ok(rate) => rate,
@@ -1278,10 +1118,13 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
 
     // Allow transfer if there's no outstanding debt
     if total_debt == Nat::from(0u128) {
+        if !users_transfer_changes(to, from, asset_name, amount).await {
+            return false;
+        };
         return true;
     }
 
-    let reserve = match get_reserve_data(base_asset) {
+    let reserve = match get_reserve_data(base_asset.clone()) {
         Ok(data) => data,
         Err(_) => return false,
     };
@@ -1307,5 +1150,125 @@ pub async fn is_transfer_allowed(user: Principal, asset_name: String, amount: Na
     // Determine whether transfer is allowed based on health factor
     let allowed = new_health_factor >= Nat::from(SCALING_FACTOR);
 
+    if !users_transfer_changes(to, from, asset_name, amount).await {
+        return false;
+    };
+
     allowed
+}
+
+/*
+ * @title Users Transfer Changes
+ * @dev Reverts the transfer changes made by the users.
+ * @param from The Principal of the user initiating the transfer.
+ * @param to The Principal of the recipient user.
+ * @param asset_name The name of the asset being transferred (typically prefixed with 'd').
+ * @param amount The amount of the asset to be transferred.
+ * @returns A boolean indicating whether the transfer changes were successfully reverted.
+ * @functionality This function reverts the transfer changes by updating the reserves of both sender and recipient,
+ *                ensuring that the sender's dToken balance is increased and the recipient's dToken balance is decreased.
+ */
+#[update]
+pub async fn users_transfer_changes(
+    from: Principal,
+    to: Principal,
+    asset_name: String,
+    amount: Nat,
+) -> bool {
+    let base_asset = asset_name.trim_start_matches('d').to_string();
+
+    let is_authorized = is_caller_authorized_for_asset(&base_asset);
+    if !is_authorized {
+        return false;
+    }
+
+    // Fetch sender account
+    let mut sender_account: UserData = match user_data(from) {
+        Ok(account) => {
+            account
+        }
+        Err(_) => {
+            // Register the user and then fetch the user data
+            if let Err(_) = register_user(Some(from)) {
+                return false;
+            }
+            match user_data(from) {
+                Ok(account) => account,
+                Err(_) => {
+                    return false;
+                }
+            }
+        }
+    };
+
+    // Fetch recipient account
+    let mut recipient_account = match user_data(to) {
+        Ok(account) => {
+            account
+        }
+        Err(_) => {
+            // Register the user and then fetch the user data
+            if let Err(_) = register_user(Some(to)) {
+                return false;
+            }
+            match user_data(to) {
+                Ok(account) => account,
+                Err(_) => {
+                    return false;
+                }
+            }
+        }
+    };
+
+    // Access reserves
+    let sender_reserve = user_reserve(&mut sender_account, &base_asset);
+    let recipient_reserve = user_reserve(&mut recipient_account, &base_asset);
+
+    if let Some((_k, sender_reserve_details)) = sender_reserve {
+        sender_reserve_details.d_token_balance += amount.clone();
+        sender_reserve_details.is_collateral = sender_reserve_details.can_be_collateral;
+        sender_reserve_details.is_using_as_collateral_or_borrow = sender_reserve_details.is_collateral || sender_reserve_details.is_borrowed;
+        debug!(
+            "Sender dToken balance reverted. New balance: {}",
+            sender_reserve_details.d_token_balance
+        );
+    } else {
+        let new_reserve = UserReserveData {
+            reserve: base_asset.clone(),
+            d_token_balance: amount.clone(),
+            is_using_as_collateral_or_borrow: true,
+            is_collateral: true,
+            can_be_collateral: true,
+            last_update_timestamp: current_timestamp(),
+            liquidity_index: Nat::from(SCALING_FACTOR),
+            ..Default::default()
+        };
+
+        if let Some(ref mut reserves) = sender_account.reserves {
+            reserves.push((base_asset.clone(), new_reserve));
+        } else {
+            sender_account.reserves = Some(vec![(base_asset.clone(), new_reserve)]);
+        }
+    }
+
+    if let Some((_k, recipient_reserve_details)) = recipient_reserve {
+        if recipient_reserve_details.d_token_balance >= amount {
+            recipient_reserve_details.d_token_balance -= amount;
+            debug!(
+                "Recipient dToken balance reverted. New balance: {}",
+                recipient_reserve_details.d_token_balance
+            );
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // Save reverted states
+    mutate_state(|state| {
+        state.user_profile.insert(from, Candid(sender_account));
+        state.user_profile.insert(to, Candid(recipient_account));
+    });
+    true
 }

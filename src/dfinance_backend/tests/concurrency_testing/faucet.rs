@@ -11,6 +11,7 @@ use tracing::{info,error};
  * @dev Ensures that the faucet function distributes assets (like ICP, ckBTC, etc.) correctly and handles both successful and failure cases based on the asset configuration.
  * @functionality Confirms that the faucet distributes the correct amount of assets and handles edge cases such as insufficient funds or asset type errors.
  */
+#[allow(dead_code)]
 pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Vec<Principal>) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -48,7 +49,7 @@ pub fn test_faucet(pic: &PocketIc, backend_canister: Principal, random_users: Ve
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(14_000_000u128), // 0.14 ckETH (includes transaction fee)
+           amount: Nat::from(15_000_000u128), // 0.15 ckETH (includes transaction fee)
             expect_success: true,
             expected_error_message: None,
         },

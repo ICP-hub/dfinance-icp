@@ -248,7 +248,6 @@ const DashboardComponent = () => {
       : "0";
     borrow_rate_apr = item.borrow_rate ? item.borrow_rate[0] : "0";
   }
-
   // Calculate total asset supply and borrow values
   const hasVisibleAssets = filteredItems.some((item) => {
     const assetData = item[1].Ok;
@@ -666,7 +665,10 @@ const DashboardComponent = () => {
       (Number(assetBorrowBalance) * Number(getAssetBorrowValue(asset))) /
       (Number(DebtIndex) * SCALING_FACTOR);
 
-    const currentCollateralStatus = reserveData?.[1]?.is_collateral ?? true;
+    const currentCollateralStatus = actionType === "collateral"
+  ? reserveData?.[1]?.is_collateral ?? true
+  : reserveData?.[1]?.can_be_collateral ?? true;
+
 
     const totalCollateral =
       parseFloat(Number(userAccountData?.Ok[0]?.[0]) / SCALING_FACTOR) || 0;
@@ -723,7 +725,7 @@ const DashboardComponent = () => {
       borrowableAssetValue
     );
   };
-
+  // Filter and map over the user's reserve data to compute detailed borrowing and supply metrics for each asset
   const filteredReserves = userData?.Ok?.[0].reserves[0]
     ?.filter((reserveGroup) => {
       const asset = reserveGroup[0];
@@ -909,7 +911,7 @@ const DashboardComponent = () => {
         const isBorrowAvailable = availableBorrowNumber > 0.01;
 
         if (!showAllAssets) {
-          const formattedTotalSupply = total_supply * 0.85;
+          const formattedTotalSupply =(total_supply * 0.85).toFixed(8);
           const formattedTotalBorrow = total_borrow;
 
           return (
@@ -931,8 +933,8 @@ const DashboardComponent = () => {
         const total_supply_B = Number(assetDataB[0]?.asset_supply || 0) / SCALING_FACTOR;
         const total_borrow_B = Number(assetDataB[0]?.asset_borrow || 0) / SCALING_FACTOR;
 
-        const isEligibleA = parseFloat((total_supply_A).toFixed(8)) * 0.85 > total_borrow_A;
-        const isEligibleB = parseFloat((total_supply_B).toFixed(8)) * 0.85 > total_borrow_B;
+        const isEligibleA = (total_supply_A * 0.85).toFixed(8) > total_borrow_A;
+        const isEligibleB = (total_supply_B * 0.85).toFixed(8) > total_borrow_B;
 
 
         if (isEligibleA && !isEligibleB) return -1;
@@ -941,7 +943,7 @@ const DashboardComponent = () => {
       });
   };
 
-
+// Returns a list of reserves where the user has supplied assets
   const getFilteredSupplyReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
 
@@ -969,7 +971,7 @@ const DashboardComponent = () => {
   };
 
 
-
+// Returns a list of reserves where the user has Borrowed assets
   const getFilteredBorrowReserves = () => {
     if (!userData?.Ok?.[0].reserves?.[0]?.length) return [];
 
@@ -2919,7 +2921,7 @@ const DashboardComponent = () => {
                         className={`w-full text-[#2A1F9D] font-[500] text-xs md:text-sm lg:text-base dark:text-darkText mt-4 `}
                       >
                         <div>
-                          {(showAllAssets || hasVisibleAssets) && (
+                          {(showAllAssets || hasVisibleAssets || !showAllAssets) && (
                             <div className="grid grid-cols-4 items-center text-left text-[#233D63] text-xs dark:text-darkTextSecondary1 pb-3 z-10 mt-4 gap-6">
                               {MY_ASSET_TO_SUPPLY_TABLE_COL.map(
                                 (item, index) => (

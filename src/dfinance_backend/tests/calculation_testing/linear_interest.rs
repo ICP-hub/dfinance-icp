@@ -18,13 +18,11 @@ fn get_scaling_value() -> Nat {
  * @functionality Returns the result of linear interest based on elapsed time and rate.
  */
 pub fn calculate_linear_interest(rate_input: Nat, last_update_timestamp: u64) -> Nat {
-    // let rate = rate_input/Nat::from(100u128);
     let rate = rate_input;
     let current_timestamp = 1_700_000_000; // Convert nanoseconds to seconds
     if last_update_timestamp > current_timestamp{
-        error!("Exponential function underflow"); //error
+        error!("Exponential function underflow"); 
         return Nat::from(0u128); 
-       //error result
     }
     debug!(
         "current time in cal_linear function {} and seconds per year {} and last timestamp {}",
@@ -76,19 +74,19 @@ pub fn test_calculate_linear_interest() {
         //simple 8% interest
         TestCase {
             rate_input: Nat::from(8_000_000u128), // 8% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR - 950000), // 
+            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR - 950000), // 950000 seconds less than a year
             expected_output: Nat::from(107_759_005u128),
         },
         //simple 15% interest
         TestCase {
             rate_input: Nat::from(15_000_000u128), // 15% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR -222225), // 
+            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR -222225), // 222225 seconds less than a year
             expected_output: Nat::from(114_894_299u128),
         },
         //simple 6% interest
         TestCase {
             rate_input: Nat::from(6_000_000u128), // 6% annual interest
-            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR / 9), // 
+            last_update_timestamp: current_timestamp - (SECONDS_PER_YEAR / 9), // 3504000 seconds ago
             expected_output: Nat::from(100_666_666u128),
         },
         // simple 10% interest for 6 months
@@ -211,7 +209,6 @@ pub fn test_calculate_linear_interest() {
 
         let amount_u128_result: u64 = result.clone().0.try_into().unwrap();
         let amount_float_result = amount_u128_result as f64;
-        // info!("Expected Output: {}", amount_float / 100000000.0);
         if result == case.expected_output {
             info!(
                 "✅ Test Case {} Passed: Expected Liquidity Index = {}, Got = {}",

@@ -1,5 +1,7 @@
-use crate::constants::constant_variables::constants::{REQUEST_LIMIT, WINDOW_SIZE_VAR};
-use crate::constants::errors::Error;
+use crate::constants::{
+    constant_variables::constants::{REQUEST_LIMIT, USER_BLOCKED, WINDOW_SIZE_VAR},
+    errors::Error,
+};
 use crate::declarations::datatypes::Certificate;
 use crate::protocol::utils::math_utils::current_timestamp;
 use crate::stable_storage::state_handler::get_certificate_witness;
@@ -14,16 +16,19 @@ thread_local! {
     static RATE_LIMITER: RefCell<HashMap<Principal, VecDeque<u64>>> = RefCell::new(HashMap::new());
 }
 
+const LIMIT: usize = REQUEST_LIMIT; 
+const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
+
 /*
  * @title Check User Rate Limit Status
  * @notice Determines whether the caller has exceeded the allowed number of function calls within a specific time window.
  * @dev Counts the number of valid timestamps in the rate-limiting queue and compares it with the predefined limit.
  * @functionality User rate-limiting mechanism to restrict excessive usage of functions.
  *
- * # Parameters
- * - `function_name` - The name of the function to check. *(Currently unused, can be integrated for per-function limits.)*
+ * @params
+ * - None
  *
- * # Returns
+ * @returns
  * - `Ok(bool)` - True if the user is currently rate-limited (blocked), false otherwise.
  * - `Err(Error)` - If the caller is an anonymous principal.
  */
@@ -32,7 +37,7 @@ pub fn is_user_blocked() -> Result<(bool, Certificate), Error> {
     guard_prevent_anonymous()?;
     let caller = ic_cdk::api::caller();
     let now = current_timestamp();
-    let cert = get_certificate_witness("user_blocked".to_string());
+    let cert = get_certificate_witness(USER_BLOCKED.to_string());
     let is_blocked = RATE_LIMITER.with(|map| {
         let map = map.borrow();
         let maybe_queue = map.get(&caller);
@@ -84,8 +89,7 @@ pub fn inspect_message() {
     }
 }
 
-const LIMIT: usize = REQUEST_LIMIT; 
-const WINDOW_SIZE: u64 = WINDOW_SIZE_VAR; 
+
 
 /**
  * @title Request Rate Limiter

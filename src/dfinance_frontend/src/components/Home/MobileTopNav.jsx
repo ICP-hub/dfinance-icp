@@ -132,7 +132,9 @@ const MobileTopNav = ({
   const transferFeRetrive = useTransferFee(asset);
   const transferFee = Number(transferFeRetrive?.transferFee) || 0;
   const ledgerFeeNumber =
-    typeof ledgerFee === "bigint" ? Number(ledgerFee) : Number(ledgerFee) || 0;
+    typeof ledgerFee === "bigint"
+      ? Number(ledgerFee) / 1e8
+      : Number(ledgerFee) / 1e8 || 0;
 
   const transactionFee = transferFee + ledgerFeeNumber;
   const approvalFee = transactionFee + ledgerFeeNumber;
@@ -496,7 +498,7 @@ const MobileTopNav = ({
     } else {
       const userFriendlyMessage =
         errorMessages[errorKey] || errorMessages.Default;
-      toast.error(`Supply failed: ${userFriendlyMessage}`, {
+      toast.error(`Transfer failed: ${userFriendlyMessage}`, {
         className: "custom-toast",
         position: "top-center",
         autoClose: 3000,
@@ -676,14 +678,19 @@ const MobileTopNav = ({
 
     // Define async function inside useEffect
     const fetchFee = async () => {
-      try {
-        const fee = await ledgerActor.icrc1_fee();
-        const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
-        const feeBigInt = BigInt(Math.round(feeAsNumber));
-        setLedgerFee(feeBigInt);
-      } catch (error) {
-        console.error(`Error getting fee for ${asset}:`, error);
+
+      const fee = await ledgerActor?.icrc1_fee();
+      const feeAsNumber = typeof fee === "bigint" ? Number(fee) : fee;
+
+      if (isNaN(feeAsNumber)) {
+        console.error("Invalid fee value:", fee);
+        return;
       }
+
+      const feeBigInt = BigInt(Math.round(feeAsNumber));
+
+      setLedgerFee(feeBigInt);
+
     };
 
     // Call the async function

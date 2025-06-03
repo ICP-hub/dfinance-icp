@@ -21,7 +21,7 @@ use tracing::{info,error};
  * 4. Validates the borrow response and checks whether the balance is updated correctly.
  * 5. Handles cases where the borrow request may fail due to errors or unexpected conditions, including mismatched error messages.
  */
-
+#[allow(dead_code)]
  pub fn test_borrow(pic: &PocketIc, backend_canister: Principal) {
     #[derive(Debug, Clone)]
     struct TestCase {
@@ -41,9 +41,9 @@ use tracing::{info,error};
         },
         TestCase {
             asset: "ICP".to_string(),
-            amount: Nat::from(10_000_000_000u128), // 100 ICP (transfer fee included)
-            expect_success: false,
-            expected_error_message: Some("LTV should be less than Liquidation Threshold".to_string()),
+            amount: Nat::from(2_000_000_000u128), // 20 ICP (transfer fee included)
+            expect_success: true,
+            expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),

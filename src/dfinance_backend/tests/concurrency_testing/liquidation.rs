@@ -1,12 +1,13 @@
 use crate::utils::common_functions::{
-    fetch_reserve_data, get_user_principal2, get_users_principal, init_tracing, test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove
+    fetch_reserve_data, get_users_principal, init_tracing,
+    test_create_user_reserve_with_low_health, test_get_asset_principal, test_icrc2_aprove,
 };
 use crate::utils::error as errors;
 use crate::utils::structs::*;
 use candid::Nat;
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
-use tracing::{info,error};
+use tracing::{error, info};
 
 /*
  * @title Test Liquidation Functionality for Asset Transactions
@@ -34,7 +35,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.4 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128), // Reward calculated accordingly
+            reward_amount: Nat::from(40_357_475u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
@@ -43,7 +44,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             collateral_asset: "ckBTC".to_string(),
             amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220_496u128), // Reward calculated accordingly
+            reward_amount: Nat::from(220_486u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
@@ -52,7 +53,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             collateral_asset: "ckUSDC".to_string(),
             amount: Nat::from(20_000_000_000u128), // 2,000 ckUSDC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(20_999_673_926u128), // Reward calculated accordingly
+            reward_amount: Nat::from(20_999_673_916u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
@@ -61,16 +62,13 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
             collateral_asset: "ckUSDT".to_string(),
             amount: Nat::from(12_500_000_000u128), // 125 ckUSDT (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13_062_155_527u128), // Reward calculated accordingly
+            reward_amount: Nat::from(13_062_155_517u128), // Reward calculated accordingly
             expect_success: true,
             expected_error_message: None,
         },
     ];
     init_tracing();
-    let user_principal = get_user_principal2();
-    info!(
-        "\n======================== Starting IC Liquidation Tests ========================\n"
-    );
+    info!("\n======================== Starting IC Liquidation Tests ========================\n");
     test_create_user_reserve_with_low_health(pic, backend_canister); // Create user reserves for liquidation tests
 
     for (i, case) in test_cases.iter().enumerate() {
@@ -95,9 +93,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
         fetch_reserve_data(pic, backend_canister, &case.collateral_asset); // Fetch and log the initial collateral reserves before liquidation
         info!("\n---------------------------------------------------------\n");
 
-        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
-        for _ in random_users.clone() {
-            let asset_principal =
+        let asset_principal =
                 match test_get_asset_principal(case.debt_asset.clone(), pic, backend_canister) {
                     Some(principal) => principal, // Get the asset principal for liquidation
                     None => {
@@ -116,6 +112,8 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                     }
                 };
 
+        let mut msg_ids = Vec::new(); // Initialize the vector to store message IDs for liquidation requests
+        for user_principal in random_users.clone() {
             let approved = test_icrc2_aprove(
                 user_principal,
                 asset_principal,
@@ -145,7 +143,9 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                 }
                 continue;
             }
+        }
 
+            for user_principal in random_users.clone() {
             let liquidation_params = ExecuteLiquidationParams {
                 debt_asset: case.debt_asset.clone(),
                 collateral_asset: case.collateral_asset.clone(),
@@ -160,17 +160,12 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal, random_user
                     user_principal,
                     "execute_liquidation",
                     encode_one(liquidation_params).unwrap(), // Submit liquidation request with parameters
-                )
-                .unwrap();
-            msg_ids.push(msg); // Store message ID for tracking the request
+                ).unwrap();
+            msg_ids.push(msg); 
         }
-        let mut results = Vec::new();
-        for msg_id in msg_ids {
-            let res = pic.await_call(msg_id).unwrap();
-            results.push(res); // Store results of all liquidation requests
-        }
+        for (_j, msg_id) in msg_ids.into_iter().enumerate() {
+            let result = pic.await_call(msg_id).unwrap();
 
-        for result in results {
             match result {
                 WasmResult::Reply(response) => {
                     let liquidation_response: Result<Nat, errors::Error> =

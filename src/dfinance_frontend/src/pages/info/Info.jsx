@@ -4,7 +4,6 @@ import { useAuth } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/CustomHooks/useFormatNumber";
-import emailjs from "emailjs-com";
 import useAssetData from "../../components/CustomHooks/useAssets";
 import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
 import useFetchBalanceBackend from "../../components/CustomHooks/useFetchBalanceBackend";
@@ -57,7 +56,6 @@ const DashboardCards = () => {
    * =================================================================================== */
 
   const [like, setLike] = useState(false);
-  // const [threshold] = useState(5000000000000);
 
   const [usersLoading, setUsersLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
@@ -204,7 +202,8 @@ const DashboardCards = () => {
   // Function to fetch all users from the backend
   const fetchAllUsers = async (totalPages, pageSize) => {
     try {
-      const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      // const result = await backendActor.get_all_user_list(totalPages, pageSize);
+      const result = await backendActor.get_all_user_list(totalPages, pageSize, false);
 
       if (!result.Ok || !Array.isArray(result.Ok)) {
         throw new Error("Unexpected response format");
@@ -262,7 +261,7 @@ const DashboardCards = () => {
     try {
       const result = await backendActor.cycle_checker();
       const cycles = result?.Ok[0] ?? "Error retrieving cycles";
-      const cert = result?.Ok[1]; 
+      const cert = result?.Ok[1];
 
       if (cert) {
         try {
@@ -303,7 +302,7 @@ const DashboardCards = () => {
 
 
 
- 
+
   // Function to format numbers with commas
   const formatValue = (num) => {
     if (num < 1) return num.toFixed(7);
@@ -718,8 +717,8 @@ const DashboardCards = () => {
 
                 <p
                   className={`text-4xl font-bold px-3 py-2 mt-1 ${usersLoading
-                      ? "text-[#233D63] dark:text-darkText"
-                      : getCycleColor(card.value)
+                    ? "text-[#233D63] dark:text-darkText"
+                    : getCycleColor(card.value)
                     }`}
                 >
                   {usersLoading ? <MiniLoader isLoading={true} /> : card.value}
@@ -843,7 +842,7 @@ const DashboardCards = () => {
                           Token Available:
                         </p>
                         <p className="text-sm font-bold  text-right">
-                          {Number(assetBalance).toFixed(2)}
+                          <span>${Number(assetBalance.toFixed(2)).toLocaleString('en-US')}</span>
                         </p>
                       </div>
 

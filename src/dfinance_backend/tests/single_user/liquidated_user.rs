@@ -31,7 +31,7 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.40 ICP (transfer fee included)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128), // 0.40357486 ICP (transfer fee included)
+            reward_amount: Nat::from(40_357_475u128), // 0.40357486 ICP (transfer fee included)
             expect_success: true,
             expected_error_message: None,
         },
@@ -206,7 +206,6 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
                                 info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // info!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                                 continue;
                             }
                         }
@@ -219,18 +218,9 @@ pub fn test_liquidated_user(pic: &PocketIc, backend_canister: Principal, random_
                         reject_message
                     );
                     continue;
-                } // Err(e) => {
-                  //     info!(
-                  //         "❌ IC Test Case {} Failed: Error during liquidation function call: {:?}",
-                  //         i + 1,
-                  //         e
-                  //     );
-                  //     continue;
-                  // }
+                } 
             }
         }
     }
-    info!(
-        "\n======================== IC Liquidation Tests Completed ========================\n"
-    );
+    info!("\n======================== IC Liquidation Tests Completed ========================\n");
 }

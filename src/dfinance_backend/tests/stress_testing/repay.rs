@@ -47,35 +47,35 @@ pub fn test_repay(pic: &PocketIc, backend_canister: Principal, random_users: Vec
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(4_000u128), // 0.004 ckBTC (includes transaction fee)
+            amount: Nat::from(4_000u128), // 0.00004 ckBTC (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckBTC".to_string(),
-            amount: Nat::from(4_000u128), // 0.004 ckBTC (includes transaction fee)
+            amount: Nat::from(4_000u128), // 0.00004 ckBTC (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDC".to_string(),
-            amount: Nat::from(400_000u128), // 4 ckUSDC (includes transaction fee)
+            amount: Nat::from(400_000u128), // 0.004 ckUSDC (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckUSDT".to_string(),
-            amount: Nat::from(30_000_000u128), // 300 ckUSDT (includes transaction fee)
+            amount: Nat::from(30_000_000u128), // 0.3 ckUSDT (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,
         },
         TestCase {
             asset: "ckETH".to_string(),
-            amount: Nat::from(500u128), // 0.0005 ckETH (includes transaction fee)
+            amount: Nat::from(500u128), // 0.0000005 ckETH (includes transaction fee)
             on_behalf_of: None,
             expect_success: true,
             expected_error_message: None,

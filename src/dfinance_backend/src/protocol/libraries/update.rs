@@ -1,26 +1,29 @@
 use crate::api::inter_canister::get_balance;
-use crate::constants::constant_variables::constants::PERCENTAGE_FACTOR;
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{
-    validate_asset_name, validate_negatige_value,
+use crate::constants::{
+    constant_variables::constants::PERCENTAGE_FACTOR,
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_negatige_value}
 };
-use crate::declarations::datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData};
-use crate::declarations::datatypes::{UserData, UserReserveData};
-use crate::declarations::structs::{
-    ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams,
+use crate::declarations::{
+    datatypes::{FaucetReserve, FaucetReserves, ReserveCache, ReserveData, UserData, UserReserveData},
+    structs::{ExecuteBorrowParams, ExecuteRepayParams, ExecuteSupplyParams, ExecuteWithdrawParams}
 };
-use crate::guards::access_control::guard_principal_not_anonymous;
-use crate::guards::api_limiter::request_limiter;
-use crate::protocol::libraries::reserve::{burn_scaled, mint_scaled};
-use crate::protocol::libraries::user::{calculate_user_account_data, register_user};
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::math_utils::{current_timestamp, ScalingMath};
-use crate::protocol::utils::price::get_exchange_rates;
-use crate::stable_storage::state_handler::insert_certified_value;
+use crate::guards::{
+    access_control::guard_principal_not_anonymous,
+    api_limiter::request_limiter
+};
+use crate::protocol::{
+    libraries::reserve::{burn_scaled, mint_scaled},
+    libraries::user::{calculate_user_account_data, register_user},
+    utils::log::{log_internal, LogLevel, LogFlusher},
+    utils::math_utils::{current_timestamp, ScalingMath},
+    utils::price::get_exchange_rates
+};
 use crate::stable_storage::{
     state_handler::{mutate_state, read_state},
     storable::Candid,
+    state_handler::insert_certified_value,
 };
 use crate::{debug, error, info};
 use candid::{Nat, Principal};
@@ -54,7 +57,7 @@ impl UpdateLogic {
         params: ExecuteSupplyParams,
         reserve: &mut ReserveData,
     ) -> Result<(), Error> {
-        register_user()?;
+        register_user(None)?;
         let mut user_data = user_data(user_principal)?;
 
         let user_reserve = user_reserve(&mut user_data, &params.asset);
@@ -63,9 +66,14 @@ impl UpdateLogic {
 
         let mut user_reserve_data = if let Some((_, reserve_data)) = user_reserve {
             reserve_data.reserve = params.asset.clone();
-            reserve_data.is_collateral = true;
             reserve_data.last_update_timestamp = current_timestamp();
-            reserve_data.is_using_as_collateral_or_borrow = true;
+            reserve_data.can_be_collateral = params.can_be_collateral;
+            reserve_data.is_collateral = params.can_be_collateral;
+            if reserve_data.is_collateral || reserve_data.is_borrowed {
+                reserve_data.is_using_as_collateral_or_borrow = true;
+            } else {
+                reserve_data.is_using_as_collateral_or_borrow = false;
+            }
 
             reserve_data
         } else {
@@ -73,6 +81,7 @@ impl UpdateLogic {
                 reserve: params.asset.clone(),
                 is_using_as_collateral_or_borrow: true,
                 is_collateral: true,
+                can_be_collateral: true,
                 last_update_timestamp: current_timestamp(),
                 ..Default::default()
             };
@@ -277,8 +286,8 @@ impl UpdateLogic {
         )
         .await?;
         user_reserve_data.last_update_timestamp = reserve.last_update_timestamp;
-        user_reserve_data.is_collateral = params.is_collateral;
-        // user_reserve_data.is_collateral = params.is_collateral;    
+        user_reserve_data.is_collateral = params.can_be_collateral;
+        
 
         debug!("Update user reserve data: {:?}", user_reserve_data);
         let d_token_canister_id = reserve.d_token_canister.clone().ok_or_else(|| {
@@ -290,6 +299,7 @@ impl UpdateLogic {
 
         if dtoken_balance == zero_nat_value() {
             user_reserve_data.is_collateral= false;
+            user_reserve_data.can_be_collateral = true;
         }
         // Set is_using_as_collateral_or_borrow based on is_collateral and is_borrowed
         user_reserve_data.is_using_as_collateral_or_borrow =
@@ -423,6 +433,9 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     validate_negatige_value(&added_amount)?;
 
     let user_principal = ic_cdk::caller();
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
     debug!("User principal in toggle collateral: {:?}", user_principal);
 
 
@@ -484,17 +497,14 @@ pub async fn toggle_collateral(asset: String, amount: Nat, added_amount: Nat) ->
     match user_reserve(&mut user_data, &asset) {
         Some((_, user_reserve_data)) => {
             user_reserve_data.is_collateral = !user_reserve_data.is_collateral;
-
-            if user_reserve_data.is_using_as_collateral_or_borrow {
-                if user_reserve_data.is_borrowed {
-                    user_reserve_data.is_using_as_collateral_or_borrow = true;
-                } else {
-                    user_reserve_data.is_using_as_collateral_or_borrow = false;
-                }
+            if user_reserve_data.d_token_balance != zero_nat_value() {
+                user_reserve_data.can_be_collateral = !user_reserve_data.can_be_collateral;
+            } 
+            user_reserve_data.is_using_as_collateral_or_borrow = if user_reserve_data.is_using_as_collateral_or_borrow {
+                user_reserve_data.is_borrowed
             } else {
-                user_reserve_data.is_using_as_collateral_or_borrow =
-                    user_reserve_data.is_collateral;
-            }
+                user_reserve_data.is_collateral
+            };
             debug!("updated User reserve data: {:?}", user_reserve_data);
         }
         None => {

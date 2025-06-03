@@ -1,19 +1,25 @@
-use crate::api::inter_canister::{asset_transfer_from, get_transfer_fee};
-use crate::stable_storage::state_handler::{insert_certified_value, mutate_state, read_state};
-use crate::constants::data_types::zero_nat_value;
-use crate::constants::errors::Error;
-use crate::constants::validators::{validate_asset_name, validate_zero_value};
-use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams, OriginalFailedOperationType, RollbackJobStatus, RollbackParamsVariant, RollbackRetryJob};
+use crate::api::inter_canister::{asset_transfer_from, get_ledger_transfer_fee};
+use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
+use crate::constants::{
+    data_types::zero_nat_value,
+    errors::Error,
+    validators::{validate_asset_name, validate_zero_value},
+};
+use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
-use crate::protocol::libraries::reserve::{self, get_asset_principal, get_reserve_data};
-use crate::protocol::libraries::update::UpdateLogic;
+use crate::protocol::libraries::{
+    reserve::{self, get_asset_principal, get_reserve_data},
+    update::UpdateLogic,
+};
 use crate::protocol::logic::helper::{
     apply_user_asset_restriction, check_user_asset_restriction, schedule_rollback
 };
 use crate::protocol::logic::validation::ValidationLogic;
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::protocol::utils::price::{calculate_transfer_fee, update_token_price};
+use crate::protocol::utils::{
+    log::{log_internal, LogLevel, LogFlusher},
+    price::{calculate_transfer_fee, update_token_price},
+};
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info};
 use candid::{Nat, Principal};
@@ -32,20 +38,18 @@ use ic_cdk::update;
  *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
  *
  * @dev The function follows these steps:
- *      1. Validates input parameters (asset name, amount, and caller's identity).
- *      2. Acquires a lock to ensure only one operation per user at a time.
- *      3. Updates the reserve data and user profile state.
- *      4. Validates the supply request against platform rules (e.g., limits, reserves).
- *      5. Transfers the asset from the user to the platform.
- *      6. Updates the interest rates (APYs) of the reserve based on liquidity changes.
- *      7. Persists the updated reserve data state.
- *      8. Rolls back any changes and releases resources if an error occurs.
- *      9. Schedules a retry job if the rollback fails.
+ *      1. Checks if the user is rate-limited.
+ *      2. Validates input parameters (asset name, amount, and caller's identity).
+ *      3. Acquires a lock to ensure only one operation per user at a time.
+ *      4. Updates the reserve data and user profile state.
+ *      5. Validates the supply request against platform rules (e.g., limits, reserves).
+ *      6. Transfers the asset from the user to the platform.
+ *      7. Rolls back any changes and releases resources if an error occurs.
  *
  * @param params Parameters for the supply operation:
  *               - `asset`: The name of the asset being supplied.
  *               - `amount`: The amount of the asset being supplied.
- *               - `is_collateral`: Flag indicating if the asset is collateral.
+ *               - `can_be_collateral`: Flag indicating if the asset is collateral.
  *
  * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
  */
@@ -56,6 +60,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
 
     let _guard: CallerGuard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     // Check if user is restricted for this asset
     check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
@@ -67,9 +74,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let ledger_canister_id = get_asset_principal(params.asset.clone())?; //fetch param.asset canister id
     let platform_principal = ic_cdk::api::id(); //fetch backend canister id
 
-    //
-    let amount_nat = params.amount.clone(); //check 
-
+    let amount_nat = params.amount.clone();
     //fetch reserve data state for the asset
     let mut reserve_data = get_reserve_data(params.asset.clone())?;
 
@@ -88,14 +93,19 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         ledger_canister_id,
     )
     .await?;
-    info!("Supply info validated successfully"); //info
+    info!("Supply info validated successfully"); 
 
     // updating the price cached in the state
     let _ = update_token_price(params.asset.clone()).await;
     //fetching the price of the asset in USD
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
-    let ledger_fee = get_transfer_fee(ledger_canister_id).await?;
+    let ledger_fee = get_ledger_transfer_fee(ledger_canister_id).await?;
+
+    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
     //updating params.amount with the actual amount of tokens to be supplied
     params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
     UpdateLogic::update_user_data_supply(
@@ -119,7 +129,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
         user_principal,
         platform_principal,
         amount_nat.clone() - ledger_fee.clone(), 
-        //pass transfer fee as well
     )
     .await
     {
@@ -134,13 +143,12 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             Ok(block_index)
         }
         Err(_) => {
-            error!(
-                    "Error in asset transfer from user to backend canister for supply (Asset: {}, User: {}). Initiating rollback.",
-                    params.asset, user_principal
-                );
+            error!("Error in asset transfer from user to backend canister"); 
+            //Rollback user state and burning dtokens
+                                                                            
             let withdraw_param = ExecuteWithdrawParams {
                 asset: params.asset.clone(),
-                is_collateral: params.is_collateral,
+                can_be_collateral: params.can_be_collateral,
                 amount: params.amount.clone(),
             };
 
@@ -248,21 +256,18 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
  *         Ensures proper checks, updates, and error handling, including rollback if any step fails.
  *
  * @dev The function follows these steps:
- *      1. Validates input parameters (asset name, amount, and caller's identity).
- *      2. Acquires a lock to ensure only one operation per user at a time.
- *      3. Updates the reserve data and user profile state.
- *      4. Validates the withdrawal request against platform rules (e.g., limits, available assets).
- *      5. Calculates and deducts transfer fee from the requested withdrawal amount.
- *      6. Transfers the requested asset from the platform backend canister to the user.
- *      7. Updates the interest rates (APYs) of the reserve based on liquidity changes.
- *      8. Rolls back any changes and releases resources if an error occurs.
- *      9. Schedules a retry job if the rollback fails.
+ *      1. Checks if the user is rate-limited.
+ *      2. Validates input parameters (asset name, amount, and caller's identity).
+ *      3. Acquires a lock to ensure only one operation per user at a time.
+ *      4. Updates the reserve data and user profile state.
+ *      5. Validates the withdrawal request against platform rules (e.g., limits, available assets).
+ *      6. Transfers the requested asset from the platform to the user.
+ *      7. Rolls back any changes and releases resources if an error occurs.
  *
  * @param params Parameters for the withdraw operation:
  *               - `asset`: The name of the asset being withdrawn.
  *               - `amount`: The amount of the asset being withdrawn.
- *               - `is_collateral`: Flag indicating if the asset is collateral.
- *               - `on_behalf_of`: Optional principal requesting the withdrawal on behalf of another user.
+ *               - `can_be_collateral`: Flag indicating if the asset is collateral.
  *
  * @return Result<Nat, Error> Returns the user's new balance after transfer or an error if the operation fails.
  */
@@ -273,6 +278,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     let user_principal = ic_cdk::caller();
 
     let _guard = CallerGuard::lock_principal(user_principal.clone())?;
+    let _log_flusher = LogFlusher {
+        user_key: user_principal.to_text(), // or whatever user_key you need
+    };
 
     // Check if user is restricted for this asset
     check_user_asset_restriction(user_principal.clone(), params.asset.clone())?;
@@ -300,7 +308,6 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     .await?;
     info!("Withdraw validated successfully");
 
-    if let Err(_) = update_token_price(params.asset.clone()).await {}
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();

@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
 import useFunctionBlockStatus from "../CustomHooks/useFunctionBlockStatus";
 import { showCaptchaToUser } from "../Captcha/showCaptchaToUser";
-import { SCALING_FACTOR } from '../../utils/constants';
+import { InitialFuaceLimit, SCALING_FACTOR } from '../../utils/constants';
 
 /**
  * FaucetPopup Component
@@ -55,11 +55,11 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const [isCaptchaOpen, setIsCaptchaOpen] = useState(false);
 
   const initialLimits = {
-    ckBTC: 50000000000,
-    ckETH: 50000000000,
-    ckUSDC: 50000000000,
-    ICP: 50000000000,
-    ckUSDT: 50000000000,
+    ckBTC: InitialFuaceLimit,
+    ckETH: InitialFuaceLimit,
+    ckUSDC: InitialFuaceLimit,
+    ICP: InitialFuaceLimit,
+    ckUSDT: InitialFuaceLimit,
   };
 
   const initialUsages = {
@@ -570,7 +570,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
                   <h1>Transaction overview</h1>
                 </div>
                 <div className="w-full flex items-center justify-between bg-gray-100 p-3 rounded-md dark:bg-[#1D1B40] dark:text-darkText">
-                  <div className="w-[60%]">
+                  <div className="w-[80%]">
                     <input
                       type="text"
                       value={amount}

@@ -57,7 +57,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.40 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128), // Reward: 0.40357486 ICP
+            reward_amount: Nat::from(40_357_475u128), // Reward: 0.40357475 ICP
             expect_success: true,
             expected_error_message: None,
         },
@@ -66,7 +66,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ckBTC".to_string(),
             amount: Nat::from(210_000u128), // 0.0021 ckBTC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(3u32)).unwrap(),
-            reward_amount: Nat::from(220_496u128), // Reward: 0.00220496 ckBTC
+            reward_amount: Nat::from(220_486u128), // Reward: 0.00220486 ckBTC
             expect_success: true,
             expected_error_message: None,
         },
@@ -75,7 +75,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ckUSDC".to_string(),
             amount: Nat::from(20_000_000_000u128), // 2000 USDC (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(4u32)).unwrap(),
-            reward_amount: Nat::from(20_999_673_926u128), // Reward: 2099.9673926 USDC
+            reward_amount: Nat::from(20_999_673_916u128), // Reward: 2099.9673916 USDC
             expect_success: true,
             expected_error_message: None,
         },
@@ -84,7 +84,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ckUSDT".to_string(),
             amount: Nat::from(12_500_000_000u128), // 125 USDT (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(5u32)).unwrap(),
-            reward_amount: Nat::from(13_062_175_527u128), // Reward: 130.62175527 USDT
+            reward_amount: Nat::from(13_062_175_517u128), // Reward: 130.62175517 USDT
             expect_success: true,
             expected_error_message: None,
         },
@@ -106,7 +106,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: true,
             expected_error_message: None,
         },
-        // // Health factor is falling below 1
+        // Reward higher than calculated
         TestCase {
             debt_asset: "ckETH".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -116,7 +116,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Reward is higher than expected".to_string()),
         },
-        // //  Invalid asset
+        //  Invalid asset
         TestCase {
             debt_asset: "XYZ".to_string(),
             collateral_asset: "XYZ".to_string(),
@@ -126,7 +126,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("No principal found for asset".to_string()),
         },
-        // // Anonymous principals are not allowed
+        //Anonymous principals are not allowed
         TestCase {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ckETH".to_string(),
@@ -136,7 +136,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             expect_success: false,
             expected_error_message: Some("Anonymous principals are not allowed".to_string()),
         },
-        // // Zero amount
+        //Zero amount
         TestCase {
             debt_asset: "ICP".to_string(),
             collateral_asset: "ICP".to_string(),
@@ -176,7 +176,6 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
 
     ];
     init_tracing();
-    // let user_principal = get_user_principal();
     info!(
         "\n======================== Starting IC Liquidation Tests ========================\n"
     );

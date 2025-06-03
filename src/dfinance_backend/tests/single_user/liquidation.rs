@@ -37,7 +37,7 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
             collateral_asset: "ICP".to_string(),
             amount: Nat::from(40_000_000u128), // 0.40 ICP (includes transaction fee)
             on_behalf_of: get_users_principal(Nat::from(1u32)).unwrap(),
-            reward_amount: Nat::from(40_357_486u128), // Reward: 0.40357486 ICP
+            reward_amount: Nat::from(40_357_475u128), // Reward: 0.40357486 ICP
             expect_success: true,
             expected_error_message: None,
         },
@@ -209,7 +209,6 @@ pub fn test_liquidation(pic: &PocketIc, backend_canister: Principal) {
                                 info!(
                                     "----------------  Wait for the previous operation to complete before retrying.  ------------\n",
                                 );
-                                // info!("❌ IC Test Case {} Failed: Expected success but got rejection with message: {:?}", i + 1, e);
                                 continue;
                             }
                         }

@@ -5,7 +5,7 @@ use crate::stable_storage::storable::Candid;
 use ic_cdk::{call, update,api};
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
-use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData, PriceCache, AssetInfo, InitArgs};
+use crate::declarations::datatypes::{ReserveData,FaucetReserves, UserData, AssetInfo, InitArgs};
 use std::collections::BTreeMap;
 use crate::protocol::utils::log::{log_internal, LogLevel};
 use crate::error;

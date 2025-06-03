@@ -132,6 +132,7 @@ async fn run_midnight_reset() {
  * @returns A `Duration` representing the time left until midnight.
  * @functionality Computes the remaining time until midnight (UTC).
  */
+#[cfg(feature = "testnet")]
 fn time_until_midnight() -> Duration {
     let now = ic_cdk::api::time();
     let nanos_since_midnight = now % SECOND_PER_DAY.as_nanos() as u64;
@@ -144,11 +145,11 @@ fn time_until_midnight() -> Duration {
  * @returns ok or Error.
  * @functionality Allows the admin to re-initialize scheduled tasks after an upgrade.
  */
+#[cfg(feature = "testnet")]
 #[update]
 pub async fn admin_restart_reset_task() -> Result<(), Error> {
     guard_admin_only()?;
 
-    #[cfg(feature = "testnet")]
     schedule_midnight_task().await;
     return Ok(());
 }

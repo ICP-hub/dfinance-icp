@@ -221,6 +221,7 @@ pub async fn reset_faucet_usage(user_principal: Principal) -> Result<(), Error> 
  *
  * @functionality Prevents anonymous users from creating CAPTCHA challenges, checks if the caller already has a valid CAPTCHA, and ensures that the CAPTCHA threshold is not exceeded. It then generates a new CAPTCHA challenge and stores the solution for verification.
  */
+#[cfg(feature = "testnet")]
 #[update]
 async fn create_captcha() -> Result<Challenge, Error> {
     guard_prevent_anonymous()?;
@@ -282,6 +283,7 @@ async fn create_captcha() -> Result<Challenge, Error> {
  *
  * @functionality Checks if the caller's CAPTCHA has expired or is invalid, then compares the user input to the stored solution to determine if the CAPTCHA is solved correctly.
  */
+#[cfg(feature = "testnet")]
 #[update]
 fn verify_captcha(user_input: String) -> Result<(), Error> {
     let caller_id = ic_cdk::api::caller();

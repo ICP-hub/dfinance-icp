@@ -1,9 +1,11 @@
 use crate::api::query::get_canister_id_by_name;
-use crate::constants::constant_variables::constants::{BATCH_SIZE, LOGS_LIMIT, DATA_STORAGE_CANISTER_NAME};
+use crate::constants::constant_variables::constants::{
+    BATCH_SIZE, DATA_STORAGE_CANISTER_NAME, LOGS_LIMIT,
+};
 use crate::constants::errors::Error;
 use crate::guards::access_control::guard_admin_only;
 use candid::Principal;
-use ic_cdk::{call, query, api};
+use ic_cdk::{api, call, query, update};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
@@ -15,6 +17,8 @@ thread_local! {
     static LOG_COUNT: RefCell<u64> = RefCell::new(0);
     static NEXT_LOG_ID: RefCell<u32> = RefCell::new(1);
 }
+
+static mut CURRENT_LOG_LEVEL: LogLevel = LogLevel::INFO;
 
 pub struct LogFlusher {
     pub user_key: String,
@@ -62,16 +66,18 @@ impl fmt::Display for LogLevel {
  *
  * @functionality Sets the log level to INFO for production and DEBUG for development.
  */
+#[update]
 pub fn init_logging(is_production: bool) {
+    if let Err(_) = guard_admin_only() {
+        return;
+    }
     if is_production {
         set_log_level(LogLevel::INFO);
     } else {
-        set_log_level(LogLevel::DEBUG);
+        set_log_level(LogLevel::TRACE);
     }
 }
 
-
-static mut CURRENT_LOG_LEVEL: LogLevel = LogLevel::INFO;
 
 /**
  * @title Set Log Level
@@ -84,6 +90,7 @@ pub fn set_log_level(level: LogLevel) {
     unsafe {
         CURRENT_LOG_LEVEL = level;
     }
+
 }
 
 /**
@@ -209,77 +216,88 @@ impl Drop for LogFlusher {
         if get_log_count() < LOGS_LIMIT {
             return; // Not enough logs to flush
         }
-        
+
         // Check if a flush is already in progress
         let should_flush = FLUSH_IN_PROGRESS.with(|flag| {
             if *flag.borrow() {
                 return false; // Another flush is already in progress
             }
-            
+
             // Set the flag to true
             *flag.borrow_mut() = true;
             true
         });
-        
+
         if !should_flush {
             return;
         }
-        
+
         // Get the data_storage canister ID
-        let data_storage_canister_id = match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
-            Ok(id) => id,
-            Err(_) => {
-                // Reset the flag if we couldn't get the canister ID
-                error!("❌ Failed to get data_storage canister ID. Aborting flush operation.");
-                FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
-                return;
-            }
-        };
-        
+        let data_storage_canister_id =
+            match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
+                Ok(id) => id,
+                Err(_) => {
+                    // Reset the flag if we couldn't get the canister ID
+                    error!("❌ Failed to get data_storage canister ID. Aborting flush operation.");
+                    FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
+                    return;
+                }
+            };
+
         // Spawn the flush operation to run asynchronously
         ic_cdk::spawn(async move {
             // Keep track of logs processed in this flush operation
             let mut total_logs_flushed = 0;
-            
+
             // Process logs in batches until we've cleared enough or hit an error
             while get_log_count() >= LOGS_LIMIT {
                 // Get batch of logs efficiently (up to BATCH_SIZE)
                 let batch_logs = get_next_batch_of_logs(BATCH_SIZE as usize);
-                
+
                 if batch_logs.is_empty() {
                     break; // No more logs to process
                 }
-                
+
                 // Count logs in this batch
                 let batch_size = batch_logs.values().map(|v| v.len()).sum::<usize>();
-                
-                match send_log_to_logs_canister(batch_logs.clone(), data_storage_canister_id).await {
+
+                match send_log_to_logs_canister(batch_logs.clone(), data_storage_canister_id).await
+                {
                     Ok(_) => {
                         total_logs_flushed += batch_size;
-                        
+
                         // Remove the sent logs from storage and update counter
                         remove_logs_from_storage(&batch_logs);
                         decrement_log_count(batch_size as u64);
-                        
+
                         // Only log occasionally to reduce log volume in high-throughput scenarios
                         if total_logs_flushed % (5 * BATCH_SIZE) == 0 {
-                            info!("✅ Flushed {} logs so far. Remaining: {}", 
-                                  total_logs_flushed, get_log_count());
+                            info!(
+                                "✅ Flushed {} logs so far. Remaining: {}",
+                                total_logs_flushed,
+                                get_log_count()
+                            );
                         }
-                    },
+                    }
                     Err(e) => {
-                        error!("❌ Failed to send batch logs: {:?}. Aborting flush operation.", e);
+                        error!(
+                            "❌ Failed to send batch logs: {:?}. Aborting flush operation.",
+                            e
+                        );
                         break;
                     }
                 }
             }
-            
+
             // Reset the flag now that we're done
             FLUSH_IN_PROGRESS.with(|flag| *flag.borrow_mut() = false);
-            
+
             // Log completion info
             if total_logs_flushed > 0 {
-                info!("📝 Flush operation complete. Total logs flushed: {}", total_logs_flushed);
+                info!(
+                    "📝 Flush operation complete. Total logs flushed: {}",
+                    total_logs_flushed
+                );
             }
         });
     }
@@ -295,17 +313,17 @@ impl Drop for LogFlusher {
 fn get_next_batch_of_logs(batch_size: usize) -> HashMap<u32, Vec<String>> {
     LOG_STORAGE.with(|log_storage| {
         let storage = log_storage.borrow();
-        
+
         // Optimization: Instead of sorting all keys, just find the lowest N keys
         // This is much more efficient with large numbers of logs
         let mut batch = HashMap::new();
         let mut batch_count = 0;
-        
+
         // Find the smallest keys first (oldest logs)
         if !storage.is_empty() {
             let mut keys: Vec<u32> = storage.keys().cloned().collect();
             keys.sort(); // Sort the keys to process oldest logs first
-            
+
             // Take only up to batch_size keys
             for &key in keys.iter().take(batch_size) {
                 if let Some(logs) = storage.get(&key) {
@@ -317,7 +335,7 @@ fn get_next_batch_of_logs(batch_size: usize) -> HashMap<u32, Vec<String>> {
                 }
             }
         }
-        
+
         batch
     })
 }
@@ -391,24 +409,22 @@ pub fn store_log(
         timestamp, level, file_name, line, user_principal, message
     );
 
-    // Use atomically generated ID 
+    // Use atomically generated ID
     let log_id = get_next_log_id();
-    
+
     LOG_STORAGE.with(|log_storage| {
         let mut storage = log_storage.borrow_mut();
-        
+
         // Insert the new log entry into the storage
         let log_entry = storage.entry(log_id).or_insert_with(Vec::new);
         log_entry.push(formatted_log);
     });
-    
+
     // Increment our log counter
     increment_log_count();
-    
-    
+
     Ok(())
 }
-
 
 #[derive(Debug)]
 pub enum LogError {
@@ -432,16 +448,24 @@ pub async fn send_log_to_logs_canister(
     match call::<(HashMap<u32, Vec<String>>,), (Result<(), String>,)>(
         data_storage_canister_id,
         "receive_logs_batch",
-        (logs,)
-    ).await {
+        (logs,),
+    )
+    .await
+    {
         Ok((Ok(()),)) => Ok(()),
         Ok((Err(err_msg),)) => {
             error!("❌ receive_logs_batch returned error: {}", err_msg);
             Err(LogError::Rejected(err_msg))
         }
         Err((code, msg)) => {
-            error!("❌ Inter-canister call failed. Code: {:?}, Message: {:?}", code, msg);
-            Err(LogError::Rejected(format!("Call failed with code {:?}: {}", code, msg)))
+            error!(
+                "❌ Inter-canister call failed. Code: {:?}, Message: {:?}",
+                code, msg
+            );
+            Err(LogError::Rejected(format!(
+                "Call failed with code {:?}: {}",
+                code, msg
+            )))
         }
     }
 }
@@ -452,10 +476,11 @@ pub async fn send_log_to_logs_canister(
  * @functionality Retrieves logs in batches, sends them to the data_storage canister, and removes successfully sent logs from the state. The process is repeated until all logs are cleared or an error occurs.
  */
 pub fn clear_temp_log() {
-    let data_storage_canister_id = match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
-        Ok(id) => id,
-        Err(_) => return,
-    };
+    let data_storage_canister_id =
+        match get_canister_id_by_name(DATA_STORAGE_CANISTER_NAME.to_string()) {
+            Ok(id) => id,
+            Err(_) => return,
+        };
 
     ic_cdk::spawn(async move {
         loop {
@@ -465,7 +490,8 @@ pub fn clear_temp_log() {
                 break;
             }
 
-            let result = send_log_to_logs_canister(all_logs.clone(), data_storage_canister_id).await;
+            let result =
+                send_log_to_logs_canister(all_logs.clone(), data_storage_canister_id).await;
 
             if result.is_ok() {
                 info!("✅ Batch logs sent successfully (clear temp log).");
@@ -498,7 +524,7 @@ pub fn clear_temp_log() {
  * @return `Result<Vec<String>, Error>` containing all logs or an error if access is unauthorized.
  */
 #[query]
-pub fn get_all_logs() -> Result<Vec<String>,Error> {
+pub fn get_all_logs() -> Result<Vec<String>, Error> {
     guard_admin_only()?;
     let mut logs: Vec<(u32, String)> = Vec::new();
     let timestamp = api::time() / 1_000_000_000;
@@ -519,19 +545,18 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
 
     LOG_STORAGE.with(|log_storage| {
         let storage = log_storage.borrow();
-        
+
         for (key, value) in storage.iter() {
             if let Some(log) = value.get(0) {
                 logs.push((*key, log.clone()));
             }
         }
-        
+
         logs.sort_by_key(|(key, _)| *key);
-        
+
         Ok(logs.into_iter().map(|(_, log)| log).collect())
     })
 }
-
 
 /**
  * @title Internal Logging Utility
@@ -550,14 +575,8 @@ pub fn get_all_logs() -> Result<Vec<String>,Error> {
  * @param msg `&str` - The message content to be logged.
  */
 pub fn log_internal(level: LogLevel, file: &str, line: u32, msg: &str) {
-    #[cfg(feature = "testnet")]
-    ic_cdk::println!(
-        "[{:?}] [{}:{}] : {}",
-        level, file, line, msg
-    );
     let user_principal = ic_cdk::caller().to_text();
-
-    if level <= LogLevel::TRACE || level <= get_log_level() {
+    if level <= get_log_level() {
         let _ = store_log(user_principal, level, file, line, msg.to_string());
     }
 }

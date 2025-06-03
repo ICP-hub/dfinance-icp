@@ -141,6 +141,7 @@ XRC_CANISTER_ID=uf6dk-hyaaa-aaaaq-qaaaq-cai
 DATA_STORAGE_CANISTER_ID=$(dfx canister id data_storage --network ic)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"  --network ic || exit 1
 dfx canister call dfinance_backend set_canister_id "(\"data_storage\", principal \"$DATA_STORAGE_CANISTER_ID\")" --network ic || exit 1
+dfx canister call dfinance_backend init_logging '(false)' --network ic || exit 1
 
 # Final deployment step
 dfx deploy --network ic || exit 1

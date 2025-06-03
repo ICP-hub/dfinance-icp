@@ -1,10 +1,8 @@
-use std::clone;
-
 use crate::api::inter_canister::{
     get_balance, get_icrc2_allowance, get_ledger_transfer_fee, get_total_supply
 };
 use crate::constants::{
-    constant_variables::constants::{PERCENTAGE_FACTOR, SCALING_FACTOR, ZERO_VALUE},
+    constant_variables::constants::{PERCENTAGE_FACTOR, SCALING_FACTOR},
     errors::Error,
 };
 
@@ -138,7 +136,7 @@ impl ValidationLogic {
      */
     pub async fn validate_withdraw(
         reserve: &ReserveData,
-        mut amount: Nat,
+        amount: Nat,
         user: Principal,
         ledger_canister: Principal,
     ) -> Result<(), Error> {
@@ -247,7 +245,7 @@ impl ValidationLogic {
                     - usd_withdrawl.scaled_mul(reserve.configuration.liquidation_threshold.clone());
                 templiq = templiq.scaled_div(adjusted_collateral.clone());
 
-                let mut new_ltv = Nat::from(ZERO_VALUE);
+                let mut new_ltv: Nat;
                 new_ltv = total_debt.clone().scaled_div(adjusted_collateral.clone());
                 new_ltv = new_ltv * Nat::from(PERCENTAGE_FACTOR);
                 debug!("New ltv {} and templiq : {}", new_ltv, templiq);

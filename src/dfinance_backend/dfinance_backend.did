@@ -238,7 +238,6 @@ type UserReserveData = record {
 };
 service : (principal) -> {
   add_admin_test : (text, principal) -> (Result);
-  add_tester : (text, principal) -> (Result_1);
   add_user_with_role : (principal, text) -> (Result);
   admin_restart_reset_task : () -> (Result_1);
   check_is_tester : () -> (bool) query;
@@ -274,8 +273,8 @@ service : (principal) -> {
   get_user_data : (principal) -> (Result_14) query;
   get_user_faucet_data : (principal) -> (Result_15) query;
   guard_admin_only : () -> (Result_1) query;
+  init_logging : (bool) -> ();
   initialize : (text, ReserveData, text) -> (Result_1);
-  initialize2 : (text, ReserveData, principal, text) -> (Result_1);
   is_transfer_allowed : (principal, principal, text, nat) -> (bool);
   is_user_blocked : () -> (Result_16) query;
   mock_price_data : () -> (Result_1);

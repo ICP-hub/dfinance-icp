@@ -152,6 +152,7 @@ DATA_STORAGE_CANISTER_ID=$(dfx canister id data_storage)
 dfx canister call dfinance_backend set_canister_id "(\"xrc\", principal \"$XRC_CANISTER_ID\")"
 dfx canister call dfinance_backend set_canister_id "(\"data_storage\", principal \"$DATA_STORAGE_CANISTER_ID\")"
 dfx canister call dfinance_backend admin_restart_reset_task
+dfx canister call dfinance_backend init_logging '(false)'
 
 # Final deploy
 dfx deploy

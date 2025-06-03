@@ -34,6 +34,7 @@ pub mod constants {
     pub const ALL_ASSETS: &str = "all_assets";
     pub const ASSET_PRINCIPAL: &str = "asset_principal";
     pub const ADMIN: &str = "admin";
+    pub const TESTER: &str = "tester";
     pub const MAIN_CONTROLLER: &str = "main_controller";
 
     // ------------------- XRC Service Fee -------------------

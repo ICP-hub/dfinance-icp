@@ -378,18 +378,18 @@ pub fn test_add_tester(
     let add_tester_result = pic.update_call(
         backend_canister,
         user_principal,
-        "add_tester",
-        encode_args((tester_principal.to_string(), tester_principal)).unwrap(),
+        "add_admin_test",
+        encode_args(("tester".to_string(), tester_principal)).unwrap(),
     );
 
     // Decode the response
     match add_tester_result {
         Ok(WasmResult::Reply(response)) => {
-            let add_tester_response: Result<(), errors::Error> =
+            let add_tester_response: Result<String, errors::Error> =
                 candid::decode_one(&response).expect("Failed to decode add tester response");
 
             match add_tester_response {
-                Ok(()) => {
+                Ok(_e) => {
                     info!("✅ Add Tester function succeeded");
                 }
                 Err(e) => {

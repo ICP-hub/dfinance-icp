@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuthClient";
 import { SCALING_FACTOR } from '../../utils/constants';
 const useTransferFee = (asset) => {
-  const { backendActor } = useAuth();
+  const { backendActor,verifyCertificate } = useAuth();
   const [transferFee, setTransferFee] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

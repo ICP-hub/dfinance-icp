@@ -1,11 +1,12 @@
-use crate::api::inter_canister::{asset_transfer,get_balance, get_total_supply};
+use crate::api::inter_canister::{asset_transfer, get_balance, get_total_supply};
+use crate::api::update::set_canister_id;
 use crate::constants::{
     constant_variables::constants::{ONE_VALUE, TOLERANCE_FACTOR},
     data_types::zero_nat_value,
     errors::Error,
-    validators::{validate_asset_image_url, validate_zero_value, validate_asset_name},
+    validators::{validate_asset_image_url, validate_asset_name, validate_zero_value},
 };
-use crate::declarations::datatypes::{AssetInfo,ReserveCache, ReserveData, UserReserveData};
+use crate::declarations::datatypes::{AssetInfo, ReserveCache, ReserveData, UserReserveData};
 use crate::declarations::structs::AccrueToTreasuryLocalVars;
 use crate::dynamic_canister::{create_testtoken_canister, create_token_canister};
 use crate::guards::access_control::guard_admin_only;
@@ -14,17 +15,17 @@ use crate::protocol::libraries::interest_rate::{
 };
 use crate::protocol::utils::{
     log::{log_internal, LogLevel},
-    math_utils::{ScalingMath, calculate_compounded_interest, calculate_linear_interest, current_timestamp}
-
+    math_utils::{
+        calculate_compounded_interest, calculate_linear_interest, current_timestamp, ScalingMath,
+    },
 };
 use crate::stable_storage::{
-    state_handler::{mutate_state, read_state, insert_certified_value},
-    storable::Candid
+    state_handler::{insert_certified_value, mutate_state, read_state},
+    storable::Candid,
 };
 use crate::{debug, error, info, trace};
 use candid::{Nat, Principal};
 use ic_cdk::update;
-use crate::api::update::set_canister_id;
 
 impl Default for AccrueToTreasuryLocalVars {
     fn default() -> Self {
@@ -130,7 +131,6 @@ pub fn update_indexes(reserve_data: &mut ReserveData, reserve_cache: &mut Reserv
 
     // Update liquidity index if there's an active liquidity rate
     if reserve_cache.curr_liquidity_rate != zero_nat_value() {
-        
         let cumulated_liquidity_interest = calculate_linear_interest(
             reserve_cache.curr_liquidity_rate.clone(),
             reserve_cache.reserve_last_update_timestamp,
@@ -339,7 +339,6 @@ pub async fn burn_scaled(
         }
         balance_increase = balance_indexed - balance_user_indexed;
 
-       
         if user_state.debt_token_balance == adjusted_amount {
             debug!("Setting debt token balance to zero");
             user_state.debt_token_balance = zero_nat_value();
@@ -347,7 +346,6 @@ pub async fn burn_scaled(
             error!("Debt token balance is less than adjusted amount");
             return Err(Error::DebtTokenBalanceLessThan);
         } else {
-           
             user_state.debt_token_balance -= adjusted_amount.clone();
 
             if user_state.debt_token_balance < Nat::from(1000u128) {
@@ -358,9 +356,7 @@ pub async fn burn_scaled(
         user_state.variable_borrow_index = index;
         debug!(
             "balance_increase: {}, final_debt_token_balance: {}, new_variable_borrow_index: {}",
-            balance_increase,
-            user_state.debt_token_balance,
-            user_state.variable_borrow_index
+            balance_increase, user_state.debt_token_balance, user_state.variable_borrow_index
         );
     }
 
@@ -537,8 +533,11 @@ pub async fn mint_scaled(
         }
 
         user_state.variable_borrow_index = index;
-       
-        debug!("balance increase debttoken {}, new debt balance {}, new debt index {} ", balance_increase, user_state.debt_token_balance, user_state.variable_borrow_index);
+
+        debug!(
+            "balance increase debttoken {}, new debt balance {}, new debt index {} ",
+            balance_increase, user_state.debt_token_balance, user_state.variable_borrow_index
+        );
     }
 
     let newmint = amount + balance_increase;
@@ -669,7 +668,6 @@ pub async fn initialize(
     mut reserve_data: ReserveData,
     asset_image: String,
 ) -> Result<(), Error> {
-
     guard_admin_only()?;
     validate_asset_name(&token_name)?;
     validate_asset_image_url(&asset_image)?;
@@ -749,9 +747,9 @@ pub async fn initialize(
     Ok(())
 }
 
-// #[cfg(feature = "mainnet")]
+#[cfg(feature = "mainnet")]
 #[update]
-pub async fn initialize2(
+pub async fn initialize(
     token_name: String,
     mut reserve_data: ReserveData,
     token_canister_id: Principal,
@@ -765,18 +763,6 @@ pub async fn initialize2(
         return Err(Error::TokenAlreadyExist);
     }
 
-     let token_canister_id =
-        match create_testtoken_canister(token_name.clone(), token_name.clone()).await {
-            Ok(principal) => {
-                info!("Successfully created test token ledger"); //debug?
-                principal
-            }
-            Err(e) => {
-                error!("Failed to create test token ledger : {:?}", e);
-                return Err(e);
-            }
-        };
-        
     let d_token_name = format!("d{}", token_name.clone());
     let debt_token_name = format!("debt{}", token_name.clone());
     let asset_info = AssetInfo {
@@ -787,16 +773,19 @@ pub async fn initialize2(
     };
 
     reserve_data.asset_name = token_name.clone();
-    reserve_data.d_token_canister =
-        match create_token_canister(d_token_name.clone(), d_token_name).await {
-            Ok(principal) => Some(principal),
-            Err(e) => return Err(e),
-        };
+    let d_token_principal = match create_token_canister(d_token_name.clone(), d_token_name).await {
+        Ok(principal) => principal,
+        Err(e) => return Err(e),
+    };
     reserve_data.debt_token_canister =
         match create_token_canister(debt_token_name.clone(), debt_token_name).await {
             Ok(principal) => Some(principal),
             Err(e) => return Err(e),
         };
+
+    reserve_data.d_token_canister = Some(d_token_principal);
+
+    set_canister_id(reserve_data.asset_name.clone(), d_token_principal).await?;
 
     reserve_data.last_update_timestamp = current_timestamp();
 

@@ -32,6 +32,8 @@ const Liquidate = () => {
   const { isAuthenticated } = useAuth();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const [showWarning, setShowWarning] = useState(false);
+  const [showRollBackWarning, setShowRollBackWarning] = useState(false);
+  const [isTranferAllowed, setIsTransferAllowed] = useState(false);
 
   /* ===================================================================================
    *                                  EFFECTS & FUNCTIONS
@@ -51,6 +53,9 @@ const Liquidate = () => {
   const handleLiquidateClick = () => {
     if (!isAuthenticated) {
       setShowWarning(true);
+    }
+    else if (isTranferAllowed) {
+      setShowRollBackWarning(true);
     } else {
       navigate("/Liquidate/debt-users-list");
     }
@@ -107,6 +112,12 @@ const Liquidate = () => {
             {showWarning && (
               <div className="text-red-500 font-bold mb-4">
                 Please connect your wallet to check the debt status.
+              </div>
+            )}
+
+            {showRollBackWarning && (
+              <div className="text-red-500 font-bold mb-4">
+                Rollback is incomplete. To complete the rollback process, please click the button in the navbar popup
               </div>
             )}
 

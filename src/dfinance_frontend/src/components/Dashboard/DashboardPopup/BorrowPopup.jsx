@@ -93,6 +93,7 @@ const Borrow = ({
   const [loading, setLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
+  const [isTranferAllowed, setIsTransferAllowed] = useState(false);
   const transferFee = Number(transferFeRetrive?.transferFee) || 0;
 
   const ledgerFeeNumber =
@@ -827,6 +828,7 @@ const Borrow = ({
               <div className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 cursor-pointer p-2 rounded-md dark:bg-darkBackground/30 dark:text-darkText">
                 <div className="w-[50%]">
                   <input
+                    disabled={isTranferAllowed}
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
@@ -852,13 +854,12 @@ const Borrow = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${
-                      parseFloat(borrowableValue) === 0
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${parseFloat(borrowableValue) === 0 || isTranferAllowed
                         ? "text-gray-400 cursor-not-allowed"
                         : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
-                    }`}
+                      }`}
                     onClick={() => {
-                      if (parseFloat(borrowableValue) > 0) {
+                      if (parseFloat(borrowableValue) > 0 && !isTranferAllowed) {
                         handleMaxClick();
                       }
                     }}
@@ -1001,7 +1002,7 @@ const Borrow = ({
                         </label>
                       </div>
 
-                      <div className="w-full flex flex-col my-3 space-y-2">
+                      {!isTranferAllowed && <div className="w-full flex flex-col my-3 space-y-2">
                         <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
                           <div className="w-1/12 flex items-center justify-center">
                             <div className="warning-icon-container">
@@ -1013,7 +1014,7 @@ const Borrow = ({
                             and increase risk of liquidation
                           </div>
                         </div>
-                      </div>
+                      </div>}
                     </div>
                   )}
                   {value <= 1 && (
@@ -1035,16 +1036,26 @@ const Borrow = ({
                   )}
                 </div>
               </div>
-
+             {isTranferAllowed && <div className="w-full flex flex-col my-3 space-y-2">
+                <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                  <div className="w-1/12 flex items-center justify-center">
+                    <div className="warning-icon-container">
+                      <TriangleAlert />
+                    </div>
+                  </div>
+                  <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                    Rollback is incomplete. To complete the rollback process, please click the button in the navbar popup
+                  </div>
+                </div>
+              </div>}
               <button
                 ref={borrowButtonRef}
                 onClick={handleBorrowETH}
-                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${
-                  isLoading || amount <= 0 || isButtonDisabled
+                className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 ${isLoading || amount <= 0 || isTranferAllowed || isButtonDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                }`}
-                disabled={isLoading || amount <= 0 || null || isButtonDisabled}
+                  }`}
+                disabled={isLoading || amount <= 0 || null || isButtonDisabled || isTranferAllowed}
               >
                 Borrow {asset}
               </button>

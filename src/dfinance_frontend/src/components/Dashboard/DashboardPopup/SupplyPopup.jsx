@@ -15,7 +15,7 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
 import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
 import useTransferFee from "../../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
-import { Info } from "lucide-react";
+import { Info, TriangleAlert } from "lucide-react";
 import useNotificationSystem from "../../CustomHooks/useNotification";
 /**
  * SupplyPopup Component
@@ -61,8 +61,8 @@ const SupplyPopup = ({
   const { conversionRate } = useRealTimeConversionRate(asset);
   const checkAndNotify = useNotificationSystem();
   /* ===================================================================================
-   *                                 STATE MANAGEMENT
-   * =================================================================================== */
+  *                                 STATE MANAGEMENT
+  * =================================================================================== */
 
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [usdValue, setUsdValue] = useState(0);
@@ -76,6 +76,7 @@ const SupplyPopup = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
+  const [isTranferAllowed, setIsTransferAllowed] = useState(false);
 
   /* ===================================================================================
    *                                  REDUX-SELECTER
@@ -815,7 +816,7 @@ const SupplyPopup = ({
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0 || isApproved}
+                    disabled={supplyBalance === 0 || isApproved || isTranferAllowed}
                     className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter ${asset} Amount`}
                   />
@@ -839,12 +840,12 @@ const SupplyPopup = ({
                     <span className="text-lg">{asset}</span>
                   </div>
                   <p
-                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
+                    className={`text-xs mt-4 p-2 py-1 rounded-md button1 ${supplyBalance === 0 || isApproved || isTranferAllowed
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "cursor-pointer bg-blue-100 dark:bg-gray-700/45"
                       }`}
                     onClick={() => {
-                      if (supplyBalance > 0 && !isApproved) {
+                      if (supplyBalance > 0 && !isApproved && !isTranferAllowed) {
                         handleMaxClick();
                       }
                     }}
@@ -997,24 +998,41 @@ const SupplyPopup = ({
             </div>
           </div>
 
+          {
+            isTranferAllowed && <div className="w-full flex flex-col my-3 space-y-2">
+              <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
+                <div className="w-1/12 flex items-center justify-center">
+                  <div className="warning-icon-container">
+                    <TriangleAlert />
+                  </div>
+                </div>
+                <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
+                  Rollback is incomplete. To complete the rollback process, please click the button in the navbar popup
+                </div>
+              </div>
+            </div>
+          }
+
           <div className="flex flex-col gap-4 mt-4">
             {/* Approve Button */}
             <button
               ref={approveButtonRef}
               onClick={() => !isApproved && handleClick()}
               className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                  isLoading ||
-                  !hasEnoughBalance ||
-                  amount <= 0 ||
-                  !hasEnoughBalance
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                isLoading ||
+                !hasEnoughBalance ||
+                amount <= 0 ||
+                isTranferAllowed ||
+                !hasEnoughBalance
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               disabled={
                 isApproved ||
                 isLoading ||
                 amount <= 0 ||
-                !hasEnoughBalance
+                !hasEnoughBalance ||
+                isTranferAllowed
               }
             >
               Approve {asset} to continue
@@ -1024,12 +1042,12 @@ const SupplyPopup = ({
             <button
               ref={supplyButtonRef}
               onClick={() => isApproved && handleClick()}
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved || isLoading || amount <= 0 || !hasEnoughBalance
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved || isLoading || amount <= 0 || !hasEnoughBalance || isTranferAllowed
+                ? "opacity-50 cursor-not-allowed"
+                : ""
                 }`}
               disabled={
-                !isApproved || isLoading || amount <= 0 || !hasEnoughBalance
+                !isApproved || isLoading || amount <= 0 || !hasEnoughBalance || isTranferAllowed
               }
             >
               Supply {asset}

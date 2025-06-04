@@ -88,6 +88,7 @@ export default function Navbar({ isHomeNav }) {
   const [amount, setAmount] = useState("");
   const [isApproved, setIsApproved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+   const [isTranferAllowed, setIsTransferAllowed] = useState(false);
   const isButtonDisabled = false;
   const isProduction = process.env.DFX_PRODUCTION === "true";
 
@@ -189,13 +190,13 @@ export default function Navbar({ isHomeNav }) {
     try {
       const cycleStatus = await backendActor.cycle_alert();
       const tokenStatus = await backendActor.token_balance_alert(asset);
-      
-      if (cycleStatus && cycleStatus.Ok !== undefined && tokenStatus && tokenStatus.Ok !== undefined){
+
+      if (cycleStatus && cycleStatus.Ok !== undefined && tokenStatus && tokenStatus.Ok !== undefined) {
         status = {
           cycle: cycleStatus.Ok,
           token: tokenStatus.Ok,
         };
-      }else{
+      } else {
         console.error("Got Error from backend while fetching status : ", cycleStatus, tokenStatus);
       }
 
@@ -1630,6 +1631,14 @@ export default function Navbar({ isHomeNav }) {
                                 </div>
                               </div>
                             </div>
+
+                            {isTranferAllowed && <div className="flex flex-row gap-3">
+                              <Button
+                                title="Retry Rollback"
+                                className="bg-gradient-to-tr from-[#E46E6E] from-20% to-[#8F1843] to-100% dark:text-darkText dark:bg-[#BA5858] border-b-3 dark:border-darkBackground rounded-lg py-2 px-9 shadow-lg text-sm font-light w-full"
+                              // onClickHandler={handleLogout}
+                              />
+                            </div>}
 
                             <div className="flex flex-col lg1:flex-row mt-3 gap-3 ">
 

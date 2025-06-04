@@ -106,6 +106,7 @@ type Error = variant {
   UnauthorizedAccess;
   ConnectedWalletInvalid;
   ErrorCreatingCanister;
+  RollbackFailed;
   ReservePaused;
   ErrorUpdateCanisterSetting;
   ErrorBurnTokens;

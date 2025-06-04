@@ -15,7 +15,7 @@ import { toggleDashboardRefresh } from "../../../redux/reducers/dashboardDataUpd
 import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
 import useTransferFee from "../../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
-import { Info, TriangleAlert } from "lucide-react";
+import { Info } from "lucide-react";
 import useNotificationSystem from "../../CustomHooks/useNotification";
 /**
  * Repay Component
@@ -96,7 +96,6 @@ const Repay = ({
   const [currentHealthFactor, setCurrentHealthFactor] = useState(null);
   const [maxAmount, setMaxAmount] = useState("0");
   const [maxClicked, setMaxClicked] = useState(false);
-  const [isTranferAllowed, setIsTransferAllowed] = useState(false);
   const dispatch = useDispatch();
   const paymentModalRef = useRef(null);
 
@@ -811,7 +810,7 @@ const Repay = ({
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
-                    disabled={supplyBalance === 0 || isApproved || isTranferAllowed}
+                    disabled={supplyBalance === 0 || isApproved}
                     className="lg:text-lg placeholder:text-sm lg:placeholder:text-md focus:outline-none bg-gray-100 rounded-md w-full dark:bg-darkBackground/5 dark:text-darkText"
                     placeholder={`Enter Amount ${asset}`}
                   />
@@ -844,9 +843,9 @@ const Repay = ({
                         {truncateToEightDecimals(supplyBalance)}
                       </p>
                       <p
-                        className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved || isTranferAllowed
-                          ? "text-gray-400 cursor-not-allowed pointer-events-none"
-                          : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
+                        className={`text-[12px] px-2 py-0 rounded-md button1 ${assetBorrow === 0 || isApproved
+                            ? "text-gray-400 cursor-not-allowed pointer-events-none"
+                            : "cursor-pointer bg-blue-100 dark:bg-gray-700/45 pointer-events-auto"
                           }`}
                         onClick={handleMaxClick}
                       >
@@ -1012,36 +1011,23 @@ const Repay = ({
                   </p>
                 </div>
               ) : null}
-             {isTranferAllowed && <div className="w-full flex flex-col my-3 space-y-2">
-                <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-                  <div className="w-1/12 flex items-center justify-center">
-                    <div className="warning-icon-container">
-                      <TriangleAlert />
-                    </div>
-                  </div>
-                  <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                    Rollback is incomplete. To complete the rollback process, please click the button in the navbar popup
-                  </div>
-                </div>
-              </div>}
+
               <div className="flex flex-col gap-4 mt-4">
                 <button
                   ref={approveButtonRef}
                   onClick={() => !isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${isApproved ||
-                    isLoading ||
-                    amount <= 0 ||
-                    isTranferAllowed ||
-                    !hasEnoughBalance
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                      isLoading ||
+                      amount <= 0 ||
+                      !hasEnoughBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                     }`}
                   disabled={
                     isApproved ||
                     isLoading ||
                     amount <= 0 ||
-                    !hasEnoughBalance ||
-                    isTranferAllowed
+                    !hasEnoughBalance
                   }
                 >
                   Approve {asset} to continue
@@ -1051,21 +1037,19 @@ const Repay = ({
                   ref={repayButtonRef}
                   onClick={() => isApproved && handleClick()}
                   className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm flex justify-center items-center ${!isApproved ||
-                    isLoading ||
-                    amount <= 0 ||
-                    supplyBalance <= 0 ||
-                    isTranferAllowed ||
-                    !hasEnoughBalance 
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
+                      isLoading ||
+                      amount <= 0 ||
+                      supplyBalance <= 0 ||
+                      !hasEnoughBalance
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                     }`}
                   disabled={
                     !isApproved ||
                     isLoading ||
                     amount <= 0 ||
                     supplyBalance <= 0 ||
-                    !hasEnoughBalance ||
-                    isTranferAllowed
+                    !hasEnoughBalance
                   }
                 >
                   Repay {asset}

@@ -15,7 +15,7 @@ import useFunctionBlockStatus from "../../CustomHooks/useFunctionBlockStatus";
 import useTransferFee from "../../CustomHooks/useTransferFee";
 import { SCALING_FACTOR } from "../../../utils/constants";
 import { PERCENTAGE_FACTOR } from "../../../utils/constants";
-import { Info, TriangleAlert } from "lucide-react";
+import { Info } from "lucide-react";
 import useNotificationSystem from "../../CustomHooks/useNotification";
 
 /**
@@ -74,7 +74,6 @@ const WithdrawPopup = ({
   const [showPanicPopup, setShowPanicPopup] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [ledgerFee, setLedgerFee] = useState(null);
-  const [isTranferAllowed, setIsTransferAllowed] = useState(false);
   const transferFee = Number(transferFeRetrive?.transferFee) || 0;
   const ledgerFeeNumber =
     typeof ledgerFee === "bigint"
@@ -748,7 +747,6 @@ const WithdrawPopup = ({
                     value={amount}
                     onChange={handleAmountChange}
                     className="lg:text-lg   mb-2 placeholder:text-xs lg:placeholder:text-sm focus:outline-none bg-gray-100 rounded-md p-1 w-full dark:bg-darkBackground/5 dark:text-darkText"
-                    disabled={isTranferAllowed}
                     placeholder={`Enter Amount ${asset}`}
                   />
                   <p className="text-xs text-gray-500 px-2  mt-2 mb-1">
@@ -769,7 +767,7 @@ const WithdrawPopup = ({
                   <p
                     className="text-xs mt-4 cursor-pointer bg-blue-100 dark:bg-gray-700/45 p-2 py-1 rounded-md button1"
                     onClick={() => {
-                      if (assetSupply > 0 && !isTranferAllowed) {
+                      if (assetSupply > 0) {
                         handleMaxClick();
                       }
                     }}
@@ -927,30 +925,19 @@ const WithdrawPopup = ({
               </div>
             )}
           </div>
-          {isTranferAllowed && <div className="w-full flex flex-col my-3 space-y-2">
-            <div className="w-full flex bg-[#BA5858] p-3 rounded-lg text-white">
-              <div className="w-1/12 flex items-center justify-center">
-                <div className="warning-icon-container">
-                  <TriangleAlert />
-                </div>
-              </div>
-              <div className="w-11/12 text-[11px] flex items-center text-white ml-2">
-                Rollback is incomplete. To complete the rollback process, please click the button in the navbar popup
-              </div>
-            </div>
-          </div>}
           <div>
             <button
               ref={withdrawButtonRef}
               onClick={
-                isLoading || amount <= 0 || isButtonDisabled || isTranferAllowed
+                isLoading || amount <= 0 || isButtonDisabled
                   ? null
                   : handleWithdraw
               }
-              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${isLoading || amount <= 0 || isButtonDisabled || isTranferAllowed
+              className={`bg-gradient-to-tr from-[#ffaf5a] to-[#81198E] w-full text-white rounded-md p-2 px-4 shadow-md font-semibold text-sm mt-4 flex justify-center items-center ${
+                isLoading || amount <= 0 || isButtonDisabled
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-                }`}
+              }`}
             >
               Withdraw
             </button>

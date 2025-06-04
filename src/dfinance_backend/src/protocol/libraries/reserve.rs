@@ -658,7 +658,6 @@ pub fn accrue_to_treasury(
  *
  * @param token_name The name of the token to be initialized.
  * @param reserve_data The reserve data structure containing metadata and token-related details.
- * @param token_canister_id Optional principal ID of the token canister. If not provided, a test token canister is created.
  *
  * @return `Ok(())` on success.
  *

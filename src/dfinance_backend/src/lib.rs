@@ -1,12 +1,10 @@
 use crate::constants::constant_variables::constants::FOUR_HOUR;
 use crate::constants::errors::Error;
-use crate::declarations::datatypes::{
-    AssetInfo, FaucetReserves, ReserveData, UserData, InitArgs
-};
+use crate::declarations::datatypes::{AssetInfo, FaucetReserves, InitArgs, ReserveData, UserData};
 
+use candid::{Nat, Principal};
 #[cfg(feature = "testnet")]
 use declarations::structs::Challenge;
-use candid::{Nat,Principal};
 use guards::access_control::guard_admin_only;
 use ic_cdk::{init, update};
 use ic_cdk_macros::export_candid;
@@ -21,20 +19,23 @@ mod guards;
 mod protocol;
 
 mod stable_storage;
+use crate::declarations::datatypes::Certificate;
 use crate::declarations::structs::{
-    ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams,
-    ExecuteWithdrawParams, UserAccountData, AssetData, CycleAlert, TokenAlert
+    AssetData, CycleAlert, ExecuteBorrowParams, ExecuteLiquidationParams, ExecuteRepayParams,
+    ExecuteSupplyParams, ExecuteWithdrawParams, TokenAlert, UserAccountData,
 };
-use crate::protocol::utils::log::{log_internal, LogLevel};
-use crate::stable_storage::state_handler::mutate_state;
-use crate::stable_storage::storable::Candid;
 #[cfg(feature = "testnet")]
 use crate::protocol::logic::faucet::get_all_faucet;
-use constants::constant_variables::constants::{ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY};
+use crate::protocol::utils::log::{log_internal, LogLevel};
+use crate::protocol::utils::rollback_retry::rollback_retry_all;
+use crate::stable_storage::state_handler::mutate_state;
+use crate::stable_storage::storable::Candid;
+use constants::constant_variables::constants::{
+    ADMIN, MAIN_CONTROLLER, SECONDS_PER_DAY, SECOND_PER_DAY,
+};
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
-use crate::declarations::datatypes::Certificate;
-use crate::protocol::utils::rollback_retry::rollback_retry_all;
+use crate::declarations::datatypes::RollbackRetryJob;
 
 /*
  * @title Initialization Function
@@ -52,7 +53,9 @@ pub fn init(args: Principal) {
     // by the admin during initialization.
     mutate_state(|state| {
         // state.access_control.insert(args, Candid(ADMIN.to_string()));
-        state.access_control.insert(args, Candid(vec![ADMIN.to_string()]));
+        state
+            .access_control
+            .insert(args, Candid(vec![ADMIN.to_string()]));
         state.meta_data.insert(
             MAIN_CONTROLLER.to_string(),
             Candid(InitArgs {
@@ -164,17 +167,15 @@ pub fn schedule_rollback_retry() {
 
     set_timer_interval(interval, || {
         ic_cdk::spawn(async {
-
-            match rollback_retry_all().await {
-                Ok(_) => {
-                    debug!(
-                        "Successfully rolled back and retried all pending jobs."
-                    );
-                }
-                Err(_) => {
-                    error!(
-                        "Error rollback retry all"
-                    );
+            let has_pending_jobs = mutate_state(|state| !state.pending_rollback.is_empty());
+            if has_pending_jobs {
+                match rollback_retry_all().await {
+                    Ok(_) => {
+                        debug!("Successfully rolled back and retried all pending jobs.");
+                    }
+                    Err(_) => {
+                        error!("Error rollback retry all");
+                    }
                 }
             }
         });

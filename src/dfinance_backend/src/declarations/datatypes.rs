@@ -269,7 +269,7 @@ pub struct Certificate {
     pub witness: Vec<u8>,
 }
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
+#[derive(CandidType, Deserialize, Clone, Debug,)]
 pub struct RollbackRetryJob {
     pub user_principal: Principal,
     pub asset_name: String,

@@ -2,10 +2,7 @@ use candid::Principal;
 
 use crate::{
     constants::{constant_variables::constants::DEFAULT_MAX_RETRIES, errors::Error},
-    declarations::{
-        datatypes::RollbackRetryJob,
-        structs::RollbackParamsVariant,
-    },
+    declarations::{datatypes::RollbackRetryJob, structs::RollbackParamsVariant},
     protocol::{
         libraries::{
             reserve::{self, get_reserve_data},
@@ -39,6 +36,15 @@ pub async fn rollback_retry_all() -> Result<(), Error> {
                 "[ROLLBACK RETRY BLOCKED] for user {} has reached max retries.",
                 rollback_job.user_principal
             );
+            mutate_state(|state| {
+                let next_id = match state.critical_rollback.last_key_value() {
+                    Some((max_id, _)) => max_id + 1,
+                    None => 1,
+                };
+                state
+                    .critical_rollback
+                    .insert(next_id, Candid(rollback_job.clone()));
+            });
             continue;
         }
 
@@ -136,7 +142,6 @@ pub async fn rollback_retry_all() -> Result<(), Error> {
     Ok(())
 }
 
-
 pub fn store_rollback_job(
     user_principal: Principal,
     asset_name: String,
@@ -164,7 +169,7 @@ pub fn store_rollback_job(
             .pending_rollback
             .insert(next_id, Candid(new_job.clone()));
     });
-    
+
     debug!(
         "[NEW JOB FOR ROLLBACK] . User: {}, Asset: {}. Initial Error: {:?}",
         new_job.user_principal, new_job.asset_name, new_job.last_error_message

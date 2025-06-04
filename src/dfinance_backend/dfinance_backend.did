@@ -207,22 +207,6 @@ type Result_9 = variant {
   Ok : vec record { principal; vec text };
   Err : Error;
 };
-type RollbackParamsVariant = variant {
-  WithdrawAsRollback : ExecuteSupplyParams;
-  RepayAsRollback : ExecuteRepayParams;
-  SupplyAsRollback : ExecuteSupplyParams;
-  BorrowAsRollback : ExecuteBorrowParams;
-};
-type RollbackRetryJob = record {
-  original_operation : text;
-  user_principal : principal;
-  asset_name : text;
-  retry_attempt : nat64;
-  created_at : nat64;
-  last_attempt_at : nat64;
-  last_error_message : opt text;
-  rollback_params : RollbackParamsVariant;
-};
 type TokenAlert = record {
   asset_name : text;
   is_exhausted : bool;
@@ -280,7 +264,6 @@ service : (principal) -> {
   get_cached_exchange_rate_certified : (text) -> (Result_5) query;
   get_canister_id_by_name : (text) -> (Result_11) query;
   get_reserve_data_certified : (text) -> (Result_12) query;
-  get_rollback_job_for_user : (principal) -> (opt RollbackRetryJob) query;
   get_total_users : () -> (nat64, Certificate) query;
   get_transfer_fee : (text) -> (Result_5) query;
   get_user_account_data : (
@@ -298,7 +281,6 @@ service : (principal) -> {
   mock_price_data : () -> (Result_1);
   receive_and_load_data_backup : (nat64) -> (Result_17);
   remove_user_role : (principal, text) -> (Result);
-  reset : () -> ();
   reset_reserve_value : (text, text, nat) -> (Result_1);
   send_backup_data_to_canister : () -> (Result_17);
   set_canister_id : (text, principal) -> (Result_1);

@@ -308,6 +308,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
         user_principal,
         liquidator_principal,
         ledger_canister_id,
+        params.asset.clone(),
     )
     .await?;
     info!("Repay validated successfully");

@@ -154,11 +154,12 @@ pub async fn admin_restart_reset_task() -> Result<(), Error> {
     guard_admin_only()?;
 
     schedule_midnight_task().await;
+    schedule_rollback_retry();
     return Ok(());
 }
 
 
-pub async  fn schedule_rollback_retry() {
+pub fn schedule_rollback_retry() {
     let interval = Duration::from_secs(FOUR_HOUR);
 
     set_timer_interval(interval, || {

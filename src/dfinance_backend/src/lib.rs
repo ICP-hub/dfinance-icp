@@ -1,3 +1,4 @@
+use crate::constants::constant_variables::constants::FOUR_HOUR;
 use crate::constants::errors::Error;
 use crate::declarations::datatypes::{
     AssetInfo, FaucetReserves, ReserveData, UserData, InitArgs
@@ -64,6 +65,7 @@ pub fn init(args: Principal) {
     init_logging(false);
 
     schedule_temp_log_cleanup();
+    schedule_rollback_retry();
 }
 /* @title Schedule Midnight Task (Only for Testnet)
  * @dev This function schedules a task to reset faucet usage at midnight.
@@ -153,4 +155,14 @@ pub async fn admin_restart_reset_task() -> Result<(), Error> {
     schedule_midnight_task().await;
     return Ok(());
 }
+
+
+pub fn schedule_rollback_retry() {
+    let interval = Duration::from_secs(FOUR_HOUR);
+
+    ic_cdk_timers::set_timer_interval(interval, || {
+        
+    });
+}
+
 export_candid!();

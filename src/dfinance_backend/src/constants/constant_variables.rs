@@ -25,6 +25,7 @@ pub mod constants {
     pub const WINDOW_SIZE_VAR: u64 = 60;
     pub const SECOND_PER_DAY: Duration = Duration::from_secs(86_400);
     pub const NANOS_PER_SECOND: u128 = 1_000_000_000u128;
+    pub const FOUR_HOUR: u64 = 4 * 60 * 60;
 
     // ------------------- Request Limit Constants -------------------
     pub const REQUEST_LIMIT: usize = 5; // Maximum allowed requests within the defined time window

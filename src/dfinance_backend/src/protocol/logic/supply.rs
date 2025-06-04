@@ -5,7 +5,7 @@ use crate::constants::{
     errors::Error,
     validators::{validate_asset_name, validate_zero_value},
 };
-use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams};
+use crate::declarations::structs::{ExecuteSupplyParams, ExecuteWithdrawParams, RollbackParamsVariant};
 use crate::guards::api_limiter::request_limiter;
 use crate::guards::locks_handler::CallerGuard;
 use crate::protocol::libraries::{
@@ -16,6 +16,7 @@ use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::utils::{
     log::{log_internal, LogLevel, LogFlusher},
     price::{calculate_transfer_fee, update_token_price},
+    rollback_retry::store_rollback_job,
 };
 use crate::stable_storage::storable::Candid;
 use crate::{debug, error, info};
@@ -89,46 +90,11 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     )
     .await?;
     info!("Supply info validated successfully"); 
-
-    // updating the price cached in the state
-    let _ = update_token_price(params.asset.clone()).await;
-    //fetching the price of the asset in USD
-
+    let user_fund_transfer_index: Nat ;
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let ledger_fee = get_ledger_transfer_fee(ledger_canister_id).await?;
 
-    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
-        error!("Insufficient amount to cover transfer fees");
-        return Err(Error::FeeExceedsAmount);
-    }
-    //updating params.amount with the actual amount of tokens to be supplied
-    params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
-    UpdateLogic::update_user_data_supply(
-        user_principal,
-        &reserve_cache,
-        params.clone(),
-        &mut reserve_data,
-    )
-    .await?;
-    info!("udpate user data supply called successfully"); 
-    let liq_added = params.amount.clone();
-    let liq_taken = zero_nat_value();
-    //Updating the APYs
-    reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
-        .await?;
-
-    info!("Interest rates updated successfully");
-    //intializing and updating user state and minting the dtokens to the user
-    
-
-    //updating the reserve data in the state
-    mutate_state(|state| {
-        state
-            .asset_index
-            .insert(params.asset.clone(), Candid(reserve_data.clone()))
-    });
-    insert_certified_value(params.asset.clone(), reserve_data.clone());
-    // Transfers the asset from the user to our backend cansiter
+    //transfer the asset from the user to our backend canister
     match asset_transfer_from(
         ledger_canister_id,
         user_principal,
@@ -138,38 +104,107 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     .await
     {
         Ok(block_index) => {
-            info!("Asset transfer from user to backend canister executed successfully");
+            user_fund_transfer_index = block_index;
+        }
+        Err(_) => {
+            error!("Error in asset transfer from user to backend canister"); 
+            return Err(Error::ErrorSupplyToken);
+        }
+    };
+    // updating the price cached in the state
+    let _ = update_token_price(params.asset.clone()).await;
+
+
+    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
+    //updating params.amount with the actual amount of tokens to be supplied
+    params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
+    match UpdateLogic::update_user_data_supply(
+        user_principal,
+        &reserve_cache,
+        params.clone(),
+        &mut reserve_data,
+    )
+    .await{
+        Ok(_) => {
+            info!("udpate user data supply called successfully"); 
+            let liq_added = params.amount.clone();
+            let liq_taken = zero_nat_value();
+            //Updating the APYs
+            reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
+                .await?;
+
+            info!("Interest rates updated successfully");
+            
+
+            //updating the reserve data in the state
             mutate_state(|state| {
                 state
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
-            Ok(block_index)
-        }
+            insert_certified_value(params.asset.clone(), reserve_data.clone());
+            return Ok(user_fund_transfer_index);
+        },
         Err(_) => {
-            error!("Error in asset transfer from user to backend canister"); 
-            //Rollback user state and burning dtokens
-                                                                            
-            let withdraw_param = ExecuteWithdrawParams {
+            
+            let supply_param = ExecuteSupplyParams {
                 asset: params.asset.clone(),
-                can_be_collateral: params.can_be_collateral,
                 amount: params.amount.clone(),
+                can_be_collateral: params.can_be_collateral,
             };
-            //for burning and reverting the supplied amount
-            UpdateLogic::update_user_data_withdraw(
+
+            match UpdateLogic::update_user_data_supply(
                 user_principal,
                 &reserve_cache,
-                withdraw_param.clone(),
+                supply_param.clone(),
                 &mut reserve_data,
             )
-            .await?;
-            
-            info!("Rollback successfully executed");
+            .await
+            {
+                Ok(_) => {
+                    info!("Rollback successfully executed"); 
+                    error!("Error in asset transfer from backend to user"); 
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    return Err(Error::ErrorBurnTokens);
+                }
+                Err(first_rollback_failed_error) => {
+                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    error!(
+                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                    );
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    // Rollback parameters
+                    let rollback_params_variant =
+                        RollbackParamsVariant::SupplyAsRollback(supply_param.clone());
 
-            error!("Error in asset transfer from user to backend canister");
-            return Err(Error::ErrorSupplyToken);
+                    // Schedule the rollback job
+                    store_rollback_job(
+                        user_principal,
+                        params.asset.clone(),
+                        "Execute_withdraw".to_string(),
+                        rollback_params_variant,
+                        first_rollback_failed_error.clone(),
+                        
+                    )?;
+                    
+                    return Err(Error::RollbackFailed);
+                }
+            };
         }
-    }
+    };
 }
 
 /*
@@ -274,6 +309,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
+            insert_certified_value(params.asset.clone(), reserve_data.clone());
             return Ok(new_balance);
         }
         Err(_) => {
@@ -284,17 +320,53 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                 can_be_collateral: params.can_be_collateral,
             };
 
-            UpdateLogic::update_user_data_supply(
+            match UpdateLogic::update_user_data_supply(
                 user_principal,
                 &reserve_cache,
-                supply_param,
+                supply_param.clone(),
                 &mut reserve_data,
             )
-            .await?;
+            .await
+            {
+                Ok(_) => {
+                    info!("Rollback successfully executed"); 
+                    error!("Error in asset transfer from backend to user"); 
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    return Err(Error::ErrorBurnTokens);
+                }
+                Err(first_rollback_failed_error) => {
+                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    error!(
+                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                    );
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    // Rollback parameters
+                    let rollback_params_variant =
+                        RollbackParamsVariant::SupplyAsRollback(supply_param.clone());
 
-            info!("Rollback successfully executed"); 
-            error!("Error in asset transfer from backend to user"); 
-            return Err(Error::ErrorBurnTokens);
+                    // Schedule the rollback job
+                    store_rollback_job(
+                        user_principal,
+                        params.asset.clone(),
+                        "Execute_withdraw".to_string(),
+                        rollback_params_variant,
+                        first_rollback_failed_error.clone(),
+                        
+                    )?;
+                    
+                    return Err(Error::RollbackFailed);
+                }
+            };
         }
     }
 }

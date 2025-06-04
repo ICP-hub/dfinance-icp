@@ -5,7 +5,7 @@ use crate::constants::{
     errors::Error,
     validators::{validate_asset_name, validate_zero_value}
 };
-use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams};
+use crate::declarations::structs::{ExecuteBorrowParams, ExecuteRepayParams, RollbackParamsVariant};
 use crate::guards::{
     api_limiter::request_limiter,
     locks_handler::CallerGuard
@@ -18,14 +18,15 @@ use crate::protocol::libraries::{
 use crate::protocol::logic::validation::ValidationLogic;
 use crate::protocol::{
     utils::log::{log_internal, LogLevel, LogFlusher},
-    utils::price::{calculate_transfer_fee, update_token_price}
+    utils::price::{calculate_transfer_fee, update_token_price},
+    utils::rollback_retry::store_rollback_job,
 };
 use crate::stable_storage::{
     state_handler::*,
     storable::Candid
 };
 use crate::{debug, error, info};
-use candid::Nat;
+use candid::{Nat, Principal};
 use ic_cdk::update;
 
 /*
@@ -159,6 +160,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
+            insert_certified_value(params.asset.clone(), reserve_data.clone());
             Ok(new_balance)
         }
         Err(_) => {
@@ -170,15 +172,57 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                 on_behalf_of: None,
             };
 
-            UpdateLogic::update_user_data_repay(
+            match UpdateLogic::update_user_data_repay(
                 user_principal,
                 &reserve_cache,
                 repay_param,
                 &mut reserve_data,
             )
-            .await?;
-            info!("Rollback user and reserve state executed successfully");
-            return Err(Error::ErrorMintDebtTokens);
+            .await
+            {
+                Ok(_) => {
+                    info!("Rollback user and reserve state executed successfully");
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    return Err(Error::ErrorMintDebtTokens);
+                }
+                Err(first_rollback_failed_error) => {
+                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    error!(
+                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                    );
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    // Rollback parameters
+                    let repay_param = ExecuteRepayParams {
+                        asset: params.asset.clone(),
+                        amount: params.amount.clone(),
+                        on_behalf_of: None,
+                    };
+
+                    let rollback_params_variant =
+                        RollbackParamsVariant::RepayAsRollback(repay_param.clone());
+
+                    // Schedule the rollback job
+                    store_rollback_job(
+                        user_principal,
+                        params.asset.clone(),
+                        "Execute_borrow".to_string(),
+                        rollback_params_variant,
+                        first_rollback_failed_error.clone(),
+                        
+                    )?;
+                    return Err(Error::RollbackFailed);
+                }
+            };
         }
     }
 }
@@ -268,6 +312,30 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     .await?;
     info!("Repay validated successfully");
 
+    let transfer_block_index:Nat;
+    //transfer asset from user or liquidator to backend
+    match asset_transfer_from(
+        ledger_canister_id,
+        transfer_from_principal,
+        platform_principal,
+        repay_amount.clone() - ledger_fee.clone(),
+    )
+    .await
+    {
+        Ok(new_balance) => {
+            info!(
+                "Asset transfer from user to backend executed successfully, new balance: {:?}",
+                new_balance
+            );
+            transfer_block_index = new_balance;
+        },
+        Err(_) => {
+            error!("Error in asset transfer from user to backend");
+            
+            // info!("Rollback user and reserve state executed successfully");
+            return Err(Error::ErrorBurnDebtTokens);
+        }
+    };
     let _ = update_token_price(params.asset.clone()).await;
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     if  params.amount < transfer_token_fee.clone() + ledger_fee.clone() {
@@ -289,67 +357,96 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     }
 
     // ----------- Update logic here -------------
-    UpdateLogic::update_user_data_repay(
+    match UpdateLogic::update_user_data_repay(
         user_principal,
         &reserve_cache,
         params.clone(),
         &mut reserve_data,
     )
-    .await?;
-    info!("User data updated successfully");
+    .await{
+        Ok(_) => {
+            info!("User data updated successfully");
+            reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
+            debug!("Current debt: {:?}", reserve_cache.curr_debt);
 
-    reserve_cache.curr_debt = reserve_data.asset_borrow.clone();
-    debug!("Current debt: {:?}", reserve_cache.curr_debt);
+            reserve::update_interest_rates(
+                &mut reserve_data,
+                &mut reserve_cache,
+                zero_nat_value(),
+                params.amount.clone(),
+            )
+            .await?;
+            info!("Interest rates updated successfully");
 
-    reserve::update_interest_rates(
-        &mut reserve_data,
-        &mut reserve_cache,
-        zero_nat_value(),
-        params.amount.clone(),
-    )
-    .await?;
-    info!("Interest rates updated successfully");
-
-    debug!("Updated Reserve data: {:?}", reserve_data);
-
-    // Transfers the asset from the user to our backend canister
-    match asset_transfer_from(
-        ledger_canister_id,
-        transfer_from_principal,
-        platform_principal,
-        repay_amount.clone() - ledger_fee.clone(),
-    )
-    .await
-    {
-        Ok(new_balance) => {
-            info!(
-                "Asset transfer from user to backend executed successfully, new balance: {:?}",
-                new_balance
-            );
+            debug!("Updated Reserve data: {:?}", reserve_data);
             mutate_state(|state| {
                 state
                     .asset_index
                     .insert(params.asset.clone(), Candid(reserve_data.clone()))
             });
-            Ok(new_balance)
-        }
+            insert_certified_value(params.asset.clone(), reserve_data.clone());
+            return Ok(transfer_block_index)
+        },
         Err(_) => {
-            error!("Error in asset transfer from user to backend");
+            error!("error in asset transfer from backend to user");
             //Rollback user state
-            let borrow_param = ExecuteBorrowParams {
+            let repay_param = ExecuteRepayParams {
                 asset: params.asset.clone(),
                 amount: params.amount.clone(),
+                on_behalf_of: None,
             };
 
-            UpdateLogic::update_user_data_borrow(
+            match UpdateLogic::update_user_data_repay(
                 user_principal,
                 &reserve_cache,
-                borrow_param,
+                repay_param,
                 &mut reserve_data,
             )
-            .await?;
-            info!("Rollback user and reserve state executed successfully");
-            return Err(Error::ErrorBurnDebtTokens);
+            .await
+            {
+                Ok(_) => {
+                    info!("Rollback user and reserve state executed successfully");
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    return Err(Error::ErrorMintDebtTokens);
+                }
+                Err(first_rollback_failed_error) => {
+                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    error!(
+                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                    );
+                    mutate_state(|state| {
+                        state
+                            .asset_index
+                            .insert(params.asset.clone(), Candid(reserve_data.clone()))
+                    });
+                    insert_certified_value(params.asset.clone(), reserve_data.clone());
+                    // Rollback parameters
+                    let repay_param = ExecuteRepayParams {
+                        asset: params.asset.clone(),
+                        amount: params.amount.clone(),
+                        on_behalf_of: None,
+                    };
+
+                    let rollback_params_variant =
+                        RollbackParamsVariant::RepayAsRollback(repay_param.clone());
+
+                    // Schedule the rollback job
+                    store_rollback_job(
+                        user_principal,
+                        params.asset.clone(),
+                        "Execute_borrow".to_string(),
+                        rollback_params_variant,
+                        first_rollback_failed_error.clone(),
+                        
+                    )?;
+                    return Err(Error::RollbackFailed);
+                }
+            };
         }
-    }
+    };
 }

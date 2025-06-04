@@ -35,6 +35,7 @@ use constants::constant_variables::constants::{
 };
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
+use crate::declarations::datatypes::RollbackRetryJob;
 
 /*
  * @title Initialization Function

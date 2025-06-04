@@ -1,6 +1,7 @@
 use candid::CandidType;
+use serde::Deserialize;
 
-#[derive(Debug, CandidType, Clone)]
+#[derive(Debug, CandidType, Clone,Deserialize)]
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,
@@ -114,6 +115,7 @@ pub enum Error {
     UserRoleNotFound,
     TokenNotTransfered,
     RollbackFailed,
+    InvalidRollbackId,
 }
 
 impl Error {
@@ -243,6 +245,7 @@ impl Error {
             Error::UserRoleNotFound => "No role assigned to the specified user.",
             Error::TokenNotTransfered => "Token transfer failed. Please try again later.",
             Error::RollbackFailed => "Rollback operation failed. job stored in rollback retry .",
+            Error::InvalidRollbackId => "Invalid rollback ID provided. Please check and try again.",
         }
     }
 }

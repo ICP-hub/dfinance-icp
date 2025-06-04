@@ -1,12 +1,9 @@
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 use crate::stable_storage::memory::{
-    ASSET_INDEX_MEMORY_ID,  CANISTER_MEMORY_ID, PENDING_ROLLBACK_MEMORY_ID,
-    META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, TESTER_LIST,
-    USER_PROFILE_MEMORY_ID, ACCESSCONTOL, ASSET_RECORDS_MEMORY_ID, FAUCETDATA
+    ACCESSCONTOL, ASSET_INDEX_MEMORY_ID, ASSET_RECORDS_MEMORY_ID, CANISTER_MEMORY_ID, CRITICAL_ROLLBACK_MEMORY_ID, FAUCETDATA, META_DATA, PENDING_ROLLBACK_MEMORY_ID, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, TESTER_LIST, USER_PROFILE_MEMORY_ID
 };
 use crate::stable_storage::types::{
-    AssetIndex,CanisterList, MetaData, PriceCacheList, PendingRollbackMap, 
-    ReserveList, TesterList, UserProfile, AccessControl, AssetRecords, FaucetData
+    AccessControl, AssetIndex, AssetRecords, CanisterList, CriticalRollbackMap, FaucetData, MetaData, PendingRollbackMap, PriceCacheList, ReserveList, TesterList, UserProfile
 };
 
 pub struct State {
@@ -21,6 +18,7 @@ pub struct State {
     pub asset_records:AssetRecords,
     pub faucet_data: FaucetData,
     pub pending_rollback: PendingRollbackMap,
+    pub critical_rollback: CriticalRollbackMap,
 }
 /*
  * @title State
@@ -43,6 +41,7 @@ impl State {
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),
             faucet_data: FaucetData::init(memory_manager.get(FAUCETDATA)),
             pending_rollback: PendingRollbackMap::init(memory_manager.get(PENDING_ROLLBACK_MEMORY_ID)),
+            critical_rollback: CriticalRollbackMap::init(memory_manager.get(CRITICAL_ROLLBACK_MEMORY_ID)),
         }
     }
 }

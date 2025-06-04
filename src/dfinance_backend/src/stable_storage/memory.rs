@@ -11,3 +11,4 @@ pub const ACCESSCONTOL: MemoryId = MemoryId::new(7);
 pub const ASSET_RECORDS_MEMORY_ID: MemoryId = MemoryId::new(8);
 pub const FAUCETDATA: MemoryId = MemoryId::new(9);
 pub const PENDING_ROLLBACK_MEMORY_ID: MemoryId = MemoryId::new(10);
+pub const CRITICAL_ROLLBACK_MEMORY_ID: MemoryId = MemoryId::new(11);

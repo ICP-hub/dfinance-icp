@@ -1,11 +1,11 @@
 use ic_stable_structures::{memory_manager::MemoryManager, DefaultMemoryImpl};
 use crate::stable_storage::memory::{
-    ASSET_INDEX_MEMORY_ID,  CANISTER_MEMORY_ID,
+    ASSET_INDEX_MEMORY_ID,  CANISTER_MEMORY_ID, PENDING_ROLLBACK_MEMORY_ID,
     META_DATA, PRICE_CACHE_MEMORY_ID, RESERVES_MEMORY_ID, TESTER_LIST,
-     USER_PROFILE_MEMORY_ID, ACCESSCONTOL, ASSET_RECORDS_MEMORY_ID, FAUCETDATA
+    USER_PROFILE_MEMORY_ID, ACCESSCONTOL, ASSET_RECORDS_MEMORY_ID, FAUCETDATA
 };
 use crate::stable_storage::types::{
-    AssetIndex,CanisterList, MetaData, PriceCacheList,
+    AssetIndex,CanisterList, MetaData, PriceCacheList, PendingRollbackMap, 
     ReserveList, TesterList, UserProfile, AccessControl, AssetRecords, FaucetData
 };
 
@@ -20,6 +20,7 @@ pub struct State {
     pub access_control: AccessControl,
     pub asset_records:AssetRecords,
     pub faucet_data: FaucetData,
+    pub pending_rollback: PendingRollbackMap,
 }
 /*
  * @title State
@@ -41,6 +42,7 @@ impl State {
             access_control: AccessControl::init(memory_manager.get(ACCESSCONTOL)),
             asset_records: AssetRecords::init(memory_manager.get(ASSET_RECORDS_MEMORY_ID)),
             faucet_data: FaucetData::init(memory_manager.get(FAUCETDATA)),
+            pending_rollback: PendingRollbackMap::init(memory_manager.get(PENDING_ROLLBACK_MEMORY_ID)),
         }
     }
 }

@@ -117,4 +117,7 @@ pub mod constants {
     //-------------------- Miscellaneous Constants -------------------
     pub const DATA_STORAGE_CANISTER_NAME: &str = "data_storage";
 
+    // ------------------- Rollback Retry Constants -------------------
+    pub const DEFAULT_MAX_RETRIES : u64 = 5;
+
 }

@@ -286,3 +286,11 @@ pub struct CaptchaEntry {
 pub struct Challenge {
     pub base64_img: String,
 }
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum RollbackParamsVariant {
+    WithdrawAsRollback(ExecuteWithdrawParams),
+    SupplyAsRollback(ExecuteSupplyParams),
+    RepayAsRollback(ExecuteRepayParams),
+    BorrowAsRollback(ExecuteBorrowParams),
+}

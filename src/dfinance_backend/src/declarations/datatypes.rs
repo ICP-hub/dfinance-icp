@@ -2,6 +2,7 @@ use crate::constants::constant_variables::constants::FAUCET_LIMIT;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use serde::Serialize;
 use std::collections::HashMap;
+use crate::declarations::structs::RollbackParamsVariant;
 
 /*
  * @title Reserve Data
@@ -266,4 +267,17 @@ pub struct PriceCache {
 pub struct Certificate {
     pub certificate: Vec<u8>,
     pub witness: Vec<u8>,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct RollbackRetryJob {
+    pub user_principal: Principal,
+    pub asset_name: String,
+    pub original_operation: String,
+    pub rollback_params: RollbackParamsVariant,
+    pub retry_attempt: u64,
+    pub last_error_message: Option<String>,
+    pub created_at: u64,      
+    pub last_attempt_at: u64, 
+
 }

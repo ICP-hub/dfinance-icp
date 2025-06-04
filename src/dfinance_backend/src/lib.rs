@@ -34,6 +34,7 @@ use constants::constant_variables::constants::{ADMIN, MAIN_CONTROLLER, SECONDS_P
 use ic_cdk_timers::{set_timer, set_timer_interval};
 use std::time::Duration;
 use crate::declarations::datatypes::Certificate;
+use crate::protocol::utils::rollback_retry::rollback_retry_all;
 
 /*
  * @title Initialization Function
@@ -157,11 +158,25 @@ pub async fn admin_restart_reset_task() -> Result<(), Error> {
 }
 
 
-pub fn schedule_rollback_retry() {
+pub async  fn schedule_rollback_retry() {
     let interval = Duration::from_secs(FOUR_HOUR);
 
-    ic_cdk_timers::set_timer_interval(interval, || {
-        
+    set_timer_interval(interval, || {
+        ic_cdk::spawn(async {
+
+            match rollback_retry_all().await {
+                Ok(_) => {
+                    debug!(
+                        "Successfully rolled back and retried all pending jobs."
+                    );
+                }
+                Err(_) => {
+                    error!(
+                        "Error rollback retry all"
+                    );
+                }
+            }
+        });
     });
 }
 

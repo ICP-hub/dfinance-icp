@@ -113,6 +113,7 @@ pub enum Error {
     RoleAlreadyExistsForUser,
     UserRoleNotFound,
     TokenNotTransfered,
+    RollbackFailed,
 }
 
 impl Error {
@@ -241,7 +242,7 @@ impl Error {
             }
             Error::UserRoleNotFound => "No role assigned to the specified user.",
             Error::TokenNotTransfered => "Token transfer failed. Please try again later.",
-
+            Error::RollbackFailed => "Rollback operation failed. Please try again later.",
         }
     }
 }

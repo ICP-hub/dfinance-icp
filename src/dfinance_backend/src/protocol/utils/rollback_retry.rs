@@ -1,8 +1,9 @@
-use candid::Principal;
+use candid::{Principal, Nat};
+use ic_cdk::{query,update};
 
 use crate::{
     constants::{constant_variables::constants::DEFAULT_MAX_RETRIES, errors::Error},
-    declarations::{datatypes::RollbackRetryJob, structs::RollbackParamsVariant},
+    declarations::{datatypes::RollbackRetryJob, structs::{RollbackParamsVariant, ExecuteRepayParams}},
     protocol::{
         libraries::{
             reserve::{self, get_reserve_data},
@@ -11,7 +12,7 @@ use crate::{
         utils::log::{log_internal, LogLevel},
     },
     stable_storage::{
-        state_handler::{insert_certified_value, mutate_state},
+        state_handler::{insert_certified_value, mutate_state, read_state},
         storable::Candid,
     },
 };
@@ -175,4 +176,26 @@ pub fn store_rollback_job(
         new_job.user_principal, new_job.asset_name, new_job.last_error_message
     );
     Ok(())
+}
+
+pub fn get_pending_repay_amount()-> Nat {
+    let user = ic_cdk::caller();
+    info!(
+        "get pending repay amount for user {}", user
+    );
+    //get total amount to repay for user
+    let total_amount = read_state(|state| {
+        state.pending_rollback.iter()
+            .filter(|(_, job)| {
+                job.user_principal == user
+            })
+            .map(|(_, job)| {
+                match &job.rollback_params {
+                    RollbackParamsVariant::RepayAsRollback(repay_params) => repay_params.amount.clone(),
+                    _ => Nat::from(0u64), // Ignore other types
+                }
+            })
+            .fold(Nat::from(0u64), |acc, x| acc + x)
+    });
+    return total_amount;
 }

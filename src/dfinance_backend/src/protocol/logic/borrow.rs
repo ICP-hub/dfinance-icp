@@ -215,7 +215,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        "Execute_borrow".to_string(),
+                        "execute_borrow".to_string(),
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         
@@ -439,7 +439,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        "Execute_borrow".to_string(),
+                        "repay".to_string(),
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         

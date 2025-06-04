@@ -194,7 +194,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        "Execute_withdraw".to_string(),
+                        "Execute_supply".to_string(),
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         
@@ -358,7 +358,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        "Execute_withdraw".to_string(),
+                        "execute_withdraw".to_string(),
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         

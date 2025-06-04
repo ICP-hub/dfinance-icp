@@ -178,16 +178,15 @@ pub fn store_rollback_job(
     Ok(())
 }
 
-pub fn get_pending_repay_amount()-> Nat {
-    let user = ic_cdk::caller();
+pub fn get_pending_repay_amount(user:Principal ,asset_name: String)-> Nat {
     info!(
         "get pending repay amount for user {}", user
     );
-    //get total amount to repay for user
+    //get total amount to repay for user for specific asset
     let total_amount = read_state(|state| {
         state.pending_rollback.iter()
             .filter(|(_, job)| {
-                job.user_principal == user
+                job.user_principal == user && job.asset_name == asset_name
             })
             .map(|(_, job)| {
                 match &job.rollback_params {

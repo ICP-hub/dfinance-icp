@@ -10,7 +10,7 @@ use crate::declarations::datatypes::{ReserveData, UserReserveData};
 use crate::protocol::libraries::{
     reserve::get_asset_principal,
     update::{user_data, user_reserve},
-    user::{calculate_user_account_data, user_normalized_debt, user_normalized_supply, get_asset_debt},
+    user::{calculate_user_account_data, user_normalized_debt, user_normalized_supply},
 };
 use crate::protocol::utils::{
     log::{log_internal, LogLevel},
@@ -19,7 +19,6 @@ use crate::protocol::utils::{
 };
 use crate::{debug, error, trace};
 use candid::{Nat, Principal};
-use crate::protocol::utils::rollback_retry::get_pending_repay_amount;
 pub struct ValidationLogic;
 
 impl ValidationLogic {
@@ -429,7 +428,7 @@ impl ValidationLogic {
         user: Principal,
         liquidator: Option<Principal>,
         ledger_canister: Principal,
-        asset: String,
+        _asset: String,
     ) -> Result<(), Error> {
         //fetching the wallet balance of the user if liquidator is not present else fetch the liquidator wallet balance
         let user_balance;
@@ -437,15 +436,6 @@ impl ValidationLogic {
             user_balance = get_balance(ledger_canister, user.clone()).await?;
         } else {
             user_balance = get_balance(ledger_canister, liquidator.unwrap().clone()).await?;
-        }
-        let user_current_debt: Nat = get_asset_debt(asset.clone(), Some(user.clone())).await?;
-        let pending_repay_amount = get_pending_repay_amount();
-        if user_current_debt < (pending_repay_amount.clone() + amount.clone()) {
-            error!(
-                "User current debt {} is less than pending repay amount + params amount {}",
-                user_current_debt, (pending_repay_amount.clone() + amount.clone())
-            );
-            return Err(Error::RepayMoreThanDebt);
         }
 
         debug!("User balance: {:?}", user_balance);

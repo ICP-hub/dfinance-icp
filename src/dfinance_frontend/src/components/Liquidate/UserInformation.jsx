@@ -560,6 +560,8 @@ const UserInformationPopup = ({
       "Interest rates could not be updated. Please retry.",
     ErrorRollBack:
       "An error occurred during rollback. Contact support if the issue persists.",
+    RollbackFailed :
+      "Rollback failed .it will be auto retried later within 4 hours.",
     Default: "An unexpected error occurred. Please try again later.",
   };
 

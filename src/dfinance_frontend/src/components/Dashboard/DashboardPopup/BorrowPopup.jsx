@@ -219,6 +219,8 @@ const Borrow = ({
       "The canister ID for the selected asset is missing. Please contact support.",
     ErrorMintDebtTokens:
       "Borrow failed due to a debt token error. Your account state has been rolled back. Try again later.",
+    RollbackFailed :
+      "Rollback failed . it will be auto retried later within 4 hours.",
     Default:
       "An unexpected error occurred during the borrow process. Please try again later.",
   };

@@ -359,6 +359,8 @@ const Repay = ({
     ErrorMintDebtTokens:
       "Failed to process the transaction. Please contact support.",
 
+    RollbackFailed :
+      "Rollback failed . it will be auto retried later within 4 hours.",
     default: "An unexpected error occurred. Please try again later.",
   };
 

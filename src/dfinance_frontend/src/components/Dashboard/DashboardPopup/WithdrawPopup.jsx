@@ -228,6 +228,8 @@ const WithdrawPopup = ({
       "There was an issue processing your transaction. The tokens could not be burned.",
     WithdrawMoreThanSupply:
       "You are trying to withdraw more than the available supply. Please check the amount and try again.",
+    RollbackFailed :
+      "Rollback failed . it will be auto retried later within 4 hours.",
     Default:
       "An unexpected error occurred during the withdraw process. Please try again later.",
   };

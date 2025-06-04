@@ -26,8 +26,9 @@ use crate::stable_storage::{
     storable::Candid
 };
 use crate::{debug, error, info};
-use candid::{Nat, Principal};
+use candid::Nat;
 use ic_cdk::update;
+use crate::protocol::utils::rollback_retry::get_pending_repay_amount;
 
 /*
 -------------------------------------
@@ -188,7 +189,7 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                             .insert(params.asset.clone(), Candid(reserve_data.clone()))
                     });
                     insert_certified_value(params.asset.clone(), reserve_data.clone());
-                    return Err(Error::ErrorMintDebtTokens);
+                    return Err(Error::TokenNotTransfered);
                 }
                 Err(first_rollback_failed_error) => {
                     // --- Direct Rollback Failed: Schedule for Retry ---
@@ -264,11 +265,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
  *      - Rolls back any changes if any step fails during the repayment process.
  */
 pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
+    let original_opt:String; //original operation name for rollback retry job
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
             let user_principal = on_behalf_of;
+            original_opt = "execute_liquidation".to_string();
             (user_principal, Some(ic_cdk::caller()))
         } else {
+            original_opt = "repay".to_string();
             (ic_cdk::caller(), None)
         };
     let _log_flusher = LogFlusher {
@@ -313,6 +317,27 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
     .await?;
     info!("Repay validated successfully");
 
+    let _ = update_token_price(params.asset.clone()).await;
+    let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
+    if  params.amount < transfer_token_fee.clone() + ledger_fee.clone() {
+        return Err(Error::FeeExceedsAmount);
+    } 
+    params.amount = params.amount - (transfer_token_fee.clone() + ledger_fee.clone());
+
+    let user_current_debt: Nat = get_asset_debt(params.asset.clone(), Some(user_principal)).await?;
+
+    debug!("User current debt: {:?}", user_current_debt);
+    if user_current_debt == zero_nat_value() {
+        error!("User has no debt to repay");
+        return Err(Error::NoDebtToRepay);
+    }
+    let pending_repay_amount = get_pending_repay_amount(user_principal,params.asset.clone());
+
+    if (params.amount.clone() + pending_repay_amount) > user_current_debt {
+        error!("Repay amount exceeds current debt");
+        return Err(Error::RepayMoreThanDebt);
+    }
+
     let transfer_block_index:Nat;
     //transfer asset from user or liquidator to backend
     match asset_transfer_from(
@@ -337,26 +362,6 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
             return Err(Error::ErrorBurnDebtTokens);
         }
     };
-    let _ = update_token_price(params.asset.clone()).await;
-    let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
-    if  params.amount < transfer_token_fee.clone() + ledger_fee.clone() {
-        return Err(Error::FeeExceedsAmount);
-    } 
-    params.amount = params.amount - (transfer_token_fee.clone() + ledger_fee.clone());
-
-    let user_current_debt: Nat = get_asset_debt(params.asset.clone(), Some(user_principal)).await?;
-
-    debug!("User current debt: {:?}", user_current_debt);
-    if user_current_debt == zero_nat_value() {
-        error!("User has no debt to repay");
-        return Err(Error::NoDebtToRepay);
-    }
-
-    if params.amount.clone() > user_current_debt {
-        error!("Repay amount exceeds current debt");
-        return Err(Error::RepayMoreThanDebt);
-    }
-
     // ----------- Update logic here -------------
     match UpdateLogic::update_user_data_repay(
         user_principal,
@@ -413,7 +418,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                             .insert(params.asset.clone(), Candid(reserve_data.clone()))
                     });
                     insert_certified_value(params.asset.clone(), reserve_data.clone());
-                    return Err(Error::ErrorMintDebtTokens);
+                    return Ok(transfer_block_index)
                 }
                 Err(first_rollback_failed_error) => {
                     // --- Direct Rollback Failed: Schedule for Retry ---
@@ -440,7 +445,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        "repay".to_string(),
+                        original_opt,
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         

@@ -6,7 +6,7 @@ use crate::constants::{
     validators::{validate_asset_name, validate_zero_value},
 };
 use crate::declarations::datatypes::{ReserveData, UserReserveData};
-use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams};
+use crate::declarations::structs::{ExecuteLiquidationParams, ExecuteRepayParams, ExecuteSupplyParams, RollbackParamsVariant, ExecuteWithdrawParams};
 use crate::guards::{
     access_control::guard_principal_not_anonymous,
     api_limiter::request_limiter,
@@ -23,6 +23,7 @@ use crate::protocol::utils::{
     log::{log_internal, LogFlusher, LogLevel},
     math_utils::ScalingMath,
     price::{calculate_transfer_fee, get_cached_exchange_rate},
+    rollback_retry::store_rollback_job
 };
 use crate::stable_storage::state_handler::{insert_certified_value, mutate_state};
 use crate::stable_storage::storable::Candid;
@@ -224,17 +225,37 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     )
     .await
     {
-        mint_scaled(
+        //minting reward failed, minting user collateral
+        if let Err(err) = mint_scaled(
             &mut collateral_reserve_data,
             &mut user_reserve_data,
-            reward_amount,
+            reward_amount.clone(),
             collateral_reserve_cache.next_liquidity_index,
             user_principal,
             collateral_dtoken_principal,
             platform_principal,
             true,
         )
-        .await?;
+        .await{
+            //minting scaled fails, schedule a rollback job for minting user collateral
+            error!("Error in minting user debt scaled rollback of liquidator supply: {:?}", err);
+            let supply_param = ExecuteSupplyParams {
+                asset: params.collateral_asset.to_string(),
+                amount: reward_amount.clone(),
+                can_be_collateral: true,
+            };
+            let rollback_params_variant =
+            RollbackParamsVariant::SupplyAsRollback(supply_param.clone());
+            
+            // Schedule the rollback job
+            store_rollback_job(
+                user_principal,
+                params.collateral_asset.to_string(),
+                "mint_scaled_liq1".to_string(),
+                rollback_params_variant,
+                err.clone(),
+            )?;
+        };
         error!("Error in minting scaled: {:?}", err);
         return Err(err);
     }
@@ -286,6 +307,10 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             Ok(params.amount)
         }
         Err(e) => {
+            // If repay fails, we don't need to rollback the user dtoken burn and liquidator dtoken mint
+            if e == Error::RollbackFailed{
+                return Err(e);
+            };
             let mut liquidator_user_data = user_data(liquidator_principal)?;
 
             let mut liquidator_collateral_reserve =
@@ -326,8 +351,8 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                     }
                 }
             };
-
-            burn_scaled(
+            //repay failed, burn the liquidator reward
+            if let Err(err) = burn_scaled(
                 &mut collateral_reserve_data,
                 &mut liquidator_reserve_data,
                 reward_amount.clone(),
@@ -337,9 +362,28 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 platform_principal,
                 true,
             )
-            .await?;
+            .await{
+                //rollback failed, schedule a rollback job for burn reward
+                let withdraw_param = ExecuteWithdrawParams {
+                    asset: params.collateral_asset.to_string(),
+                    amount: reward_amount.clone(),
+                    can_be_collateral: true,
+                };
+                let rollback_params_variant =
+                RollbackParamsVariant::WithdrawAsRollback(withdraw_param.clone());
+                
+                // Schedule the rollback job
+                store_rollback_job(
+                    liquidator_principal,
+                    params.collateral_asset.to_string(),
+                    "burn_scaled_liq".to_string(),
+                    rollback_params_variant,
+                    err.clone(),
+                )?;
+            };
 
-            mint_scaled(
+            // repay failed, mint the user collateral
+            if let Err(err) = mint_scaled(
                 &mut collateral_reserve_data,
                 &mut user_reserve_data,
                 reward_amount.clone() - protocol_fee_amount.clone(),
@@ -349,7 +393,25 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 platform_principal,
                 true,
             )
-            .await?;
+            .await{
+                //rollback failed, schedule a rollback job for mint collateral
+                let supply_param = ExecuteSupplyParams {
+                    asset: params.collateral_asset.to_string(),
+                    amount: reward_amount.clone() - protocol_fee_amount.clone(),
+                    can_be_collateral: true,
+                };
+                let rollback_params_variant =
+                RollbackParamsVariant::SupplyAsRollback(supply_param.clone());
+                
+                // Schedule the rollback job
+                store_rollback_job(
+                    user_principal,
+                    params.collateral_asset.to_string(),
+                    "mint_scaled_liq2".to_string(),
+                    rollback_params_variant,
+                    err.clone(),
+                )?;
+            };
  
             if let Some(ref mut reserves) = user_account_data.reserves {
                 if let Some((_, reserve)) = reserves

@@ -166,14 +166,24 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             {
                 Ok(_) => {
                     info!("Rollback successfully executed"); 
-                    error!("Error in asset transfer from backend to user"); 
+                    info!("udpate user data supply called successfully"); 
+                    let liq_added = params.amount.clone();
+                    let liq_taken = zero_nat_value();
+                    //Updating the APYs
+                    reserve::update_interest_rates(&mut reserve_data, &mut reserve_cache, liq_taken, liq_added)
+                        .await?;
+
+                    info!("Interest rates updated successfully");
+                    
+
+                    //updating the reserve data in the state
                     mutate_state(|state| {
                         state
                             .asset_index
                             .insert(params.asset.clone(), Candid(reserve_data.clone()))
                     });
                     insert_certified_value(params.asset.clone(), reserve_data.clone());
-                    return Err(Error::ErrorBurnTokens);
+                    return Ok(user_fund_transfer_index);
                 }
                 Err(first_rollback_failed_error) => {
                     // --- Direct Rollback Failed: Schedule for Retry ---
@@ -337,7 +347,7 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                             .insert(params.asset.clone(), Candid(reserve_data.clone()))
                     });
                     insert_certified_value(params.asset.clone(), reserve_data.clone());
-                    return Err(Error::ErrorBurnTokens);
+                    return Err(Error::TokenNotTransfered);
                 }
                 Err(first_rollback_failed_error) => {
                     // --- Direct Rollback Failed: Schedule for Retry ---

@@ -127,6 +127,8 @@ const SupplyPopup = ({
       "Unable to update interest rates. Please retry the operation.",
     ErrorMintTokens:
       "Minting of tokens failed. Your account state has been rolled back. Try again later.",
+    RollbackFailed :
+      "Rollback failed . it will be auto retried later within 4 hours.",
     Default: "An unexpected error occurred. Please try again later.",
   };
 

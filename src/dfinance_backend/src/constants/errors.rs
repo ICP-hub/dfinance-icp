@@ -1,6 +1,6 @@
 use candid::CandidType;
 
-#[derive(Debug, CandidType, Clone)]
+#[derive(Debug, CandidType, Clone, PartialEq)]
 pub enum Error {
     MaxAmountPlatform,
     InvalidAmount,

@@ -529,9 +529,16 @@ impl ValidationLogic {
             return Err(Error::NoCollateralFound);
         }
 
+        let supplied_interest_rate = user_normalized_supply(reward_reserve_data.clone())?;
         let user_dtoken_balance = get_balance(reward_asset_principal, user.clone()).await?;
-        if user_dtoken_balance < reward_amount {
+        let user_normalized_supply = user_dtoken_balance.clone().scaled_mul(supplied_interest_rate.clone());
+
+        if user_normalized_supply < reward_amount {
             error!("User collateral amount is less than the reward amount.");
+            debug!(
+                "User collateral balance: {:?}, Reward amount: {:?} and supplied interest rate: {:?}, user normalized supply: {:?}",
+                user_dtoken_balance, reward_amount, supplied_interest_rate, user_normalized_supply
+            );
             return Err(Error::UserCollateralLessThanReward);
         }
 

@@ -1,22 +1,22 @@
-use candid::{Nat, Principal};
-use ic_cdk::{query, update};
-
 use crate::{
-    constants::{constant_variables::constants::DEFAULT_MAX_RETRIES, errors::Error}, declarations::{
-        datatypes::RollbackRetryJob,
-        structs::RollbackParamsVariant,
-    }, guards::access_control::guard_admin_only, protocol::{
+    constants::{constant_variables::constants::DEFAULT_MAX_RETRIES, errors::Error},
+    declarations::{datatypes::RollbackRetryJob, structs::RollbackParamsVariant},
+    guards::access_control::guard_admin_only,
+    protocol::{
         libraries::{
             reserve::{self, get_reserve_data},
             update::UpdateLogic,
         },
         utils::log::{log_internal, LogLevel},
-    }, stable_storage::{
+    },
+    stable_storage::{
         state_handler::{insert_certified_value, mutate_state, read_state},
         storable::Candid,
-    }
+    },
 };
 use crate::{debug, error, info};
+use candid::{Nat, Principal};
+use ic_cdk::{query, update};
 
 /* * @title Rollback Retry Function
  * @dev This function retries all rollback jobs that are pending in the system.
@@ -43,6 +43,8 @@ pub async fn rollback_retry_all() -> Result<(), Error> {
                 "[ROLLBACK RETRY BLOCKED] for user {} has reached max retries.",
                 rollback_job.user_principal
             );
+
+            // Move to critical rollback if max retries exceeded
             mutate_state(|state| {
                 let next_id = match state.critical_rollback.last_key_value() {
                     Some((max_id, _)) => max_id + 1,
@@ -67,9 +69,14 @@ pub async fn rollback_retry_all() -> Result<(), Error> {
                 );
                 rollback_job.last_error_message = Some(err_msg);
                 mutate_state(|state| {
+                    let next_id = match state.critical_rollback.last_key_value() {
+                        Some((max_id, _)) => max_id + 1,
+                        None => 1,
+                    };
                     state
-                        .pending_rollback
-                        .insert(job_id, Candid(rollback_job.clone()));
+                        .critical_rollback
+                        .insert(next_id, Candid(rollback_job.clone()));
+                    state.pending_rollback.remove(&job_id);
                 });
                 continue;
             }
@@ -165,14 +172,14 @@ pub async fn rollback_retry_all() -> Result<(), Error> {
 pub fn store_rollback_job(
     user_principal: Principal,
     asset_name: String,
-    original_op_type: String,
+    origin_function_name: String,
     params_variant: RollbackParamsVariant,
     current_error: Error,
 ) -> Result<(), Error> {
     let new_job = RollbackRetryJob {
         user_principal: user_principal,
         asset_name: asset_name.clone(),
-        original_operation: original_op_type.clone(),
+        original_operation: origin_function_name.clone(),
         rollback_params: params_variant,
         retry_attempt: 0,
         last_error_message: Some(format!("{:?}", current_error)),
@@ -206,15 +213,13 @@ pub fn store_rollback_job(
  * @returns Result<(), Error>
  */
 #[update]
-pub fn admin_store_rollback_job(
-    critical_rollback_id: u64,
-    amount: Nat,
-) -> Result<(), Error> {
-    guard_admin_only()?; 
+pub fn admin_store_rollback_job(critical_rollback_id: u64, amount: Nat) -> Result<(), Error> {
+    guard_admin_only()?;
 
     mutate_state(|state| {
-        
-        let critical_job_candid = state.critical_rollback.get(&critical_rollback_id)
+        let critical_job_candid = state
+            .critical_rollback
+            .get(&critical_rollback_id)
             .ok_or_else(|| Error::InvalidRollbackId)?;
 
         let mut critical_job = critical_job_candid.0.clone();
@@ -231,7 +236,7 @@ pub fn admin_store_rollback_job(
             return Err(Error::InvalidAmount);
         }
 
-        // Insert a new rollback retry job into the pending map
+        // Insert a new rollback retry job into the pending rollback map
         let new_job = RollbackRetryJob {
             user_principal: critical_job.user_principal.clone(),
             asset_name: critical_job.asset_name.clone(),
@@ -248,7 +253,9 @@ pub fn admin_store_rollback_job(
             None => 1,
         };
 
-        state.pending_rollback.insert(next_id, Candid(new_job.clone()));
+        state
+            .pending_rollback
+            .insert(next_id, Candid(new_job.clone()));
 
         if amount == job_amount {
             // Full amount used: remove from critical rollback
@@ -303,22 +310,18 @@ pub fn get_all_critical_rollbacks() -> Result<Vec<(u64, RollbackRetryJob)>, Erro
  */
 #[update]
 pub fn delete_critical_rollback(critical_rollback_id: u64) -> Result<(), Error> {
-    guard_admin_only()?; 
+    guard_admin_only()?;
 
-    mutate_state(|state| {
-        match state.critical_rollback.remove(&critical_rollback_id) {
+    mutate_state(
+        |state| match state.critical_rollback.remove(&critical_rollback_id) {
             Some(_) => {
-                debug!(
-                    "[CRITICAL ROLLBACK DELETED] ID: {}",
-                    critical_rollback_id
-                );
+                debug!("[CRITICAL ROLLBACK DELETED] ID: {}", critical_rollback_id);
                 Ok(())
             }
             None => Err(Error::InvalidRollbackId),
-        }
-    })
+        },
+    )
 }
-
 
 /**
  * @title Get Pending Repay Amount
@@ -326,21 +329,17 @@ pub fn delete_critical_rollback(critical_rollback_id: u64) -> Result<(), Error> 
  *      It sums up all the amounts from pending rollback jobs that are of type RepayAsRollback.
  * @returns Nat The total amount pending for repayment.
  */
-pub fn get_pending_repay_amount(user:Principal ,asset_name: String)-> Nat {
+pub fn get_pending_repay_amount(user: Principal, asset_name: String) -> Nat {
     info!("get pending repay amount for user {}", user);
     //get total amount to repay for user
     let total_amount = read_state(|state| {
-        state.pending_rollback.iter()
-            .filter(|(_, job)| {
-                job.user_principal == user && job.asset_name == asset_name
-            })
-            .map(|(_, job)| {
-                match &job.rollback_params {
-                    RollbackParamsVariant::RepayAsRollback(repay_params) => {
-                        repay_params.amount.clone()
-                    }
-                    _ => Nat::from(0u64), 
-                }
+        state
+            .pending_rollback
+            .iter()
+            .filter(|(_, job)| job.user_principal == user && job.asset_name == asset_name)
+            .map(|(_, job)| match &job.rollback_params {
+                RollbackParamsVariant::RepayAsRollback(repay_params) => repay_params.amount.clone(),
+                _ => Nat::from(0u64),
             })
             .fold(Nat::from(0u64), |acc, x| acc + x)
     });

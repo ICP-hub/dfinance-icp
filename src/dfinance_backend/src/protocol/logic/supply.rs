@@ -93,6 +93,16 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
     let user_fund_transfer_index: Nat ;
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
     let ledger_fee = get_ledger_transfer_fee(ledger_canister_id).await?;
+    
+    // updating the price cached in the state
+    let _ = update_token_price(params.asset.clone()).await;
+
+    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
+    //updating params.amount with the actual amount of tokens to be supplied
+    params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
 
     //transfer the asset from the user to our backend canister
     match asset_transfer_from(
@@ -111,16 +121,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
             return Err(Error::ErrorSupplyToken);
         }
     };
-    // updating the price cached in the state
-    let _ = update_token_price(params.asset.clone()).await;
-
-
-    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
-        error!("Insufficient amount to cover transfer fees");
-        return Err(Error::FeeExceedsAmount);
-    }
-    //updating params.amount with the actual amount of tokens to be supplied
-    params.amount = params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone());
     match UpdateLogic::update_user_data_supply(
         user_principal,
         &reserve_cache,
@@ -137,7 +137,6 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                 .await?;
 
             info!("Interest rates updated successfully");
-            
 
             //updating the reserve data in the state
             mutate_state(|state| {
@@ -186,9 +185,9 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                     return Ok(user_fund_transfer_index);
                 }
                 Err(first_rollback_failed_error) => {
-                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    // Direct Rollback Failed: Schedule for Retry. 
                     error!(
-                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                        "Direct rollback failed supply function error:{:?}", first_rollback_failed_error
                     );
                     mutate_state(|state| {
                         state
@@ -204,7 +203,7 @@ pub async fn execute_supply(mut params: ExecuteSupplyParams) -> Result<Nat, Erro
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        "Execute_supply".to_string(),
+                        "execute_supply".to_string(),
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         
@@ -279,8 +278,11 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
     .await?;
     info!("Withdraw validated successfully");
 
-
     let transfer_token_fee= calculate_transfer_fee(&params.asset, params.amount.clone())?;
+    if params.amount.clone() < transfer_token_fee.clone() {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
     let withdraw_amount = params.amount.clone() - transfer_token_fee.clone();
     debug!("Withdraw amount: {:?}", withdraw_amount);
      // ----------- Update logic here -------------
@@ -350,9 +352,9 @@ pub async fn execute_withdraw(params: ExecuteWithdrawParams) -> Result<Nat, Erro
                     return Err(Error::TokenNotTransfered);
                 }
                 Err(first_rollback_failed_error) => {
-                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    // Direct Rollback Failed: Schedule for Retry.
                     error!(
-                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                        "Direct rollback failed withdraw function error:{:?}", first_rollback_failed_error
                     );
                     mutate_state(|state| {
                         state

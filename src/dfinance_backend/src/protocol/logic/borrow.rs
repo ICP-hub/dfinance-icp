@@ -115,6 +115,10 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
 
 
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
+    if params.amount.clone() < transfer_token_fee.clone() {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
     let borrow_amount = params.amount.clone() - transfer_token_fee.clone();
     debug!("borrow amount = {}", borrow_amount);
 
@@ -192,9 +196,9 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
                     return Err(Error::TokenNotTransfered);
                 }
                 Err(first_rollback_failed_error) => {
-                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    // Direct Rollback Failed: Schedule for Retry.
                     error!(
-                        "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
+                        "Direct rollback failed borrow function error:{:?}", first_rollback_failed_error
                     );
                     mutate_state(|state| {
                         state
@@ -265,14 +269,14 @@ pub async fn execute_borrow(params: ExecuteBorrowParams) -> Result<Nat, Error> {
  *      - Rolls back any changes if any step fails during the repayment process.
  */
 pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
-    let original_opt:String; //original operation name for rollback retry job
+    let original_function_name:String; //original operation name for rollback retry job
     let (user_principal, liquidator_principal) =
         if let Some(on_behalf_of) = params.on_behalf_of.clone() {
             let user_principal = on_behalf_of;
-            original_opt = "execute_liquidation".to_string();
+            original_function_name = "execute_liquidation".to_string();
             (user_principal, Some(ic_cdk::caller()))
         } else {
-            original_opt = "repay".to_string();
+            original_function_name = "execute_repay".to_string();
             (ic_cdk::caller(), None)
         };
     let _log_flusher = LogFlusher {
@@ -319,7 +323,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
 
     let _ = update_token_price(params.asset.clone()).await;
     let transfer_token_fee = calculate_transfer_fee(&params.asset, params.amount.clone())?;
-    if  params.amount < transfer_token_fee.clone() + ledger_fee.clone() {
+    if  params.amount < (transfer_token_fee.clone() + ledger_fee.clone()) {
         return Err(Error::FeeExceedsAmount);
     } 
     params.amount = params.amount - (transfer_token_fee.clone() + ledger_fee.clone());
@@ -421,7 +425,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                     return Ok(transfer_block_index)
                 }
                 Err(first_rollback_failed_error) => {
-                    // --- Direct Rollback Failed: Schedule for Retry ---
+                    // Direct Rollback Failed: Schedule for Retry.
                     error!(
                         "Direct rollback failed repay function error:{:?}", first_rollback_failed_error
                     );
@@ -445,7 +449,7 @@ pub async fn repay(mut params: ExecuteRepayParams) -> Result<Nat, Error> {
                     store_rollback_job(
                         user_principal,
                         params.asset.clone(),
-                        original_opt,
+                        original_function_name,
                         rollback_params_variant,
                         first_rollback_failed_error.clone(),
                         

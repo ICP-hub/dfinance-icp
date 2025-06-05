@@ -117,6 +117,11 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
     let repay_ledger_canister_id = get_asset_principal(params.debt_asset.clone())?;
     let ledger_fee = get_ledger_transfer_fee(repay_ledger_canister_id).await?;
 
+    if params.amount.clone() < (transfer_token_fee.clone() + ledger_fee.clone()) {
+        error!("Insufficient amount to cover transfer fees");
+        return Err(Error::FeeExceedsAmount);
+    }
+
     let (earned_rewards, liquidity_bonus) = to_get_reward_amount(
         params.amount.clone() - (transfer_token_fee.clone() + ledger_fee.clone()),
         params.collateral_asset.clone(),
@@ -251,7 +256,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
             store_rollback_job(
                 user_principal,
                 params.collateral_asset.to_string(),
-                "mint_scaled_liq1".to_string(),
+                "liquidation_liquidator_mint".to_string(),
                 rollback_params_variant,
                 err.clone(),
             )?;
@@ -376,7 +381,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 store_rollback_job(
                     liquidator_principal,
                     params.collateral_asset.to_string(),
-                    "burn_scaled_liq".to_string(),
+                    "liquidation_repay".to_string(),
                     rollback_params_variant,
                     err.clone(),
                 )?;
@@ -407,7 +412,7 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 store_rollback_job(
                     user_principal,
                     params.collateral_asset.to_string(),
-                    "mint_scaled_liq2".to_string(),
+                    "liquidation_repay".to_string(),
                     rollback_params_variant,
                     err.clone(),
                 )?;

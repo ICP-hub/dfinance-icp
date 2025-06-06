@@ -238,7 +238,7 @@ const Repay = ({
       console.error("Amount must be a positive number");
       return;
     }
-    if (numericAmount > assetBorrow) {
+    if (numericAmount > truncateTo8Decimals(assetBorrow)) {
       console.error("Amount exceeds the supply balance");
       return;
     }

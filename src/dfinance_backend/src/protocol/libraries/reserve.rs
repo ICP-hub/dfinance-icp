@@ -466,7 +466,7 @@ pub async fn mint_scaled(
     platform_principal: Principal,
     minting_dtoken: bool,
 ) -> Result<(), Error> {
-    trace!("calling mind scaled function ");
+    trace!("calling mint scaled function ");
     let mut is_supply = true;
     let adjusted_amount = if amount.clone() % index.clone() != zero_nat_value()
         && amount.clone() < Nat::from(10u128)

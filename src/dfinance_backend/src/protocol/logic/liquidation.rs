@@ -260,6 +260,36 @@ pub async fn execute_liquidation(params: ExecuteLiquidationParams) -> Result<Nat
                 rollback_params_variant,
                 err.clone(),
             )?;
+            mutate_state(|state| {
+                state.asset_index.insert(
+                    params.collateral_asset.clone(),
+                    Candid(collateral_reserve_data.clone()),
+                )
+            });
+            match user_account_data.reserves.as_mut() {
+                Some(reserves) => {
+                    if let Some((_, reserve_data)) = reserves
+                        .iter_mut()
+                        .find(|(asset, _)| asset == &params.collateral_asset)
+                    {
+                        *reserve_data = user_reserve_data.clone();
+                    } else {
+                        reserves.push((params.collateral_asset.clone(), user_reserve_data.clone()));
+                    }
+                }
+                None => {
+                    user_account_data.reserves = Some(vec![(
+                        params.collateral_asset.clone(),
+                        user_reserve_data.clone(),
+                    )]);
+                }
+            }
+            mutate_state(|state| {
+                state
+                    .user_profile
+                    .insert(user_principal, Candid(user_account_data.clone()));
+            });
+            insert_certified_value(user_principal.to_string(), user_account_data.clone());
         };
         error!("Error in minting scaled: {:?}", err);
         return Err(err);

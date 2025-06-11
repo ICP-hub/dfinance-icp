@@ -1,7 +1,7 @@
 import { Check, X, TriangleAlert } from "lucide-react";
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
@@ -64,7 +64,7 @@ const Borrow = ({
   const borrowButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { filteredItems, loading: loadinBorrow } = useAssetData();
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const { userData, userAccountData } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const { healthFactorBackend } = useUserData();

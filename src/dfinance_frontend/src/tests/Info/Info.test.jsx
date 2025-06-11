@@ -3,7 +3,7 @@ import { render, screen} from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import "@testing-library/jest-dom";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import useAssetData from "../../components/CustomHooks/useAssets";
 import { MemoryRouter } from "react-router-dom";
 import MainDashboard from "../../pages/Dashboard/MainDashboard";

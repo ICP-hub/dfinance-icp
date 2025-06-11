@@ -4,14 +4,14 @@ import Element from "../../public/element/elements.svg";
 import { useSelector } from "react-redux";
 import Astro from "../../public/errors/astro.png";
 import Globe from "../../public/errors/globe.png";
-import { useAuth } from "../utils/useAuthClient";
+import { useAuths } from "../utils/useAuthClient";
 import MiniLoader from "../components/Common/miniLoader";
 const WalletModal = lazy(() => import("../components/Dashboard/WalletModal"));
 
 const Error = () => {
   const navigate = useNavigate();
   const { isSwitchingWallet } = useSelector((state) => state.utility);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
 
   const handleTakeMeBack = () => {
     navigate("/");

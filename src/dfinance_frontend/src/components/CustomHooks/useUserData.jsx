@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
@@ -22,11 +22,11 @@ const useUserData = () => {
   const {
     backendActor,
     principal,
-    user,
+    User,
     isAuthenticated,
     createLedgerActor,
     verifyCertificate,
-  } = useAuth();
+  } = useAuths();
 
   const { batchFetchReserveData } = useReserveData();
 
@@ -235,8 +235,8 @@ const useUserData = () => {
   };
 
   useEffect(() => {
-    fetchUserData(user);
-  }, [user, backendActor, dashboardRefreshTrigger]);
+    fetchUserData(User);
+  }, [User, backendActor, dashboardRefreshTrigger]);
 
   useEffect(() => {
     if (userData) {

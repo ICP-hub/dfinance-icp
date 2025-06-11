@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { X, TriangleAlert } from "lucide-react";
 import FaucetPayment from "./FaucetPayment";
 import { useDispatch } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import { toast } from "react-toastify";
 import { toggleRefresh } from "../../redux/reducers/faucetUpdateReducer";
@@ -28,7 +28,7 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   const { isBlocked } = useFunctionBlockStatus();
   const faucetButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { backendActor, user, verifyCertificate } = useAuth();
+  const { backendActor, User, verifyCertificate } = useAuths();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,
@@ -512,10 +512,10 @@ const FaucetPopup = ({ isOpen, onClose, asset, assetImage }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (user) {
-      getUserFaucetData(user);
+    if (User) {
+      getUserFaucetData(User);
     }
-  }, [user]);
+  }, [User]);
 
   useEffect(() => {
     const faucetAmount = getFaucetAmount();

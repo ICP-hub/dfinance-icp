@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Info, X, TriangleAlert } from "lucide-react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import check from "../../../public/assests-icon/check.png";
 import cross from "../../../public/assests-icon/cross.png";
 import { Principal } from "@dfinity/principal";
@@ -28,7 +28,7 @@ const UserInformationPopup = ({
    *                                  HOOKS
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
 
   const {
     ckBTCUsdRate,

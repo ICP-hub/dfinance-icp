@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Principal } from "@dfinity/principal";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { MY_ASSET_TO_SUPPLY_TABLE_COL } from "../../utils/constants";
 import { idlFactory } from "../../../../declarations/dtoken";
 import { idlFactory as idlFactory1 } from "../../../../declarations/debttoken";
@@ -32,6 +32,7 @@ import FreezeCanisterPopup from "./DashboardPopup/CanisterDrainPopup";
 import { useReserveData } from "../../context/ReserveDataContext";
 import { SCALING_FACTOR } from '../../utils/constants';
 import { PERCENTAGE_FACTOR } from '../../utils/constants';
+import { useLedgerActor } from "../CustomHooks/CustomLedger";
 
 /**
  * DashboardComponent Component
@@ -50,7 +51,7 @@ const DashboardComponent = () => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const theme = useSelector((state) => state.theme.theme);
-  const { principal, createLedgerActor } = useAuth();
+  const { principal, createLedgerActor ,agent } = useAuths();
 
   const {
     userData,
@@ -302,7 +303,7 @@ const DashboardComponent = () => {
         };
 
         if (dtokenId) {
-          const dtokenActor = createLedgerActor(dtokenId, idlFactory);
+          const dtokenActor = useLedgerActor(dtokenId, agent, "dToken");
           if (dtokenActor) {
             try {
               const account = { owner: principalObj, subaccount: [] };
@@ -318,11 +319,12 @@ const DashboardComponent = () => {
         }
 
         if (debtTokenId) {
-          const debtTokenActor = createLedgerActor(debtTokenId, idlFactory1);
+          const debtTokenActor = useLedgerActor(debtTokenId, agent, "debtToken")
           if (debtTokenActor) {
             try {
               const account = { owner: principalObj, subaccount: [] };
               const balance = await debtTokenActor.icrc1_balance_of(account);
+              console.log("balance",balance)
               assetBalance.debtTokenBalance = balance;
             } catch (error) {
               console.error(

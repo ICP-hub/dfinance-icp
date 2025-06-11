@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 
 const useFunctionBlockStatus = (functionName) => {
-  const { backendActor, isAuthenticated, verifyCertificate } = useAuth();
+  const { backendActor, isAuthenticated, verifyCertificate } = useAuths();
   const [isBlocked, setIsBlocked] = useState(false);
   const [loading, setLoading] = useState(true);
 

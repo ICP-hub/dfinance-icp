@@ -6,7 +6,7 @@ import {
   useMemo,
   useEffect
 } from "react";
-import { useAuth } from "../utils/useAuthClient";
+import { useAuths } from "../utils/useAuthClient";
 import { useSelector } from "react-redux";
 
 const ReserveDataContext = createContext();
@@ -20,7 +20,7 @@ export const ReserveDataProvider = ({ children }) => {
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
 
-  const { backendActor, verifyCertificate } = useAuth();
+  const { backendActor, verifyCertificate } = useAuths();
 
   useEffect(() => {
     invalidateCache();

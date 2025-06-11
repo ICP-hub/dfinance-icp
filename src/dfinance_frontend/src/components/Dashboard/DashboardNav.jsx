@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import RiskPopup from "./DashboardPopup/RiskDetails";
 import { Infinity, X } from "lucide-react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { ChevronLeft } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
 import { Principal } from "@dfinity/principal";
@@ -71,7 +71,7 @@ const DashboardNav = () => {
     (state) => state.borrowSupply.totalUsdValueSupply
   );
   const tooltipRef = useRef(null);
-  const { isAuthenticated, principal, createLedgerActor } = useAuth();
+  const { isAuthenticated, principal, createLedgerActor } = useAuths();
 
   const theme = useSelector((state) => state.theme.theme);
   const menuRef = useRef(null);

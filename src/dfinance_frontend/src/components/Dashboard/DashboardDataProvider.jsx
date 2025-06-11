@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import useAssetData from "../CustomHooks/useAssets";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 
 export const DashboardDataProvider = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const assetData = useAssetData();
 
   useEffect(() => {

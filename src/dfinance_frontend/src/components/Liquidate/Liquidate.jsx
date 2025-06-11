@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../Common/button";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import DebtStatus from "./LiquidationList";
 import WalletModal from "../Dashboard/WalletModal";
@@ -29,7 +29,7 @@ const Liquidate = () => {
   const { isWalletCreated, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const [showWarning, setShowWarning] = useState(false);
 

@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import Market from "../../pages/Market/Market";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import useAssetData from "../../components/CustomHooks/useAssets";
 import useFetchConversionRate from "../../components/CustomHooks/useFetchConversionRate";
 import useUserData from "../../components/CustomHooks/useUserData";

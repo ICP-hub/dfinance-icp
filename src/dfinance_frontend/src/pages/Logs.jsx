@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../utils/useAuthClient";
+import { useAuths } from "../utils/useAuthClient";
 import Pagination from "../components/Common/pagination";
 import Error from "./Error";
 
@@ -9,7 +9,7 @@ const Logs = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [like, setLike] = useState(false);
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
 
   const [currentPage, setCurrentPage] = useState(1);
   const logsPerPage = 200;

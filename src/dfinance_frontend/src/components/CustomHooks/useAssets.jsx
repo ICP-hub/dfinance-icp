@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useReserveData } from "../../context/ReserveDataContext";
 import useFormatNumber from "./useFormatNumber";
 import useFetchConversionRate from "./useFetchConversionRate";
@@ -17,7 +17,7 @@ const useAssetData = (searchQuery = "") => {
   );
 
   const { principal, backendActor, isAuthenticated, verifyCertificate } =
-    useAuth();
+    useAuths();
   const { fetchReserveData, batchFetchReserveData } = useReserveData();
 
   const [assets, setAssets] = useState([]);

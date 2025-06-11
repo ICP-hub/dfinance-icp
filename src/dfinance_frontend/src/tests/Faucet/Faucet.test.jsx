@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import Faucet from "../../pages/Faucet/Faucet";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 
 const mockStore = configureStore([]);

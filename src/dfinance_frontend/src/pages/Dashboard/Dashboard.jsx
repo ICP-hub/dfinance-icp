@@ -1,12 +1,16 @@
-import React, {  useEffect } from "react";
+import React, { useEffect } from "react";
 import Button from "../../components/Common/button";
 import { useDispatch, useSelector } from "react-redux";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import MySupply from "../../components/Dashboard/DashboardComponent";
 import WalletModal from "../../components/Dashboard/WalletModal";
 import { useSearchParams } from "react-router-dom";
+import { FaWallet } from "react-icons/fa";
+import {
+  ConnectWallet,
+} from "@nfid/identitykit/react";
 
 const CreateWallet = () => {
   /* ===================================================================================
@@ -16,19 +20,33 @@ const CreateWallet = () => {
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const handleWalletConnect = () => {
     dispatch(
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
-  const [searchParams] = useSearchParams(); 
+  const [searchParams] = useSearchParams();
   useEffect(() => {
-    const openWallet = searchParams.get("openWallet"); 
+    const openWallet = searchParams.get("openWallet");
     if (openWallet === "true") {
-      handleWalletConnect(); 
+      handleWalletConnect();
     }
-  }, [searchParams]); 
+  }, [searchParams]);
+
+  const ConnectBtn = ({ onClick }) => (
+    <button
+      className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-center">
+        <p className="hidden md:flex">Connect Wallet</p>
+        <div>
+          <FaWallet size={17} className="ml-0 md:hidden" />
+        </div>
+      </div>
+    </button>
+  );
   /* ===================================================================================
    *                                  RENDER COMPONENT
    * =================================================================================== */
@@ -52,7 +70,11 @@ const CreateWallet = () => {
             Please connect your wallet to see your supplies, borrowings anf open
             positions.
           </p>
-          <Button title="Connect Wallet" onClickHandler={handleWalletConnect} />
+          {/* <Button title="Connect Wallet" onClickHandler={handleWalletConnect} /> */}
+          <ConnectWallet
+            connectButtonComponent={ConnectBtn}
+            className="rounded-full bg-black"
+          />
         </div>
       )}
 

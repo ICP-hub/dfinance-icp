@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import React from "react";
 import Button from "../Common/button";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { SlidersHorizontal, SlidersVertical } from "lucide-react";
 import { ASSET_DETAILS } from "../../utils/constants";
 import { setAssetDetailFilter } from "../../redux/reducers/utilityReducer";
@@ -68,7 +68,7 @@ const AssetDetails = () => {
     backendActor,
     createLedgerActor,
     verifyCertificate,
-  } = useAuth();
+  } = useAuths();
 
   const location = useLocation();
   const { assetData } = location.state || {};

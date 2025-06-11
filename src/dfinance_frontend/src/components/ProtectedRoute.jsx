@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
-import { useAuth } from "../utils/useAuthClient";
+import { useAuths } from "../utils/useAuthClient";
 import Error from "../pages/Error";
 import MainDashboard from "../pages/Dashboard/MainDashboard";
 import { Suspense } from "react";
 import MiniLoader from "./Common/miniLoader";
 
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated } = useAuths();
 
     if (isAuthenticated === false) {
         return <MainDashboard includeDashboardNav={false}>

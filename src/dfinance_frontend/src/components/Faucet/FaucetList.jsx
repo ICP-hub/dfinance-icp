@@ -4,7 +4,7 @@ import Button from "../Common/button";
 import { FAUCET_ASSETS_TABLE_COL } from "../../utils/constants";
 import FaucetPopup from "./FaucetPopup";
 import useAssetData from "../CustomHooks/useAssets";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useEffect } from "react";
 import useFetchConversionRate from "../CustomHooks/useFetchConversionRate";
 import MiniLoader from "../Common/miniLoader";
@@ -28,7 +28,7 @@ const FaucetDetails = () => {
    * =================================================================================== */
 
   const { filteredItems, loading, assets, AssetImages } = useAssetData();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
   const {
     ckBTCUsdRate,
     ckETHUsdRate,

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Check, X, TriangleAlert } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -42,7 +42,7 @@ const ColateralPopup = ({
    * =================================================================================== */
   const { isBlocked } = useFunctionBlockStatus();
   const { healthFactorBackend } = useUserData();
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
   const { conversionRate } = useRealTimeConversionRate(asset);
 
   /* ===================================================================================

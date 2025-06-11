@@ -4,7 +4,7 @@ import { WALLET_ASSETS_TABLE_COL } from "../../utils/constants";
 import Button from "../../components/Common/button";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { trackEvent } from "../../utils/googleAnalytics";
 import useAssetData from "../../components/CustomHooks/useAssets";
@@ -59,7 +59,7 @@ const Market = () => {
     (state) => state.utility
   );
 
-  const { isAuthenticated, principal } = useAuth();
+  const { isAuthenticated, principal } = useAuths();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const {
     totalMarketSize,

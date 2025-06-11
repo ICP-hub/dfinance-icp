@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate, useRoutes } from "react-router-dom";
-import { useAuth } from "./utils/useAuthClient";
+import { useAuths } from "./utils/useAuthClient";
 import routesList from "./routes/routes";
 import { useSelector } from "react-redux";
 import { usePageLoading } from "./components/CustomHooks/useLoading";
@@ -32,7 +32,7 @@ export default function App() {
     createLedgerActor,
     reloadLogin,
     verifyCertificate,
-  } = useAuth();
+  } = useAuths();
 
   const isTourRunning = useSelector((state) => state.joyride.joyRideTrigger);
   const theme = useSelector((state) => state.theme.theme);

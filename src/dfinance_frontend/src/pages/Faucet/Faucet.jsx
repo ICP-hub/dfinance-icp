@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import Button from "../../components/Common/button";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/miniLoader";
@@ -25,7 +25,7 @@ const Faucet = () => {
   const { isWalletModalOpen, isSwitchingWallet } = useSelector(
     (state) => state.utility
   );
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuths();
 
   const handleWalletConnect = () => {
     dispatch(

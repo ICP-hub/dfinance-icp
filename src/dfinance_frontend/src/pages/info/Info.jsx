@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { ExternalLink } from "lucide-react";
 import Error from "../Error";
 import useFormatNumber from "../../components/CustomHooks/useFormatNumber";
@@ -30,7 +30,7 @@ const DashboardCards = () => {
    *                                  HOOKS
    * =================================================================================== */
   const navigate = useNavigate();
-  const { backendActor, isAuthenticated, verifyCertificate } = useAuth();
+  const { backendActor, isAuthenticated, verifyCertificate } = useAuths();
   const { isFreezePopupVisible, setIsFreezePopupVisible } = useUserData();
   const formatNumber = useFormatNumber();
 

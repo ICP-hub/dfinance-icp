@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Check, X } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useRealTimeConversionRate from "../../CustomHooks/useRealTimeConversionRate";
@@ -53,7 +53,7 @@ const WithdrawPopup = ({
   const transferFeRetrive = useTransferFee(asset);
   const withdrawButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const modalRef = useRef(null);
   const { healthFactorBackend } = useUserData();

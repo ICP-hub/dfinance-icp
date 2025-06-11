@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import DebtStatus from "../../components/Liquidate/LiquidationList";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import useAssetData from "../../components/CustomHooks/useAssets";
 
 // Mock the hooks and modules
@@ -60,7 +60,7 @@ describe("DebtStatus Component", () => {
     // Setup default mock returns
     useSelector.mockReturnValue(false);
     
-    useAuth.mockReturnValue({
+    useAuths.mockReturnValue({
       getAllUsers: jest.fn().mockResolvedValue([]),
       user: { toString: () => "user-principal" },
       backendActor: {

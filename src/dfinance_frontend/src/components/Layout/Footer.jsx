@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import { FOOTER_LINK_1, FOOTER_LINK_2 } from "../../utils/constants";
 import Ellipse from "../Common/ellipse";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useSelector } from "react-redux";
 import { Plus, Minus, RefreshCw } from "lucide-react";
@@ -26,7 +26,7 @@ const Footer = () => {
   const [loading, setLoading] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isTester, setIsTester] = useState(false);
-  const { backendActor } = useAuth();
+  const { backendActor } = useAuths();
 
   /* ===================================================================================
    *                                  FUNCTIONS

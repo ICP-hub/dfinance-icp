@@ -1,7 +1,7 @@
 import { Check, X } from "lucide-react";
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { useMemo } from "react";
 import { Principal } from "@dfinity/principal";
 import { useEffect } from "react";
@@ -56,7 +56,7 @@ const Repay = ({
   const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
   const { conversionRate } = useRealTimeConversionRate(asset);
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const checkAndNotify = useNotificationSystem();
   const [ledgerFee, setLedgerFee] = useState(null);
 

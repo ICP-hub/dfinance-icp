@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Check, X } from "lucide-react";
-import { useAuth } from "../../../utils/useAuthClient";
+import { useAuths } from "../../../utils/useAuthClient";
 import { Principal } from "@dfinity/principal";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
@@ -57,7 +57,7 @@ const SupplyPopup = ({
   const supplyButtonRef = useRef(null);
   const closeButtonRef = useRef(null);
   const { healthFactorBackend } = useUserData();
-  const { backendActor, principal } = useAuth();
+  const { backendActor, principal } = useAuths();
   const { conversionRate } = useRealTimeConversionRate(asset);
   const checkAndNotify = useNotificationSystem();
   /* ===================================================================================

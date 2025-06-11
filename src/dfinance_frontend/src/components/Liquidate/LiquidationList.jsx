@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { LIQUIDATION_USERLIST_COL } from "../../utils/constants";
 import Button from "../Common/button";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useRef } from "react";
 import { Principal } from "@dfinity/principal";
 import Pagination from "../Common/pagination";
@@ -56,11 +56,11 @@ const DebtStatus = () => {
   } = useAssetData();
 
   const {
-    user,
+    User,
     backendActor,
     createLedgerActor,
     verifyCertificate,
-  } = useAuth();
+  } = useAuths();
 
   const { batchFetchReserveData } = useReserveData();
 
@@ -166,7 +166,7 @@ const DebtStatus = () => {
     // Step 1: Filter valid users
     const filtered = liquidationUsers.filter((item) => {
       return (
-        item.principal?._arr?.toText() !== user?.toString() &&
+        item.principal?._arr?.toText() !== User?.toString() &&
         typeof item.debt !== "undefined" &&
         item.debt !== 0n &&
         typeof item.collateral !== "undefined" &&
@@ -196,7 +196,7 @@ const DebtStatus = () => {
       currentItems: items,
       totalPages: pages
     };
-  }, [liquidationUsers, liquidationLoading, currentPage, user, setCurrentPage]);
+  }, [liquidationUsers, liquidationLoading, currentPage, User, setCurrentPage]);
 
   // Function to fetch asset data for each user
   const fetchAssetData = async () => {

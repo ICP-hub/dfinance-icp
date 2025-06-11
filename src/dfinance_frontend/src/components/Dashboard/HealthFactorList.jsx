@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { SlidersHorizontal } from "lucide-react";
 import { useSelector } from "react-redux";
 import WalletModal from "./WalletModal";
@@ -33,7 +33,7 @@ const HealthFactorList = () => {
     isAuthenticated,
     createLedgerActor,
     verifyCertificate,
-  } = useAuth();
+  } = useAuths();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);

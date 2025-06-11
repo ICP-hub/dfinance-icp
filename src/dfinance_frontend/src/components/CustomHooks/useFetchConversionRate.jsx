@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import useFetchBalance from "./useFetchBalance";
 import { useSelector } from "react-redux";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 
 /**
  * Global cache for exchange rates to persist between hook instances and component remounts
@@ -39,7 +39,7 @@ const useFetchConversionRate = (
     (state) => state.dashboardUpdate.refreshDashboardTrigger
   );
   const ledgerActors = useSelector((state) => state.ledger);
-  const { principal, backendActor, verifyCertificate } = useAuth();
+  const { principal, backendActor, verifyCertificate } = useAuths();
   const {
     ckBTCBalance,
     ckETHBalance,

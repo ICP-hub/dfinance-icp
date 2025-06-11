@@ -3,7 +3,7 @@ import { Drawer } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../utils/useAuthClient";
+import { useAuths } from "../../utils/useAuthClient";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../../redux/reducers/themeReducer";
 import CustomizedSwitches from "../Common/materialUISwitch";
@@ -46,7 +46,7 @@ const MobileTopNav = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { assets, AssetImages } = useAssetData();
-  const { isAuthenticated, principal, accountIdString, backendActor } = useAuth();
+  const { isAuthenticated, principal, accountIdString, backendActor } = useAuths();
   const ledgerActors = useSelector((state) => state.ledger);
   const checkAndNotify = useNotificationSystem();
   /* ===================================================================================

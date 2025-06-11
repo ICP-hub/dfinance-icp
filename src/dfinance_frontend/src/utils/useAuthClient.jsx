@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { initGA, setUserId } from "./googleAnalytics";
 import { Principal } from "@dfinity/principal";
 import { Certificate, Cbor, reconstruct } from "@dfinity/agent";
+import { useIdentity, useAuth, } from "@nfid/identitykit/react";
 
 const AuthContext = createContext();
 
@@ -39,6 +40,10 @@ const defaultOptions = {
   loginOptionsbifinity: {},
 };
 
+const LOCAL_HOST = "http://127.0.0.1:4943";
+const MAINNET_HOST = "https://icp0.io";
+const HOST = process.env.DFX_NETWORK === "ic" ? MAINNET_HOST : LOCAL_HOST;
+
 /**
  * Custom hook for handling authentication with Internet Identity and other providers.
  *
@@ -46,12 +51,15 @@ const defaultOptions = {
  * @returns {Object} - Authentication state and utility functions.
  */
 export const useAuthClient = (options = defaultOptions) => {
+  // const dispatch = useDispatch();
+  const { connect, disconnect, user } = useAuth();
+  const identity = useIdentity();
+  const [agent, setnewagent] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accountIdString, setAccountIdString] = useState("");
   const [authClient, setAuthClient] = useState(null);
-  const [identity, setIdentity] = useState(null);
   const [principal, setPrincipal] = useState(null);
-  const [user, setUser] = useState(null);
+  const [User, setUser] = useState(null);
   const [backendActor, setBackendActor] = useState(null);
   const [accountId, setAccountId] = useState(null);
   const [certObj, setCertObj] = useState(null);
@@ -60,15 +68,10 @@ export const useAuthClient = (options = defaultOptions) => {
 
   useEffect(() => {
     AuthClient.create(options.createOptions).then((client) => {
-      setAuthClient(client);
+      setAuthClient(client.getIdentity());
     });
+    initActor();
   }, []);
-
-  useEffect(() => {
-    if (authClient) {
-      updateClient(authClient);
-    }
-  }, [authClient]);
 
   const toHexString = (byteArray) => {
     return Array.from(byteArray, (byte) =>
@@ -82,32 +85,14 @@ export const useAuthClient = (options = defaultOptions) => {
    * @param {string} provider - The provider name (ii, nfid, bifinity).
    * @returns {Promise<AuthClient>} - Returns the authenticated client instance.
    */
-  const login = async (provider) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (
-          authClient.isAuthenticated() &&
-          !(await authClient.getIdentity().getPrincipal().isAnonymous())
-        ) {
-          updateClient(authClient);
-          resolve(authClient);
-        } else {
-          const opt = getLoginOptions(provider);
-          authClient.login({
-            ...opt,
-            onError: (error) => reject(error),
-            onSuccess: () => {
-              updateClient(authClient);
-              setSessionTimeout();
-              resolve(authClient);
-            },
-          });
-        }
-      } catch (error) {
-        console.error(error)
-        throw(error);
-      }
-    });
+  const login = async () => {
+    try {
+      const res = await connect();
+      await initActor();
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error("Login Error:", error);
+    }
   };
 
   const setSessionTimeout = () => {
@@ -138,22 +123,23 @@ export const useAuthClient = (options = defaultOptions) => {
    */
   const logout = async () => {
     try {
-      await authClient.logout();
-      clearTimeout(logoutTimeout);
-      setIsAuthenticated(false);
-      setIdentity(null);
-      setPrincipal(null);
+      await disconnect();
       setBackendActor(null);
-      setAccountId(null);
+      setIsAuthenticated(false);
+      setPrincipal(null);
+
       localStorage.removeItem("connectedWallet");
+      localStorage.removeItem("signerId");
+
       localStorage.removeItem("sessionStart");
-      sessionStorage.removeItem("hasCheckedUser");
       if (isSwitchingWallet == false) {
         localStorage.removeItem("connectedWallet");
+        localStorage.removeItem("signerId");
         window.location.reload();
       }
     } catch (error) {
-      console.error(error.message);
+      console.error("Logout Error:", error);
+      dispatch(logoutFailure(error.toString()));
     }
   };
 
@@ -174,40 +160,62 @@ export const useAuthClient = (options = defaultOptions) => {
     checkSession();
   }, []);
 
-  /**
-   * Updates client state with authentication details.
-   * @param {AuthClient} client - AuthClient instance.
-   */
-  const updateClient = async (client) => {
+  const initActor = async () => {
     try {
-      const isAuthenticated = await client.isAuthenticated();
-      setIsAuthenticated(isAuthenticated);
-      const identity = client.getIdentity();
-      setIdentity(identity);
 
-      const principal = identity.getPrincipal();
-      setUser(principal);
-      setPrincipal(principal.toString());
-      initGA("G-HP2ELMSQCW");
-      if (isAuthenticated) {
-        setUserId(principal.toString());
+      // If identity is not available, fallback to AuthClient identity
+      if (!identity) {
+        const client = await AuthClient.create(options.createOptions);
+
+        let clientIdentity = client.getIdentity();
+        setUser(clientIdentity.getPrincipal());
+        const principalText = clientIdentity.getPrincipal().toText();
+        setPrincipal(principalText);
+        const accountId = AccountIdentifier.fromPrincipal({ principal: clientIdentity.getPrincipal() });
+        setAccountId(toHexString(accountId.bytes));
+        setAccountIdString(toHexString(accountId.bytes));
       }
 
-      const accountId = AccountIdentifier.fromPrincipal({ principal });
-      setAccountId(toHexString(accountId.bytes));
-      setAccountIdString(toHexString(accountId.bytes));
+      let agent;
+      let principal;
+      let originalPrincipal;
+      if (user && identity) {
 
-      const agent = new HttpAgent({ identity });
+        principal = identity.getPrincipal().toText();
+        originalPrincipal = identity.getPrincipal();
+        setPrincipal(principal);
+        setUser(identity.getPrincipal());
+        const accountId = AccountIdentifier.fromPrincipal({ principal: originalPrincipal });
+        setAccountId(toHexString(accountId.bytes));
+        setAccountIdString(toHexString(accountId.bytes));
 
-      const backendActor = createActor(
-        process.env.CANISTER_ID_DFINANCE_BACKEND,
-        { agent }
-      );
-      setBackendActor(backendActor);
+        const storedSignerId = localStorage.getItem("signerId");
+
+        if (storedSignerId) {
+          setIsAuthenticated(true);
+        }
+
+        agent = new HttpAgent({ identity, host: HOST });
+
+        if (process.env.DFX_NETWORK !== "ic") {
+          await agent.fetchRootKey();
+        }
+      } else {
+        agent = new HttpAgent({ host: HOST });
+
+        if (process.env.DFX_NETWORK !== "ic") {
+          await agent.fetchRootKey();
+        }
+      }
+      const actor = createActor(process.env.CANISTER_ID_DFINANCE_BACKEND, {
+        agent,
+      });
+      setBackendActor(actor);
     } catch (error) {
-      console.error(error.message);
+      console.error("Error initializing actor:", error.message);
     }
   };
+
 
   useEffect(() => {
     const savedAuth = localStorage.getItem("isAuthenticated");
@@ -221,7 +229,7 @@ export const useAuthClient = (options = defaultOptions) => {
     const agent = new HttpAgent({ identity });
 
     if (process.env.DFX_NETWORK !== "production") {
-      agent.fetchRootKey().catch((err) => {console.error(err)});
+      agent.fetchRootKey().catch((err) => { console.error(err) });
     }
     return Actor.createActor(IdlFac, { agent, canisterId });
   };
@@ -233,7 +241,7 @@ export const useAuthClient = (options = defaultOptions) => {
         authClient.isAuthenticated() &&
         !(await authClient.getIdentity().getPrincipal().isAnonymous())
       ) {
-        updateClient(authClient);
+        initActor()
       }
     } catch (error) {
       console.error(error)
@@ -315,16 +323,31 @@ export const useAuthClient = (options = defaultOptions) => {
       throw error;
     }
   };
+  useEffect(() => {
+    const initializeAgent = async () => {
+      const newAgent = new HttpAgent({
+        identity: identity || undefined,
+        host: HOST,
+      });
 
+      if (process.env.DFX_NETWORK !== "ic") {
+        await newAgent.fetchRootKey();
+      }
+      setnewagent(newAgent);
+    };
+    initializeAgent();
+    initActor();
+
+  }, [user, identity]);
   return {
+    agent,
     isAuthenticated,
     login,
     logout,
-    updateClient,
     authClient,
     identity,
     principal,
-    user,
+    User,
     backendActor,
     accountId,
     createLedgerActor,
@@ -345,4 +368,4 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuths = () => useContext(AuthContext);

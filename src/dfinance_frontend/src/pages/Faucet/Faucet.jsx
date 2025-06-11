@@ -5,6 +5,10 @@ import { useAuths } from "../../utils/useAuthClient";
 import Element from "../../../public/element/elements.svg";
 import { setWalletModalOpen } from "../../redux/reducers/utilityReducer";
 import MiniLoader from "../../components/Common/miniLoader";
+import { FaWallet } from "react-icons/fa";
+import {
+  ConnectWallet,
+} from "@nfid/identitykit/react";
 
 const FaucetDetails = lazy(() =>
   import("../../components/Faucet/FaucetList")
@@ -32,6 +36,20 @@ const Faucet = () => {
       setWalletModalOpen({ isOpen: !isWalletModalOpen, isSwitching: false })
     );
   };
+
+  const ConnectBtn = ({ onClick }) => (
+    <button
+      className="broder-b-[1px] bg-gradient-to-tr from-[#4C5FD8] from-20% via-[#D379AB] via-60% to-[#FCBD78] to-90% text-white rounded-xl p-[11px] md:px-7 shadow-sm shadow-[#00000040] font-medium text-sm sxs3:px-4 sxs1:text-[11px] md:text-[14px] flex items-center justify-center"
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-center">
+        <p className="hidden md:flex">Connect Wallet</p>
+        <div>
+          <FaWallet size={17} className="ml-0 md:hidden" />
+        </div>
+      </div>
+    </button>
+  );
 
   return (
     <>
@@ -71,9 +89,13 @@ const Faucet = () => {
               <p className="text-[#737373] my-2 font-medium text-center dark:text-darkTextSecondary">
                 Please connect your wallet to get free testnet assets
               </p>
-              <Button
+              {/* <Button
                 title="Connect Wallet"
                 onClickHandler={handleWalletConnect}
+              /> */}
+              <ConnectWallet
+                connectButtonComponent={ConnectBtn}
+                className="rounded-full bg-black"
               />
               <Suspense
                 fallback={
